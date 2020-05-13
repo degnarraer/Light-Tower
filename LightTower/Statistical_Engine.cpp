@@ -28,7 +28,7 @@
 
 void StatisticalEngine::HandleInterrupt()
 {
-  sampler.handleInterrupt();
+  sampler.HandleInterrupt();
 }
 
 void StatisticalEngine::Setup()
@@ -48,7 +48,7 @@ void StatisticalEngine::UpdateSoundData()
     UpdateSoundState(); 
   }
   */
-  sampler.begin(SAMPLE_RATE);
+  sampler.Begin(SAMPLE_RATE);
   //THIS FUCKING SUCKS.... ADC SAMPLING USES Timer 0, so does FAST LED, so we have to wait for this to end before we can move on
   while(false == NewDataReady());
   AnalyzeSound();
@@ -59,10 +59,10 @@ bool StatisticalEngine::NewDataReady()
 {
   if(false == testMode)
   {
-    if (sampler.available())
+    if (sampler.IsAvailable())
     {
       int bufferLength = 0;
-      uint16_t* cBuf = sampler.getFilledBuffer(&bufferLength);
+      uint16_t* cBuf = sampler.GetFilledBuffer(&bufferLength);
       for (int i = 0; i < bufferLength; i=i+NUM_CHANNELS)
       {
         m_data[i/NUM_CHANNELS] = cBuf[i+2];
@@ -72,7 +72,7 @@ bool StatisticalEngine::NewDataReady()
           ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10(ADDBITS - cBuf[1])/log10(ADDBITS)));
         }
       }
-      sampler.readBufferDone();
+      sampler.SetReadBufferDone();
       return true;
     }
     else

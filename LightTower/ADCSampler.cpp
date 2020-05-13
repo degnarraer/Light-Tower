@@ -11,7 +11,7 @@ ADCSampler::ADCSampler()
     memset((void *)adcBuffer[i], 0, BUFFER_SIZE);
   }
 }
-void ADCSampler::begin(unsigned int samplingRate)
+void ADCSampler::Begin(unsigned int samplingRate)
 {
   this->samplingRate = samplingRate;
   // Turning devices Timer on.
@@ -81,12 +81,12 @@ void ADCSampler::begin(unsigned int samplingRate)
   TC0->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN;
   TC_Start(TC0, 0);
 }
-void ADCSampler::end()
+void ADCSampler::End()
 {
 
 }
 
-void ADCSampler::handleInterrupt()
+void ADCSampler::HandleInterrupt()
 {
   unsigned long status = ADC->ADC_ISR;
   if (status & ADC_ISR_ENDRX)
@@ -95,7 +95,6 @@ void ADCSampler::handleInterrupt()
     dataReady = true;
   }
 }
-
 void ADCSampler::StartNextBuffer()
 {
   bufferOverflow = ((adcDMAIndex - adcReadIndex) >= NUMBER_OF_BUFFERS ? true : false);
@@ -104,27 +103,26 @@ void ADCSampler::StartNextBuffer()
   ADC->ADC_RNPR  = (unsigned long) adcBuffer[(adcDMAIndex + 1) % NUMBER_OF_BUFFERS];
   ADC->ADC_RNCR  = BUFFER_SIZE;
 }
-
-unsigned int ADCSampler::numberOfReadings()
+unsigned int ADCSampler::GetNumberOfReadings()
 {
   return adcDMAIndex - adcReadIndex;
 }
-bool ADCSampler::available()
+bool ADCSampler::IsAvailable()
 {
   return dataReady;
 }
-unsigned int ADCSampler::getSamplingRate()
+unsigned int ADCSampler::GetSamplingRate()
 {
   return samplingRate;
 }
 
-uint16_t* ADCSampler::getFilledBuffer(int *bufferLength)
+uint16_t* ADCSampler::GetFilledBuffer(int *bufferLength)
 {
   *bufferLength = BUFFER_SIZE;
   return adcBuffer[(adcTransferIndex % NUMBER_OF_BUFFERS)];
 }
 
-void ADCSampler::readBufferDone()
+void ADCSampler::SetReadBufferDone()
 {
   adcReadIndex += 1;
   dataReady = false;

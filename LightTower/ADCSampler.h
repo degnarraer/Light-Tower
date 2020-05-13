@@ -9,15 +9,15 @@
 class ADCSampler {
   public:
     ADCSampler();
-    void begin(unsigned int samplingRate);
-    void end();
-    void handleInterrupt();
-    bool available();
-    unsigned int getSamplingRate();
-    uint16_t* getFilledBuffer(int *bufferLength);
-    unsigned int numberOfReadings();
+    void Begin(unsigned int samplingRate);
+    void End();
+    void HandleInterrupt();
+    bool IsAvailable();
+    unsigned int GetSamplingRate();
+    uint16_t* GetFilledBuffer(int *bufferLength);
+    unsigned int GetNumberOfReadings();
     void StartNextBuffer();
-    void readBufferDone();
+    void SetReadBufferDone();
   private:
     unsigned int samplingRate;
     volatile bool dataReady;

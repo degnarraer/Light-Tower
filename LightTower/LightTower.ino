@@ -27,9 +27,9 @@
 
 ActiveVisualizationController activeVisualizationController;
 
-long startMillis;
-long currentMillis;
-int frameCount = 0;
+unsigned long startMillis;
+unsigned long currentMillis;
+unsigned int frameCount = 0;
 
 void setup()
 {
@@ -66,7 +66,7 @@ void loop()
   activeVisualizationController.Loop();
   ++frameCount;
   currentMillis = millis();
-  long lapsedTime = currentMillis - startMillis;
+  unsigned long lapsedTime = currentMillis - startMillis;
   if(lapsedTime >= 1000)
   {
     startMillis = millis();
@@ -74,55 +74,3 @@ void loop()
     frameCount = 0;
   }
 }
-
-
-/*
-#include "Tunes.h"
-#include "ADCSampler.h"
-
-
-ADCSampler sampler;
-unsigned int samplingRate = 26000;
-
-
-void setup()
-{
-  
-  Serial.begin(115200);  // To print debugging messages.
-  Serial.print("Start ... Sampling Rate is set to ");
-  Serial.print(samplingRate);
-  Serial.println("Hz");
-
-  Serial.print("The DMA uses ");;
-  Serial.print(NUMBER_OF_BUFFERS);
-  Serial.print(" buffers with ");
-  Serial.print(BUFFER_SIZE);
-  Serial.println(" elements each");
-  Serial.print("A serial stream will be send every ");
-  double interval = (((double) BUFFER_SIZE) / samplingRate) / NUM_CHANNELS;
-  Serial.print(interval);
-  Serial.println(" seconds");
-  sampler.begin(samplingRate);
-}
-
-void loop()
-{
-  if (sampler.available()) {
-    int bufferLength = 0;
-    uint16_t* cBuf = sampler.getFilledBuffer(&bufferLength);
-    for (int i = 0; i < bufferLength; i=i+2)
-    {
-      Serial.print(cBuf[i]);
-      Serial.print(",");
-      Serial.println(cBuf[i+1]);
-    }
-    Serial.println("----");
-    sampler.readBufferDone();
-  }
-}
-
-void ADC_Handler()
-{
-  sampler.handleInterrupt();
-}
-*/
