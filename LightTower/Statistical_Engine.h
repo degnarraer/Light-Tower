@@ -63,12 +63,6 @@ struct MinMaxDb
   db max = 0.0;
 };
 
-struct Sample
-{
-  int16_t value;
-  long sampleTime;
-};
-
 class MicrophoneMeasureCalleeInterface
 {
 public:
@@ -91,23 +85,24 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
   public:
     StatisticalEngine()
     {
-      //if(true == debugMode && debugLevel >= 0) Serial << "StatisticalEngine: Instantiate\n";
       power = 0;
     }
     ADCSampler    sampler;
-    void          HandleInterrupt();
     void          Setup();
+    void          HandleInterrupt();
     void          UpdateSoundData();
     SoundState    GetSoundState();
-    int           GetFFTIndex(float freq);
+    int           GetFFTBinIndexForFrequency(float freq);
     float         GetFreqForBin(unsigned int bin);
     int           GetFFTData(int position);
     
     //Testing
+  public:
     void          EnableTestMode();
     void          DisableTestMode();
-    void          TestFunctions();
     bool          GetTestMode();
+  private:
+    void          TestFunctions();
     void          SetTestData(int16_t data[FFT_MAX]);
     void          PrintDataBuffer(char tag[10]);
     int           testCount = 0;
@@ -121,11 +116,13 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
     float         t = 1/SAMPLE_RATE;
     
     //STATISTICS
+  public:
     float         GetVariance(unsigned int bin, int depth, enum BinDataType binDataType);
     float         GetStandardDeviation(unsigned int bin, int depth, enum BinDataType binDataType); 
     
     //FFT BIN FUNCTIONS
     //Bin data contains int values
+  public:
     MinMax        GetFFTBinMinMaxAverage(unsigned int bin, int depth, enum BinDataType binDataType);
     int           GetMaxFFTBin(int maxBinToTest);
     int           GetMaxFFTBinFromRange(int minBinToTest, int maxBinToTest);
@@ -142,6 +139,7 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
 
     //FREQUENCY RANGE FUNCTIONS
     //Frequency functions output decibals
+  public:
     MinMaxDb      GetFFTBinMinMaxAverageDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType);
     MinMax        GetFFTBinMinMaxAverageOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType);
     db            GetFFTBinAverageDb(unsigned int bin, int depth, enum BinDataType binDataType);
@@ -156,15 +154,16 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
     db            GetStandardDeviationDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType);
     float         power;
     float         powerDb;
- 
-    int           m_silenceIntegrator = 0;
-    const int     m_silenceIntegratorMin = 0;
-    const int     m_silenceIntegratorMax = silenceIntegratorMax;
+
+ //Sound Detection
+  public:
     const int     m_silenceDetectedThreshold = silenceDetectedThreshold;
     const int     m_soundDetectedThreshold = soundDetectedThreshold;
-    long          m_silenceStartTime;
-    
+    const int     m_silenceIntegratorMax = silenceIntegratorMax;
+    int           m_silenceIntegrator = 0;
+    const int     m_silenceIntegratorMin = 0;
   private:
+    long          m_silenceStartTime;
     unsigned long m_startMicros;
     unsigned long m_previousMicros;
     unsigned long m_currentMicros;
@@ -173,6 +172,8 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
     const int     m_silenceSubtractor = silenceSubtractor;
     SoundState    soundState = SoundState::SilenceDetected;
 
+  //Helpers
+  private:
     bool          NewDataReady();
     void          PlotData();
     void          FillDataBufferHelper(int testCase, float  a1, float  f1, float  a2, float  f2, float  a3, float  f3, float  a4, float  f4, float  a5, float  f5, float  a6, float  f6);
@@ -183,6 +184,7 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
     int16_t       m_data[FFT_MAX];
 
     //FFT BIN CIRCULAR BUFFER
+  private:
     void UpdateBinArray();
     void UpdateRunningAverageBinArray();
     int BinValues[BINS][BIN_SAVE_LENGTH];

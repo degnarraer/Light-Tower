@@ -29,7 +29,6 @@
 
 #define RANDOM_TIME random(10000, 120000)
 
-
 struct SceneConfig
 {
   VisualizationEntries transitionEntry;
@@ -117,5 +116,4 @@ class ActiveVisualizationController: public LEDController
     void Illuminate();
     void Deluminate();
 };
-
 #endif

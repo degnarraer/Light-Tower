@@ -755,7 +755,7 @@ void SolidColorTower::Tick1()
     if(true == debugMode && debugLevel >= 4) Serial << i << "|" << level << "\t";
   }
   if(true == debugMode && debugLevel >= 4) Serial << "\n";
-  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   color.red = color.red * maxLevelSave;
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;
@@ -960,7 +960,7 @@ void RandomFrequencySprites::Tick1()
     }
   }
   if(true == debugMode && debugLevel >= 5) Serial << "\n";
-  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   color.red = color.red * maxLevelSave;
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;
@@ -1125,7 +1125,7 @@ void FrequencySpriteSpiral::Tick1()
       maxBinSave = i;
     }
   }    
-  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   color.red = color.red * maxLevelSave;
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;  
@@ -1365,7 +1365,7 @@ bool VerticalFFTAmplitudeTower::Loop()
 void VerticalFFTAmplitudeTower::Tick1()
 {
   
-  float  endBin = m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ);
+  float  endBin = m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ);
   float  leds = NUMLEDS;
   float  binsPerLED = endBin/leds;
   float  ledsPerBin = leds/endBin;
@@ -1776,9 +1776,9 @@ bool ChasingSprites::Loop()
 void ChasingSprites::Tick1()
 {
   
-  bassColor = GetColor( m_statisticalEngine.GetMaxFFTBinFromRange( m_statisticalEngine.GetFFTIndex(0.0), m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ/3)), m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
-  midColor = GetColor( m_statisticalEngine.GetMaxFFTBinFromRange( m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ/3)+1, m_statisticalEngine.GetFFTIndex(2*MAX_DISPLAYED_FREQ/3)), m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
-  highColor = GetColor( m_statisticalEngine.GetMaxFFTBinFromRange( m_statisticalEngine.GetFFTIndex(2*MAX_DISPLAYED_FREQ/3)+1, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ)), m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+  bassColor = GetColor( m_statisticalEngine.GetMaxFFTBinFromRange( m_statisticalEngine.GetFFTBinIndexForFrequency(0.0), m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ/3)), m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
+  midColor = GetColor( m_statisticalEngine.GetMaxFFTBinFromRange( m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ/3)+1, m_statisticalEngine.GetFFTBinIndexForFrequency(2*MAX_DISPLAYED_FREQ/3)), m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
+  highColor = GetColor( m_statisticalEngine.GetMaxFFTBinFromRange( m_statisticalEngine.GetFFTBinIndexForFrequency(2*MAX_DISPLAYED_FREQ/3)+1, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ)), m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
     
   m_bassTime = GetNewBassTime();
   m_midTime = GetNewMidTime();
@@ -1984,7 +1984,7 @@ void FrequencyColorStreamer::Tick1()
   }
   if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
-    m_BottomColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+    m_BottomColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   }
   else
   {
@@ -2093,7 +2093,7 @@ void UpDownFrequencyColorStreamer::Tick1()
   }
   if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
-    m_BottomColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+    m_BottomColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   }
   else
   {
@@ -2182,7 +2182,7 @@ void UpDownMaxFrequencyStreamer::Tick2()
         m_maxBin = i;
       }
     }
-    m_Color = GetColor(m_maxBin, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+    m_Color = GetColor(m_maxBin, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   }
   else
   {
@@ -2329,7 +2329,7 @@ void ScrollingFrequencyColorRectangles::Tick2()
         maxBinSave = i;
       }
     }
-    m_detectedColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+    m_detectedColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   }
   else
   {
@@ -2662,8 +2662,8 @@ void Opposites::Tick1()
         minBinSave = i;
       }
     }
-    colorMax = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
-    colorMin = GetColor(minBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+    colorMax = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
+    colorMin = GetColor(minBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
     int count = 0;
     for(int i = 0; i < NUMLEDS; i = i + m_barLength)
     {
@@ -2751,7 +2751,7 @@ void Snake::Tick1()
       maxBinSave = i;
     }
   }    
-  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTIndex(MAX_DISPLAYED_FREQ));
+  CRGB color = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   color.red = color.red * maxLevelSave;
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;

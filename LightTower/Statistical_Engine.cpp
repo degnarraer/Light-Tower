@@ -625,7 +625,7 @@ int StatisticalEngine::GetFFTBinRMS(unsigned int bin, int depth, enum BinDataTyp
   return sqroot;
 }
 
-int StatisticalEngine::GetFFTIndex(float freq)
+int StatisticalEngine::GetFFTBinIndexForFrequency(float freq)
 {
   if(freq > MAX_DISPLAYED_FREQ) freq = MAX_DISPLAYED_FREQ;
   if(freq < 0) freq = 0.0;
@@ -657,8 +657,8 @@ db StatisticalEngine::GetFFTBinAverageDb(unsigned int bin, int depth, enum BinDa
 
 float  StatisticalEngine::GetRMSOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int total = 0;
   int i = startBin;
   int count = 0;
@@ -680,8 +680,8 @@ float  StatisticalEngine::GetRMSOfFreqRange(float startFreq, float endFreq, int 
 
 db StatisticalEngine::GetRMSDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int total = 0;
   int i = startBin;
   int count = 0;
@@ -704,8 +704,8 @@ db StatisticalEngine::GetRMSDbOfFreqRange(float startFreq, float endFreq, int de
 
 db StatisticalEngine::GetRSSDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int total = 0;
   int i = startBin;
   while(i <= endBin)
@@ -723,8 +723,8 @@ db StatisticalEngine::GetRSSDbOfFreqRange(float startFreq, float endFreq, int de
 
 float  StatisticalEngine::GetRSSOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int total = 0;
   int i = startBin;
   while(i <= endBin)
@@ -742,8 +742,8 @@ float  StatisticalEngine::GetRSSOfFreqRange(float startFreq, float endFreq, int 
 
 db StatisticalEngine::GetMinDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int minimum = INT_MAX;
   int i = startBin;
   while(i <= endBin)
@@ -761,8 +761,8 @@ db StatisticalEngine::GetMinDbOfFreqRange(float startFreq, float endFreq, int de
 
 db StatisticalEngine::GetMaxDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int maximum = 0;
   int i = startBin;
   while(i <= endBin)
@@ -781,8 +781,8 @@ db StatisticalEngine::GetMaxDbOfFreqRange(float startFreq, float endFreq, int de
 db StatisticalEngine::GetAverageDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
   if(true == debugMode && debugLevel >= 5) Serial << "GetAverageDbOfFreqRange: " << "    Start Freq: " << startFreq << "    End Freq: " << endFreq;
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int totalCount = 0;
   int result = 0;
   int i = startBin;
@@ -819,8 +819,8 @@ db StatisticalEngine::GetAverageDbOfFreqRange(float startFreq, float endFreq, in
 
 float  StatisticalEngine::GetAverageOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int total = 0;
   int i = startBin;
   int totalCount = 0;
@@ -841,8 +841,8 @@ float  StatisticalEngine::GetAverageOfFreqRange(float startFreq, float endFreq, 
 
 float StatisticalEngine::GetMinOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int minimum = INT_MAX;
   int i = startBin;
   while(i <= endBin)
@@ -859,8 +859,8 @@ float StatisticalEngine::GetMinOfFreqRange(float startFreq, float endFreq, int d
 
 float StatisticalEngine::GetMaxOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int maximum = 0;
   int i = startBin;
   while(i <= endBin)
@@ -880,8 +880,8 @@ MinMaxDb StatisticalEngine::GetFFTBinMinMaxAverageDbOfFreqRange(float startFreq,
 {
   if(true == debugMode && debugLevel >= 5) Serial << "GetFFTBinMinMaxAverageDbOfFreqRange: " << "    Start Freq: " << startFreq << "    End Freq: " << endFreq;
   MinMaxDb result;
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   int maxTotal = 0;
   int maxCount = 0;
   int minTotal = 0;
@@ -936,8 +936,8 @@ MinMaxDb StatisticalEngine::GetFFTBinMinMaxAverageDbOfFreqRange(float startFreq,
 
 MinMax StatisticalEngine::GetFFTBinMinMaxAverageOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   MinMax result;
   int avg = GetAverageOfFreqRange(startFreq, endFreq, depth, binDataType);
   unsigned int maxTotal = 0;
@@ -1013,8 +1013,8 @@ float  StatisticalEngine::GetStandardDeviation(unsigned int bin, int depth, enum
 
 db StatisticalEngine::GetVarianceDbOfFreqRange(float startFreq, float endFreq, int depth, enum BinDataType binDataType)
 {
-  int startBin = GetFFTIndex(startFreq);
-  int endBin = GetFFTIndex(endFreq);
+  int startBin = GetFFTBinIndexForFrequency(startFreq);
+  int endBin = GetFFTBinIndexForFrequency(endFreq);
   float  mean = GetAverageDbOfFreqRange(startFreq, endFreq, depth, binDataType);
   
   // Compute sum squared  

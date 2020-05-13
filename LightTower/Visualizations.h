@@ -29,7 +29,7 @@
 enum VisualizationEntries
 { 
   VisualizationEntries_Nothing,
-  
+ 
   VisualizationEntries_CommandsStart,
   VisualizationEntries_GetNext,
   VisualizationEntries_GetPrevious,
