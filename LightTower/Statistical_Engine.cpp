@@ -39,10 +39,15 @@ void StatisticalEngine::Setup()
 
 void StatisticalEngine::UpdateSoundData()
 {
-  if(true == NewDataReady())
+  int i = 0;
+  while(sampler.GetNumberOfReadings() > 0 && true == NewDataReady() && i <= MAX_BUFFERS_TO_PROCESS)
   {
-    AnalyzeSound();
-    UpdateSoundState(); 
+    if(true == NewDataReady())
+    {
+      AnalyzeSound();
+      UpdateSoundState();
+      ++i;
+    } 
   }
 }
 
@@ -63,7 +68,7 @@ bool StatisticalEngine::NewDataReady()
           ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10(ADDBITS - cBuf[1])/log10(ADDBITS)));
         }
       }
-      sampler.SetReadBufferDone();
+      sampler.SetReadCompleted();
       return true;
     }
     else
@@ -260,7 +265,7 @@ void StatisticalEngine::AnalyzeSound()
     ampGain = testAmpGain;
     fftGain = testFFTGain;
   }
-  if(true == debugMode && debugLevel >= 1) Serial << "Amplitude Gain: " << ampGain << "\t" << "FFT Gain: " << fftGain << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Amplitude Gain: " << ampGain << "\t" << "FFT Gain: " << fftGain << "\n";
   for(int i = 0; i < CHANNEL_SIZE; ++i)
   {
       avg += m_data[i];
@@ -303,7 +308,7 @@ void StatisticalEngine::AnalyzeSound()
   ZeroFFT(m_data, FFT_MAX);
   if(true == debugPlotFFT) PlotData();
   UpdateBinArray();
-  if(true == debugMode && debugLevel >= 1) Serial << "Min: " << signalMin << "\tMax: " << signalMax << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Min: " << signalMin << "\tMax: " << signalMax << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
   PrintDataBuffer("After FFT: ");
 }
 void StatisticalEngine::PlotData()
@@ -356,7 +361,7 @@ void StatisticalEngine::UpdateSoundState()
   m_silenceIntegrator += delta;
   if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
   if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
-  if(true == debugMode && debugLevel >= 0) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
   if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
   {
     if(true == debugMode && debugLevel >= 1) Serial << "Sound Detected\n";

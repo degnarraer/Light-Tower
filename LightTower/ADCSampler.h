@@ -17,7 +17,7 @@ class ADCSampler {
     uint16_t* GetFilledBuffer(int *bufferLength);
     unsigned int GetNumberOfReadings();
     void StartNextBuffer();
-    void SetReadBufferDone();
+    void SetReadCompleted();
   private:
     unsigned int samplingRate;
     volatile bool dataReady;
@@ -26,8 +26,6 @@ class ADCSampler {
   public:
     unsigned int adcDMAIndex;        //!< This hold the index of the next DMA buffer
     unsigned int adcTransferIndex;   //!< This hold the last filled buffer
-    unsigned int adcReadIndex;       //!< This hold the last read buffer
-
 };
 
 #endif /* ADCSAMPLER_H */
