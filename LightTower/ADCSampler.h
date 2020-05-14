@@ -9,7 +9,7 @@
 class ADCSampler {
   public:
     ADCSampler();
-    void Begin(unsigned int samplingRate);
+    void SetSampleRateAndStart(unsigned int samplingRate);
     void End();
     void HandleInterrupt();
     bool IsAvailable();

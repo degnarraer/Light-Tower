@@ -53,7 +53,6 @@ class InstantSwitch: public Transitions
     bool Tick1();
 };
 
-
 class FadeTransition: public Transitions
 {
   public:
