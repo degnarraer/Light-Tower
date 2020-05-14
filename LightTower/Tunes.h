@@ -16,11 +16,11 @@ static const MicType micType = MicType::MIC_TYPE_FIXEDGAIN;
 static bool   testMode = false;
 
 //Output Debug Messages
-static bool   debugMode = true;
+static bool   debugMode = false;
 static bool   debugNanInf = false;
 static bool   debugPlotMic = false;
 static bool   debugPlotFFT = false;
-static int    debugLevel = 1;
+static int    debugLevel = 2;
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;
@@ -52,8 +52,8 @@ static float triggerLevelGain = 1.0;
 const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
 const unsigned int BUFFER_SIZE = CHANNEL_SIZE*NUM_CHANNELS;
-const unsigned int NUMBER_OF_BUFFERS = 3;  /// Make this 3 or greater
-
+const unsigned int NUMBER_OF_BUFFERS = 10;  /// Make this 3 or greater
+const unsigned int MAX_BUFFERS_TO_PROCESS = 3;
 //Sound Detection
 const float   SOUND_DETECT_THRESHOLD = 0.05;
 const int     silenceIntegratorMax = 50000;

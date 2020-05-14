@@ -5,7 +5,6 @@ ADCSampler::ADCSampler()
   dataReady = false;
   adcDMAIndex = 0;
   adcTransferIndex = 0;
-  adcReadIndex = 0;
   for (int i = 0; i < NUMBER_OF_BUFFERS; i++)
   {
     memset((void *)adcBuffer[i], 0, BUFFER_SIZE);
@@ -60,7 +59,6 @@ void ADCSampler::SetSampleRateAndStart(unsigned int samplingRate)
   dataReady = false;
   adcDMAIndex = 0;
   adcTransferIndex = 0;
-  adcReadIndex = 0;
   for (int i = 0; i < NUMBER_OF_BUFFERS; i++)
   {
     memset((void *)adcBuffer[i], 0, BUFFER_SIZE);
@@ -97,15 +95,15 @@ void ADCSampler::HandleInterrupt()
 }
 void ADCSampler::StartNextBuffer()
 {
-  bufferOverflow = ((adcDMAIndex - adcReadIndex) >= NUMBER_OF_BUFFERS ? true : false);
-  adcTransferIndex = adcDMAIndex;
+  bufferOverflow = ((adcDMAIndex - adcTransferIndex) >= NUMBER_OF_BUFFERS ? true : false);
   adcDMAIndex = adcDMAIndex + 1;
+  if(true == bufferOverflow) adcTransferIndex += 1;
   ADC->ADC_RNPR  = (unsigned long) adcBuffer[(adcDMAIndex + 1) % NUMBER_OF_BUFFERS];
   ADC->ADC_RNCR  = BUFFER_SIZE;
 }
 unsigned int ADCSampler::GetNumberOfReadings()
 {
-  return adcDMAIndex - adcReadIndex;
+  return adcDMAIndex - adcTransferIndex;
 }
 bool ADCSampler::IsAvailable()
 {
@@ -118,13 +116,21 @@ unsigned int ADCSampler::GetSamplingRate()
 
 uint16_t* ADCSampler::GetFilledBuffer(int *bufferLength)
 {
+  if(true == debugMode && debugLevel >= 3) Serial << "Read Buffer: " << adcDMAIndex << "|" << adcTransferIndex << "\n";
   *bufferLength = BUFFER_SIZE;
   return adcBuffer[(adcTransferIndex % NUMBER_OF_BUFFERS)];
 }
 
-void ADCSampler::SetReadBufferDone()
+void ADCSampler::SetReadCompleted()
 {
-  adcReadIndex += 1;
-  dataReady = false;
+  adcTransferIndex += 1;
+  if(adcTransferIndex >= adcDMAIndex - 1)
+  {
+    dataReady = false;
+  }
+  else
+  {
+    dataReady = true;
+  }
   if(true == debugMode && debugLevel >= 3) Serial << "Read Buffer Done\n";
 }
