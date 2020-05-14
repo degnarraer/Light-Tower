@@ -11,15 +11,15 @@ ADCSampler::ADCSampler()
     memset((void *)adcBuffer[i], 0, BUFFER_SIZE);
   }
 }
-void ADCSampler::Begin(unsigned int samplingRate)
+void ADCSampler::SetSampleRateAndStart(unsigned int samplingRate)
 {
   this->samplingRate = samplingRate;
   // Turning devices Timer on.
-  pmc_enable_periph_clk(ID_TC0);
+  pmc_enable_periph_clk(ID_TC1);
 
 
   // Configure timer
-  TC_Configure(TC0, 0, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET | TC_CMR_ASWTRG_CLEAR | TC_CMR_TCCLKS_TIMER_CLOCK1);
+  TC_Configure(TC0, 1, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET | TC_CMR_ASWTRG_CLEAR | TC_CMR_TCCLKS_TIMER_CLOCK1);
 
   // It is good to have the timer 0 on PIN2, good for Debugging
   //int result = PIO_Configure( PIOB, PIO_PERIPH_B, PIO_PB25B_TIOA0, PIO_DEFAULT);
@@ -36,7 +36,7 @@ void ADCSampler::Begin(unsigned int samplingRate)
   ADC->ADC_MR |= ADC_MR_TRACKTIM(15);
   ADC->ADC_MR |= ADC_MR_TRANSFER(1);
   ADC->ADC_MR |= ADC_MR_TRGEN_EN;
-  ADC->ADC_MR |= ADC_MR_TRGSEL_ADC_TRIG1; // selecting TIOA0 as trigger.
+  ADC->ADC_MR |= ADC_MR_TRGSEL_ADC_TRIG2; // selecting TIOA1 as trigger.
   ADC->ADC_CHER = ADC_CHANNELS;
 
   /* Interupts */
@@ -53,8 +53,8 @@ void ADCSampler::Begin(unsigned int samplingRate)
   unsigned int cycles = 42000000 / samplingRate;
 
   /*  timing of ADC */
-  TC_SetRC(TC0, 0, cycles);      // TIOA0 goes HIGH on RC.
-  TC_SetRA(TC0, 0, cycles / 2);  // TIOA0 goes LOW  on RA.
+  TC_SetRC(TC0, 1, cycles);      // TIOA0 goes HIGH on RC.
+  TC_SetRA(TC0, 1, cycles / 2);  // TIOA0 goes LOW  on RA.
 
   // We have to reinitalise just in case the Sampler is stopped and restarted...
   dataReady = false;
@@ -77,9 +77,9 @@ void ADCSampler::Begin(unsigned int samplingRate)
   ADC->ADC_CR   |=  ADC_CR_START;    //start waiting for trigger.
 
   // Start timer
-  TC0->TC_CHANNEL[0].TC_SR;
-  TC0->TC_CHANNEL[0].TC_CCR = TC_CCR_CLKEN;
-  TC_Start(TC0, 0);
+  TC0->TC_CHANNEL[1].TC_SR;
+  TC0->TC_CHANNEL[1].TC_CCR = TC_CCR_CLKEN;
+  TC_Start(TC0, 1);
 }
 void ADCSampler::End()
 {

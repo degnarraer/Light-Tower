@@ -34,25 +34,16 @@ void StatisticalEngine::HandleInterrupt()
 void StatisticalEngine::Setup()
 {
   if(true == debugMode && debugLevel >= 0) Serial << "StatisticalEngine: Setup Complete\n";
-  //sampler.begin(SAMPLE_RATE);
+  sampler.SetSampleRateAndStart(SAMPLE_RATE);
 }
 
 void StatisticalEngine::UpdateSoundData()
 {
-
-  /*
-  if(
-  true == NewDataReady())
+  if(true == NewDataReady())
   {
     AnalyzeSound();
     UpdateSoundState(); 
   }
-  */
-  sampler.Begin(SAMPLE_RATE);
-  //THIS FUCKING SUCKS.... ADC SAMPLING USES Timer 0, so does FAST LED, so we have to wait for this to end before we can move on
-  while(false == NewDataReady());
-  AnalyzeSound();
-  UpdateSoundState();
 }
 
 bool StatisticalEngine::NewDataReady()
