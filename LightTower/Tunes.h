@@ -20,7 +20,7 @@ static bool   debugMode = false;
 static bool   debugNanInf = false;
 static bool   debugPlotMic = false;
 static bool   debugPlotFFT = false;
-static int    debugLevel = 2;
+static int    debugLevel = 0;
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;
@@ -52,8 +52,9 @@ static float triggerLevelGain = 1.0;
 const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
 const unsigned int BUFFER_SIZE = CHANNEL_SIZE*NUM_CHANNELS;
-const unsigned int NUMBER_OF_BUFFERS = 10;  /// Make this 3 or greater
-const unsigned int MAX_BUFFERS_TO_PROCESS = 3;
+const unsigned int NUMBER_OF_BUFFERS = 20;  /// Size of circular buffer for holding microphone sample sets
+const unsigned int MAX_BUFFERS_TO_PROCESS = 20;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
+
 //Sound Detection
 const float   SOUND_DETECT_THRESHOLD = 0.05;
 const int     silenceIntegratorMax = 50000;

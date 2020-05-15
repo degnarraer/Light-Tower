@@ -40,14 +40,14 @@ void StatisticalEngine::Setup()
 void StatisticalEngine::UpdateSoundData()
 {
   int i = 0;
-  while(sampler.GetNumberOfReadings() > 0 && true == NewDataReady() && i <= MAX_BUFFERS_TO_PROCESS)
+  while( i < MAX_BUFFERS_TO_PROCESS
+      && sampler.GetNumberOfReadings() > 0 
+      && true == NewDataReady() )
   {
-    if(true == NewDataReady())
-    {
-      AnalyzeSound();
-      UpdateSoundState();
-      ++i;
-    } 
+    AnalyzeSound();
+    UpdateSoundState();
+    ++i;
+    //if(true == debugMode && debugLevel >= 0 && i >= MAX_BUFFERS_TO_PROCESS) Serial << "2\n";
   }
 }
 
