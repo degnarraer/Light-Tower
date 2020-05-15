@@ -126,10 +126,12 @@ void ADCSampler::SetReadCompleted()
   adcTransferIndex += 1;
   if(adcTransferIndex >= adcDMAIndex - 1)
   {
+    //if(true == debugMode && debugLevel >= 0) Serial << "3\n";
     dataReady = false;
   }
   else
   {
+    //if(true == debugMode && debugLevel >= 0) Serial << "1";
     dataReady = true;
   }
   if(true == debugMode && debugLevel >= 3) Serial << "Read Buffer Done\n";
