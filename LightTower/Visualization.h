@@ -846,17 +846,32 @@ class ScrollingRainbow: public Visualizations
     virtual bool Loop();
     virtual void End();
     
+    void Tick0();
     void Tick1();
     void Tick2();
     void Tick3();
-    CRGB m_currentColor;
-    CRGB m_fadeToColor;
-    int m_currentColorCount = 0;
-    int m_renderCount = 0;
-    const int m_numColors = 7;
-    const int m_colorLength = random(1, NUMLEDS);
-    struct FadeController m_fadeController;
-    
+    void Tick4();
+    void Tick5();
+    const unsigned int m_maxTime = 10000;
+    unsigned int m_randomTime1;
+    unsigned int m_randomTime2;
+    struct FadeController m_fadeController0;
+    unsigned int m_renderCount0 = 0;
+    unsigned int m_desiredRenderCount0 = 0;
+    struct FadeController m_fadeController1;
+    unsigned int m_renderCount1 = 0;
+    unsigned int m_desiredRenderCount1 = 0;
+    struct FadeController m_fadeController2;
+    unsigned int m_renderCount2 = 0;
+    unsigned int m_desiredRenderCount2 = 0;
+    CRGB m_startingColor1;
+    CRGB m_currentColor1;
+    CRGB m_fadeToColor1;
+    CRGB m_startingColor2;
+    CRGB m_currentColor2;
+    CRGB m_fadeToColor2;
+    const int m_numColors = 256;
+    unsigned int m_colorLength = random(1, NUMLEDS);
 };
 
 class ScrollingFrequencyColorRectangles: public Visualizations
@@ -923,7 +938,6 @@ class ScrollingFrequencySprites: public Visualizations
     void Tick2();
     const int m_numberOfSprites = random(1, NUMLEDS+1);
     struct Sprite *m_sprites;
-    
 };
 
 class ScrollingSpeedFrequencySprites: public Visualizations

@@ -41,6 +41,8 @@ void ActiveVisualizationController::Setup()
   m_statisticalEngine.Setup();
   m_statisticalEngine.ConnectCallback(this);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries::VisualizationEntries_SoundDetectionTester, ULONG_MAX);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingRainbow, 600000);
+  
 /*
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 600000);

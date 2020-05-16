@@ -314,7 +314,7 @@ void StatisticalEngine::AnalyzeSound()
 void StatisticalEngine::PlotData()
 {
   
-  for(int i=0; i < CHANNEL_SIZE; i++)
+  for(int i=0; i < 2 *CHANNEL_SIZE; i++)
   {
     Serial.println(0);
   }
