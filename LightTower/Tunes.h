@@ -10,7 +10,7 @@ enum MicType
   MIC_TYPE_AUTOGAIN,
   MIC_TYPE_FIXEDGAIN
 };
-static const MicType micType = MicType::MIC_TYPE_FIXEDGAIN;
+static const MicType micType = MicType::MIC_TYPE_AUTOGAIN;
 
 //Run Fixed Data Tables instead of microphone
 static bool   testMode = false;

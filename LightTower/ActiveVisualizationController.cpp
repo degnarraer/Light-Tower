@@ -41,12 +41,14 @@ void ActiveVisualizationController::Setup()
   m_statisticalEngine.Setup();
   m_statisticalEngine.ConnectCallback(this);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries::VisualizationEntries_SoundDetectionTester, ULONG_MAX);
-/*
+  
+  /*
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Confirmation, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_WaterFallFireStreamer, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SolidColorTower, 600000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingSolidColorTower, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_PowerBarWithBassSprite, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomFrequencySprites, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FFTAmplitudes, 600000);
@@ -63,6 +65,7 @@ void ActiveVisualizationController::Setup()
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownFrequencyColorStreamer, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownMaxFrequencyStreamer, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingRainbow, 600000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingColors2, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencyColorRectangles, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencySprites, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingSpeedFrequencySprites, 600000);
@@ -194,12 +197,12 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
       if(false == m_1stSoundDetected)
       {
         m_1stSoundDetected = true;
-        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_GetRandom, RANDOM_TIME);
+        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
         GetNextTransition();
       }
       else if(false == m_gainAdjustModeActive)
       {
-        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_GetRandom, RANDOM_TIME);
+        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
         GetNextTransition();
       }
     break;
@@ -207,7 +210,7 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
       if(true == debugMode && debugLevel >= 1) Serial << "Silence Detected Callback\n";
       if(false == m_gainAdjustModeActive)
       {
-        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, m_visualizationsFactory.GetRandomStaticVisualizationEntry(), ULONG_MAX);
+        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, m_visualizationsFactory.GetRandomStaticVisualizationEntry(), ULONG_MAX);
         GetNextTransition(); 
       }
     break;

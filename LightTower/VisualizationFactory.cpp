@@ -188,16 +188,16 @@ VisualizationConfig VisualizationsFactory::GetRandomForegroundVisualizationConfi
 
 VisualizationEntries VisualizationsFactory::GetRandomStaticVisualizationEntry()
 {
-  switch(random(2))
+  switch(random(3))
   {
     case 0: 
-      //return VisualizationEntries::VisualizationEntries_ColorFadingTower;
-      return VisualizationEntries::VisualizationEntries_ScrollingRainbow;
-      
+      return VisualizationEntries::VisualizationEntries_ColorFadingTower;      
     break;
     case 1:
-      //return VisualizationEntries::VisualizationEntries_ColorFadingTower;
       return VisualizationEntries::VisualizationEntries_ScrollingRainbow;
+    break;
+    case 2:
+      return VisualizationEntries::VisualizationEntries_FadingColors2;
     break;
     default:
       return VisualizationEntries::VisualizationEntries_ColorFadingTower;
