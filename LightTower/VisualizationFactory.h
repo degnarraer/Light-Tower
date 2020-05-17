@@ -42,7 +42,7 @@ struct VisualizationConfig
   bool isTuner;
 };
     
-const VisualizationConfig visualizationConfig[34] PROGMEM =
+const VisualizationConfig visualizationConfig[35] PROGMEM =
 {
   //visualizationEntry                                                                    Visualization Instantiation                            Transition Instantiation           isTransition   isVisualization   isForeground  isBackground  isConfirmation  isTuner
 { VisualizationEntries::VisualizationEntries_InstantSwitch,                               NULL,                                                  InstantSwitch::GetInstance,        true,          false,            true,         false,        false,          false },
@@ -56,6 +56,7 @@ const VisualizationConfig visualizationConfig[34] PROGMEM =
 { VisualizationEntries::VisualizationEntries_Confirmation,                                Confirmation::GetInstance,                             NULL,                              false,         false,            false,        false,        true,           false },
 { VisualizationEntries::VisualizationEntries_WaterFallFireStreamer,                       WaterFallFireStreamer::GetInstance,                    NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_SolidColorTower,                             SolidColorTower::GetInstance,                          NULL,                              false,         true,             true,         true,         false,          false },
+{ VisualizationEntries::VisualizationEntries_FadingSolidColorTower,                       FadingSolidColorTower::GetInstance,                    NULL,                              false,         true,             true,         true,         false,          false },
 { VisualizationEntries::VisualizationEntries_PowerBarWithBassSprite,                      PowerBarWithBassSprite::GetInstance,                   NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_RandomFrequencySprites,                      RandomFrequencySprites::GetInstance,                   NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_FFTAmplitudes,                               FFTAmplitudes::GetInstance,                            NULL,                              false,         true,             true,         false,        false,          false },
@@ -72,6 +73,7 @@ const VisualizationConfig visualizationConfig[34] PROGMEM =
 { VisualizationEntries::VisualizationEntries_UpDownFrequencyColorStreamer,                UpDownFrequencyColorStreamer::GetInstance,             NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_UpDownMaxFrequencyStreamer,                  UpDownMaxFrequencyStreamer::GetInstance,               NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_ScrollingRainbow,                            ScrollingRainbow::GetInstance,                         NULL,                              false,         false,            true,         true,         false,          false },
+{ VisualizationEntries::VisualizationEntries_FadingColors2,                               FadingColors2::GetInstance,                            NULL,                              false,         false,            true,         true,         false,          false },
 { VisualizationEntries::VisualizationEntries_ScrollingFrequencyColorRectangles,           ScrollingFrequencyColorRectangles::GetInstance,        NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_ScrollingFrequencySprites,                   ScrollingFrequencySprites::GetInstance,                NULL,                              false,         true,             true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_ScrollingSpeedFrequencySprites,              ScrollingSpeedFrequencySprites::GetInstance,           NULL,                              false,         true,             true,         false,        false,          false },

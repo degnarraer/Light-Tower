@@ -332,6 +332,38 @@ class SolidColorTower: public Visualizations
         
 };
 
+class FadingSolidColorTower: public Visualizations
+{
+  public:
+    FadingSolidColorTower( int duration
+                   , StatisticalEngine &statisticalEngine
+                   , VisualizationsCalleeInterface *callee )
+                   : Visualizations( duration
+                                   , VisualizationType::VISUALIZATION
+                                   , statisticalEngine
+                                   , callee ){}
+    virtual ~FadingSolidColorTower()
+    {
+      if(true == debugMode && debugLevel >= 2) Serial << "Delete SolidColorTower\n";
+    }
+    static Visualizations* GetInstance( int duration
+                                      , StatisticalEngine &statisticalEngine
+                                      , VisualizationsCalleeInterface *callee );
+    virtual void Start();
+    virtual bool Loop();
+    virtual void End();
+  private:
+    void Tick1();
+    void Tick2();
+    struct FadeController m_fadeController;
+    CRGB m_startColor;
+    CRGB m_currentColor;
+    CRGB m_finalColor;
+    unsigned int m_desiredFadeCount = 50;
+    unsigned int m_desiredRenderCount = 50;
+    unsigned int m_renderCount = 0;
+};
+
 
 class PowerBarWithBassSprite: public Visualizations
 {
@@ -815,15 +847,65 @@ class UpDownMaxFrequencyStreamer: public Visualizations
     virtual void Start();
     virtual bool Loop();
     virtual void End();
-    
     void Tick1();
     void Tick2();
     CRGB m_Color;
     int m_Count;
     int m_maxBin;
     const int m_colorTime = 200;
-    
 };
+
+class FadingColors2: public Visualizations
+{
+  public:
+    FadingColors2( int duration
+                 , StatisticalEngine &statisticalEngine
+                 , VisualizationsCalleeInterface *callee )
+                 : Visualizations( duration
+                                 , VisualizationType::VISUALIZATION
+                                 , statisticalEngine
+                                 , callee ){}
+    virtual ~FadingColors2()
+    {
+      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingRainbow\n";
+    }
+    static Visualizations* GetInstance( int duration
+                                      , StatisticalEngine &statisticalEngine
+                                      , VisualizationsCalleeInterface *callee );
+    virtual void Start();
+    virtual bool Loop();
+    virtual void End();
+    
+    void Tick0();
+    void Tick1();
+    void Tick2();
+    void Tick3();
+    void Tick4();
+    void Random();
+
+    bool m_getRandom = false;
+    const unsigned int m_maxTime = 10000;
+    unsigned int m_randomTime1;
+    unsigned int m_randomTime2;
+    struct FadeController m_fadeController0;
+    unsigned int m_renderCount0 = 0;
+    unsigned int m_desiredRenderCount0 = 0;
+    struct FadeController m_fadeController1;
+    unsigned int m_renderCount1 = 0;
+    unsigned int m_desiredRenderCount1 = 0;
+    struct FadeController m_fadeController2;
+    unsigned int m_renderCount2 = 0;
+    unsigned int m_desiredRenderCount2 = 0;
+    CRGB m_startingColor1;
+    CRGB m_currentColor1;
+    CRGB m_fadeToColor1;
+    CRGB m_startingColor2;
+    CRGB m_currentColor2;
+    CRGB m_fadeToColor2;
+    const int m_numColors = 256;
+    unsigned int m_colorLength = random(1, NUMLEDS);
+};
+
 
 class ScrollingRainbow: public Visualizations
 {
@@ -846,32 +928,16 @@ class ScrollingRainbow: public Visualizations
     virtual bool Loop();
     virtual void End();
     
-    void Tick0();
     void Tick1();
     void Tick2();
     void Tick3();
-    void Tick4();
-    void Tick5();
-    const unsigned int m_maxTime = 10000;
-    unsigned int m_randomTime1;
-    unsigned int m_randomTime2;
-    struct FadeController m_fadeController0;
-    unsigned int m_renderCount0 = 0;
-    unsigned int m_desiredRenderCount0 = 0;
-    struct FadeController m_fadeController1;
-    unsigned int m_renderCount1 = 0;
-    unsigned int m_desiredRenderCount1 = 0;
-    struct FadeController m_fadeController2;
-    unsigned int m_renderCount2 = 0;
-    unsigned int m_desiredRenderCount2 = 0;
-    CRGB m_startingColor1;
-    CRGB m_currentColor1;
-    CRGB m_fadeToColor1;
-    CRGB m_startingColor2;
-    CRGB m_currentColor2;
-    CRGB m_fadeToColor2;
-    const int m_numColors = 256;
-    unsigned int m_colorLength = random(1, NUMLEDS);
+    CRGB m_currentColor;
+    CRGB m_fadeToColor;
+    int m_currentColorCount = 0;
+    int m_renderCount = 0;
+    const int m_numColors = 7;
+    const int m_colorLength = random(1, NUMLEDS);
+    struct FadeController m_fadeController;    
 };
 
 class ScrollingFrequencyColorRectangles: public Visualizations

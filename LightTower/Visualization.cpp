@@ -778,6 +778,75 @@ void SolidColorTower::End()
   Ended();
 }
 
+//********* FadingSolidColorTower *********
+ Visualizations* FadingSolidColorTower::GetInstance( int duration
+                                                   , StatisticalEngine &statisticalEngine
+                                                   , VisualizationsCalleeInterface *callee )
+{
+  if(true == debugMode && debugLevel >= 2) Serial << "New SolidColorTower\n";
+  return new FadingSolidColorTower(duration, statisticalEngine, callee);
+}
+void FadingSolidColorTower::Start()
+{
+  if(true == debugMode && debugLevel >= 1) Serial << "SolidColorTower Start\n";
+  Started();
+}
+bool FadingSolidColorTower::Loop() 
+{
+  if(false == m_visualizationStarted) {Start(); m_visualizationStarted = true;}
+  bool updateRequired = false;
+  unsigned long currentTime = millis();
+  if(true == debugMode && debugLevel >= 3) Serial << "SolidColorTower Loop: " << currentTime-m_resetTimer << " | " << m_duration << "\n";
+  if(currentTime-m_timers[0] >= 0) {ResetTimer(0); Tick1(); updateRequired = true;}
+  if(m_renderCount >= m_desiredRenderCount) {m_renderCount = 0; Tick2(); updateRequired = true;}
+  if(currentTime-m_resetTimer >= m_duration) {End(); updateRequired = true;}
+  return updateRequired;
+}
+void FadingSolidColorTower::Tick1()
+{
+  if (m_statisticalEngine.power >= SILENCE_THRESHOLD)
+  {
+    CRGB color;
+    m_currentColor = FadeColor(m_fadeController);
+    ++m_renderCount;
+    color.red = m_currentColor.red * m_statisticalEngine.powerDb;
+    color.blue = m_currentColor.blue * m_statisticalEngine.powerDb;
+    color.green = m_currentColor.green * m_statisticalEngine.powerDb;
+    m_layer[0] = color;
+  }
+  else
+  {
+    m_layer[0] = CRGB::Black;
+  }
+  for(int i=0; i<NUMSTRIPS; ++i)
+  {
+     m_strips[i] = m_layer[0];
+  }
+}
+void FadingSolidColorTower::Tick2()
+{
+  int maxBinSave = 0;
+  float  maxLevelSave = 0.0;
+  if(true == debugMode && debugLevel >= 4) Serial << "SolidColorTower Tick1: \t";
+  for(int i = 0; i < BINS; ++i)
+  {
+    float  level = GetNormalizedSoundLevelForBin(i, m_desiredFadeCount, SoundLevelOutputType_Beat);
+    if(level > maxLevelSave)
+    {
+      maxLevelSave = level;
+      maxBinSave = i;
+    }
+    if(true == debugMode && debugLevel >= 4) Serial << i << "|" << level << "\t";
+  }
+  if(true == debugMode && debugLevel >= 4) Serial << "\n";
+  m_finalColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
+  SetFadeToColor(m_fadeController, m_currentColor, m_finalColor, m_desiredFadeCount);
+}
+void FadingSolidColorTower::End()
+{
+  Ended();
+}
+
 //********* PowerBarWithBassSprite *********
  Visualizations* PowerBarWithBassSprite::GetInstance( int duration
                                                     , StatisticalEngine &statisticalEngine
@@ -2194,15 +2263,15 @@ void UpDownMaxFrequencyStreamer::End()
   Ended();
 }
 
-//********* ScrollingRainbow *********
- Visualizations* ScrollingRainbow::GetInstance( int duration
-                                              , StatisticalEngine &statisticalEngine
-                                              , VisualizationsCalleeInterface *callee )
+//********* FadingColors2 *********
+ Visualizations* FadingColors2::GetInstance( int duration
+                                           , StatisticalEngine &statisticalEngine
+                                           , VisualizationsCalleeInterface *callee )
 {
   if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingRainbow\n";
-  return new ScrollingRainbow(duration, statisticalEngine, callee);
+  return new FadingColors2(duration, statisticalEngine, callee);
 }
-void ScrollingRainbow::Start()
+void FadingColors2::Start()
 {
   if(true == debugMode && debugLevel >= 1) Serial << "ScrollingRainbow Start\n";
   Tick3();
@@ -2212,7 +2281,7 @@ void ScrollingRainbow::Start()
   m_desiredRenderCount2 = NUMLEDS;
   Started();
 }
-bool ScrollingRainbow::Loop() 
+bool FadingColors2::Loop() 
 {
   bool updateRequired = false;
   unsigned long currentTime = millis();
@@ -2223,10 +2292,11 @@ bool ScrollingRainbow::Loop()
   if(m_renderCount0 % m_desiredRenderCount0 == 0) {Tick2(); updateRequired = true;}
   if(currentTime-m_timers[1] >= m_randomTime1) {ResetTimer(1); Tick3(); updateRequired = true;}
   if(currentTime-m_timers[2] >= m_randomTime2) {ResetTimer(2); Tick4(); updateRequired = true;}
+  if(true == m_getRandom) {m_getRandom = false; Random(); updateRequired = true;}
   if(currentTime-m_resetTimer > m_duration) {End(); updateRequired = true;}
   return updateRequired;
 }
-void ScrollingRainbow::Tick0()
+void FadingColors2::Tick0()
 {
   SetFadeToColor(m_fadeController0, m_currentColor1, m_currentColor2, m_desiredRenderCount0);
   for(int i = 0; i < NUMLEDS; ++i)
@@ -2239,34 +2309,86 @@ void ScrollingRainbow::Tick0()
     m_strips[i] = m_layer[0]; 
   }
 }
-void ScrollingRainbow::Tick1()
+void FadingColors2::Tick1()
 {
   m_currentColor1 = FadeColor(m_fadeController1);
   ++m_renderCount1;
 }
-void ScrollingRainbow::Tick2()
+void FadingColors2::Tick2()
 {
   m_currentColor2 = FadeColor(m_fadeController2);
   ++m_renderCount2;
 }
-void ScrollingRainbow::Tick3()
+void FadingColors2::Tick3()
 {
   m_randomTime1 = random(0, m_maxTime);
   m_fadeToColor1 = GetColor(random(0,m_numColors), m_numColors);
-  Tick5();
+  m_getRandom = true;
 }
-void ScrollingRainbow::Tick4()
+void FadingColors2::Tick4()
 {
   m_randomTime2 = random(0, m_maxTime);
   m_fadeToColor2 = GetColor(random(0,m_numColors), m_numColors);
-  Tick5();
+  m_getRandom = true;
 }
-void ScrollingRainbow::Tick5()
+void FadingColors2::Random()
 {
   m_fadeToColor1 = GetColor(random(0,m_numColors), m_numColors);
   SetFadeToColor(m_fadeController1, m_currentColor1, m_fadeToColor1, m_desiredRenderCount1);
   m_fadeToColor2 = GetColor(random(0,m_numColors), m_numColors);
   SetFadeToColor(m_fadeController2, m_currentColor2, m_fadeToColor2, m_desiredRenderCount2);
+}
+void FadingColors2::End()
+{
+  Ended();
+}
+
+
+//********* ScrollingRainbow *********
+ Visualizations* ScrollingRainbow::GetInstance( int duration
+                                              , StatisticalEngine &statisticalEngine
+                                              , VisualizationsCalleeInterface *callee )
+{
+  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingRainbow\n";
+  return new ScrollingRainbow(duration, statisticalEngine, callee);
+}
+void ScrollingRainbow::Start()
+{
+  if(true == debugMode && debugLevel >= 1) Serial << "ScrollingRainbow Start\n";
+  Started();
+}
+bool ScrollingRainbow::Loop() 
+{
+  bool updateRequired = false;
+  unsigned long currentTime = millis();
+  if(false == m_visualizationStarted) {Start(); m_visualizationStarted = true;}
+  if(true == debugMode && debugLevel >= 3) Serial << "ScrollingRainbow Loop: " << currentTime-m_resetTimer << " | " << m_duration << "\n";
+  if(currentTime-m_timers[0] >= 0) {ResetTimer(0); Tick1(); updateRequired = true;}
+  if(m_renderCount >= m_colorLength) {m_renderCount = 0; Tick2(); updateRequired = true;}
+  if(currentTime-m_timers[1] >= 100) {ResetTimer(1); Tick3(); updateRequired = true;}
+  if(currentTime-m_resetTimer > m_duration) {End(); updateRequired = true;}
+  return updateRequired;
+}
+void ScrollingRainbow::Tick1()
+{
+  m_currentColor = FadeColor(m_fadeController);
+  m_layer[0][0] = CRGB {(byte)dim8_raw(m_currentColor.red), (byte)dim8_raw(m_currentColor.green), (byte)dim8_raw(m_currentColor.blue)};
+  for(int i = 0; i < NUMSTRIPS; ++i)
+  {
+    m_strips[i] = m_layer[0]; 
+  }
+  ++m_renderCount;
+}
+void ScrollingRainbow::Tick2()
+{
+  int count = m_currentColorCount%m_numColors;
+  m_fadeToColor = GetColor(count, m_numColors);
+  SetFadeToColor(m_fadeController, m_currentColor, m_fadeToColor, m_colorLength);
+  ++m_currentColorCount;
+}
+void ScrollingRainbow::Tick3()
+{
+  ShiftStrip(m_layer[0], Up, 1);
 }
 void ScrollingRainbow::End()
 {

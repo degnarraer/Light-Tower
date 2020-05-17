@@ -69,6 +69,7 @@ bool StatisticalEngine::NewDataReady()
         }
       }
       sampler.SetReadCompleted();
+      if(true == debugMode && debugLevel >= 0) Serial << "Amp Gain: " << ampGain << "\tFFT Gain: " << fftGain << "\n";
       return true;
     }
     else
@@ -361,7 +362,7 @@ void StatisticalEngine::UpdateSoundState()
   m_silenceIntegrator += delta;
   if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
   if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
-  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
   if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
   {
     if(true == debugMode && debugLevel >= 1) Serial << "Sound Detected\n";
