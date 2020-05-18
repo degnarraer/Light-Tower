@@ -38,19 +38,14 @@ class InstantSwitch: public Transitions
     }
     virtual ~InstantSwitch()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete InstantSwitch\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete InstantSwitch\n";
     }
     static Transitions* GetInstance( StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee );
     virtual void Start();
     virtual bool Loop();
     virtual void End();
-    static int Add(int input1, int input2)
-    {
-      return input1 + input2;
-    }
   private:
-    bool Tick1();
 };
 
 class FadeTransition: public Transitions
@@ -64,7 +59,7 @@ class FadeTransition: public Transitions
     }
     virtual ~FadeTransition()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete FadeTransition\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete FadeTransition\n";
     }
     static Transitions* GetInstance( StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee );
@@ -77,18 +72,18 @@ class FadeTransition: public Transitions
     int m_fadeCount = 0;
 };
 
-class MixerTransition: public Transitions
+class MixerAddTransition: public Transitions
 {
   public:
-    MixerTransition( StatisticalEngine &statisticalEngine
-                   , VisualizationsCalleeInterface *callee )
-                   : Transitions( statisticalEngine
-                                , callee )
+    MixerAddTransition( StatisticalEngine &statisticalEngine
+                      , VisualizationsCalleeInterface *callee )
+                      : Transitions( statisticalEngine
+                                   , callee )
     {
     }
-    virtual ~MixerTransition()
+    virtual ~MixerAddTransition()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete MixerTransition\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete MixerTransition\n";
     }
     static Transitions* GetInstance( StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee );       
@@ -97,7 +92,28 @@ class MixerTransition: public Transitions
     virtual void End();
   private:
     bool Tick1();
-    int m_blendMode;
+};
+
+class MixerMergeTransition: public Transitions
+{
+  public:
+    MixerMergeTransition( StatisticalEngine &statisticalEngine
+                   , VisualizationsCalleeInterface *callee )
+                   : Transitions( statisticalEngine
+                                , callee )
+    {
+    }
+    virtual ~MixerMergeTransition()
+    {
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete MixerTransition\n";
+    }
+    static Transitions* GetInstance( StatisticalEngine &statisticalEngine
+                                   , VisualizationsCalleeInterface *callee );       
+    virtual void Start();
+    virtual bool Loop();
+    virtual void End();
+  private:
+    bool Tick1();
 };
 
 class SlideUpTransition: public Transitions
@@ -111,7 +127,7 @@ class SlideUpTransition: public Transitions
     }
     virtual ~SlideUpTransition()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SlideUpTransition\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SlideUpTransition\n";
     }
     static Transitions* GetInstance( StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee );        
@@ -135,7 +151,7 @@ class SlideDownTransition: public Transitions
     }
     virtual ~SlideDownTransition()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SlideDownTransition\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SlideDownTransition\n";
     }
     static Transitions* GetInstance( StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee );              
@@ -160,7 +176,7 @@ class SplitTransition: public Transitions
     }
     virtual ~SplitTransition()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SplitTransition\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SplitTransition\n";
     }
     static Transitions* GetInstance( StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee );            
@@ -186,7 +202,7 @@ class SoundDetectionTester: public Visualizations
                                         , callee ){}
     virtual ~SoundDetectionTester()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SoundDetectionTester\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SoundDetectionTester\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -210,7 +226,7 @@ class Confirmation: public Visualizations
                                 , callee ){}
     virtual ~Confirmation()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete Confirmation\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete Confirmation\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -240,7 +256,7 @@ class ColorFadingTower: public Visualizations
                                     , callee ){}
     virtual ~ColorFadingTower()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ColorFadingTower\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ColorFadingTower\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -250,11 +266,9 @@ class ColorFadingTower: public Visualizations
     virtual void End();
   private:
     int m_randomTime;
-    CRGB m_color = GetRandomNonGrayColor();
-    CRGB m_fadeToColor;
     const int m_maxRandomTime = 10000;
     const int m_fadeLength = 500;
-    struct FadeController m_fadeController;
+    FadeController m_fadeController;
     void Tick1();
     void Tick2();
 };
@@ -271,7 +285,7 @@ class WaterFallFireStreamer: public Visualizations
                                          , callee ){}
     virtual ~WaterFallFireStreamer()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete WaterFallFireStreamer\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete WaterFallFireStreamer\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -293,10 +307,10 @@ class WaterFallFireStreamer: public Visualizations
     
     int m_randomTime;
     const int m_fadeLength = 500;
-    struct FadeController m_topFadeController;
-    struct FadeController m_bottomFadeController;
-    struct FadeController m_topMiddleFadeController;
-    struct FadeController m_bottomMiddleFadeController;
+    FadeController m_topFadeController;
+    FadeController m_bottomFadeController;
+    FadeController m_topMiddleFadeController;
+    FadeController m_bottomMiddleFadeController;
     enum StreamerType
     {
       StreamerType_Outward_In,
@@ -319,7 +333,7 @@ class SolidColorTower: public Visualizations
                                    , callee ){}
     virtual ~SolidColorTower()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SolidColorTower\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SolidColorTower\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -344,7 +358,7 @@ class FadingSolidColorTower: public Visualizations
                                    , callee ){}
     virtual ~FadingSolidColorTower()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SolidColorTower\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SolidColorTower\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -355,12 +369,9 @@ class FadingSolidColorTower: public Visualizations
   private:
     void Tick1();
     void Tick2();
-    struct FadeController m_fadeController;
-    CRGB m_startColor;
-    CRGB m_currentColor;
-    CRGB m_finalColor;
-    unsigned int m_desiredFadeCount = 50;
-    unsigned int m_desiredRenderCount = 50;
+    FadeController m_fadeController;
+    unsigned int m_desiredFadeCount = 100;
+    unsigned int m_desiredRenderCount = 100;
     unsigned int m_renderCount = 0;
 };
 
@@ -377,7 +388,7 @@ class PowerBarWithBassSprite: public Visualizations
                                           , callee ){}
     virtual ~PowerBarWithBassSprite()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete PowerBarWithBassSprite\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete PowerBarWithBassSprite\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -394,15 +405,15 @@ class PowerBarWithBassSprite: public Visualizations
     void Tick6();
     void Random();
     struct Sprite m_sprites[3];
-    struct FadeController m_fadeControllers[2];
+    FadeController m_fadeControllers[2];
     CRGB m_powerBarColor;
-    struct FadeController m_powerBarFadeController;
+    FadeController m_powerBarFadeController;
     int m_powerBarChangeColorTime;
     CRGB m_bassPowerBarColor;
-    struct FadeController m_bassPowerBarFadeController;
+    FadeController m_bassPowerBarFadeController;
     int m_bassPowerBarChangeColorTime;
     CRGB m_maxBassSpriteColor;
-    struct FadeController m_maxBassSpriteFadeController;
+    FadeController m_maxBassSpriteFadeController;
     int m_bassPowerMaxChangeColorTime;
         
 };
@@ -419,7 +430,7 @@ class RandomFrequencySprites: public Visualizations
                                           , callee){}
     virtual ~RandomFrequencySprites()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete RandomFrequencySprites\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete RandomFrequencySprites\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -445,7 +456,7 @@ class FFTAmplitudes: public Visualizations
                                  , callee){}
     virtual ~FFTAmplitudes()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete FFTAmplitudes\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete FFTAmplitudes\n";
     }
     static Visualizations* GetInstance( int duration
                                       ,  StatisticalEngine &statisticalEngine
@@ -476,7 +487,7 @@ class FrequencySpriteSpiral: public Visualizations
                                          , callee ){}
     virtual ~FrequencySpriteSpiral()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete FrequencySpriteSpiral\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete FrequencySpriteSpiral\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -502,7 +513,7 @@ class RandomHighLowFrequencyAmplitudeStreamer: public Visualizations
                                                            , callee ){}
     virtual ~RandomHighLowFrequencyAmplitudeStreamer()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete RandomHighLowFrequencyAmplitudeStreamer\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete RandomHighLowFrequencyAmplitudeStreamer\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -532,7 +543,7 @@ class OutwardAmplitudeWithFloatingBassSprites: public Visualizations
                                                            , callee ){}
     virtual ~OutwardAmplitudeWithFloatingBassSprites()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete OutwardAmplitudeWithFloatingBassSprites\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete OutwardAmplitudeWithFloatingBassSprites\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -552,8 +563,8 @@ class OutwardAmplitudeWithFloatingBassSprites: public Visualizations
     CRGB m_BottomFadeToColor;
     CRGB m_TopFadeToColor;
     int m_fadeLength;
-    struct FadeController m_topFadeController;
-    struct FadeController m_bottomFadeController;
+    FadeController m_topFadeController;
+    FadeController m_bottomFadeController;
         
 };
 
@@ -569,7 +580,7 @@ class VerticalFFTAmplitudeTower: public Visualizations
                                              , callee ){}
     virtual ~VerticalFFTAmplitudeTower()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete VerticalFFTAmplitudeTower\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete VerticalFFTAmplitudeTower\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -595,7 +606,7 @@ class MultiRangeAmplitudeTower: public Visualizations
                                             , callee ){}
     virtual ~MultiRangeAmplitudeTower()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete MultiRangeAmplitudeTower\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete MultiRangeAmplitudeTower\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -629,7 +640,7 @@ class SimultaneousFrequencyStreamer: public Visualizations
                                                  , callee ){}
     virtual ~SimultaneousFrequencyStreamer()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete SimultaneousFrequencyStreamer\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete SimultaneousFrequencyStreamer\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -681,7 +692,7 @@ class MinMaxAmplitude: public Visualizations
                                    , callee ){}
     virtual ~MinMaxAmplitude()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete MinMaxAmplitude\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete MinMaxAmplitude\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -710,7 +721,7 @@ class ChasingSprites: public Visualizations
                                   , callee ){}
     virtual ~ChasingSprites()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ChasingSprites\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ChasingSprites\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -756,7 +767,7 @@ class FrequencyColorStreamer: public Visualizations
                                           , callee ){}
     virtual ~FrequencyColorStreamer()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete FrequencyColorStreamer\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete FrequencyColorStreamer\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -783,7 +794,7 @@ class FrequencyColorSpinningTower: public Visualizations
                                                , callee ){}
     virtual ~FrequencyColorSpinningTower()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete FrequencyColorSpinningTower\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete FrequencyColorSpinningTower\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -812,7 +823,7 @@ class UpDownFrequencyColorStreamer: public Visualizations
                                                 , callee ){}
     virtual ~UpDownFrequencyColorStreamer()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete UpDownFrequencyColorStreamer\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete UpDownFrequencyColorStreamer\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -839,7 +850,7 @@ class UpDownMaxFrequencyStreamer: public Visualizations
                                               , callee ){}
     virtual ~UpDownMaxFrequencyStreamer()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete UpDownMaxFrequencyStreamer\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete UpDownMaxFrequencyStreamer\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -867,7 +878,7 @@ class FadingColors2: public Visualizations
                                  , callee ){}
     virtual ~FadingColors2()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingRainbow\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete FadingColors2\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -887,13 +898,13 @@ class FadingColors2: public Visualizations
     const unsigned int m_maxTime = 10000;
     unsigned int m_randomTime1;
     unsigned int m_randomTime2;
-    struct FadeController m_fadeController0;
+    FadeController m_fadeController0;
     unsigned int m_renderCount0 = 0;
     unsigned int m_desiredRenderCount0 = 0;
-    struct FadeController m_fadeController1;
+    FadeController m_fadeController1;
     unsigned int m_renderCount1 = 0;
     unsigned int m_desiredRenderCount1 = 0;
-    struct FadeController m_fadeController2;
+    FadeController m_fadeController2;
     unsigned int m_renderCount2 = 0;
     unsigned int m_desiredRenderCount2 = 0;
     CRGB m_startingColor1;
@@ -919,7 +930,7 @@ class ScrollingRainbow: public Visualizations
                                     , callee ){}
     virtual ~ScrollingRainbow()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingRainbow\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ScrollingRainbow\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -937,7 +948,7 @@ class ScrollingRainbow: public Visualizations
     int m_renderCount = 0;
     const int m_numColors = 7;
     const int m_colorLength = random(1, NUMLEDS);
-    struct FadeController m_fadeController;    
+    FadeController m_fadeController;    
 };
 
 class ScrollingFrequencyColorRectangles: public Visualizations
@@ -952,7 +963,7 @@ class ScrollingFrequencyColorRectangles: public Visualizations
                                                      , callee ){}
     virtual ~ScrollingFrequencyColorRectangles()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingFrequencyColorRectangles\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ScrollingFrequencyColorRectangles\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -990,7 +1001,7 @@ class ScrollingFrequencySprites: public Visualizations
     }
     virtual ~ScrollingFrequencySprites()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingFrequencySprites\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ScrollingFrequencySprites\n";
       delete m_sprites;
     }
     static Visualizations* GetInstance( int duration
@@ -1021,7 +1032,7 @@ class ScrollingSpeedFrequencySprites: public Visualizations
     }
     virtual ~ScrollingSpeedFrequencySprites()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingSpeedFrequencySprites\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ScrollingSpeedFrequencySprites\n";
       delete m_sprites;
     }
     static Visualizations* GetInstance( int duration
@@ -1054,7 +1065,7 @@ class ScrollingAmplitudeSprite: public Visualizations
     }
     virtual ~ScrollingAmplitudeSprite()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingAmplitudeSprite\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ScrollingAmplitudeSprite\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -1075,7 +1086,7 @@ class ScrollingAmplitudeSprite: public Visualizations
     CRGB m_fadeToColor;
     const int m_maxRandomTime = 5000;
     const int m_fadeLength = NUMLEDS;
-    struct FadeController m_fadeController;
+    FadeController m_fadeController;
     
 };
 
@@ -1091,7 +1102,7 @@ class Opposites: public Visualizations
                              , callee ){}
     virtual ~Opposites()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete ScrollingAmplitudeSprite\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete ScrollingAmplitudeSprite\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine
@@ -1121,7 +1132,7 @@ class Snake: public Visualizations
                              , callee ){}
     virtual ~Snake()
     {
-      if(true == debugMode && debugLevel >= 2) Serial << "Delete Snake\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete Snake\n";
     }
     static Visualizations* GetInstance( int duration
                                       , StatisticalEngine &statisticalEngine

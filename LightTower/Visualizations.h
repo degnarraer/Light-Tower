@@ -43,7 +43,8 @@ enum VisualizationEntries
   VisualizationEntries_TransitionStart,
   VisualizationEntries_InstantSwitch,
   VisualizationEntries_FadeTransition,
-  VisualizationEntries_MixerTransition,
+  VisualizationEntries_MixerAddTransition,
+  VisualizationEntries_MixerMergeTransition,
   VisualizationEntries_SlideUpTransition,
   VisualizationEntries_SlideDownTransition,
   VisualizationEntries_SplitTransition,
@@ -122,14 +123,6 @@ struct Sprite
   Direction direction = DIRECTION_DOWN;
 };
 
-struct FadeController
-{
-  int fadeLength;
-  int currentTickOfFadeLength;
-  CRGB startingColor;
-  CRGB fadeToColor;
-};
-
 class Visualizations;
 class VisualizationsCalleeInterface
 {
@@ -146,12 +139,30 @@ class VisualizationsCalleeInterface
     virtual void ConfirmationVisualizationEnded(Visualizations *visualization) = 0;  
 };
 
+class FadeController
+{
+  public:
+  FadeController(){};
+  virtual ~FadeController(){}
+  void ConfigureFadeController(CRGB start, CRGB endColor, unsigned int duration);
+  CRGB IncrementFade(unsigned int incrementValue);
+  void ResetFade();
+  CRGB GetCurrentColor() {return m_currentColor; }
+  unsigned int GetCurrentTickOfDuration() {return m_currentTickOfDuration; }
+  private:
+  CRGB m_startColor;
+  CRGB m_currentColor;
+  CRGB m_endColor;
+  int m_duration;
+  int m_currentTickOfDuration;
+};
+
 class VisualizationsCaller
 {
   public:
     VisualizationsCaller( VisualizationsCalleeInterface *callee )
                         : m_callee(callee){};
-    virtual ~VisualizationsCaller(){}                    
+    virtual ~VisualizationsCaller(){}
     VisualizationsCalleeInterface *m_callee;
 };
 
@@ -288,8 +299,6 @@ class Visualizations: public VisualizationsCaller
     LEDStrip FadeInLayerBy(LEDStrip layer, byte fadeAmount);
     void SpiralTowerUpwards();
     void SpiralTowerDownwards();
-    void SetFadeToColor(struct FadeController &fadeController, CRGB startingColor, CRGB fadeToColor, int fadeLength);
-    CRGB FadeColor(struct FadeController &controller);
     CRGB GetRandomColor(byte minRed, byte maxRed, byte minGreen, byte maxGreen, byte minBlue, byte maxBlue);
     CRGB GetRandomNonGrayColor();
     float GetTriggerGainForFrequency(float frequency);

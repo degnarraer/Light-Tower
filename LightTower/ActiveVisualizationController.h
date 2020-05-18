@@ -78,9 +78,8 @@ class ActiveVisualizationController: public LEDController
     bool m_automaticModeOld = true;
 
     //SceneConfig Queue
-    SceneConfig m_sceneConfigQueue[5];
+    SceneConfig m_sceneConfigQueue[60];
     SceneConfig m_activeSceneConfig;
-    int m_sceneConfigQueueCount = 0;
     int m_sceneConfigQueueHeadIndex = 0;
     int m_sceneConfigQueueTailIndex = 0;
     void AddSceneConfigToQueue(VisualizationEntries transition, VisualizationEntries visualization, unsigned long duration, CRGB confirmationColor = CRGB::Black);

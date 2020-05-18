@@ -4,23 +4,15 @@
 
 #include <math.h>
 
-//Mic Selection
-enum MicType
-{
-  MIC_TYPE_AUTOGAIN,
-  MIC_TYPE_FIXEDGAIN
-};
-static const MicType micType = MicType::MIC_TYPE_AUTOGAIN;
-
 //Run Fixed Data Tables instead of microphone
-static bool   testMode = false;
+static bool         testMode = false;
 
 //Output Debug Messages
-static bool   debugMode = false;
-static bool   debugNanInf = false;
-static bool   debugPlotMic = false;
-static bool   debugPlotFFT = false;
-static int    debugLevel = 0;
+const bool   debugMode = false;
+const bool   debugNanInf = false;
+const bool   debugPlotMic = false;
+const bool   debugPlotFFT = false;
+const int    debugLevel = 1;
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;
@@ -43,11 +35,12 @@ const unsigned int BIN_SAVE_LENGTH = 60;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.025;
-static float triggerLevelGain = 1.0;
+const float triggerLevelGain = 1.0;
 
 // Sampler Tunes
 /* ch7:A0 ch6:A1 ch5:A2 ch4:A3 ch3:A4 ch2:A5 ch1:A6 ch0:A7 */
-#define ADC_CHANNELS ADC_CHER_CH7 | ADC_CHER_CH5 | ADC_CHER_CH4
+#define ADC_CHANNELS ADC_CHER_CH7 | ADC_CHER_CH5 | ADC_CHER_CH4  //Fixed Gain Mic
+//#define ADC_CHANNELS ADC_CHER_CH6 | ADC_CHER_CH5 | ADC_CHER_CH4  //Auto Gain Mic
 #define ADC_RESOLUTION 12
 const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
@@ -72,4 +65,5 @@ const int FFT_GAIN = 200;
 const int POWER_GAIN = 10;
 const int MAX_POWER = ADDBITS * POWER_GAIN;
 const float MAX_DB = 20*log10(ADDBITS);
+
 #endif
