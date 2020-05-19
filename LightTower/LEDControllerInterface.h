@@ -62,10 +62,10 @@ class LEDController
       FastLED.setBrightness(0);
       if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to 0.\n";
     }
-    void TurnOnLEDs()
+    void TurnOnLEDs(unsigned int level)
     {
-      FastLED.setBrightness(255);
-      if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to 255.\n";
+      FastLED.setBrightness(255*level/100);
+      if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to " << level << ".\n";
     }
   protected:
     LEDStrip m_strips[NUMSTRIPS];

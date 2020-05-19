@@ -36,7 +36,8 @@ void setup()
   if( true == debugMode ||
       true == debugNanInf ||
       true == debugPlotMic ||
-      true == debugPlotFFT)
+      true == debugPlotFFT ||
+      true == debugFPS )
   {
     Serial.begin(115200);
   }
@@ -70,7 +71,7 @@ void loop()
   if(lapsedTime >= 1000)
   {
     startMillis = millis();
-    if(true == debugMode && debugLevel >= 2) Serial << "FPS: " << frameCount / (lapsedTime/1000.0) << "\n";
+    if(true == debugFPS) Serial << "FPS: " << frameCount / (lapsedTime/1000.0) << "\n";
     frameCount = 0;
   }
 }

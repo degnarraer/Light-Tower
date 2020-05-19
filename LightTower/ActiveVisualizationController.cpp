@@ -100,37 +100,6 @@ void ActiveVisualizationController::Setup()
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Snake, 0);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
   */
-  /*
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Confirmation, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_WaterFallFireStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SolidColorTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingSolidColorTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_PowerBarWithBassSprite, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomFrequencySprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FFTAmplitudes, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencySpriteSpiral, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomHighLowFrequencyAmplitudeStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_OutwardAmplitudeWithFloatingBassSprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_VerticalFFTAmplitudeTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_MultiRangeAmplitudeTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SimultaneousFrequencyStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_MinMaxAmplitude, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ChasingSprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencyColorStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencyColorSpinningTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownFrequencyColorStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownMaxFrequencyStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingRainbow, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingColors2, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencyColorRectangles, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencySprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingSpeedFrequencySprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingAmplitudeSprite, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Opposites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Snake, 600000);
-*/
   GetNextTransition();
   m_gainAdjustModeActive = false;
   if(true == debugMode && debugLevel >= 0) Serial << "Active Visualization Controller: Setup Complete\n";
@@ -244,7 +213,7 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
   {
     case SoundDetected:
       if(true == debugMode && debugLevel >= 0) Serial << "Sound Detected Callback\n";
-      Illuminate();
+      Illuminate(100);
       if(false == m_1stSoundDetected)
       {
         m_1stSoundDetected = true;
@@ -259,6 +228,7 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
     break;
     case SilenceDetected:
       if(true == debugMode && debugLevel >= 0) Serial << "Silence Detected Callback\n";
+      Illuminate(50);
       if(false == m_gainAdjustModeActive)
       {
         if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex == 0)
@@ -601,7 +571,7 @@ void ActiveVisualizationController::ProcessButtons()
     if(true == debugMode) Serial << "Button Released\n";
     if(true == m_silentModeActive)
     {
-      Illuminate();
+      Illuminate(100);
     }
     else
     {
@@ -641,11 +611,11 @@ void ActiveVisualizationController::ProcessButtons()
   m_automaticModeOld = m_automaticMode;
 }
 
-void ActiveVisualizationController::Illuminate()
+void ActiveVisualizationController::Illuminate(unsigned int level)
 {
   if(true == m_silentModeActive)
   {
-    TurnOnLEDs();
+    TurnOnLEDs(level);
     m_silentModeActive = false;   
   }
 }

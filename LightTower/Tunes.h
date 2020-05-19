@@ -12,6 +12,7 @@ const bool   debugMode = false;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
+const bool   debugFPS = false;
 const int    debugLevel = 1;
 
 // LED SETUP
@@ -54,7 +55,7 @@ const int     silenceIntegratorMax = 50000;
 const int     silenceDetectedThreshold = 0.1*silenceIntegratorMax;
 const int     soundDetectedThreshold = 0.9*silenceIntegratorMax;
 const int     soundAdder = 1000;
-const int     silenceSubtractor = -100;
+const int     silenceSubtractor = -25;
 
 //CALCULATED TUNES
 const int FFT_M = (int)log2(FFT_MAX);

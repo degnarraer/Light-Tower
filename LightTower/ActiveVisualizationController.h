@@ -112,7 +112,7 @@ class ActiveVisualizationController: public LEDController
     void ProcessVisualizations();
     void ProcessButtons();
     void ProcessSilence();
-    void Illuminate();
+    void Illuminate(unsigned int level);
     void Deluminate();
 };
 #endif
