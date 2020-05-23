@@ -44,7 +44,7 @@ void ActiveVisualizationController::Setup()
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, UINT_MAX);  
   
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 0);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 600000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_WaterFallFireStreamer, 0);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SolidColorTower, 0);
