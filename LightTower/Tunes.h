@@ -8,12 +8,14 @@
 static bool         testMode = false;
 
 //Output Debug Messages
-const bool   debugMode = false;
+const bool   debugMode = true;
+const int    debugLevel = 0;
+
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
 const bool   debugFPS = false;
-const int    debugLevel = 1;
+const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS);
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;

@@ -273,6 +273,7 @@ void StatisticalEngine::AnalyzeSound()
       avg += m_data[i];
   }
   avg = avg/CHANNEL_SIZE;
+  if(true == debugPlotMic) PlotData();
   for(int i=0; i < CHANNEL_SIZE; i++)
   {
     int result = ((m_data[i] - avg) * ampGain);
@@ -293,7 +294,6 @@ void StatisticalEngine::AnalyzeSound()
   };
   m_signalMin = signalMin;
   m_signalMax = signalMax;
-  if(true == debugPlotMic) PlotData();
   peakToPeak = m_signalMax - m_signalMin;
   power = ((float)peakToPeak / (float)ADDBITS);
   if(peakToPeak > 0)
@@ -317,6 +317,8 @@ void StatisticalEngine::AnalyzeSound()
 }
 void StatisticalEngine::PlotData()
 {
+  Serial.println(4096);
+  Serial.println(0);
   for(int i=0; i < CHANNEL_SIZE; i++)
   {
     Serial.println(m_data[i]);

@@ -33,11 +33,7 @@ unsigned int frameCount = 0;
 
 void setup()
 {
-  if( true == debugMode ||
-      true == debugNanInf ||
-      true == debugPlotMic ||
-      true == debugPlotFFT ||
-      true == debugFPS )
+  if( true == debugRequired )
   {
     Serial.begin(115200);
   }

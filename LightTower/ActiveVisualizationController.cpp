@@ -42,11 +42,9 @@ void ActiveVisualizationController::Setup()
   m_statisticalEngine.ConnectCallback(this);
   
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, UINT_MAX);  
-  /*
+  
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 0);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Confirmation, 0);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 600000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_WaterFallFireStreamer, 0);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SolidColorTower, 0);
@@ -99,7 +97,7 @@ void ActiveVisualizationController::Setup()
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Snake, 0);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
-  */
+  
   GetNextTransition();
   m_gainAdjustModeActive = false;
   if(true == debugMode && debugLevel >= 0) Serial << "Active Visualization Controller: Setup Complete\n";
@@ -228,7 +226,7 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
     break;
     case SilenceDetected:
       if(true == debugMode && debugLevel >= 0) Serial << "Silence Detected Callback\n";
-      Illuminate(50);
+      Illuminate(10);
       if(false == m_gainAdjustModeActive)
       {
         if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex == 0)

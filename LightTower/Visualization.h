@@ -253,7 +253,10 @@ class ColorFadingTower: public Visualizations
                     : Visualizations( duration
                                     , VisualizationType::VISUALIZATION
                                     , statisticalEngine
-                                    , callee ){}
+                                    , callee )
+                                    {
+                                      m_fadeController.SetCurrentColor(GetRandomNonGrayColor());
+                                    }
     virtual ~ColorFadingTower()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete ColorFadingTower\n";

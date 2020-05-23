@@ -583,23 +583,25 @@ bool ColorFadingTower::Loop()
   bool updateRequired = false;
   unsigned long currentTime = millis();
   if(true == debugMode && debugLevel >= 4) Serial << "ColorFadingTower Loop: " << currentTime-m_resetTimer << " | " << m_duration << "\n";
-  {Tick1(); updateRequired = true;}
-  if(currentTime-m_timers[0] >= m_randomTime) {ResetTimer(0); Tick2(); updateRequired = true;}
+  if(currentTime-m_timers[0] >= 0) {ResetTimer(0); Tick1(); updateRequired = true;}
+  if(currentTime-m_timers[1] >= m_randomTime) {ResetTimer(1); Tick2(); updateRequired = true;}
   if(currentTime-m_resetTimer >= m_duration) {End(); updateRequired = true;}
   return updateRequired;
 }
 void ColorFadingTower::Tick1()
 {
-  CRGB color = m_fadeController.IncrementFade(1);
+  m_fadeController.IncrementFade(1);
   for(int i=0; i<NUMSTRIPS; ++i)
   {
-     m_strips[i] = color;
+     m_strips[i] = m_fadeController.GetCurrentColor();
   }
 }
 void ColorFadingTower::Tick2()
 {
   m_randomTime = random(1000, m_maxRandomTime);
-  m_fadeController.ConfigureFadeController(m_fadeController.GetCurrentColor(), GetRandomNonGrayColor(), m_fadeLength);
+  m_fadeController.ConfigureFadeController( m_fadeController.GetCurrentColor()
+                                          , GetRandomNonGrayColor()
+                                          , m_fadeLength);
 }
 void ColorFadingTower::End()
 {
@@ -2150,7 +2152,14 @@ void FrequencyColorSpinningTower::Tick1()
     float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 0, SoundLevelOutputType_Beat);    
     CRGB color = GetColor(rotatedIndex, NUMSTRIPS);
     if(true == debugMode && debugLevel >= 3) Serial << i << "|" << level << "\t";
-    m_strips[i] = CRGB((byte)(dim8_raw(color.red*level)), (byte)(dim8_raw(color.green*level)), (byte)(dim8_raw(color.blue*level)));
+    if(m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+    {
+      m_strips[i] = CRGB((byte)(dim8_raw(color.red*level)), (byte)(dim8_raw(color.green*level)), (byte)(dim8_raw(color.blue*level)));
+    }
+    else
+    {
+      m_strips[i] = CRGB::Black;
+    }
   }
   if(true == debugMode && debugLevel >= 3) Serial << "\n";
 }

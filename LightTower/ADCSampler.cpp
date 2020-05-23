@@ -19,7 +19,7 @@ void ADCSampler::SetSampleRateAndStart(unsigned int samplingRate)
 
   // Configure timer
   TC_Configure(TC0, 1, TC_CMR_WAVE | TC_CMR_WAVSEL_UP_RC | TC_CMR_ACPA_CLEAR | TC_CMR_ACPC_SET | TC_CMR_ASWTRG_CLEAR | TC_CMR_TCCLKS_TIMER_CLOCK1);
-
+  
   // It is good to have the timer 0 on PIN2, good for Debugging
   //int result = PIO_Configure( PIOB, PIO_PERIPH_B, PIO_PB25B_TIOA1, PIO_DEFAULT);
 
@@ -81,7 +81,7 @@ void ADCSampler::SetSampleRateAndStart(unsigned int samplingRate)
 }
 void ADCSampler::End()
 {
-
+  TC_Stop(TC0, 1);
 }
 
 void ADCSampler::HandleInterrupt()

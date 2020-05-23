@@ -25,7 +25,7 @@
 #define LEDControllerInterface_H
 
 #define FASTLED_ALLOW_INTERRUPTS 1
-#define FASTLED_INTERRUPT_RETRY_COUNT 1
+#define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
 #include "Tunes.h"
 #include "Streaming.h"
@@ -64,7 +64,7 @@ class LEDController
     }
     void TurnOnLEDs(unsigned int level)
     {
-      FastLED.setBrightness(255*level/100);
+      FastLED.setBrightness(255*(double)level/(double)100);
       if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to " << level << ".\n";
     }
   protected:

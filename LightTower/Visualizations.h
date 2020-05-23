@@ -139,24 +139,6 @@ class VisualizationsCalleeInterface
     virtual void ConfirmationVisualizationEnded(Visualizations *visualization) = 0;  
 };
 
-class FadeController
-{
-  public:
-  FadeController(){};
-  virtual ~FadeController(){}
-  void ConfigureFadeController(CRGB start, CRGB endColor, unsigned int duration);
-  CRGB IncrementFade(unsigned int incrementValue);
-  void ResetFade();
-  CRGB GetCurrentColor() {return m_currentColor; }
-  unsigned int GetCurrentTickOfDuration() {return m_currentTickOfDuration; }
-  private:
-  CRGB m_startColor;
-  CRGB m_currentColor;
-  CRGB m_endColor;
-  int m_duration;
-  int m_currentTickOfDuration;
-};
-
 class VisualizationsCaller
 {
   public:
@@ -209,7 +191,6 @@ class Visualizations: public VisualizationsCaller
       float spreadDb = 0.0;
       float triggerLevelDb = 0.0;
       float normalizedLevel = 0.0;
-      float spreadMinimumDb = 20*log10(ADDBITS/10);
       db ampDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
       db avgDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
       switch(aLevelType)
@@ -239,7 +220,6 @@ class Visualizations: public VisualizationsCaller
       float avgDb = 0.0;
       float triggerLevelDb = 0.0;
       float normalizedLevel = 0.0;
-      float spreadDbMinimum = 20*log10(ADDBITS/10);
       int amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
       int avg = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
       if(amp > 0)
@@ -357,6 +337,27 @@ class Transitions: public Visualizations
   protected:
     Visualizations *mp_currentVisualization;
     Visualizations *mp_previousVisualization;
+};
+
+class FadeController
+{
+  public:
+  FadeController()
+  {
+  }
+  virtual ~FadeController(){}
+  void ConfigureFadeController(CRGB start, CRGB endColor, unsigned int duration);
+  CRGB IncrementFade(unsigned int incrementValue);
+  void ResetFade();
+  CRGB GetCurrentColor() { return m_currentColor; }
+  CRGB SetCurrentColor(CRGB color) { m_currentColor = color; }
+  unsigned int GetCurrentTickOfDuration() { return m_currentTickOfDuration; }
+  private:
+  CRGB m_startColor;
+  CRGB m_currentColor;
+  CRGB m_endColor;
+  int m_duration;
+  int m_currentTickOfDuration;
 };
 
 #endif

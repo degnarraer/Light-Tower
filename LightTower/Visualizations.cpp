@@ -306,20 +306,22 @@ void FadeController::ConfigureFadeController(CRGB startColor, CRGB endColor, uns
   m_duration = duration;
   m_currentTickOfDuration = 0;
 }
+
 CRGB FadeController::IncrementFade(unsigned int incrementValue)
 {
-  double normalization = 1.0;
-  m_currentTickOfDuration += incrementValue;
+  float normalization = 1.0;
+  m_currentTickOfDuration = m_currentTickOfDuration + incrementValue;
   if(m_currentTickOfDuration > m_duration) m_currentTickOfDuration = m_duration;
-  normalization = ((double)m_currentTickOfDuration / (double)m_duration);
-  m_currentColor.red = m_startColor.red + (((double)m_endColor.red - (double)m_startColor.red) * normalization);
-  m_currentColor.green = m_startColor.green + (((double)m_endColor.green - (double)m_startColor.green) * normalization);
-  m_currentColor.blue = m_startColor.blue + (((double)m_endColor.blue - (double)m_startColor.blue) * normalization);
+  normalization = ((float)m_currentTickOfDuration / (float)m_duration);
+  if(true == debugMode && debugLevel >= 0) Serial << normalization << "\n";
+  m_currentColor.red = (byte)(m_startColor.red + (((float)m_endColor.red - (float)m_startColor.red) * normalization));
+  m_currentColor.green = (byte)(m_startColor.green + (((float)m_endColor.green - (float)m_startColor.green) * normalization));
+  m_currentColor.blue = (byte)(m_startColor.blue + (((float)m_endColor.blue - (float)m_startColor.blue) * normalization));
   return m_currentColor;
 }
 void FadeController::ResetFade()
 {
-  m_duration = 0;
+  m_currentTickOfDuration = 0;
 }
 
 CRGB Visualizations::GetRandomColor(byte minRed, byte maxRed, byte minGreen, byte maxGreen, byte minBlue, byte maxBlue)
