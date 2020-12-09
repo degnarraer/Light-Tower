@@ -313,7 +313,7 @@ CRGB FadeController::IncrementFade(unsigned int incrementValue)
   m_currentTickOfDuration = m_currentTickOfDuration + incrementValue;
   if(m_currentTickOfDuration > m_duration) m_currentTickOfDuration = m_duration;
   normalization = ((float)m_currentTickOfDuration / (float)m_duration);
-  if(true == debugMode && debugLevel >= 0) Serial << normalization << "\n";
+  if(true == debugMode && debugLevel >= 5) Serial << "FadeController::IncrementFade: " << normalization << "\n";
   m_currentColor.red = (byte)(m_startColor.red + (((float)m_endColor.red - (float)m_startColor.red) * normalization));
   m_currentColor.green = (byte)(m_startColor.green + (((float)m_endColor.green - (float)m_startColor.green) * normalization));
   m_currentColor.blue = (byte)(m_startColor.blue + (((float)m_endColor.blue - (float)m_startColor.blue) * normalization));

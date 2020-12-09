@@ -28,7 +28,7 @@
 Transitions* InstantSwitch::GetInstance(  StatisticalEngine &statisticalEngine
                                         , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New InstantSwitch\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New InstantSwitch\n";
   InstantSwitch *newTransition = new InstantSwitch(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -65,7 +65,7 @@ void InstantSwitch::End()
 Transitions* FadeTransition::GetInstance( StatisticalEngine &statisticalEngine
                                         , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New FadeTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FadeTransition\n";
   FadeTransition *newTransition = new FadeTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -136,7 +136,7 @@ void FadeTransition::End()
 Transitions* MixerAddTransition::GetInstance( StatisticalEngine &statisticalEngine
                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New MixerAddTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New MixerAddTransition\n";
   MixerAddTransition *newTransition = new MixerAddTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -192,7 +192,7 @@ void MixerAddTransition::End()
 Transitions* MixerMergeTransition::GetInstance( StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New MixerMergeTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New MixerMergeTransition\n";
   MixerMergeTransition *newTransition = new MixerMergeTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -249,7 +249,7 @@ void MixerMergeTransition::End()
 Transitions* SlideUpTransition::GetInstance( StatisticalEngine &statisticalEngine
                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SlideUpTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SlideUpTransition\n";
   SlideUpTransition *newTransition = new SlideUpTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -331,7 +331,7 @@ void SlideUpTransition::End()
  Transitions* SlideDownTransition::GetInstance( StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SlideDownTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SlideDownTransition\n";
   SlideDownTransition *newTransition = new SlideDownTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -414,7 +414,7 @@ void SlideDownTransition::End()
  Transitions* SplitTransition::GetInstance( StatisticalEngine &statisticalEngine
                                           , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SplitTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SplitTransition\n";
   SplitTransition *newTransition = new SplitTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -516,7 +516,7 @@ void SplitTransition::End()
                                                   , StatisticalEngine &statisticalEngine
                                                   , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SoundDetectionTester with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SoundDetectionTester with Duration: " << duration << "\n";
   return new SoundDetectionTester(duration, statisticalEngine, callee);
 } 
 void SoundDetectionTester::Start()
@@ -564,7 +564,7 @@ void SoundDetectionTester::End()
                                               , StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ColorFadingTower with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ColorFadingTower with Duration: " << duration << "\n";
   return new ColorFadingTower(duration, statisticalEngine, callee);
 }
 void ColorFadingTower::Start()
@@ -613,7 +613,7 @@ Visualizations* Confirmation::GetInstance( int duration
                                          , StatisticalEngine &statisticalEngine
                                          , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New Confirmation with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New Confirmation with Duration: " << duration << "\n";
   Confirmation *newVisualization = new Confirmation(duration, statisticalEngine, callee);
   newVisualization->SetConfirmationColor(callee->GetConfirmationColor());
   return newVisualization;
@@ -658,7 +658,7 @@ void Confirmation::End()
                                                          , StatisticalEngine &statisticalEngine
                                                          , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New WaterFallFireStreamer with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New WaterFallFireStreamer with Duration: " << duration << "\n";
   return new WaterFallFireStreamer(duration, statisticalEngine, callee);
 }
 void WaterFallFireStreamer::Start()
@@ -756,7 +756,7 @@ void WaterFallFireStreamer::End()
                                              , StatisticalEngine &statisticalEngine
                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SolidColorTower with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SolidColorTower with Duration: " << duration << "\n";
   return new SolidColorTower(duration, statisticalEngine, callee);
 }
 void SolidColorTower::Start()
@@ -818,7 +818,7 @@ void SolidColorTower::End()
                                                    , StatisticalEngine &statisticalEngine
                                                    , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SolidColorTower with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SolidColorTower with Duration: " << duration << "\n";
   return new FadingSolidColorTower(duration, statisticalEngine, callee);
 }
 void FadingSolidColorTower::Start()
@@ -888,7 +888,7 @@ void FadingSolidColorTower::End()
                                                     , StatisticalEngine &statisticalEngine
                                                     , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New PowerBarWithBassSprite with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New PowerBarWithBassSprite with Duration: " << duration << "\n";
   return new PowerBarWithBassSprite(duration, statisticalEngine, callee);
 }
 void PowerBarWithBassSprite::Start()
@@ -1030,7 +1030,7 @@ void PowerBarWithBassSprite::End()
                                                     , StatisticalEngine &statisticalEngine
                                                     , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New RandomFrequencySprites with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New RandomFrequencySprites with Duration: " << duration << "\n";
   return new RandomFrequencySprites(duration, statisticalEngine, callee);
 }
 void RandomFrequencySprites::Start()
@@ -1099,7 +1099,7 @@ void RandomFrequencySprites::End()
                                            , StatisticalEngine &statisticalEngine
                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New FFTAmplitudes with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FFTAmplitudes with Duration: " << duration << "\n";
   return new FFTAmplitudes(duration, statisticalEngine, callee);
 }
 void FFTAmplitudes::Start()
@@ -1163,7 +1163,7 @@ void FFTAmplitudes::End()
                                                          , StatisticalEngine &statisticalEngine
                                                          , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New FrequencySpriteSpiral with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FrequencySpriteSpiral with Duration: " << duration << "\n";
   return new FrequencySpriteSpiral(duration, statisticalEngine, callee);
 }
 void FrequencySpriteSpiral::Start()
@@ -1272,7 +1272,7 @@ void FrequencySpriteSpiral::End()
                                                                            , StatisticalEngine &statisticalEngine
                                                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New RandomHighLowFrequencyAmplitudeStreamer with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New RandomHighLowFrequencyAmplitudeStreamer with Duration: " << duration << "\n";
   return new RandomHighLowFrequencyAmplitudeStreamer(duration, statisticalEngine, callee);
 }
 void RandomHighLowFrequencyAmplitudeStreamer::Start()
@@ -1334,7 +1334,7 @@ void RandomHighLowFrequencyAmplitudeStreamer::End()
                                                                            , StatisticalEngine &statisticalEngine
                                                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New OutwardAmplitudeWithFloatingBassSprites with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New OutwardAmplitudeWithFloatingBassSprites with Duration: " << duration << "\n";
   return new OutwardAmplitudeWithFloatingBassSprites(duration, statisticalEngine, callee);
 }
 void OutwardAmplitudeWithFloatingBassSprites::Start()
@@ -1452,7 +1452,7 @@ void OutwardAmplitudeWithFloatingBassSprites::End()
                                                              , StatisticalEngine &statisticalEngine
                                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New VerticalFFTAmplitudeTower with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New VerticalFFTAmplitudeTower with Duration: " << duration << "\n";
   return new VerticalFFTAmplitudeTower(duration, statisticalEngine, callee);
 }
 void VerticalFFTAmplitudeTower::Start()
@@ -1531,7 +1531,7 @@ void VerticalFFTAmplitudeTower::End()
                                                             , StatisticalEngine &statisticalEngine
                                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New MultiRangeAmplitudeTower with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New MultiRangeAmplitudeTower with Duration: " << duration << "\n";
   return new MultiRangeAmplitudeTower(duration, statisticalEngine, callee);
 }
 void MultiRangeAmplitudeTower::Start()
@@ -1600,7 +1600,7 @@ void MultiRangeAmplitudeTower::End()
                                                                  , StatisticalEngine &statisticalEngine
                                                                  , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New SimultaneousFrequencyStreamer with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SimultaneousFrequencyStreamer with Duration: " << duration << "\n";
   return new SimultaneousFrequencyStreamer(duration, statisticalEngine, callee);
 }
 void SimultaneousFrequencyStreamer::Start()
@@ -1765,7 +1765,7 @@ void SimultaneousFrequencyStreamer::End()
                                              , StatisticalEngine &statisticalEngine
                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New MinMaxAmplitude with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New MinMaxAmplitude with Duration: " << duration << "\n";
   return new MinMaxAmplitude(duration, statisticalEngine, callee);
 }
 void MinMaxAmplitude::Start()
@@ -1857,7 +1857,7 @@ void MinMaxAmplitude::End()
                                             , StatisticalEngine &statisticalEngine
                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ChasingSprites with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ChasingSprites with Duration: " << duration << "\n";
   return new ChasingSprites(duration, statisticalEngine, callee);
 }
 void ChasingSprites::Start()
@@ -2063,7 +2063,7 @@ void ChasingSprites::End()
                                                     , StatisticalEngine &statisticalEngine
                                                     , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New FrequencyColorStreamer with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FrequencyColorStreamer with Duration: " << duration << "\n";
   return new FrequencyColorStreamer(duration, statisticalEngine, callee);
 }
 void FrequencyColorStreamer::Start()
@@ -2087,7 +2087,7 @@ void FrequencyColorStreamer::Tick1()
   float  maxLevelSave = 0.0;
   for(int i = 0; i < BINS; ++i)
   {
-    float  level = GetNormalizedSoundLevelForBin(i, 0, SoundLevelOutputType_Beat); 
+    float  level = GetNormalizedSoundLevelForBin(i, 0, SoundLevelOutputType_Level); 
     if(level > maxLevelSave)
     {
       maxLevelSave = level;
@@ -2120,7 +2120,7 @@ void FrequencyColorStreamer::End()
                                                                , StatisticalEngine &statisticalEngine
                                                                , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New FrequencyColorSpinningTower with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FrequencyColorSpinningTower with Duration: " << duration << "\n";
   return new FrequencyColorSpinningTower(duration, statisticalEngine, callee);
 }
 void FrequencyColorSpinningTower::Start()
@@ -2177,7 +2177,7 @@ void FrequencyColorSpinningTower::End()
                                                           , StatisticalEngine &statisticalEngine
                                                           , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New UpDownFrequencyColorStreamer with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New UpDownFrequencyColorStreamer with Duration: " << duration << "\n";
   return new UpDownFrequencyColorStreamer(duration, statisticalEngine, callee);
 }
 void UpDownFrequencyColorStreamer::Start()
@@ -2245,7 +2245,7 @@ void UpDownFrequencyColorStreamer::End()
                                                               , StatisticalEngine &statisticalEngine
                                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New UpDownMaxFrequencyStreamer with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New UpDownMaxFrequencyStreamer with Duration: " << duration << "\n";
   return new UpDownMaxFrequencyStreamer(duration, statisticalEngine, callee);
 }
 void UpDownMaxFrequencyStreamer::Start()
@@ -2318,7 +2318,7 @@ void UpDownMaxFrequencyStreamer::End()
                                            , StatisticalEngine &statisticalEngine
                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ScrollingRainbow with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingRainbow with Duration: " << duration << "\n";
   return new FadingColors2(duration, statisticalEngine, callee);
 }
 void FadingColors2::Start()
@@ -2399,7 +2399,7 @@ void FadingColors2::End()
                                               , StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ScrollingRainbow with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingRainbow with Duration: " << duration << "\n";
   return new ScrollingRainbow(duration, statisticalEngine, callee);
 }
 void ScrollingRainbow::Start()
@@ -2450,7 +2450,7 @@ void ScrollingRainbow::End()
                                                                      , StatisticalEngine &statisticalEngine
                                                                      , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ScrollingFrequencyColorRectangles with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingFrequencyColorRectangles with Duration: " << duration << "\n";
   return new ScrollingFrequencyColorRectangles(duration, statisticalEngine, callee);
 }
 void ScrollingFrequencyColorRectangles::Start()
@@ -2552,7 +2552,7 @@ void ScrollingFrequencyColorRectangles::End()
                                                              , StatisticalEngine &statisticalEngine
                                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ScrollingFrequencySprites with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingFrequencySprites with Duration: " << duration << "\n";
   return new ScrollingFrequencySprites(duration, statisticalEngine, callee);
 }
 void ScrollingFrequencySprites::Start()
@@ -2618,7 +2618,7 @@ void ScrollingFrequencySprites::End()
                                                                   , StatisticalEngine &statisticalEngine
                                                                   , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ScrollingSpeedFrequencySprites with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingSpeedFrequencySprites with Duration: " << duration << "\n";
   return new ScrollingSpeedFrequencySprites(duration, statisticalEngine, callee);
 }
 void ScrollingSpeedFrequencySprites::Start()
@@ -2725,7 +2725,7 @@ void ScrollingSpeedFrequencySprites::End()
                                                             , StatisticalEngine &statisticalEngine
                                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New ScrollingAmplitudeSprite with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingAmplitudeSprite with Duration: " << duration << "\n";
   return new ScrollingAmplitudeSprite(duration, statisticalEngine, callee);
 }
 void ScrollingAmplitudeSprite::Start()
@@ -2807,7 +2807,7 @@ void ScrollingAmplitudeSprite::End()
                                        , StatisticalEngine &statisticalEngine
                                        , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New Opposites with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New Opposites with Duration: " << duration << "\n";
   return new Opposites(duration, statisticalEngine, callee);
 }
 void Opposites::Start()
@@ -2902,7 +2902,7 @@ void Opposites::End()
                                    , StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "New Snake with Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New Snake with Duration: " << duration << "\n";
   return new Snake(duration, statisticalEngine, callee);
 }
 void Snake::Start()

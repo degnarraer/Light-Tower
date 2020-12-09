@@ -5,10 +5,10 @@
 #include <math.h>
 
 //Run Fixed Data Tables instead of microphone
-static bool         testMode = false;
+static bool  testMode = false;
 
 //Output Debug Messages
-const bool   debugMode = true;
+const bool   debugMode = false;
 const int    debugLevel = 0;
 
 const bool   debugNanInf = false;
@@ -37,7 +37,7 @@ const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 const unsigned int BIN_SAVE_LENGTH = 60;
 
 //Trigger Level
-const float SILENCE_THRESHOLD = 0.025;
+const float SILENCE_THRESHOLD = 0.05;
 const float triggerLevelGain = 1.0;
 
 // Sampler Tunes
@@ -57,7 +57,7 @@ const int     silenceIntegratorMax = 50000;
 const int     silenceDetectedThreshold = 0.1*silenceIntegratorMax;
 const int     soundDetectedThreshold = 0.9*silenceIntegratorMax;
 const int     soundAdder = 1000;
-const int     silenceSubtractor = -25;
+const int     silenceSubtractor = -10;
 
 //CALCULATED TUNES
 const int FFT_M = (int)log2(FFT_MAX);

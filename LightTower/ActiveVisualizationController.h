@@ -63,8 +63,8 @@ class ActiveVisualizationController: public LEDController
     VisualizationsFactory m_visualizationsFactory;
     void VisualizationStarted(Visualizations *visualization);
     void VisualizationEnded(Visualizations *visualization);
-    void TransitionStarted(Visualizations *visualization);
-    void TransitionEnded(Visualizations *visualization);
+    void TransitionStarted(Visualizations *transition);
+    void TransitionEnded(Visualizations *transition);
     void ConfirmationVisualizationStarted(Visualizations *visualization);
     void ConfirmationVisualizationEnded(Visualizations *visualization);
   
@@ -78,11 +78,34 @@ class ActiveVisualizationController: public LEDController
     bool m_automaticModeOld = true;
 
     //SceneConfig Queue
-    SceneConfig m_sceneConfigQueue[60];
+    static const unsigned int m_sceneConfigQueueSize = 60;
+    SceneConfig m_sceneConfigQueue[m_sceneConfigQueueSize];
     SceneConfig m_activeSceneConfig;
     int m_sceneConfigQueueHeadIndex = 0;
     int m_sceneConfigQueueTailIndex = 0;
     void AddSceneConfigToQueue(VisualizationEntries transition, VisualizationEntries visualization, unsigned long duration, CRGB confirmationColor = CRGB::Black);
+    bool SceneConfigExists()
+    {
+      if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex > 0)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    bool SceneConfigQueueIsFull()
+    {
+      if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex < m_sceneConfigQueueSize - 1)
+      {
+        return false;
+      }
+      else
+      {
+        return true;
+      }
+    }
     SceneConfig GetNextSceneConfigFromQueue();
 
     //Visualizations
@@ -107,6 +130,7 @@ class ActiveVisualizationController: public LEDController
     void TrashTransition();
     void EmptyTransitionTrash();
     void PrintFreeMemory(String text);
+    void TryToGetNextTransition();
     void GetNextTransition();
     void GetNextVisualizer(bool usingSceneConfig);
     void ProcessVisualizations();

@@ -42,6 +42,10 @@ void ActiveVisualizationController::Setup()
   m_statisticalEngine.ConnectCallback(this);
   
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, UINT_MAX);  
+
+  /*
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_VerticalFFTAmplitudeTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 60000);
   
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 0);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
@@ -97,7 +101,8 @@ void ActiveVisualizationController::Setup()
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Snake, 0);
   AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
-  
+  */
+
   GetNextTransition();
   m_gainAdjustModeActive = false;
   if(true == debugMode && debugLevel >= 0) Serial << "Active Visualization Controller: Setup Complete\n";
@@ -143,17 +148,17 @@ void ActiveVisualizationController::VisualizationEnded(Visualizations *visualiza
   }
 }
 
-void ActiveVisualizationController::TransitionStarted(Visualizations *visualization)
+void ActiveVisualizationController::TransitionStarted(Visualizations *transition)
 {
-  if(visualization == m_activeTransition)
+  if(transition == m_activeTransition)
   {
     if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Transition Started\n"; 
   }
 }
 
-void ActiveVisualizationController::TransitionEnded(Visualizations *visualization)
+void ActiveVisualizationController::TransitionEnded(Visualizations *transition)
 {
-  if(visualization == m_activeTransition)
+  if(transition == m_activeTransition)
   {
     if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Transition Ended\n";
     if(true == m_automaticMode)
@@ -182,24 +187,22 @@ void ActiveVisualizationController::ConfirmationVisualizationEnded(Visualization
 
 void ActiveVisualizationController::AddSceneConfigToQueue(VisualizationEntries transition, VisualizationEntries visualization, unsigned long duration, CRGB confirmationColor)
 {
-  int count = (sizeof(m_sceneConfigQueue)/sizeof(*m_sceneConfigQueue));
-  if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex < count - 1)
+  if(false == SceneConfigQueueIsFull())
   {
-    SceneConfig item = {transition, visualization, duration, confirmationColor};
-    m_sceneConfigQueue[m_sceneConfigQueueHeadIndex % count] = item;
     ++m_sceneConfigQueueHeadIndex;
+    SceneConfig item = {transition, visualization, duration, confirmationColor};
+    m_sceneConfigQueue[m_sceneConfigQueueHeadIndex % m_sceneConfigQueueSize] = item;
   }
   if(true == debugMode && debugLevel >= 0) Serial << "Adding Scene Config with Confirmation Color.  Head: " << m_sceneConfigQueueHeadIndex << "\tTail: " << m_sceneConfigQueueTailIndex << "\tDuration: " << duration << "\n";
 }
 
 SceneConfig ActiveVisualizationController::GetNextSceneConfigFromQueue()
 {
-  int count = (sizeof(m_sceneConfigQueue)/sizeof(*m_sceneConfigQueue));
   SceneConfig result;
-  if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex >= 0)
+  if(true == SceneConfigExists())
   {
-    result = m_sceneConfigQueue[m_sceneConfigQueueTailIndex % count];
     ++m_sceneConfigQueueTailIndex;
+    result = m_sceneConfigQueue[m_sceneConfigQueueTailIndex % m_sceneConfigQueueSize];
   }
   if(true == debugMode && debugLevel >= 0) Serial << "Getting Next Scene Config.  Head: " << m_sceneConfigQueueHeadIndex << "\tTail: " << m_sceneConfigQueueTailIndex << "\tDuration: " << result.duration << "\n";
   return result;
@@ -215,13 +218,21 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
       if(false == m_1stSoundDetected)
       {
         m_1stSoundDetected = true;
-        if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex == 0) AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
+        if(false == SceneConfigExists()) AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
         GetNextTransition();
       }
       else if(false == m_gainAdjustModeActive)
       {
-        if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex == 0) AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
-        GetNextTransition();
+        if(true == m_automaticMode)
+        {
+          if(false == SceneConfigExists()) AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
+          GetNextTransition();
+        }
+        else
+        {
+          AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetPrevious, RANDOM_TIME);
+          GetNextTransition();
+        }
       }
     break;
     case SilenceDetected:
@@ -229,7 +240,7 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
       Illuminate(10);
       if(false == m_gainAdjustModeActive)
       {
-        if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex == 0)
+        if(false == SceneConfigExists())
         {
           AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, m_visualizationsFactory.GetRandomStaticVisualizationEntry(), 0);
           AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, ULONG_MAX);
@@ -315,6 +326,10 @@ void ActiveVisualizationController::PrintFreeMemory(String text)
   }
 }
 
+void TryToGetNextTransition()
+{
+  
+}
 void ActiveVisualizationController::GetNextTransition()
 {
   bool usingSceneConfig = false;
@@ -325,7 +340,7 @@ void ActiveVisualizationController::GetNextTransition()
   TrashTransition();
 
   VisualizationType visualizationType = VisualizationType::TRANSITION;
-  if(m_sceneConfigQueueHeadIndex - m_sceneConfigQueueTailIndex > 0)
+  if(true == SceneConfigExists())
   {
     usingSceneConfig = true;
     m_activeSceneConfig = GetNextSceneConfigFromQueue();
