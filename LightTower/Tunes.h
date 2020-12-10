@@ -38,7 +38,7 @@ const unsigned int BIN_SAVE_LENGTH = 60;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.05;
-const float triggerLevelGain = 1.0;
+const float triggerLevelGain = 1.1;
 
 // Sampler Tunes
 /* ch7:A0 ch6:A1 ch5:A2 ch4:A3 ch3:A4 ch2:A5 ch1:A6 ch0:A7 */

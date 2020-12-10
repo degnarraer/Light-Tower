@@ -188,7 +188,7 @@ VisualizationConfig VisualizationsFactory::GetRandomForegroundVisualizationConfi
 
 VisualizationEntries VisualizationsFactory::GetRandomStaticVisualizationEntry()
 {
-  switch(random(3))
+  switch(1) //random(3))
   {
     case 0: 
       return VisualizationEntries::VisualizationEntries_ColorFadingTower;      

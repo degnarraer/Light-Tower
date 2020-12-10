@@ -538,7 +538,7 @@ void SoundDetectionTester::Tick1()
 {
   m_layer[0] = CRGB::Black;
   CRGB spriteColor;
-  if(m_statisticalEngine.powerDb >= SOUND_DETECT_THRESHOLD)
+  if(m_statisticalEngine.power >= SOUND_DETECT_THRESHOLD)
   {
     spriteColor = CRGB::Blue;
   }
@@ -570,7 +570,10 @@ void SoundDetectionTester::End()
 void ColorFadingTower::Start()
 {
   if(true == debugMode && debugLevel >= 1) Serial << "ColorFadingTower Start\n";
-  Tick2();
+  m_randomTime = random(1000, m_maxRandomTime);
+  m_fadeController.ConfigureFadeController( CRGB::Black
+                                          , GetRandomNonGrayColor()
+                                          , m_fadeLength);
   for(int i=0; i<NUMSTRIPS; ++i)
   {
      m_strips[i] = m_fadeController.GetCurrentColor();
@@ -692,11 +695,11 @@ void WaterFallFireStreamer::Tick1()
   ShiftStrip(m_layer[2], Down, 1);
   ShiftStrip(m_layer[3], Up, 1);
   
-  m_layer[0](0, 0) = CRGB((byte)(dim8_raw(m_BottomColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomColor.blue * m_statisticalEngine.powerDb)));
-  m_layer[1](NUMLEDS-1, NUMLEDS-1) = CRGB((byte)(dim8_raw(m_TopColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopColor.blue * m_statisticalEngine.powerDb)));
+  m_layer[0](0, 0) = CRGB((byte)(dim8_raw(m_BottomColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomColor.blue * m_statisticalEngine.power)));
+  m_layer[1](NUMLEDS-1, NUMLEDS-1) = CRGB((byte)(dim8_raw(m_TopColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopColor.blue * m_statisticalEngine.power)));
   
-  m_layer[2]((NUMLEDS/2-1), (NUMLEDS/2-1)) = CRGB((byte)(dim8_raw(m_BottomMiddleColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomMiddleColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomMiddleColor.blue * m_statisticalEngine.powerDb)));
-  m_layer[3](NUMLEDS/2, NUMLEDS/2) = CRGB((byte)(dim8_raw(m_TopMiddleColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopMiddleColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopMiddleColor.blue * m_statisticalEngine.powerDb)));
+  m_layer[2]((NUMLEDS/2-1), (NUMLEDS/2-1)) = CRGB((byte)(dim8_raw(m_BottomMiddleColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomMiddleColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomMiddleColor.blue * m_statisticalEngine.power)));
+  m_layer[3](NUMLEDS/2, NUMLEDS/2) = CRGB((byte)(dim8_raw(m_TopMiddleColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopMiddleColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopMiddleColor.blue * m_statisticalEngine.power)));
   
   m_layer[4] = m_layer[0];
   m_layer[5] = m_layer[1];
@@ -795,7 +798,7 @@ void SolidColorTower::Tick1()
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;
   m_layer[0] = color;
-  if (m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     m_layer[0] = color;
   }
@@ -839,14 +842,14 @@ bool FadingSolidColorTower::Loop()
 }
 void FadingSolidColorTower::Tick1()
 {
-  if (m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     CRGB color;
     m_fadeController.IncrementFade(1);
     ++m_renderCount;
-    color.red = m_fadeController.GetCurrentColor().red * m_statisticalEngine.powerDb;
-    color.blue = m_fadeController.GetCurrentColor().blue * m_statisticalEngine.powerDb;
-    color.green = m_fadeController.GetCurrentColor().green * m_statisticalEngine.powerDb;
+    color.red = m_fadeController.GetCurrentColor().red * m_statisticalEngine.power;
+    color.blue = m_fadeController.GetCurrentColor().blue * m_statisticalEngine.power;
+    color.green = m_fadeController.GetCurrentColor().green * m_statisticalEngine.power;
     m_layer[0] = color;
   }
   else
@@ -941,8 +944,8 @@ void PowerBarWithBassSprite::Tick1()
   m_powerBarColor = m_powerBarFadeController.GetCurrentColor();
   m_maxBassSpriteFadeController.IncrementFade(1);
   m_powerBarColor = m_maxBassSpriteFadeController.GetCurrentColor();
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 5, SoundLevelOutputType_Level);
-  float  level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500.0, 2, SoundLevelOutputType_Beat);
+  float level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 20, SoundLevelOutputType_Level);
+  float level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500.0, 20, SoundLevelOutputType_Level);
   int power = level1 * (NUMLEDS - 2);
   int bassSize = level2 * (NUMLEDS*0.10);
   if(m_sprites[0].position <= power + 1)
@@ -1076,7 +1079,7 @@ void RandomFrequencySprites::Tick1()
   color.green = color.green * maxLevelSave;
   struct Sprite aSprite;
   aSprite.position = random(0, NUMLEDS);
-  if(m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     aSprite.color = color;
     m_layer[0] = CRGB::Black;
@@ -1132,7 +1135,7 @@ void FFTAmplitudes::Tick1()
   {
     float lowerFrequencyRange = i*freqWidth;
     float upperFrequencyRange = i*freqWidth+freqWidth;
-    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 20, SoundLevelOutputType_Level);
+    float  level = GetNormalizedSoundLevelDbForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 5, SoundLevelOutputType_Level);
     level = m_gainmultiplier*m_gainIntigrator*level/m_gainLimitMax;
     if(level < 0.0) level = 0.0;
     if(level > 1.0) level = 1.0;
@@ -1240,7 +1243,7 @@ void FrequencySpriteSpiral::Tick1()
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;  
   
-  if (m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     aSprite.color = color;    
   }
@@ -1296,13 +1299,13 @@ void RandomHighLowFrequencyAmplitudeStreamer::Tick1()
 {
   ShiftStrip(m_layer[0], Up, 1);
   ShiftStrip(m_layer[1], Down, 1);
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, m_triggerFrequencyLow, 0, SoundLevelOutputType_Beat); 
+  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, m_triggerFrequencyLow, 0, SoundLevelOutputType_Level); 
   CRGB color = GetColor(m_triggerFrequencyLow, MAX_DISPLAYED_FREQ);
   color.red = color.red * level1;
   color.blue = color.blue * level1;
   color.green = color.green * level1; 
   m_layer[0](0, 0) = color;
-  float  level2 = GetNormalizedSoundLevelForFrequencyRange(m_triggerFrequencyHigh, MAX_DISPLAYED_FREQ, 0, SoundLevelOutputType_Beat);  
+  float  level2 = GetNormalizedSoundLevelForFrequencyRange(m_triggerFrequencyHigh, MAX_DISPLAYED_FREQ, 0, SoundLevelOutputType_Level);  
   CRGB color2 = GetColor(m_triggerFrequencyHigh, MAX_DISPLAYED_FREQ);
   color2.red = color2.red * level2;
   color2.blue = color2.blue * level2;
@@ -1365,7 +1368,7 @@ void OutwardAmplitudeWithFloatingBassSprites::Tick1()
 {
   int bottomCenter = NUMLEDS/2-1;
   int topCenter = NUMLEDS/2;
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 5, SoundLevelOutputType_Level);
+  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 5, SoundLevelOutputType_Beat);
   float  level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500, 2, SoundLevelOutputType_Beat);
   int barHeight = ((NUMLEDS/2-1))*level1;
   int bassSize = level2 * (0.1 * NUMLEDS);
@@ -1492,7 +1495,7 @@ void VerticalFFTAmplitudeTower::Tick1()
       float  levelSave = 0.0;
       for(int j = 0; ((j < binsPerLED) && (i+j < endBin)); ++j)
       {
-        float  level = GetNormalizedSoundLevelForBin(i+j, 0, SoundLevelOutputType_Beat);
+        float  level = GetNormalizedSoundLevelForBin(i+j, 0, SoundLevelOutputType_Level);
         if(level > levelSave) levelSave = level;
       }
       if(true == debugMode && debugLevel >= 5) Serial << i << " | " << levelSave << "\n";
@@ -1509,7 +1512,7 @@ void VerticalFFTAmplitudeTower::Tick1()
   {
     for(int i = 0; i < NUMLEDS; ++i)
     {
-      float  level = GetNormalizedSoundLevelForBin(i/ledsPerBin, 0, SoundLevelOutputType_Beat);
+      float  level = GetNormalizedSoundLevelForBin(i/ledsPerBin, 0, SoundLevelOutputType_Level);
       if(true == debugMode && debugLevel >= 5) Serial << i << " | " << level << "\n";
       CRGB color = GetColor(i, NUMLEDS);
       m_layer[0][i] = CRGB((byte)(dim8_raw(color.red * level)), (byte)(dim8_raw(color.green * level)), (byte)(dim8_raw(color.blue * level)));
@@ -1563,7 +1566,7 @@ void MultiRangeAmplitudeTower::Tick1()
     int upperLedPosition = i*rangeHeight+rangeHeight-1;
     float lowerFrequencyRange = i*rangeFrequency;
     float upperFrequencyRange = i*rangeFrequency+rangeFrequency;
-    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 5, SoundLevelOutputType_Level);   
+    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 20, SoundLevelOutputType_Beat);   
     if(true == debugMode && debugLevel >= 3) Serial << i << "|" << level << "\t";
     int onLEDs = level*(upperLedPosition-lowerLedPosition - 1);
     m_layer[0](lowerLedPosition, lowerLedPosition + onLEDs) = m_powerBarColor;    
@@ -1630,42 +1633,42 @@ bool SimultaneousFrequencyStreamer::Loop()
 }
 void SimultaneousFrequencyStreamer::Tick1()
 { 
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0*MAX_DISPLAYED_FREQ/8, 1*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0*MAX_DISPLAYED_FREQ/8, 1*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[8] = CRGB((byte)(dim8_raw(m_randomColors[0].red * level1))
                        , (byte)(dim8_raw(m_randomColors[0].green * level1))
                        , (byte)(dim8_raw(m_randomColors[0].blue * level1)));
                      
-  float  level2 = GetNormalizedSoundLevelForFrequencyRange(1*MAX_DISPLAYED_FREQ/8, 2*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level2 = GetNormalizedSoundLevelForFrequencyRange(1*MAX_DISPLAYED_FREQ/8, 2*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[9] = CRGB((byte)(dim8_raw(m_randomColors[1].red * level2))
                        , (byte)(dim8_raw(m_randomColors[1].green * level2))
                        , (byte)(dim8_raw(m_randomColors[1].blue * level2)));
                     
-  float  level3 = GetNormalizedSoundLevelForFrequencyRange(2*MAX_DISPLAYED_FREQ/8, 3*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level3 = GetNormalizedSoundLevelForFrequencyRange(2*MAX_DISPLAYED_FREQ/8, 3*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[10] = CRGB((byte)(dim8_raw(m_randomColors[2].red * level3))
                          , (byte)(dim8_raw(m_randomColors[2].green * level3))
                          , (byte)(dim8_raw(m_randomColors[2].blue * level3)));
                                             
-  float  level4 = GetNormalizedSoundLevelForFrequencyRange(3*MAX_DISPLAYED_FREQ/8, 4*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level4 = GetNormalizedSoundLevelForFrequencyRange(3*MAX_DISPLAYED_FREQ/8, 4*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[11] = CRGB((byte)(dim8_raw(m_randomColors[3].red * level4))
                          , (byte)(dim8_raw(m_randomColors[3].green * level4))
                          , (byte)(dim8_raw(m_randomColors[3].blue * level4)));
                      
-  float  level5 = GetNormalizedSoundLevelForFrequencyRange(4*MAX_DISPLAYED_FREQ/8, 5*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level5 = GetNormalizedSoundLevelForFrequencyRange(4*MAX_DISPLAYED_FREQ/8, 5*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[12] = CRGB((byte)(dim8_raw(m_randomColors[4].red * level5))
                          , (byte)(dim8_raw(m_randomColors[4].green * level5))
                          , (byte)(dim8_raw(m_randomColors[4].blue * level5)));
                    
-  float  level6 = GetNormalizedSoundLevelForFrequencyRange(5*MAX_DISPLAYED_FREQ/8, 6*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level6 = GetNormalizedSoundLevelForFrequencyRange(5*MAX_DISPLAYED_FREQ/8, 6*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[13] = CRGB((byte)(dim8_raw(m_randomColors[5].red * level6))
                          , (byte)(dim8_raw(m_randomColors[5].green * level6))
                          , (byte)(dim8_raw(m_randomColors[5].blue * level6)));
                     
-  float  level7 = GetNormalizedSoundLevelForFrequencyRange(6*MAX_DISPLAYED_FREQ/8, 7*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level7 = GetNormalizedSoundLevelForFrequencyRange(6*MAX_DISPLAYED_FREQ/8, 7*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[14] = CRGB((byte)(dim8_raw(m_randomColors[6].red * level7))
                          , (byte)(dim8_raw(m_randomColors[6].green * level7))
                          , (byte)(dim8_raw(m_randomColors[6].blue * level7)));
                      
-  float  level8 = GetNormalizedSoundLevelForFrequencyRange(7*MAX_DISPLAYED_FREQ/8, 8*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level8 = GetNormalizedSoundLevelForFrequencyRange(7*MAX_DISPLAYED_FREQ/8, 8*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[15] = CRGB((byte)(dim8_raw(m_randomColors[7].red * level8))
                          , (byte)(dim8_raw(m_randomColors[7].green * level8))
                          , (byte)(dim8_raw(m_randomColors[7].blue * level8)));
@@ -1797,17 +1800,17 @@ void MinMaxAmplitude::Tick1()
   float lowerFrequencyRange = m_activeBand*freqWidth;
   float upperFrequencyRange = m_activeBand*freqWidth+freqWidth;
   aSprite.color = GetColor(m_activeBand, m_numBands);
-  db amp = m_statisticalEngine.GetAverageDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, 0, BinDataType::INSTANT);
-  db avg = m_statisticalEngine.GetAverageDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  db maximum = m_statisticalEngine.GetMaxDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  db minimum = m_statisticalEngine.GetMinDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  MinMaxDb mm = m_statisticalEngine.GetFFTBinMinMaxAverageDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  int powerAmp = (amp/MAX_DB) * (NUMLEDS - 1);
-  int powerAvg = (avg/MAX_DB) * (NUMLEDS - 1);
-  int powerMinMaxMax = (mm.max/MAX_DB) * (NUMLEDS - 1);
-  int powerMinMaxMin = (mm.min/MAX_DB) * (NUMLEDS - 1);
-  int powerMax = (maximum/MAX_DB) * (NUMLEDS - 1);
-  int powerMin = (minimum/MAX_DB) * (NUMLEDS - 1);
+  float amp = m_statisticalEngine.GetAverageOfFreqRange(lowerFrequencyRange, upperFrequencyRange, 0, BinDataType::INSTANT);
+  float avg = m_statisticalEngine.GetAverageOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  float maximum = m_statisticalEngine.GetMaxOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  float minimum = m_statisticalEngine.GetMinOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  MinMax mm = m_statisticalEngine.GetFFTBinMinMaxAverageOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  int powerAmp = (amp/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerAvg = (avg/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMinMaxMax = (mm.max/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMinMaxMin = (mm.min/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMax = (maximum/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMin = (minimum/(float)ADDBITS) * (NUMLEDS - 1);
   
   if(powerMinMaxMin < 0) powerMinMaxMin = 0;
   if(powerMinMaxMax < 0) powerMinMaxMax = 0;
@@ -2087,14 +2090,14 @@ void FrequencyColorStreamer::Tick1()
   float  maxLevelSave = 0.0;
   for(int i = 0; i < BINS; ++i)
   {
-    float  level = GetNormalizedSoundLevelForBin(i, 0, SoundLevelOutputType_Level); 
+    float  level = GetNormalizedSoundLevelForBin(i, 0, SoundLevelOutputType_Beat); 
     if(level > maxLevelSave)
     {
       maxLevelSave = level;
       maxBinSave = i;
     }
   }
-  if(m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     m_BottomColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   }
@@ -2152,7 +2155,7 @@ void FrequencyColorSpinningTower::Tick1()
     float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 0, SoundLevelOutputType_Beat);    
     CRGB color = GetColor(rotatedIndex, NUMSTRIPS);
     if(true == debugMode && debugLevel >= 3) Serial << i << "|" << level << "\t";
-    if(m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+    if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
     {
       m_strips[i] = CRGB((byte)(dim8_raw(color.red*level)), (byte)(dim8_raw(color.green*level)), (byte)(dim8_raw(color.blue*level)));
     }
@@ -2210,7 +2213,7 @@ void UpDownFrequencyColorStreamer::Tick1()
       maxBinSave = i;
     }
   }
-  if(m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     m_BottomColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
   }
@@ -2290,7 +2293,7 @@ void UpDownMaxFrequencyStreamer::Tick2()
 {
   float  maxLevelSave = 0.0;
   m_maxBin = 0;
-  if (m_statisticalEngine.powerDb > SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power > SILENCE_THRESHOLD)
   {
     for(int i = 0; i < BINS; ++i)
     {
@@ -2481,7 +2484,7 @@ bool ScrollingFrequencyColorRectangles::Loop()
 }
 void ScrollingFrequencyColorRectangles::Tick1()
 {
-  m_gain = m_statisticalEngine.powerDb;
+  m_gain = m_statisticalEngine.power;
   switch(m_direction)
   {
     case 0:
@@ -2509,7 +2512,7 @@ void ScrollingFrequencyColorRectangles::Tick2()
 {
   int maxBinSave = 0;
   float  maxLevelSave = 0.0;
-  if (m_statisticalEngine.powerDb > SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power > SILENCE_THRESHOLD)
   {
     for(int i = 0; i < BINS; ++i)
     {
@@ -2749,7 +2752,7 @@ bool ScrollingAmplitudeSprite::Loop()
 
 void ScrollingAmplitudeSprite::Tick1()
 {
-  float  level = m_statisticalEngine.powerDb;
+  float  level = m_statisticalEngine.power;
   m_sprite.color = m_fadeController.IncrementFade(1);
   if(m_count % m_waitCount == 0)
   {
@@ -2837,7 +2840,7 @@ void Opposites::Tick1()
   float  minLevelSave = 1.0;
   CRGB colorMax;
   CRGB colorMin;
-  if (m_statisticalEngine.powerDb >= SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     for(int i = 0; i < BINS; ++i)
     {
@@ -2947,7 +2950,7 @@ void Snake::Tick1()
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;
   m_layer[0](0,0) = color;
-  if (m_statisticalEngine.powerDb > SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power > SILENCE_THRESHOLD)
   {
     m_layer[0](0,0) = color;
   }

@@ -65,8 +65,8 @@ bool StatisticalEngine::NewDataReady()
         m_data[i/NUM_CHANNELS] = cBuf[i+2];
         if(i == 0)
         {
-          fftGain = 1.0 + ((FFT_GAIN - 1) - ((FFT_GAIN - 1) * log10(ADDBITS - cBuf[0])/log10(ADDBITS)));
-          ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10(ADDBITS - cBuf[1])/log10(ADDBITS)));
+          fftGain = 1.0 + ((FFT_GAIN - 1) - ((FFT_GAIN - 1) * log10((float)ADDBITS - cBuf[0])/log10((float)ADDBITS)));
+          ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10((float)ADDBITS - cBuf[1])/log10((float)ADDBITS)));
         }
       }
       sampler.SetReadCompleted();
@@ -159,9 +159,9 @@ void StatisticalEngine::UpdateBinArray()
   for(int i = 0; i < BINS; ++i)
   {
     int result = 0;
-    if(m_data[i] > ADDBITS - 1)
+    if(m_data[i] > (float)ADDBITS - 1)
     {
-      result = ADDBITS - 1;
+      result = (float)ADDBITS - 1;
     }
     else
     {
@@ -244,12 +244,12 @@ void StatisticalEngine::FillDataBufferHelper(int testCase, float  a1, float  f1,
   t_count = 0;
   for (int i = 0; i < CHANNEL_SIZE; ++i)
   {
-    m_data[i] = ( (a1 * ADDBITS/2 * sin(2.0 * M_PI  * f1  * t_count*t)) + 
-                  (a2 * ADDBITS/2 * sin(2.0 * M_PI  * f2  * t_count*t)) + 
-                  (a3 * ADDBITS/2 * sin(2.0 * M_PI  * f3  * t_count*t)) +
-                  (a4 * ADDBITS/2 * sin(2.0 * M_PI  * f4  * t_count*t)) + 
-                  (a5 * ADDBITS/2 * sin(2.0 * M_PI  * f5  * t_count*t)) + 
-                  (a6 * ADDBITS/2 * sin(2.0 * M_PI  * f6  * t_count*t)) );
+    m_data[i] = ( (a1 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f1  * t_count*t)) + 
+                  (a2 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f2  * t_count*t)) + 
+                  (a3 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f3  * t_count*t)) +
+                  (a4 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f4  * t_count*t)) + 
+                  (a5 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f5  * t_count*t)) + 
+                  (a6 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f6  * t_count*t)) );
     ++t_count;
   }
 }
