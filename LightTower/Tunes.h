@@ -64,8 +64,8 @@ const int FFT_M = (int)log2(FFT_MAX);
 const int BINS = FFT_MAX / 2;
 const float BINS_DOUBLE = FFT_MAX / 2.0;
 const int ADDBITS = pow(2,ADC_RESOLUTION);
-const int FFT_GAIN = 200;
-const int POWER_GAIN = 10;
+const int FFT_GAIN = 1000;
+const int POWER_GAIN = 20;
 const int MAX_POWER = ADDBITS * POWER_GAIN;
 const float MAX_DB = 20*log10(ADDBITS);
 

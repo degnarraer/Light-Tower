@@ -189,23 +189,22 @@ class Visualizations: public VisualizationsCaller
     float GetNormalizedSoundLevelDbForBin(int aBin, int aDepth, SoundLevelOutputType aLevelType)
     {
       float amp = 0.0;
-      float avg = 0.0;
+      float triggerLevel = 0.0;
       float maximum = 0.0;
       float ampDb = 0.0;
-      float avgDb = 0.0;
+      float triggerLevelDb = 0.0;
       float maximumDb = 0.0;
       float normalizedLevel = 0.0;
       
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
-          avg = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          maximum = m_statisticalEngine.GetFFTBinMax(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          amp = m_statisticalEngine.GetFFTBinRMS(aBin, aDepth, BinDataType::INSTANT);
         break;
         case SoundLevelOutputType_Beat:
           amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
-          avg = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          triggerLevel = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximum = m_statisticalEngine.GetFFTBinMax(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
         break;
       }
       if(amp > 0)
@@ -216,13 +215,13 @@ class Visualizations: public VisualizationsCaller
       {
         ampDb = 0.0;
       }
-      if(avg > 0)
+      if(triggerLevel > 0)
       {
-        avgDb = 20*log10(avg);
+        triggerLevelDb = 20*log10(triggerLevel);
       }
       else
       {
-        avgDb = 0.0;
+        triggerLevelDb = 0.0;
       }
       if(maximum > 0)
       {
@@ -235,15 +234,22 @@ class Visualizations: public VisualizationsCaller
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          normalizedLevel = (ampDb-avgDb) / maximumDb;
+          normalizedLevel = (ampDb) / MAX_DB;
         break;
         case SoundLevelOutputType_Beat:
-          normalizedLevel = ((ampDb-avgDb) / avgDb);
+          if(ampDb > triggerLevelDb) 
+          {
+            normalizedLevel = ((ampDb-triggerLevelDb) / maximumDb);
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
         break;
       }
       if(normalizedLevel < 0.0) normalizedLevel = 0.0;
       if(normalizedLevel > 1.0) normalizedLevel = 1.0;
-      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelDbForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << ampDb << "\Average: " << avgDb << "\tNormalized Level: " << normalizedLevel << "\n";
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelDbForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << ampDb << "\Average: " << triggerLevelDb << "\tNormalized Level: " << normalizedLevel << "\n";
       return normalizedLevel;
     }
     
@@ -251,25 +257,31 @@ class Visualizations: public VisualizationsCaller
     {
       float normalizedLevel = 0.0;
       float amp = 0.0;
-      float avg = 0.0;
+      float triggerLevel = 0.0;
       float maximum = 0.0;
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
-          avg = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          maximum = m_statisticalEngine.GetFFTBinMax(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
-          normalizedLevel = (amp-avg) / maximum;
+          amp = m_statisticalEngine.GetFFTBinRMS(aBin, aDepth, BinDataType::INSTANT);
+          normalizedLevel = (amp) / ADDBITS;
         break;
         case SoundLevelOutputType_Beat:
-          amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
-          avg = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          normalizedLevel = ((amp-avg) / avg);
+          amp = m_statisticalEngine.GetFFTBinRMS(aBin, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximum = m_statisticalEngine.GetFFTBinMax(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          if(amp > triggerLevel) 
+          {
+            normalizedLevel = (amp-triggerLevel) / maximum;
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
         break;
       }
       if(normalizedLevel < 0.0) normalizedLevel = 0.0;
       if(normalizedLevel > 1.0) normalizedLevel = 1.0;
-      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << amp << "\tAverage: " << avg << "\tNormalized Level: " << normalizedLevel << "\n";
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << amp << "\tTrigger Level: " << triggerLevel << "\tNormalized Level: " << normalizedLevel << "\n";
       return normalizedLevel;
     }
 
@@ -278,32 +290,39 @@ class Visualizations: public VisualizationsCaller
       float normalizedLevel = 0.0;
       db maximumDb = 0.0;
       db ampDb = 0.0;
-      db avgDb = 0.0;
+      db triggerLevelDb = 0.0;
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          ampDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
-          maximumDb = m_statisticalEngine.GetMaxDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
-          avgDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          normalizedLevel = ((ampDb-avgDb) / maximumDb);
+          ampDb = m_statisticalEngine.GetRMSDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          triggerLevelDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          normalizedLevel = ((ampDb) / MAX_DB);
         break;
         case SoundLevelOutputType_Beat:
-          ampDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
-          float avg = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          if(avg > 0)
+          ampDb = m_statisticalEngine.GetRMSDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          float triggerLevel = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximumDb = m_statisticalEngine.GetMaxDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          if(triggerLevel > 0)
           {
-            avgDb = 20*log10(avg);
+            triggerLevelDb = 20*log10(triggerLevel);
           }
           else
           {
-            avgDb = 0.0;
+            triggerLevelDb = 0.0;
           }
-          normalizedLevel = ((ampDb-avgDb) / avgDb);
+          if(ampDb > triggerLevelDb) 
+          {
+          normalizedLevel = ((ampDb-triggerLevelDb) / maximumDb);
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
         break;
       }
       if(normalizedLevel < 0.0) normalizedLevel = 0.0;
       if(normalizedLevel > 1.0) normalizedLevel = 1.0;
-      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelDbForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << ampDb << "\tAvrtage: " << avgDb << "\tNormalized Level: " << normalizedLevel << "\n";
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelDbForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << ampDb << "\tAvrtage: " << triggerLevelDb << "\tNormalized Level: " << normalizedLevel << "\n";
       return normalizedLevel;
     }
     
@@ -311,25 +330,32 @@ class Visualizations: public VisualizationsCaller
     {
       float normalizedLevel = 0.0;
       float amp = 0.0;
-      float avg = 0.0;
+      float triggerLevel = 0.0;
       float maximum = 0.0;
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          amp = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
-          avg = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          maximum = m_statisticalEngine.GetMaxOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
-          normalizedLevel = ((amp-avg) / maximum);
+          amp = m_statisticalEngine.GetRMSOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          normalizedLevel = ((amp) / ADDBITS);
         break;
         case SoundLevelOutputType_Beat:
-          amp = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
-          avg = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
-          normalizedLevel = ((amp-avg) / avg);
+          amp = m_statisticalEngine.GetRMSOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximum = m_statisticalEngine.GetMaxOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          if(amp > triggerLevel) 
+          {
+            normalizedLevel = ((amp-triggerLevel) / maximum);
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
         break;
       }
       if(normalizedLevel < 0.0) normalizedLevel = 0.0;
       if(normalizedLevel > 1.0) normalizedLevel = 1.0;
-      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << amp << "\tAverage: " << avg << "\tNormalized Level: " << normalizedLevel << "\n";
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << amp << "\tTrigger Level: " << triggerLevel << "\tNormalized Level: " << normalizedLevel << "\n";
       return normalizedLevel;
     }
     

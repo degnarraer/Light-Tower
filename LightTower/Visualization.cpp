@@ -922,7 +922,7 @@ bool PowerBarWithBassSprite::Loop()
   unsigned long currentTime = millis();
   if(true == debugMode && debugLevel >= 3) Serial << "PowerBarWithBassSprite Loop: " << currentTime-m_resetTimer << " | " << m_duration << "\n";
   if(currentTime-m_timers[0] >= 0) {ResetTimer(0); Tick1(); updateRequired = true;}
-  if(currentTime-m_timers[1] >= 500) {ResetTimer(1); Tick2(); updateRequired = true;}
+  if(currentTime-m_timers[1] >= 100) {ResetTimer(1); Tick2(); updateRequired = true;}
   if(currentTime-m_timers[2] >= 1) {ResetTimer(2); Tick3(); updateRequired = true;}
   if(currentTime-m_timers[3] >= m_powerBarChangeColorTime) {ResetTimer(3); Tick4(); updateRequired = true;}
   if(currentTime-m_timers[4] >= m_bassPowerBarChangeColorTime) {ResetTimer(4); Tick5(); updateRequired = true;}
@@ -944,8 +944,8 @@ void PowerBarWithBassSprite::Tick1()
   m_powerBarColor = m_powerBarFadeController.GetCurrentColor();
   m_maxBassSpriteFadeController.IncrementFade(1);
   m_powerBarColor = m_maxBassSpriteFadeController.GetCurrentColor();
-  float level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 20, SoundLevelOutputType_Level);
-  float level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500.0, 20, SoundLevelOutputType_Level);
+  float level1 = m_statisticalEngine.power;
+  float level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500.0, 20, SoundLevelOutputType_Beat);
   int power = level1 * (NUMLEDS - 2);
   int bassSize = level2 * (NUMLEDS*0.10);
   if(m_sprites[0].position <= power + 1)
@@ -1231,7 +1231,7 @@ void FrequencySpriteSpiral::Tick1()
   float  maxLevelSave = 0.0;
   for(int i = 0; i < BINS; ++i)
   {
-    float  level = GetNormalizedSoundLevelForBin(i, 0, SoundLevelOutputType_Beat);
+    float  level = GetNormalizedSoundLevelForBin(i, 5, SoundLevelOutputType_Beat);
     if(level > maxLevelSave)
     {
       maxLevelSave = level;
@@ -1368,7 +1368,7 @@ void OutwardAmplitudeWithFloatingBassSprites::Tick1()
 {
   int bottomCenter = NUMLEDS/2-1;
   int topCenter = NUMLEDS/2;
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 5, SoundLevelOutputType_Beat);
+  float  level1 = m_statisticalEngine.power;
   float  level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500, 2, SoundLevelOutputType_Beat);
   int barHeight = ((NUMLEDS/2-1))*level1;
   int bassSize = level2 * (0.1 * NUMLEDS);
@@ -1495,7 +1495,7 @@ void VerticalFFTAmplitudeTower::Tick1()
       float  levelSave = 0.0;
       for(int j = 0; ((j < binsPerLED) && (i+j < endBin)); ++j)
       {
-        float  level = GetNormalizedSoundLevelForBin(i+j, 0, SoundLevelOutputType_Level);
+        float  level = GetNormalizedSoundLevelForBin(i+j, 0, SoundLevelOutputType_Beat);
         if(level > levelSave) levelSave = level;
       }
       if(true == debugMode && debugLevel >= 5) Serial << i << " | " << levelSave << "\n";
@@ -1566,7 +1566,7 @@ void MultiRangeAmplitudeTower::Tick1()
     int upperLedPosition = i*rangeHeight+rangeHeight-1;
     float lowerFrequencyRange = i*rangeFrequency;
     float upperFrequencyRange = i*rangeFrequency+rangeFrequency;
-    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 20, SoundLevelOutputType_Beat);   
+    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 5, SoundLevelOutputType_Beat);   
     if(true == debugMode && debugLevel >= 3) Serial << i << "|" << level << "\t";
     int onLEDs = level*(upperLedPosition-lowerLedPosition - 1);
     m_layer[0](lowerLedPosition, lowerLedPosition + onLEDs) = m_powerBarColor;    
