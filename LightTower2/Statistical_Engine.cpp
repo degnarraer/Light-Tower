@@ -235,7 +235,7 @@ void StatisticalEngine::UpdateRunningAverageBandArray()
   }
   for(int i = 0; i < NUM_BANDS; ++i)
   {
-    BandRunningAverageValues[i][currentAverageBandIndex] = GetBandAverage(i, BAND_SAVE_LENGTH, BandDataType::INSTANT);
+    BandRunningAverageValues[i][currentAverageBandIndex] = GetBandAverage(i, BAND_SAVE_LENGTH);
   }
   if(true == debugMode && debugLevel >= 0) Serial << "BAND AVG VALUES: " << BandRunningAverageValues[0][currentAverageBandIndex] << "\t" 
                                                                          << BandRunningAverageValues[1][currentAverageBandIndex] << "\t"  
@@ -275,4 +275,10 @@ float  StatisticalEngine::GetFreqForBin(unsigned int bin)
   if(bin > BINS) bin = BINS;
   if(bin < 0) bin = 0;
   return FFT_BIN(bin, SAMPLE_RATE, FFT_MAX);
+}
+
+
+float StatisticalEngine::GetBandAverage(int band, int depth)
+{
+  return 0;
 }

@@ -139,6 +139,9 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
     const int     m_silenceSubtractor = silenceSubtractor;
     SoundState    soundState = SoundState::SilenceDetected;
 
+  //Statistical Functions
+  float GetBandAverage(int band, int depth);
+
 
 };
 

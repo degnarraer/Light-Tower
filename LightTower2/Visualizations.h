@@ -8,7 +8,8 @@ class Visualization: public VisualizationInterface
     void Start() {}
     bool Loop() {}
     void End() {}
-    
+    bool m_visualizationStarted = false;
+    unsigned long m_resetTimer;
 };
 
 

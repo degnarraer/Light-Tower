@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "Streaming.h"
 #include "Tunes.h"
 
 class TaskInterface
