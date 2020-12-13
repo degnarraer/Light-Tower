@@ -5,13 +5,13 @@
 #include <math.h>
 
 //Output Debug Messages
-const bool   debugMode = false;
-const int    debugLevel = 0;
+const bool   debugMode = true;
+const int    debugLevel = 1;
 
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = true;
+const bool   debugFPS = false;
 const bool   debugTasks = false;
 const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS || debugTasks);
 
@@ -35,7 +35,7 @@ const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
 const unsigned int NUM_BANDS = 8;
-const unsigned int BAND_SAVE_LENGTH = 10;
+const unsigned int BAND_SAVE_LENGTH = 25;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.05;

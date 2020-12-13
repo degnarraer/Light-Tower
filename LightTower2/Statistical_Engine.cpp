@@ -62,7 +62,7 @@ void StatisticalEngine::ProcessSoundData()
          m_Sampler.GetNumberOfReadings() > 0 &&
          true == NewDataReady() )
   {
-    if(true == debugMode && debugLevel >= 0) Serial << "StatisticalEngine: Processing Sound Data\n";
+    if(true == debugMode && debugLevel >= 3) Serial << "StatisticalEngine: Processing Sound Data\n";
     AnalyzeSound();
     UpdateSoundState();
     ++i;
@@ -199,7 +199,8 @@ void StatisticalEngine::UpdateBandArray()
   ++currentBandIndex;
   if(currentBandIndex >= BAND_SAVE_LENGTH )
   {
-    if(true == debugMode && debugLevel >= 0) Serial << "Band Array Rollover\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Band Array Rollover\n";
+    UpdateRunningAverageBandArray();
     currentBandIndex = 0;
   }
   for(int i = 0; i < NUM_BANDS; ++i)
@@ -220,11 +221,7 @@ void StatisticalEngine::UpdateBandArray()
     if(freq > 6400 && freq <= 12800) bandIndex = 7;
     BandValues[bandIndex][currentBandIndex] += m_data[i];
   }
-  if(currentBandIndex >= BAND_SAVE_LENGTH - 1 )
-  {
-    UpdateRunningAverageBandArray();
-  }
-  if(true == debugMode && debugLevel >= 0) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
+  if(true == debugMode && debugLevel >= 1) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
                                                                      << BandValues[1][currentBandIndex] << "\t"  
                                                                      << BandValues[2][currentBandIndex] << "\t"  
                                                                      << BandValues[3][currentBandIndex] << "\t"  
@@ -239,18 +236,14 @@ void StatisticalEngine::UpdateRunningAverageBandArray()
   ++currentAverageBandIndex;
   if(currentAverageBandIndex >= BAND_SAVE_LENGTH)
   {
-    if(true == debugMode && debugLevel >= 0) Serial << "Band Running Average Array Rollover\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Band Running Average Array Rollover\n";
     currentAverageBandIndex = 0;
-  }
-  for(int i = 0; i < NUM_BANDS; ++i)
-  {
-    BandValues[i][currentAverageBandIndex] = 0;
   }
   for(int i = 0; i < NUM_BANDS; ++i)
   {
     BandRunningAverageValues[i][currentAverageBandIndex] = GetBandAverage(i, BAND_SAVE_LENGTH);
   }
-  if(true == debugMode && debugLevel >= 0) Serial << "BAND AVG VALUES: " << BandRunningAverageValues[0][currentAverageBandIndex] << "\t" 
+  if(true == debugMode && debugLevel >= 1) Serial << "BAND AVG VALUES: " << BandRunningAverageValues[0][currentAverageBandIndex] << "\t" 
                                                                          << BandRunningAverageValues[1][currentAverageBandIndex] << "\t"  
                                                                          << BandRunningAverageValues[2][currentAverageBandIndex] << "\t"  
                                                                          << BandRunningAverageValues[3][currentAverageBandIndex] << "\t"  
@@ -272,8 +265,42 @@ float StatisticalEngine::GetFreqForBin(unsigned int bin)
   return FFT_BIN(bin, SAMPLE_RATE, FFT_MAX);
 }
 
+int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
+{
+  int result;
+  
+  if(band < NUM_BANDS && depth < BAND_SAVE_LENGTH)
+  {
+    int position = 0;
+    if (depth <= currentBandIndex)
+    {
+      position = currentBandIndex - depth;
+    }
+    else
+    {
+      position = BAND_SAVE_LENGTH - (depth - currentBandIndex);
+    }
+    result = BandValues[band][position];
+    if(true == debugMode && debugLevel >= 5) Serial << "Band: " << band << " " << "Depth: " << depth << " " << "Result: " << result << "\n";
+    return result;
+  }
+  else
+  {
+    if(true == debugMode) Serial << "!!ERROR: Bin Array Out of Bounds\n";
+    return 0;
+  }
+}
 
 float StatisticalEngine::GetBandAverage(int band, int depth)
 {
-  return 0;
+  float result = 0.0;
+  unsigned int count = 0;
+  for(int i = 0; i < BAND_SAVE_LENGTH && i <= depth; ++i)
+  {
+    result += GetBandValue(band, i);
+    ++count;
+  }
+  result /= count;
+  if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
+  return result;
 }

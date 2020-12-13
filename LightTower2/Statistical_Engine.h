@@ -146,6 +146,7 @@ class StatisticalEngine : public Task
     SoundState    soundState = SoundState::SilenceDetected;
 
   //Statistical Functions
+  int GetBandValue(unsigned int band, unsigned int depth);
   float GetBandAverage(int band, int depth);
 
 };
