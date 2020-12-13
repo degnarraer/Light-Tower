@@ -31,9 +31,9 @@ void StatisticalEngine::Setup()
   m_Sampler.SetSampleRateAndStart(SAMPLE_RATE);
 }
 
-bool StatisticalEngine::CanRunTaskLoop()
+bool StatisticalEngine::CanRunTask()
 {
-  if(true == m_Sampler.IsAvailable() && m_Sampler.GetNumberOfReadings() > 0 && true == NewDataReady())
+  if(m_Sampler.GetNumberOfReadings() > 0 && true == NewDataReady())
   {
     return true;
   }
@@ -42,14 +42,14 @@ bool StatisticalEngine::CanRunTaskLoop()
     return false;
   }
 }
-void StatisticalEngine::RunTaskLoop()
+void StatisticalEngine::RunTask()
 {
   ProcessSoundData();
 }
 
-void StatisticalEngine::HandleInterrupt()
+void StatisticalEngine::HandleADCInterrupt()
 {
-  m_Sampler.HandleInterrupt();
+  m_Sampler.HandleADCInterrupt();
 }
 
 void StatisticalEngine::ProcessSoundData()

@@ -84,7 +84,7 @@ void ADCSampler::End()
   TC_Stop(TC0, 1);
 }
 
-void ADCSampler::HandleInterrupt()
+void ADCSampler::HandleADCInterrupt()
 {
   unsigned long status = ADC->ADC_ISR;
   if (status & ADC_ISR_ENDRX)

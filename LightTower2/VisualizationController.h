@@ -8,22 +8,23 @@
 
 class VisualizationController: public Task
                              , MicrophoneMeasureCalleeInterface
-                             , InterruptHandler
+                             , ADCInterruptHandler
 {
   public:
     VisualizationController(): Task("VisualizationController"){}
-    void HandleInterrupt() { m_StatisticalEngine.HandleInterrupt(); }
-
-    //Task Interface
-    void Setup();
-    bool CanRunTaskLoop(){ return true; }
-    void RunTaskLoop();
-
+    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
+  protected:
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState){}
+    
+    //Task Interface
+    void Setup();
+    bool CanRunTask(){ return true; }
+    void RunTask();
   private:
-    StatisticalEngine m_StatisticalEngine;
     TaskScheduler m_Scheduler;
+    Task *m_Tasks[1] = {&m_StatisticalEngine};
+    StatisticalEngine m_StatisticalEngine;
 };
 
 #endif

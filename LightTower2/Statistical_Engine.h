@@ -91,15 +91,15 @@ class StatisticalEngine : public Task
 
     //Task Interface
     void          Setup();
-    bool          CanRunTaskLoop();
-    void          RunTaskLoop();
+    bool          CanRunTask();
+    void          RunTask();
     
     float power;
     float powerDb;
   
-    void          HandleInterrupt();
+    void          HandleADCInterrupt();
     SoundState    GetSoundState();
-  private:
+  public:
     float ampGain = 1.0;
     float fftGain = 1.0;
     ADCSampler    m_Sampler;
@@ -108,7 +108,7 @@ class StatisticalEngine : public Task
     int           GetFFTData(int position);
 
   //Helpers
-  private:
+  public:
     int16_t       m_data[FFT_MAX];
     int           m_signalMin;
     int           m_signalMax;
@@ -120,7 +120,7 @@ class StatisticalEngine : public Task
     void          setup_AtoD();
 
     //FFT BAND CIRCULAR BUFFER
-  private:
+  public:
     int BandValues[NUM_BANDS][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
     int BandRunningAverageValues[NUM_BANDS][BAND_SAVE_LENGTH];
@@ -135,7 +135,7 @@ class StatisticalEngine : public Task
     const int     m_silenceIntegratorMax = silenceIntegratorMax;
     int           m_silenceIntegrator = 0;
     const int     m_silenceIntegratorMin = 0;
-  private:
+  public:
     long          m_silenceStartTime;
     unsigned long m_startMicros;
     unsigned long m_previousMicros;

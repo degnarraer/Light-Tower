@@ -7,18 +7,18 @@
 #include <Arduino.h>
 
 
-class InterruptHandler
+class ADCInterruptHandler
 {
 public:
-    virtual void HandleInterrupt() = 0;
+    virtual void HandleADCInterrupt() = 0;
 };
 
-class ADCSampler: public InterruptHandler {
+class ADCSampler: public ADCInterruptHandler {
   public:
     ADCSampler();
     void SetSampleRateAndStart(unsigned int samplingRate);
     void End();
-    void HandleInterrupt();
+    void HandleADCInterrupt();
     bool IsAvailable();
     unsigned int GetSamplingRate();
     uint16_t* GetFilledBuffer(int *bufferLength);

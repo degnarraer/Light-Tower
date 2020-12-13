@@ -12,8 +12,8 @@ class Task
     Task(String title): m_Title(title){}
     String m_Title;
     virtual void Setup() = 0;
-    virtual void RunTaskLoop() = 0;
-    virtual bool CanRunTaskLoop() = 0;
+    virtual void RunTask() = 0;
+    virtual bool CanRunTask() = 0;
     String GetTaskTitle() 
     {
       return m_Title;
@@ -34,7 +34,7 @@ class TaskScheduler
       m_numTasks = numTasks;
     }
     void Setup();
-    void RunTaskLoops();
+    void RunTasks();
   private:
     Task **m_tasks;
     unsigned int m_numTasks = 0;
@@ -54,8 +54,11 @@ class CalculateFPS: public Task
       m_startMillis = millis();
       m_frameCount = 0;
     }
-    bool CanRunTaskLoop()
-    { 
+    bool CanRunTask()
+    {
+      return false;
+    
+      /*
       ++m_frameCount;
       m_currentMillis = millis();
       m_lapsedTime = m_currentMillis - m_startMillis;
@@ -67,8 +70,9 @@ class CalculateFPS: public Task
       {
         return false;
       }
+      */
     }
-    void RunTaskLoop()
+    void RunTask()
     {
       m_startMillis = millis();
       if(true == debugFPS) Serial << "FPS for " << m_Title << ": " << m_frameCount / (m_lapsedTime/1000.0) << "\n";
