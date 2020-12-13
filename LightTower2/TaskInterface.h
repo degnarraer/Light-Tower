@@ -26,28 +26,29 @@ class TaskScheduler
   public:
     TaskScheduler(){}
     TaskScheduler(Task **tasks, unsigned int numTasks)
-      : m_tasks(tasks)
-      , m_numTasks(numTasks){}
+      : m_Tasks(tasks)
+      , m_NumTasks(numTasks){}
     void SetTasks(Task **tasks, unsigned int numTasks)
     {
-      m_tasks = tasks;
-      m_numTasks = numTasks;
+      m_Tasks = tasks;
+      m_NumTasks = numTasks;
     }
     void Setup();
     void RunTasks();
   private:
-    Task **m_tasks;
-    unsigned int m_numTasks = 0;
+    Task **m_Tasks;
+    unsigned int m_NumTasks = 0;
 };
 
 class CalculateFPS: public Task
 {
   public:
     CalculateFPS(String title, unsigned int updatePeriodMillis)
-      : m_updatePeriodMillis(updatePeriodMillis)
+      : m_Title(title)
+      , m_updatePeriodMillis(updatePeriodMillis)
       , Task("CalculateFPS"){}
     String m_Title;
-    int m_updatePeriodMillis;
+    unsigned int m_updatePeriodMillis;
     unsigned long m_lapsedTime;
     void Setup()
     {

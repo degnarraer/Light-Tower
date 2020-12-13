@@ -27,11 +27,12 @@
 
 
 VisualizationController visualizationController;
-CalculateFPS calculateFPS("Main", 1000);
+CalculateFPS calculateFPS("Main Loop", 1000);
 Task *tasks[2] = { &visualizationController
                  , &calculateFPS
                  };
-TaskScheduler scheduler(tasks, 2);
+unsigned int taskCount = sizeof(tasks)/sizeof(tasks[0]);
+TaskScheduler scheduler(tasks, taskCount);
 
 void setup()
 {
@@ -48,9 +49,10 @@ void setup()
   }
   delay(3000);
   randomSeed(analogRead(4)*1000);
-  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Started");
-  if(true == debugMode && debugLevel >= 0) Serial << "Main Program: TUNES: SAMPLE_RATE: " << SAMPLE_RATE << "\n";
-  if(true == debugMode && debugLevel >= 0) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
+  if(true == debugRequired) Serial.println("Main Program: Setup Started");
+  if(true == debugRequired) Serial << "Main Program: TUNES: SAMPLE_RATE: " << SAMPLE_RATE << "\n";
+  if(true == debugRequired) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
+  if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << taskCount << "\n";
   scheduler.Setup();
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
 }

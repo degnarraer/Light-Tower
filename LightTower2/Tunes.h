@@ -5,7 +5,7 @@
 #include <math.h>
 
 //Output Debug Messages
-const bool   debugMode = true;
+const bool   debugMode = false;
 const int    debugLevel = 0;
 
 const bool   debugNanInf = false;

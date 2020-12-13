@@ -22,9 +22,9 @@ class VisualizationController: public Task
     bool CanRunTask(){ return true; }
     void RunTask();
   private:
+    StatisticalEngine m_StatisticalEngine;
     TaskScheduler m_Scheduler;
     Task *m_Tasks[1] = {&m_StatisticalEngine};
-    StatisticalEngine m_StatisticalEngine;
 };
 
 #endif
