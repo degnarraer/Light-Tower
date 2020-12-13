@@ -25,6 +25,7 @@
 #define StatisticalEngine_H
 
 #include <limits.h>
+#include "TaskInterface.h"
 #include "Streaming.h"
 #include "Tunes.h"
 #include "ADCSampler.h"
@@ -67,7 +68,6 @@ class MicrophoneMeasureCalleeInterface
 {
 public:
     virtual void MicrophoneStateChange(SoundState) = 0;
-    virtual void TestSequenceComplete() = 0;
 };
 
 class MicrophoneMeasureCallerInterface
@@ -80,47 +80,53 @@ public:
     MicrophoneMeasureCalleeInterface *m_cb;
 };
 
-class StatisticalEngine : public MicrophoneMeasureCallerInterface
+class StatisticalEngine : public Task
+                        , public MicrophoneMeasureCallerInterface
 { 
   public:
     StatisticalEngine()
-    {
-      power = 0;
-    }
+      : Task("StatisticalEngine")
+      , power(0)
+      , powerDb(0){}
+
+    //Task Interface
+    void          Setup();
+    bool          CanRunTaskLoop();
+    void          RunTaskLoop();
+    
     float power;
     float powerDb;
+  
+    void          HandleInterrupt();
+    SoundState    GetSoundState();
+  private:
     float ampGain = 1.0;
     float fftGain = 1.0;
-    ADCSampler    sampler;
-    void          Setup();
-    void          HandleInterrupt();
-    void          UpdateSoundData();
-    SoundState    GetSoundState();
+    ADCSampler    m_Sampler;
     int           GetFFTBinIndexForFrequency(float freq);
     float         GetFreqForBin(unsigned int bin);
     int           GetFFTData(int position);
 
   //Helpers
   private:
-    bool          NewDataReady();
-    void          PlotData();
-    void          FillDataBufferHelper(int testCase, float  a1, float  f1, float  a2, float  f2, float  a3, float  f3, float  a4, float  f4, float  a5, float  f5, float  a6, float  f6);
-    void          AnalyzeSound();
-    void          UpdateSoundState();
-    void          setup_AtoD();
-    float         m_calculatedSampleRate;
     int16_t       m_data[FFT_MAX];
     int           m_signalMin;
     int           m_signalMax;
+    
+    void          ProcessSoundData();
+    bool          NewDataReady();
+    void          AnalyzeSound();
+    void          UpdateSoundState();
+    void          setup_AtoD();
 
     //FFT BAND CIRCULAR BUFFER
   private:
+    int BandValues[NUM_BANDS][BAND_SAVE_LENGTH];
+    int currentBandIndex = -1;
+    int BandRunningAverageValues[NUM_BANDS][BAND_SAVE_LENGTH];
+    int currentAverageBandIndex = -1;
     void UpdateBandArray();
     void UpdateRunningAverageBandArray();
-    int BandValues[NUM_BANDS][BAND_SAVE_LENGTH];
-    int BandRunningAverageValues[NUM_BANDS][BAND_SAVE_LENGTH];
-    int currentBandIndex = -1;
-    int currentAverageBandIndex = -1;
 
  //Sound Detection
   public:
@@ -141,7 +147,6 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
 
   //Statistical Functions
   float GetBandAverage(int band, int depth);
-
 
 };
 

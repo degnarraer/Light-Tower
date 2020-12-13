@@ -14,7 +14,8 @@ const int    debugLevel = 0;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = false;
+const bool   debugFPS = true;
+const bool   debugTasks = true;
 const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS);
 
 // LED SETUP
@@ -31,12 +32,12 @@ const unsigned int NUMBER_OF_TICK_TIMERS = 10;
 const unsigned int NUMBER_OF_LAYERS = 10;
 
 //FFT Tunes
-const int FFT_MAX = 1024;
+const int FFT_MAX = 256;
 const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
-const unsigned int NUM_BANDS = 10;
+const unsigned int NUM_BANDS = 8;
 const unsigned int BAND_SAVE_LENGTH = 10;
 
 //Trigger Level

@@ -24,8 +24,14 @@
 #include <Arduino.h>
 #include "VisualizationController.h"
 
+
+
 VisualizationController visualizationController;
-TaskInterface *tasks[2];
+CalculateFPS calculateFPS("Main", 1000);
+Task *tasks[2] = { &visualizationController
+                 , &calculateFPS
+                 };
+TaskScheduler scheduler(tasks, 2);
 
 void setup()
 {
@@ -42,11 +48,11 @@ void setup()
   }
   delay(3000);
   randomSeed(analogRead(4)*1000);
-  if(true == debugMode && debugLevel >= 0) Serial.println("Setup");
-  if(true == debugMode && debugLevel >= 0) Serial << "SAMPLE_RATE: " << SAMPLE_RATE << "\n";
-  if(true == debugMode && debugLevel >= 0) Serial << "FFT_MAX: " << FFT_MAX << "\n";
-
-  visualizationController.Setup();
+  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Started");
+  if(true == debugMode && debugLevel >= 0) Serial << "Main Program: TUNES: SAMPLE_RATE: " << SAMPLE_RATE << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
+  scheduler.Setup();
+  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
 }
 
 void ADC_Handler()
@@ -56,5 +62,7 @@ void ADC_Handler()
 
 void loop()
 {
-  visualizationController.Loop();
+  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Loop");
+  scheduler.RunTaskLoops();
+  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Loop");
 }

@@ -28,22 +28,38 @@
 
 void StatisticalEngine::Setup()
 {
-  if(true == debugMode && debugLevel >= 0) Serial << "StatisticalEngine: Setup Complete\n";
-  sampler.SetSampleRateAndStart(SAMPLE_RATE);
+  m_Sampler.SetSampleRateAndStart(SAMPLE_RATE);
+}
+
+bool StatisticalEngine::CanRunTaskLoop()
+{
+  if(true == m_Sampler.IsAvailable() && m_Sampler.GetNumberOfReadings() > 0 && true == NewDataReady())
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+void StatisticalEngine::RunTaskLoop()
+{
+  ProcessSoundData();
 }
 
 void StatisticalEngine::HandleInterrupt()
 {
-  sampler.HandleInterrupt();
+  m_Sampler.HandleInterrupt();
 }
 
-void StatisticalEngine::UpdateSoundData()
+void StatisticalEngine::ProcessSoundData()
 {
   int i = 0;
-  while( i < MAX_BUFFERS_TO_PROCESS
-      && sampler.GetNumberOfReadings() > 0 
-      && true == NewDataReady() )
+  while( i < MAX_BUFFERS_TO_PROCESS && 
+         m_Sampler.GetNumberOfReadings() > 0 &&
+         true == NewDataReady() )
   {
+    if(true == debugMode && debugLevel >= 0) Serial << "StatisticalEngine: Processing Sound Data\n";
     AnalyzeSound();
     UpdateSoundState();
     ++i;
@@ -53,10 +69,10 @@ void StatisticalEngine::UpdateSoundData()
 
 bool StatisticalEngine::NewDataReady()
 {
-  if (sampler.IsAvailable())
+  if (m_Sampler.IsAvailable())
   {
     int bufferLength = 0;
-    uint16_t* cBuf = sampler.GetFilledBuffer(&bufferLength);
+    uint16_t* cBuf = m_Sampler.GetFilledBuffer(&bufferLength);
     for (int i = 0; i < bufferLength; i=i+NUM_CHANNELS)
     {
       m_data[i/NUM_CHANNELS] = cBuf[i+2];
@@ -66,7 +82,7 @@ bool StatisticalEngine::NewDataReady()
         ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10((float)ADDBITS - cBuf[1])/log10((float)ADDBITS)));
       }
     }
-    sampler.SetReadCompleted();
+    m_Sampler.SetReadCompleted();
     if(true == debugMode && debugLevel >= 3) Serial << "Amp Gain: " << ampGain << "\tFFT Gain: " << fftGain << "\n";
     return true;
   }
@@ -90,7 +106,6 @@ void StatisticalEngine::AnalyzeSound()
       avg += m_data[i];
   }
   avg = avg/CHANNEL_SIZE;
-  if(true == debugPlotMic) PlotData();
   for(int i=0; i < CHANNEL_SIZE; i++)
   {
     int result = ((m_data[i] - avg) * ampGain);
@@ -127,7 +142,6 @@ void StatisticalEngine::AnalyzeSound()
   if(power > 1.0) power = 1.0;
   if(power < 0.0) power = 0.0;
   ZeroFFT(m_data, FFT_MAX);
-  if(true == debugPlotFFT) PlotData();
   UpdateBandArray();
   if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
 }
@@ -193,16 +207,14 @@ void StatisticalEngine::UpdateBandArray()
   {
     float freq = GetFreqForBin(i);
     int bandIndex = 0;
-    if(freq > 0 && freq <= 25) bandIndex = 0;
-    if(freq > 25 && freq <= 50) bandIndex = 1;
-    if(freq > 50 && freq <= 100) bandIndex = 2;
-    if(freq > 100 && freq <= 200) bandIndex = 3;
-    if(freq > 200 && freq <= 400) bandIndex = 4;
-    if(freq > 400 && freq <= 800) bandIndex = 5;
-    if(freq > 800 && freq <= 1600) bandIndex = 6;
-    if(freq > 1600 && freq <= 3200) bandIndex = 7;
-    if(freq > 3200 && freq <= 6400) bandIndex = 8;
-    if(freq > 6400 && freq <= 12800) bandIndex = 9;
+    if(freq > 0 && freq <= 100) bandIndex = 0;
+    if(freq > 100 && freq <= 200) bandIndex = 1;
+    if(freq > 200 && freq <= 400) bandIndex = 2;
+    if(freq > 400 && freq <= 800) bandIndex = 3;
+    if(freq > 800 && freq <= 1600) bandIndex = 4;
+    if(freq > 1600 && freq <= 3200) bandIndex = 5;
+    if(freq > 3200 && freq <= 6400) bandIndex = 6;
+    if(freq > 6400 && freq <= 12800) bandIndex = 7;
     BandValues[bandIndex][currentBandIndex] += m_data[i];
   }
   if(currentBandIndex >= BAND_SAVE_LENGTH - 1 )
@@ -216,9 +228,7 @@ void StatisticalEngine::UpdateBandArray()
                                                                      << BandValues[4][currentBandIndex] << "\t"  
                                                                      << BandValues[5][currentBandIndex] << "\t" 
                                                                      << BandValues[6][currentBandIndex] << "\t" 
-                                                                     << BandValues[7][currentBandIndex] << "\t"
-                                                                     << BandValues[8][currentBandIndex] << "\t"
-                                                                     << BandValues[9][currentBandIndex] << "\n";
+                                                                     << BandValues[7][currentBandIndex] << "\n";
 }
 
 void StatisticalEngine::UpdateRunningAverageBandArray()
@@ -244,33 +254,15 @@ void StatisticalEngine::UpdateRunningAverageBandArray()
                                                                          << BandRunningAverageValues[4][currentAverageBandIndex] << "\t"  
                                                                          << BandRunningAverageValues[5][currentAverageBandIndex] << "\t" 
                                                                          << BandRunningAverageValues[6][currentAverageBandIndex] << "\t" 
-                                                                         << BandRunningAverageValues[7][currentAverageBandIndex] << "\t" 
-                                                                         << BandRunningAverageValues[8][currentAverageBandIndex] << "\t" 
-                                                                         << BandRunningAverageValues[9][currentAverageBandIndex] << "\n"; 
+                                                                         << BandRunningAverageValues[7][currentAverageBandIndex] << "\n"; 
 }
-
-
 
 SoundState StatisticalEngine::GetSoundState()
 {
   return soundState;
 }
 
-
-int StatisticalEngine::GetFFTData(int position)
-{
-  if(position < BINS)
-  {
-    int result = m_data[position];
-    return result;
-  }
-  else
-  {
-    return 0;
-  }
-}
-
-float  StatisticalEngine::GetFreqForBin(unsigned int bin)
+float StatisticalEngine::GetFreqForBin(unsigned int bin)
 {
   if(bin > BINS) bin = BINS;
   if(bin < 0) bin = 0;

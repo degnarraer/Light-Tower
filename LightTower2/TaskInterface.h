@@ -1,38 +1,84 @@
+#ifndef TaskInterface_H
+#define TaskInterface_H
+
 #include <Arduino.h>
 #include "Streaming.h"
 #include "Tunes.h"
 
-class TaskInterface
+class Task
 {
   public:
-    TaskInterface(){}
+    Task(): m_Title("Unnamed"){}
+    Task(String title): m_Title(title){}
+    String m_Title;
     virtual void Setup() = 0;
-    virtual bool Loop() = 0;
+    virtual void RunTaskLoop() = 0;
+    virtual bool CanRunTaskLoop() = 0;
+    String GetTaskTitle() 
+    {
+      return m_Title;
+    }
+    void SetTaskTitle(String title) { m_Title = title; }
 };
 
-class CalculateFPS: public TaskInterface
+class TaskScheduler
 {
   public:
-    CalculateFPS(){}
+    TaskScheduler(){}
+    TaskScheduler(Task **tasks, unsigned int numTasks)
+      : m_tasks(tasks)
+      , m_numTasks(numTasks){}
+    void SetTasks(Task **tasks, unsigned int numTasks)
+    {
+      m_tasks = tasks;
+      m_numTasks = numTasks;
+    }
+    void Setup();
+    void RunTaskLoops();
   private:
-    unsigned long m_startMillis;
-    unsigned long m_currentMillis;
-    unsigned int m_frameCount;
+    Task **m_tasks;
+    unsigned int m_numTasks = 0;
+};
+
+class CalculateFPS: public Task
+{
+  public:
+    CalculateFPS(String title, unsigned int updatePeriodMillis)
+      : m_updatePeriodMillis(updatePeriodMillis)
+      , Task("CalculateFPS"){}
+    String m_Title;
+    int m_updatePeriodMillis;
+    unsigned long m_lapsedTime;
     void Setup()
     {
       m_startMillis = millis();
       m_frameCount = 0;
     }
-    bool Loop()
-    {
+    bool CanRunTaskLoop()
+    { 
       ++m_frameCount;
       m_currentMillis = millis();
-      unsigned long lapsedTime = m_currentMillis - m_startMillis;
-      if(lapsedTime >= 1000)
+      m_lapsedTime = m_currentMillis - m_startMillis;
+      if(m_lapsedTime >= m_updatePeriodMillis)
       {
-        m_startMillis = millis();
-        if(true == debugFPS) Serial << "FPS: " << m_frameCount / (lapsedTime/1000.0) << "\n";
-        m_frameCount = 0;
-      } 
+        return true;
+      }
+      else
+      {
+        return false;
+      }
     }
+    void RunTaskLoop()
+    {
+      m_startMillis = millis();
+      if(true == debugFPS) Serial << "FPS for " << m_Title << ": " << m_frameCount / (m_lapsedTime/1000.0) << "\n";
+      m_frameCount = 0;
+    }
+  private:
+    unsigned long m_startMillis;
+    unsigned long m_currentMillis;
+    unsigned int m_frameCount;
+    
 };
+
+#endif

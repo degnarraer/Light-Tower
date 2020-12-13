@@ -6,10 +6,8 @@ void BandAmplitudes::Start()
   if(true == debugMode && debugLevel >= 1) Serial << "BandAmplitudes Start\n";
 }
 
-bool BandAmplitudes::Loop() 
+void BandAmplitudes::Loop() 
 {
-
-  return false;
 }
 
 void BandAmplitudes::Tick1()

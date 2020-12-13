@@ -1,34 +1,29 @@
+#ifndef VisualizationController_H
+#define VisualizationController_H
+
 #include "Statistical_Engine.h"
 #include "Visualizations.h"
 #include "LEDControllerInterface.h"
+#include "TaskInterface.h"
 
-class VisualizationController: public TaskInterface
+class VisualizationController: public Task
                              , MicrophoneMeasureCalleeInterface
                              , InterruptHandler
 {
   public:
-    VisualizationController(){}
-    StatisticalEngine m_StatisticalEngine;
-    
-    void Setup()
-    {
-      m_StatisticalEngine.Setup();
-      m_StatisticalEngine.ConnectCallback(this);
-    }
-    bool Loop()
-    {
-      m_StatisticalEngine.UpdateSoundData();
-    }
+    VisualizationController(): Task("VisualizationController"){}
+    void HandleInterrupt() { m_StatisticalEngine.HandleInterrupt(); }
+
+    //Task Interface
+    void Setup();
+    bool CanRunTaskLoop(){ return true; }
+    void RunTaskLoop();
 
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState){}
-    void TestSequenceComplete(){}
-    void HandleInterrupt() 
-    {
-      m_StatisticalEngine.HandleInterrupt();
-    }
   private:
-    Visualization CreateNewVisualization() {};
-    BandAmplitudes fFTAmplitudes;
-
+    StatisticalEngine m_StatisticalEngine;
+    TaskScheduler m_Scheduler;
 };
+
+#endif

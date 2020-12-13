@@ -1,3 +1,6 @@
+#ifndef Visualization_H
+#define Visualization_H
+
 #include "VisualizationInterface.h"
 
 class Visualization: public VisualizationInterface
@@ -6,7 +9,7 @@ class Visualization: public VisualizationInterface
     Visualization(){}    
     void Setup() {}
     void Start() {}
-    bool Loop() {}
+    void Loop() {}
     void End() {}
     bool m_visualizationStarted = false;
     unsigned long m_resetTimer;
@@ -22,7 +25,7 @@ class BandAmplitudes: public Visualization
       if(true == debugMode && debugLevel >= 1) Serial << "Delete BandAmplitudes\n";
     }
     virtual void Start();
-    virtual bool Loop();
+    virtual void Loop();
     virtual void End();
   private:
     void Tick1();
@@ -34,3 +37,5 @@ class BandAmplitudes: public Visualization
     int m_gainIntigrator = 100;
         
 };
+
+#endif
