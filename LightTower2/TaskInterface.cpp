@@ -13,7 +13,7 @@ void TaskScheduler::Setup()
     if(true == debugTasks) Serial << "TaskScheduler: Setup Task: " << tp->GetTaskTitle() << " Complete\n";
     ++tpp;
   }
-  if(true == debugTasks) Serial << "TaskScheduler: Setup Complete\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "TaskScheduler: Setup Complete\n";
 }
 void TaskScheduler::RunTasks()
 {

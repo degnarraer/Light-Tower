@@ -4,9 +4,6 @@
 
 #include <math.h>
 
-//Run Fixed Data Tables instead of microphone
-static bool  testMode = false;
-
 //Output Debug Messages
 const bool   debugMode = true;
 const int    debugLevel = 0;
@@ -16,7 +13,7 @@ const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
 const bool   debugFPS = true;
 const bool   debugTasks = false;
-const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS);
+const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS || debugTasks);
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;

@@ -31,7 +31,7 @@ CalculateFPS calculateFPS("Main", 1000);
 Task *tasks[2] = { &visualizationController
                  , &calculateFPS
                  };
-TaskScheduler scheduler(tasks, sizeof(tasks)/sizeof(tasks[0]));
+TaskScheduler scheduler(tasks, 2);
 
 void setup()
 {
@@ -62,7 +62,5 @@ void ADC_Handler()
 
 void loop()
 {
-  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Loop");
   scheduler.RunTasks();
-  if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Loop");
 }

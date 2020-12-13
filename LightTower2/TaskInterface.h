@@ -56,9 +56,6 @@ class CalculateFPS: public Task
     }
     bool CanRunTask()
     {
-      return false;
-    
-      /*
       ++m_frameCount;
       m_currentMillis = millis();
       m_lapsedTime = m_currentMillis - m_startMillis;
@@ -70,7 +67,6 @@ class CalculateFPS: public Task
       {
         return false;
       }
-      */
     }
     void RunTask()
     {

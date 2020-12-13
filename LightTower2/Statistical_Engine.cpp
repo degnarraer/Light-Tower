@@ -33,7 +33,7 @@ void StatisticalEngine::Setup()
 
 bool StatisticalEngine::CanRunTask()
 {
-  if(m_Sampler.GetNumberOfReadings() > 0 && true == NewDataReady())
+  if(m_Sampler.GetNumberOfReadings() > 0)
   {
     return true;
   }
