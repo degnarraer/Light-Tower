@@ -3,10 +3,40 @@
 
 #include "VisualizationInterface.h"
 
+class Model
+{
+  public: 
+  Model(){}
+};
+
+class View
+{
+  typedef int position;
+  typedef int size;
+  public:
+    View(position x, position y, size l, size w){}
+    position X;
+    position Y;
+    size Length;
+    size Width;
+    View *Children;
+    View *Parent;
+    void AddChildView(View Child);
+    void RemoveChildView(View Child);
+    void RemoveAllChildrenViews();
+};
+
+class Controller
+{
+};
+
 class Visualization: public VisualizationInterface
+                   , Model
+                   , View
+                   , Controller
 {
   public:
-    Visualization(){}    
+    Visualization(): View(0, 0, NUMLEDS, NUMSTRIPS){}    
     void Setup() {}
     void Start() {}
     void Loop() {}
