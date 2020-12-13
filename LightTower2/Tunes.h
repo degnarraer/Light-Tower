@@ -29,7 +29,7 @@ const unsigned int NUMBER_OF_TICK_TIMERS = 10;
 const unsigned int NUMBER_OF_LAYERS = 10;
 
 //FFT Tunes
-const int FFT_MAX = 256;
+const int FFT_MAX = 512;
 const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 

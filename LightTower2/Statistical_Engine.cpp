@@ -26,8 +26,10 @@
 #include <Arduino.h>
 #include "Statistical_Engine.h"
 
+CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
+  calculateFPS2.Setup();
   m_Sampler.SetSampleRateAndStart(SAMPLE_RATE);
 }
 
@@ -35,6 +37,7 @@ bool StatisticalEngine::CanRunTask()
 {
   if(m_Sampler.GetNumberOfReadings() > 0)
   {
+    if(true == calculateFPS2.CanRunTask()) { calculateFPS2.RunTask(); }
     return true;
   }
   else
