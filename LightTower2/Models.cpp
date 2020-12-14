@@ -20,3 +20,17 @@
  * *
 
  */
+
+#include "Models.h"
+ 
+void StatisticalEngineModelInterface::Setup()
+{
+  m_Scheduler.AddTask(m_StatisticalEngine);
+  m_StatisticalEngine.ConnectCallback(this);
+}
+void StatisticalEngineModelInterface::RunTask()
+{
+  m_Scheduler.RunTasks();
+}
+
+//************** SOUND POWER MODEL **************

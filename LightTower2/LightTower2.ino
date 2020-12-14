@@ -24,7 +24,9 @@
 #include <Arduino.h>
 #include "Streaming.h"
 #include "VisualizationController.h"
+#include "Models.h"
 
+StatisticalEngineModelInterface statisticalEngineModelInterface;
 VisualizationController visualizationController;
 CalculateFPS calculateFPS("Main Loop", 1000);
 TaskScheduler Scheduler;
@@ -50,12 +52,13 @@ void setup()
   if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << Scheduler.GetTaskCount() << "\n";
   Scheduler.AddTask(calculateFPS);
   Scheduler.AddTask(visualizationController);
+  Scheduler.AddTask(statisticalEngineModelInterface);
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
 }
 
 void ADC_Handler()
 {
-  visualizationController.HandleADCInterrupt();
+  statisticalEngineModelInterface.HandleADCInterrupt();
 }
 
 void loop()

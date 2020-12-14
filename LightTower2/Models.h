@@ -23,9 +23,33 @@
  
 #ifndef Models_H
 #define Models_H
+#include "TaskInterface.h"
+#include "Statistical_Engine.h"
 #include <LinkedList.h>
 #include "Streaming.h"
 #include "Tunes.h"
+
+class StatisticalEngineModelInterface: public Task
+                                     , MicrophoneMeasureCalleeInterface
+                                     , ADCInterruptHandler
+{
+  public:
+    StatisticalEngineModelInterface(): Task("StatisticalEngineModelInterface"){}
+    StatisticalEngine m_StatisticalEngine;
+    TaskScheduler m_Scheduler;
+    
+    //MicrophoneMeasureCalleeInterface
+    void MicrophoneStateChange(SoundState){}
+    
+    //ADCInterruptHandler
+    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
+  
+  private:
+    //Task Interface
+    void Setup();
+    void RunTask();
+    bool CanRunTask() {return true;}
+};
 
 class ModelEventNotificationCallerInterface;
 
@@ -54,7 +78,7 @@ class ModelEventNotificationCallerInterface
         }
       }
     }
-    void SendNotificationToCalleesFrom(float value, ModelEventNotificationCallerInterface &source)
+    void SendNewValueNotificationToCalleesFrom(float value, ModelEventNotificationCallerInterface &source)
     {
       for(int i = 0; i < myCallees.size(); ++i)
       {
@@ -65,13 +89,39 @@ class ModelEventNotificationCallerInterface
     LinkedList<ModelEventNotificationCalleeInterface*> myCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
 };
 
-class Model: public ModelEventNotificationCallerInterface
+class Model: public Task
+           , ModelEventNotificationCallerInterface
 {
   public: 
     Model(){}
   private:
     float m_PreviousValue;
     float m_CurrentValue;
+    void SetCurrentValue(float value)
+    {
+      m_CurrentValue = value;
+      if(m_PreviousValue != m_CurrentValue)
+      {
+        SendNewValueNotificationToCalleesFrom(m_CurrentValue, *this);
+        m_PreviousValue = m_CurrentValue;
+      }
+    }
+    virtual void Setup() = 0;
+    virtual void RunTask() = 0;
+    virtual bool CanRunTask() = 0;
+};
+
+class SoundPower: public Model
+                , Task
+                , StatisticalEngineModelInterface
+{
+  public:
+    SoundPower(): Task("SoundPower"){}
+    TaskScheduler Scheduler;
+  private:  
+    void Setup(){};
+    void RunTask(){};
+    bool CanRunTask(){};
 };
 
 #endif

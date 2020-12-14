@@ -32,13 +32,16 @@ class VisualizationInterface: public Task
 {
   public:
     VisualizationInterface(){}
+  
+  private:
+    //Task Interface
     virtual void Setup() = 0;
-    virtual void Start() = 0;
     virtual void RunTask() = 0;
-    virtual void End() = 0;
+    virtual bool CanRunTask() = 0;
 };
 
-class View: public ModelEventNotificationCalleeInterface
+class View: public VisualizationInterface
+          , ModelEventNotificationCalleeInterface
 {
   typedef int position;
   typedef int size;
@@ -50,18 +53,15 @@ class View: public ModelEventNotificationCalleeInterface
     size Width;
 
     //Views
-    LinkedList<View*> SubViews = LinkedList<View*>();
+    LinkedList<View*> ChildViews = LinkedList<View*>();
     View *ParentView;
-    void AddChildView(View Child);
-    void RemoveChildView(View Child);
-    void RemoveAllChildrenViews();
+    void AddChildView(View &Child){};
+    void RemoveChildView(View &Child){};
+    void RemoveAllChildrenViews(){};
     
     //Models    
     void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source);
     LinkedList<Model*> Models = LinkedList<Model*>();
-    void AddModel(Model aModel);
-    void RemoveModel(Model aModel);
-    void RemoveAllModels();
 };
 
 class Controller
@@ -71,18 +71,14 @@ class Controller
 };
 
 class Visualization: public VisualizationInterface
-                   , Model
                    , View
-                   , Controller
 {
   public:
     Visualization(): View(0, 0, NUMLEDS, NUMSTRIPS){}    
-    void Setup() {}
-    void Start() {}
-    void Loop() {}
-    void End() {}
-    bool m_visualizationStarted = false;
-    unsigned long m_resetTimer;
+  private:
+    virtual void Setup() = 0;
+    virtual void RunTask() = 0;
+    virtual bool CanRunTask() = 0;
 };
 
 
