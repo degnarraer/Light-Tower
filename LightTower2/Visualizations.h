@@ -1,22 +1,54 @@
 #ifndef Visualization_H
 #define Visualization_H
-
 #include "VisualizationInterface.h"
+#include <LinkedList.h>
 
-class Model
+
+class ModelEventNotificationCallerInterface;
+
+class ModelEventNotificationCalleeInterface
+{
+public:
+    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
+};
+
+class ModelEventNotificationCallerInterface
+{
+  public:
+    void RegisterForNotification(ModelEventNotificationCalleeInterface &callee)
+    {
+      if(true == debugModelNotifications) Serial << "ModelEventNotificationCallerInterface: Add: ";        
+      myCallees.add(&callee);
+    }
+    void DeRegisterForNotification(ModelEventNotificationCalleeInterface &callee)
+    {
+      for(int i = 0; i < myCallees.size(); ++i)
+      {
+        if(myCallees.get(i) == &callee)
+        {
+          myCallees.remove(i);
+          break;
+        }
+      }
+    }
+    void SendNotificationToCalleesFrom(float value, ModelEventNotificationCallerInterface &source)
+    {
+      for(int i = 0; i < myCallees.size(); ++i)
+      {
+        myCallees.get(i)->NewValueNotificationFrom(value, source);
+      }
+    }
+  private:
+    LinkedList<ModelEventNotificationCalleeInterface*> myCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
+};
+
+class Model: public ModelEventNotificationCallerInterface
 {
   public: 
     Model(){}
   private:
     float m_PreviousValue;
     float m_CurrentValue;
-    void ConnectCallback(Model *cb)
-    {
-        m_cb = cb;
-    }
-    Model *m_cb;
-    virtual void NewValueNotification(float Value) = 0;
-    virtual void ModelUpdate() = 0;
 };
 
 class View
@@ -29,11 +61,19 @@ class View
     position Y;
     size Length;
     size Width;
-    View *Children;
-    View *Parent;
+
+    //Views
+    LinkedList<View*> SubViews = LinkedList<View*>();
+    View *ParentView;
     void AddChildView(View Child);
     void RemoveChildView(View Child);
     void RemoveAllChildrenViews();
+    
+    //Models
+    LinkedList<Model*> Models = LinkedList<Model*>();
+    void AddModel(Model aModel);
+    void RemoveModel(Model aModel);
+    void RemoveAllModels();
 };
 
 class Controller

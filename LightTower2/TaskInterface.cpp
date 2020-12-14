@@ -12,6 +12,10 @@ void TaskScheduler::RunTasks()
       aTask->RunTask();
       if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Complete\n";
     }
+    else
+    {
+      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Not Ready\n";
+    }
   }
   if(true == debugTasks) Serial << "TaskScheduler: RunTasks: Complete\n";
 }
@@ -25,5 +29,30 @@ void TaskScheduler::AddTask(Task &task)
     task.Setup();
     task.m_IsSetup = true;
     if(true == debugTasks) Serial << "TaskScheduler: Setup: " << task.GetTaskTitle() << ": Complete\n";
+  }
+}
+
+bool TaskScheduler::RemoveTask(Task &task)
+{
+  if(true == debugTasks) Serial << "TaskScheduler: Remove Task: " << task.GetTaskTitle() << ": Start\n";
+  bool taskFound = false;
+  for(int i = 0; i < myTasks.size(); ++i)
+  {
+    if(myTasks.get(i) == &task)
+    {
+      taskFound = true;
+      myTasks.remove(i);
+      break;
+    }
+  }
+  if(true == taskFound)
+  {
+    if(true == debugTasks) Serial << "TaskScheduler: Remove Task: " << task.GetTaskTitle() << ": Success\n";
+    return true;
+  }
+  else
+  {
+    if(true == debugTasks) Serial << "TaskScheduler: Remove Task: " << task.GetTaskTitle() << ": Fail\n";
+    return false;
   }
 }

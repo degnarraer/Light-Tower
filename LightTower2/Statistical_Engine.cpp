@@ -224,7 +224,7 @@ void StatisticalEngine::UpdateBandArray()
   {
     UpdateRunningAverageBandArray();
   }
-  if(true == debugMode && debugLevel >= 2) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
+  if(true == debugMode && debugLevel >= 1) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
                                                                      << BandValues[1][currentBandIndex] << "\t"  
                                                                      << BandValues[2][currentBandIndex] << "\t"  
                                                                      << BandValues[3][currentBandIndex] << "\t"  

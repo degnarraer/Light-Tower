@@ -12,8 +12,15 @@ const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
 const bool   debugFPS = true;
-const bool   debugTasks = false;
-const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS || debugTasks);
+const bool   debugTasks = true;
+const bool   debugModelNotifications = true;
+const bool   debugRequired = ( debugMode || 
+                               debugNanInf || 
+                               debugPlotMic || 
+                               debugPlotFFT || 
+                               debugFPS || 
+                               debugTasks || 
+                               debugModelNotifications);
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;

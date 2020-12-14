@@ -31,6 +31,7 @@ class TaskScheduler
     TaskScheduler(){}
     void RunTasks();
     void AddTask(Task &task);
+    bool RemoveTask(Task &task);
     unsigned int GetTaskCount() {return myTasks.size();}
   private:
     LinkedList<Task*> myTasks = LinkedList<Task*>();
