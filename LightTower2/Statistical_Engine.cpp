@@ -197,9 +197,10 @@ void StatisticalEngine::UpdateSoundState()
 void StatisticalEngine::UpdateBandArray()
 {
   ++currentBandIndex;
-  if(currentBandIndex >= BAND_SAVE_LENGTH )
+  if(currentBandIndex >= BAND_SAVE_LENGTH)
   {
     currentBandIndex = 0;
+    if(true == debugMode && debugLevel >= 2) Serial << "Band Array Rollover\n";
   }
   for(int i = 0; i < NUM_BANDS; ++i)
   {
@@ -219,9 +220,8 @@ void StatisticalEngine::UpdateBandArray()
     if(freq > 6400 && freq <= 12800) bandIndex = 7;
     BandValues[bandIndex][currentBandIndex] += m_data[i];
   }
-  if(currentBandIndex >= BAND_SAVE_LENGTH - 1 )
+  if(currentBandIndex >= BAND_SAVE_LENGTH - 1)
   {
-    if(true == debugMode && debugLevel >= 2) Serial << "Band Array Rollover\n";
     UpdateRunningAverageBandArray();
   }
   if(true == debugMode && debugLevel >= 2) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
@@ -271,7 +271,6 @@ float StatisticalEngine::GetFreqForBin(unsigned int bin)
 int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
 {
   int result;
-  
   if(band < NUM_BANDS && depth < BAND_SAVE_LENGTH)
   {
     int position = 0;
