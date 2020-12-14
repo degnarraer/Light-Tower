@@ -35,7 +35,7 @@ void StatisticalEngine::Setup()
 
 bool StatisticalEngine::CanRunTask()
 {
-  if(true == m_Sampler.IsAvailable() && m_Sampler.GetNumberOfReadings() > 0)
+  if(true == m_Sampler.IsAvailable())
   {
     if(true == calculateFPS2.CanRunTask()) { calculateFPS2.RunTask(); }
     return true;
@@ -199,8 +199,6 @@ void StatisticalEngine::UpdateBandArray()
   ++currentBandIndex;
   if(currentBandIndex >= BAND_SAVE_LENGTH )
   {
-    if(true == debugMode && debugLevel >= 2) Serial << "Band Array Rollover\n";
-    UpdateRunningAverageBandArray();
     currentBandIndex = 0;
   }
   for(int i = 0; i < NUM_BANDS; ++i)
@@ -220,6 +218,11 @@ void StatisticalEngine::UpdateBandArray()
     if(freq > 3200 && freq <= 6400) bandIndex = 6;
     if(freq > 6400 && freq <= 12800) bandIndex = 7;
     BandValues[bandIndex][currentBandIndex] += m_data[i];
+  }
+  if(currentBandIndex >= BAND_SAVE_LENGTH - 1 )
+  {
+    if(true == debugMode && debugLevel >= 2) Serial << "Band Array Rollover\n";
+    UpdateRunningAverageBandArray();
   }
   if(true == debugMode && debugLevel >= 2) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
                                                                      << BandValues[1][currentBandIndex] << "\t"  
