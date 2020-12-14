@@ -29,12 +29,8 @@ class TaskScheduler
 {
   public:
     TaskScheduler(){}
-    TaskScheduler(LinkedList<Task*> &tasks)
-      : myTasks(tasks){}
-    void SetTasks(LinkedList<Task*> &tasks);
     void RunTasks();
-    void AddTasks(LinkedList<Task*> &tasks);
-    void AddTask(Task *tasks);
+    void AddTask(Task &task);
     unsigned int GetTaskCount() {return myTasks.size();}
   private:
     LinkedList<Task*> myTasks = LinkedList<Task*>();

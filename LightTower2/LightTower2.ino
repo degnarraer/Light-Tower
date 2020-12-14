@@ -30,8 +30,6 @@ TaskScheduler Scheduler;
 
 void setup()
 {
-  Scheduler.AddTask(&calculateFPS);
-  Scheduler.AddTask(&visualizationController);
   if( true == debugRequired )
   {
     Serial.begin(115200);
@@ -49,6 +47,8 @@ void setup()
   if(true == debugRequired) Serial << "Main Program: TUNES: SAMPLE_RATE: " << SAMPLE_RATE << "\n";
   if(true == debugRequired) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
   if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << Scheduler.GetTaskCount() << "\n";
+  Scheduler.AddTask(calculateFPS);
+  Scheduler.AddTask(visualizationController);
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
 }
 

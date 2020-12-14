@@ -1,13 +1,8 @@
 #include "TaskInterface.h"
 
-void TaskScheduler::SetTasks(LinkedList<Task*> &tasks)
-{
-  AddTasks(tasks);
-}
 void TaskScheduler::RunTasks()
 {
-  if(true == debugTasks) Serial << "TaskScheduler: Run " << myTasks.size() << " Task(s): Start\n";
-  
+  if(true == debugTasks) Serial << "TaskScheduler: Try to Run " << myTasks.size() << " Task(s): Start\n";
   for(int t = 0; t < myTasks.size(); ++t)
   {
     Task *aTask = myTasks.get(t);
@@ -20,27 +15,15 @@ void TaskScheduler::RunTasks()
   }
   if(true == debugTasks) Serial << "TaskScheduler: RunTasks: Complete\n";
 }
-void TaskScheduler::AddTask(Task *task)
+void TaskScheduler::AddTask(Task &task)
 {
-  if(true == debugTasks) Serial << "TaskScheduler: Adding 1 Task";
-  myTasks.add(task);
-  if(false == task->m_IsSetup)
+  if(true == debugTasks) Serial << "TaskScheduler: Adding Task: " << task.GetTaskTitle() << "\n";
+  myTasks.add(&task);
+  if(false == task.m_IsSetup)
   {
-    task->Setup();
-    task->m_IsSetup = true;
-  }
-}
-void TaskScheduler::AddTasks(LinkedList<Task*> &tasks)
-{
-  if(true == debugTasks) Serial << "TaskScheduler: Adding " << tasks.size() << " Task(s)";
-  for(int t = 0; t < tasks.size(); ++t)
-  {
-    Task *aTask = tasks.get(t);
-    myTasks.add(aTask);
-    if(false == aTask->m_IsSetup)
-    {
-      aTask->Setup();
-      aTask->m_IsSetup = true;
-    }
+    if(true == debugTasks) Serial << "TaskScheduler: Setup: " << task.GetTaskTitle() << ": Start\n";
+    task.Setup();
+    task.m_IsSetup = true;
+    if(true == debugTasks) Serial << "TaskScheduler: Setup: " << task.GetTaskTitle() << ": Complete\n";
   }
 }
