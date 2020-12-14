@@ -6,7 +6,17 @@
 class Model
 {
   public: 
-  Model(){}
+    Model(){}
+  private:
+    float m_PreviousValue;
+    float m_CurrentValue;
+    void ConnectCallback(Model *cb)
+    {
+        m_cb = cb;
+    }
+    Model *m_cb;
+    virtual void NewValueNotification(float Value) = 0;
+    virtual void ModelUpdate() = 0;
 };
 
 class View
@@ -28,6 +38,8 @@ class View
 
 class Controller
 {
+  public: 
+  Controller(){}
 };
 
 class Visualization: public VisualizationInterface

@@ -113,7 +113,7 @@ class StatisticalEngine : public Task
     int           m_signalMin;
     int           m_signalMax;
     
-    void          ProcessSoundData();
+    void          GetSampledSoundData();
     bool          NewDataReady();
     void          AnalyzeSound();
     void          UpdateSoundState();

@@ -2,9 +2,8 @@
 
 void VisualizationController::Setup()
 {
-  m_Scheduler.SetTasks(m_Tasks, sizeof(m_Tasks)/sizeof(m_Tasks[0]));
+  m_Scheduler.AddTask(&m_StatisticalEngine);
   m_StatisticalEngine.ConnectCallback(this);
-  m_Scheduler.Setup();
 }
 void VisualizationController::RunTask()
 {

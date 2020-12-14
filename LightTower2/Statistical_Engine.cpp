@@ -35,7 +35,7 @@ void StatisticalEngine::Setup()
 
 bool StatisticalEngine::CanRunTask()
 {
-  if(m_Sampler.GetNumberOfReadings() > 0)
+  if(true == m_Sampler.IsAvailable() && m_Sampler.GetNumberOfReadings() > 0)
   {
     if(true == calculateFPS2.CanRunTask()) { calculateFPS2.RunTask(); }
     return true;
@@ -47,7 +47,7 @@ bool StatisticalEngine::CanRunTask()
 }
 void StatisticalEngine::RunTask()
 {
-  ProcessSoundData();
+  GetSampledSoundData();
 }
 
 void StatisticalEngine::HandleADCInterrupt()
@@ -55,7 +55,7 @@ void StatisticalEngine::HandleADCInterrupt()
   m_Sampler.HandleADCInterrupt();
 }
 
-void StatisticalEngine::ProcessSoundData()
+void StatisticalEngine::GetSampledSoundData()
 {
   int i = 0;
   while( i < MAX_BUFFERS_TO_PROCESS && 
@@ -72,7 +72,7 @@ void StatisticalEngine::ProcessSoundData()
 
 bool StatisticalEngine::NewDataReady()
 {
-  if (m_Sampler.IsAvailable())
+  if (true == m_Sampler.IsAvailable())
   {
     int bufferLength = 0;
     uint16_t* cBuf = m_Sampler.GetFilledBuffer(&bufferLength);
@@ -221,7 +221,7 @@ void StatisticalEngine::UpdateBandArray()
     if(freq > 6400 && freq <= 12800) bandIndex = 7;
     BandValues[bandIndex][currentBandIndex] += m_data[i];
   }
-  if(true == debugMode && debugLevel >= 1) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
+  if(true == debugMode && debugLevel >= 2) Serial << "BAND VALUES: " << BandValues[0][currentBandIndex] << "\t" 
                                                                      << BandValues[1][currentBandIndex] << "\t"  
                                                                      << BandValues[2][currentBandIndex] << "\t"  
                                                                      << BandValues[3][currentBandIndex] << "\t"  

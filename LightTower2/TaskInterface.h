@@ -1,7 +1,10 @@
+
+
 #ifndef TaskInterface_H
 #define TaskInterface_H
 
 #include <Arduino.h>
+#include <LinkedList.h>
 #include "Streaming.h"
 #include "Tunes.h"
 
@@ -11,6 +14,7 @@ class Task
     Task(): m_Title("Unnamed"){}
     Task(String title): m_Title(title){}
     String m_Title;
+    bool m_IsSetup = false;
     virtual void Setup() = 0;
     virtual void RunTask() = 0;
     virtual bool CanRunTask() = 0;
@@ -25,19 +29,15 @@ class TaskScheduler
 {
   public:
     TaskScheduler(){}
-    TaskScheduler(Task **tasks, unsigned int numTasks)
-      : m_Tasks(tasks)
-      , m_NumTasks(numTasks){}
-    void SetTasks(Task **tasks, unsigned int numTasks)
-    {
-      m_Tasks = tasks;
-      m_NumTasks = numTasks;
-    }
-    void Setup();
+    TaskScheduler(LinkedList<Task*> &tasks)
+      : myTasks(tasks){}
+    void SetTasks(LinkedList<Task*> &tasks);
     void RunTasks();
+    void AddTasks(LinkedList<Task*> &tasks);
+    void AddTask(Task *tasks);
+    unsigned int GetTaskCount() {return myTasks.size();}
   private:
-    Task **m_Tasks;
-    unsigned int m_NumTasks = 0;
+    LinkedList<Task*> myTasks = LinkedList<Task*>();
 };
 
 class CalculateFPS: public Task

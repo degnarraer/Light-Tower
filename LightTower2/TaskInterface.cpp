@@ -1,32 +1,46 @@
 #include "TaskInterface.h"
 
-
-void TaskScheduler::Setup()
+void TaskScheduler::SetTasks(LinkedList<Task*> &tasks)
 {
-  if(true == debugMode && debugLevel >= 0) Serial << "TaskScheduler: Setup Start\n";
-  Task **tpp = m_Tasks;
-  for(int t = 0; t < m_NumTasks; ++t)
-  {
-    Task *tp = *(tpp+t);
-    if(true == true) Serial << "TaskScheduler: Setup Task: " << tp->GetTaskTitle() << " Start\n";
-    tp->Setup();
-    if(true == debugTasks) Serial << "TaskScheduler: Setup Task: " << tp->GetTaskTitle() << " Complete\n";
-  }
-  if(true == debugMode && debugLevel >= 0) Serial << "TaskScheduler: Setup Complete\n";
+  AddTasks(tasks);
 }
 void TaskScheduler::RunTasks()
 {
-  if(true == debugTasks) Serial << "TaskScheduler: Run " << m_NumTasks << " Task(s): Start\n";
-  Task **tpp = m_Tasks;
-  for(int t = 0; t < m_NumTasks; ++t)
+  if(true == debugTasks) Serial << "TaskScheduler: Run " << myTasks.size() << " Task(s): Start\n";
+  
+  for(int t = 0; t < myTasks.size(); ++t)
   {
-    Task *tp = *(tpp+t);
-    if(true == tp->CanRunTask())
+    Task *aTask = myTasks.get(t);
+    if(true==aTask->CanRunTask())
     {
-      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << tp->GetTaskTitle() << ": Start\n";
-      tp->RunTask();
-      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << tp->GetTaskTitle() << ": Complete\n";
+      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Start\n";
+      aTask->RunTask();
+      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Complete\n";
     }
   }
   if(true == debugTasks) Serial << "TaskScheduler: RunTasks: Complete\n";
+}
+void TaskScheduler::AddTask(Task *task)
+{
+  if(true == debugTasks) Serial << "TaskScheduler: Adding 1 Task";
+  myTasks.add(task);
+  if(false == task->m_IsSetup)
+  {
+    task->Setup();
+    task->m_IsSetup = true;
+  }
+}
+void TaskScheduler::AddTasks(LinkedList<Task*> &tasks)
+{
+  if(true == debugTasks) Serial << "TaskScheduler: Adding " << tasks.size() << " Task(s)";
+  for(int t = 0; t < tasks.size(); ++t)
+  {
+    Task *aTask = tasks.get(t);
+    myTasks.add(aTask);
+    if(false == aTask->m_IsSetup)
+    {
+      aTask->Setup();
+      aTask->m_IsSetup = true;
+    }
+  }
 }

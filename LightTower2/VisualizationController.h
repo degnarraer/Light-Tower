@@ -24,7 +24,6 @@ class VisualizationController: public Task
   private:
     StatisticalEngine m_StatisticalEngine;
     TaskScheduler m_Scheduler;
-    Task *m_Tasks[1] = {&m_StatisticalEngine};
 };
 
 #endif

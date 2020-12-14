@@ -11,7 +11,7 @@ const int    debugLevel = 1;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = false;
+const bool   debugFPS = true;
 const bool   debugTasks = false;
 const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS || debugTasks);
 
@@ -49,7 +49,7 @@ const float triggerLevelGain = 1.1;
 const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
 const unsigned int BUFFER_SIZE = CHANNEL_SIZE*NUM_CHANNELS;
-const unsigned int NUMBER_OF_BUFFERS = 2;  /// Size of circular buffer for holding microphone sample sets
+const unsigned int NUMBER_OF_BUFFERS = 20;  /// Size of circular buffer for holding microphone sample sets
 const unsigned int MAX_BUFFERS_TO_PROCESS = 20;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
 
 //Sound Detection
