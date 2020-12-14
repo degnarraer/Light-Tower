@@ -1,57 +1,44 @@
+    /*
+    Light Tower by Rob Shockency
+    Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    */
+/**
+ * @file LightTower2.ino
+ * *
+
+ */
+
 #ifndef Visualization_H
 #define Visualization_H
-#include "VisualizationInterface.h"
+#include "Streaming.h"
+#include "Models.h"
+#include "TaskInterface.h"
 #include <LinkedList.h>
 
-
-class ModelEventNotificationCallerInterface;
-
-class ModelEventNotificationCalleeInterface
-{
-public:
-    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
-};
-
-class ModelEventNotificationCallerInterface
+class VisualizationInterface: public Task
 {
   public:
-    void RegisterForNotification(ModelEventNotificationCalleeInterface &callee)
-    {
-      if(true == debugModelNotifications) Serial << "ModelEventNotificationCallerInterface: Add: ";        
-      myCallees.add(&callee);
-    }
-    void DeRegisterForNotification(ModelEventNotificationCalleeInterface &callee)
-    {
-      for(int i = 0; i < myCallees.size(); ++i)
-      {
-        if(myCallees.get(i) == &callee)
-        {
-          myCallees.remove(i);
-          break;
-        }
-      }
-    }
-    void SendNotificationToCalleesFrom(float value, ModelEventNotificationCallerInterface &source)
-    {
-      for(int i = 0; i < myCallees.size(); ++i)
-      {
-        myCallees.get(i)->NewValueNotificationFrom(value, source);
-      }
-    }
-  private:
-    LinkedList<ModelEventNotificationCalleeInterface*> myCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
+    VisualizationInterface(){}
+    virtual void Setup() = 0;
+    virtual void Start() = 0;
+    virtual void RunTask() = 0;
+    virtual void End() = 0;
 };
 
-class Model: public ModelEventNotificationCallerInterface
-{
-  public: 
-    Model(){}
-  private:
-    float m_PreviousValue;
-    float m_CurrentValue;
-};
-
-class View
+class View: public ModelEventNotificationCalleeInterface
 {
   typedef int position;
   typedef int size;
@@ -69,7 +56,8 @@ class View
     void RemoveChildView(View Child);
     void RemoveAllChildrenViews();
     
-    //Models
+    //Models    
+    void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source);
     LinkedList<Model*> Models = LinkedList<Model*>();
     void AddModel(Model aModel);
     void RemoveModel(Model aModel);
@@ -98,26 +86,19 @@ class Visualization: public VisualizationInterface
 };
 
 
-class BandAmplitudes: public Visualization
+//********* VUMeter *********
+class VUMeter: public Visualization
 {
   public:
-    BandAmplitudes(): Visualization(){}
-    virtual ~BandAmplitudes()
+    VUMeter(): Visualization(){}
+    virtual ~VUMeter()
     {
-      if(true == debugMode && debugLevel >= 1) Serial << "Delete BandAmplitudes\n";
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter\n";
     }
     virtual void Start();
     virtual void Loop();
     virtual void End();
-  private:
-    void Tick1();
-    void Random();
-    unsigned long m_randomTimes[1];
-    const int m_gainLimitMax = 1000;
-    const int m_gainLimitMin = 1;
-    const int m_gainmultiplier = 10;
-    int m_gainIntigrator = 100;
-        
+  private:        
 };
 
 #endif

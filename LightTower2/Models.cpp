@@ -20,15 +20,3 @@
  * *
 
  */
- 
-#include "Visualizations.h"
-
-//********* VUMeter *********
-void VUMeter::Start()
-{
-  if(true == debugMode && debugLevel >= 1) Serial << "BandAmplitudes Start\n";
-}
-
-void VUMeter::Loop() 
-{
-}

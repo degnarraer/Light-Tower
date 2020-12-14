@@ -1,6 +1,6 @@
     /*
     Light Tower by Rob Shockency
-    Copyright (C) 2019 Rob Shockency degnarraer@yahoo.com
+    Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
  */
 
 #include <Arduino.h>
+#include "Streaming.h"
 #include "VisualizationController.h"
 
 VisualizationController visualizationController;
