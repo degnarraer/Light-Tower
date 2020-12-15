@@ -34,7 +34,7 @@ const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
 const bool   debugFPS = true;
-const bool   debugTasks = true;
+const bool   debugTasks = false;
 const bool   debugModelNotifications = true;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
@@ -64,7 +64,7 @@ const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
 const unsigned int NUM_BANDS = 8;
-const unsigned int BAND_SAVE_LENGTH = 100;
+const unsigned int BAND_SAVE_LENGTH = 10;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.05;
@@ -79,7 +79,7 @@ const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
 const unsigned int BUFFER_SIZE = CHANNEL_SIZE*NUM_CHANNELS;
 const unsigned int NUMBER_OF_BUFFERS = 5;  /// Size of circular buffer for holding microphone sample sets
-const unsigned int MAX_BUFFERS_TO_PROCESS = 20;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
+const unsigned int MAX_BUFFERS_TO_PROCESS = 5;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
 
 //Sound Detection
 const float   SOUND_DETECT_THRESHOLD = 0.05;

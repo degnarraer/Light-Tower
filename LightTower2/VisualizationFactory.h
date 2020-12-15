@@ -43,7 +43,7 @@ class VisualizationFactory : public Task
     
     //Task Interface
     void Setup(){}
-    bool CanRunTask(){ return true; }
+    bool CanRunTask(){ return false; }
     void RunTask(){}
 };
 

@@ -171,7 +171,11 @@ class StatisticalEngineInterface : public Task
   private:
     TaskScheduler m_Scheduler;
     StatisticalEngine m_StatisticalEngine;
-    void Setup(){ m_Scheduler.AddTask(m_StatisticalEngine); }
+    void Setup()
+    { 
+      m_StatisticalEngine.ConnectCallback(this);
+      m_Scheduler.AddTask(m_StatisticalEngine);
+    }
     bool CanRunTask(){ return true; }
     void RunTask(){ m_Scheduler.RunTasks(); }
 };
