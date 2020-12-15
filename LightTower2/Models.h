@@ -24,38 +24,16 @@
 #ifndef Models_H
 #define Models_H
 #include "TaskInterface.h"
-#include "Statistical_Engine.h"
 #include <LinkedList.h>
 #include "Streaming.h"
 #include "Tunes.h"
 
-class StatisticalEngineModelInterface: public Task
-                                     , MicrophoneMeasureCalleeInterface
-                                     , ADCInterruptHandler
-{
-  public:
-    StatisticalEngineModelInterface(): Task("StatisticalEngineModelInterface"){}
-    StatisticalEngine m_StatisticalEngine;
-    TaskScheduler m_Scheduler;
-    
-    //MicrophoneMeasureCalleeInterface
-    void MicrophoneStateChange(SoundState){}
-    
-    //ADCInterruptHandler
-    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
-  
-  private:
-    //Task Interface
-    void Setup();
-    void RunTask();
-    bool CanRunTask() {return true;}
-};
 
 class ModelEventNotificationCallerInterface;
 
 class ModelEventNotificationCalleeInterface
 {
-public:
+  public:
     virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
 };
 
@@ -89,11 +67,14 @@ class ModelEventNotificationCallerInterface
     LinkedList<ModelEventNotificationCalleeInterface*> myCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
 };
 
-class Model: public Task
-           , ModelEventNotificationCallerInterface
+class Model: public ModelEventNotificationCallerInterface
 {
   public: 
     Model(){}
+    ~Model(){}
+    
+  protected:
+    TaskScheduler m_Scheduler;  
   private:
     float m_PreviousValue;
     float m_CurrentValue;
@@ -106,22 +87,19 @@ class Model: public Task
         m_PreviousValue = m_CurrentValue;
       }
     }
-    virtual void Setup() = 0;
-    virtual void RunTask() = 0;
-    virtual bool CanRunTask() = 0;
 };
 
 class SoundPower: public Model
-                , Task
-                , StatisticalEngineModelInterface
+                , public Task
 {
   public:
-    SoundPower(): Task("SoundPower"){}
-    TaskScheduler Scheduler;
+    SoundPower() : Task("Sound Power"){}
+    ~SoundPower(){}
+    TaskScheduler m_Scheduler;
   private:  
-    void Setup(){};
-    void RunTask(){};
-    bool CanRunTask(){};
+    void Setup(){}
+    void RunTask(){}
+    bool CanRunTask(){ return true; }
 };
 
 #endif

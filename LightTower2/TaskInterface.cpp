@@ -54,7 +54,13 @@ void TaskScheduler::AddTask(Task &task)
     if(true == debugTasks) Serial << "TaskScheduler: Setup: " << task.GetTaskTitle() << ": Complete\n";
   }
 }
-
+void TaskScheduler::AddTasks(LinkedList<Task*> &tasks)
+{
+  for(int t = 0; t < tasks.size(); ++t)
+  {
+    myTasks.add(tasks.get(t));
+  }
+}
 bool TaskScheduler::RemoveTask(Task &task)
 {
   if(true == debugTasks) Serial << "TaskScheduler: Remove Task: " << task.GetTaskTitle() << ": Start\n";

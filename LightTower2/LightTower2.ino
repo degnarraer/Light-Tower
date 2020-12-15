@@ -22,14 +22,15 @@
  */
 
 #include <Arduino.h>
+#include "Tunes.h"
 #include "Streaming.h"
-#include "VisualizationController.h"
-#include "Models.h"
+#include "VisualizationFactory.h"
+#include "Statistical_Engine.h"
 
-StatisticalEngineModelInterface statisticalEngineModelInterface;
-VisualizationController visualizationController;
-CalculateFPS calculateFPS("Main Loop", 1000);
-TaskScheduler Scheduler;
+StatisticalEngineInterface m_StatisticalEngineInterface;
+VisualizationFactory m_VisualizationFactory(m_StatisticalEngineInterface);
+CalculateFPS m_CalculateFPS("Main Loop", 1000);
+TaskScheduler m_Scheduler;
 
 void setup()
 {
@@ -49,19 +50,19 @@ void setup()
   if(true == debugRequired) Serial.println("Main Program: Setup Started");
   if(true == debugRequired) Serial << "Main Program: TUNES: SAMPLE_RATE: " << SAMPLE_RATE << "\n";
   if(true == debugRequired) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
-  if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << Scheduler.GetTaskCount() << "\n";
-  Scheduler.AddTask(calculateFPS);
-  Scheduler.AddTask(visualizationController);
-  Scheduler.AddTask(statisticalEngineModelInterface);
+  if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << m_Scheduler.GetTaskCount() << "\n";
+  m_Scheduler.AddTask(m_CalculateFPS);
+  m_Scheduler.AddTask(m_VisualizationFactory);
+  m_Scheduler.AddTask(m_StatisticalEngineInterface);
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
 }
 
 void ADC_Handler()
 {
-  statisticalEngineModelInterface.HandleADCInterrupt();
+  m_StatisticalEngineInterface.HandleADCInterrupt();
 }
 
 void loop()
 {
-  Scheduler.RunTasks();
+  m_Scheduler.RunTasks();
 }

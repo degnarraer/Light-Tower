@@ -20,26 +20,5 @@
  * *
 
  */
- 
-#ifndef VisualizationController_H
-#define VisualizationController_H
 
-#include "Streaming.h"
-#include "Visualizations.h"
-#include "TaskInterface.h"
-
-class VisualizationController: public Task
-{
-  public:
-    VisualizationController(): Task("VisualizationController"){}
-  private:  
-    Visualization* GetRandomVisualiization();
-    
-    //Task Interface
-    void Setup(){}
-    bool CanRunTask(){ return true; }
-    void RunTask(){}
-  private:
-};
-
-#endif
+#include "VisualizationFactory.h"

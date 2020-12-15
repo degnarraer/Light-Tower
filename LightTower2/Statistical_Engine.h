@@ -97,8 +97,8 @@ class StatisticalEngine : public Task
     float power;
     float powerDb;
   
-    void          HandleADCInterrupt();
-    SoundState    GetSoundState();
+    void HandleADCInterrupt();
+    SoundState GetSoundState();
   public:
     float ampGain = 1.0;
     float fftGain = 1.0;
@@ -148,9 +148,32 @@ class StatisticalEngine : public Task
   //Statistical Functions
   int GetBandValue(unsigned int band, unsigned int depth);
   float GetBandAverage(int band, int depth);
+  float GetSoundPower(){ return power; }
 
-  float GetSoundPower(){return power;}
+};
 
+class StatisticalEngineInterface : public Task
+                                 , ADCInterruptHandler 
+                                 , MicrophoneMeasureCalleeInterface
+{
+  public:
+    StatisticalEngineInterface() : Task("StatisticalEngineInterface"){}
+    ~StatisticalEngineInterface(){}
+
+    float GetSoundPower(){ return m_StatisticalEngine.GetSoundPower(); }
+  
+    //ADCInterruptHandler
+    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
+    
+    //MicrophoneMeasureCalleeInterface
+    void MicrophoneStateChange(SoundState){}
+    
+  private:
+    TaskScheduler m_Scheduler;
+    StatisticalEngine m_StatisticalEngine;
+    void Setup(){ m_Scheduler.AddTask(m_StatisticalEngine); }
+    bool CanRunTask(){ return true; }
+    void RunTask(){ m_Scheduler.RunTasks(); }
 };
 
 #endif

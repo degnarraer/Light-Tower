@@ -20,19 +20,3 @@
  * *
 
  */
- 
-#include "Visualizations.h"
-
-//********* VUMeter *********
-void VUMeter::Setup()
-{
-  
-}
-bool VUMeter::CanRunTask()
-{
-  return true;
-}
-void VUMeter::RunTask()
-{
-  
-}

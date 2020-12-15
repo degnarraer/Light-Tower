@@ -71,31 +71,49 @@ class Visualization: public Task
                    , VisualizationEventNotificationCallerInterface
 {
   public:
-    Visualization(){}
+    Visualization() : Task("Visualization"){}
     ~Visualization()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
-    }    
-    void SetDuration(int Duration){ m_Duration = Duration; }
-      
-  private:
-    unsigned int m_Duration = 0;    
-    virtual Visualization* GetInstance() = 0;
-    LinkedList<View*> myViews = LinkedList<View*>();
-    LinkedList<Model*> myModels = LinkedList<Model*>();
+    }
+    
     //Task Interface
-    virtual void Setup() = 0;
-    virtual bool CanRunTask() = 0;
-    virtual void RunTask() = 0;
+    void Setup()
+    {
+      m_Scheduler.AddTasks(myViews);
+      m_Scheduler.AddTasks(myModels);
+      SetupVisualization();
+    }
+    bool CanRunTask()
+    {
+      return CanRunVisualization();
+    }
+    void RunTask()
+    {
+      RunVisualization();
+    }
+    virtual void SetupVisualization() = 0;
+    virtual bool CanRunVisualization() = 0;
+    virtual void RunVisualization() = 0; 
+  protected:
+    unsigned int m_Duration = 0;
+    TaskScheduler m_Scheduler;    
+    virtual Visualization* GetInstance() = 0;
+    LinkedList<Task*> myViews = LinkedList<Task*>();
+    LinkedList<Task*> myModels = LinkedList<Task*>();
 };
 
-
+/*
 //********* VUMeter *********
 class VUMeter: public Visualization
 {
   public:
-    VUMeter(): Visualization(){}
-    virtual ~VUMeter()
+    VUMeter()
+    {
+      //myViews.add(&m_VerticalBar);
+      //myModels.add(&m_SoundPower);
+    }
+    ~VUMeter()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter\n";
     }
@@ -106,12 +124,12 @@ class VUMeter: public Visualization
       Visualization *vis = new VUMeter();
       return vis;
     }
-
-    //Task Interface
-    void Setup();
-    bool CanRunTask();
-    void RunTask();
-  private:        
+    void SetupVisualization(){}
+    bool CanRunVisualization(){ return true; }
+    void RunVisualization(){}
+  private:
+    VerticalBar m_VerticalBar = VerticalBar(0, 0, NUMSTRIPS, NUMLEDS);
+    SoundPower m_SoundPower;       
 };
-
+*/
 #endif

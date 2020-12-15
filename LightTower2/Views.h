@@ -33,18 +33,18 @@ typedef int size;
 class View: public Task
 {
   public:
-    View(position X, position Y, size L, size W){}
+    View(position X, position Y, size W, size H){}
     ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
     }    
     position m_X;
     position m_Y;
-    size m_L;
     size m_W;
+    size m_H;
 
     void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
-    void SetSize(size L, size W){ m_L = L; m_W = W; }
+    void SetSize(size W, size H){ m_W = W; m_H = H; }
 
     //Task
     virtual void Setup() = 0;
@@ -54,15 +54,17 @@ class View: public Task
     //Views
     LinkedList<View*> ChildViews = LinkedList<View*>();
     View *ParentView;
-    void AddChildView(View &Child){};
-    void RemoveChildView(View &Child){};
-    void RemoveAllChildrenViews(){};
+    void AddChildView(View &Child){}
+    void RemoveChildView(View &Child){}
+    void RemoveAllChildrenViews(){}
 };
+
 
 class VerticalBar: public View
 {
   public:
-    VerticalBar(position X, position Y, size L, size W): View(X, Y, L, W){}
+    VerticalBar(): View(0, 0, 0, 0){}
+    VerticalBar(position X, position Y, size W, size H): View(X, Y, W, H){}
     ~VerticalBar(){}
     void SetColor(CRGB Color){ m_Color = Color; }
     void SetNormalizedHeight(float Height) { m_Height = Height; }

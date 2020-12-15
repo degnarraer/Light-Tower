@@ -20,5 +20,31 @@
  * *
 
  */
+ 
+#ifndef VisualizationFactory_H
+#define VisualizationFactory_H
 
-#include "VisualizationController.h"
+#include "Streaming.h"
+#include "Visualizations.h"
+#include "TaskInterface.h"
+#include "Statistical_Engine.h"
+
+
+class VisualizationFactory : public Task
+{
+  public:
+    VisualizationFactory(StatisticalEngineInterface &statisticalEngineInterface) : Task("VisualizationFactory")
+                                                                                 , m_StatisticalEngineInterface(statisticalEngineInterface){}
+    ~VisualizationFactory(){}
+
+  private:  
+    TaskScheduler m_Scheduler;
+    StatisticalEngineInterface m_StatisticalEngineInterface;
+    
+    //Task Interface
+    void Setup(){}
+    bool CanRunTask(){ return true; }
+    void RunTask(){}
+};
+
+#endif

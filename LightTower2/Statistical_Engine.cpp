@@ -126,7 +126,7 @@ void StatisticalEngine::AnalyzeSound()
     if(result > INT16_MAX) result = INT16_MAX;
     if(result < INT16_MIN) result = INT16_MIN;
     m_data[i] = result;
-  };
+  }
   m_signalMin = signalMin;
   m_signalMax = signalMax;
   peakToPeak = m_signalMax - m_signalMin;
