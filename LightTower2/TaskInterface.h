@@ -37,8 +37,8 @@ class Task
     String m_Title;
     bool m_IsSetup = false;
     virtual void Setup() = 0;
-    virtual void RunTask() = 0;
     virtual bool CanRunTask() = 0;
+    virtual void RunTask() = 0;
     String GetTaskTitle() 
     {
       return m_Title;

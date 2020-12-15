@@ -33,6 +33,8 @@ class VisualizationController: public Task
   public:
     VisualizationController(): Task("VisualizationController"){}
   private:  
+    Visualization* GetRandomVisualiization();
+    
     //Task Interface
     void Setup(){}
     bool CanRunTask(){ return true; }

@@ -25,60 +25,68 @@
 #define Visualization_H
 #include "Streaming.h"
 #include "Models.h"
+#include "Views.h"
 #include "TaskInterface.h"
 #include <LinkedList.h>
 
-class VisualizationInterface: public Task
+class VisualizationEventNotificationCallerInterface;
+
+class VisualizationEventNotificationCalleeInterface
+{
+public:
+    virtual void VisualizationCompleteNotificationFrom(VisualizationEventNotificationCallerInterface &source) = 0;
+};
+
+class VisualizationEventNotificationCallerInterface
 {
   public:
-    VisualizationInterface(){}
-  
+    void RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
+    {
+      if(true == debugModelNotifications) Serial << "VisualizationEventNotificationCallerInterface: Add: ";        
+      myCallees.add(&callee);
+    }
+    void DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
+    {
+      for(int i = 0; i < myCallees.size(); ++i)
+      {
+        if(myCallees.get(i) == &callee)
+        {
+          myCallees.remove(i);
+          break;
+        }
+      }
+    }
+    void SendVisualizationCompleteNotificationToCalleesFrom(VisualizationEventNotificationCallerInterface &source)
+    {
+      for(int i = 0; i < myCallees.size(); ++i)
+      {
+        myCallees.get(i)->VisualizationCompleteNotificationFrom(source);
+      }
+    }
   private:
+    LinkedList<VisualizationEventNotificationCalleeInterface*> myCallees = LinkedList<VisualizationEventNotificationCalleeInterface*>();
+};
+
+class Visualization: public Task
+                   , VisualizationEventNotificationCallerInterface
+{
+  public:
+    Visualization(){}
+    ~Visualization()
+    {
+      if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
+    }    
+    void SetDuration(int Duration){ m_Duration = Duration; }
+      
+  private:
+    unsigned int m_Duration = 0;    
+    virtual Visualization* GetInstance() = 0;
+    LinkedList<View*> myViews = LinkedList<View*>();
+    LinkedList<Model*> myModels = LinkedList<Model*>();
     //Task Interface
     virtual void Setup() = 0;
-    virtual void RunTask() = 0;
     virtual bool CanRunTask() = 0;
-};
-
-class View: public VisualizationInterface
-          , ModelEventNotificationCalleeInterface
-{
-  typedef int position;
-  typedef int size;
-  public:
-    View(position x, position y, size l, size w){}
-    position X;
-    position Y;
-    size Length;
-    size Width;
-
-    //Views
-    LinkedList<View*> ChildViews = LinkedList<View*>();
-    View *ParentView;
-    void AddChildView(View &Child){};
-    void RemoveChildView(View &Child){};
-    void RemoveAllChildrenViews(){};
-    
-    //Models    
-    void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source);
-    LinkedList<Model*> Models = LinkedList<Model*>();
-};
-
-class Controller
-{
-  public: 
-  Controller(){}
-};
-
-class Visualization: public VisualizationInterface
-                   , View
-{
-  public:
-    Visualization(): View(0, 0, NUMLEDS, NUMSTRIPS){}    
-  private:
-    virtual void Setup() = 0;
     virtual void RunTask() = 0;
-    virtual bool CanRunTask() = 0;
 };
 
 
@@ -91,9 +99,18 @@ class VUMeter: public Visualization
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter\n";
     }
-    virtual void Start();
-    virtual void Loop();
-    virtual void End();
+
+    //Visualization
+    Visualization* GetInstance()
+    {
+      Visualization *vis = new VUMeter();
+      return vis;
+    }
+
+    //Task Interface
+    void Setup();
+    bool CanRunTask();
+    void RunTask();
   private:        
 };
 

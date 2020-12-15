@@ -24,11 +24,15 @@
 #include "Visualizations.h"
 
 //********* VUMeter *********
-void VUMeter::Start()
+void VUMeter::Setup()
 {
-  if(true == debugMode && debugLevel >= 1) Serial << "BandAmplitudes Start\n";
+  
 }
-
-void VUMeter::Loop() 
+bool VUMeter::CanRunTask()
 {
+  return true;
+}
+void VUMeter::RunTask()
+{
+  
 }

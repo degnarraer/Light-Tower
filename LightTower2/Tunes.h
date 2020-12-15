@@ -34,7 +34,7 @@ const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
 const bool   debugFPS = true;
-const bool   debugTasks = true;
+const bool   debugTasks = false;
 const bool   debugModelNotifications = true;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
