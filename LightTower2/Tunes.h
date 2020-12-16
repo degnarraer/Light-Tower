@@ -45,8 +45,10 @@ const bool   debugRequired = ( debugMode ||
                                debugModelNotifications);
 
 // LED SETUP
-const unsigned int NUMLEDS = 60;
-const unsigned int NUMSTRIPS = 4;
+static const unsigned int NUMLEDS = 60;
+static const unsigned int NUMSTRIPS = 4;
+static const unsigned int SCREEN_WIDTH = NUMSTRIPS;
+static const unsigned int SCREEN_HEIGHT = NUMLEDS;
 const unsigned int DATA_PIN_STRIP1 = 4;  //STRIP1 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP2 = 5;  //STRIP2 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP3 = 6;  //STRIP3 PIN ASSIGNMENT
@@ -58,7 +60,7 @@ const unsigned int NUMBER_OF_TICK_TIMERS = 10;
 const unsigned int NUMBER_OF_LAYERS = 10;
 
 //FFT Tunes
-const int FFT_MAX = 1024;
+const int FFT_MAX = 512;
 const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 

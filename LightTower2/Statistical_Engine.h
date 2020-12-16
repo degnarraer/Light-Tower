@@ -92,7 +92,7 @@ class StatisticalEngine : public Task
     //Task Interface
     void          Setup();
     bool          CanRunMyTask();
-    void          RunTask();
+    void          RunMyTask();
     
     float power;
     float powerDb;
@@ -176,7 +176,7 @@ class StatisticalEngineInterface : public Task
       AddTask(m_StatisticalEngine);
     }
     bool CanRunMyTask(){ return true; }
-    void RunTask(){ }
+    void RunMyTask(){ }
 };
 
 #endif

@@ -28,6 +28,7 @@
 #include "Visualizations.h"
 #include "TaskInterface.h"
 #include "Statistical_Engine.h"
+#include "LEDControllerInterface.h"
 
 
 class VisualizationFactory : public Task
@@ -39,12 +40,13 @@ class VisualizationFactory : public Task
 
   private:
     StatisticalEngineInterface m_StatisticalEngineInterface;
+    LEDController m_LEDController;
     VUMeter *m_VUMeter;
     
     //Task Interface
     void Setup();
     bool CanRunMyTask();
-    void RunTask();
+    void RunMyTask();
 };
 
 #endif

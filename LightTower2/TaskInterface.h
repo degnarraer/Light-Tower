@@ -56,7 +56,7 @@ class Task
     void RunScheduler();
     virtual void Setup() = 0;
     virtual bool CanRunMyTask() = 0;
-    virtual void RunTask() = 0;
+    virtual void RunMyTask() = 0;
   private:
     TaskScheduler m_Scheduler;
     bool m_IsSetup = false;
@@ -95,7 +95,7 @@ class CalculateFPS: public Task
         return false;
       }
     }
-    void RunTask()
+    void RunMyTask()
     {
       m_startMillis = millis();
       if(true == debugFPS) Serial << "FPS for " << m_Title << ": " << m_frameCount / (m_lapsedTime/1000.0) << "\n";

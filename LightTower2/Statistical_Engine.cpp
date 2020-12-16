@@ -37,7 +37,7 @@ bool StatisticalEngine::CanRunMyTask()
 {
   if(true == m_Sampler.IsAvailable())
   {
-    if(true == calculateFPS2.CanRunMyTask()) { calculateFPS2.RunTask(); }
+    if(true == calculateFPS2.CanRunMyTask()) { calculateFPS2.RunMyTask(); }
     return true;
   }
   else
@@ -45,7 +45,7 @@ bool StatisticalEngine::CanRunMyTask()
     return false;
   }
 }
-void StatisticalEngine::RunTask()
+void StatisticalEngine::RunMyTask()
 {
   GetSampledSoundData();
 }

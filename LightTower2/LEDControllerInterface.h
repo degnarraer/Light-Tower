@@ -31,6 +31,7 @@
 #include "Streaming.h"
 
 typedef CRGBArray<NUMLEDS> LEDStrip;
+typedef struct { CRGB Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]; } Pixels;
 
 class LEDController
 {
@@ -46,6 +47,17 @@ class LEDController
     void Setup()
     {
       
+    }
+    void UpdateLEDs( Pixels Pixels )
+    {
+      for(int w = 0; w < SCREEN_WIDTH; ++w)
+      {
+        for(int h = 0; h < SCREEN_HEIGHT; ++ h)
+        {
+          m_LEDStrip[w][h] = Pixels.Pixel[w][h];
+        }
+      }
+      FastLED.show();
     }
     void TurnOffLEDs()
     {

@@ -44,7 +44,7 @@ bool Visualization::CanRunMyTask()
 {
   return CanRunVisualization();
 }
-void Visualization::RunTask()
+void Visualization::RunMyTask()
 {
   RunVisualization();
 }

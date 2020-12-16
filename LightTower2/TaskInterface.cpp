@@ -49,14 +49,14 @@ void TaskScheduler::RunScheduler()
     Task *aTask = myTasks.get(t);
     if(true==aTask->CanRunMyTask())
     {
-      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Start\n";
-      aTask->RunTask();
+      if(true == debugTasks) Serial << "TaskScheduler: RunMyTask: " << aTask->GetTaskTitle() << ": Start\n";
+      aTask->RunMyTask();
       aTask->RunScheduler();
-      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Complete\n";
+      if(true == debugTasks) Serial << "TaskScheduler: RunMyTask: " << aTask->GetTaskTitle() << ": Complete\n";
     }
     else
     {
-      if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Not Ready\n";
+      if(true == debugTasks) Serial << "TaskScheduler: RunMyTask: " << aTask->GetTaskTitle() << ": Not Ready\n";
     }
   }
   if(true == debugTasks) Serial << "TaskScheduler: RunScheduler: Complete\n";

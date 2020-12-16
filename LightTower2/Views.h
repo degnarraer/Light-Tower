@@ -26,10 +26,10 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include <LinkedList.h>
+#include <assert.h>
 
 typedef int position;
 typedef int size;
-
 class View: public Task
 {
   public:
@@ -37,25 +37,28 @@ class View: public Task
     ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
-    } 
+    }
     void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
     void SetSize(size W, size H){ m_W = W; m_H = H; }
     void AddChildView(View &Child){}
     void RemoveChildView(View &Child){}
     void RemoveAllChildrenViews(){}
-  
-  private:   
+    Pixels GetPixels() { return m_Pixels; }
+
+  protected:
+    Pixels m_Pixels = {{{CRGB::Black},{ CRGB::Black}}};
     position m_X;
     position m_Y;
     size m_W;
     size m_H;
+    private:
     LinkedList<View*> ChildViews = LinkedList<View*>();
     View *ParentView;
     
     //Task
     void Setup(){ SetupView(); }
     bool CanRunMyTask(){ return CanRunViewTask(); }
-    void RunTask(){ RunViewTask(); }
+    void RunMyTask(){ RunViewTask(); }
 
     //View
     virtual void SetupView() = 0;
@@ -65,34 +68,47 @@ class View: public Task
 };
 
 
-class VerticalBar: public View
+class VerticalBarView: public View
 {
   public:
-    VerticalBar(): View(0, 0, 0, 0){}
-    VerticalBar(position X, position Y, size W, size H): View(X, Y, W, H){}
-    ~VerticalBar(){}
+    VerticalBarView(): View(0, 0, 0, 0){}
+    VerticalBarView(position X, position Y, size W, size H): View(X, Y, W, H){}
+    ~VerticalBarView(){}
     void SetColor(CRGB Color){ m_Color = Color; }
-    void SetNormalizedHeight(float Height) { m_Height = Height; }
+    void SetNormalizedHeight(float Height) { assert (Height <= 1.0); m_Height = Height; }
 
   private:
-    CRGB m_Color;
+    CRGB m_Color = CRGB::Red;
     float m_Height;
 
     //View
     void SetupView(){}
-    bool CanRunViewTask(){}
-    void RunViewTask(){}
+    bool CanRunViewTask(){ return true; }
+    void RunViewTask()
+    {
+      for(int w = 0; w<SCREEN_WIDTH; ++w)
+      {
+        for(int h = 0; h<SCREEN_HEIGHT; ++h)
+        {
+          m_Pixels.Pixel[w][h] = CRGB::Black;
+          if(w >= m_X && w < m_X + m_W && h >= m_Y && h < m_Y + m_H)
+          {
+            m_Pixels.Pixel[w][h] = m_Color;
+          }
+        }
+      }
+    }
 };
 
-class BassSprite: public View
+class BassSpriteView: public View
 {
   public:
-    BassSprite(position X, position Y, size L, size W): View(X, Y, L, W){}
-    ~BassSprite(){}
+    BassSpriteView(position X, position Y, size L, size W): View(X, Y, L, W){}
+    ~BassSpriteView(){}
 
   private:
     //View
     void SetupView(){}
-    bool CanRunViewTask(){}
+    bool CanRunViewTask(){ return true; }
     void RunViewTask(){}
 };

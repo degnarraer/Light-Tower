@@ -25,13 +25,13 @@
 
 void VisualizationFactory::Setup()
 {
-  //m_VUMeter = new VUMeter(m_StatisticalEngineInterface);
-  //AddTask(*m_VUMeter);
+  m_VUMeter = new VUMeter(m_StatisticalEngineInterface, m_LEDController);
+  AddTask(*m_VUMeter);
 }
 bool VisualizationFactory::CanRunMyTask()
 { 
   return true;
 }
-void VisualizationFactory::RunTask()
+void VisualizationFactory::RunMyTask()
 {
 }

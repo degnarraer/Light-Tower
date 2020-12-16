@@ -31,7 +31,7 @@ bool Model::CanRunMyTask()
 {
   return CanRunModelTask();
 }
-void Model::RunTask()
+void Model::RunMyTask()
 {
   RunModelTask();
 }

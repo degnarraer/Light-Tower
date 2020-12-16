@@ -28,6 +28,7 @@
 #include "Models.h"
 #include "Views.h"
 #include "TaskInterface.h"
+#include "LEDControllerInterface.h"
 #include <LinkedList.h>
 
 class VisualizationEventNotificationCallerInterface;
@@ -72,17 +73,20 @@ class Visualization: public Task
                                                                            , VisualizationEventNotificationCallerInterface
 {
   public:
-    Visualization(StatisticalEngineInterface &statisticalEngineInterface) : Task("Visualization")
-                                                                          , m_StatisticalEngineInterface(statisticalEngineInterface){}
+    Visualization( StatisticalEngineInterface &StatisticalEngineInterface, 
+                   LEDController &LEDController) : Task("Visualization")
+                                                 , m_StatisticalEngineInterface(StatisticalEngineInterface)
+                                                 , m_LEDController(LEDController){}
     ~Visualization()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
     }
     StatisticalEngineInterface m_StatisticalEngineInterface;
+    LEDController m_LEDController;
     void AddSubView(View &view);
     void AddModel(Model &model);
     
-    virtual Visualization* GetInstance(StatisticalEngineInterface &statisticalEngineInterface) = 0;
+    virtual Visualization* GetInstance(StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController) = 0;
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;
     virtual void RunVisualization() = 0;
@@ -90,7 +94,7 @@ class Visualization: public Task
     //Task Interface
     void Setup();
     bool CanRunMyTask();
-    void RunTask();
+    void RunMyTask();
   protected:
     unsigned int m_Duration = 0;
   private:
@@ -104,7 +108,7 @@ class Visualization: public Task
 class VUMeter: public Visualization
 {
   public:
-    VUMeter(StatisticalEngineInterface &statisticalEngineInterface) : Visualization(statisticalEngineInterface)
+    VUMeter( StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController) : Visualization( StatisticalEngineInterface, LEDController)
     {
       AddSubView(m_VerticalBar);
       AddModel(m_SoundPower);
@@ -115,17 +119,21 @@ class VUMeter: public Visualization
     }
 
     //Visualization
-    Visualization* GetInstance(StatisticalEngineInterface &statisticalEngineInterface)
+    Visualization* GetInstance(StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController)
     {
-      VUMeter *vis = new VUMeter(statisticalEngineInterface);
+      VUMeter *vis = new VUMeter(StatisticalEngineInterface, LEDController);
       return vis;
     }
     void SetupVisualization(){}
     bool CanRunVisualization(){ return true; }
-    void RunVisualization(){}
+    void RunVisualization()
+    {
+      m_VerticalBar.SetNormalizedHeight(m_SoundPower.GetSoundPower());
+      m_LEDController.UpdateLEDs(m_VerticalBar.GetPixels());
+    }
   private:
-    VerticalBar m_VerticalBar = VerticalBar(0, 0, NUMSTRIPS, NUMLEDS);
-    SoundPower m_SoundPower;       
+    VerticalBarView m_VerticalBar = VerticalBarView(0, 0, NUMSTRIPS, NUMLEDS);
+    SoundPowerModel m_SoundPower = SoundPowerModel(m_StatisticalEngineInterface);       
 };
 
 #endif

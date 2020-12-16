@@ -27,6 +27,7 @@
 #include <LinkedList.h>
 #include "Streaming.h"
 #include "Tunes.h"
+#include "Statistical_Engine.h"
 
 
 class ModelEventNotificationCallerInterface;
@@ -71,7 +72,8 @@ class Model: public Task
            , public ModelEventNotificationCallerInterface
 {
   public: 
-    Model(): Task("Model"){}
+    Model(StatisticalEngineInterface &statisticalEngineInterface): Task("Model")
+                                                                 , m_StatisticalEngineInterface(statisticalEngineInterface){}
     ~Model(){}
     
   protected:
@@ -84,10 +86,12 @@ class Model: public Task
         m_PreviousValue = m_CurrentValue;
       }
     }  
+  protected:
+    StatisticalEngineInterface m_StatisticalEngineInterface;  
   private:
     void Setup();
     bool CanRunMyTask();
-    void RunTask();
+    void RunMyTask();
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
@@ -96,11 +100,12 @@ class Model: public Task
     
 };
 
-class SoundPower: public Model
+class SoundPowerModel: public Model
 {
   public:
-    SoundPower(){}
-    ~SoundPower(){}
+    SoundPowerModel(StatisticalEngineInterface &statisticalEngineInterface): Model(statisticalEngineInterface){}
+    ~SoundPowerModel(){}
+    float GetSoundPower() { return m_StatisticalEngineInterface.GetSoundPower(); }
   private:  
     void SetupModel(){}
     bool CanRunModelTask(){ return true; }
