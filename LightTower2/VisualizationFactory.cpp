@@ -22,3 +22,16 @@
  */
 
 #include "VisualizationFactory.h"
+
+void VisualizationFactory::Setup()
+{
+  //m_VUMeter = new VUMeter(m_StatisticalEngineInterface);
+  //AddTask(*m_VUMeter);
+}
+bool VisualizationFactory::CanRunMyTask()
+{ 
+  return true;
+}
+void VisualizationFactory::RunTask()
+{
+}

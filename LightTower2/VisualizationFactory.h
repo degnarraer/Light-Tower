@@ -37,14 +37,14 @@ class VisualizationFactory : public Task
                                                                                  , m_StatisticalEngineInterface(statisticalEngineInterface){}
     ~VisualizationFactory(){}
 
-  private:  
-    TaskScheduler m_Scheduler;
+  private:
     StatisticalEngineInterface m_StatisticalEngineInterface;
+    VUMeter *m_VUMeter;
     
     //Task Interface
-    void Setup(){}
-    bool CanRunTask(){ return false; }
-    void RunTask(){}
+    void Setup();
+    bool CanRunMyTask();
+    void RunTask();
 };
 
 #endif

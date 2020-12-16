@@ -91,7 +91,7 @@ class StatisticalEngine : public Task
 
     //Task Interface
     void          Setup();
-    bool          CanRunTask();
+    bool          CanRunMyTask();
     void          RunTask();
     
     float power;
@@ -169,15 +169,14 @@ class StatisticalEngineInterface : public Task
     void MicrophoneStateChange(SoundState){}
     
   private:
-    TaskScheduler m_Scheduler;
     StatisticalEngine m_StatisticalEngine;
     void Setup()
     { 
       m_StatisticalEngine.ConnectCallback(this);
-      m_Scheduler.AddTask(m_StatisticalEngine);
+      AddTask(m_StatisticalEngine);
     }
-    bool CanRunTask(){ return true; }
-    void RunTask(){ m_Scheduler.RunTasks(); }
+    bool CanRunMyTask(){ return true; }
+    void RunTask(){ }
 };
 
 #endif

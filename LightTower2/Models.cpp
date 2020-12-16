@@ -23,6 +23,17 @@
 
 #include "Models.h"
 
-
+void Model::Setup()
+{
+  SetupModel();
+}
+bool Model::CanRunMyTask()
+{
+  return CanRunModelTask();
+}
+void Model::RunTask()
+{
+  RunModelTask();
+}
 
 //************** SOUND POWER MODEL **************

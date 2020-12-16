@@ -29,28 +29,12 @@
 #include "Streaming.h"
 #include "Tunes.h"
 
-class Task
-{
-  public:
-    Task(): m_Title("Unnamed"){}
-    Task(String title): m_Title(title){}
-    String m_Title;
-    bool m_IsSetup = false;
-    virtual void Setup() = 0;
-    virtual bool CanRunTask() = 0;
-    virtual void RunTask() = 0;
-    String GetTaskTitle() 
-    {
-      return m_Title;
-    }
-    void SetTaskTitle(String title) { m_Title = title; }
-};
-
+class Task;
 class TaskScheduler
 {
   public:
     TaskScheduler(){}
-    void RunTasks();
+    void RunScheduler();
     void AddTask(Task &task);
     void AddTasks(LinkedList<Task*> &tasks);
     bool RemoveTask(Task &task);
@@ -58,6 +42,29 @@ class TaskScheduler
   private:
     LinkedList<Task*> myTasks = LinkedList<Task*>();
 };
+class Task
+{
+  public:
+    Task(): m_Title("Unnamed"){}
+    Task(String title): m_Title(title){}
+    String GetTaskTitle() { return m_Title; }
+    bool GetIsSetup() { return m_IsSetup; }
+    bool SetIsSetup(bool IsSetup) { m_IsSetup = IsSetup; }
+    void AddTask(Task &task);
+    void AddTasks(LinkedList<Task*> &tasks);
+    bool RemoveTask(Task &task);
+    void RunScheduler();
+    virtual void Setup() = 0;
+    virtual bool CanRunMyTask() = 0;
+    virtual void RunTask() = 0;
+  private:
+    TaskScheduler m_Scheduler;
+    bool m_IsSetup = false;
+    String m_Title;
+    void SetTaskTitle(String title) { m_Title = title; }
+    
+};
+
 
 class CalculateFPS: public Task
 {
@@ -74,7 +81,7 @@ class CalculateFPS: public Task
       m_startMillis = millis();
       m_frameCount = 0;
     }
-    bool CanRunTask()
+    bool CanRunMyTask()
     {
       ++m_frameCount;
       m_currentMillis = millis();

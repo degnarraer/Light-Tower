@@ -22,17 +22,36 @@
  */
 
 #include "TaskInterface.h"
+#include <typeinfo>
 
-void TaskScheduler::RunTasks()
+void Task::AddTask(Task &task)
+{
+  m_Scheduler.AddTask(task);
+}
+void Task::AddTasks(LinkedList<Task*> &tasks)
+{
+  m_Scheduler.AddTasks(tasks);
+}
+bool Task::RemoveTask(Task &task)
+{
+  m_Scheduler.RemoveTask(task);
+}
+void Task::RunScheduler()
+{
+  m_Scheduler.RunScheduler();
+}
+
+void TaskScheduler::RunScheduler()
 {
   if(true == debugTasks) Serial << "TaskScheduler: Try to Run " << myTasks.size() << " Task(s): Start\n";
   for(int t = 0; t < myTasks.size(); ++t)
   {
     Task *aTask = myTasks.get(t);
-    if(true==aTask->CanRunTask())
+    if(true==aTask->CanRunMyTask())
     {
       if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Start\n";
       aTask->RunTask();
+      aTask->RunScheduler();
       if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Complete\n";
     }
     else
@@ -40,17 +59,17 @@ void TaskScheduler::RunTasks()
       if(true == debugTasks) Serial << "TaskScheduler: RunTask: " << aTask->GetTaskTitle() << ": Not Ready\n";
     }
   }
-  if(true == debugTasks) Serial << "TaskScheduler: RunTasks: Complete\n";
+  if(true == debugTasks) Serial << "TaskScheduler: RunScheduler: Complete\n";
 }
 void TaskScheduler::AddTask(Task &task)
 {
   if(true == debugTasks) Serial << "TaskScheduler: Adding Task: " << task.GetTaskTitle() << "\n";
   myTasks.add(&task);
-  if(false == task.m_IsSetup)
+  if(false == task.GetIsSetup())
   {
     if(true == debugTasks) Serial << "TaskScheduler: Setup: " << task.GetTaskTitle() << ": Start\n";
     task.Setup();
-    task.m_IsSetup = true;
+    task.SetIsSetup(true);
     if(true == debugTasks) Serial << "TaskScheduler: Setup: " << task.GetTaskTitle() << ": Complete\n";
   }
 }
@@ -58,7 +77,7 @@ void TaskScheduler::AddTasks(LinkedList<Task*> &tasks)
 {
   for(int t = 0; t < tasks.size(); ++t)
   {
-    myTasks.add(tasks.get(t));
+    myTasks.add((Task*)tasks.get(t));
   }
 }
 bool TaskScheduler::RemoveTask(Task &task)

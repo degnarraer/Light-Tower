@@ -67,17 +67,14 @@ class ModelEventNotificationCallerInterface
     LinkedList<ModelEventNotificationCalleeInterface*> myCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
 };
 
-class Model: public ModelEventNotificationCallerInterface
+class Model: public Task
+           , public ModelEventNotificationCallerInterface
 {
   public: 
-    Model(){}
+    Model(): Task("Model"){}
     ~Model(){}
     
   protected:
-    TaskScheduler m_Scheduler;  
-  private:
-    float m_PreviousValue;
-    float m_CurrentValue;
     void SetCurrentValue(float value)
     {
       m_CurrentValue = value;
@@ -86,20 +83,28 @@ class Model: public ModelEventNotificationCallerInterface
         SendNewValueNotificationToCalleesFrom(m_CurrentValue, *this);
         m_PreviousValue = m_CurrentValue;
       }
-    }
+    }  
+  private:
+    void Setup();
+    bool CanRunMyTask();
+    void RunTask();
+    virtual void SetupModel() = 0;
+    virtual bool CanRunModelTask() = 0;
+    virtual void RunModelTask() = 0;
+    float m_PreviousValue;
+    float m_CurrentValue;
+    
 };
 
 class SoundPower: public Model
-                , public Task
 {
   public:
-    SoundPower() : Task("Sound Power"){}
+    SoundPower(){}
     ~SoundPower(){}
-    TaskScheduler m_Scheduler;
   private:  
-    void Setup(){}
-    void RunTask(){}
-    bool CanRunTask(){ return true; }
+    void SetupModel(){}
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask(){}
 };
 
 #endif

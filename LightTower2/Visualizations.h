@@ -23,6 +23,7 @@
 
 #ifndef Visualization_H
 #define Visualization_H
+#include "Statistical_Engine.h"
 #include "Streaming.h"
 #include "Models.h"
 #include "Views.h"
@@ -68,50 +69,45 @@ class VisualizationEventNotificationCallerInterface
 };
 
 class Visualization: public Task
-                   , VisualizationEventNotificationCallerInterface
+                                                                           , VisualizationEventNotificationCallerInterface
 {
   public:
-    Visualization() : Task("Visualization"){}
+    Visualization(StatisticalEngineInterface &statisticalEngineInterface) : Task("Visualization")
+                                                                          , m_StatisticalEngineInterface(statisticalEngineInterface){}
     ~Visualization()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
     }
+    StatisticalEngineInterface m_StatisticalEngineInterface;
+    void AddSubView(View &view);
+    void AddModel(Model &model);
     
-    //Task Interface
-    void Setup()
-    {
-      m_Scheduler.AddTasks(myViews);
-      m_Scheduler.AddTasks(myModels);
-      SetupVisualization();
-    }
-    bool CanRunTask()
-    {
-      return CanRunVisualization();
-    }
-    void RunTask()
-    {
-      RunVisualization();
-    }
+    virtual Visualization* GetInstance(StatisticalEngineInterface &statisticalEngineInterface) = 0;
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;
-    virtual void RunVisualization() = 0; 
+    virtual void RunVisualization() = 0;
+
+    //Task Interface
+    void Setup();
+    bool CanRunMyTask();
+    void RunTask();
   protected:
     unsigned int m_Duration = 0;
-    TaskScheduler m_Scheduler;    
-    virtual Visualization* GetInstance() = 0;
-    LinkedList<Task*> myViews = LinkedList<Task*>();
-    LinkedList<Task*> myModels = LinkedList<Task*>();
+  private:
+    LinkedList<View*> m_MyViews = LinkedList<View*>();
+    LinkedList<Model*> m_MyModels = LinkedList<Model*>();
+    LinkedList<Task*> m_MyTasks = LinkedList<Task*>();
 };
 
-/*
+
 //********* VUMeter *********
 class VUMeter: public Visualization
 {
   public:
-    VUMeter()
+    VUMeter(StatisticalEngineInterface &statisticalEngineInterface) : Visualization(statisticalEngineInterface)
     {
-      //myViews.add(&m_VerticalBar);
-      //myModels.add(&m_SoundPower);
+      AddSubView(m_VerticalBar);
+      AddModel(m_SoundPower);
     }
     ~VUMeter()
     {
@@ -119,9 +115,9 @@ class VUMeter: public Visualization
     }
 
     //Visualization
-    Visualization* GetInstance()
+    Visualization* GetInstance(StatisticalEngineInterface &statisticalEngineInterface)
     {
-      Visualization *vis = new VUMeter();
+      VUMeter *vis = new VUMeter(statisticalEngineInterface);
       return vis;
     }
     void SetupVisualization(){}
@@ -131,5 +127,5 @@ class VUMeter: public Visualization
     VerticalBar m_VerticalBar = VerticalBar(0, 0, NUMSTRIPS, NUMLEDS);
     SoundPower m_SoundPower;       
 };
-*/
+
 #endif

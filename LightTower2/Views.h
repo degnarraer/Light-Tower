@@ -37,26 +37,31 @@ class View: public Task
     ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
-    }    
+    } 
+    void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
+    void SetSize(size W, size H){ m_W = W; m_H = H; }
+    void AddChildView(View &Child){}
+    void RemoveChildView(View &Child){}
+    void RemoveAllChildrenViews(){}
+  
+  private:   
     position m_X;
     position m_Y;
     size m_W;
     size m_H;
-
-    void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
-    void SetSize(size W, size H){ m_W = W; m_H = H; }
-
-    //Task
-    virtual void Setup() = 0;
-    virtual bool CanRunTask() = 0;
-    virtual void RunTask() = 0;
-
-    //Views
     LinkedList<View*> ChildViews = LinkedList<View*>();
     View *ParentView;
-    void AddChildView(View &Child){}
-    void RemoveChildView(View &Child){}
-    void RemoveAllChildrenViews(){}
+    
+    //Task
+    void Setup(){ SetupView(); }
+    bool CanRunMyTask(){ return CanRunViewTask(); }
+    void RunTask(){ RunViewTask(); }
+
+    //View
+    virtual void SetupView() = 0;
+    virtual bool CanRunViewTask() = 0;
+    virtual void RunViewTask() = 0;
+    
 };
 
 
@@ -73,10 +78,10 @@ class VerticalBar: public View
     CRGB m_Color;
     float m_Height;
 
-    //Task
-    void Setup(){}
-    bool CanRunTask(){}
-    void RunTask(){}
+    //View
+    void SetupView(){}
+    bool CanRunViewTask(){}
+    void RunViewTask(){}
 };
 
 class BassSprite: public View
@@ -86,9 +91,8 @@ class BassSprite: public View
     ~BassSprite(){}
 
   private:
-    
-    //Task
-    void Setup(){}
-    bool CanRunTask(){}
-    void RunTask(){}
+    //View
+    void SetupView(){}
+    bool CanRunViewTask(){}
+    void RunViewTask(){}
 };

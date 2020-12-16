@@ -20,3 +20,31 @@
  * *
 
  */
+#include "Visualizations.h"
+
+void Visualization::AddSubView(View &view)
+{ 
+  m_MyViews.add(&view);
+  m_MyTasks.add(&view);
+}
+void Visualization::AddModel(Model &model)
+{ 
+  m_MyModels.add(&model);
+  m_MyTasks.add(&model); 
+}
+
+
+//Task Interface
+void Visualization::Setup()
+{
+  SetupVisualization();
+  AddTasks(m_MyTasks);
+}
+bool Visualization::CanRunMyTask()
+{
+  return CanRunVisualization();
+}
+void Visualization::RunTask()
+{
+  RunVisualization();
+}

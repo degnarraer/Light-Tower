@@ -64,5 +64,5 @@ void ADC_Handler()
 
 void loop()
 {
-  m_Scheduler.RunTasks();
+  m_Scheduler.RunScheduler();
 }
