@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
  
 #ifndef Models_H
@@ -28,6 +23,7 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include "Statistical_Engine.h"
+
 
 
 class ModelEventNotificationCallerInterface;
@@ -69,11 +65,13 @@ class ModelEventNotificationCallerInterface
 };
 
 class Model: public Task
-           , public ModelEventNotificationCallerInterface
+           , ModelEventNotificationCallerInterface
 {
   public: 
-    Model(StatisticalEngineInterface &statisticalEngineInterface): Task("Model")
-                                                                 , m_StatisticalEngineInterface(statisticalEngineInterface){}
+    Model(StatisticalEngineInterface &statisticalEngineInterface, String Title): Task(Title)
+                                                                               , ModelEventNotificationCallerInterface() 
+                                                                               , m_StatisticalEngineInterface(statisticalEngineInterface){}
+    
     ~Model(){}
     
   protected:
@@ -87,7 +85,7 @@ class Model: public Task
       }
     }  
   protected:
-    StatisticalEngineInterface m_StatisticalEngineInterface;  
+    StatisticalEngineInterface &m_StatisticalEngineInterface;  
   private:
     void Setup();
     bool CanRunMyTask();
@@ -103,7 +101,7 @@ class Model: public Task
 class SoundPowerModel: public Model
 {
   public:
-    SoundPowerModel(StatisticalEngineInterface &statisticalEngineInterface): Model(statisticalEngineInterface){}
+    SoundPowerModel(StatisticalEngineInterface &statisticalEngineInterface, String Title): Model(statisticalEngineInterface, Title){}
     ~SoundPowerModel(){}
     float GetSoundPower() { return m_StatisticalEngineInterface.GetSoundPower(); }
   private:  
@@ -111,5 +109,4 @@ class SoundPowerModel: public Model
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}
 };
-
 #endif

@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
 
 #ifndef Tunes_H
@@ -35,14 +30,18 @@ const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
 const bool   debugFPS = false;
 const bool   debugTasks = false;
-const bool   debugModelNotifications = true;
+const bool   debugModelNotifications = false;
+const bool   debugSoundPower = true;
+const bool   debugLEDs = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
                                debugPlotFFT || 
                                debugFPS || 
                                debugTasks || 
-                               debugModelNotifications);
+                               debugModelNotifications ||
+                               debugSoundPower ||
+                               debugLEDs);
 
 // LED SETUP
 static const unsigned int NUMLEDS = 60;

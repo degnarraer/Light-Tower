@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
 
 #ifndef StatisticalEngine_H
@@ -148,7 +143,7 @@ class StatisticalEngine : public Task
   //Statistical Functions
   int GetBandValue(unsigned int band, unsigned int depth);
   float GetBandAverage(int band, int depth);
-  float GetSoundPower(){ return power; }
+  float GetSoundPower();
 
 };
 
@@ -160,7 +155,7 @@ class StatisticalEngineInterface : public Task
     StatisticalEngineInterface() : Task("StatisticalEngineInterface"){}
     ~StatisticalEngineInterface(){}
 
-    float GetSoundPower(){ return m_StatisticalEngine.GetSoundPower(); }
+    float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
   
     //ADCInterruptHandler
     void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
@@ -169,7 +164,7 @@ class StatisticalEngineInterface : public Task
     void MicrophoneStateChange(SoundState){}
     
   private:
-    StatisticalEngine m_StatisticalEngine;
+    StatisticalEngine m_StatisticalEngine = StatisticalEngine();
     void Setup()
     { 
       m_StatisticalEngine.ConnectCallback(this);

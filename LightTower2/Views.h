@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
 
 #include "LEDControllerInterface.h"
@@ -28,12 +23,18 @@
 #include <LinkedList.h>
 #include <assert.h>
 
+
+
 typedef int position;
 typedef int size;
 class View: public Task
 {
   public:
-    View(position X, position Y, size W, size H){}
+    View(position X, position Y, size W, size H, String Title): Task(Title)
+                                                              , m_X(X)
+                                                              , m_Y(Y)
+                                                              , m_W(W)
+                                                              , m_H(H){}
     ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
@@ -43,10 +44,10 @@ class View: public Task
     void AddChildView(View &Child){}
     void RemoveChildView(View &Child){}
     void RemoveAllChildrenViews(){}
-    Pixels GetPixels() { return m_Pixels; }
+    Pixels &GetPixels() { return m_Pixels; }
 
-  protected:
-    Pixels m_Pixels = {{{CRGB::Black},{ CRGB::Black}}};
+  public:
+    Pixels m_Pixels = {{{CRGB::Red},{ CRGB::Red}}};
     position m_X;
     position m_Y;
     size m_W;
@@ -71,8 +72,8 @@ class View: public Task
 class VerticalBarView: public View
 {
   public:
-    VerticalBarView(): View(0, 0, 0, 0){}
-    VerticalBarView(position X, position Y, size W, size H): View(X, Y, W, H){}
+    VerticalBarView(String Title): View(0, 0, 0, 0, Title){}
+    VerticalBarView(position X, position Y, size W, size H, String Title): View(X, Y, W, H, Title){}
     ~VerticalBarView(){}
     void SetColor(CRGB Color){ m_Color = Color; }
     void SetNormalizedHeight(float Height) { assert (Height <= 1.0); m_Height = Height; }
@@ -82,20 +83,43 @@ class VerticalBarView: public View
     float m_Height;
 
     //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask()
+    void SetupView()
     {
       for(int w = 0; w<SCREEN_WIDTH; ++w)
       {
         for(int h = 0; h<SCREEN_HEIGHT; ++h)
         {
           m_Pixels.Pixel[w][h] = CRGB::Black;
-          if(w >= m_X && w < m_X + m_W && h >= m_Y && h < m_Y + m_H)
+        }
+      }
+    }
+    bool CanRunViewTask(){ return true; }
+    void RunViewTask()
+    {
+      
+      if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << "\n";
+      for(int w = 0; w<SCREEN_WIDTH; ++w)
+      {
+        for(int h = 0; h<SCREEN_HEIGHT; ++h)
+        {
+          m_Pixels.Pixel[w][h] = CRGB::Black;
+          if(w >= m_X && w < m_X + m_W && h >= m_Y && h < m_Height * (m_Y + m_H))
           {
-            m_Pixels.Pixel[w][h] = m_Color;
+            if(true == debugLEDs) Serial << "R";
+            m_Pixels.Pixel[w][h] = CRGB::Red;
           }
         }
+      }
+      if(true == debugLEDs) Serial << "\n";
+      if(true == debugLEDs) Serial << "******View LEDs******\n";
+      for(int h = 0; h < SCREEN_HEIGHT; ++ h)
+      {
+        for(int w = 0; w < SCREEN_WIDTH; ++w)
+        {
+          CRGB bufColor = m_Pixels.Pixel[w][h];
+          if(true == debugLEDs) Serial << bufColor[0] << ":" << bufColor[1] << ":" << bufColor[2] << " \t";
+        }
+        if(true == debugLEDs) Serial << "\n";
       }
     }
 };
@@ -103,7 +127,7 @@ class VerticalBarView: public View
 class BassSpriteView: public View
 {
   public:
-    BassSpriteView(position X, position Y, size L, size W): View(X, Y, L, W){}
+    BassSpriteView(position X, position Y, size L, size W, String Title): View(X, Y, L, W, Title){}
     ~BassSpriteView(){}
 
   private:

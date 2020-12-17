@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
  
 #include <Adafruit_ZeroFFT.h>
@@ -305,4 +300,12 @@ float StatisticalEngine::GetBandAverage(int band, int depth)
   result /= count;
   if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   return result;
+}
+
+float StatisticalEngine::GetSoundPower()
+{ 
+  bool TEST = false;
+  if(true == TEST) power = 0.5; 
+  if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << power << "\n";
+  return power;
 }

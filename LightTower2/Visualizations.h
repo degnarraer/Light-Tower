@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,15 +14,11 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
 
 #ifndef Visualization_H
 #define Visualization_H
+
 #include "Statistical_Engine.h"
 #include "Streaming.h"
 #include "Models.h"
@@ -81,8 +77,8 @@ class Visualization: public Task
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
     }
-    StatisticalEngineInterface m_StatisticalEngineInterface;
-    LEDController m_LEDController;
+    StatisticalEngineInterface &m_StatisticalEngineInterface;
+    LEDController &m_LEDController;
     void AddSubView(View &view);
     void AddModel(Model &model);
     
@@ -110,8 +106,6 @@ class VUMeter: public Visualization
   public:
     VUMeter( StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController) : Visualization( StatisticalEngineInterface, LEDController)
     {
-      AddSubView(m_VerticalBar);
-      AddModel(m_SoundPower);
     }
     ~VUMeter()
     {
@@ -124,7 +118,11 @@ class VUMeter: public Visualization
       VUMeter *vis = new VUMeter(StatisticalEngineInterface, LEDController);
       return vis;
     }
-    void SetupVisualization(){}
+    void SetupVisualization()
+    {
+      AddModel(m_SoundPower);
+      AddSubView(m_VerticalBar);
+    }
     bool CanRunVisualization(){ return true; }
     void RunVisualization()
     {
@@ -132,8 +130,8 @@ class VUMeter: public Visualization
       m_LEDController.UpdateLEDs(m_VerticalBar.GetPixels());
     }
   private:
-    VerticalBarView m_VerticalBar = VerticalBarView(0, 0, NUMSTRIPS, NUMLEDS);
-    SoundPowerModel m_SoundPower = SoundPowerModel(m_StatisticalEngineInterface);       
+    VerticalBarView m_VerticalBar = VerticalBarView(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, "Vertical Bar");
+    SoundPowerModel m_SoundPower = SoundPowerModel(m_StatisticalEngineInterface, "Power Model");       
 };
 
 #endif

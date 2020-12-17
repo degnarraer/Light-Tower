@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
 
 #ifndef LEDControllerInterface_H
@@ -48,14 +43,18 @@ class LEDController
     {
       
     }
-    void UpdateLEDs( Pixels Pixels )
+    void UpdateLEDs( Pixels &Pixels )
     {
-      for(int w = 0; w < SCREEN_WIDTH; ++w)
+      if(true == debugLEDs) Serial << "******LED Controller LEDs******\n";
+      for(int h = 0; h < SCREEN_HEIGHT; ++ h)
       {
-        for(int h = 0; h < SCREEN_HEIGHT; ++ h)
+        for(int w = 0; w < SCREEN_WIDTH; ++w)
         {
+          CRGB bufColor = Pixels.Pixel[w][h];
           m_LEDStrip[w][h] = Pixels.Pixel[w][h];
+          if(true == debugLEDs) Serial << bufColor[0] << ":" << bufColor[1] << ":" << bufColor[2] << " \t";
         }
+        if(true == debugLEDs) Serial << "\n";
       }
       FastLED.show();
     }

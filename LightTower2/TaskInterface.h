@@ -1,4 +1,4 @@
-    /*
+/*
     Light Tower by Rob Shockency
     Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
 
@@ -14,11 +14,6 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-    */
-/**
- * @file LightTower2.ino
- * *
-
  */
 
 #ifndef TaskInterface_H
@@ -38,9 +33,9 @@ class TaskScheduler
     void AddTask(Task &task);
     void AddTasks(LinkedList<Task*> &tasks);
     bool RemoveTask(Task &task);
-    unsigned int GetTaskCount() {return myTasks.size();}
+    unsigned int GetTaskCount(){return m_MyTasks.size();}
   private:
-    LinkedList<Task*> myTasks = LinkedList<Task*>();
+    LinkedList<Task*> m_MyTasks = LinkedList<Task*>();
 };
 class Task
 {
@@ -64,7 +59,6 @@ class Task
     void SetTaskTitle(String title) { m_Title = title; }
     
 };
-
 
 class CalculateFPS: public Task
 {
