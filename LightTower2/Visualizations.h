@@ -73,15 +73,13 @@ class Visualization: public Task
     Visualization( StatisticalEngineModelInterface &StatisticalEngineModelInterface, 
                    LEDController &LEDController) : Task("Visualization")
                                                  , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
-                                                 , m_LEDController(LEDController)
-                                                 , ModelEventNotificationCalleeInterface(){}
+                                                 , m_LEDController(LEDController){}
     ~Visualization()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
     }
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController &m_LEDController;
-    void AddSubView(View &view);
     void AddModel(Model &model);
     
     virtual Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) = 0;
@@ -94,14 +92,9 @@ class Visualization: public Task
     bool CanRunMyTask();
     void RunMyTask();
 
-    //ModelEventNotificationCalleeInterface
-    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
   protected:
     unsigned int m_Duration = 0;
   private:
-    LinkedList<View*> m_MyViews = LinkedList<View*>();
-    LinkedList<Model*> m_MyModels = LinkedList<Model*>();
-    LinkedList<Task*> m_MyTasks = LinkedList<Task*>();
 };
 
 
@@ -109,13 +102,8 @@ class Visualization: public Task
 class VUMeter: public Visualization
 {
   public:
-    VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController)
-    {
-    }
-    ~VUMeter()
-    {
-      if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter\n";
-    }
+    VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController){}
+    ~VUMeter(){if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter\n";}
 
     //Visualization
     Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
@@ -123,13 +111,12 @@ class VUMeter: public Visualization
       VUMeter *vis = new VUMeter(StatisticalEngineModelInterface, LEDController);
       return vis;
     }
-    void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) 
-    {
-    }
+    void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source){}
     void SetupVisualization()
     {
+      AddTask(m_SoundPower);
+      AddTask(m_VerticalBar);
       AddModel(m_SoundPower);
-      AddSubView(m_VerticalBar);
       m_VerticalBar.SetModel(m_SoundPower);
     }
     bool CanRunVisualization(){ return true; }

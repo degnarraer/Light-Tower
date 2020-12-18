@@ -30,7 +30,7 @@ class ModelEventNotificationCallerInterface;
 class ModelEventNotificationCalleeInterface
 {
   public:
-    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
+    virtual void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
 };
 
 class ModelEventNotificationCallerInterface

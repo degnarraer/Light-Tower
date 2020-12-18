@@ -66,7 +66,7 @@ class View: public Task
     void RunMyTask(){ RunViewTask(); }
 
     //ModelEventNotificationCallerInterface
-    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
+    virtual void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
 
     //View
     virtual void SetupView() = 0;
@@ -90,7 +90,7 @@ class VerticalBarView: public View
 
     
     //ModelEventNotificationCallerInterface
-    void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source)
+    void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source)
     {
       SetNormalizedHeight(Value);
     }
