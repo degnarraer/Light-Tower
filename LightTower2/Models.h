@@ -27,7 +27,6 @@
 
 
 class ModelEventNotificationCallerInterface;
-
 class ModelEventNotificationCalleeInterface
 {
   public:
@@ -37,55 +36,29 @@ class ModelEventNotificationCalleeInterface
 class ModelEventNotificationCallerInterface
 {
   public:
-    void RegisterForNotification(ModelEventNotificationCalleeInterface &callee)
-    {
-      if(true == debugModelNotifications) Serial << "ModelEventNotificationCallerInterface: Add: ";        
-      myCallees.add(&callee);
-    }
-    void DeRegisterForNotification(ModelEventNotificationCalleeInterface &callee)
-    {
-      for(int i = 0; i < myCallees.size(); ++i)
-      {
-        if(myCallees.get(i) == &callee)
-        {
-          myCallees.remove(i);
-          break;
-        }
-      }
-    }
-    void SendNewValueNotificationToCalleesFrom(float value, ModelEventNotificationCallerInterface &source)
-    {
-      for(int i = 0; i < myCallees.size(); ++i)
-      {
-        myCallees.get(i)->NewValueNotificationFrom(value, source);
-      }
-    }
+    void RegisterForNotification(ModelEventNotificationCalleeInterface &callee);
+    void DeRegisterForNotification(ModelEventNotificationCalleeInterface &callee);
+    bool HasUser();
+    void SendNewValueNotificationToCallees(float value, ModelEventNotificationCallerInterface &source);
+    virtual void UpdateValue() = 0;
   private:
-    LinkedList<ModelEventNotificationCalleeInterface*> myCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
+    LinkedList<ModelEventNotificationCalleeInterface*> m_MyCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
 };
 
+class StatisticalEngineModelInterface;
 class Model: public Task
-           , ModelEventNotificationCallerInterface
+           , public ModelEventNotificationCallerInterface
 {
   public: 
-    Model(StatisticalEngineInterface &statisticalEngineInterface, String Title): Task(Title)
-                                                                               , ModelEventNotificationCallerInterface() 
-                                                                               , m_StatisticalEngineInterface(statisticalEngineInterface){}
+    Model(StatisticalEngineModelInterface &StatisticalEngineModelInterface, String Title): Task(Title)
+                                                                                         , ModelEventNotificationCallerInterface() 
+                                                                                         , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
     
     ~Model(){}
-    
+    virtual void UpdateValue() = 0;
   protected:
-    void SetCurrentValue(float value)
-    {
-      m_CurrentValue = value;
-      if(m_PreviousValue != m_CurrentValue)
-      {
-        SendNewValueNotificationToCalleesFrom(m_CurrentValue, *this);
-        m_PreviousValue = m_CurrentValue;
-      }
-    }  
-  protected:
-    StatisticalEngineInterface &m_StatisticalEngineInterface;  
+    void SetCurrentValue(float value);
+    StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;  
   private:
     void Setup();
     bool CanRunMyTask();
@@ -95,16 +68,64 @@ class Model: public Task
     virtual void RunModelTask() = 0;
     float m_PreviousValue;
     float m_CurrentValue;
-    
 };
 
+
+class ModelNewValueProcessor : public Task
+{
+  public:
+    ModelNewValueProcessor() : Task("ModelNewValueProcessor"){}
+    ~ModelNewValueProcessor(){}
+    void AddModel(Model &Model);
+    
+    //Task
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
+  private:
+    LinkedList<Model*> m_MyModels = LinkedList<Model*>();
+};
+
+class StatisticalEngineModelInterface : public Task
+                                      , ADCInterruptHandler 
+                                      , MicrophoneMeasureCalleeInterface
+{
+  public:
+    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){}
+    ~StatisticalEngineModelInterface(){}
+
+    float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
+  
+    //ADCInterruptHandler
+    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
+    
+    //MicrophoneMeasureCalleeInterface
+    void MicrophoneStateChange(SoundState){}
+    
+    void AddModel(Model &Model) { m_ModelNewValueProcessor.AddModel(Model); }
+
+  private:
+    StatisticalEngine m_StatisticalEngine = StatisticalEngine();
+    ModelNewValueProcessor m_ModelNewValueProcessor = ModelNewValueProcessor();
+    void Setup()
+    { 
+      m_StatisticalEngine.ConnectCallback(this);
+      AddTask(m_StatisticalEngine);
+      AddTask(m_ModelNewValueProcessor);
+    }
+    bool CanRunMyTask(){ return true; }
+    void RunMyTask(){ //Only runs scheduler's tasks }
+};
 class SoundPowerModel: public Model
 {
   public:
-    SoundPowerModel(StatisticalEngineInterface &statisticalEngineInterface, String Title): Model(statisticalEngineInterface, Title){}
+    SoundPowerModel(StatisticalEngineModelInterface &StatisticalEngineModelInterface, String Title): Model(StatisticalEngineModelInterface, Title){}
     ~SoundPowerModel(){}
-    float GetSoundPower() { return m_StatisticalEngineInterface.GetSoundPower(); }
-  private:  
+    
+     //Model
+    void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetSoundPower()); }
+  private:
+     //Model
     void SetupModel(){}
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}

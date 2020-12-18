@@ -29,12 +29,12 @@
 class VisualizationFactory : public Task
 {
   public:
-    VisualizationFactory(StatisticalEngineInterface &statisticalEngineInterface) : Task("VisualizationFactory")
-                                                                                 , m_StatisticalEngineInterface(statisticalEngineInterface){}
+    VisualizationFactory(StatisticalEngineModelInterface &StatisticalEngineModelInterface) : Task("VisualizationFactory")
+                                                                                 , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
     ~VisualizationFactory(){}
 
   private:
-    StatisticalEngineInterface &m_StatisticalEngineInterface;
+    StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController m_LEDController;
     VUMeter *m_VUMeter;
     

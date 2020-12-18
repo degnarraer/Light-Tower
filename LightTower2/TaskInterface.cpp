@@ -45,8 +45,8 @@ void TaskScheduler::RunScheduler()
     if(true==aTask->CanRunMyTask())
     {
       if(true == debugTasks) Serial << "TaskScheduler Running Task: " << aTask->GetTaskTitle() << "\n";
-      aTask->RunMyTask();
       aTask->RunScheduler();
+      aTask->RunMyTask();
     }
     else
     {

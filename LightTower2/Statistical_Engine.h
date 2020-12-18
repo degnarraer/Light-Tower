@@ -147,31 +147,4 @@ class StatisticalEngine : public Task
 
 };
 
-class StatisticalEngineInterface : public Task
-                                 , ADCInterruptHandler 
-                                 , MicrophoneMeasureCalleeInterface
-{
-  public:
-    StatisticalEngineInterface() : Task("StatisticalEngineInterface"){}
-    ~StatisticalEngineInterface(){}
-
-    float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
-  
-    //ADCInterruptHandler
-    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
-    
-    //MicrophoneMeasureCalleeInterface
-    void MicrophoneStateChange(SoundState){}
-    
-  private:
-    StatisticalEngine m_StatisticalEngine = StatisticalEngine();
-    void Setup()
-    { 
-      m_StatisticalEngine.ConnectCallback(this);
-      AddTask(m_StatisticalEngine);
-    }
-    bool CanRunMyTask(){ return true; }
-    void RunMyTask(){ }
-};
-
 #endif

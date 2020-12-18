@@ -20,10 +20,10 @@
 #include "Tunes.h"
 #include "Streaming.h"
 #include "VisualizationFactory.h"
-#include "Statistical_Engine.h"
+#include "Models.h"
 
-StatisticalEngineInterface m_StatisticalEngineInterface;
-VisualizationFactory m_VisualizationFactory = VisualizationFactory(m_StatisticalEngineInterface);
+StatisticalEngineModelInterface m_StatisticalEngineModelInterface;
+VisualizationFactory m_VisualizationFactory = VisualizationFactory(m_StatisticalEngineModelInterface);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
@@ -48,13 +48,13 @@ void setup()
   if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << m_Scheduler.GetTaskCount() << "\n";
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_VisualizationFactory);
-  m_Scheduler.AddTask(m_StatisticalEngineInterface);
+  m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
 }
 
 void ADC_Handler()
 {
-  m_StatisticalEngineInterface.HandleADCInterrupt();
+  m_StatisticalEngineModelInterface.HandleADCInterrupt();
 }
 
 void loop()

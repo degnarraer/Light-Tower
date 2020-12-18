@@ -24,6 +24,7 @@ void Visualization::AddSubView(View &view)
 }
 void Visualization::AddModel(Model &model)
 { 
+  m_StatisticalEngineModelInterface.AddModel(model);
   m_MyModels.add(&model);
   m_MyTasks.add(&model); 
 }

@@ -22,16 +22,16 @@
 #include <math.h>
 
 //Output Debug Messages
-const bool   debugMode = true;
+const bool   debugMode = false;
 const int    debugLevel = 1;
 
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = false;
+const bool   debugFPS = true;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
-const bool   debugSoundPower = true;
+const bool   debugSoundPower = false;
 const bool   debugLEDs = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
@@ -59,7 +59,7 @@ const unsigned int NUMBER_OF_TICK_TIMERS = 10;
 const unsigned int NUMBER_OF_LAYERS = 10;
 
 //FFT Tunes
-const int FFT_MAX = 512;
+const int FFT_MAX = 1024;
 const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 

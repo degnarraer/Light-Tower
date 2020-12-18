@@ -66,23 +66,25 @@ class VisualizationEventNotificationCallerInterface
 };
 
 class Visualization: public Task
-                                                                           , VisualizationEventNotificationCallerInterface
+                   , VisualizationEventNotificationCallerInterface
+                   , ModelEventNotificationCalleeInterface
 {
   public:
-    Visualization( StatisticalEngineInterface &StatisticalEngineInterface, 
+    Visualization( StatisticalEngineModelInterface &StatisticalEngineModelInterface, 
                    LEDController &LEDController) : Task("Visualization")
-                                                 , m_StatisticalEngineInterface(StatisticalEngineInterface)
-                                                 , m_LEDController(LEDController){}
+                                                 , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
+                                                 , m_LEDController(LEDController)
+                                                 , ModelEventNotificationCalleeInterface(){}
     ~Visualization()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
     }
-    StatisticalEngineInterface &m_StatisticalEngineInterface;
+    StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController &m_LEDController;
     void AddSubView(View &view);
     void AddModel(Model &model);
     
-    virtual Visualization* GetInstance(StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController) = 0;
+    virtual Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) = 0;
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;
     virtual void RunVisualization() = 0;
@@ -91,6 +93,9 @@ class Visualization: public Task
     void Setup();
     bool CanRunMyTask();
     void RunMyTask();
+
+    //ModelEventNotificationCalleeInterface
+    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
   protected:
     unsigned int m_Duration = 0;
   private:
@@ -104,7 +109,7 @@ class Visualization: public Task
 class VUMeter: public Visualization
 {
   public:
-    VUMeter( StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController) : Visualization( StatisticalEngineInterface, LEDController)
+    VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController)
     {
     }
     ~VUMeter()
@@ -113,25 +118,28 @@ class VUMeter: public Visualization
     }
 
     //Visualization
-    Visualization* GetInstance(StatisticalEngineInterface &StatisticalEngineInterface, LEDController &LEDController)
+    Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
     {
-      VUMeter *vis = new VUMeter(StatisticalEngineInterface, LEDController);
+      VUMeter *vis = new VUMeter(StatisticalEngineModelInterface, LEDController);
       return vis;
+    }
+    void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) 
+    {
     }
     void SetupVisualization()
     {
       AddModel(m_SoundPower);
       AddSubView(m_VerticalBar);
+      m_VerticalBar.SetModel(m_SoundPower);
     }
     bool CanRunVisualization(){ return true; }
     void RunVisualization()
     {
-      m_VerticalBar.SetNormalizedHeight(m_SoundPower.GetSoundPower());
       m_LEDController.UpdateLEDs(m_VerticalBar.GetPixels());
     }
   private:
     VerticalBarView m_VerticalBar = VerticalBarView(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, "Vertical Bar");
-    SoundPowerModel m_SoundPower = SoundPowerModel(m_StatisticalEngineInterface, "Power Model");       
+    SoundPowerModel m_SoundPower = SoundPowerModel(m_StatisticalEngineModelInterface, "Power Model");       
 };
 
 #endif

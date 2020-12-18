@@ -28,6 +28,7 @@
 typedef int position;
 typedef int size;
 class View: public Task
+          , public ModelEventNotificationCalleeInterface
 {
   public:
     View(position X, position Y, size W, size H, String Title): Task(Title)
@@ -47,12 +48,16 @@ class View: public Task
     Pixels &GetPixels() { return m_Pixels; }
 
   public:
+    void SetModel(Model &Model) 
+    { 
+      Model.RegisterForNotification(*this);
+    }
     Pixels m_Pixels = {{{CRGB::Red},{ CRGB::Red}}};
     position m_X;
     position m_Y;
     size m_W;
     size m_H;
-    private:
+  private:
     LinkedList<View*> ChildViews = LinkedList<View*>();
     View *ParentView;
     
@@ -61,11 +66,13 @@ class View: public Task
     bool CanRunMyTask(){ return CanRunViewTask(); }
     void RunMyTask(){ RunViewTask(); }
 
+    //ModelEventNotificationCallerInterface
+    virtual void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
+
     //View
     virtual void SetupView() = 0;
     virtual bool CanRunViewTask() = 0;
     virtual void RunViewTask() = 0;
-    
 };
 
 
@@ -81,6 +88,13 @@ class VerticalBarView: public View
   private:
     CRGB m_Color = CRGB::Red;
     float m_Height;
+
+    
+    //ModelEventNotificationCallerInterface
+    void NewValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source)
+    {
+      SetNormalizedHeight(Value);
+    }
 
     //View
     void SetupView()

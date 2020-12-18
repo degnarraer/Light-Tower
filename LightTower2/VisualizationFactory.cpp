@@ -20,7 +20,7 @@
 
 void VisualizationFactory::Setup()
 {
-  m_VUMeter = new VUMeter(m_StatisticalEngineInterface, m_LEDController);
+  m_VUMeter = new VUMeter(m_StatisticalEngineModelInterface, m_LEDController);
   AddTask(*m_VUMeter);
 }
 bool VisualizationFactory::CanRunMyTask()
