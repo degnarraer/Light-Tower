@@ -31,7 +31,7 @@ class View: public Task
           , public ModelEventNotificationCalleeInterface
 {
   public:
-    View(position X, position Y, size W, size H, String Title): Task(Title)
+    View(String Title, position X, position Y, size W, size H): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
@@ -47,7 +47,6 @@ class View: public Task
     void RemoveAllChildrenViews(){}
     Pixels &GetPixels() { return m_Pixels; }
 
-  public:
     void SetModel(Model &Model) 
     { 
       Model.RegisterForNotification(*this);
@@ -79,8 +78,8 @@ class View: public Task
 class VerticalBarView: public View
 {
   public:
-    VerticalBarView(String Title): View(0, 0, 0, 0, Title){}
-    VerticalBarView(position X, position Y, size W, size H, String Title): View(X, Y, W, H, Title){}
+    VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
+    VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
     ~VerticalBarView(){}
     void SetColor(CRGB Color){ m_Color = Color; }
     void SetNormalizedHeight(float Height) { assert (Height <= 1.0); m_Height = Height; }
@@ -141,7 +140,7 @@ class VerticalBarView: public View
 class BassSpriteView: public View
 {
   public:
-    BassSpriteView(position X, position Y, size L, size W, String Title): View(X, Y, L, W, Title){}
+    BassSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
     ~BassSpriteView(){}
 
   private:

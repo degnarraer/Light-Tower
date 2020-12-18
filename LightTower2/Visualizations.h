@@ -138,8 +138,8 @@ class VUMeter: public Visualization
       m_LEDController.UpdateLEDs(m_VerticalBar.GetPixels());
     }
   private:
-    VerticalBarView m_VerticalBar = VerticalBarView(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, "Vertical Bar");
-    SoundPowerModel m_SoundPower = SoundPowerModel(m_StatisticalEngineModelInterface, "Power Model");       
+    SoundPowerModel m_SoundPower = SoundPowerModel("Power Model", m_StatisticalEngineModelInterface);  
+    VerticalBarView m_VerticalBar = VerticalBarView("Vertical Bar", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);  
 };
 
 #endif

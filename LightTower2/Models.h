@@ -50,7 +50,7 @@ class Model: public Task
            , public ModelEventNotificationCallerInterface
 {
   public: 
-    Model(StatisticalEngineModelInterface &StatisticalEngineModelInterface, String Title): Task(Title)
+    Model(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Task(Title)
                                                                                          , ModelEventNotificationCallerInterface() 
                                                                                          , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
     ~Model(){}
@@ -119,7 +119,7 @@ class StatisticalEngineModelInterface : public Task
 class SoundPowerModel: public Model
 {
   public:
-    SoundPowerModel(StatisticalEngineModelInterface &StatisticalEngineModelInterface, String Title): Model(StatisticalEngineModelInterface, Title){}
+    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title, StatisticalEngineModelInterface){}
     ~SoundPowerModel(){}
     
      //Model
