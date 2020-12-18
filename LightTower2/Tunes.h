@@ -31,6 +31,7 @@ const bool   debugPlotFFT = false;
 const bool   debugFPS = true;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
+const bool   debugModelNewValueProcessor = false;
 const bool   debugSoundPower = false;
 const bool   debugLEDs = false;
 const bool   debugRequired = ( debugMode || 
@@ -40,6 +41,7 @@ const bool   debugRequired = ( debugMode ||
                                debugFPS || 
                                debugTasks || 
                                debugModelNotifications ||
+                               debugModelNewValueProcessor ||
                                debugSoundPower ||
                                debugLEDs);
 

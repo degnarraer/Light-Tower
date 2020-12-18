@@ -81,16 +81,8 @@ class StatisticalEngine : public Task
   public:
     StatisticalEngine()
       : Task("StatisticalEngine")
-      , power(0)
-      , powerDb(0){}
-
-    //Task Interface
-    void          Setup();
-    bool          CanRunMyTask();
-    void          RunMyTask();
-    
-    float power;
-    float powerDb;
+      , m_Power(0)
+      , m_PowerDb(0){}
   
     void HandleADCInterrupt();
     SoundState GetSoundState();
@@ -101,6 +93,16 @@ class StatisticalEngine : public Task
     int           GetFFTBinIndexForFrequency(float freq);
     float         GetFreqForBin(unsigned int bin);
     int           GetFFTData(int position);
+  
+  private:
+    //Task Interface
+    void          Setup();
+    bool          CanRunMyTask();
+    void          RunMyTask();
+    
+    float m_Power;
+    float m_PowerDb;
+
 
   //Helpers
   public:

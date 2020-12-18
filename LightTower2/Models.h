@@ -53,8 +53,9 @@ class Model: public Task
     Model(StatisticalEngineModelInterface &StatisticalEngineModelInterface, String Title): Task(Title)
                                                                                          , ModelEventNotificationCallerInterface() 
                                                                                          , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
-    
     ~Model(){}
+
+    //ModelEventNotificationCallerInterface
     virtual void UpdateValue() = 0;
   protected:
     void SetCurrentValue(float value);
@@ -70,19 +71,19 @@ class Model: public Task
     float m_CurrentValue;
 };
 
-
 class ModelNewValueProcessor : public Task
 {
   public:
     ModelNewValueProcessor() : Task("ModelNewValueProcessor"){}
     ~ModelNewValueProcessor(){}
     void AddModel(Model &Model);
-    
+    bool RemoveModel(Model &Model);
+
+  private:
     //Task
     void Setup();
     bool CanRunMyTask();
     void RunMyTask();
-  private:
     LinkedList<Model*> m_MyModels = LinkedList<Model*>();
 };
 
@@ -94,6 +95,7 @@ class StatisticalEngineModelInterface : public Task
     StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){}
     ~StatisticalEngineModelInterface(){}
 
+    //StatisticalEngine Getters
     float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
   
     //ADCInterruptHandler
@@ -101,21 +103,19 @@ class StatisticalEngineModelInterface : public Task
     
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState){}
-    
-    void AddModel(Model &Model) { m_ModelNewValueProcessor.AddModel(Model); }
+    void AddModel(Model &Model);
+    bool RemoveModel(Model &Model);
 
   private:
-    StatisticalEngine m_StatisticalEngine = StatisticalEngine();
-    ModelNewValueProcessor m_ModelNewValueProcessor = ModelNewValueProcessor();
-    void Setup()
-    { 
-      m_StatisticalEngine.ConnectCallback(this);
-      AddTask(m_StatisticalEngine);
-      AddTask(m_ModelNewValueProcessor);
-    }
-    bool CanRunMyTask(){ return true; }
-    void RunMyTask(){ //Only runs scheduler's tasks }
+    StatisticalEngine m_StatisticalEngine;
+    ModelNewValueProcessor m_ModelNewValueProcessor;
+
+    //Task
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
 };
+
 class SoundPowerModel: public Model
 {
   public:

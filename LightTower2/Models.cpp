@@ -72,10 +72,36 @@ void Model::SetCurrentValue(float value)
 
 void ModelNewValueProcessor::AddModel(Model &Model)
 {
+  if(true == debugModelNewValueProcessor) Serial << "ModelNewValueProcessor: Add Model\n";
   m_MyModels.add(&Model);
 }
-//Task
-void ModelNewValueProcessor::Setup(){};
+bool ModelNewValueProcessor::RemoveModel(Model &Model)
+{
+  bool modelFound = false;
+  for(int m = 0; m < m_MyModels.size(); ++m)
+  {
+    if(m_MyModels.get(m) == &Model)
+    {
+      modelFound = true;
+      m_MyModels.remove(m);
+      break;
+    }
+  }
+  if(true == modelFound)
+  {
+    if(true == debugModelNewValueProcessor) Serial << "ModelNewValueProcessor Successfully Removed Task: " << Model.GetTaskTitle() << "\n";
+    return true;
+  }
+  else
+  {
+    if(true == debugModelNewValueProcessor) Serial << "ModelNewValueProcessor failed to Remove Task: " << Model.GetTaskTitle() << "\n";
+    return false;
+  }
+}
+
+void ModelNewValueProcessor::Setup()
+{
+}
 bool ModelNewValueProcessor::CanRunMyTask()
 {
   bool result = false;
@@ -85,7 +111,7 @@ bool ModelNewValueProcessor::CanRunMyTask()
     if(result = true) break;
   }
   return result;
-};
+}
 void ModelNewValueProcessor::RunMyTask()
 {
   for(int m = 0; m < m_MyModels.size(); ++m)
@@ -96,4 +122,26 @@ void ModelNewValueProcessor::RunMyTask()
       aModel->UpdateValue();
     }
   }
-};
+}
+
+void StatisticalEngineModelInterface::Setup()
+{ 
+  m_StatisticalEngine.ConnectCallback(this);
+  AddTask(m_StatisticalEngine);
+  AddTask(m_ModelNewValueProcessor);
+}
+bool StatisticalEngineModelInterface::CanRunMyTask()
+{ 
+  return true; 
+}
+void StatisticalEngineModelInterface::RunMyTask()
+{
+}
+void StatisticalEngineModelInterface::AddModel(Model &Model) 
+{
+  m_ModelNewValueProcessor.AddModel(Model); 
+}
+bool StatisticalEngineModelInterface::RemoveModel(Model &Model)
+{
+  m_ModelNewValueProcessor.RemoveModel(Model); 
+}

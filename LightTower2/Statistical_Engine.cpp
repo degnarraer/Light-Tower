@@ -61,7 +61,7 @@ void StatisticalEngine::GetSampledSoundData()
     AnalyzeSound();
     UpdateSoundState();
     ++i;
-    if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tIntegrator: " << m_silenceIntegrator << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
+    if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tIntegrator: " << m_silenceIntegrator << "\tPower: " << m_Power << "\tPower Db: " << m_PowerDb << "\n";
   }
 }
 
@@ -125,7 +125,7 @@ void StatisticalEngine::AnalyzeSound()
   m_signalMin = signalMin;
   m_signalMax = signalMax;
   peakToPeak = m_signalMax - m_signalMin;
-  power = ((float)peakToPeak / (float)ADDBITS);
+  m_Power = ((float)peakToPeak / (float)ADDBITS);
   if(peakToPeak > 0)
   {
     db = 20*log10(peakToPeak/100.0);
@@ -134,23 +134,23 @@ void StatisticalEngine::AnalyzeSound()
   {
     db = 0.0;
   }
-  powerDb = db / MAX_DB;
-  if(powerDb > 1.0) powerDb = 1.0;
-  if(powerDb < 0.0) powerDb = 0.0;
-  if(power > 1.0) power = 1.0;
-  if(power < 0.0) power = 0.0;
+  m_PowerDb = db / MAX_DB;
+  if(m_PowerDb > 1.0) m_PowerDb = 1.0;
+  if(m_PowerDb < 0.0) m_PowerDb = 0.0;
+  if(m_Power > 1.0) m_Power = 1.0;
+  if(m_Power < 0.0) m_Power = 0.0;
   ZeroFFT(m_data, FFT_MAX);
   UpdateBandArray();
-  if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tPower: " << m_Power << "\tPower Db: " << m_PowerDb << "\n";
 }
 
 void StatisticalEngine::UpdateSoundState()
 {
   int delta = 0;
   float gain = 0.0;
-  if(power >= SOUND_DETECT_THRESHOLD)
+  if(m_Power >= SOUND_DETECT_THRESHOLD)
   {
-    float  numerator = power - SOUND_DETECT_THRESHOLD;
+    float  numerator = m_Power - SOUND_DETECT_THRESHOLD;
     float  denomanator = SOUND_DETECT_THRESHOLD;
     if(numerator < 0) numerator = 0;
     gain = (numerator/denomanator);
@@ -158,7 +158,7 @@ void StatisticalEngine::UpdateSoundState()
   }
   else
   {
-    float  numerator = SOUND_DETECT_THRESHOLD - power;
+    float  numerator = SOUND_DETECT_THRESHOLD - m_Power;
     float  denomanator = SOUND_DETECT_THRESHOLD;
     if(numerator < 0) numerator = 0;
     gain = (numerator/denomanator);
@@ -167,7 +167,7 @@ void StatisticalEngine::UpdateSoundState()
   m_silenceIntegrator += delta;
   if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
   if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
-  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << m_PowerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
   if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
   {
     if(true == debugMode && debugLevel >= 1) Serial << "Sound Detected\n";
@@ -304,8 +304,6 @@ float StatisticalEngine::GetBandAverage(int band, int depth)
 
 float StatisticalEngine::GetSoundPower()
 { 
-  bool TEST = false;
-  if(true == TEST) power = 0.5; 
-  if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << power << "\n";
-  return power;
+  if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << m_Power << "\n";
+  return m_Power;
 }
