@@ -24,6 +24,7 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include "ADCSampler.h"
+#include <assert.h>
 
 enum SoundState
 {
@@ -86,53 +87,58 @@ class StatisticalEngine : public Task
   
     void HandleADCInterrupt();
     SoundState GetSoundState();
-  public:
-    float ampGain = 1.0;
-    float fftGain = 1.0;
-    ADCSampler    m_Sampler;
-    int           GetFFTBinIndexForFrequency(float freq);
-    float         GetFreqForBin(unsigned int bin);
-    int           GetFFTData(int position);
+
+  //Main Data Interface
+  int GetFFTBinIndexForFrequency(float freq);
+  float GetFreqForBin(unsigned int bin);
+  int GetFFTData(int position);  
+  
+  //Power Getters
+  float GetSoundPower();
+  
+  //Band Data Getters
+  int GetBandValue(unsigned int band, unsigned int depth);
+  float GetBandAverage(unsigned band, unsigned int depth);
+  float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
+    //BAND Circular Buffer
+    static const unsigned int m_NumBands = 8;
+    int BandValues[m_NumBands][BAND_SAVE_LENGTH];
+    int currentBandIndex = -1;
+    int BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
+    int currentAverageBandIndex = -1;
+    void UpdateBandArray();
+    void UpdateRunningAverageBandArray();
+  
     //Task Interface
     void          Setup();
     bool          CanRunMyTask();
     void          RunMyTask();
-    
+
+    //Mic Data Variable
+    ADCSampler    m_Sampler;
     float m_Power;
     float m_PowerDb;
-
-
-  //Helpers
-  public:
-    int16_t       m_data[FFT_MAX];
-    int           m_signalMin;
-    int           m_signalMax;
+    int16_t m_data[FFT_MAX];
+    int m_signalMin;
+    int m_signalMax;
+    float m_AmpGain = 1.0;
+    float m_FFTGain = 1.0;
     
-    void          GetSampledSoundData();
-    bool          NewDataReady();
-    void          AnalyzeSound();
-    void          UpdateSoundState();
-    void          setup_AtoD();
-
-    //FFT BAND CIRCULAR BUFFER
-  public:
-    int BandValues[NUM_BANDS][BAND_SAVE_LENGTH];
-    int currentBandIndex = -1;
-    int BandRunningAverageValues[NUM_BANDS][BAND_SAVE_LENGTH];
-    int currentAverageBandIndex = -1;
-    void UpdateBandArray();
-    void UpdateRunningAverageBandArray();
+    void GetSampledSoundData();
+    bool NewDataReady();
+    void AnalyzeSound();
+    void  UpdateSoundState();
+    void  setup_AtoD();
 
  //Sound Detection
-  public:
+  private:
     const int     m_silenceDetectedThreshold = silenceDetectedThreshold;
     const int     m_soundDetectedThreshold = soundDetectedThreshold;
     const int     m_silenceIntegratorMax = silenceIntegratorMax;
     int           m_silenceIntegrator = 0;
-    const int     m_silenceIntegratorMin = 0;
-  public:
+    const int     m_silenceIntegratorMin = 0;  
     long          m_silenceStartTime;
     unsigned long m_startMicros;
     unsigned long m_previousMicros;
@@ -141,12 +147,6 @@ class StatisticalEngine : public Task
     const int     m_soundAdder = soundAdder;
     const int     m_silenceSubtractor = silenceSubtractor;
     SoundState    soundState = SoundState::SilenceDetected;
-
-  //Statistical Functions
-  int GetBandValue(unsigned int band, unsigned int depth);
-  float GetBandAverage(unsigned band, unsigned int depth);
-  float GetSoundPower();
-
 };
 
 #endif

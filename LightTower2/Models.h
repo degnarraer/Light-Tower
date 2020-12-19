@@ -98,7 +98,7 @@ class StatisticalEngineModelInterface : public Task
     //StatisticalEngine Getters
     float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
     float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
-    
+    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) { return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands); }
   
     //ADCInterruptHandler
     void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
@@ -150,6 +150,37 @@ class BandPowerModel: public Model
   private:
      //Model
     unsigned int m_Band = 0;
+    void SetupModel(){}
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask(){}
+};
+
+class ReducedBandsBandPowerModel: public Model
+{
+  public:
+    ReducedBandsBandPowerModel( String Title
+                              , unsigned int band
+                              , unsigned int depth
+                              , unsigned int totalBands
+                              , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+                              : Model(Title, StatisticalEngineModelInterface)
+                              , m_Band(band)
+                              , m_Depth(depth)
+                              , m_TotalBands(totalBands){}
+    ~ReducedBandsBandPowerModel(){}
+    
+     //Model
+    void UpdateValue()
+    {
+      float value = (m_StatisticalEngineModelInterface.GetBandAverageForABandOutOfNBands(m_Band, m_Depth, m_TotalBands) / (float)ADDBITS);
+      if(true == debugModels) Serial << "ReducedBandsBandPowerModel value: " << value << " for band: " << m_Band << " of " << m_TotalBands << " bands\n";
+      SetCurrentValue( value );
+    }
+  private:
+     //Model
+    unsigned int m_Band = 0;
+    unsigned int m_Depth = 0;
+    unsigned int m_TotalBands = 0;
     void SetupModel(){}
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}

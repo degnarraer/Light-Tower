@@ -28,7 +28,7 @@ const int    debugLevel = 1;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = false;
+const bool   debugFPS = true;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = false;
@@ -36,7 +36,7 @@ const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
-const bool   debugModels = true;
+const bool   debugModels = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
@@ -72,7 +72,7 @@ const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
-const unsigned int NUM_BANDS = 8;
+
 const unsigned int BAND_SAVE_LENGTH = 10;
 
 //Trigger Level

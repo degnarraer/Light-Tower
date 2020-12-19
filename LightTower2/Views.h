@@ -36,19 +36,10 @@ class View: public Task
                                                               , m_Y(Y)
                                                               , m_W(W)
                                                               , m_H(H){}
-                                                              
-    View(String Title, int ID, position X, position Y, size W, size H): Task(Title)
-                                                                     , m_ID(ID)
-                                                                     , m_X(X)
-                                                                     , m_Y(Y)
-                                                                     , m_W(W)
-                                                                     , m_H(H){}
     ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
     }
-    void SetID(int ID) { m_ID = ID; }
-    int GetID() { return m_ID; }
     void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
     void SetSize(size W, size H){ m_W = W; m_H = H; }
     void AddChildView(View &Child){}
@@ -102,7 +93,6 @@ class VerticalBarView: public View
   public:
     VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
     VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
-    VerticalBarView(String Title, int ID, position X, position Y, size W, size H): View(Title, ID, X, Y, W, H){}
     ~VerticalBarView(){}
     void SetColor(CRGB Color){ m_Color = Color; }
     void SetNormalizedHeight(float Height) { m_HeightScalar = Height; }

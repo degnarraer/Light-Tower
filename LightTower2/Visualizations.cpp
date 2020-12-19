@@ -17,6 +17,30 @@
  */
 #include "Visualizations.h"
 
+
+void VisualizationEventNotificationCallerInterface::RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
+{
+  if(true == debugModelNotifications) Serial << "VisualizationEventNotificationCallerInterface: Add: ";        
+  myCallees.add(&callee);
+}
+void VisualizationEventNotificationCallerInterface::DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
+  {
+    for(int i = 0; i < myCallees.size(); ++i)
+    {
+      if(myCallees.get(i) == &callee)
+      {
+        myCallees.remove(i);
+        break;
+      }
+    }
+  }
+void VisualizationEventNotificationCallerInterface::SendVisualizationCompleteNotificationToCalleesFrom(VisualizationEventNotificationCallerInterface &source)
+{
+  for(int i = 0; i < myCallees.size(); ++i)
+  {
+    myCallees.get(i)->VisualizationCompleteNotificationFrom(source);
+  }
+}
 void Visualization::AddView(View &View)
 {
   m_MyViews.add(&View);
@@ -24,8 +48,17 @@ void Visualization::AddView(View &View)
 }
 void Visualization::AddModel(Model &Model)
 { 
+  m_MyModels.add(&Model);
   m_StatisticalEngineModelInterface.AddModel(Model);
   AddTask(Model);
+}
+void Visualization::RemoveAllModels()
+{
+  for(int m = 0; m < m_MyModels.size(); ++m)
+  {
+    Model *aModel = m_MyModels.get(m);
+    m_StatisticalEngineModelInterface.RemoveModel(*aModel);
+  }
 }
 void Visualization::Setup()
 {
@@ -50,6 +83,7 @@ void Visualization::RunMyTask()
   MergeSubViews();
   m_LEDController.UpdateLEDs(m_MyPixelStruct);
 }
+
 void Visualization::MergeSubViews()
 {
   for(int x = 0; x < SCREEN_WIDTH; ++x)
@@ -63,7 +97,6 @@ void Visualization::MergeSubViews()
   {
     View *aView = m_MyViews.get(v);
     PixelStruct &aPixelStruct = aView->GetPixelStruct();
-    if(true == debugVisualization) Serial << "My View: " << v << " ID: " << aView->GetID() << "\n";
     for(int y = 0; y < SCREEN_HEIGHT; ++y)
     {
       for(int x = 0; x < SCREEN_WIDTH; ++x)
@@ -81,4 +114,21 @@ void Visualization::MergeSubViews()
       }
     }
   }
+}
+
+//Visualization
+Visualization* VUMeter::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+{
+  VUMeter *vis = new VUMeter(StatisticalEngineModelInterface, LEDController);
+  return vis;
+}
+void VUMeter::SetupVisualization()
+{
+  m_VerticalBar.SetModel(m_SoundPower);
+  AddView(m_VerticalBar);
+  AddModel(m_SoundPower);
+}
+bool VUMeter::CanRunVisualization(){ return true; }
+void VUMeter::RunVisualization()
+{
 }
