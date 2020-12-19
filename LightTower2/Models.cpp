@@ -56,6 +56,7 @@ void ModelEventNotificationCallerInterface::SendNewValueNotificationToCallees(fl
   if(true == debugModelNotifications) Serial << "ModelEventNotificationCallerInterface: Sending New Value Notification with Value: " << value << "\n"; 
   for(int i = 0; i < m_MyCallees.size(); ++i)
   {
+    if(true == debugModelNotifications) Serial << "ModelEventNotificationCallerInterface: Sending Notification " << i << "\n"; 
     m_MyCallees.get(i)->NewFloatValueNotificationFrom(value, source);
   }
 }

@@ -36,32 +36,54 @@ class View: public Task
                                                               , m_Y(Y)
                                                               , m_W(W)
                                                               , m_H(H){}
+                                                              
+    View(String Title, int ID, position X, position Y, size W, size H): Task(Title)
+                                                                     , m_ID(ID)
+                                                                     , m_X(X)
+                                                                     , m_Y(Y)
+                                                                     , m_W(W)
+                                                                     , m_H(H){}
     ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
     }
+    void SetID(int ID) { m_ID = ID; }
+    int GetID() { return m_ID; }
     void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
     void SetSize(size W, size H){ m_W = W; m_H = H; }
     void AddChildView(View &Child){}
     void RemoveChildView(View &Child){}
     void RemoveAllChildrenViews(){}
-    Pixels &GetPixels() { return m_Pixels; }
+    PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
 
     void SetModel(Model &Model) 
     { 
       Model.RegisterForNotification(*this);
     }
-    Pixels m_Pixels = {{{CRGB::Red},{ CRGB::Red}}};
+    PixelStruct m_MyPixelStruct;
     position m_X;
     position m_Y;
     size m_W;
     size m_H;
   private:
-    LinkedList<View*> ChildViews = LinkedList<View*>();
-    View *ParentView;
+    LinkedList<View*> m_ChildViews = LinkedList<View*>();
+    View *m_ParentView;
+    int m_ID;
     
     //Task
-    void Setup(){ SetupView(); }
+    void Setup()
+    {
+      if(true == debugView) Serial << "Setup View\n";
+      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      {
+        for(int y = 0; y < SCREEN_HEIGHT; ++y)
+        {
+          m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
+          if(true == debugView) Serial << "\tR: " << m_MyPixelStruct.Pixel[x][y].red << "\tG: " << m_MyPixelStruct.Pixel[x][y].green << "\tB: " << m_MyPixelStruct.Pixel[x][y].blue << "\n";
+        }
+      }
+      SetupView();
+    }
     bool CanRunMyTask(){ return CanRunViewTask(); }
     void RunMyTask(){ RunViewTask(); }
 
@@ -80,15 +102,15 @@ class VerticalBarView: public View
   public:
     VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
     VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
+    VerticalBarView(String Title, int ID, position X, position Y, size W, size H): View(Title, ID, X, Y, W, H){}
     ~VerticalBarView(){}
     void SetColor(CRGB Color){ m_Color = Color; }
-    void SetNormalizedHeight(float Height) { assert (Height <= 1.0); m_Height = Height; }
+    void SetNormalizedHeight(float Height) { assert (Height <= 1.0); m_HeightScalar = Height; }
 
   private:
-    CRGB m_Color = CRGB::Red;
-    float m_Height;
+    CRGB m_Color = CRGB::Green;
+    float m_HeightScalar;
 
-    
     //ModelEventNotificationCallerInterface
     void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source)
     {
@@ -96,41 +118,36 @@ class VerticalBarView: public View
     }
 
     //View
-    void SetupView()
-    {
-      for(int w = 0; w<SCREEN_WIDTH; ++w)
-      {
-        for(int h = 0; h<SCREEN_HEIGHT; ++h)
-        {
-          m_Pixels.Pixel[w][h] = CRGB::Black;
-        }
-      }
-    }
+    void SetupView(){}
     bool CanRunViewTask(){ return true; }
     void RunViewTask()
     {
-      
-      if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << "\n";
-      for(int w = 0; w<SCREEN_WIDTH; ++w)
+      int scaledHeight = (m_Y + round(m_HeightScalar*(float)m_H));
+      if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << " Scaled Height: " << scaledHeight << "\n";
+      for(int x = 0; x<SCREEN_WIDTH; ++x)
       {
-        for(int h = 0; h<SCREEN_HEIGHT; ++h)
+        for(int y = 0; y<SCREEN_HEIGHT; ++y)
         {
-          m_Pixels.Pixel[w][h] = CRGB::Black;
-          if(w >= m_X && w < m_X + m_W && h >= m_Y && h < m_Height * (m_Y + m_H))
+            m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
+          if( 
+              (x >= m_X) && 
+              (x < (m_X + m_W)) &&
+              (y >= m_Y) && 
+              (y < scaledHeight)
+            )
           {
-            if(true == debugLEDs) Serial << "R";
-            m_Pixels.Pixel[w][h] = CRGB::Red;
+            m_MyPixelStruct.Pixel[x][y] = m_Color;
           }
         }
       }
       if(true == debugLEDs) Serial << "\n";
-      if(true == debugLEDs) Serial << "******View LEDs******\n";
-      for(int h = 0; h < SCREEN_HEIGHT; ++ h)
+      if(true == debugLEDs) Serial << "************\n";
+      for(int y = 0; y < SCREEN_HEIGHT; ++y)
       {
-        for(int w = 0; w < SCREEN_WIDTH; ++w)
+        for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
-          CRGB bufColor = m_Pixels.Pixel[w][h];
-          if(true == debugLEDs) Serial << bufColor[0] << ":" << bufColor[1] << ":" << bufColor[2] << " \t";
+          CRGB bufColor = m_MyPixelStruct.Pixel[x][y];
+          if(true == debugLEDs) Serial << bufColor.red << ":" << bufColor.green << ":" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";
       }

@@ -80,7 +80,9 @@ class Visualization: public Task
     }
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController &m_LEDController;
-    void AddModel(Model &model);
+    void AddView(View &View);
+    void AddModel(Model &Model);
+    PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
     
     virtual Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) = 0;
     virtual void SetupVisualization() = 0;
@@ -94,7 +96,10 @@ class Visualization: public Task
 
   protected:
     unsigned int m_Duration = 0;
+    LinkedList<View*> m_MyViews = LinkedList<View*>();
   private:
+    PixelStruct m_MyPixelStruct;
+    void MergeSubViews();
 };
 
 
@@ -114,19 +119,32 @@ class VUMeter: public Visualization
     void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source){}
     void SetupVisualization()
     {
-      AddTask(m_SoundPower);
-      AddTask(m_VerticalBar);
+      m_VerticalBar1.SetModel(m_SoundPower);
+      AddView(m_VerticalBar1);
+      m_VerticalBar2.SetModel(m_SoundPower);
+      AddView(m_VerticalBar2);
+      m_VerticalBar3.SetModel(m_SoundPower);
+      AddView(m_VerticalBar3);
+      m_VerticalBar4.SetModel(m_SoundPower);
+      AddView(m_VerticalBar4);
+      m_VerticalBar5.SetModel(m_SoundPower);
+      AddView(m_VerticalBar5);
+      m_VerticalBar6.SetModel(m_SoundPower);
+      AddView(m_VerticalBar6);
       AddModel(m_SoundPower);
-      m_VerticalBar.SetModel(m_SoundPower);
     }
     bool CanRunVisualization(){ return true; }
     void RunVisualization()
     {
-      m_LEDController.UpdateLEDs(m_VerticalBar.GetPixels());
     }
   private:
-    SoundPowerModel m_SoundPower = SoundPowerModel("Power Model", m_StatisticalEngineModelInterface);  
-    VerticalBarView m_VerticalBar = VerticalBarView("Vertical Bar", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);  
+    SoundPowerModel m_SoundPower = SoundPowerModel("Power Model", m_StatisticalEngineModelInterface);
+    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar1", 100, 0, 0, SCREEN_WIDTH, 10);
+    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar2", 101, 0, 10, SCREEN_WIDTH, 10);
+    VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar3", 102, 0, 20, SCREEN_WIDTH, 10);
+    VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar4", 103, 0, 30, SCREEN_WIDTH, 10);
+    VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar5", 104, 0, 40, SCREEN_WIDTH, 10);
+    VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar6", 105, 0, 50, SCREEN_WIDTH, 10);
 };
 
 #endif

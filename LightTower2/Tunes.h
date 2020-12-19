@@ -28,11 +28,13 @@ const int    debugLevel = 1;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = true;
+const bool   debugFPS = false;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = false;
 const bool   debugSoundPower = false;
+const bool   debugVisualization = false;
+const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
@@ -43,6 +45,8 @@ const bool   debugRequired = ( debugMode ||
                                debugModelNotifications ||
                                debugModelNewValueProcessor ||
                                debugSoundPower ||
+                               debugVisualization ||
+                               debugView ||
                                debugLEDs);
 
 // LED SETUP

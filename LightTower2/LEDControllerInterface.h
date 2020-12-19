@@ -26,7 +26,7 @@
 #include "Streaming.h"
 
 typedef CRGBArray<NUMLEDS> LEDStrip;
-typedef struct { CRGB Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]; } Pixels;
+typedef struct { CRGB (Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]); } PixelStruct;
 
 class LEDController
 {
@@ -43,16 +43,16 @@ class LEDController
     {
       
     }
-    void UpdateLEDs( Pixels &Pixels )
+    void UpdateLEDs(PixelStruct &pixelStruct)
     {
       if(true == debugLEDs) Serial << "******LED Controller LEDs******\n";
-      for(int h = 0; h < SCREEN_HEIGHT; ++ h)
+      for(int y = 0; y < SCREEN_HEIGHT; ++ y)
       {
-        for(int w = 0; w < SCREEN_WIDTH; ++w)
+        for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
-          CRGB bufColor = Pixels.Pixel[w][h];
-          m_LEDStrip[w][h] = Pixels.Pixel[w][h];
-          if(true == debugLEDs) Serial << bufColor[0] << ":" << bufColor[1] << ":" << bufColor[2] << " \t";
+          CRGB bufColor = pixelStruct.Pixel[x][y];
+          m_LEDStrip[x][y] = bufColor;
+          if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";
       }

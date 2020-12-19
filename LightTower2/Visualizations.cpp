@@ -17,12 +17,27 @@
  */
 #include "Visualizations.h"
 
-void Visualization::AddModel(Model &model)
+void Visualization::AddView(View &View)
+{
+  m_MyViews.add(&View);
+  AddTask(View);
+}
+void Visualization::AddModel(Model &Model)
 { 
-  m_StatisticalEngineModelInterface.AddModel(model);
+  m_StatisticalEngineModelInterface.AddModel(Model);
+  AddTask(Model);
 }
 void Visualization::Setup()
 {
+  if(true == debugVisualization) Serial << "Setup Visualization\n"; 
+  for(int x = 0; x < SCREEN_WIDTH; ++x)
+  {
+    for(int y = 0; y < SCREEN_HEIGHT; ++ y)
+    {
+      m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
+      if(true == debugVisualization) Serial << "\tR: " << m_MyPixelStruct.Pixel[x][y].red << "\tG: " << m_MyPixelStruct.Pixel[x][y].green << "\tB: " << m_MyPixelStruct.Pixel[x][y].blue << "\n";
+    }
+  }
   SetupVisualization();
 }
 bool Visualization::CanRunMyTask()
@@ -32,4 +47,38 @@ bool Visualization::CanRunMyTask()
 void Visualization::RunMyTask()
 {
   RunVisualization();
+  MergeSubViews();
+  m_LEDController.UpdateLEDs(m_MyPixelStruct);
+}
+void Visualization::MergeSubViews()
+{
+  for(int x = 0; x < SCREEN_WIDTH; ++x)
+  {
+    for(int y = 0; y < SCREEN_HEIGHT; ++y)
+    {
+      m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
+    }
+  }
+  for(int v = 0; v < m_MyViews.size(); ++v)
+  {
+    View *aView = m_MyViews.get(v);
+    PixelStruct &aPixelStruct = aView->GetPixelStruct();
+    if(true == debugVisualization) Serial << "My View: " << v << " ID: " << aView->GetID() << "\n";
+    for(int y = 0; y < SCREEN_HEIGHT; ++y)
+    {
+      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      {
+        if(true == debugVisualization) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+        if(
+          aPixelStruct.Pixel[x][y].red != 0 ||
+          aPixelStruct.Pixel[x][y].green != 0 ||
+          aPixelStruct.Pixel[x][y].blue != 0
+          )
+          {
+            if(true == debugVisualization) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+            m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
+          }
+      }
+    }
+  }
 }
