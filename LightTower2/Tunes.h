@@ -72,7 +72,6 @@ const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
-
 const unsigned int BAND_SAVE_LENGTH = 10;
 
 //Trigger Level
