@@ -36,6 +36,7 @@ const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
+const bool   debugModels = true;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
@@ -47,7 +48,8 @@ const bool   debugRequired = ( debugMode ||
                                debugSoundPower ||
                                debugVisualization ||
                                debugView ||
-                               debugLEDs);
+                               debugLEDs ||
+                               debugModels );
 
 // LED SETUP
 static const unsigned int NUMLEDS = 60;

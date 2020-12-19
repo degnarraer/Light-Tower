@@ -97,6 +97,8 @@ class StatisticalEngineModelInterface : public Task
 
     //StatisticalEngine Getters
     float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
+    float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
+    
   
     //ADCInterruptHandler
     void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
@@ -126,6 +128,28 @@ class SoundPowerModel: public Model
     void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetSoundPower()); }
   private:
      //Model
+    void SetupModel(){}
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask(){}
+};
+
+class BandPowerModel: public Model
+{
+  public:
+    BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title, StatisticalEngineModelInterface)
+                                                                                                                             , m_Band(Band){}
+    ~BandPowerModel(){}
+    
+     //Model
+    void UpdateValue()
+    {
+      float value = (m_StatisticalEngineModelInterface.GetBandAverage(m_Band, 1) / (float)ADDBITS);
+      if(true == debugModels) Serial << "BandPowerModel value: " << value << " for band: " << m_Band << "\n";
+      SetCurrentValue( value );
+    }
+  private:
+     //Model
+    unsigned int m_Band = 0;
     void SetupModel(){}
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}

@@ -105,7 +105,7 @@ class VerticalBarView: public View
     VerticalBarView(String Title, int ID, position X, position Y, size W, size H): View(Title, ID, X, Y, W, H){}
     ~VerticalBarView(){}
     void SetColor(CRGB Color){ m_Color = Color; }
-    void SetNormalizedHeight(float Height) { assert (Height <= 1.0); m_HeightScalar = Height; }
+    void SetNormalizedHeight(float Height) { m_HeightScalar = Height; }
 
   private:
     CRGB m_Color = CRGB::Green;

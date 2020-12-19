@@ -144,7 +144,7 @@ class StatisticalEngine : public Task
 
   //Statistical Functions
   int GetBandValue(unsigned int band, unsigned int depth);
-  float GetBandAverage(int band, int depth);
+  float GetBandAverage(unsigned band, unsigned int depth);
   float GetSoundPower();
 
 };

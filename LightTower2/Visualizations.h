@@ -119,32 +119,59 @@ class VUMeter: public Visualization
     void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source){}
     void SetupVisualization()
     {
-      m_VerticalBar1.SetModel(m_SoundPower);
+      m_VerticalBar0.SetModel(m_Band0Power);
+      AddView(m_VerticalBar0);
+      AddModel(m_Band0Power);
+      
+      m_VerticalBar1.SetModel(m_Band1Power);
       AddView(m_VerticalBar1);
-      m_VerticalBar2.SetModel(m_SoundPower);
+      AddModel(m_Band1Power);
+      
+      m_VerticalBar2.SetModel(m_Band2Power);
       AddView(m_VerticalBar2);
-      m_VerticalBar3.SetModel(m_SoundPower);
+      AddModel(m_Band2Power);
+      
+      m_VerticalBar3.SetModel(m_Band3Power);
       AddView(m_VerticalBar3);
-      m_VerticalBar4.SetModel(m_SoundPower);
+      AddModel(m_Band3Power);
+      
+      m_VerticalBar4.SetModel(m_Band4Power);
       AddView(m_VerticalBar4);
-      m_VerticalBar5.SetModel(m_SoundPower);
+      AddModel(m_Band4Power);
+      
+      m_VerticalBar5.SetModel(m_Band5Power);
       AddView(m_VerticalBar5);
-      m_VerticalBar6.SetModel(m_SoundPower);
+      AddModel(m_Band5Power);
+      
+      m_VerticalBar6.SetModel(m_Band6Power);
       AddView(m_VerticalBar6);
-      AddModel(m_SoundPower);
+      AddModel(m_Band6Power);
+      
+      m_VerticalBar7.SetModel(m_Band7Power);
+      AddView(m_VerticalBar7);
+      AddModel(m_Band7Power);
     }
     bool CanRunVisualization(){ return true; }
     void RunVisualization()
     {
     }
   private:
-    SoundPowerModel m_SoundPower = SoundPowerModel("Power Model", m_StatisticalEngineModelInterface);
-    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar1", 100, 0, 0, SCREEN_WIDTH, 10);
-    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar2", 101, 0, 10, SCREEN_WIDTH, 10);
-    VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar3", 102, 0, 20, SCREEN_WIDTH, 10);
-    VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar4", 103, 0, 30, SCREEN_WIDTH, 10);
-    VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar5", 104, 0, 40, SCREEN_WIDTH, 10);
-    VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar6", 105, 0, 50, SCREEN_WIDTH, 10);
+    BandPowerModel m_Band0Power = BandPowerModel("Band Power Model 0", 0, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band1Power = BandPowerModel("Band Power Model 1", 1, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band2Power = BandPowerModel("Band Power Model 2", 2, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band3Power = BandPowerModel("Band Power Model 3", 3, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band4Power = BandPowerModel("Band Power Model 4", 4, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band5Power = BandPowerModel("Band Power Model 5", 5, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band6Power = BandPowerModel("Band Power Model 6", 6, m_StatisticalEngineModelInterface);
+    BandPowerModel m_Band7Power = BandPowerModel("Band Power Model 7", 7, m_StatisticalEngineModelInterface);
+    VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar0", 100, 0, 0, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar1", 101, 0, 7, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar2", 102, 0, 14, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar3", 103, 0, 21, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar4", 104, 0, 28, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar5", 105, 0, 35, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar6", 106, 0, 42, SCREEN_WIDTH, 7);
+    VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar7", 107, 0, 49, SCREEN_WIDTH, 7);
 };
 
 #endif

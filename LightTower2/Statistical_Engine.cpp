@@ -288,7 +288,7 @@ int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
   }
 }
 
-float StatisticalEngine::GetBandAverage(int band, int depth)
+float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
 {
   float result = 0.0;
   unsigned int count = 0;
