@@ -20,9 +20,9 @@
 #define Visualization_H
 
 #include "Statistical_Engine.h"
+#include "Views.h"
 #include "Streaming.h"
 #include "Models.h"
-#include "Views.h"
 #include "TaskInterface.h"
 #include "LEDControllerInterface.h"
 #include <LinkedList.h>

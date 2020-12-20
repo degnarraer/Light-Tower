@@ -42,14 +42,13 @@ class ADCSampler: public ADCInterruptHandler {
     unsigned int GetNumberOfReadings();
     void StartNextBuffer();
     void SetReadCompleted();
+    unsigned int adcDMAIndex;        //!< This hold the index of the next DMA buffer
+    unsigned int adcTransferIndex;   //!< This hold the last filled buffer
   private:
     unsigned int samplingRate;
     volatile bool dataReady;
     volatile bool bufferOverflow;
     uint16_t adcBuffer[NUMBER_OF_BUFFERS][BUFFER_SIZE];
-  public:
-    unsigned int adcDMAIndex;        //!< This hold the index of the next DMA buffer
-    unsigned int adcTransferIndex;   //!< This hold the last filled buffer
 };
 
 #endif /* ADCSAMPLER_H */

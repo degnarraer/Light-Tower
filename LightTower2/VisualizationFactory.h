@@ -30,7 +30,7 @@ class VisualizationFactory : public Task
 {
   public:
     VisualizationFactory(StatisticalEngineModelInterface &StatisticalEngineModelInterface) : Task("VisualizationFactory")
-                                                                                 , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
+                                                                                           , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
     ~VisualizationFactory(){}
 
   private:
