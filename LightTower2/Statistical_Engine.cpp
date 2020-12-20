@@ -205,37 +205,51 @@ void StatisticalEngine::UpdateBandArray()
   {
     float freq = GetFreqForBin(i);
     int bandIndex = 0;
-    if(freq > 0 && freq <= 20) bandIndex = 0;
-    else if(freq > 20 && freq <= 25) bandIndex = 1;
-    else if(freq > 25 && freq <= 31.5) bandIndex = 2;
-    else if(freq > 31.5 && freq <= 40) bandIndex = 3;
-    else if(freq > 40 && freq <= 50) bandIndex = 4;
-    else if(freq > 50 && freq <= 63) bandIndex = 5;
-    else if(freq > 63 && freq <= 80) bandIndex = 6;
-    else if(freq > 80 && freq <= 100) bandIndex = 7;
-    else if(freq > 100 && freq <= 125) bandIndex = 8;
-    else if(freq > 125 && freq <= 160) bandIndex = 9;
-    else if(freq > 160 && freq <= 200) bandIndex = 10;
-    else if(freq > 200 && freq <= 250) bandIndex = 11;
-    else if(freq > 250 && freq <= 315) bandIndex = 12;
-    else if(freq > 315 && freq <= 400) bandIndex = 13;
-    else if(freq > 400 && freq <= 500) bandIndex = 14;
-    else if(freq > 500 && freq <= 630) bandIndex = 15;
-    else if(freq > 630 && freq <= 800) bandIndex = 16;
-    else if(freq > 800 && freq <= 1000) bandIndex = 17;
-    else if(freq > 1000 && freq <= 1250) bandIndex = 18;
-    else if(freq > 1250 && freq <= 1600) bandIndex = 19;
-    else if(freq > 1600 && freq <= 2000) bandIndex = 20;
-    else if(freq > 2000 && freq <= 2500) bandIndex = 21;
-    else if(freq > 2500 && freq <= 3150) bandIndex = 22;
-    else if(freq > 3150 && freq <= 4000) bandIndex = 23;
-    else if(freq > 4000 && freq <= 5000) bandIndex = 24;
-    else if(freq > 5000 && freq <= 6300) bandIndex = 25;
-    else if(freq > 6300 && freq <= 8000) bandIndex = 26;
-    else if(freq > 8000 && freq <= 10000) bandIndex = 27;
-    else if(freq > 10000 && freq <= 12500) bandIndex = 28;
-    else if(freq > 12500 && freq <= 16000) bandIndex = 29;
-    else if(freq > 16000 && freq <= 20000) bandIndex = 30;
+    if(8 == m_NumBands)
+    {
+      if(freq > 0 && freq <= 100) bandIndex = 0;
+      if(freq > 100 && freq <= 200) bandIndex = 1;
+      if(freq > 200 && freq <= 400) bandIndex = 2;
+      if(freq > 400 && freq <= 800) bandIndex = 3;
+      if(freq > 800 && freq <= 1600) bandIndex = 4;
+      if(freq > 1600 && freq <= 3200) bandIndex = 5;
+      if(freq > 3200 && freq <= 6400) bandIndex = 6;
+      if(freq > 6400 && freq <= 12800) bandIndex = 7;
+    }
+    else if(31 == m_NumBands)
+    {
+      if(freq > 0 && freq <= 20) bandIndex = 0;
+      else if(freq > 20 && freq <= 25) bandIndex = 1;
+      else if(freq > 25 && freq <= 31.5) bandIndex = 2;
+      else if(freq > 31.5 && freq <= 40) bandIndex = 3;
+      else if(freq > 40 && freq <= 50) bandIndex = 4;
+      else if(freq > 50 && freq <= 63) bandIndex = 5;
+      else if(freq > 63 && freq <= 80) bandIndex = 6;
+      else if(freq > 80 && freq <= 100) bandIndex = 7;
+      else if(freq > 100 && freq <= 125) bandIndex = 8;
+      else if(freq > 125 && freq <= 160) bandIndex = 9;
+      else if(freq > 160 && freq <= 200) bandIndex = 10;
+      else if(freq > 200 && freq <= 250) bandIndex = 11;
+      else if(freq > 250 && freq <= 315) bandIndex = 12;
+      else if(freq > 315 && freq <= 400) bandIndex = 13;
+      else if(freq > 400 && freq <= 500) bandIndex = 14;
+      else if(freq > 500 && freq <= 630) bandIndex = 15;
+      else if(freq > 630 && freq <= 800) bandIndex = 16;
+      else if(freq > 800 && freq <= 1000) bandIndex = 17;
+      else if(freq > 1000 && freq <= 1250) bandIndex = 18;
+      else if(freq > 1250 && freq <= 1600) bandIndex = 19;
+      else if(freq > 1600 && freq <= 2000) bandIndex = 20;
+      else if(freq > 2000 && freq <= 2500) bandIndex = 21;
+      else if(freq > 2500 && freq <= 3150) bandIndex = 22;
+      else if(freq > 3150 && freq <= 4000) bandIndex = 23;
+      else if(freq > 4000 && freq <= 5000) bandIndex = 24;
+      else if(freq > 5000 && freq <= 6300) bandIndex = 25;
+      else if(freq > 6300 && freq <= 8000) bandIndex = 26;
+      else if(freq > 8000 && freq <= 10000) bandIndex = 27;
+      else if(freq > 10000 && freq <= 12500) bandIndex = 28;
+      else if(freq > 12500 && freq <= 16000) bandIndex = 29;
+      else if(freq > 16000 && freq <= 20000) bandIndex = 30;
+    }
     BandValues[bandIndex][currentBandIndex] += m_data[i];
   }
   if(currentBandIndex >= BAND_SAVE_LENGTH - 1)
@@ -315,14 +329,14 @@ int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
 
 float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
 {
-  float result = 0.0;
+  int total = 0;
   unsigned int count = 0;
   for(int i = 0; i < BAND_SAVE_LENGTH && i <= depth; ++i)
   {
-    result += GetBandValue(band, i);
+    total += GetBandValue(band, i);
     ++count;
   }
-  result /= count;
+  float result = total / count;
   if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   return result;
 }

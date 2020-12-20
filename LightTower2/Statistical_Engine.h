@@ -103,7 +103,7 @@ class StatisticalEngine : public Task
   
   private:
     //BAND Circular Buffer
-    static const unsigned int m_NumBands = 8;
+    static const unsigned int m_NumBands = 8; //8 or 32
     int BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
     int BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
