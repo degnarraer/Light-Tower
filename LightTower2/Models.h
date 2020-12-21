@@ -26,66 +26,110 @@
 
 
 
-class ModelEventNotificationCallerInterface;
-class ModelEventNotificationCalleeInterface
+template <class T> class ModelEventNotificationCaller;
+template <class T>
+class ModelEventNotificationCallee
 {
   public:
-    virtual void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
+    virtual void NewValueNotification(T Value) = 0;
 };
 
-class ModelEventNotificationCallerInterface
+template <class T>
+class ModelEventNotificationCaller
 {
   public:
-    void RegisterForNotification(ModelEventNotificationCalleeInterface &callee);
-    void DeRegisterForNotification(ModelEventNotificationCalleeInterface &callee);
-    bool HasUser();
-    void SendNewValueNotificationToCallees(float value, ModelEventNotificationCallerInterface &source);
+    ModelEventNotificationCaller<T>(){}
+    void RegisterForNotification(ModelEventNotificationCallee<T> &callee)
+    {
+      if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";        
+      m_MyCallees.add(&callee);
+    }
+    void DeRegisterForNotification(ModelEventNotificationCallee<T> &callee)
+    {
+      for(int i = 0; i < m_MyCallees.size(); ++i)
+      {
+        if(m_MyCallees.get(i) == &callee)
+        {
+          m_MyCallees.remove(i);
+          break;
+        }
+      }
+    }
+    bool HasUser()
+    {
+      return (m_MyCallees.size() > 0)? true:false;
+    }
+    void SendNewValueNotificationToCallees(T value)
+    {
+      if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Sending New Value Notification with Value: " << value << "\n"; 
+      for(int i = 0; i < m_MyCallees.size(); ++i)
+      {
+        if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\n"; 
+        m_MyCallees.get(i)->NewValueNotification(value);
+      }
+    }
     virtual void UpdateValue() = 0;
   private:
-    LinkedList<ModelEventNotificationCalleeInterface*> m_MyCallees = LinkedList<ModelEventNotificationCalleeInterface*>();
+    LinkedList<ModelEventNotificationCallee<T>*> m_MyCallees = LinkedList<ModelEventNotificationCallee<T>*>();
 };
 
 class StatisticalEngineModelInterface;
 class Model: public Task
-           , public ModelEventNotificationCallerInterface
 {
   public: 
     Model(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Task(Title)
-                                                                                         , ModelEventNotificationCallerInterface() 
                                                                                          , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
     ~Model(){}
 
-    //ModelEventNotificationCallerInterface
+    //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
+    
   protected:
-    void SetCurrentValue(float value);
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;  
   private:
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
-    float m_PreviousValue;
-    float m_CurrentValue;
+    void Setup()
+    {
+      SetupModel();
+    }
+    bool CanRunMyTask()
+    {
+      return CanRunModelTask();
+    }
+    void RunMyTask()
+    {
+      UpdateValue();
+      RunModelTask();
+    }
 };
 
-class ModelNewValueProcessor : public Task
+template <class T>
+class ModelWithNewValueNotification: public Model
+                                   , public ModelEventNotificationCaller<T>
 {
   public:
-    ModelNewValueProcessor() : Task("ModelNewValueProcessor"){}
-    ~ModelNewValueProcessor(){}
-    void AddModel(Model &Model);
-    bool RemoveModel(Model &Model);
-
-  private:
-    //Task
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
-    LinkedList<Model*> m_MyModels = LinkedList<Model*>();
+    ModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title, StatisticalEngineModelInterface){}
+    ~ModelWithNewValueNotification<T>(){}
+    
+  protected:
+    void SetCurrentValue(T value)
+    {
+      m_CurrentValue = value;
+      if(m_PreviousValue != m_CurrentValue)
+      {
+        m_PreviousValue = m_CurrentValue;
+        this->SendNewValueNotificationToCallees(m_CurrentValue);
+      }
+    }
+    virtual void SetupModel() = 0;
+    virtual bool CanRunModelTask() = 0;
+    virtual void RunModelTask() = 0;
+    T m_PreviousValue;
+    T m_CurrentValue;
 };
+
 
 class StatisticalEngineModelInterface : public Task
                                       , ADCInterruptHandler 
@@ -105,12 +149,9 @@ class StatisticalEngineModelInterface : public Task
     
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState){}
-    void AddModel(Model &Model);
-    bool RemoveModel(Model &Model);
 
   private:
     StatisticalEngine m_StatisticalEngine;
-    ModelNewValueProcessor m_ModelNewValueProcessor;
 
     //Task
     void Setup();
@@ -118,10 +159,10 @@ class StatisticalEngineModelInterface : public Task
     void RunMyTask();
 };
 
-class SoundPowerModel: public Model
+class SoundPowerModel: public ModelWithNewValueNotification<float>
 {
   public:
-    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title, StatisticalEngineModelInterface){}
+    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): ModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface){}
     ~SoundPowerModel(){}
     
      //Model
@@ -132,7 +173,7 @@ class SoundPowerModel: public Model
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}
 };
-
+/*
 class BandPowerModel: public Model
 {
   public:
@@ -185,4 +226,5 @@ class ReducedBandsBandPowerModel: public Model
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}
 };
+*/
 #endif

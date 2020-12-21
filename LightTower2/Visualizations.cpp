@@ -49,7 +49,6 @@ void Visualization::AddView(View &View)
 void Visualization::AddModel(Model &Model)
 { 
   m_MyModels.add(&Model);
-  m_StatisticalEngineModelInterface.AddModel(Model);
   AddTask(Model);
 }
 void Visualization::RemoveAllModels()
@@ -57,7 +56,6 @@ void Visualization::RemoveAllModels()
   for(int m = 0; m < m_MyModels.size(); ++m)
   {
     Model *aModel = m_MyModels.get(m);
-    m_StatisticalEngineModelInterface.RemoveModel(*aModel);
   }
 }
 void Visualization::Setup()
@@ -124,9 +122,9 @@ Visualization* VUMeter::GetInstance(StatisticalEngineModelInterface &Statistical
 }
 void VUMeter::SetupVisualization()
 {
-  m_VerticalBar.SetModel(m_SoundPower);
   AddView(m_VerticalBar);
   AddModel(m_SoundPower);
+  m_VerticalBar.ConnectModel(m_SoundPower);
 }
 bool VUMeter::CanRunVisualization(){ return true; }
 void VUMeter::RunVisualization()

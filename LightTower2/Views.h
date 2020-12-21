@@ -34,7 +34,6 @@ typedef int position;
 typedef int size;
 
 class View: public Task
-          , public ModelEventNotificationCalleeInterface
 {
   public:
     View(String Title, position X, position Y, size W, size H): Task(Title)
@@ -52,11 +51,6 @@ class View: public Task
     void RemoveChildView(View &Child){}
     void RemoveAllChildrenViews(){}
     PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
-
-    void SetModel(Model &Model) 
-    { 
-      Model.RegisterForNotification(*this);
-    }
     PixelStruct m_MyPixelStruct;
     position m_X;
     position m_Y;
@@ -71,9 +65,6 @@ class View: public Task
     bool CanRunMyTask();
     void RunMyTask();
 
-    //ModelEventNotificationCallerInterface
-    virtual void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source) = 0;
-
     //View
     virtual void SetupView() = 0;
     virtual bool CanRunViewTask() = 0;
@@ -81,6 +72,7 @@ class View: public Task
 };
 
 class VerticalBarView: public View
+                     , public ModelEventNotificationCallee<float>
 {
   public:
     VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
@@ -88,14 +80,16 @@ class VerticalBarView: public View
     ~VerticalBarView(){}
     void SetColor(CRGB Color);
     void SetNormalizedHeight(float Height);
+    void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
 
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
 
-    //ModelEventNotificationCallerInterface
-    void NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source);
-
+    //ModelEventNotificationCaller
+    void NewValueNotification(float Value);
+    
+  private:
     //View
     void SetupView();
     bool CanRunViewTask();
@@ -103,11 +97,15 @@ class VerticalBarView: public View
 };
 
 class BassSpriteView: public View
+                    , public ModelEventNotificationCallee<float>
 {
   public:
     BassSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
     ~BassSpriteView(){}
 
+    //ModelEventNotificationCaller
+    void NewValueNotification(float Value);
+    
   private:
     //View
     void SetupView(){}

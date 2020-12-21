@@ -30,7 +30,7 @@ void VerticalBarView::SetNormalizedHeight(float Height)
 { 
   m_HeightScalar = Height;
 }
-void VerticalBarView::NewFloatValueNotificationFrom(float Value, ModelEventNotificationCallerInterface &source)
+void VerticalBarView::NewValueNotification(float Value)
 {
   SetNormalizedHeight(Value);
 }
