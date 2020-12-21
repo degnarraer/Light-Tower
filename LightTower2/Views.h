@@ -78,15 +78,15 @@ class VerticalBarView: public View
     VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
     VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
     ~VerticalBarView(){}
+    void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
     void SetColor(CRGB Color);
     void SetNormalizedHeight(float Height);
-    void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
 
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
 
-    //ModelEventNotificationCaller
+    //ModelEventNotificationCallee
     void NewValueNotification(float Value);
     
   private:
@@ -102,8 +102,9 @@ class BassSpriteView: public View
   public:
     BassSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
     ~BassSpriteView(){}
+    void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
 
-    //ModelEventNotificationCaller
+    //ModelEventNotificationCallee
     void NewValueNotification(float Value);
     
   private:
