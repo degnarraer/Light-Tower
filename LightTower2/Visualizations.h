@@ -97,7 +97,49 @@ class VUMeter: public Visualization
     void RunVisualization();
   private:
     SoundPowerModel m_SoundPower = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Model", 5000, m_StatisticalEngineModelInterface);
     VerticalBarView m_VerticalBar = VerticalBarView("Vertical Bar", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+};
+
+//********* 8 Band VUMeter *********
+class VUMeter8Band: public Visualization
+{
+  public:
+    VUMeter8Band( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+                : Visualization( StatisticalEngineModelInterface, LEDController){}
+    ~VUMeter8Band(){if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter8Band\n";}
+
+    //Visualization
+    Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:
+    RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Model", 5000, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower0 = BandPowerModel("Sound Power Model 0", 0, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower1 = BandPowerModel("Sound Power Model 1", 1, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower2 = BandPowerModel("Sound Power Model 2", 2, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar 3", 0, 3*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower3 = BandPowerModel("Sound Power Model 3", 3, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar 4", 0, 4*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower4 = BandPowerModel("Sound Power Model 4", 4, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar 5", 0, 5*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower5 = BandPowerModel("Sound Power Model 5", 5, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar 6", 0, 6*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower6 = BandPowerModel("Sound Power Model 6", 6, m_StatisticalEngineModelInterface);
+    
+    VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar 7", 0, 7*SCREEN_HEIGHT/8, SCREEN_WIDTH, SCREEN_HEIGHT/8);
+    BandPowerModel m_BandPower7 = BandPowerModel("Sound Power Model 7", 7, m_StatisticalEngineModelInterface);
 };
 
 #endif

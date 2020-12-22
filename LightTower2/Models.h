@@ -23,6 +23,7 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include "Statistical_Engine.h"
+#include "LEDControllerInterface.h"
 
 
 
@@ -100,8 +101,8 @@ class Model: public Task
     }
     void RunMyTask()
     {
-      UpdateValue();
       RunModelTask();
+      UpdateValue();
     }
 };
 
@@ -173,12 +174,12 @@ class SoundPowerModel: public ModelWithNewValueNotification<float>
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}
 };
-/*
-class BandPowerModel: public Model
+
+class BandPowerModel: public ModelWithNewValueNotification<float>
 {
   public:
-    BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title, StatisticalEngineModelInterface)
-                                                                                                                             , m_Band(Band){}
+    BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): ModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+                                                                                                                     , m_Band(Band){}
     ~BandPowerModel(){}
     
      //Model
@@ -196,7 +197,7 @@ class BandPowerModel: public Model
     void RunModelTask(){}
 };
 
-class ReducedBandsBandPowerModel: public Model
+class ReducedBandsBandPowerModel: public ModelWithNewValueNotification<float>
 {
   public:
     ReducedBandsBandPowerModel( String Title
@@ -204,7 +205,7 @@ class ReducedBandsBandPowerModel: public Model
                               , unsigned int depth
                               , unsigned int totalBands
                               , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
-                              : Model(Title, StatisticalEngineModelInterface)
+                              : ModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
                               , m_Band(band)
                               , m_Depth(depth)
                               , m_TotalBands(totalBands){}
@@ -226,5 +227,33 @@ class ReducedBandsBandPowerModel: public Model
     bool CanRunModelTask(){ return true; }
     void RunModelTask(){}
 };
-*/
+
+
+class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
+{
+  public:
+    RandomColorFadingModel( String Title
+                          , unsigned long Duration
+                          , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+                          : ModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
+                          , m_Duration(Duration){}
+    ~RandomColorFadingModel(){}
+  private:
+     //Model
+    void UpdateValue();
+    void SetupModel();
+    bool CanRunModelTask();
+    void RunModelTask();
+
+    //This
+    CRGB m_CurrentColor;
+    CRGB m_StartColor;
+    CRGB m_EndColor;
+    unsigned long m_Duration;
+    unsigned long m_CurrentDuration;
+    unsigned long m_CurrentTime;
+    unsigned long m_StartTime;
+    void StartFadingNextColor();
+    CRGB GetRandomNonGrayColor();
+};
 #endif

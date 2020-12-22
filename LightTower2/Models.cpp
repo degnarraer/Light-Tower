@@ -30,3 +30,76 @@ bool StatisticalEngineModelInterface::CanRunMyTask()
 void StatisticalEngineModelInterface::RunMyTask()
 {
 }
+
+void RandomColorFadingModel::UpdateValue()
+{
+  if(true == debugModels) Serial << "RandomColorFadingModel value:  R:" << m_CurrentColor.red << "\tG:" << m_CurrentColor.green << "\tB:" << m_CurrentColor.blue << "\n";
+  SetCurrentValue( m_CurrentColor );
+}
+void RandomColorFadingModel::StartFadingNextColor()
+{
+  m_StartColor = m_CurrentColor;
+  m_EndColor = GetRandomNonGrayColor();
+  m_StartTime = millis();
+}
+CRGB RandomColorFadingModel::GetRandomNonGrayColor()
+{
+  byte threshold = 25;
+  byte red = random(0, 255);
+  byte green = random(0, 255);
+  byte blue = random(0, 255);
+
+  int redGreenDiff = abs(red - green);
+  int blueRedDiff = abs(blue - red);
+  int greenBlueDiff = abs(green - blue);
+  
+  if(redGreenDiff < threshold && blueRedDiff < threshold && greenBlueDiff < threshold)
+  {
+    if(redGreenDiff < threshold)
+    {
+      red += threshold;
+      if(red > 255) red-= 255;
+    }
+    else if(blueRedDiff < threshold)
+    {
+      blue += threshold;
+      if(blue > 255) blue-= 255;
+    }
+    else if(greenBlueDiff < threshold)
+    {
+      green += threshold;
+      if(green > 255) green-= 255;
+    }
+  }
+  return {red, green, blue};
+}
+
+
+void RandomColorFadingModel::SetupModel()
+{
+  m_StartColor = GetRandomNonGrayColor();
+  m_EndColor = GetRandomNonGrayColor();
+  m_StartTime = millis();
+}
+bool RandomColorFadingModel::CanRunModelTask()
+{ 
+  return true;
+}
+void RandomColorFadingModel::RunModelTask()
+{
+    float normalization = 1.0;
+    m_CurrentTime = millis();
+    m_CurrentDuration = m_CurrentTime - m_StartTime;
+    if(m_CurrentDuration > m_Duration)
+    {
+      StartFadingNextColor();
+    }
+    else
+    {
+      normalization = (float)m_CurrentDuration / (float)m_Duration;
+      if(true == debugModels) Serial << "FadeController: Current Duration: " << m_CurrentDuration << " Duration: " << m_Duration << " Fade Normalizatilon:" << normalization << "\n";
+      m_CurrentColor.red = (byte)(m_StartColor.red + (((float)m_EndColor.red - (float)m_StartColor.red) * normalization));
+      m_CurrentColor.green = (byte)(m_StartColor.green + (((float)m_EndColor.green - (float)m_StartColor.green) * normalization));
+      m_CurrentColor.blue = (byte)(m_StartColor.blue + (((float)m_EndColor.blue - (float)m_StartColor.blue) * normalization)); 
+    }
+}

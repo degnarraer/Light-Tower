@@ -34,6 +34,10 @@ void VerticalBarView::NewValueNotification(float Value)
 {
   SetNormalizedHeight(Value);
 }
+void VerticalBarView::NewValueNotification(CRGB Value)
+{
+  m_Color = Value; 
+}
 void VerticalBarView::SetupView()
 {
 

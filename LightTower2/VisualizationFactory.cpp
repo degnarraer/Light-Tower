@@ -20,8 +20,10 @@
 
 void VisualizationFactory::Setup()
 {
-  m_VUMeter = new VUMeter(m_StatisticalEngineModelInterface, m_LEDController);
-  AddTask(*m_VUMeter);
+  m_MyVisiualizations.add(m_VUMeter);
+  m_MyVisiualizations.add(m_VUMeter8Band);
+  m_VUMeter8Band = new VUMeter8Band(m_StatisticalEngineModelInterface, m_LEDController);
+  AddTask(*m_VUMeter8Band);
 }
 bool VisualizationFactory::CanRunMyTask()
 { 

@@ -37,11 +37,17 @@ class VisualizationFactory : public Task
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController m_LEDController;
     VUMeter *m_VUMeter;
+    VUMeter8Band *m_VUMeter8Band;
     
     //Task Interface
     void Setup();
     bool CanRunMyTask();
     void RunMyTask();
+    
+    Visualization *m_CurrentVisualization;
+    Visualization *m_PreviousVisualization;
+    LinkedList<Visualization*> m_MyVisiualizations = LinkedList<Visualization*>();
+    LinkedList<Visualization*> m_MyQueue = LinkedList<Visualization*>();
 };
 
 #endif

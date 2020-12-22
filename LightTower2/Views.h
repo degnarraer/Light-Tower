@@ -73,12 +73,14 @@ class View: public Task
 
 class VerticalBarView: public View
                      , public ModelEventNotificationCallee<float>
+                     , public ModelEventNotificationCallee<CRGB>
 {
   public:
     VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
     VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
     ~VerticalBarView(){}
-    void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
     void SetColor(CRGB Color);
     void SetNormalizedHeight(float Height);
 
@@ -88,6 +90,7 @@ class VerticalBarView: public View
 
     //ModelEventNotificationCallee
     void NewValueNotification(float Value);
+    void NewValueNotification(CRGB Value);
     
   private:
     //View
