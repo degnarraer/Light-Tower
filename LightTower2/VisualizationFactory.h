@@ -36,8 +36,15 @@ class VisualizationFactory : public Task
   private:
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController m_LEDController;
+
+    //Visualizations
     VUMeter *m_VUMeter;
     VUMeter8Band *m_VUMeter8Band;
+
+    unsigned long m_Duration;
+    unsigned long m_CurrentDuration;
+    void GetNextVisualization();
+    void GetRandomVisualization();
     
     //Task Interface
     void Setup();
@@ -46,7 +53,8 @@ class VisualizationFactory : public Task
     
     Visualization *m_CurrentVisualization;
     Visualization *m_PreviousVisualization;
-    LinkedList<Visualization*> m_MyVisiualizations = LinkedList<Visualization*>();
+    //typedef Visualization* (* VisualizationPointer)(StatisticalEngineModelInterface &, LEDController &);
+    //LinkedList<VisualizationPointer*> m_MyVisiualizations = LinkedList<VisualizationPointer*>();
     LinkedList<Visualization*> m_MyQueue = LinkedList<Visualization*>();
 };
 

@@ -117,6 +117,7 @@ void Visualization::MergeSubViews()
 //VU METER
 Visualization* VUMeter::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
 {
+  if(true == debugMemory) Serial << "VUMeter: Get Instance";
   VUMeter *vis = new VUMeter(StatisticalEngineModelInterface, LEDController);
   return vis;
 }
@@ -134,6 +135,7 @@ void VUMeter::RunVisualization(){}
 //VU METER 8 Band
 Visualization* VUMeter8Band::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
 {
+  if(true == debugMemory) Serial << "VUMeter8Band: Get Instance";
   VUMeter8Band *vis = new VUMeter8Band(StatisticalEngineModelInterface, LEDController);
   return vis;
 }

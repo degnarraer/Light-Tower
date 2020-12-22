@@ -53,6 +53,7 @@ class Visualization: public Task
                    LEDController &LEDController) : Task("Visualization")
                                                  , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
                                                  , m_LEDController(LEDController){}
+               
     ~Visualization()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
@@ -62,7 +63,6 @@ class Visualization: public Task
     LEDController &m_LEDController;
     PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
     
-    virtual Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) = 0;
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;
     virtual void RunVisualization() = 0;
@@ -88,10 +88,13 @@ class VUMeter: public Visualization
 {
   public:
     VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController){}
-    ~VUMeter(){if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter\n";}
+    ~VUMeter()
+    {
+      if(true == debugMemory) Serial << "VUMeter: Deleted";
+    }
 
     //Visualization
-    Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
     void SetupVisualization();
     bool CanRunVisualization();
     void RunVisualization();
@@ -107,10 +110,13 @@ class VUMeter8Band: public Visualization
   public:
     VUMeter8Band( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
                 : Visualization( StatisticalEngineModelInterface, LEDController){}
-    ~VUMeter8Band(){if(true == debugMode && debugLevel >= 1) Serial << "Delete VUMeter8Band\n";}
+    ~VUMeter8Band()
+    {
+      if(true == debugMemory) Serial << "VUMeter8Band: Deleted";
+    }
 
     //Visualization
-    Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
     void SetupVisualization();
     bool CanRunVisualization();
     void RunVisualization();

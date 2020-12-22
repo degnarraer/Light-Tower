@@ -37,6 +37,7 @@ const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugModels = false;
+const bool   debugMemory = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
@@ -49,7 +50,8 @@ const bool   debugRequired = ( debugMode ||
                                debugVisualization ||
                                debugView ||
                                debugLEDs ||
-                               debugModels );
+                               debugModels ||
+                               debugMemory);
 
 // LED SETUP
 static const unsigned int NUMLEDS = 60;
@@ -67,7 +69,7 @@ const unsigned int NUMBER_OF_TICK_TIMERS = 10;
 const unsigned int NUMBER_OF_LAYERS = 10;
 
 //FFT Tunes
-const int FFT_MAX = 1024;
+const int FFT_MAX = 512;
 const unsigned int SAMPLE_RATE = 26000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
