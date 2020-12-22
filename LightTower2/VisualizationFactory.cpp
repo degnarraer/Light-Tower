@@ -20,11 +20,9 @@
 
 void VisualizationFactory::Setup()
 {
-  //m_MyVisiualizations.add(VUMeter::GetInstance);
-  //m_MyVisiualizations.add(VUMeter8Band::GetInstance);
-  //GetRandomVisualization();
-  m_CurrentVisualization = new VUMeter8Band(m_StatisticalEngineModelInterface, m_LEDController);
-  AddTask(*m_CurrentVisualization);
+  m_MyVisiualizationInstantiations.add(VUMeter::GetInstance);
+  m_MyVisiualizationInstantiations.add(VUMeter8Band::GetInstance);
+  GetRandomVisualization();
 }
 bool VisualizationFactory::CanRunMyTask()
 { 
@@ -38,21 +36,19 @@ unsigned long m_Duration;
 unsigned long m_CurrentDuration;
 void VisualizationFactory::GetNextVisualization()
 {
-  /*
   RemoveTask(*m_PreviousVisualization);
   delete m_PreviousVisualization;
   m_PreviousVisualization = m_CurrentVisualization;
-  m_CurrentVisualization = m_MyVisiualizations.get( random(0, m_MyVisiualizations.size()) )->GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
-  AddTask(*m_CurrentVisualization);
-  */
+  GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
+  m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
+  AddTask(*m_CurrentVisualization); 
 }
 void VisualizationFactory::GetRandomVisualization()
 {
-  /*
   RemoveTask(*m_PreviousVisualization);
   delete m_PreviousVisualization;
   m_PreviousVisualization = m_CurrentVisualization;
-  m_CurrentVisualization = m_MyVisiualizations.get( random(0, m_MyVisiualizations.size()) )->GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+  GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
+  m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
   AddTask(*m_CurrentVisualization);
-  */
 }

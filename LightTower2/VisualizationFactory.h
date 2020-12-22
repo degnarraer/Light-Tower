@@ -53,8 +53,8 @@ class VisualizationFactory : public Task
     
     Visualization *m_CurrentVisualization;
     Visualization *m_PreviousVisualization;
-    //typedef Visualization* (* VisualizationPointer)(StatisticalEngineModelInterface &, LEDController &);
-    //LinkedList<VisualizationPointer*> m_MyVisiualizations = LinkedList<VisualizationPointer*>();
+    typedef Visualization* (* GetInstanceFunctionPointer)(StatisticalEngineModelInterface &, LEDController &);
+    LinkedList<GetInstanceFunctionPointer> m_MyVisiualizationInstantiations = LinkedList<GetInstanceFunctionPointer>();
     LinkedList<Visualization*> m_MyQueue = LinkedList<Visualization*>();
 };
 
