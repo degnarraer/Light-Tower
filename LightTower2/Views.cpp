@@ -49,6 +49,7 @@ bool VerticalBarView::CanRunViewTask()
 void VerticalBarView::RunViewTask()
 {
   int scaledHeight = (m_Y + round(m_HeightScalar*(float)m_H));
+  if(scaledHeight > m_Y + m_H) scaledHeight = m_Y + m_H;
   if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << " Scaled Height: " << scaledHeight << "\n";
   for(int x = 0; x<SCREEN_WIDTH; ++x)
   {
