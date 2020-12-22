@@ -75,12 +75,41 @@ class ModelEventNotificationCaller
 };
 
 class StatisticalEngineModelInterface;
+
 class Model: public Task
 {
   public: 
-    Model(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Task(Title)
-                                                                                         , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
+    Model(String Title): Task(Title){}
     ~Model(){}
+
+    //ModelEventNotificationCaller
+    virtual void UpdateValue() = 0;
+    
+  private:
+    virtual void SetupModel() = 0;
+    virtual bool CanRunModelTask() = 0;
+    virtual void RunModelTask() = 0;
+    void Setup()
+    {
+      SetupModel();
+    }
+    bool CanRunMyTask()
+    {
+      return CanRunModelTask();
+    }
+    void RunMyTask()
+    {
+      RunModelTask();
+      UpdateValue();
+    }
+};
+
+class DataModel: public Model
+{
+  public: 
+    DataModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title)
+                                                                                             , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
+    ~DataModel(){}
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
@@ -111,8 +140,33 @@ class ModelWithNewValueNotification: public Model
                                    , public ModelEventNotificationCaller<T>
 {
   public:
-    ModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title, StatisticalEngineModelInterface){}
+    ModelWithNewValueNotification<T>(String Title): Model(Title){}
     ~ModelWithNewValueNotification<T>(){}
+    
+  protected:
+    void SetCurrentValue(T value)
+    {
+      m_CurrentValue = value;
+      if(m_PreviousValue != m_CurrentValue)
+      {
+        m_PreviousValue = m_CurrentValue;
+        this->SendNewValueNotificationToCallees(m_CurrentValue);
+      }
+    }
+    virtual void SetupModel() = 0;
+    virtual bool CanRunModelTask() = 0;
+    virtual void RunModelTask() = 0;
+    T m_PreviousValue;
+    T m_CurrentValue;
+};
+
+template <class T>
+class DataModelWithNewValueNotification: public DataModel
+                                       , public ModelEventNotificationCaller<T>
+{
+  public:
+    DataModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface){}
+    ~DataModelWithNewValueNotification<T>(){}
     
   protected:
     void SetCurrentValue(T value)
@@ -141,6 +195,7 @@ class StatisticalEngineModelInterface : public Task
     ~StatisticalEngineModelInterface(){}
 
     //StatisticalEngine Getters
+    unsigned int GetNumberOfBands() { return m_StatisticalEngine.GetNumberOfBands(); }
     float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
     float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
     float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) { return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands); }
@@ -160,10 +215,10 @@ class StatisticalEngineModelInterface : public Task
     void RunMyTask();
 };
 
-class SoundPowerModel: public ModelWithNewValueNotification<float>
+class SoundPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): ModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface){}
+    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface){}
     ~SoundPowerModel(){}
     
      //Model
@@ -175,10 +230,10 @@ class SoundPowerModel: public ModelWithNewValueNotification<float>
     void RunModelTask(){}
 };
 
-class BandPowerModel: public ModelWithNewValueNotification<float>
+class BandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): ModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+    BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
                                                                                                                      , m_Band(Band){}
     ~BandPowerModel(){}
     
@@ -197,7 +252,7 @@ class BandPowerModel: public ModelWithNewValueNotification<float>
     void RunModelTask(){}
 };
 
-class ReducedBandsBandPowerModel: public ModelWithNewValueNotification<float>
+class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
     ReducedBandsBandPowerModel( String Title
@@ -205,7 +260,7 @@ class ReducedBandsBandPowerModel: public ModelWithNewValueNotification<float>
                               , unsigned int depth
                               , unsigned int totalBands
                               , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
-                              : ModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+                              : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
                               , m_Band(band)
                               , m_Depth(depth)
                               , m_TotalBands(totalBands){}
@@ -228,14 +283,12 @@ class ReducedBandsBandPowerModel: public ModelWithNewValueNotification<float>
     void RunModelTask(){}
 };
 
-
 class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
     RandomColorFadingModel( String Title
-                          , unsigned long Duration
-                          , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
-                          : ModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
+                          , unsigned long Duration)
+                          : ModelWithNewValueNotification<CRGB>(Title)
                           , m_Duration(Duration){}
     ~RandomColorFadingModel(){}
   private:
@@ -255,5 +308,29 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
     unsigned long m_StartTime;
     void StartFadingNextColor();
     CRGB GetRandomNonGrayColor();
+};
+
+class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
+{
+  public:
+    RainbowColorModel( String Title
+                     , unsigned int Numerator
+                     , unsigned int Denominator)
+                     : ModelWithNewValueNotification<CRGB>(Title)
+                     , m_Numerator(Numerator)
+                     , m_Denominator(Denominator){}
+    ~RainbowColorModel(){}
+  private:
+     unsigned int m_Numerator;
+     unsigned int m_Denominator;
+     //Model
+    void UpdateValue(){ SetCurrentValue(GetColor(m_Numerator, m_Denominator)); }
+    void SetupModel(){ }
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask() { }
+
+    //This
+    CRGB GetColor(unsigned int numerator, unsigned int denominator);
+
 };
 #endif

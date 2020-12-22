@@ -103,3 +103,77 @@ void RandomColorFadingModel::RunModelTask()
       m_CurrentColor.blue = (byte)(m_StartColor.blue + (((float)m_EndColor.blue - (float)m_StartColor.blue) * normalization)); 
     }
 }
+
+CRGB RainbowColorModel::GetColor(unsigned int numerator, unsigned int denominator)
+{
+  int colorCount = 7.0;
+  float calculation = ((float)((float)numerator/(float)denominator)*colorCount);
+  double whole;
+  double fractional = modf(calculation, &whole);
+  CRGB value;
+  CRGB value1;
+  CRGB value2;
+
+  int switchValue1 = (int)whole;
+  int switchValue2 = (int)whole + 1;
+  if(switchValue2 > colorCount - 1) switchValue2 = colorCount - 1;
+  
+  switch(switchValue1)
+  {
+    case 0:
+      value1 = CRGB::Red;
+    break;
+    case 1:
+      value1 = CRGB::Orange;
+    break;
+    case 2:
+      value1 = CRGB::Yellow;
+    break;
+    case 3:
+      value1 = CRGB::Green;
+    break;
+    case 4:
+      value1 = CRGB::Blue;
+    break;
+    case 5:
+      value1 = CRGB::Indigo;
+    break;
+    case 6:
+      value1 = CRGB::Violet;
+    break;
+    default:
+      value1 = CRGB::Violet;
+    break;
+  }
+  switch(switchValue2)
+  {
+    case 0:
+      value2 = CRGB::Red;
+    break;
+    case 1:
+      value2 = CRGB::Orange;
+    break;
+    case 2:
+      value2 = CRGB::Yellow;
+    break;
+    case 3:
+      value2 = CRGB::Green;
+    break;
+    case 4:
+      value2 = CRGB::Blue;
+    break;
+    case 5:
+      value2 = CRGB::Indigo;
+    break;
+    case 6:
+      value2 = CRGB::Violet;
+    break;
+    default:
+      value2 = CRGB::Violet;
+    break;
+  }
+  value.red = value1.red + fractional*(value2.red - value1.red);
+  value.green = value1.green + fractional*(value2.green - value1.green);
+  value.blue = value1.blue + fractional*(value2.blue - value1.blue);
+  return value;
+}
