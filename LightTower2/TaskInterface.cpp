@@ -56,7 +56,7 @@ void TaskScheduler::RunScheduler()
 }
 void TaskScheduler::AddTask(Task &task)
 {
-  if(true == debugTasks) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
+  if(true == debugTasks || true == debugMemory) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
   m_MyTasks.add(&task);
   if(false == task.GetIsSetup())
   {
@@ -86,12 +86,12 @@ bool TaskScheduler::RemoveTask(Task &task)
   }
   if(true == taskFound)
   {
-    if(true == debugTasks) Serial << "TaskScheduler Successfully Removed Task: " << task.GetTaskTitle() << "\n";
+    if(true == debugTasks || true == debugMemory) Serial << "TaskScheduler Successfully Removed Task: " << task.GetTaskTitle() << "\n";
     return true;
   }
   else
   {
-    if(true == debugTasks) Serial << "TaskScheduler failed to Remove Task: " << task.GetTaskTitle() << "\n";
+    if(true == debugTasks || true == debugMemory) Serial << "TaskScheduler failed to Remove Task: " << task.GetTaskTitle() << "\n";
     return false;
   }
 }

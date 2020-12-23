@@ -47,6 +47,7 @@ class Task
     bool SetIsSetup(bool IsSetup) { m_IsSetup = IsSetup; }
     void AddTask(Task &task);
     void AddTasks(LinkedList<Task*> &tasks);
+    unsigned int GetTaskCount(){return m_Scheduler.GetTaskCount();}
     bool RemoveTask(Task &task);
     void RunScheduler();
     virtual void Setup() = 0;

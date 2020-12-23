@@ -19,11 +19,11 @@
 #include <Arduino.h>
 #include "Tunes.h"
 #include "Streaming.h"
-#include "VisualizationFactory.h"
+#include "VisualizationPlayer.h"
 #include "Models.h"
 
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface;
-VisualizationFactory m_VisualizationFactory = VisualizationFactory(m_StatisticalEngineModelInterface);
+VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
@@ -47,9 +47,10 @@ void setup()
   if(true == debugRequired) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
   if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << m_Scheduler.GetTaskCount() << "\n";
   m_Scheduler.AddTask(m_CalculateFPS);
-  m_Scheduler.AddTask(m_VisualizationFactory);
+  m_Scheduler.AddTask(m_VisualizationPlayer);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
+  if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << m_Scheduler.GetTaskCount() << "\n";
 }
 
 void ADC_Handler()

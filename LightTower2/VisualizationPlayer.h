@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
  
-#ifndef VisualizationFactory_H
-#define VisualizationFactory_H
+#ifndef VisualizationPlayer_H
+#define VisualizationPlayer_H
 
 #include "Streaming.h"
 #include "Visualizations.h"
@@ -26,12 +26,12 @@
 #include "LEDControllerInterface.h"
 
 
-class VisualizationFactory : public Task
+class VisualizationPlayer : public Task
 {
   public:
-    VisualizationFactory(StatisticalEngineModelInterface &StatisticalEngineModelInterface) : Task("VisualizationFactory")
-                                                                                           , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
-    ~VisualizationFactory(){}
+    VisualizationPlayer(StatisticalEngineModelInterface &StatisticalEngineModelInterface) : Task("VisualizationPlayer")
+                                                                                          , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
+    virtual ~VisualizationPlayer(){}
 
   private:
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
@@ -41,6 +41,8 @@ class VisualizationFactory : public Task
     VUMeter *m_VUMeter;
     VUMeter8Band *m_VUMeter8Band;
 
+    unsigned long m_StartTime;
+    unsigned long m_CurrentTime;
     unsigned long m_Duration;
     unsigned long m_CurrentDuration;
     void GetNextVisualization();

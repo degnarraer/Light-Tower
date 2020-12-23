@@ -40,6 +40,10 @@ class ModelEventNotificationCaller
 {
   public:
     ModelEventNotificationCaller<T>(){}
+    virtual ~ModelEventNotificationCaller<T>()
+    {
+      if(true == debugMemory) Serial << "Delete ModelEventNotificationCaller\n";  
+    }
     void RegisterForNotification(ModelEventNotificationCallee<T> &callee)
     {
       if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";        
@@ -80,7 +84,10 @@ class Model: public Task
 {
   public: 
     Model(String Title): Task(Title){}
-    ~Model(){}
+    virtual ~Model()
+    {
+      if(true == debugMemory) Serial << "Delete Model\n";  
+    }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
@@ -109,7 +116,10 @@ class DataModel: public Model
   public: 
     DataModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title)
                                                                                              , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
-    ~DataModel(){}
+    virtual ~DataModel()
+    {
+      if(true == debugMemory) Serial << "Delete DataModel\n";  
+    }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
@@ -141,7 +151,10 @@ class ModelWithNewValueNotification: public Model
 {
   public:
     ModelWithNewValueNotification<T>(String Title): Model(Title){}
-    ~ModelWithNewValueNotification<T>(){}
+    virtual ~ModelWithNewValueNotification<T>()
+    {
+      if(true == debugMemory) Serial << "Delete ModelWithNewValueNotification\n";  
+    }
     
   protected:
     void SetCurrentValue(T value)
@@ -166,7 +179,10 @@ class DataModelWithNewValueNotification: public DataModel
 {
   public:
     DataModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface){}
-    ~DataModelWithNewValueNotification<T>(){}
+    virtual ~DataModelWithNewValueNotification<T>()
+    {
+      if(true == debugMemory) Serial << "Delete DataModelWithNewValueNotification\n";  
+    }
     
   protected:
     void SetCurrentValue(T value)
@@ -192,7 +208,10 @@ class StatisticalEngineModelInterface : public Task
 {
   public:
     StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){}
-    ~StatisticalEngineModelInterface(){}
+    virtual ~StatisticalEngineModelInterface()
+    {
+      if(true == debugMemory) Serial << "Delete StatisticalEngineModelInterface\n";  
+    }
 
     //StatisticalEngine Getters
     unsigned int GetNumberOfBands() { return m_StatisticalEngine.GetNumberOfBands(); }
@@ -219,7 +238,10 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
     SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface){}
-    ~SoundPowerModel(){}
+    virtual ~SoundPowerModel()
+    {
+      if(true == debugMemory) Serial << "Delete SoundPowerModel\n";  
+    }
     
      //Model
     void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetSoundPower()); }
@@ -235,7 +257,10 @@ class BandPowerModel: public DataModelWithNewValueNotification<float>
   public:
     BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
                                                                                                                      , m_Band(Band){}
-    ~BandPowerModel(){}
+    virtual ~BandPowerModel()
+    {
+      if(true == debugMemory) Serial << "Delete BandPowerModel\n";  
+    }
     
      //Model
     void UpdateValue()
@@ -264,7 +289,10 @@ class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float
                               , m_Band(band)
                               , m_Depth(depth)
                               , m_TotalBands(totalBands){}
-    ~ReducedBandsBandPowerModel(){}
+    virtual ~ReducedBandsBandPowerModel()
+    {
+      if(true == debugMemory) Serial << "Delete ReducedBandsBandPowerModel\n";  
+    }
     
      //Model
     void UpdateValue()
@@ -290,7 +318,10 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
                           , unsigned long Duration)
                           : ModelWithNewValueNotification<CRGB>(Title)
                           , m_Duration(Duration){}
-    ~RandomColorFadingModel(){}
+    virtual ~RandomColorFadingModel()
+    {
+      if(true == debugMemory) Serial << "Delete RandomColorFadingModel\n";  
+    }
   private:
      //Model
     void UpdateValue();
@@ -319,15 +350,19 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
                      : ModelWithNewValueNotification<CRGB>(Title)
                      , m_Numerator(Numerator)
                      , m_Denominator(Denominator){}
-    ~RainbowColorModel(){}
+    virtual ~RainbowColorModel()
+    {
+      if(true == debugMemory) Serial << "Delete RainbowColorModel\n";  
+    }
   private:
      unsigned int m_Numerator;
      unsigned int m_Denominator;
+     CRGB m_Color = CRGB::Black;
      //Model
-    void UpdateValue(){ SetCurrentValue(GetColor(m_Numerator, m_Denominator)); }
+    void UpdateValue(){ SetCurrentValue(m_Color); }
     void SetupModel(){ }
     bool CanRunModelTask(){ return true; }
-    void RunModelTask() { }
+    void RunModelTask() { m_Color = GetColor(m_Numerator, m_Denominator); }
 
     //This
     CRGB GetColor(unsigned int numerator, unsigned int denominator);

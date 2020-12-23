@@ -54,9 +54,9 @@ class Visualization: public Task
                                                  , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
                                                  , m_LEDController(LEDController){}
                
-    ~Visualization()
+    virtual ~Visualization()
     {
-      if(true == debugMode && debugLevel >= 1) Serial << "Delete Visualization\n";
+      if(true == debugMemory) Serial << "Delete Visualization\n";
       
     }
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
@@ -88,7 +88,7 @@ class VUMeter: public Visualization
 {
   public:
     VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController){}
-    ~VUMeter()
+    virtual ~VUMeter()
     {
       if(true == debugMemory) Serial << "VUMeter: Deleted";
     }
@@ -110,7 +110,7 @@ class VUMeter8Band: public Visualization
   public:
     VUMeter8Band( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
                 : Visualization( StatisticalEngineModelInterface, LEDController){}
-    ~VUMeter8Band()
+    virtual ~VUMeter8Band()
     {
       if(true == debugMemory) Serial << "VUMeter8Band: Deleted";
     }
@@ -121,39 +121,38 @@ class VUMeter8Band: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
-    int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
     float numVisualizations = 8.0;
     VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower0 = BandPowerModel("Sound Power Model 0", 0, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations-1);
     
     VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower1 = BandPowerModel("Sound Power Model 1", 1, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, numVisualizations-1);
     
     VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower2 = BandPowerModel("Sound Power Model 2", 2, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, numVisualizations-1);
     
     VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar 3", 0, 3*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower3 = BandPowerModel("Sound Power Model 3", 3, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel3 = RainbowColorModel("Color Model 3", 3*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel3 = RainbowColorModel("Color Model 3", 3, numVisualizations-1);
     
     VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar 4", 0, 4*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower4 = BandPowerModel("Sound Power Model 4", 4, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel4 = RainbowColorModel("Color Model 4", 4*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower4 = ReducedBandsBandPowerModel("Sound Power Model 4", 4, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel4 = RainbowColorModel("Color Model 4", 4, numVisualizations-1);
     
     VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar 5", 0, 5*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower5 = BandPowerModel("Sound Power Model 5", 5, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel5 = RainbowColorModel("Color Model 5", 5*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel5 = RainbowColorModel("Color Model 5", 5, numVisualizations-1);
     
     VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar 6", 0, 6*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower6 = BandPowerModel("Sound Power Model 6", 6, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel6 = RainbowColorModel("Color Model 6", 6*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel6 = RainbowColorModel("Color Model 6", 6, numVisualizations-1);
     
     VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar 7", 0, 7*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    BandPowerModel m_BandPower7 = BandPowerModel("Sound Power Model 7", 7, m_StatisticalEngineModelInterface);
-    RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7*(numBands-1)/(numVisualizations-1), numBands-1);
+    ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 0, 8, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7, numVisualizations-1);
 };
 
 #endif

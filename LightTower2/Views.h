@@ -41,7 +41,7 @@ class View: public Task
                                                               , m_Y(Y)
                                                               , m_W(W)
                                                               , m_H(H){}
-    ~View()
+    virtual ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
     }
@@ -78,7 +78,10 @@ class VerticalBarView: public View
   public:
     VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
     VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
-    ~VerticalBarView(){}
+    virtual ~VerticalBarView()
+    {
+      if(true == debugMemory) Serial << "Delete VerticalBarView\n";  
+    }
     void ConnectBarHeightModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
     void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
     void SetColor(CRGB Color);
@@ -104,7 +107,10 @@ class BassSpriteView: public View
 {
   public:
     BassSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
-    ~BassSpriteView(){}
+    virtual ~BassSpriteView()
+    {
+      if(true == debugMemory) Serial << "Delete BassSpriteView\n";  
+    }
     void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
 
     //ModelEventNotificationCallee

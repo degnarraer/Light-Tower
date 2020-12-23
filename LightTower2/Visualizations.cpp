@@ -117,7 +117,7 @@ void Visualization::MergeSubViews()
 //VU METER
 Visualization* VUMeter::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
 {
-  if(true == debugMemory) Serial << "VUMeter: Get Instance";
+  if(true == debugMemory) Serial << "VUMeter: Get Instance\n";
   VUMeter *vis = new VUMeter(StatisticalEngineModelInterface, LEDController);
   return vis;
 }
@@ -135,58 +135,58 @@ void VUMeter::RunVisualization(){}
 //VU METER 8 Band
 Visualization* VUMeter8Band::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
 {
-  if(true == debugMemory) Serial << "VUMeter8Band: Get Instance";
+  if(true == debugMemory) Serial << "VUMeter8Band: Get Instance\n";
   VUMeter8Band *vis = new VUMeter8Band(StatisticalEngineModelInterface, LEDController);
   return vis;
 }
 void VUMeter8Band::SetupVisualization()
 {
-  AddModel(m_ColorModel0);
-  AddModel(m_ColorModel1);
-  AddModel(m_ColorModel2);
-  AddModel(m_ColorModel3);
-  AddModel(m_ColorModel4);
-  AddModel(m_ColorModel5);
-  AddModel(m_ColorModel6);
-  AddModel(m_ColorModel7);
   
   AddView(m_VerticalBar0);
   AddModel(m_BandPower0);
+  AddModel(m_ColorModel0);
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
   m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
   
   AddView(m_VerticalBar1);
   AddModel(m_BandPower1);
+  AddModel(m_ColorModel1);
   m_VerticalBar1.ConnectBarHeightModel(m_BandPower1);
   m_VerticalBar1.ConnectBarColorModel(m_ColorModel1);
   
   AddView(m_VerticalBar2);
   AddModel(m_BandPower2);
+  AddModel(m_ColorModel2);
   m_VerticalBar2.ConnectBarHeightModel(m_BandPower2);
   m_VerticalBar2.ConnectBarColorModel(m_ColorModel2);
   
   AddView(m_VerticalBar3);
   AddModel(m_BandPower3);
+  AddModel(m_ColorModel3);
   m_VerticalBar3.ConnectBarHeightModel(m_BandPower3);
   m_VerticalBar3.ConnectBarColorModel(m_ColorModel3);
   
   AddView(m_VerticalBar4);
   AddModel(m_BandPower4);
+  AddModel(m_ColorModel4);
   m_VerticalBar4.ConnectBarHeightModel(m_BandPower4);
   m_VerticalBar4.ConnectBarColorModel(m_ColorModel4);
   
   AddView(m_VerticalBar5);
   AddModel(m_BandPower5);
+  AddModel(m_ColorModel5);
   m_VerticalBar5.ConnectBarHeightModel(m_BandPower5);
   m_VerticalBar5.ConnectBarColorModel(m_ColorModel5);
   
   AddView(m_VerticalBar6);
   AddModel(m_BandPower6);
+  AddModel(m_ColorModel6);
   m_VerticalBar6.ConnectBarHeightModel(m_BandPower6);
   m_VerticalBar6.ConnectBarColorModel(m_ColorModel6);
   
   AddView(m_VerticalBar7);
   AddModel(m_BandPower7);
+  AddModel(m_ColorModel7);
   m_VerticalBar7.ConnectBarHeightModel(m_BandPower7);
   m_VerticalBar7.ConnectBarColorModel(m_ColorModel7);
 }

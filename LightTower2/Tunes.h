@@ -37,7 +37,7 @@ const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugModels = false;
-const bool   debugMemory = false;
+const bool   debugMemory = true;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
@@ -89,7 +89,7 @@ const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
 const unsigned int BUFFER_SIZE = CHANNEL_SIZE*NUM_CHANNELS;
 const unsigned int NUMBER_OF_BUFFERS = 5;  /// Size of circular buffer for holding microphone sample sets
-const unsigned int MAX_BUFFERS_TO_PROCESS = 5;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
+const unsigned int MAX_BUFFERS_TO_PROCESS = 1;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
 
 //Sound Detection
 const float   SOUND_DETECT_THRESHOLD = 0.05;
