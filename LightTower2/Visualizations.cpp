@@ -77,8 +77,8 @@ bool Visualization::CanRunMyTask()
 }
 void Visualization::RunMyTask()
 {
-  RunVisualization();
   MergeSubViews();
+  RunVisualization();
   m_LEDController.UpdateLEDs(m_MyPixelStruct);
 }
 
@@ -192,3 +192,42 @@ void VUMeter8Band::SetupVisualization()
 }
 bool VUMeter8Band::CanRunVisualization(){ return true; }
 void VUMeter8Band::RunVisualization(){}
+
+//VU METER 3 Band
+Visualization* VUMeter3Band::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+{
+  if(true == debugMemory) Serial << "VUMeter3Band: Get Instance\n";
+  VUMeter3Band *vis = new VUMeter3Band(StatisticalEngineModelInterface, LEDController);
+  return vis;
+}
+void VUMeter3Band::SetupVisualization()
+{
+  AddView(m_VerticalBar0);
+  AddModel(m_BandPower0);
+  AddModel(m_ColorModel0);
+  m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
+  m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
+  
+  AddView(m_VerticalBar1);
+  AddModel(m_BandPower1);
+  AddModel(m_ColorModel1);
+  m_VerticalBar1.ConnectBarHeightModel(m_BandPower1);
+  m_VerticalBar1.ConnectBarColorModel(m_ColorModel1);
+  
+  AddView(m_VerticalBar2);
+  AddModel(m_BandPower2);
+  AddModel(m_ColorModel2);
+  m_VerticalBar2.ConnectBarHeightModel(m_BandPower2);
+  m_VerticalBar2.ConnectBarColorModel(m_ColorModel2);
+}
+bool VUMeter3Band::CanRunVisualization(){ return true; }
+void VUMeter3Band::RunVisualization(){}
+
+
+//Waterfall
+Visualization* Waterfall::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+{
+  if(true == debugMemory) Serial << "Waterfall: Get Instance\n";
+  Waterfall *vis = new Waterfall(StatisticalEngineModelInterface, LEDController);
+  return vis;
+}

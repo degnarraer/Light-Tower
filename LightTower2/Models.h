@@ -188,7 +188,7 @@ class DataModelWithNewValueNotification: public DataModel
     void SetCurrentValue(T value)
     {
       m_CurrentValue = value;
-      if(m_PreviousValue != m_CurrentValue)
+      if(m_CurrentValue != m_PreviousValue)
       {
         m_PreviousValue = m_CurrentValue;
         this->SendNewValueNotificationToCallees(m_CurrentValue);
@@ -215,7 +215,7 @@ class StatisticalEngineModelInterface : public Task
 
     //StatisticalEngine Getters
     unsigned int GetNumberOfBands() { return m_StatisticalEngine.GetNumberOfBands(); }
-    float GetSoundPower() { return m_StatisticalEngine.GetSoundPower(); }
+    float GetNormalizedSoundPower() { return m_StatisticalEngine.GetNormalizedSoundPower(); }
     float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
     float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) { return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands); }
   
@@ -244,7 +244,7 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
     }
     
      //Model
-    void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetSoundPower()); }
+    void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetNormalizedSoundPower()); }
   private:
      //Model
     void SetupModel(){}
@@ -366,6 +366,37 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
 
     //This
     CRGB GetColor(unsigned int numerator, unsigned int denominator);
+};
 
+class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
+{
+  public:
+    ColorPowerModel( String Title
+                   , CRGB Color
+                   , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+                   : DataModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
+                   , m_InputColor(Color){}
+    virtual ~ColorPowerModel()
+    {
+      if(true == debugMemory) Serial << "Delete ColorPowerModel\n";  
+    }
+  private:
+     CRGB m_InputColor = CRGB::Black;
+     CRGB m_OutputColor = CRGB::Black;
+     //Model
+    void UpdateValue()
+    {
+      SetCurrentValue( m_OutputColor );
+    }
+    void SetupModel(){ }
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask() 
+    {    
+      float normalizedPower = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
+      m_OutputColor.red = (byte)(m_InputColor.red * normalizedPower);
+      m_OutputColor.green = (byte)(m_InputColor.green * normalizedPower);
+      m_OutputColor.blue = (byte)(m_InputColor.blue * normalizedPower);
+      if(true == debugModels) Serial << "ColorPowerModel normalizedPower: " << normalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+    }
 };
 #endif

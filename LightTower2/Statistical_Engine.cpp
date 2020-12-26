@@ -357,7 +357,7 @@ float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsign
   return result;
 }
 
-float StatisticalEngine::GetSoundPower()
+float StatisticalEngine::GetNormalizedSoundPower()
 { 
   if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << m_Power << "\n";
   return m_Power;

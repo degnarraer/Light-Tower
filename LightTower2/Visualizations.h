@@ -155,4 +155,64 @@ class VUMeter8Band: public Visualization
     RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7, numVisualizations-1);
 };
 
+
+//********* 3 Band VUMeter *********
+class VUMeter3Band: public Visualization
+{
+  public:
+    VUMeter3Band( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+                : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~VUMeter3Band()
+    {
+      if(true == debugMemory) Serial << "VUMeter3Band: Deleted";
+    }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:
+    float numVisualizations = 3.0;
+    VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 3, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations-1);
+    
+    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
+    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 3, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, numVisualizations-1);
+    
+    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
+    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 3, m_StatisticalEngineModelInterface);
+    RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, numVisualizations-1);
+};
+
+//********* Waterfall *********
+class Waterfall: public Visualization
+{
+  public:
+    Waterfall( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+             : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~Waterfall()
+    {
+      if(true == debugMemory) Serial << "Waterfall: Deleted";
+    }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization()
+    {
+      AddView(m_ScrollingView);
+      m_ScrollingView.AddSubView(m_Sprite0);
+      AddModel(m_ColorPowerModel0);
+      m_Sprite0.ConnectColorModel(m_ColorPowerModel0);
+    }
+    bool CanRunVisualization(){ return true; }
+    void RunVisualization() {}
+  private:
+    ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, 0, 4, 1);
+    ColorPowerModel m_ColorPowerModel0 = ColorPowerModel("Color Power Model0", CRGB::Green, m_StatisticalEngineModelInterface);
+};
+
 #endif

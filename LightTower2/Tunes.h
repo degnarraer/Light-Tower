@@ -34,9 +34,9 @@ const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = false;
 const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
-const bool   debugView = false;
+const bool   debugView = true;
 const bool   debugLEDs = false;
-const bool   debugModels = false;
+const bool   debugModels = true;
 const bool   debugMemory = true;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 

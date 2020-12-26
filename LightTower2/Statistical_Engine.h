@@ -94,7 +94,7 @@ class StatisticalEngine : public Task
   int GetFFTData(int position);  
   
   //Power Getters
-  float GetSoundPower();
+  float GetNormalizedSoundPower();
   
   //Band Data Getters
   unsigned int GetNumberOfBands() { return m_NumBands; }

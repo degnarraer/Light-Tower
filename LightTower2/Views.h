@@ -47,9 +47,35 @@ class View: public Task
     }
     void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
     void SetSize(size W, size H){ m_W = W; m_H = H; }
-    void AddChildView(View &Child){}
-    void RemoveChildView(View &Child){}
-    void RemoveAllChildrenViews(){}
+    void AddSubView(View &SubView)
+    { 
+      m_SubViews.add(&SubView);
+      AddTask(SubView);
+    }
+    bool RemoveSubView(View &SubView)
+    {
+      bool viewFound = false;
+      for(int i = 0; i < m_SubViews.size(); ++i)
+      {
+        if(m_SubViews.get(i) == &SubView)
+        {
+          viewFound = true;
+          m_SubViews.remove(i);
+          break;
+        }
+      }
+      if(true == viewFound)
+      {
+        if(true == debugTasks || true == debugMemory) Serial << "View Successfully Removed Subview.\n";
+        return true;
+      }
+      else
+      {
+        if(true == debugTasks || true == debugMemory) Serial << "View failed to Remove Subview.\n";
+        return false;
+      }
+    }
+    void RemoveAllSubViews(){}
     PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
     PixelStruct m_MyPixelStruct;
     position m_X;
@@ -57,15 +83,20 @@ class View: public Task
     size m_W;
     size m_H;
   private:
-    LinkedList<View*> m_ChildViews = LinkedList<View*>();
+    LinkedList<View*> m_SubViews = LinkedList<View*>();
     View *m_ParentView;
     
     //Task
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    bool CanRunMyTask(){ return CanRunViewTask(); }
+    void RunMyTask()
+    {
+      MergeSubViews();
+      RunViewTask();
+    }
 
     //View
+    void MergeSubViews();
     virtual void SetupView() = 0;
     virtual bool CanRunViewTask() = 0;
     virtual void RunViewTask() = 0;
@@ -84,21 +115,20 @@ class VerticalBarView: public View
     }
     void ConnectBarHeightModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
     void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
-    void SetColor(CRGB Color);
-    void SetNormalizedHeight(float Height);
-
+    void SetColor(CRGB Color) { m_Color = Color; }
+    void SetNormalizedHeight(float Height) { m_HeightScalar = Height; }
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float Value);
-    void NewValueNotification(CRGB Value);
+    void NewValueNotification(float Value) { SetNormalizedHeight(Value); }
+    void NewValueNotification(CRGB Value) { m_Color = Value; }
     
   private:
     //View
-    void SetupView();
-    bool CanRunViewTask();
+    void SetupView() {}
+    bool CanRunViewTask() { return true; }
     void RunViewTask();
 };
 
@@ -123,4 +153,55 @@ class BassSpriteView: public View
     void RunViewTask(){}
 };
 
+
+enum ScrollDirection
+{
+  ScrollDirection_Up,
+  ScrollDirection_Down
+};
+class ScrollingView: public View
+                   , public ModelEventNotificationCallee<bool>
+{
+  public:
+  
+    ScrollingView(String Title, ScrollDirection ScrollDirection, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
+    virtual ~ScrollingView()
+    {
+      if(true == debugMemory) Serial << "Delete ScrollingView\n";  
+    }
+    void ConnectModel(ModelEventNotificationCaller<bool> &Caller) { Caller.RegisterForNotification(*this); }
+
+    //ModelEventNotificationCallee
+    void NewValueNotification(bool Value){ }
+    
+  private:
+    //View
+    void SetupView(){}
+    bool CanRunViewTask(){ return true; }
+    void RunViewTask();
+    enum ScrollDirection m_ScrollDirection = ScrollDirection_Up;
+};
+
+
+class ColorSpriteView: public View
+                     , public ModelEventNotificationCallee<CRGB>
+{
+  public:
+    ColorSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
+    virtual ~ColorSpriteView()
+    {
+      if(true == debugMemory) Serial << "Delete ColorSpriteView\n";  
+    }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
+
+    //ModelEventNotificationCallee
+    void NewValueNotification(CRGB Value) { m_MyColor = Value; }
+    
+  private:
+    //View
+    void SetupView(){}
+    bool CanRunViewTask(){ return true; }
+    void RunViewTask();
+    CRGB m_MyColor = CRGB::Black;
+};
 #endif

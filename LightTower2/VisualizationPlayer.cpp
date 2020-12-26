@@ -20,10 +20,15 @@
 
 void VisualizationPlayer::Setup()
 {
-  m_Duration = 10000;
+  m_Duration = 1000000;
   m_MyVisiualizationInstantiations.add(VUMeter::GetInstance);
+  m_MyVisiualizationInstantiations.add(VUMeter3Band::GetInstance);
   m_MyVisiualizationInstantiations.add(VUMeter8Band::GetInstance);
-  GetRandomVisualization();
+  m_MyVisiualizationInstantiations.add(Waterfall::GetInstance);
+  //GetRandomVisualization();
+  m_CurrentVisualization = Waterfall::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+  AddTask(*m_CurrentVisualization);
+  m_StartTime = millis();
 }
 bool VisualizationPlayer::CanRunMyTask()
 { 

@@ -37,10 +37,6 @@ class VisualizationPlayer : public Task
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController m_LEDController;
 
-    //Visualizations
-    VUMeter *m_VUMeter;
-    VUMeter8Band *m_VUMeter8Band;
-
     unsigned long m_StartTime;
     unsigned long m_CurrentTime;
     unsigned long m_Duration;
