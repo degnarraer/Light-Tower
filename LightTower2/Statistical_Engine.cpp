@@ -354,6 +354,7 @@ float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsign
   {
     result += GetBandAverage(b, depth);
   }
+  if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
   return result;
 }
 

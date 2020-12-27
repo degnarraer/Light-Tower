@@ -28,6 +28,10 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
   GetRandomVisualization();
+  //m_Duration = 100000;
+  //m_CurrentVisualization = VerticalBandTower::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+  //AddTask(*m_CurrentVisualization);
+  //m_StartTime = millis();
 }
 bool VisualizationPlayer::CanRunMyTask()
 { 

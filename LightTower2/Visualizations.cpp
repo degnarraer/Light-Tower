@@ -226,7 +226,11 @@ void VerticalBandTower::SetupVisualization()
   int numVisualizations = m_StatisticalEngineModelInterface.GetNumberOfBands();
   for(int i = 0; i < numVisualizations; ++i)
   {
-    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, (int)round(i*(float)SCREEN_HEIGHT/(float)numVisualizations), SCREEN_WIDTH, (int)round((float)SCREEN_HEIGHT/(float)numVisualizations));
+    int yPosition = (int)round(i*(float)SCREEN_HEIGHT/(float)numVisualizations);
+    int visHeight = (int)round((float)SCREEN_HEIGHT/(float)numVisualizations);
+    int band = i;
+    if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition << "\tH:" << visHeight << "\tB:" << band << " of " << numVisualizations << "\n";
+    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition, SCREEN_WIDTH, visHeight);
     AddNewedView(*sprite);
     ReducedBandsBandPowerModel *bandPower = new ReducedBandsBandPowerModel("Sound Power Model", i, 0, numVisualizations, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);

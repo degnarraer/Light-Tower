@@ -85,7 +85,7 @@ void Visualization::Setup()
     for(int y = 0; y < SCREEN_HEIGHT; ++ y)
     {
       m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
-      if(true == debugVisualization) Serial << "\tR: " << m_MyPixelStruct.Pixel[x][y].red << "\tG: " << m_MyPixelStruct.Pixel[x][y].green << "\tB: " << m_MyPixelStruct.Pixel[x][y].blue << "\n";
+      if(true == debugLEDs) Serial << "\tR: " << m_MyPixelStruct.Pixel[x][y].red << "\tG: " << m_MyPixelStruct.Pixel[x][y].green << "\tB: " << m_MyPixelStruct.Pixel[x][y].blue << "\n";
     }
   }
   SetupVisualization();
@@ -118,14 +118,14 @@ void Visualization::MergeSubViews()
     {
       for(int x = 0; x < SCREEN_WIDTH; ++x)
       {
-        if(true == debugVisualization) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+        if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
         if(
           aPixelStruct.Pixel[x][y].red != 0 ||
           aPixelStruct.Pixel[x][y].green != 0 ||
           aPixelStruct.Pixel[x][y].blue != 0
           )
           {
-            if(true == debugVisualization) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+            if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
             m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
           }
       }
