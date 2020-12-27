@@ -28,8 +28,21 @@ void View::MergeSubViews()
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
         if( aPixelStruct.Pixel[x][y].red != 0 || aPixelStruct.Pixel[x][y].green != 0 || aPixelStruct.Pixel[x][y].blue != 0 )
         {
-          if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
-          m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
+          switch(m_MergeType)
+          {
+            case MergeType_Layer:
+              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+              m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
+            break;
+            case MergeType_Add:
+              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+              m_MyPixelStruct.Pixel[x][y].red = qadd8(aPixelStruct.Pixel[x][y].red, m_MyPixelStruct.Pixel[x][y].red);
+              m_MyPixelStruct.Pixel[x][y].blue = qadd8(aPixelStruct.Pixel[x][y].blue, m_MyPixelStruct.Pixel[x][y].blue);
+              m_MyPixelStruct.Pixel[x][y].green = qadd8(aPixelStruct.Pixel[x][y].green, m_MyPixelStruct.Pixel[x][y].green);
+            break;
+            default:
+            break;
+          }
         }
       }
     }

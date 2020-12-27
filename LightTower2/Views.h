@@ -33,6 +33,13 @@
 typedef int position;
 typedef int size;
 
+
+enum MergeType
+{
+  MergeType_Layer,
+  MergeType_Add
+};
+
 class View: public Task
 {
   public:
@@ -85,6 +92,7 @@ class View: public Task
   private:
     LinkedList<View*> m_SubViews = LinkedList<View*>();
     View *m_ParentView;
+    MergeType m_MergeType = MergeType_Layer;
     
     //Task
     void Setup();
