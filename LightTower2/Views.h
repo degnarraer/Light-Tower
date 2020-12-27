@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef Views_H
 #define Views_H
@@ -107,23 +107,23 @@ class VerticalBarView: public View
                      , public ModelEventNotificationCallee<CRGB>
 {
   public:
-    VerticalBarView(String Title): View(Title, 0, 0, 0, 0){}
-    VerticalBarView(String Title, position X, position Y, size W, size H): View(Title, X, Y, W, H){}
+    VerticalBarView(String title): View(title, 0, 0, 0, 0){}
+    VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H){}
     virtual ~VerticalBarView()
     {
       if(true == debugMemory) Serial << "Delete VerticalBarView\n";  
     }
-    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
-    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
-    void SetColor(CRGB Color) { m_Color = Color; }
-    void SetNormalizedHeight(float Height) { m_HeightScalar = Height; }
+    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
+    void SetColor(CRGB color) { m_Color = color; }
+    void SetNormalizedHeight(float height) { m_HeightScalar = height; }
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float Value) { SetNormalizedHeight(Value); }
-    void NewValueNotification(CRGB Value) { m_Color = Value; }
+    void NewValueNotification(float value) { SetNormalizedHeight(value); }
+    void NewValueNotification(CRGB value) { m_Color = value; }
     
   private:
     //View
@@ -136,12 +136,12 @@ class BassSpriteView: public View
                     , public ModelEventNotificationCallee<float>
 {
   public:
-    BassSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
+    BassSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
     virtual ~BassSpriteView()
     {
       if(true == debugMemory) Serial << "Delete BassSpriteView\n";  
     }
-    void ConnectModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
 
     //ModelEventNotificationCallee
     void NewValueNotification(float Value);
@@ -157,22 +157,20 @@ class BassSpriteView: public View
 enum ScrollDirection
 {
   ScrollDirection_Up,
-  ScrollDirection_Down
+  ScrollDirection_Down,
+  ScrollDirection_Left,
+  ScrollDirection_Right
 };
 class ScrollingView: public View
-                   , public ModelEventNotificationCallee<bool>
 {
   public:
   
-    ScrollingView(String Title, ScrollDirection ScrollDirection, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
+    ScrollingView(String title, ScrollDirection scrollDirection, position X, position Y, size L, size W): View(title, X, Y, L, W)
+                                                                                                        , m_ScrollDirection(scrollDirection){}
     virtual ~ScrollingView()
     {
       if(true == debugMemory) Serial << "Delete ScrollingView\n";  
     }
-    void ConnectModel(ModelEventNotificationCaller<bool> &Caller) { Caller.RegisterForNotification(*this); }
-
-    //ModelEventNotificationCallee
-    void NewValueNotification(bool Value){ }
     
   private:
     //View
@@ -187,15 +185,15 @@ class ColorSpriteView: public View
                      , public ModelEventNotificationCallee<CRGB>
 {
   public:
-    ColorSpriteView(String Title, position X, position Y, size L, size W): View(Title, X, Y, L, W){}
+    ColorSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
     virtual ~ColorSpriteView()
     {
       if(true == debugMemory) Serial << "Delete ColorSpriteView\n";  
     }
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
 
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB Value) { m_MyColor = Value; }
+    void NewValueNotification(CRGB value) { m_MyColor = value; }
     
   private:
     //View

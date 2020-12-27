@@ -14,21 +14,20 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #include "VisualizationPlayer.h"
 
 void VisualizationPlayer::Setup()
 {
-  m_Duration = 1000000;
   m_MyVisiualizationInstantiations.add(VUMeter::GetInstance);
   m_MyVisiualizationInstantiations.add(VUMeter3Band::GetInstance);
   m_MyVisiualizationInstantiations.add(VUMeter8Band::GetInstance);
   m_MyVisiualizationInstantiations.add(Waterfall::GetInstance);
-  //GetRandomVisualization();
-  m_CurrentVisualization = Waterfall::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
-  AddTask(*m_CurrentVisualization);
-  m_StartTime = millis();
+  m_MyVisiualizationInstantiations.add(Fire::GetInstance);
+  m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
+  m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
+  GetRandomVisualization();
 }
 bool VisualizationPlayer::CanRunMyTask()
 { 
@@ -48,6 +47,7 @@ unsigned long m_Duration;
 unsigned long m_CurrentDuration;
 void VisualizationPlayer::GetNextVisualization()
 {
+  m_Duration = random(1000,100000);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
@@ -58,6 +58,7 @@ void VisualizationPlayer::GetNextVisualization()
 }
 void VisualizationPlayer::GetRandomVisualization()
 {
+  m_Duration = random(1000,100000);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));

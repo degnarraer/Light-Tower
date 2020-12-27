@@ -21,20 +21,16 @@ void View::MergeSubViews()
   {
     View *aView = m_SubViews.get(v);
     PixelStruct &aPixelStruct = aView->GetPixelStruct();
-    for(int y = 0; y < SCREEN_HEIGHT; ++y)
+    for(int x = 0; x < SCREEN_WIDTH; ++x)
     {
-      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      for(int y = 0; y < SCREEN_HEIGHT; ++y)
       {
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
-        if(
-          aPixelStruct.Pixel[x][y].red != 0 ||
-          aPixelStruct.Pixel[x][y].green != 0 ||
-          aPixelStruct.Pixel[x][y].blue != 0
-          )
-          {
-            if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
-            m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
-          }
+        if( aPixelStruct.Pixel[x][y].red != 0 || aPixelStruct.Pixel[x][y].green != 0 || aPixelStruct.Pixel[x][y].blue != 0 )
+        {
+          if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+          m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
+        }
       }
     }
   }
@@ -78,21 +74,45 @@ void ScrollingView::RunViewTask()
   switch(m_ScrollDirection)
   {
     case ScrollDirection_Up:
-      for(int x = m_X; x < m_X + m_W; ++x)
+      if(true == debugView) Serial << "Scroll Up\n";
+      for(int x = 0; x < SCREEN_WIDTH; ++x)
       {
-        for(int y = m_Y + m_H - 2; y >= m_Y; --y)
+        for(int y = SCREEN_HEIGHT-1; y >= 0; --y)
         {
-          m_MyPixelStruct.Pixel[x][y+1] = m_MyPixelStruct.Pixel[x][y];
+          if((x >= m_X) && (x < (m_X + m_W)) && (y > m_Y) && (y < (m_Y + m_H)))
+          {
+            if(true == debugView) Serial << x << "|" << y << ":S ";
+            //Shift screen
+            m_MyPixelStruct.Pixel[x][y] = m_MyPixelStruct.Pixel[x][y-1];
+          }
+          else
+          {
+            if(true == debugView) Serial << x << "|" << y << ":N ";
+            //DO nothing
+          }
         }
+        if(true == debugView) Serial << "\n";
       }
       break;
     case ScrollDirection_Down:
-      for(int x = m_X; x < m_X + m_W; ++x)
+      if(true == debugView) Serial << "Scroll Down\n";
+      for(int x = 0; x < SCREEN_WIDTH; ++x)
       {
-        for(int y = m_Y+1; y < m_Y + m_H; ++y)
+        for(int y = 0; y < SCREEN_HEIGHT; ++y)
         {
-          m_MyPixelStruct.Pixel[x][y] = m_MyPixelStruct.Pixel[x][y-1];
+          if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
+          {
+            if(true == debugView) Serial << x << "|" << y << ":S ";
+            //Shift screen
+            m_MyPixelStruct.Pixel[x][y] = m_MyPixelStruct.Pixel[x][y+1];
+          }
+          else
+          {
+            if(true == debugView) Serial << x << "|" << y << ":N ";
+            //Do nothing
+          }
         }
+        if(true == debugView) Serial << "\n";
       }
       break;
     default:

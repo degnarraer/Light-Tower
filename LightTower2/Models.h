@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
  
 #ifndef Models_H
 #define Models_H
@@ -369,6 +369,7 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
 };
 
 class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
+                     , public ModelEventNotificationCallee<CRGB>
 {
   public:
     ColorPowerModel( String Title
@@ -398,5 +399,46 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
       m_OutputColor.blue = (byte)(m_InputColor.blue * normalizedPower);
       if(true == debugModels) Serial << "ColorPowerModel normalizedPower: " << normalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
+    
+    //ModelEventNotificationCallee
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
+    void NewValueNotification(CRGB Value) { m_InputColor = Value; }
+};
+
+
+class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
+                             , public ModelEventNotificationCallee<CRGB>
+                             , public ModelEventNotificationCallee<float>
+{
+  public:
+    SettableColorPowerModel( String Title )
+                           : ModelWithNewValueNotification<CRGB>(Title){}
+    virtual ~SettableColorPowerModel()
+    {
+      if(true == debugMemory) Serial << "Delete SettableColorPowerModel\n";  
+    }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectPowerModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
+  private:
+     CRGB m_InputColor = CRGB::Black;
+     CRGB m_OutputColor = CRGB::Black;
+     float m_NormalizedPower = 0;
+     //Model
+    void UpdateValue(){
+      SetCurrentValue( m_OutputColor );
+    }
+    void SetupModel(){ }
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask() 
+    {
+      m_OutputColor.red = (byte)(m_InputColor.red * m_NormalizedPower);
+      m_OutputColor.green = (byte)(m_InputColor.green * m_NormalizedPower);
+      m_OutputColor.blue = (byte)(m_InputColor.blue * m_NormalizedPower);
+      if(true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+    }
+    
+    //ModelEventNotificationCallee
+    void NewValueNotification(CRGB Value) { m_InputColor = Value; }
+    void NewValueNotification(float Value) { m_NormalizedPower = Value; }
 };
 #endif

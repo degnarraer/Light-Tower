@@ -14,7 +14,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
 #ifndef Tunes_H
 #define Tunes_H
@@ -34,10 +34,10 @@ const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = false;
 const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
-const bool   debugView = true;
+const bool   debugView = false;
 const bool   debugLEDs = false;
-const bool   debugModels = true;
-const bool   debugMemory = true;
+const bool   debugModels = false;
+const bool   debugMemory = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 

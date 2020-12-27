@@ -14,74 +14,12 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#ifndef Visualization_H
-#define Visualization_H
+#ifndef Visualizations_H
+#define Visualizatiosn_H
 
-#include "Statistical_Engine.h"
-#include "Views.h"
-#include "Streaming.h"
-#include "Models.h"
-#include "TaskInterface.h"
-#include "LEDControllerInterface.h"
-#include <LinkedList.h>
-
-class VisualizationEventNotificationCallerInterface;
-
-class VisualizationEventNotificationCalleeInterface
-{
-public:
-    virtual void VisualizationCompleteNotificationFrom(VisualizationEventNotificationCallerInterface &source) = 0;
-};
-
-class VisualizationEventNotificationCallerInterface
-{
-  public:
-    void RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee);
-    void DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee);
-    void SendVisualizationCompleteNotificationToCalleesFrom(VisualizationEventNotificationCallerInterface &source);
-  private:
-    LinkedList<VisualizationEventNotificationCalleeInterface*> myCallees = LinkedList<VisualizationEventNotificationCalleeInterface*>();
-};
-
-class Visualization: public Task
-                   , VisualizationEventNotificationCallerInterface
-{
-  public:
-    Visualization( StatisticalEngineModelInterface &StatisticalEngineModelInterface, 
-                   LEDController &LEDController) : Task("Visualization")
-                                                 , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
-                                                 , m_LEDController(LEDController){}
-               
-    virtual ~Visualization()
-    {
-      if(true == debugMemory) Serial << "Delete Visualization\n";
-      
-    }
-    StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
-    LEDController &m_LEDController;
-    PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
-    
-    virtual void SetupVisualization() = 0;
-    virtual bool CanRunVisualization() = 0;
-    virtual void RunVisualization() = 0;
-
-    //Task Interface
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
-  protected:
-    void AddView(View &View);
-    void AddModel(Model &Model);
-    void RemoveAllModels();
-  private:
-    LinkedList<View*> m_MyViews = LinkedList<View*>();
-    LinkedList<Model*> m_MyModels = LinkedList<Model*>();
-    PixelStruct m_MyPixelStruct;
-    void MergeSubViews();
-};
-
+#include "Visualization.h"
 
 //********* VUMeter *********
 class VUMeter: public Visualization
@@ -123,38 +61,37 @@ class VUMeter8Band: public Visualization
   private:
     float numVisualizations = 8.0;
     VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations-1);
     
     VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, numVisualizations-1);
     
     VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, numVisualizations-1);
     
     VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar 3", 0, 3*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel3 = RainbowColorModel("Color Model 3", 3, numVisualizations-1);
     
     VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar 4", 0, 4*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower4 = ReducedBandsBandPowerModel("Sound Power Model 4", 4, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower4 = ReducedBandsBandPowerModel("Sound Power Model 4", 4, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel4 = RainbowColorModel("Color Model 4", 4, numVisualizations-1);
     
     VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar 5", 0, 5*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel5 = RainbowColorModel("Color Model 5", 5, numVisualizations-1);
     
     VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar 6", 0, 6*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel6 = RainbowColorModel("Color Model 6", 6, numVisualizations-1);
     
     VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar 7", 0, 7*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7, numVisualizations-1);
 };
-
 
 //********* 3 Band VUMeter *********
 class VUMeter3Band: public Visualization
@@ -175,15 +112,15 @@ class VUMeter3Band: public Visualization
   private:
     float numVisualizations = 3.0;
     VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 3, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 5, 3, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations-1);
     
     VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 3, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 5, 3, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, numVisualizations-1);
     
     VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2*SCREEN_HEIGHT/numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT/numVisualizations);
-    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 3, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 5, 3, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, numVisualizations-1);
 };
 
@@ -193,26 +130,82 @@ class Waterfall: public Visualization
   public:
     Waterfall( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
              : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~Waterfall()
-    {
-      if(true == debugMemory) Serial << "Waterfall: Deleted";
-    }
+    virtual ~Waterfall() { if(true == debugMemory) Serial << "Waterfall: Deleted"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
-    void SetupVisualization()
-    {
-      AddView(m_ScrollingView);
-      m_ScrollingView.AddSubView(m_Sprite0);
-      AddModel(m_ColorPowerModel0);
-      m_Sprite0.ConnectColorModel(m_ColorPowerModel0);
-    }
-    bool CanRunVisualization(){ return true; }
-    void RunVisualization() {}
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
   private:
-    ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, 0, 4, 1);
-    ColorPowerModel m_ColorPowerModel0 = ColorPowerModel("Color Power Model0", CRGB::Green, m_StatisticalEngineModelInterface);
+    ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, SCREEN_HEIGHT - 1, 4, 1);
+    SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Fading Model", 10000);
+    SettableColorPowerModel m_PowerColorModel = SettableColorPowerModel("Settable Power Model");
 };
 
+//********* Fire *********
+class Fire: public Visualization
+{
+  public:
+    Fire( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+        : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~Fire(){ if(true == debugMemory) Serial << "Fire: Deleted"; }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:    
+    ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, 0, 4, 1);
+    SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Fading Model", 10000);
+    SettableColorPowerModel m_PowerColorModel = SettableColorPowerModel("Settable Power Model");
+};
+
+//********* WaterFireFromCenter *********
+class WaterFireFromCenter: public Visualization
+{
+  public:
+    WaterFireFromCenter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+                       : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~WaterFireFromCenter() { if(true == debugMemory) Serial << "Fire: Deleted"; }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:
+    ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT/2);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, SCREEN_HEIGHT/2, 4, 1);
+    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model", 10000);
+    SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model");
+    
+    ScrollingView m_ScrollingView1 = ScrollingView("Water Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT/2);
+    ColorSpriteView m_Sprite1 = ColorSpriteView("Water Sprite 0", 0, SCREEN_HEIGHT/2-1, 4, 1);
+    SoundPowerModel m_PowerModel1 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model", 10000);
+    SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model");
+};
+
+//********* Vertical Band Tower *********
+class VerticalBandTower: public Visualization
+{
+  public:
+    VerticalBandTower( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+                     : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~VerticalBandTower(){ if(true == debugMemory) Serial << "VerticalBandTower: Deleted"; }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:  
+};
 #endif
