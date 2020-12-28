@@ -52,7 +52,7 @@ unsigned long m_Duration;
 unsigned long m_CurrentDuration;
 void VisualizationPlayer::GetNextVisualization()
 {
-  m_Duration = random(1000,100000);
+  m_Duration = random(1000,120000);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
@@ -63,11 +63,11 @@ void VisualizationPlayer::GetNextVisualization()
 }
 void VisualizationPlayer::GetRandomVisualization()
 {
-  m_Duration = random(1000,500);
+  m_Duration = random(1000,120000);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
-  m_CurrentVisualization = VUMeter8Band::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+  m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
   AddTask(*m_CurrentVisualization);
   m_StartTime = millis();
   if(true == debugMemory) Serial << "VisualizationPlayer::Getting Next Visualization: Task Count: " << GetTaskCount() << "\n";

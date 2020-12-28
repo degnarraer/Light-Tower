@@ -234,7 +234,7 @@ void VerticalBandTower::SetupVisualization()
     AddNewedView(*sprite);
     ReducedBandsBandPowerModel *bandPower = new ReducedBandsBandPowerModel("Sound Power Model", i, 0, numVisualizations, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
-    RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numVisualizations);
+    RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numVisualizations-1);
     AddNewedModel(*colorModel);
     SettableColorPowerModel *settableColorPowerModel = new SettableColorPowerModel("Settable Power Model");
     AddNewedModel(*settableColorPowerModel);

@@ -51,7 +51,7 @@ class LEDController
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelStruct.Pixel[x][y];
-          m_LEDStrip[x][y].red = (byte)dim8_raw(bufColor.red);
+          m_LEDStrip[x][y].red =(byte)dim8_raw(bufColor.red);
           m_LEDStrip[x][y].green = (byte)dim8_raw(bufColor.green);
           m_LEDStrip[x][y].blue = (byte)dim8_raw(bufColor.blue);
           if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";

@@ -106,7 +106,7 @@ void RandomColorFadingModel::RunModelTask()
 
 CRGB RainbowColorModel::GetColor(unsigned int numerator, unsigned int denominator)
 {
-  int colorCount = 7.0;
+  const int colorCount = 7.0;
   float calculation = ((float)((float)numerator/(float)denominator)*colorCount);
   double whole;
   double fractional = modf(calculation, &whole);
