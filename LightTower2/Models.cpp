@@ -25,6 +25,7 @@ void StatisticalEngineModelInterface::Setup()
 }
 bool StatisticalEngineModelInterface::CanRunMyTask()
 { 
+  m_StatisticalEngine.SetProcessFFTStatus(UsersRequireFFT());
   return true; 
 }
 void StatisticalEngineModelInterface::RunMyTask()

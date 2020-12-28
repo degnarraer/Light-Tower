@@ -113,18 +113,99 @@ class Model: public Task
     }
 };
 
+class StatisticalEngineModelInterfaceUsers
+{
+  public:
+    virtual bool RequiresFFT() = 0;
+};
+
+class StatisticalEngineModelInterfaceUserTracker
+{
+  public:
+    void RegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
+    {
+      m_MyUsers.add(&user);
+    }
+    void DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
+    {
+      for(int i = 0; i < m_MyUsers.size(); ++i)
+      {
+        if(m_MyUsers.get(i) == &user)
+        {
+          m_MyUsers.remove(i);
+          break;
+        }
+      }
+    }
+    bool UsersRequireFFT()
+    {
+      bool result = false;
+      for(int u = 0; u < m_MyUsers.size(); ++u)
+      {
+        if(true == m_MyUsers.get(u)->RequiresFFT())
+        {
+          result = true;
+          break;
+        }
+      }
+      return result;
+    }
+    private:
+      LinkedList<StatisticalEngineModelInterfaceUsers*> m_MyUsers = LinkedList<StatisticalEngineModelInterfaceUsers*>();
+};
+
+class StatisticalEngineModelInterface : public Task
+                                      , public StatisticalEngineModelInterfaceUserTracker
+                                      , ADCInterruptHandler 
+                                      , MicrophoneMeasureCalleeInterface
+{
+  public:
+    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){}
+    virtual ~StatisticalEngineModelInterface()
+    {
+      if(true == debugMemory) Serial << "Delete StatisticalEngineModelInterface\n";  
+    }
+
+    //StatisticalEngine Getters
+    unsigned int GetNumberOfBands() { return m_StatisticalEngine.GetNumberOfBands(); }
+    float GetNormalizedSoundPower() { return m_StatisticalEngine.GetNormalizedSoundPower(); }
+    float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
+    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) { return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands); }
+  
+    //ADCInterruptHandler
+    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
+    
+    //MicrophoneMeasureCalleeInterface
+    void MicrophoneStateChange(SoundState){}
+
+  private:
+    StatisticalEngine m_StatisticalEngine;
+    //Task
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
+};
+
 class DataModel: public Model
+               , public StatisticalEngineModelInterfaceUsers
 {
   public: 
     DataModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title)
-                                                                                             , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
+                                                                                             , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
+     {
+        m_StatisticalEngineModelInterface.RegisterAsUser(*this);
+     }
     virtual ~DataModel()
     {
-      if(true == debugMemory) Serial << "Delete DataModel\n";  
+      if(true == debugMemory) Serial << "Delete DataModel\n";
+      m_StatisticalEngineModelInterface.DeRegisterAsUser(*this);
     }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
+    
+    //StatisticalEngineModelInterfaceUsers
+    virtual bool RequiresFFT() = 0;
     
   protected:
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;  
@@ -193,7 +274,7 @@ class DataModelWithNewValueNotification: public DataModel
     {
       if(true == debugMemory) Serial << "Delete DataModelWithNewValueNotification\n";  
     }
-    
+  
   protected:
     T GetCurrentValue()
     {
@@ -213,39 +294,9 @@ class DataModelWithNewValueNotification: public DataModel
     virtual void RunModelTask() = 0;
     T m_PreviousValue;
     T m_CurrentValue;
-};
 
-
-class StatisticalEngineModelInterface : public Task
-                                      , ADCInterruptHandler 
-                                      , MicrophoneMeasureCalleeInterface
-{
-  public:
-    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){}
-    virtual ~StatisticalEngineModelInterface()
-    {
-      if(true == debugMemory) Serial << "Delete StatisticalEngineModelInterface\n";  
-    }
-
-    //StatisticalEngine Getters
-    unsigned int GetNumberOfBands() { return m_StatisticalEngine.GetNumberOfBands(); }
-    float GetNormalizedSoundPower() { return m_StatisticalEngine.GetNormalizedSoundPower(); }
-    float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
-    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) { return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands); }
-  
-    //ADCInterruptHandler
-    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
-    
-    //MicrophoneMeasureCalleeInterface
-    void MicrophoneStateChange(SoundState){}
-
-  private:
-    StatisticalEngine m_StatisticalEngine;
-
-    //Task
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    //StatisticalEngineModelInterfaceUsers
+    virtual bool RequiresFFT() = 0;
 };
 
 class SoundPowerModel: public DataModelWithNewValueNotification<float>
@@ -259,6 +310,10 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
     
      //Model
     void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetNormalizedSoundPower()); }
+
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return false; }
   private:
      //Model
     void SetupModel(){}
@@ -283,6 +338,9 @@ class BandPowerModel: public DataModelWithNewValueNotification<float>
       if(true == debugModels) Serial << "BandPowerModel value: " << value << " for band: " << m_Band << "\n";
       SetCurrentValue( value );
     }
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return true; }
   private:
      //Model
     unsigned int m_Band = 0;
@@ -315,6 +373,9 @@ class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float
       if(true == debugModels) Serial << "ReducedBandsBandPowerModel value: " << value << " for band: " << m_Band << " of " << m_TotalBands << " bands\n";
       SetCurrentValue( value );
     }
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return true; }
   private:
      //Model
     unsigned int m_Band = 0;
@@ -395,6 +456,9 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
     {
       if(true == debugMemory) Serial << "Delete ColorPowerModel\n";  
     }
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return true; }
   private:
      CRGB m_InputColor = CRGB::Black;
      CRGB m_OutputColor = CRGB::Black;

@@ -88,6 +88,9 @@ class StatisticalEngine : public Task
     void HandleADCInterrupt();
     SoundState GetSoundState();
 
+  void SetProcessFFTStatus(bool value) {m_ProcessFFT = value; }
+  bool GetProcessFFTStatus() {return m_ProcessFFT; }
+  
   //Main Data Interface
   int GetFFTBinIndexForFrequency(float freq);
   float GetFreqForBin(unsigned int bin);
@@ -103,6 +106,7 @@ class StatisticalEngine : public Task
   float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
+    bool m_ProcessFFT = true;
     //BAND Circular Buffer
     static const unsigned int m_NumBands = 8; //8 or 31
     int BandValues[m_NumBands][BAND_SAVE_LENGTH];

@@ -139,8 +139,11 @@ void StatisticalEngine::AnalyzeSound()
   if(m_PowerDb < 0.0) m_PowerDb = 0.0;
   if(m_Power > 1.0) m_Power = 1.0;
   if(m_Power < 0.0) m_Power = 0.0;
-  ZeroFFT(m_data, FFT_MAX);
-  UpdateBandArray();
+  if(true == m_ProcessFFT)
+  {
+    ZeroFFT(m_data, FFT_MAX);
+    UpdateBandArray();
+  }
   if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tPower: " << m_Power << "\tPower Db: " << m_PowerDb << "\n";
 }
 
