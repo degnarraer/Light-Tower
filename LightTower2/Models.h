@@ -48,6 +48,7 @@ class ModelEventNotificationCaller
     {
       if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";        
       m_MyCallees.add(&callee);
+      callee.NewValueNotification(GetCurrentValue());
     }
     void DeRegisterForNotification(ModelEventNotificationCallee<T> &callee)
     {
@@ -66,14 +67,15 @@ class ModelEventNotificationCaller
     }
     void SendNewValueNotificationToCallees(T value)
     {
-      if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Sending New Value Notification with Value: " << value << "\n"; 
+      if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending New Value Notification with Value: " << value << "\n"; 
       for(int i = 0; i < m_MyCallees.size(); ++i)
       {
-        if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\n"; 
+        if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\n"; 
         m_MyCallees.get(i)->NewValueNotification(value);
       }
     }
     virtual void UpdateValue() = 0;
+    virtual T GetCurrentValue() = 0;
   private:
     LinkedList<ModelEventNotificationCallee<T>*> m_MyCallees = LinkedList<ModelEventNotificationCallee<T>*>();
 };
@@ -157,6 +159,14 @@ class ModelWithNewValueNotification: public Model
     }
     
   protected:
+    void NewCalleeRegistered(ModelEventNotificationCallee<T> &callee)
+    {
+      callee.NewValueNotification(m_CurrentValue);
+    }
+    T GetCurrentValue()
+    {
+      return m_CurrentValue; 
+    }
     void SetCurrentValue(T value)
     {
       m_CurrentValue = value;
@@ -185,6 +195,10 @@ class DataModelWithNewValueNotification: public DataModel
     }
     
   protected:
+    T GetCurrentValue()
+    {
+      return m_CurrentValue; 
+    }
     void SetCurrentValue(T value)
     {
       m_CurrentValue = value;

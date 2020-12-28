@@ -28,11 +28,11 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
-  //GetRandomVisualization();
-  m_Duration = 100000;
-  m_CurrentVisualization = ScrollingBands::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
-  AddTask(*m_CurrentVisualization);
-  m_StartTime = millis();
+  GetRandomVisualization();
+  //m_Duration = 100000;
+  //m_CurrentVisualization = ScrollingBands::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+  //AddTask(*m_CurrentVisualization);
+  //m_StartTime = millis();
 }
 bool VisualizationPlayer::CanRunMyTask()
 { 
@@ -63,11 +63,11 @@ void VisualizationPlayer::GetNextVisualization()
 }
 void VisualizationPlayer::GetRandomVisualization()
 {
-  m_Duration = random(1000,100000);
+  m_Duration = random(1000,500);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
-  m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
+  m_CurrentVisualization = VUMeter8Band::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
   AddTask(*m_CurrentVisualization);
   m_StartTime = millis();
   if(true == debugMemory) Serial << "VisualizationPlayer::Getting Next Visualization: Task Count: " << GetTaskCount() << "\n";
