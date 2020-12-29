@@ -25,6 +25,20 @@
 #include "Statistical_Engine.h"
 #include "LEDControllerInterface.h"
 
+struct BandData
+{
+  float Power;
+  unsigned int Band;
+  CRGB Color;
+  bool operator==(const BandData& a)
+  {
+    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color)))? true:false;
+  }
+  bool operator!=(const BandData& a)
+  {
+    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color)))? false:true;
+  }
+};
 
 
 template <class T> class ModelEventNotificationCaller;
@@ -67,7 +81,6 @@ class ModelEventNotificationCaller
     }
     void SendNewValueNotificationToCallees(T value)
     {
-      if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending New Value Notification with Value: " << value << "\n"; 
       for(int i = 0; i < m_MyCallees.size(); ++i)
       {
         if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\n"; 
@@ -94,6 +107,9 @@ class Model: public Task
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
     
+  protected:
+    CRGB GetColor(unsigned int numerator, unsigned int denominator);
+    CRGB GetRandomNonGrayColor();
   private:
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
@@ -190,8 +206,10 @@ class DataModel: public Model
                , public StatisticalEngineModelInterfaceUsers
 {
   public: 
-    DataModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): Model(Title)
-                                                                                             , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
+    DataModel( String Title
+             , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+             : Model(Title)
+             , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
      {
         m_StatisticalEngineModelInterface.RegisterAsUser(*this);
      }
@@ -413,7 +431,6 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
     unsigned long m_CurrentTime;
     unsigned long m_StartTime;
     void StartFadingNextColor();
-    CRGB GetRandomNonGrayColor();
 };
 
 class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
@@ -440,7 +457,6 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
     void RunModelTask() { m_Color = GetColor(m_Numerator, m_Denominator); }
 
     //This
-    CRGB GetColor(unsigned int numerator, unsigned int denominator);
 };
 
 class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
@@ -518,5 +534,86 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     //ModelEventNotificationCallee
     void NewValueNotification(CRGB Value) { m_InputColor = Value; }
     void NewValueNotification(float Value) { m_NormalizedPower = Value; }
+};
+
+class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData>
+{
+  public:
+    MaximumBandModel( String Title, unsigned int Depth, StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+                    : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
+                    , m_Depth(Depth){}
+    virtual ~MaximumBandModel()
+    {
+      if(true == debugMemory) Serial << "Delete MaximumBandPowerModel\n";  
+    }
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return true; }
+  private:
+     BandData m_MaxBandData;
+     unsigned int m_Depth = 0;
+     //Model
+    void UpdateValue(){
+      SetCurrentValue( m_MaxBandData );
+    }
+    void SetupModel(){ }
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask() 
+    {
+      unsigned int maxBandIndex = 0;
+      float maxBandPowerValue = 0.0;
+      unsigned int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
+      for(int b = 0; b < m_StatisticalEngineModelInterface.GetNumberOfBands(); ++b)
+      {
+        float power = m_StatisticalEngineModelInterface.GetBandAverage(b, m_Depth) / (float)ADDBITS;
+        if(power > maxBandPowerValue)
+        {
+          maxBandPowerValue = power;
+          maxBandIndex = b;
+        }
+      }
+      m_MaxBandData.Power = maxBandPowerValue;
+      m_MaxBandData.Band = maxBandIndex;
+      m_MaxBandData.Color = GetColor(maxBandIndex, numBands-1); 
+    }
+};
+
+class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
+                        , public ModelEventNotificationCallee<BandData>
+{
+  public:
+    BandDataColorModel( String Title )
+                      : ModelWithNewValueNotification<CRGB>(Title){}
+    virtual ~BandDataColorModel()
+    {
+      if(true == debugMemory) Serial << "Delete BandDataColorModel\n";  
+    }
+    void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this); }
+  private:
+    CRGB m_InputColor = CRGB::Black;
+    CRGB m_OutputColor = CRGB::Black;
+    float m_NormalizedPower = 0;
+    
+    //Model
+    void UpdateValue(){
+      SetCurrentValue( m_OutputColor );
+    }
+    void SetupModel(){ }
+    bool CanRunModelTask(){ return true; }
+    void RunModelTask() 
+    {
+      if(m_NormalizedPower > 1.0) m_NormalizedPower = 1.0;
+      m_OutputColor.red = (byte)(m_InputColor.red * m_NormalizedPower);
+      m_OutputColor.green = (byte)(m_InputColor.green * m_NormalizedPower);
+      m_OutputColor.blue = (byte)(m_InputColor.blue * m_NormalizedPower);
+      if(true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+    }
+    
+    //ModelEventNotificationCallee
+    void NewValueNotification(BandData Value) 
+    { 
+      m_InputColor = Value.Color;
+      m_NormalizedPower = Value.Power;
+    }
 };
 #endif

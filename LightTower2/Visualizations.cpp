@@ -333,3 +333,26 @@ bool ScrollingBands::CanRunVisualization()
 void ScrollingBands::RunVisualization()
 {
 }
+
+Visualization* ScrollingMaxBand::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+{
+  if(true == debugMemory) Serial << "ScrollingMaxBand: Get Instance\n";
+  ScrollingMaxBand *vis = new ScrollingMaxBand(StatisticalEngineModelInterface, LEDController);
+  return vis;
+}
+void ScrollingMaxBand::SetupVisualization()
+{
+  AddView(m_ScrollingView);
+  AddModel(m_MaxBandModel);
+  AddModel(m_BandDataColorModel);
+  m_ScrollingView.AddSubView(m_Sprite0);
+  m_BandDataColorModel.ConnectBandDataModel(m_MaxBandModel);
+  m_Sprite0.ConnectColorModel(m_BandDataColorModel);
+}
+bool ScrollingMaxBand::CanRunVisualization()
+{
+  return true;
+}
+void ScrollingMaxBand::RunVisualization()
+{
+}

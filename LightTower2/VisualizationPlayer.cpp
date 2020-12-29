@@ -28,11 +28,21 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
-  GetRandomVisualization();
-  //m_Duration = 100000;
-  //m_CurrentVisualization = ScrollingBands::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
-  //AddTask(*m_CurrentVisualization);
-  //m_StartTime = millis();
+  m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
+
+
+  bool testVisualization = false;
+  if(true == testVisualization)
+  {
+    m_Duration = 10000000;
+    m_CurrentVisualization = ScrollingMaxBand::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    AddTask(*m_CurrentVisualization);
+    m_StartTime = millis();
+  }
+  else
+  {
+    GetRandomVisualization();
+  }
 }
 bool VisualizationPlayer::CanRunMyTask()
 { 

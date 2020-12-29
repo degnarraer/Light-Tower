@@ -268,4 +268,24 @@ class ScrollingBands: public Visualization
     RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 1", 7, 7);
     SettableColorPowerModel m_PowerColorModel7 = SettableColorPowerModel("Settable Power Model"); 
 };
+
+//********* Scrolling Max Band *********
+class ScrollingMaxBand: public Visualization
+{
+  public:
+    ScrollingMaxBand( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+                    : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~ScrollingMaxBand(){ if(true == debugMemory) Serial << "ScrollingMaxBand: Deleted"; }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:    
+    ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, 0, 4, 1);
+    BandDataColorModel m_BandDataColorModel = BandDataColorModel( "Band Data Color Model" );
+    MaximumBandModel m_MaxBandModel = MaximumBandModel( "Max Band Model", 0, m_StatisticalEngineModelInterface );
+};
 #endif

@@ -199,7 +199,7 @@ class ColorSpriteView: public View
       if(true == debugMemory) Serial << "Delete ColorSpriteView\n";  
     }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
-
+    
     //ModelEventNotificationCallee
     void NewValueNotification(CRGB value) { m_MyColor = value; }
     
