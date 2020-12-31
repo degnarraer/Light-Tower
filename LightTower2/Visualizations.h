@@ -193,6 +193,33 @@ class WaterFireFromCenter: public Visualization
     SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model");
 };
 
+//********* WaterFireFromEdge *********
+class WaterFireFromEdge: public Visualization
+{
+  public:
+    WaterFireFromEdge( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
+                       : Visualization( StatisticalEngineModelInterface, LEDController){}
+    virtual ~WaterFireFromEdge() { if(true == debugMemory) Serial << "Fire: Deleted"; }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
+    void SetupVisualization();
+    bool CanRunVisualization();
+    void RunVisualization();
+  private:
+    ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, 0, 4, 1);
+    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model", 10000);
+    SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model");
+    
+    ScrollingView m_ScrollingView1 = ScrollingView("Water Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
+    ColorSpriteView m_Sprite1 = ColorSpriteView("Water Sprite 0", 0, SCREEN_HEIGHT-1, 4, 1);
+    SoundPowerModel m_PowerModel1 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model", 10000);
+    SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model");
+};
+
 //********* Vertical Band Tower *********
 class VerticalBandTower: public Visualization
 {

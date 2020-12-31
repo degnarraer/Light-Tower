@@ -96,13 +96,14 @@ bool Visualization::CanRunMyTask()
 }
 void Visualization::RunMyTask()
 {
-  MergeSubViews();
   RunVisualization();
+  MergeSubViews();
   m_LEDController.UpdateLEDs(m_MyPixelStruct);
 }
 
 void Visualization::MergeSubViews()
 {
+  
   for(int x = 0; x < SCREEN_WIDTH; ++x)
   {
     for(int y = 0; y < SCREEN_HEIGHT; ++y)
@@ -110,6 +111,7 @@ void Visualization::MergeSubViews()
       m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
     }
   }
+  
   for(int v = 0; v < m_MyViews.size(); ++v)
   {
     View *aView = m_MyViews.get(v);
@@ -125,14 +127,14 @@ void Visualization::MergeSubViews()
           aPixelStruct.Pixel[x][y].blue != 0
           )
           {
-            switch(m_MergeType)
+            switch(aView->GetMergeType())
             {
               case MergeType_Layer:
                 if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
                 m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
               break;
               case MergeType_Add:
-                if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
+                if(true == debugLEDs) Serial << "Add Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
                 m_MyPixelStruct.Pixel[x][y].red = qadd8(aPixelStruct.Pixel[x][y].red, m_MyPixelStruct.Pixel[x][y].red);
                 m_MyPixelStruct.Pixel[x][y].blue = qadd8(aPixelStruct.Pixel[x][y].blue, m_MyPixelStruct.Pixel[x][y].blue);
                 m_MyPixelStruct.Pixel[x][y].green = qadd8(aPixelStruct.Pixel[x][y].green, m_MyPixelStruct.Pixel[x][y].green);

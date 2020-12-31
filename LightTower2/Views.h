@@ -48,6 +48,12 @@ class View: public Task
                                                               , m_Y(Y)
                                                               , m_W(W)
                                                               , m_H(H){}
+    View(String Title, position X, position Y, size W, size H, MergeType MergeType): Task(Title)
+                                                              , m_X(X)
+                                                              , m_Y(Y)
+                                                              , m_W(W)
+                                                              , m_H(H)
+                                                              , m_MergeType(MergeType){}
     virtual ~View()
     {
       if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
@@ -82,8 +88,10 @@ class View: public Task
         return false;
       }
     }
+    MergeType GetMergeType(){ return m_MergeType; }
     void RemoveAllSubViews(){}
     PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
+  protected:
     PixelStruct m_MyPixelStruct;
     position m_X;
     position m_Y;
@@ -99,8 +107,8 @@ class View: public Task
     bool CanRunMyTask(){ return CanRunViewTask(); }
     void RunMyTask()
     {
-      MergeSubViews();
       RunViewTask();
+      MergeSubViews();
     }
 
     //View
@@ -117,6 +125,7 @@ class VerticalBarView: public View
   public:
     VerticalBarView(String title): View(title, 0, 0, 0, 0){}
     VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H){}
+    VerticalBarView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType){}
     virtual ~VerticalBarView()
     {
       if(true == debugMemory) Serial << "Delete VerticalBarView\n";  
@@ -145,6 +154,7 @@ class BassSpriteView: public View
 {
   public:
     BassSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
+    BassSpriteView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType){}
     virtual ~BassSpriteView()
     {
       if(true == debugMemory) Serial << "Delete BassSpriteView\n";  
@@ -172,9 +182,23 @@ enum ScrollDirection
 class ScrollingView: public View
 {
   public:
-  
-    ScrollingView(String title, ScrollDirection scrollDirection, position X, position Y, size L, size W): View(title, X, Y, L, W)
-                                                                                                        , m_ScrollDirection(scrollDirection){}
+    ScrollingView( String title
+                 , ScrollDirection scrollDirection
+                 , position X
+                 , position Y
+                 , size L
+                 , size W)
+                 : View(title, X, Y, L, W)
+                 , m_ScrollDirection(scrollDirection){}
+    ScrollingView( String title
+                 , ScrollDirection scrollDirection
+                 , position X
+                 , position Y
+                 , size L
+                 , size W
+                 , MergeType MergeType)
+                 : View(title, X, Y, L, W, MergeType)
+                 , m_ScrollDirection(scrollDirection){}
     virtual ~ScrollingView()
     {
       if(true == debugMemory) Serial << "Delete ScrollingView\n";  
@@ -194,6 +218,7 @@ class ColorSpriteView: public View
 {
   public:
     ColorSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
+    ColorSpriteView(String title, position X, position Y, size L, size W, MergeType MergeType): View(title, X, Y, L, W, MergeType){}
     virtual ~ColorSpriteView()
     {
       if(true == debugMemory) Serial << "Delete ColorSpriteView\n";  

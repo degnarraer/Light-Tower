@@ -214,6 +214,41 @@ void WaterFireFromCenter::RunVisualization()
 {
 }
 
+//WaterFireFromEdge
+Visualization* WaterFireFromEdge::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+{
+  if(true == debugMemory) Serial << "WaterFireFromEdge: Get Instance\n";
+  WaterFireFromEdge *vis = new WaterFireFromEdge(StatisticalEngineModelInterface, LEDController);
+  return vis;
+}
+void WaterFireFromEdge::SetupVisualization()
+{
+  AddView(m_ScrollingView0);
+  m_ScrollingView0.AddSubView(m_Sprite0);
+  AddModel(m_PowerModel0);
+  AddModel(m_ColorModel0);
+  AddModel(m_PowerColorModel0);
+  m_PowerColorModel0.ConnectColorModel(m_ColorModel0);
+  m_PowerColorModel0.ConnectPowerModel(m_PowerModel0);
+  m_Sprite0.ConnectColorModel(m_PowerColorModel0);
+  
+  AddView(m_ScrollingView1);
+  m_ScrollingView1.AddSubView(m_Sprite1);
+  AddModel(m_PowerModel1);
+  AddModel(m_ColorModel1);
+  AddModel(m_PowerColorModel1);
+  m_PowerColorModel1.ConnectColorModel(m_ColorModel1);
+  m_PowerColorModel1.ConnectPowerModel(m_PowerModel1);
+  m_Sprite1.ConnectColorModel(m_PowerColorModel1);  
+}
+bool WaterFireFromEdge::CanRunVisualization()
+{ 
+  return true; 
+}
+void WaterFireFromEdge::RunVisualization()
+{
+}
+
 //VerticalBandTower
 Visualization* VerticalBandTower::GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
 {

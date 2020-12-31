@@ -28,7 +28,7 @@ void View::MergeSubViews()
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
         if( aPixelStruct.Pixel[x][y].red != 0 || aPixelStruct.Pixel[x][y].green != 0 || aPixelStruct.Pixel[x][y].blue != 0 )
         {
-          switch(m_MergeType)
+          switch(aView->GetMergeType())
           {
             case MergeType_Layer:
               if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";

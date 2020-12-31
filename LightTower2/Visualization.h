@@ -65,7 +65,6 @@ class Visualization: public Task
     LinkedList<View*> m_MyNewedViews = LinkedList<View*>();
     LinkedList<Model*> m_MyNewedModels = LinkedList<Model*>();
     PixelStruct m_MyPixelStruct;
-    MergeType m_MergeType = MergeType_Add;
     void MergeSubViews();
 };
 
