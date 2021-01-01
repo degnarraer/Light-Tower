@@ -25,9 +25,28 @@
 #include "Tunes.h"
 #include "Streaming.h"
 
-typedef CRGBArray<NUMLEDS> LEDStrip;
-typedef struct { CRGB (Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]); } PixelStruct;
 
+typedef CRGBArray<NUMLEDS> LEDStrip;
+struct PixelStruct
+{ 
+  CRGB (Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]);
+  
+  public:
+  PixelStruct()
+  {
+    Clear();
+  }
+  void Clear()
+  {
+    for(int x = 0; x < SCREEN_WIDTH; ++x)
+    {
+      for(int y = 0; y < SCREEN_HEIGHT; ++y)
+      {
+        Pixel[x][y] = CRGB::Black;
+      }
+    }
+  }
+};
 class LEDController
 {
   public:

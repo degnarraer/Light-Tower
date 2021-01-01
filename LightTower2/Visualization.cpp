@@ -80,14 +80,7 @@ void Visualization::DeleteAllNewedObjects()
 void Visualization::Setup()
 {
   if(true == debugVisualization) Serial << "Setup Visualization\n"; 
-  for(int x = 0; x < SCREEN_WIDTH; ++x)
-  {
-    for(int y = 0; y < SCREEN_HEIGHT; ++ y)
-    {
-      m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
-      if(true == debugLEDs) Serial << "\tR: " << m_MyPixelStruct.Pixel[x][y].red << "\tG: " << m_MyPixelStruct.Pixel[x][y].green << "\tB: " << m_MyPixelStruct.Pixel[x][y].blue << "\n";
-    }
-  }
+  m_MyPixelStruct.Clear();
   SetupVisualization();
 }
 bool Visualization::CanRunMyTask()
@@ -96,22 +89,14 @@ bool Visualization::CanRunMyTask()
 }
 void Visualization::RunMyTask()
 {
-  RunVisualization();
   MergeSubViews();
+  RunVisualization();
   m_LEDController.UpdateLEDs(m_MyPixelStruct);
 }
 
 void Visualization::MergeSubViews()
 {
-  
-  for(int x = 0; x < SCREEN_WIDTH; ++x)
-  {
-    for(int y = 0; y < SCREEN_HEIGHT; ++y)
-    {
-      m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
-    }
-  }
-  
+  m_MyPixelStruct.Clear();
   for(int v = 0; v < m_MyViews.size(); ++v)
   {
     View *aView = m_MyViews.get(v);

@@ -40,6 +40,14 @@ enum MergeType
   MergeType_Add
 };
 
+enum Direction
+{
+  Direction_Up,
+  Direction_Down,
+  Direction_Right,
+  Direction_Left
+};
+
 class View: public Task
 {
   public:
@@ -107,8 +115,8 @@ class View: public Task
     bool CanRunMyTask(){ return CanRunViewTask(); }
     void RunMyTask()
     {
-      RunViewTask();
       MergeSubViews();
+      RunViewTask();
     }
 
     //View
@@ -218,6 +226,8 @@ class ColorSpriteView: public View
 {
   public:
     ColorSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
+    ColorSpriteView(String title, position X, position Y, size L, size W, CRGB Color): View(title, X, Y, L, W)
+                                                                                     , m_MyColor(Color){}
     ColorSpriteView(String title, position X, position Y, size L, size W, MergeType MergeType): View(title, X, Y, L, W, MergeType){}
     virtual ~ColorSpriteView()
     {
@@ -234,5 +244,175 @@ class ColorSpriteView: public View
     bool CanRunViewTask(){ return true; }
     void RunViewTask();
     CRGB m_MyColor = CRGB::Black;
+};
+
+class FadingView: public View
+{
+  public:
+    FadingView( String title
+              , unsigned int FadeLength
+              , Direction Direction
+              , position X
+              , position Y
+              , size L
+              , size W)
+              : View(title, X, Y, L, W)
+              , m_FadeLength(FadeLength)
+              , m_Direction(Direction){}
+    FadingView( String title
+              , unsigned int FadeLength
+              , Direction Direction
+              , position X
+              , position Y
+              , size L
+              , size W
+              , MergeType MergeType)
+              : View(title, X, Y, L, W, MergeType)
+              , m_FadeLength(FadeLength)
+              , m_Direction(Direction){}
+    virtual ~FadingView()
+    {
+      if(true == debugMemory) Serial << "Delete FadingView\n";  
+    }
+    
+  private:
+    //View
+    void SetupView(){}
+    bool CanRunViewTask(){ return true; }
+    void RunViewTask()
+    {
+      if(m_FadeLength > 0)
+      {
+        switch(m_Direction)
+        {
+          case Direction_Up:
+            for(int x = 0; x < SCREEN_WIDTH; ++x)
+            {
+              for(int y = 0; y < SCREEN_HEIGHT; ++y)
+              {
+                if((x >= m_X) && (x < (m_X + m_W)) && (y > m_Y) && (y < (m_Y + m_H)))
+                {
+                  PerformFade(x, y, y);
+                }
+              }
+            }
+            break;
+          case Direction_Down:
+            for(unsigned int x = 0; x < SCREEN_WIDTH; ++x)
+            {
+              unsigned int index = 0;
+              for(unsigned int y = SCREEN_HEIGHT-1; y > 0; --y)
+              {
+                if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
+                {
+                  PerformFade(x, y, index);
+                }
+                ++index;
+              }
+            }
+            break;
+          default:
+          break;
+        }
+      }
+    }
+    void PerformFade(unsigned int x, unsigned int y, unsigned int i)
+    {
+      float normalizedFade = 1.0 - ((float)i / (float)m_FadeLength);
+      m_MyPixelStruct.Pixel[x][y].red = m_MyPixelStruct.Pixel[x][y].red * normalizedFade;
+      m_MyPixelStruct.Pixel[x][y].green = m_MyPixelStruct.Pixel[x][y].green * normalizedFade;
+      m_MyPixelStruct.Pixel[x][y].blue = m_MyPixelStruct.Pixel[x][y].blue * normalizedFade;
+    }
+    Direction m_Direction = Direction_Down;
+    unsigned int m_FadeLength = 0;
+};
+
+class RotatingView: public View
+{
+  public:
+    RotatingView( String title
+                , Direction Direction
+                , position X
+                , position Y
+                , size L
+                , size W)
+                : View(title, X, Y, L, W)
+                , m_Direction(Direction){}
+    RotatingView( String title
+                , Direction Direction
+                , position X
+                , position Y
+                , size L
+                , size W
+                , MergeType MergeType)
+                : View(title, X, Y, L, W, MergeType)
+                , m_Direction(Direction){}
+    virtual ~RotatingView()
+    {
+      if(true == debugMemory) Serial << "Delete RotatingView\n";  
+    }
+    
+  private:
+    //View
+    void SetupView(){}
+    bool CanRunViewTask()
+    { 
+      //m_MyPixelStruct.Clear(); 
+      return true; 
+    }
+    void RunViewTask()
+    {
+      ++m_Count;
+      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      {
+        for(int y = 0; y < SCREEN_HEIGHT; ++y)
+        {
+          if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H)))
+          {
+            switch(m_Direction)
+            {
+              case Direction_Up:
+              {
+                unsigned int rotation = m_Count % m_H;
+                int source = y-rotation;
+                if(source < m_Y) { source = m_H - (rotation - y); }
+                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[x][source];
+              }
+              break;
+              case Direction_Down:
+              {
+                unsigned int rotation = m_Count % m_H;
+                int source = y+rotation;
+                if(source >= m_Y + m_H) { source = m_Y - (m_H - (y + rotation)); }
+                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[x][source];
+              }
+              break;
+              case Direction_Right:
+              {
+                unsigned int rotation = m_Count % m_W;
+                int source = x+rotation;
+                if(source >= m_X + m_W) { source = m_X - (m_W - (x + rotation)); }
+                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[source][y];
+              }
+              break;
+              case Direction_Left:
+              {
+                unsigned int rotation = m_Count % m_W;
+                int source = x-rotation;
+                if(source < m_X) { source = m_W - (rotation - x); }
+                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[source][y];
+              }
+              break;
+              default:
+              break;
+            }
+          }
+        }
+      }
+      m_MyPixelStruct = m_ResultingPixels;
+    }
+    PixelStruct m_ResultingPixels;
+    Direction m_Direction = Direction_Right;
+    unsigned int m_Count = 0;
 };
 #endif

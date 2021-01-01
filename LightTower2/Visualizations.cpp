@@ -223,7 +223,8 @@ Visualization* WaterFireFromEdge::GetInstance(StatisticalEngineModelInterface &S
 }
 void WaterFireFromEdge::SetupVisualization()
 {
-  AddView(m_ScrollingView0);
+  AddView(m_FadingView0);
+  m_FadingView0.AddSubView(m_ScrollingView0);
   m_ScrollingView0.AddSubView(m_Sprite0);
   AddModel(m_PowerModel0);
   AddModel(m_ColorModel0);
@@ -232,7 +233,8 @@ void WaterFireFromEdge::SetupVisualization()
   m_PowerColorModel0.ConnectPowerModel(m_PowerModel0);
   m_Sprite0.ConnectColorModel(m_PowerColorModel0);
   
-  AddView(m_ScrollingView1);
+  AddView(m_FadingView1);
+  m_FadingView1.AddSubView(m_ScrollingView1);
   m_ScrollingView1.AddSubView(m_Sprite1);
   AddModel(m_PowerModel1);
   AddModel(m_ColorModel1);
@@ -261,15 +263,16 @@ void VerticalBandTower::SetupVisualization()
   int numVisualizations = m_StatisticalEngineModelInterface.GetNumberOfBands();
   for(int i = 0; i < numVisualizations; ++i)
   {
-    int yPosition = (int)round(i*(float)SCREEN_HEIGHT/(float)numVisualizations);
-    int visHeight = (int)round((float)SCREEN_HEIGHT/(float)numVisualizations);
+    int yPosition1 = (int)round(i*(float)SCREEN_HEIGHT/(float)numVisualizations);
+    int yPosition2 = (int)round((i+1)*(float)SCREEN_HEIGHT/(float)numVisualizations);
+    int visHeight = yPosition2 - yPosition1;
     int band = i;
-    if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition << "\tH:" << visHeight << "\tB:" << band << " of " << numVisualizations << "\n";
-    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition, SCREEN_WIDTH, visHeight);
+    if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numVisualizations << "\n";
+    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight);
     AddNewedView(*sprite);
     ReducedBandsBandPowerModel *bandPower = new ReducedBandsBandPowerModel("Sound Power Model", i, 0, numVisualizations, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
-    RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numVisualizations-1);
+    RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numVisualizations);
     AddNewedModel(*colorModel);
     SettableColorPowerModel *settableColorPowerModel = new SettableColorPowerModel("Settable Power Model");
     AddNewedModel(*settableColorPowerModel);
@@ -358,8 +361,11 @@ void ScrollingBands::SetupVisualization()
   m_ScrollingView1.AddSubView(m_Sprite6);
   m_ScrollingView1.AddSubView(m_Sprite7);
   
-  AddView(m_ScrollingView0);
-  AddView(m_ScrollingView1);
+  m_FadingView0.AddSubView(m_ScrollingView0);
+  m_FadingView1.AddSubView(m_ScrollingView1);
+  
+  AddView(m_FadingView0);
+  AddView(m_FadingView1);
 }
 bool ScrollingBands::CanRunVisualization()
 {

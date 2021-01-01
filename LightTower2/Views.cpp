@@ -4,14 +4,6 @@
 void View::Setup()
 {
   if(true == debugLEDs) Serial << "Setup View\n";
-  for(int x = 0; x < SCREEN_WIDTH; ++x)
-  {
-    for(int y = 0; y < SCREEN_HEIGHT; ++y)
-    {
-      m_MyPixelStruct.Pixel[x][y] = CRGB::Black;
-      if(true == debugLEDs) Serial << "\tR: " << m_MyPixelStruct.Pixel[x][y].red << "\tG: " << m_MyPixelStruct.Pixel[x][y].green << "\tB: " << m_MyPixelStruct.Pixel[x][y].blue << "\n";
-    }
-  }
   SetupView();
 }
 
