@@ -43,9 +43,9 @@ void View::MergeSubViews()
 
 void VerticalBarView::RunViewTask()
 {
-  int scaledHeight = (m_Y + round(m_HeightScalar*(float)m_H));
-  if(scaledHeight > m_Y + m_H) scaledHeight = m_Y + m_H;
-  if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << " Scaled Height: " << scaledHeight << "\n";
+  m_ScaledHeight = (m_Y + round(m_HeightScalar*(float)m_H));
+  if(m_ScaledHeight > m_Y + m_H) m_ScaledHeight = m_Y + m_H;
+  if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << " Scaled Height: " << m_ScaledHeight << "\n";
   for(int x = 0; x<SCREEN_WIDTH; ++x)
   {
     for(int y = 0; y<SCREEN_HEIGHT; ++y)
@@ -55,7 +55,7 @@ void VerticalBarView::RunViewTask()
           (x >= m_X) && 
           (x < (m_X + m_W)) &&
           (y >= m_Y) && 
-          (y < scaledHeight)
+          (y < m_ScaledHeight)
         )
       {
         m_MyPixelStruct.Pixel[x][y] = m_Color;

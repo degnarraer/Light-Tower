@@ -41,6 +41,47 @@ struct BandData
 };
 
 
+struct Position
+{
+  int X;
+  int Y;
+  bool operator==(const Position& a)
+  {
+    return (true == ((a.X == X) && (a.Y == Y)))? true:false;
+  }
+  bool operator!=(const Position& a)
+  {
+    return (true == ((a.X == X) && (a.Y == Y)))? false:true;
+  }
+};
+struct Size
+{
+  unsigned int W;
+  unsigned int H;
+  bool operator==(const Size& a)
+  {
+    return (true == ((a.W == W) && (a.H == H)))? true:false;
+  }
+  bool operator!=(const Size& a)
+  {
+    return (true == ((a.W == W) && (a.H == H)))? false:true;
+  }
+};
+struct Coordinates
+{
+  struct Position Position;
+  struct Size Size;
+  bool operator==(const Coordinates& a)
+  {
+    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H==Size.H)))? true:false;
+  }
+  bool operator!=(const Coordinates& a)
+  {
+    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H==Size.H)))? false:true;
+  }
+};
+
+
 template <class T> class ModelEventNotificationCaller;
 template <class T>
 class ModelEventNotificationCallee
@@ -614,6 +655,65 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     { 
       m_InputColor = Value.Color;
       m_NormalizedPower = Value.Power;
+    }
+};
+
+class SlowFallingPositionModel: public ModelWithNewValueNotification<Position>
+                              , public ModelEventNotificationCallee<Position>
+{
+  public:
+    SlowFallingPositionModel( String title
+                            , unsigned long fallTime)
+                            : ModelWithNewValueNotification<Position>(title)
+                            , m_FallTime(fallTime){}
+    
+  void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this); }
+  
+  private:
+    unsigned long m_StartTime;
+    unsigned long m_CurrentTime;
+    unsigned long m_FallTime;
+    Position m_Position = { 0, 0 };
+    Position m_LowerPositionLimit = { 0, 0 };
+    
+    //Model
+    void UpdateValue(){ SetCurrentValue( m_Position ); }
+    void SetupModel(){ m_StartTime = millis(); }
+    bool CanRunModelTask()
+    {
+      m_CurrentTime = millis();
+      if(m_Position.Y < m_LowerPositionLimit.Y)
+      {
+        m_Position = m_LowerPositionLimit;
+        UpdateValue();
+      }
+      if(m_CurrentTime - m_StartTime > m_FallTime)
+      {
+        return true; 
+      }
+      else
+      {
+        return false;
+      }
+    }
+    void RunModelTask() 
+    {
+      m_StartTime = millis();
+      if(m_Position.Y > m_LowerPositionLimit.Y)
+      {
+        --m_Position.Y;
+      }
+      else
+      {
+        m_Position = m_LowerPositionLimit;
+      }
+    }
+    
+    //ModelEventNotificationCallee
+    void NewValueNotification(Position value) 
+    { 
+      m_LowerPositionLimit = value;
+      UpdateValue();
     }
 };
 #endif

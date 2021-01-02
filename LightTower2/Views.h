@@ -127,27 +127,31 @@ class View: public Task
 };
 
 class VerticalBarView: public View
+                     , public ModelWithNewValueNotification<Position>
                      , public ModelEventNotificationCallee<float>
                      , public ModelEventNotificationCallee<CRGB>
 {
   public:
-    VerticalBarView(String title): View(title, 0, 0, 0, 0){}
-    VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H){}
-    VerticalBarView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType){}
+    VerticalBarView(String title): View(title, 0, 0, 0, 0)
+                                 , ModelWithNewValueNotification<Position>(title){}
+    VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H)
+                                                                         , ModelWithNewValueNotification<Position>(title){}
+    VerticalBarView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
+                                                                                              , ModelWithNewValueNotification<Position>(title){}
     virtual ~VerticalBarView()
     {
       if(true == debugMemory) Serial << "Delete VerticalBarView\n";  
     }
     void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
     void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
-    void SetColor(CRGB color) { m_Color = color; }
-    void SetNormalizedHeight(float height) { m_HeightScalar = height; }
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
+    int m_ScaledHeight;
+    Position m_Peak;
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float value) { SetNormalizedHeight(value); }
+    void NewValueNotification(float value) { m_HeightScalar = value; }
     void NewValueNotification(CRGB value) { m_Color = value; }
     
   private:
@@ -155,6 +159,16 @@ class VerticalBarView: public View
     void SetupView() {}
     bool CanRunViewTask() { return true; }
     void RunViewTask();
+
+    //Model
+    void SetupModel(){}
+    bool CanRunModelTask(){ return true;}
+    void RunModelTask()
+    {
+      m_Peak.X = m_X;
+      m_Peak.Y = m_ScaledHeight;
+    }
+    void UpdateValue(){ SetCurrentValue(m_Peak); }
 };
 
 class BassSpriteView: public View
@@ -223,20 +237,29 @@ class ScrollingView: public View
 
 class ColorSpriteView: public View
                      , public ModelEventNotificationCallee<CRGB>
+                     , public ModelEventNotificationCallee<Position>
 {
   public:
     ColorSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
     ColorSpriteView(String title, position X, position Y, size L, size W, CRGB Color): View(title, X, Y, L, W)
                                                                                      , m_MyColor(Color){}
+    ColorSpriteView(String title, position X, position Y, size L, size W, CRGB Color, MergeType MergeType): View(title, X, Y, L, W, MergeType)
+                                                                                                          , m_MyColor(Color){}
     ColorSpriteView(String title, position X, position Y, size L, size W, MergeType MergeType): View(title, X, Y, L, W, MergeType){}
     virtual ~ColorSpriteView()
     {
       if(true == debugMemory) Serial << "Delete ColorSpriteView\n";  
     }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
     
     //ModelEventNotificationCallee
     void NewValueNotification(CRGB value) { m_MyColor = value; }
+    void NewValueNotification(Position value) 
+    { 
+      m_X = value.X;
+      m_Y = value.Y;
+    }
     
   private:
     //View
