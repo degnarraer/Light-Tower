@@ -31,11 +31,11 @@ void VUMeter::SetupVisualization()
   AddModel(m_SoundPower);
   AddModel(m_VerticalBar);
   AddModel(m_ColorModel);
-  AddModel(m_SlowFallingPositionModel);
+  AddModel(m_GravitationalModel);
   m_VerticalBar.ConnectBarHeightModel(m_SoundPower);
   m_VerticalBar.ConnectBarColorModel(m_ColorModel);
-  m_SlowFallingPositionModel.ConnectPositionModel(m_VerticalBar);
-  m_PeakSprite.ConnectPositionModel(m_SlowFallingPositionModel);
+  m_GravitationalModel.ConnectPositionModel(m_VerticalBar);
+  m_PeakSprite.ConnectPositionModel(m_GravitationalModel);
 }
 bool VUMeter::CanRunVisualization(){ return true; }
 void VUMeter::RunVisualization(){}
@@ -49,94 +49,93 @@ Visualization* VUMeter8Band::GetInstance(StatisticalEngineModelInterface &Statis
 }
 void VUMeter8Band::SetupVisualization()
 {
-  
   AddView(m_VerticalBar0);
   AddView(m_PeakSprite0);
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
   m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
-  m_PeakSprite0.ConnectPositionModel(m_SlowFallingPositionModel0);
-  m_SlowFallingPositionModel0.ConnectPositionModel(m_VerticalBar0);
+  m_PeakSprite0.ConnectPositionModel(m_GravitationalModel0);
+  m_GravitationalModel0.ConnectPositionModel(m_VerticalBar0);
   AddModel(m_BandPower0);
   AddModel(m_ColorModel0);
   AddModel(m_VerticalBar0);
-  AddModel(m_SlowFallingPositionModel0); 
+  AddModel(m_GravitationalModel0); 
   
   AddView(m_VerticalBar1);
   AddView(m_PeakSprite1);
   m_VerticalBar1.ConnectBarHeightModel(m_BandPower1);
   m_VerticalBar1.ConnectBarColorModel(m_ColorModel1);
-  m_PeakSprite1.ConnectPositionModel(m_SlowFallingPositionModel1);
-  m_SlowFallingPositionModel1.ConnectPositionModel(m_VerticalBar1);
+  m_PeakSprite1.ConnectPositionModel(m_GravitationalModel1);
+  m_GravitationalModel1.ConnectPositionModel(m_VerticalBar1);
   AddModel(m_BandPower1);
   AddModel(m_ColorModel1);
   AddModel(m_VerticalBar1);
-  AddModel(m_SlowFallingPositionModel1);
+  AddModel(m_GravitationalModel1);
   
   AddView(m_VerticalBar2);
   AddView(m_PeakSprite2);
   m_VerticalBar2.ConnectBarHeightModel(m_BandPower2);
   m_VerticalBar2.ConnectBarColorModel(m_ColorModel2);
-  m_PeakSprite2.ConnectPositionModel(m_SlowFallingPositionModel2);
-  m_SlowFallingPositionModel2.ConnectPositionModel(m_VerticalBar2);
+  m_PeakSprite2.ConnectPositionModel(m_GravitationalModel2);
+  m_GravitationalModel2.ConnectPositionModel(m_VerticalBar2);
   AddModel(m_BandPower2);
   AddModel(m_ColorModel2);
   AddModel(m_VerticalBar2);
-  AddModel(m_SlowFallingPositionModel2);
+  AddModel(m_GravitationalModel2);
   
   AddView(m_VerticalBar3);
   AddView(m_PeakSprite3);
   m_VerticalBar3.ConnectBarHeightModel(m_BandPower3);
   m_VerticalBar3.ConnectBarColorModel(m_ColorModel3);
-  m_PeakSprite3.ConnectPositionModel(m_SlowFallingPositionModel3);
-  m_SlowFallingPositionModel3.ConnectPositionModel(m_VerticalBar3);
+  m_PeakSprite3.ConnectPositionModel(m_GravitationalModel3);
+  m_GravitationalModel3.ConnectPositionModel(m_VerticalBar3);
   AddModel(m_BandPower3);
   AddModel(m_ColorModel3);
   AddModel(m_VerticalBar3);
-  AddModel(m_SlowFallingPositionModel3);
+  AddModel(m_GravitationalModel3);
   
   AddView(m_VerticalBar4);
   AddView(m_PeakSprite4);
   m_VerticalBar4.ConnectBarHeightModel(m_BandPower4);
   m_VerticalBar4.ConnectBarColorModel(m_ColorModel4);
-  m_PeakSprite4.ConnectPositionModel(m_SlowFallingPositionModel4);
-  m_SlowFallingPositionModel4.ConnectPositionModel(m_VerticalBar4);
+  m_PeakSprite4.ConnectPositionModel(m_GravitationalModel4);
+  m_GravitationalModel4.ConnectPositionModel(m_VerticalBar4);
   AddModel(m_BandPower4);
   AddModel(m_ColorModel4);
   AddModel(m_VerticalBar4);
-  AddModel(m_SlowFallingPositionModel4);
+  AddModel(m_GravitationalModel4);
   
   AddView(m_VerticalBar5);
   AddView(m_PeakSprite5);
   m_VerticalBar5.ConnectBarHeightModel(m_BandPower5);
   m_VerticalBar5.ConnectBarColorModel(m_ColorModel5);
-  m_PeakSprite5.ConnectPositionModel(m_SlowFallingPositionModel5);
-  m_SlowFallingPositionModel5.ConnectPositionModel(m_VerticalBar5);
+  m_PeakSprite5.ConnectPositionModel(m_GravitationalModel5);
+  m_GravitationalModel5.ConnectPositionModel(m_VerticalBar5);
   AddModel(m_BandPower5);
   AddModel(m_ColorModel5);
   AddModel(m_VerticalBar5);
-  AddModel(m_SlowFallingPositionModel5);
+  AddModel(m_GravitationalModel5);
   
   AddView(m_VerticalBar6);
   AddView(m_PeakSprite6);
   m_VerticalBar6.ConnectBarHeightModel(m_BandPower6);
   m_VerticalBar6.ConnectBarColorModel(m_ColorModel6);
-  m_PeakSprite6.ConnectPositionModel(m_SlowFallingPositionModel6);
-  m_SlowFallingPositionModel6.ConnectPositionModel(m_VerticalBar6);
+  m_PeakSprite6.ConnectPositionModel(m_GravitationalModel6);
+  m_GravitationalModel6.ConnectPositionModel(m_VerticalBar6);
   AddModel(m_BandPower6);
   AddModel(m_ColorModel6);
   AddModel(m_VerticalBar6);
-  AddModel(m_SlowFallingPositionModel6);
+  AddModel(m_GravitationalModel6);
   
   AddView(m_VerticalBar7);
   AddView(m_PeakSprite7);
   m_VerticalBar7.ConnectBarHeightModel(m_BandPower7);
   m_VerticalBar7.ConnectBarColorModel(m_ColorModel7);
-  m_PeakSprite7.ConnectPositionModel(m_SlowFallingPositionModel7);
-  m_SlowFallingPositionModel7.ConnectPositionModel(m_VerticalBar7);
+  m_PeakSprite7.ConnectPositionModel(m_GravitationalModel7);
+  m_GravitationalModel7.ConnectPositionModel(m_VerticalBar7);
   AddModel(m_BandPower7);
   AddModel(m_ColorModel7);
   AddModel(m_VerticalBar7);
-  AddModel(m_SlowFallingPositionModel7);
+  AddModel(m_GravitationalModel7);
 }
 bool VUMeter8Band::CanRunVisualization(){ return true; }
 void VUMeter8Band::RunVisualization(){}
@@ -155,33 +154,33 @@ void VUMeter3Band::SetupVisualization()
   AddModel(m_BandPower0);
   AddModel(m_ColorModel0);
   AddModel(m_VerticalBar0);
-  AddModel(m_SlowFallingPositionModel0);
+  AddModel(m_GravitationalModel0);
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
   m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
-  m_PeakSprite0.ConnectPositionModel(m_SlowFallingPositionModel0);
-  m_SlowFallingPositionModel0.ConnectPositionModel(m_VerticalBar0);
+  m_PeakSprite0.ConnectPositionModel(m_GravitationalModel0);
+  m_GravitationalModel0.ConnectPositionModel(m_VerticalBar0);
   
   AddView(m_VerticalBar1);
   AddView(m_PeakSprite1);
   AddModel(m_BandPower1);
   AddModel(m_ColorModel1);
   AddModel(m_VerticalBar1);
-  AddModel(m_SlowFallingPositionModel1);
+  AddModel(m_GravitationalModel1);
   m_VerticalBar1.ConnectBarHeightModel(m_BandPower1);
   m_VerticalBar1.ConnectBarColorModel(m_ColorModel1);
-  m_PeakSprite1.ConnectPositionModel(m_SlowFallingPositionModel1);
-  m_SlowFallingPositionModel1.ConnectPositionModel(m_VerticalBar1);
+  m_PeakSprite1.ConnectPositionModel(m_GravitationalModel1);
+  m_GravitationalModel1.ConnectPositionModel(m_VerticalBar1);
   
   AddView(m_VerticalBar2);
   AddView(m_PeakSprite2);
   AddModel(m_BandPower2);
   AddModel(m_ColorModel2);
   AddModel(m_VerticalBar2);
-  AddModel(m_SlowFallingPositionModel2);
+  AddModel(m_GravitationalModel2);
   m_VerticalBar2.ConnectBarHeightModel(m_BandPower2);
   m_VerticalBar2.ConnectBarColorModel(m_ColorModel2);
-  m_PeakSprite2.ConnectPositionModel(m_SlowFallingPositionModel2);
-  m_SlowFallingPositionModel2.ConnectPositionModel(m_VerticalBar2);
+  m_PeakSprite2.ConnectPositionModel(m_GravitationalModel2);
+  m_GravitationalModel2.ConnectPositionModel(m_VerticalBar2);
 }
 bool VUMeter3Band::CanRunVisualization(){ return true; }
 void VUMeter3Band::RunVisualization(){}

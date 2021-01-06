@@ -28,7 +28,7 @@ const int    debugLevel = 1;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = false;
+const bool   debugFPS = true;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = false;
@@ -37,6 +37,7 @@ const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugModels = false;
+const bool   debugGravitationalModel = false;
 const bool   debugMemory = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
@@ -51,6 +52,7 @@ const bool   debugRequired = ( debugMode ||
                                debugView ||
                                debugLEDs ||
                                debugModels ||
+                               debugGravitationalModel ||
                                debugMemory);
 
 // LED SETUP
@@ -58,6 +60,7 @@ static const unsigned int NUMLEDS = 60;
 static const unsigned int NUMSTRIPS = 4;
 static const unsigned int SCREEN_WIDTH = NUMSTRIPS;
 static const unsigned int SCREEN_HEIGHT = NUMLEDS;
+static const float LEDS_PER_METER = 60.0;
 const unsigned int DATA_PIN_STRIP1 = 4;  //STRIP1 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP2 = 5;  //STRIP2 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP3 = 6;  //STRIP3 PIN ASSIGNMENT
@@ -65,8 +68,6 @@ const unsigned int DATA_PIN_STRIP4 = 7;  //STRIP4 PIN ASSIGNMENT
 
 // VISUALIZATION TUNES
 const float MAX_DISPLAYED_FREQ = 10000.0;
-const unsigned int NUMBER_OF_TICK_TIMERS = 10;
-const unsigned int NUMBER_OF_LAYERS = 10;
 
 //FFT Tunes
 const int FFT_MAX = 512;

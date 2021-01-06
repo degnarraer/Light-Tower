@@ -175,7 +175,7 @@ class BassSpriteView: public View
                     , public ModelEventNotificationCallee<float>
 {
   public:
-    BassSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
+    BassSpriteView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H){}
     BassSpriteView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType){}
     virtual ~BassSpriteView()
     {
@@ -208,18 +208,18 @@ class ScrollingView: public View
                  , ScrollDirection scrollDirection
                  , position X
                  , position Y
-                 , size L
-                 , size W)
-                 : View(title, X, Y, L, W)
+                 , size W
+                 , size H)
+                 : View(title, X, Y, W, H)
                  , m_ScrollDirection(scrollDirection){}
     ScrollingView( String title
                  , ScrollDirection scrollDirection
                  , position X
                  , position Y
-                 , size L
                  , size W
+                 , size H
                  , MergeType MergeType)
-                 : View(title, X, Y, L, W, MergeType)
+                 : View(title, X, Y, W, H, MergeType)
                  , m_ScrollDirection(scrollDirection){}
     virtual ~ScrollingView()
     {
@@ -240,16 +240,36 @@ class ColorSpriteView: public View
                      , public ModelEventNotificationCallee<Position>
 {
   public:
-    ColorSpriteView(String title, position X, position Y, size L, size W): View(title, X, Y, L, W){}
-    ColorSpriteView(String title, position X, position Y, size L, size W, CRGB Color): View(title, X, Y, L, W)
-                                                                                     , m_MyColor(Color){}
-    ColorSpriteView(String title, position X, position Y, size L, size W, CRGB Color, MergeType MergeType): View(title, X, Y, L, W, MergeType)
-                                                                                                          , m_MyColor(Color){}
-    ColorSpriteView(String title, position X, position Y, size L, size W, MergeType MergeType): View(title, X, Y, L, W, MergeType){}
-    virtual ~ColorSpriteView()
-    {
-      if(true == debugMemory) Serial << "Delete ColorSpriteView\n";  
-    }
+    ColorSpriteView( String title
+                   , position X
+                   , position Y
+                   , size W, size H)
+                   : View(title, X, Y, W, H){}
+    ColorSpriteView( String title
+                   , position X
+                   , position Y
+                   , size W
+                   , size H
+                   , CRGB Color)
+                   : View(title, X, Y, W, H)
+                   , m_MyColor(Color){}
+    ColorSpriteView( String title
+                   , position X
+                   , position Y
+                   , size W
+                   , size H
+                   , CRGB Color
+                   , MergeType MergeType)
+                   : View(title, X, Y, W, H, MergeType)
+                   , m_MyColor(Color){}
+    ColorSpriteView( String title
+                   , position X
+                   , position Y
+                   , size W
+                   , size H
+                   , MergeType MergeType)
+                   : View(title, X, Y, W, H, MergeType){}
+    virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete ColorSpriteView\n"; }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
     void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
     
@@ -277,9 +297,9 @@ class FadingView: public View
               , Direction Direction
               , position X
               , position Y
-              , size L
-              , size W)
-              : View(title, X, Y, L, W)
+              , size W
+              , size H)
+              : View(title, X, Y, W, H)
               , m_FadeLength(FadeLength)
               , m_Direction(Direction){}
     FadingView( String title
@@ -287,10 +307,10 @@ class FadingView: public View
               , Direction Direction
               , position X
               , position Y
-              , size L
               , size W
+              , size H
               , MergeType MergeType)
-              : View(title, X, Y, L, W, MergeType)
+              : View(title, X, Y, W, H, MergeType)
               , m_FadeLength(FadeLength)
               , m_Direction(Direction){}
     virtual ~FadingView()
@@ -357,18 +377,18 @@ class RotatingView: public View
                 , Direction Direction
                 , position X
                 , position Y
-                , size L
-                , size W)
-                : View(title, X, Y, L, W)
+                , size W
+                , size H)
+                : View(title, X, Y, W, H)
                 , m_Direction(Direction){}
     RotatingView( String title
                 , Direction Direction
                 , position X
                 , position Y
-                , size L
                 , size W
+                , size H
                 , MergeType MergeType)
-                : View(title, X, Y, L, W, MergeType)
+                : View(title, X, Y, W, H, MergeType)
                 , m_Direction(Direction){}
     virtual ~RotatingView()
     {

@@ -658,62 +658,84 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     }
 };
 
-class SlowFallingPositionModel: public ModelWithNewValueNotification<Position>
+class GravitationalModel: public ModelWithNewValueNotification<Position>
                               , public ModelEventNotificationCallee<Position>
 {
   public:
-    SlowFallingPositionModel( String title
-                            , unsigned long fallTime)
+    GravitationalModel( String title
+                            , float gravitationalScaler
+                            , float maxInitialVelocity)
                             : ModelWithNewValueNotification<Position>(title)
-                            , m_FallTime(fallTime){}
+                            , m_GravitationalScaler(gravitationalScaler)
+                            , m_MaxInitialVelocity(maxInitialVelocity){}
     
   void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this); }
   
   private:
     unsigned long m_StartTime;
     unsigned long m_CurrentTime;
-    unsigned long m_FallTime;
+    unsigned long m_PreviousLoopTime;
+    float m_Duration = 0.0;
+    float m_GravitationalScaler = 1.0;
+    float m_InitialVelocity = 0.0;
+    float m_MaxInitialVelocity = 0.0;
     Position m_Position = { 0, 0 };
     Position m_LowerPositionLimit = { 0, 0 };
+    Position m_StartingPosition = { 0, 0 };
     
     //Model
     void UpdateValue(){ SetCurrentValue( m_Position ); }
-    void SetupModel(){ m_StartTime = millis(); }
+    void SetupModel()
+    { 
+      m_StartTime = millis();
+      m_CurrentTime = m_StartTime;
+      m_PreviousLoopTime = m_StartTime;
+    }
     bool CanRunModelTask()
     {
-      m_CurrentTime = millis();
-      if(m_Position.Y < m_LowerPositionLimit.Y)
-      {
-        m_Position = m_LowerPositionLimit;
-        UpdateValue();
-      }
-      if(m_CurrentTime - m_StartTime > m_FallTime)
-      {
-        return true; 
-      }
-      else
-      {
-        return false;
-      }
+      return true;
     }
     void RunModelTask() 
     {
-      m_StartTime = millis();
-      if(m_Position.Y > m_LowerPositionLimit.Y)
-      {
-        --m_Position.Y;
-      }
-      else
-      {
-        m_Position = m_LowerPositionLimit;
-      }
+      m_CurrentTime = millis();
+      m_Duration = (m_CurrentTime - m_StartTime) / 1000.0;
+      m_Position.Y = m_StartingPosition.Y + (GetGravitationalPosition(m_Duration, m_InitialVelocity, m_GravitationalScaler) * LEDS_PER_METER);
+      if(m_Position.Y < m_LowerPositionLimit.Y) StartExperiment();
+      if(true == debugModels || (true == debugGravitationalModel)) Serial << "GravitationalModel: \tPosition.Y " << m_Position.Y << "\tStart Position.Y " << m_StartingPosition.Y << "\n";
+      m_PreviousLoopTime = m_CurrentTime;
     }
     
     //ModelEventNotificationCallee
     void NewValueNotification(Position value) 
     { 
       m_LowerPositionLimit = value;
-      UpdateValue();
+    }
+    void StartExperiment()
+    {
+      m_StartTime = millis();
+      float dT = (m_CurrentTime - m_PreviousLoopTime)/1000.0;
+      int dY = m_LowerPositionLimit.Y - m_Position.Y;   //Delta Pixels
+      float dM = (float)dY / (float)LEDS_PER_METER;  //Delta Meters
+      if(dT == 0)
+      {
+        m_InitialVelocity = m_MaxInitialVelocity;
+      }
+      else
+      {
+        m_InitialVelocity = dM/dT;
+      }
+      if(m_InitialVelocity > m_MaxInitialVelocity) m_InitialVelocity = m_MaxInitialVelocity;
+      m_Position = m_LowerPositionLimit;
+      m_StartingPosition = m_LowerPositionLimit;
+      if(true == debugModels || (true == debugGravitationalModel)) Serial << "GravitationalModel: \tdY: " << dY << "\tdM: " << dM <<  "\tdT: " << dT << "\tInitial Velocity: " << m_InitialVelocity << "\n";
+    }
+    float GetGravitationalPosition(float t, float initialVelocity, float gravitationalScaler) 
+    {
+      //Returns distance an object falls in meters for t seconds 
+      float d = 0;
+      const float g = -9.802 * gravitationalScaler;
+      d = initialVelocity*t + ((0.5 * g) * (pow(t, 2)));
+      return d;
     }
 };
 #endif
