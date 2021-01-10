@@ -20,7 +20,7 @@
 #define VisualizationPlayer_H
 
 #include "Streaming.h"
-#include "Visualizations.h"
+#include "VisualizationFactory.h"
 #include "TaskInterface.h"
 #include "Statistical_Engine.h"
 #include "LEDControllerInterface.h"

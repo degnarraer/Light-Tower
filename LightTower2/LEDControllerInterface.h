@@ -27,25 +27,25 @@
 
 
 typedef CRGBArray<NUMLEDS> LEDStrip;
+
 struct PixelStruct
 { 
   CRGB (Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]);
-  
   public:
-  PixelStruct()
-  {
-    Clear();
-  }
-  void Clear()
-  {
-    for(int x = 0; x < SCREEN_WIDTH; ++x)
+    PixelStruct()
     {
-      for(int y = 0; y < SCREEN_HEIGHT; ++y)
+      Clear();
+    }
+    void Clear()
+    {
+      for(int x = 0; x < SCREEN_WIDTH; ++x)
       {
-        Pixel[x][y] = CRGB::Black;
+        for(int y = 0; y < SCREEN_HEIGHT; ++y)
+        {
+          Pixel[x][y] = CRGB::Black;
+        }
       }
     }
-  }
 };
 class LEDController
 {

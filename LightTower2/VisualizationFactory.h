@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Visualizations_H
-#define Visualizatiosn_H
+#ifndef VisualizationFactory_H
+#define VisualizatiosnFactory_H
 
 #include "Visualization.h"
 
