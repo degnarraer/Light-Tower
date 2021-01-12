@@ -4,8 +4,8 @@
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
 
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,8 +17,8 @@
     */
 /**
  * @file LightTower.ino
- *
- *
+ * *
+
  */
 
 #include <Arduino.h>
@@ -33,10 +33,7 @@ unsigned int frameCount = 0;
 
 void setup()
 {
-  if( true == debugMode ||
-      true == debugNanInf ||
-      true == debugPlotMic ||
-      true == debugPlotFFT)
+  if( true == debugRequired )
   {
     Serial.begin(115200);
   }
@@ -70,7 +67,7 @@ void loop()
   if(lapsedTime >= 1000)
   {
     startMillis = millis();
-    if(true == debugMode && debugLevel >= 2) Serial << "FPS: " << frameCount / (lapsedTime/1000.0) << "\n";
+    if(true == debugFPS) Serial << "FPS: " << frameCount / (lapsedTime/1000.0) << "\n";
     frameCount = 0;
   }
 }

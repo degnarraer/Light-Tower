@@ -42,12 +42,13 @@ struct VisualizationConfig
   bool isTuner;
 };
     
-const VisualizationConfig visualizationConfig[35] PROGMEM =
+const VisualizationConfig visualizationConfig[36] PROGMEM =
 {
   //visualizationEntry                                                                    Visualization Instantiation                            Transition Instantiation           isTransition   isVisualization   isForeground  isBackground  isConfirmation  isTuner
 { VisualizationEntries::VisualizationEntries_InstantSwitch,                               NULL,                                                  InstantSwitch::GetInstance,        true,          false,            true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_FadeTransition,                              NULL,                                                  FadeTransition::GetInstance,       true,          false,            true,         false,        false,          false },
-{ VisualizationEntries::VisualizationEntries_MixerTransition,                             NULL,                                                  MixerTransition::GetInstance,      false,         false,            true,         true,         false,          false },
+{ VisualizationEntries::VisualizationEntries_MixerAddTransition,                          NULL,                                                  MixerAddTransition::GetInstance,   false,         false,            true,         true,         false,          false },
+{ VisualizationEntries::VisualizationEntries_MixerMergeTransition,                        NULL,                                                  MixerMergeTransition::GetInstance, false,         false,            true,         true,         false,          false },
 { VisualizationEntries::VisualizationEntries_SlideUpTransition,                           NULL,                                                  SlideUpTransition::GetInstance,    true,          false,            true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_SlideDownTransition,                         NULL,                                                  SlideDownTransition::GetInstance,  true,          false,            true,         false,        false,          false },
 { VisualizationEntries::VisualizationEntries_SplitTransition,                             NULL,                                                  SplitTransition::GetInstance,      true,          false,            true,         false,        false,          false },

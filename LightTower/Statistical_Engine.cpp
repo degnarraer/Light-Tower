@@ -48,6 +48,7 @@ void StatisticalEngine::UpdateSoundData()
     UpdateSoundState();
     ++i;
     //if(true == debugMode && debugLevel >= 0 && i >= MAX_BUFFERS_TO_PROCESS) Serial << "2\n";
+    if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tIntegrator: " << m_silenceIntegrator << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
   }
 }
 
@@ -64,12 +65,12 @@ bool StatisticalEngine::NewDataReady()
         m_data[i/NUM_CHANNELS] = cBuf[i+2];
         if(i == 0)
         {
-          fftGain = 1.0 + ((FFT_GAIN - 1) - ((FFT_GAIN - 1) * log10(ADDBITS - cBuf[0])/log10(ADDBITS)));
-          ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10(ADDBITS - cBuf[1])/log10(ADDBITS)));
+          fftGain = 1.0 + ((FFT_GAIN - 1) - ((FFT_GAIN - 1) * log10((float)ADDBITS - cBuf[0])/log10((float)ADDBITS)));
+          ampGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10((float)ADDBITS - cBuf[1])/log10((float)ADDBITS)));
         }
       }
       sampler.SetReadCompleted();
-      if(true == debugMode && debugLevel >= 0) Serial << "Amp Gain: " << ampGain << "\tFFT Gain: " << fftGain << "\n";
+      if(true == debugMode && debugLevel >= 3) Serial << "Amp Gain: " << ampGain << "\tFFT Gain: " << fftGain << "\n";
       return true;
     }
     else
@@ -158,9 +159,9 @@ void StatisticalEngine::UpdateBinArray()
   for(int i = 0; i < BINS; ++i)
   {
     int result = 0;
-    if(m_data[i] > ADDBITS - 1)
+    if(m_data[i] > (float)ADDBITS - 1)
     {
-      result = ADDBITS - 1;
+      result = (float)ADDBITS - 1;
     }
     else
     {
@@ -243,12 +244,12 @@ void StatisticalEngine::FillDataBufferHelper(int testCase, float  a1, float  f1,
   t_count = 0;
   for (int i = 0; i < CHANNEL_SIZE; ++i)
   {
-    m_data[i] = ( (a1 * ADDBITS/2 * sin(2.0 * M_PI  * f1  * t_count*t)) + 
-                  (a2 * ADDBITS/2 * sin(2.0 * M_PI  * f2  * t_count*t)) + 
-                  (a3 * ADDBITS/2 * sin(2.0 * M_PI  * f3  * t_count*t)) +
-                  (a4 * ADDBITS/2 * sin(2.0 * M_PI  * f4  * t_count*t)) + 
-                  (a5 * ADDBITS/2 * sin(2.0 * M_PI  * f5  * t_count*t)) + 
-                  (a6 * ADDBITS/2 * sin(2.0 * M_PI  * f6  * t_count*t)) );
+    m_data[i] = ( (a1 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f1  * t_count*t)) + 
+                  (a2 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f2  * t_count*t)) + 
+                  (a3 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f3  * t_count*t)) +
+                  (a4 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f4  * t_count*t)) + 
+                  (a5 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f5  * t_count*t)) + 
+                  (a6 * (float)ADDBITS/2 * sin(2.0 * M_PI  * f6  * t_count*t)) );
     ++t_count;
   }
 }
@@ -272,6 +273,7 @@ void StatisticalEngine::AnalyzeSound()
       avg += m_data[i];
   }
   avg = avg/CHANNEL_SIZE;
+  if(true == debugPlotMic) PlotData();
   for(int i=0; i < CHANNEL_SIZE; i++)
   {
     int result = ((m_data[i] - avg) * ampGain);
@@ -290,8 +292,9 @@ void StatisticalEngine::AnalyzeSound()
     if(result < INT16_MIN) result = INT16_MIN;
     m_data[i] = result;
   };
-  if(true == debugPlotMic) PlotData();
-  peakToPeak = signalMax - signalMin;
+  m_signalMin = signalMin;
+  m_signalMax = signalMax;
+  peakToPeak = m_signalMax - m_signalMin;
   power = ((float)peakToPeak / (float)ADDBITS);
   if(peakToPeak > 0)
   {
@@ -309,16 +312,13 @@ void StatisticalEngine::AnalyzeSound()
   ZeroFFT(m_data, FFT_MAX);
   if(true == debugPlotFFT) PlotData();
   UpdateBinArray();
-  if(true == debugMode && debugLevel >= 3) Serial << "Min: " << signalMin << "\tMax: " << signalMax << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tPower: " << power << "\tPower Db: " << powerDb << "\n";
   PrintDataBuffer("After FFT: ");
 }
 void StatisticalEngine::PlotData()
 {
-  
-  for(int i=0; i < 2 *CHANNEL_SIZE; i++)
-  {
-    Serial.println(0);
-  }
+  Serial.println(4096);
+  Serial.println(0);
   for(int i=0; i < CHANNEL_SIZE; i++)
   {
     Serial.println(m_data[i]);
@@ -362,7 +362,7 @@ void StatisticalEngine::UpdateSoundState()
   m_silenceIntegrator += delta;
   if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
   if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
-  if(true == debugMode && debugLevel >= 0) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
+  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << powerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
   if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
   {
     if(true == debugMode && debugLevel >= 1) Serial << "Sound Detected\n";

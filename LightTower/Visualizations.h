@@ -43,7 +43,8 @@ enum VisualizationEntries
   VisualizationEntries_TransitionStart,
   VisualizationEntries_InstantSwitch,
   VisualizationEntries_FadeTransition,
-  VisualizationEntries_MixerTransition,
+  VisualizationEntries_MixerAddTransition,
+  VisualizationEntries_MixerMergeTransition,
   VisualizationEntries_SlideUpTransition,
   VisualizationEntries_SlideDownTransition,
   VisualizationEntries_SplitTransition,
@@ -122,14 +123,6 @@ struct Sprite
   Direction direction = DIRECTION_DOWN;
 };
 
-struct FadeController
-{
-  int fadeLength;
-  int currentTickOfFadeLength;
-  CRGB startingColor;
-  CRGB fadeToColor;
-};
-
 class Visualizations;
 class VisualizationsCalleeInterface
 {
@@ -151,7 +144,7 @@ class VisualizationsCaller
   public:
     VisualizationsCaller( VisualizationsCalleeInterface *callee )
                         : m_callee(callee){};
-    virtual ~VisualizationsCaller(){}                    
+    virtual ~VisualizationsCaller(){}
     VisualizationsCalleeInterface *m_callee;
 };
 
@@ -192,45 +185,28 @@ class Visualizations: public VisualizationsCaller
       SoundLevelOutputType_Level,
       SoundLevelOutputType_Beat,
     };
-    float GetNormalizedSoundLevelForFrequencyRange(float aStartFrequency, float aStopFrequency, int aDepth, SoundLevelOutputType aLevelType)
+    
+    float GetNormalizedSoundLevelDbForBin(int aBin, int aDepth, SoundLevelOutputType aLevelType)
     {
-      float levelDb = 0.0;
-      float spreadDb = 0.0;
+      float amp = 0.0;
+      float triggerLevel = 0.0;
+      float maximum = 0.0;
+      float ampDb = 0.0;
       float triggerLevelDb = 0.0;
+      float maximumDb = 0.0;
       float normalizedLevel = 0.0;
-      float spreadMinimumDb = 20*log10(ADDBITS/10);
-      db ampDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
-      db avgDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+      
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          levelDb = ampDb;
-          normalizedLevel = (levelDb / MAX_DB);
+          amp = m_statisticalEngine.GetFFTBinRMS(aBin, aDepth, BinDataType::INSTANT);
         break;
         case SoundLevelOutputType_Beat:
-          levelDb = ampDb;
-          normalizedLevel = ((levelDb-(avgDb*triggerLevelGain)) / (MAX_DB-avgDb));
+          amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximum = m_statisticalEngine.GetFFTBinMax(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
         break;
       }
-      if(normalizedLevel < 0.0) normalizedLevel = 0.0;
-      if(normalizedLevel > 1.0) normalizedLevel = 1.0;
-      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << levelDb << "\tAvrtage: " << avgDb << "\tNormalized Level: " << normalizedLevel << "\n";
-      return normalizedLevel;
-    }
-    float GetNormalizedSoundLevelForBin(int aBin, int aDepth, SoundLevelOutputType aLevelType)
-    {
-      float levelDb = 0.0;
-      float minDb = 0.0;
-      float maxDb = 0.0;
-      float peakDb = 0.0;
-      float spreadDb = 0.0;
-      float ampDb = 0.0;
-      float avgDb = 0.0;
-      float triggerLevelDb = 0.0;
-      float normalizedLevel = 0.0;
-      float spreadDbMinimum = 20*log10(ADDBITS/10);
-      int amp = m_statisticalEngine.GetFFTBinAverage(aBin, aDepth, BinDataType::INSTANT);
-      int avg = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
       if(amp > 0)
       {
         ampDb = 20*log10(amp);
@@ -239,28 +215,147 @@ class Visualizations: public VisualizationsCaller
       {
         ampDb = 0.0;
       }
-      if(avg > 0)
+      if(triggerLevel > 0)
       {
-        avgDb = 20*log10(avg);
+        triggerLevelDb = 20*log10(triggerLevel);
       }
       else
       {
-        avgDb = 0.0;
+        triggerLevelDb = 0.0;
+      }
+      if(maximum > 0)
+      {
+        maximumDb = 20*log10(maximum);
+      }
+      else
+      {
+        maximumDb = 0.0;
       }
       switch(aLevelType)
       {
         case SoundLevelOutputType_Level:
-          levelDb = ampDb;
-          normalizedLevel = levelDb / MAX_DB;
+          normalizedLevel = (ampDb) / MAX_DB;
         break;
         case SoundLevelOutputType_Beat:
-          levelDb = ampDb;
-          normalizedLevel = ((levelDb-(avgDb*triggerLevelGain)) / (MAX_DB-avgDb));
+          if(ampDb > triggerLevelDb) 
+          {
+            normalizedLevel = ((ampDb-triggerLevelDb) / maximumDb);
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
         break;
       }
       if(normalizedLevel < 0.0) normalizedLevel = 0.0;
       if(normalizedLevel > 1.0) normalizedLevel = 1.0;
-      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << levelDb << "\tTrigger Level: " << triggerLevelDb << "\tSpread: " << spreadDb  << "\tPeak: " << peakDb << "\tRange Min: " << minDb << "\tRange Max: " << maxDb << "\tNormalized Level: " << normalizedLevel << "\n";
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelDbForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << ampDb << "\Average: " << triggerLevelDb << "\tNormalized Level: " << normalizedLevel << "\n";
+      return normalizedLevel;
+    }
+    
+    float GetNormalizedSoundLevelForBin(int aBin, int aDepth, SoundLevelOutputType aLevelType)
+    {
+      float normalizedLevel = 0.0;
+      float amp = 0.0;
+      float triggerLevel = 0.0;
+      float maximum = 0.0;
+      switch(aLevelType)
+      {
+        case SoundLevelOutputType_Level:
+          amp = m_statisticalEngine.GetFFTBinRMS(aBin, aDepth, BinDataType::INSTANT);
+          normalizedLevel = (amp) / ADDBITS;
+        break;
+        case SoundLevelOutputType_Beat:
+          amp = m_statisticalEngine.GetFFTBinRMS(aBin, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetFFTBinAverage(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximum = m_statisticalEngine.GetFFTBinMax(aBin, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          if(amp > triggerLevel) 
+          {
+            normalizedLevel = (amp-triggerLevel) / maximum;
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
+        break;
+      }
+      if(normalizedLevel < 0.0) normalizedLevel = 0.0;
+      if(normalizedLevel > 1.0) normalizedLevel = 1.0;
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForBin: \tBin: " << aBin << "\tDepth: " << aDepth << "\tLevel:" << amp << "\tTrigger Level: " << triggerLevel << "\tNormalized Level: " << normalizedLevel << "\n";
+      return normalizedLevel;
+    }
+
+    float GetNormalizedSoundLevelDbForFrequencyRange(float aStartFrequency, float aStopFrequency, int aDepth, SoundLevelOutputType aLevelType)
+    {
+      float normalizedLevel = 0.0;
+      db maximumDb = 0.0;
+      db ampDb = 0.0;
+      db triggerLevelDb = 0.0;
+      switch(aLevelType)
+      {
+        case SoundLevelOutputType_Level:
+          ampDb = m_statisticalEngine.GetRMSDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          triggerLevelDb = m_statisticalEngine.GetAverageDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          normalizedLevel = ((ampDb) / MAX_DB);
+        break;
+        case SoundLevelOutputType_Beat:
+          ampDb = m_statisticalEngine.GetRMSDbOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          float triggerLevel = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximumDb = m_statisticalEngine.GetMaxDbOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          if(triggerLevel > 0)
+          {
+            triggerLevelDb = 20*log10(triggerLevel);
+          }
+          else
+          {
+            triggerLevelDb = 0.0;
+          }
+          if(ampDb > triggerLevelDb) 
+          {
+          normalizedLevel = ((ampDb-triggerLevelDb) / maximumDb);
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
+        break;
+      }
+      if(normalizedLevel < 0.0) normalizedLevel = 0.0;
+      if(normalizedLevel > 1.0) normalizedLevel = 1.0;
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelDbForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << ampDb << "\tAvrtage: " << triggerLevelDb << "\tNormalized Level: " << normalizedLevel << "\n";
+      return normalizedLevel;
+    }
+    
+    float GetNormalizedSoundLevelForFrequencyRange(float aStartFrequency, float aStopFrequency, int aDepth, SoundLevelOutputType aLevelType)
+    {
+      float normalizedLevel = 0.0;
+      float amp = 0.0;
+      float triggerLevel = 0.0;
+      float maximum = 0.0;
+      switch(aLevelType)
+      {
+        case SoundLevelOutputType_Level:
+          amp = m_statisticalEngine.GetRMSOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          normalizedLevel = ((amp) / ADDBITS);
+        break;
+        case SoundLevelOutputType_Beat:
+          amp = m_statisticalEngine.GetRMSOfFreqRange(aStartFrequency, aStopFrequency, aDepth, BinDataType::INSTANT);
+          triggerLevel = m_statisticalEngine.GetAverageOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE)*triggerLevelGain;
+          maximum = m_statisticalEngine.GetMaxOfFreqRange(aStartFrequency, aStopFrequency, BIN_SAVE_LENGTH-1, BinDataType::AVERAGE);
+          if(amp > triggerLevel) 
+          {
+            normalizedLevel = ((amp-triggerLevel) / maximum);
+          }
+          else 
+          {
+            normalizedLevel = 0.0;
+          }
+        break;
+      }
+      if(normalizedLevel < 0.0) normalizedLevel = 0.0;
+      if(normalizedLevel > 1.0) normalizedLevel = 1.0;
+      if((true == debugMode && debugLevel >= 5) || (true == debugNanInf && ( isnan(normalizedLevel) || isinf(normalizedLevel)))) Serial << "GetNormalizedSoundLevelForFrequencyRange: \tStart Freq: " << aStartFrequency << "\tStop Freq: " << aStopFrequency << "\tDepth: " << aDepth << "\tLevel: " << amp << "\tTrigger Level: " << triggerLevel << "\tNormalized Level: " << normalizedLevel << "\n";
       return normalizedLevel;
     }
     
@@ -288,8 +383,6 @@ class Visualizations: public VisualizationsCaller
     LEDStrip FadeInLayerBy(LEDStrip layer, byte fadeAmount);
     void SpiralTowerUpwards();
     void SpiralTowerDownwards();
-    void SetFadeToColor(struct FadeController &fadeController, CRGB startingColor, CRGB fadeToColor, int fadeLength);
-    CRGB FadeColor(struct FadeController &controller);
     CRGB GetRandomColor(byte minRed, byte maxRed, byte minGreen, byte maxGreen, byte minBlue, byte maxBlue);
     CRGB GetRandomNonGrayColor();
     float GetTriggerGainForFrequency(float frequency);
@@ -348,6 +441,27 @@ class Transitions: public Visualizations
   protected:
     Visualizations *mp_currentVisualization;
     Visualizations *mp_previousVisualization;
+};
+
+class FadeController
+{
+  public:
+  FadeController()
+  {
+  }
+  virtual ~FadeController(){}
+  void ConfigureFadeController(CRGB start, CRGB endColor, unsigned int duration);
+  CRGB IncrementFade(unsigned int incrementValue);
+  void ResetFade();
+  CRGB GetCurrentColor() { return m_currentColor; }
+  CRGB SetCurrentColor(CRGB color) { m_currentColor = color; }
+  unsigned int GetCurrentTickOfDuration() { return m_currentTickOfDuration; }
+  private:
+  CRGB m_startColor;
+  CRGB m_currentColor;
+  CRGB m_endColor;
+  int m_duration;
+  int m_currentTickOfDuration;
 };
 
 #endif

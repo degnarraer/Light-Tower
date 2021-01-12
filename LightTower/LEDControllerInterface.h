@@ -25,7 +25,7 @@
 #define LEDControllerInterface_H
 
 #define FASTLED_ALLOW_INTERRUPTS 1
-#define FASTLED_INTERRUPT_RETRY_COUNT 1
+#define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
 #include "Tunes.h"
 #include "Streaming.h"
@@ -62,10 +62,10 @@ class LEDController
       FastLED.setBrightness(0);
       if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to 0.\n";
     }
-    void TurnOnLEDs()
+    void TurnOnLEDs(unsigned int level)
     {
-      FastLED.setBrightness(255);
-      if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to 255.\n";
+      FastLED.setBrightness(255*(double)level/(double)100);
+      if(true == debugMode && debugLevel >= 2) Serial << "Brightness set to " << level << ".\n";
     }
   protected:
     LEDStrip m_strips[NUMSTRIPS];

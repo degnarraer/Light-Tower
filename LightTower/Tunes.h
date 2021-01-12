@@ -4,23 +4,18 @@
 
 #include <math.h>
 
-//Mic Selection
-enum MicType
-{
-  MIC_TYPE_AUTOGAIN,
-  MIC_TYPE_FIXEDGAIN
-};
-static const MicType micType = MicType::MIC_TYPE_AUTOGAIN;
-
 //Run Fixed Data Tables instead of microphone
-static bool   testMode = false;
+static bool  testMode = false;
 
 //Output Debug Messages
-static bool   debugMode = false;
-static bool   debugNanInf = false;
-static bool   debugPlotMic = false;
-static bool   debugPlotFFT = false;
-static int    debugLevel = 0;
+const bool   debugMode = false;
+const int    debugLevel = 0;
+
+const bool   debugNanInf = false;
+const bool   debugPlotMic = false;
+const bool   debugPlotFFT = false;
+const bool   debugFPS = false;
+const bool   debugRequired = (debugMode || debugNanInf || debugPlotMic || debugPlotFFT || debugFPS);
 
 // LED SETUP
 const unsigned int NUMLEDS = 60;
@@ -42,12 +37,13 @@ const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 const unsigned int BIN_SAVE_LENGTH = 60;
 
 //Trigger Level
-const float SILENCE_THRESHOLD = 0.025;
-static float triggerLevelGain = 1.0;
+const float SILENCE_THRESHOLD = 0.05;
+const float triggerLevelGain = 1.1;
 
 // Sampler Tunes
 /* ch7:A0 ch6:A1 ch5:A2 ch4:A3 ch3:A4 ch2:A5 ch1:A6 ch0:A7 */
-#define ADC_CHANNELS ADC_CHER_CH7 | ADC_CHER_CH5 | ADC_CHER_CH4
+#define ADC_CHANNELS ADC_CHER_CH7 | ADC_CHER_CH5 | ADC_CHER_CH4  //Fixed Gain Mic
+//#define ADC_CHANNELS ADC_CHER_CH6 | ADC_CHER_CH5 | ADC_CHER_CH4  //Auto Gain Mic
 #define ADC_RESOLUTION 12
 const unsigned int NUM_CHANNELS = 3;
 const unsigned int CHANNEL_SIZE = FFT_MAX;
@@ -61,15 +57,16 @@ const int     silenceIntegratorMax = 50000;
 const int     silenceDetectedThreshold = 0.1*silenceIntegratorMax;
 const int     soundDetectedThreshold = 0.9*silenceIntegratorMax;
 const int     soundAdder = 1000;
-const int     silenceSubtractor = -100;
+const int     silenceSubtractor = -10;
 
 //CALCULATED TUNES
 const int FFT_M = (int)log2(FFT_MAX);
 const int BINS = FFT_MAX / 2;
 const float BINS_DOUBLE = FFT_MAX / 2.0;
 const int ADDBITS = pow(2,ADC_RESOLUTION);
-const int FFT_GAIN = 200;
-const int POWER_GAIN = 10;
+const int FFT_GAIN = 1000;
+const int POWER_GAIN = 20;
 const int MAX_POWER = ADDBITS * POWER_GAIN;
 const float MAX_DB = 20*log10(ADDBITS);
+
 #endif

@@ -182,6 +182,8 @@ class StatisticalEngine : public MicrophoneMeasureCallerInterface
     void          setup_AtoD();
     float         m_calculatedSampleRate;
     int16_t       m_data[FFT_MAX];
+    int           m_signalMin;
+    int           m_signalMax;
 
     //FFT BIN CIRCULAR BUFFER
   private:

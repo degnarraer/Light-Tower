@@ -40,42 +40,70 @@ void ActiveVisualizationController::Setup()
   digitalWrite(2, HIGH);  // turn on pullup resistors
   m_statisticalEngine.Setup();
   m_statisticalEngine.ConnectCallback(this);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries::VisualizationEntries_SoundDetectionTester, ULONG_MAX);
   
-  /*
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Confirmation, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_WaterFallFireStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SolidColorTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingSolidColorTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_PowerBarWithBassSprite, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomFrequencySprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FFTAmplitudes, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencySpriteSpiral, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomHighLowFrequencyAmplitudeStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_OutwardAmplitudeWithFloatingBassSprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_VerticalFFTAmplitudeTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_MultiRangeAmplitudeTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SimultaneousFrequencyStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_MinMaxAmplitude, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ChasingSprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencyColorStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencyColorSpinningTower, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownFrequencyColorStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownMaxFrequencyStreamer, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingRainbow, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingColors2, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencyColorRectangles, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencySprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingSpeedFrequencySprites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingAmplitudeSprite, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Opposites, 600000);
-  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Snake, 600000);
-*/
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SoundDetectionTester, UINT_MAX);
+  
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencySpriteSpiral, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 1000000);
+/*
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ColorFadingTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_WaterFallFireStreamer, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SolidColorTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingSolidColorTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_PowerBarWithBassSprite, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomFrequencySprites, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FFTAmplitudes, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencySpriteSpiral, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_RandomHighLowFrequencyAmplitudeStreamer, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_OutwardAmplitudeWithFloatingBassSprites, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_VerticalFFTAmplitudeTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_MultiRangeAmplitudeTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_SimultaneousFrequencyStreamer, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_MinMaxAmplitude, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ChasingSprites, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencyColorStreamer, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FrequencyColorSpinningTower, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownFrequencyColorStreamer, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_UpDownMaxFrequencyStreamer, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingRainbow, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_FadingColors2, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencyColorRectangles, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingFrequencySprites, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingSpeedFrequencySprites, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_ScrollingAmplitudeSprite, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Opposites, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, VisualizationEntries_Snake, 0);
+  AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, 10000);
+  */
   GetNextTransition();
   m_gainAdjustModeActive = false;
-  if(true == debugMode && debugLevel >= 1) Serial << "Active Visualization Controller: Setup Complete\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "Active Visualization Controller: Setup Complete\n";
 }
 
 void ActiveVisualizationController::HandleInterrupt()
@@ -102,7 +130,7 @@ void ActiveVisualizationController::VisualizationStarted(Visualizations *visuali
 {
   if(visualization == m_currentVisualization)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Callback: Active Visualization Started\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Visualization Started\n";
   }
 }
 
@@ -110,30 +138,27 @@ void ActiveVisualizationController::VisualizationEnded(Visualizations *visualiza
 {
   if(visualization == m_currentVisualization)
   {
-    if(m_statisticalEngine.GetSoundState() != SoundState::SilenceDetected  && m_statisticalEngine.GetSoundState() != SoundState::LastingSilenceDetected)
+    if(true == m_automaticMode)
     {
-      if(true == m_automaticMode)
-      {
-        if(true == debugMode && debugLevel >= 1) Serial << "Callback: Active Visualization Ended\n";
-        GetNextTransition();
-      }
+      if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Visualization Ended\n";
+      GetNextTransition();
     }
   }
 }
 
-void ActiveVisualizationController::TransitionStarted(Visualizations *visualization)
+void ActiveVisualizationController::TransitionStarted(Visualizations *transition)
 {
-  if(visualization == m_activeTransition)
+  if(transition == m_activeTransition)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Callback: Active Transition Started\n"; 
+    if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Transition Started\n"; 
   }
 }
 
-void ActiveVisualizationController::TransitionEnded(Visualizations *visualization)
+void ActiveVisualizationController::TransitionEnded(Visualizations *transition)
 {
-  if(visualization == m_activeTransition)
+  if(transition == m_activeTransition)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Callback: Active Transition Ended\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Transition Ended\n";
     if(true == m_automaticMode)
     {
       GetNextTransition();
@@ -145,7 +170,7 @@ void ActiveVisualizationController::ConfirmationVisualizationStarted(Visualizati
 {
   if(visualization == m_currentVisualization)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Callback: Confirmation Started\n"; 
+    if(true == debugMode && debugLevel >= 2) Serial << "Callback: Confirmation Started\n"; 
   }
 }
 
@@ -153,37 +178,31 @@ void ActiveVisualizationController::ConfirmationVisualizationEnded(Visualization
 {
   if(visualization == m_currentVisualization)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Callback: Active Confirmation Ended\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Callback: Active Confirmation Ended\n";
     GetNextTransition();
   }
 }
 
 void ActiveVisualizationController::AddSceneConfigToQueue(VisualizationEntries transition, VisualizationEntries visualization, unsigned long duration, CRGB confirmationColor)
 {
-  int count = (sizeof(m_sceneConfigQueue)/sizeof(*m_sceneConfigQueue));
-  if(m_sceneConfigQueueCount < count)
+  if(false == SceneConfigQueueIsFull())
   {
+    ++m_sceneConfigQueueHeadIndex;
     SceneConfig item = {transition, visualization, duration, confirmationColor};
-    m_sceneConfigQueue[m_sceneConfigQueueTailIndex] = item;
-    ++m_sceneConfigQueueTailIndex;
-    if(m_sceneConfigQueueTailIndex > count) m_sceneConfigQueueTailIndex = 0;
-    ++m_sceneConfigQueueCount; 
+    m_sceneConfigQueue[m_sceneConfigQueueHeadIndex % m_sceneConfigQueueSize] = item;
   }
-  if(true == debugMode && debugLevel >= 1) Serial << "Adding Scene Config with Confirmation Color.  Queue Count: " << m_sceneConfigQueueCount << "\tHead: " << m_sceneConfigQueueHeadIndex << "\tTail: " << m_sceneConfigQueueTailIndex << "\tDuration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "Adding Scene Config with Confirmation Color.  Head: " << m_sceneConfigQueueHeadIndex << "\tTail: " << m_sceneConfigQueueTailIndex << "\tDuration: " << duration << "\n";
 }
 
 SceneConfig ActiveVisualizationController::GetNextSceneConfigFromQueue()
 {
-  int count = (sizeof(m_sceneConfigQueue)/sizeof(*m_sceneConfigQueue));
   SceneConfig result;
-  if(m_sceneConfigQueueCount > 0)
+  if(true == SceneConfigExists())
   {
-    result = m_sceneConfigQueue[m_sceneConfigQueueHeadIndex];
-    ++m_sceneConfigQueueHeadIndex;
-    if(m_sceneConfigQueueHeadIndex > count) m_sceneConfigQueueHeadIndex = 0;
-    --m_sceneConfigQueueCount; 
+    ++m_sceneConfigQueueTailIndex;
+    result = m_sceneConfigQueue[m_sceneConfigQueueTailIndex % m_sceneConfigQueueSize];
   }
-  if(true == debugMode && debugLevel >= 1) Serial << "Getting Next Scene Config.  Queue Count: " << m_sceneConfigQueueCount << "\tHead: " << m_sceneConfigQueueHeadIndex << "\tTail: " << m_sceneConfigQueueTailIndex << "\tDuration: " << result.duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "Getting Next Scene Config.  Head: " << m_sceneConfigQueueHeadIndex << "\tTail: " << m_sceneConfigQueueTailIndex << "\tDuration: " << result.duration << "\n";
   return result;
 }
 
@@ -192,30 +211,43 @@ void ActiveVisualizationController::MicrophoneStateChange(SoundState state)
   switch(state)
   {
     case SoundDetected:
-      if(true == debugMode && debugLevel >= 1) Serial << "Sound Detected Callback\n";
-      Illuminate();
+      if(true == debugMode && debugLevel >= 0) Serial << "Sound Detected Callback\n";
+      Illuminate(100);
       if(false == m_1stSoundDetected)
       {
         m_1stSoundDetected = true;
-        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
+        if(false == SceneConfigExists()) AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
         GetNextTransition();
       }
       else if(false == m_gainAdjustModeActive)
       {
-        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
-        GetNextTransition();
+        if(true == m_automaticMode)
+        {
+          if(false == SceneConfigExists()) AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetRandom, RANDOM_TIME);
+          GetNextTransition();
+        }
+        else
+        {
+          AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, VisualizationEntries_GetPrevious, RANDOM_TIME);
+          GetNextTransition();
+        }
       }
     break;
     case SilenceDetected:
-      if(true == debugMode && debugLevel >= 1) Serial << "Silence Detected Callback\n";
+      if(true == debugMode && debugLevel >= 0) Serial << "Silence Detected Callback\n";
+      Illuminate(10);
       if(false == m_gainAdjustModeActive)
       {
-        AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_FadeTransition, m_visualizationsFactory.GetRandomStaticVisualizationEntry(), ULONG_MAX);
+        if(false == SceneConfigExists())
+        {
+          AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_InstantSwitch, m_visualizationsFactory.GetRandomStaticVisualizationEntry(), 0);
+          AddSceneConfigToQueue(VisualizationEntries::VisualizationEntries_MixerMergeTransition, VisualizationEntries::VisualizationEntries_SoundDetectionTester, ULONG_MAX);
+        }
         GetNextTransition(); 
       }
     break;
     case LastingSilenceDetected:
-      if(true == debugMode && debugLevel >= 1) Serial << "Lasting Silence Detected Callback\n";
+      if(true == debugMode && debugLevel >= 0) Serial << "Lasting Silence Detected Callback\n";
       if(false == m_gainAdjustModeActive)
       {
         Deluminate();
@@ -252,7 +284,7 @@ void ActiveVisualizationController::StartVisualization()
   }
   else
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Failed to create visualization\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Failed to create visualization\n";
   }
 }
 
@@ -269,15 +301,15 @@ void ActiveVisualizationController::EmptyTransitionTrash()
 {
   if(m_garbageTransition != NULL)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Emptying Trash\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Emptying Trash\n";
     if(m_garbageTransition->getCurrentVisualization() != m_currentVisualization && m_garbageTransition->getCurrentVisualization() != m_previousVisualization)
     {
-      if(true == debugMode && debugLevel >= 1) Serial << "Deleting Current Visualization\n";
+      if(true == debugMode && debugLevel >= 2) Serial << "Deleting Current Visualization\n";
       m_garbageTransition->DeleteCurrentVisualization();
     }
     if(m_garbageTransition->getPreviousVisualization() != m_currentVisualization && m_garbageTransition->getPreviousVisualization() != m_previousVisualization)
     {
-      if(true == debugMode && debugLevel >= 1) Serial << "Deleting Previous Visualization\n";
+      if(true == debugMode && debugLevel >= 2) Serial << "Deleting Previous Visualization\n";
       m_garbageTransition->DeletePreviousVisualization();      
     }
     delete m_garbageTransition;
@@ -292,6 +324,10 @@ void ActiveVisualizationController::PrintFreeMemory(String text)
   }
 }
 
+void TryToGetNextTransition()
+{
+  
+}
 void ActiveVisualizationController::GetNextTransition()
 {
   bool usingSceneConfig = false;
@@ -302,7 +338,7 @@ void ActiveVisualizationController::GetNextTransition()
   TrashTransition();
 
   VisualizationType visualizationType = VisualizationType::TRANSITION;
-  if(m_sceneConfigQueueCount > 0)
+  if(true == SceneConfigExists())
   {
     usingSceneConfig = true;
     m_activeSceneConfig = GetNextSceneConfigFromQueue();
@@ -313,25 +349,25 @@ void ActiveVisualizationController::GetNextTransition()
         case VisualizationEntries::VisualizationEntries_GetNext:
           {
             m_currentTransitionEntry = m_visualizationsFactory.GetNextVisualizationConfigForTypeAfterIndex(visualizationType, m_activeSceneConfig.transitionEntry).visualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Next Transition: " << m_currentTransitionEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Next Transition: " << m_currentTransitionEntry << "\n";
           }
         break;
         case VisualizationEntries::VisualizationEntries_GetPrevious:
           {
             m_currentTransitionEntry = m_previousTransitionEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Previous Transition: " << m_currentTransitionEntry << "\n";    
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Previous Transition: " << m_currentTransitionEntry << "\n";    
           }
         break;
         case VisualizationEntries::VisualizationEntries_GetRandom:
           {
             m_currentTransitionEntry = m_visualizationsFactory.GetVisualizationConfigForTypeAtIndex(visualizationType, random(0, m_visualizationsFactory.GetNumberOfVisualizationType(visualizationType))).visualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Transitionization: " << m_currentTransitionEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Transitionization: " << m_currentTransitionEntry << "\n";
           }
         break;
         default:
           {
             m_currentTransitionEntry = VisualizationEntries::VisualizationEntries_InstantSwitch;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Default Transition: " << m_currentTransitionEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Default Transition: " << m_currentTransitionEntry << "\n";
           }
         break;
       }
@@ -339,23 +375,23 @@ void ActiveVisualizationController::GetNextTransition()
     else if(VisualizationEntries::VisualizationEntries_TransitionStart < m_activeSceneConfig.transitionEntry && m_activeSceneConfig.transitionEntry < VisualizationEntries::VisualizationEntries_TransitionEnd)
     {
       m_currentTransitionEntry = m_activeSceneConfig.transitionEntry;
-      if(true == debugMode && debugLevel >= 1) Serial << "Get Specific Transition: " << m_currentTransitionEntry <<"\n";
+      if(true == debugMode && debugLevel >= 2) Serial << "Get Specific Transition: " << m_currentTransitionEntry <<"\n";
     }
     else
     {
       m_currentTransitionEntry = VisualizationEntries::VisualizationEntries_InstantSwitch;
-      if(true == debugMode && debugLevel >= 1) Serial << "Getting Default Transition: " << m_currentTransitionEntry << "\n";
+      if(true == debugMode && debugLevel >= 2) Serial << "Getting Default Transition: " << m_currentTransitionEntry << "\n";
     }
   }
   else if(true == m_statisticalEngine.GetTestMode() || false == m_automaticMode)
   {
     m_currentTransitionEntry = VisualizationEntries::VisualizationEntries_InstantSwitch;
-    if(true == debugMode && debugLevel >= 1) Serial << "Get Instant Switch Transition\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Get Instant Switch Transition\n";
   }
   else
   {
     m_currentTransitionEntry = m_visualizationsFactory.GetVisualizationConfigForTypeAtIndex(visualizationType, random(0, m_visualizationsFactory.GetNumberOfVisualizationType(visualizationType))).visualizationEntry;
-    if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Transitionization: " << m_currentTransitionEntry << "\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Transitionization: " << m_currentTransitionEntry << "\n";
   }
   GetNextVisualizer(usingSceneConfig);
   m_activeTransition = m_visualizationsFactory.GetVisualizationConfig(m_currentTransitionEntry).getTransitionInstancePtr(m_statisticalEngine, this);
@@ -369,11 +405,11 @@ void ActiveVisualizationController::GetNextVisualizer(bool usingSceneConfig)
   StoreActiveVisualization();
   if(true == usingSceneConfig)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Active Scene Config Duration: " << m_activeSceneConfig.duration << "\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Active Scene Config Duration: " << m_activeSceneConfig.duration << "\n";
     if(VisualizationEntries::VisualizationEntries_VisualizationStart < m_activeSceneConfig.visualizationEntry && m_activeSceneConfig.visualizationEntry < VisualizationEntries::VisualizationEntries_VisualizationEnd)
     {
       m_currentVisualizationEntry = m_activeSceneConfig.visualizationEntry;
-      if(true == debugMode && debugLevel >= 1) Serial << "Getting Specific Visualization: " << m_currentVisualizationEntry << "\n";
+      if(true == debugMode && debugLevel >= 2) Serial << "Getting Specific Visualization: " << m_currentVisualizationEntry << "\n";
       m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
     }
     else if(VisualizationEntries::VisualizationEntries_CommandsStart < m_activeSceneConfig.visualizationEntry && m_activeSceneConfig.visualizationEntry < VisualizationEntries::VisualizationEntries_CommandsEnd)
@@ -383,42 +419,42 @@ void ActiveVisualizationController::GetNextVisualizer(bool usingSceneConfig)
         case VisualizationEntries::VisualizationEntries_GetNext:
           {
             m_currentVisualizationEntry = m_visualizationsFactory.GetNextVisualizationConfigForTypeAfterIndex(visualizationType, m_currentVisualizationEntry).visualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Next Visualization: " << m_currentVisualizationEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Next Visualization: " << m_currentVisualizationEntry << "\n";
             m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
           }
         break;
         case VisualizationEntries::VisualizationEntries_GetPrevious:
           {
             m_currentVisualizationEntry = m_previousVisualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Previous Visualization: " << m_currentVisualizationEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Previous Visualization: " << m_currentVisualizationEntry << "\n";
             m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
           }
         break;
         case VisualizationEntries::VisualizationEntries_GetRandom:
           {
             m_currentVisualizationEntry = m_visualizationsFactory.GetVisualizationConfigForTypeAtIndex(visualizationType, random(0, m_visualizationsFactory.GetNumberOfVisualizationType(visualizationType))).visualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Visualization: " << m_currentVisualizationEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Visualization: " << m_currentVisualizationEntry << "\n";
             m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
           }
         break;
         case VisualizationEntries::VisualizationEntries_GetForeground:
           {
             m_currentVisualizationEntry = m_visualizationsFactory.GetRandomForegroundVisualizationConfig().visualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Foreground Visualization: " << m_currentVisualizationEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Foreground Visualization: " << m_currentVisualizationEntry << "\n";
             m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
           }
         break;
         case VisualizationEntries::VisualizationEntries_GetBackground:
           {
             m_currentVisualizationEntry = m_visualizationsFactory.GetRandomBackgroundVisualizationConfig().visualizationEntry;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Background Visualization: " << m_currentVisualizationEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Background Visualization: " << m_currentVisualizationEntry << "\n";
             m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
           }
         break;
         default:
           {
             m_currentVisualizationEntry = VisualizationEntries::VisualizationEntries_WaterFallFireStreamer;
-            if(true == debugMode && debugLevel >= 1) Serial << "Getting Default Visualization: " << m_currentVisualizationEntry << "\n";
+            if(true == debugMode && debugLevel >= 2) Serial << "Getting Default Visualization: " << m_currentVisualizationEntry << "\n";
             m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(m_activeSceneConfig.duration, m_statisticalEngine, this);
           }
         break;
@@ -427,20 +463,20 @@ void ActiveVisualizationController::GetNextVisualizer(bool usingSceneConfig)
     else
     {
       m_currentVisualizationEntry = m_visualizationsFactory.GetVisualizationConfigForTypeAtIndex(visualizationType, random(0, m_visualizationsFactory.GetNumberOfVisualizationType(visualizationType))).visualizationEntry;
-      if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Visualization: " << m_currentVisualizationEntry << "\n";
+      if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Visualization: " << m_currentVisualizationEntry << "\n";
       m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(RANDOM_TIME, m_statisticalEngine, this);
     }
   }
   else if(true == m_visualizationsFactory.GetVisualizationConfig(m_currentTransitionEntry).isBackground && true == m_visualizationsFactory.GetVisualizationConfig(m_currentTransitionEntry).isForeground)
   {
     m_previousVisualizationEntry = m_visualizationsFactory.GetRandomBackgroundVisualizationConfig().visualizationEntry;
-    if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Foreground Visualization: " << m_currentVisualizationEntry << "\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Foreground Visualization: " << m_currentVisualizationEntry << "\n";
     m_previousVisualization = m_visualizationsFactory.GetVisualizationConfig(m_previousVisualizationEntry).getVisualizationInstancePtr(RANDOM_TIME, m_statisticalEngine, this);
   }
   else
   {
     m_currentVisualizationEntry = m_visualizationsFactory.GetVisualizationConfigForTypeAtIndex(visualizationType, random(0, m_visualizationsFactory.GetNumberOfVisualizationType(visualizationType))).visualizationEntry;
-    if(true == debugMode && debugLevel >= 1) Serial << "Getting Random Visualization: " << m_currentVisualizationEntry << "\n";
+    if(true == debugMode && debugLevel >= 2) Serial << "Getting Random Visualization: " << m_currentVisualizationEntry << "\n";
     m_currentVisualization = m_visualizationsFactory.GetVisualizationConfig(m_currentVisualizationEntry).getVisualizationInstancePtr(RANDOM_TIME, m_statisticalEngine, this);
   }
   PrintFreeMemory("Free Memory After: ");
@@ -546,7 +582,7 @@ void ActiveVisualizationController::ProcessButtons()
     if(true == debugMode) Serial << "Button Released\n";
     if(true == m_silentModeActive)
     {
-      Illuminate();
+      Illuminate(100);
     }
     else
     {
@@ -586,11 +622,11 @@ void ActiveVisualizationController::ProcessButtons()
   m_automaticModeOld = m_automaticMode;
 }
 
-void ActiveVisualizationController::Illuminate()
+void ActiveVisualizationController::Illuminate(unsigned int level)
 {
   if(true == m_silentModeActive)
   {
-    TurnOnLEDs();
+    TurnOnLEDs(level);
     m_silentModeActive = false;   
   }
 }

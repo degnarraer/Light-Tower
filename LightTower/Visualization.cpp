@@ -28,7 +28,7 @@
 Transitions* InstantSwitch::GetInstance(  StatisticalEngine &statisticalEngine
                                         , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New InstantSwitch\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New InstantSwitch\n";
   InstantSwitch *newTransition = new InstantSwitch(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -44,14 +44,6 @@ bool InstantSwitch::Loop()
 {
   if(false == m_visualizationStarted) {Start(); m_visualizationStarted = true;}
   if(true == debugMode && debugLevel >= 3) Serial << "InstantSwitch Loop\n";
-  bool updateRequired = false;
-  unsigned long currentTime = millis();
-  if(currentTime-m_timers[0] >= 0) {ResetTimer(0); updateRequired |= Tick1();}
-  return updateRequired;
-}
-
-bool InstantSwitch::Tick1()
-{
   m_statisticalEngine.UpdateSoundData();
   bool updateRequired = false;
   updateRequired |= mp_currentVisualization->Loop();
@@ -73,7 +65,7 @@ void InstantSwitch::End()
 Transitions* FadeTransition::GetInstance( StatisticalEngine &statisticalEngine
                                         , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New FadeTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FadeTransition\n";
   FadeTransition *newTransition = new FadeTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -139,25 +131,23 @@ void FadeTransition::End()
   Ended();
 }
 
+//********* Mixer Add **********
 
-//********* TRANSITION 2 **********
-
-Transitions* MixerTransition::GetInstance( StatisticalEngine &statisticalEngine
-                                         , VisualizationsCalleeInterface *callee )
+Transitions* MixerAddTransition::GetInstance( StatisticalEngine &statisticalEngine
+                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New MixerTransition\n";
-  MixerTransition *newTransition = new MixerTransition(statisticalEngine, callee);
+  if(true == debugMode && debugLevel >= 0) Serial << "New MixerAddTransition\n";
+  MixerAddTransition *newTransition = new MixerAddTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
   return newTransition;
 }  
 
-void MixerTransition::Start()
+void MixerAddTransition::Start()
 {
-  m_blendMode = random(2);
   Started();
 }
-bool MixerTransition::Loop()
+bool MixerAddTransition::Loop()
 {
   if(false == m_visualizationStarted) {Start(); m_visualizationStarted = true;}
   if(true == debugMode && debugLevel >= 3) Serial << "MixerTransition Loop\n";
@@ -167,7 +157,7 @@ bool MixerTransition::Loop()
   return updateRequired;
 }
 
-bool MixerTransition::Tick1()
+bool MixerAddTransition::Tick1()
 {
   m_statisticalEngine.UpdateSoundData();
   bool updateRequired = false;
@@ -177,18 +167,7 @@ bool MixerTransition::Tick1()
     updateRequired |= mp_previousVisualization->Loop(); 
     for(int i = 0; i < NUMSTRIPS; ++i)
     {
-      switch(m_blendMode)
-      {
-        case 0:
-          m_strips[i] = AddLayer(mp_currentVisualization->GetStrips()[i], mp_previousVisualization->GetStrips()[i]);
-        break;
-        case 1:
-          m_strips[i] = MergeLayer(mp_currentVisualization->GetStrips()[i], mp_previousVisualization->GetStrips()[i]);
-        break;
-        default:
-          m_strips[i] = MergeLayer(mp_currentVisualization->GetStrips()[i], mp_previousVisualization->GetStrips()[i]);
-        break;
-      }
+      m_strips[i] = AddLayer(mp_currentVisualization->GetStrips()[i], mp_previousVisualization->GetStrips()[i]);
     }
   }
   else if(mp_currentVisualization != NULL)
@@ -202,7 +181,63 @@ bool MixerTransition::Tick1()
   return updateRequired;
 }
 
-void MixerTransition::End()
+void MixerAddTransition::End()
+{
+  Ended();
+}
+
+
+//********* Mixer Merge **********
+
+Transitions* MixerMergeTransition::GetInstance( StatisticalEngine &statisticalEngine
+                                              , VisualizationsCalleeInterface *callee )
+{
+  if(true == debugMode && debugLevel >= 0) Serial << "New MixerMergeTransition\n";
+  MixerMergeTransition *newTransition = new MixerMergeTransition(statisticalEngine, callee);
+  newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
+  newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
+  return newTransition;
+}  
+
+void MixerMergeTransition::Start()
+{
+  Started();
+}
+bool MixerMergeTransition::Loop()
+{
+  if(false == m_visualizationStarted) {Start(); m_visualizationStarted = true;}
+  if(true == debugMode && debugLevel >= 3) Serial << "MixerTransition Loop\n";
+  bool updateRequired = false;
+  unsigned long currentTime = millis();
+  if(currentTime-m_timers[0] >= 0) {ResetTimer(0); updateRequired |= Tick1();}
+  return updateRequired;
+}
+
+bool MixerMergeTransition::Tick1()
+{
+  m_statisticalEngine.UpdateSoundData();
+  bool updateRequired = false;
+  if(mp_currentVisualization != NULL && mp_previousVisualization != NULL) 
+  {
+    updateRequired |= mp_currentVisualization->Loop();
+    updateRequired |= mp_previousVisualization->Loop(); 
+    for(int i = 0; i < NUMSTRIPS; ++i)
+    {
+      m_strips[i] = MergeLayer(mp_currentVisualization->GetStrips()[i], mp_previousVisualization->GetStrips()[i]);
+    }
+  }
+  else if(mp_currentVisualization != NULL)
+  {   
+    updateRequired |= mp_currentVisualization->Loop();
+    for(int i = 0; i < NUMSTRIPS; ++i)
+    {
+      m_strips[i] = mp_currentVisualization->GetStrips()[i];
+    }
+  }
+  return updateRequired;
+}
+
+void MixerMergeTransition::End()
 {
   Ended();
 }
@@ -214,7 +249,7 @@ void MixerTransition::End()
 Transitions* SlideUpTransition::GetInstance( StatisticalEngine &statisticalEngine
                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SlideUpTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SlideUpTransition\n";
   SlideUpTransition *newTransition = new SlideUpTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -296,7 +331,7 @@ void SlideUpTransition::End()
  Transitions* SlideDownTransition::GetInstance( StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SlideDownTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SlideDownTransition\n";
   SlideDownTransition *newTransition = new SlideDownTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -379,7 +414,7 @@ void SlideDownTransition::End()
  Transitions* SplitTransition::GetInstance( StatisticalEngine &statisticalEngine
                                           , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SplitTransition\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SplitTransition\n";
   SplitTransition *newTransition = new SplitTransition(statisticalEngine, callee);
   newTransition->SetCurrentVisualization(callee->GetCurrentVisualizationPtr());
   newTransition->SetPreviousVisualization(callee->GetPreviousVisualizationPtr());
@@ -481,8 +516,7 @@ void SplitTransition::End()
                                                   , StatisticalEngine &statisticalEngine
                                                   , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SoundDetectionTester\n";
-  if(true == debugMode && debugLevel >= 2) Serial << "Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SoundDetectionTester with Duration: " << duration << "\n";
   return new SoundDetectionTester(duration, statisticalEngine, callee);
 } 
 void SoundDetectionTester::Start()
@@ -497,6 +531,7 @@ bool SoundDetectionTester::Loop()
   unsigned long currentTime = millis();
   if(true == debugMode && debugLevel >= 3) Serial << "SoundDetectionTester Loop: " << currentTime-m_resetTimer << " | " << m_duration << "\n";
   if(currentTime-m_timers[0] >= 0) {ResetTimer(0); Tick1(); updateRequired = true;}
+  if(currentTime-m_resetTimer >= m_duration) {End(); updateRequired = true;}
   return updateRequired;
 }
 void SoundDetectionTester::Tick1()
@@ -529,17 +564,19 @@ void SoundDetectionTester::End()
                                               , StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ColorFadingTower\n";
-  if(true == debugMode && debugLevel >= 2) Serial << "Duration: " << duration << "\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ColorFadingTower with Duration: " << duration << "\n";
   return new ColorFadingTower(duration, statisticalEngine, callee);
 }
 void ColorFadingTower::Start()
 {
   if(true == debugMode && debugLevel >= 1) Serial << "ColorFadingTower Start\n";
-  Tick2();
+  m_randomTime = random(1000, m_maxRandomTime);
+  m_fadeController.ConfigureFadeController( CRGB::Black
+                                          , GetRandomNonGrayColor()
+                                          , m_fadeLength);
   for(int i=0; i<NUMSTRIPS; ++i)
   {
-     m_strips[i] = m_color;
+     m_strips[i] = m_fadeController.GetCurrentColor();
   }
   Started();
 }
@@ -556,17 +593,18 @@ bool ColorFadingTower::Loop()
 }
 void ColorFadingTower::Tick1()
 {
-  m_color = FadeColor(m_fadeController);
+  m_fadeController.IncrementFade(1);
   for(int i=0; i<NUMSTRIPS; ++i)
   {
-     m_strips[i] = m_color;
+     m_strips[i] = m_fadeController.GetCurrentColor();
   }
 }
 void ColorFadingTower::Tick2()
 {
   m_randomTime = random(1000, m_maxRandomTime);
-  m_fadeToColor = GetRandomNonGrayColor();
-  SetFadeToColor(m_fadeController, m_color, m_fadeToColor, m_fadeLength);
+  m_fadeController.ConfigureFadeController( m_fadeController.GetCurrentColor()
+                                          , GetRandomNonGrayColor()
+                                          , m_fadeLength);
 }
 void ColorFadingTower::End()
 {
@@ -578,7 +616,7 @@ Visualizations* Confirmation::GetInstance( int duration
                                          , StatisticalEngine &statisticalEngine
                                          , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New Confirmation\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New Confirmation with Duration: " << duration << "\n";
   Confirmation *newVisualization = new Confirmation(duration, statisticalEngine, callee);
   newVisualization->SetConfirmationColor(callee->GetConfirmationColor());
   return newVisualization;
@@ -623,7 +661,7 @@ void Confirmation::End()
                                                          , StatisticalEngine &statisticalEngine
                                                          , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New WaterFallFireStreamer\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New WaterFallFireStreamer with Duration: " << duration << "\n";
   return new WaterFallFireStreamer(duration, statisticalEngine, callee);
 }
 void WaterFallFireStreamer::Start()
@@ -647,21 +685,21 @@ bool WaterFallFireStreamer::Loop()
 }
 void WaterFallFireStreamer::Tick1()
 {
-  m_BottomColor = FadeColor(m_bottomFadeController);
-  m_TopColor = FadeColor(m_topFadeController);
-  m_BottomMiddleColor = FadeColor(m_bottomMiddleFadeController);
-  m_TopMiddleColor = FadeColor(m_topMiddleFadeController);
+  m_BottomColor = m_bottomFadeController.IncrementFade(1);
+  m_TopColor = m_topFadeController.IncrementFade(1);
+  m_BottomMiddleColor = m_bottomMiddleFadeController.IncrementFade(1);
+  m_TopMiddleColor = m_topMiddleFadeController.IncrementFade(1);
   
   ShiftStrip(m_layer[0], Up, 1);
   ShiftStrip(m_layer[1], Down, 1);
   ShiftStrip(m_layer[2], Down, 1);
   ShiftStrip(m_layer[3], Up, 1);
   
-  m_layer[0](0, 0) = CRGB((byte)(dim8_raw(m_BottomColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomColor.blue * m_statisticalEngine.powerDb)));
-  m_layer[1](NUMLEDS-1, NUMLEDS-1) = CRGB((byte)(dim8_raw(m_TopColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopColor.blue * m_statisticalEngine.powerDb)));
+  m_layer[0](0, 0) = CRGB((byte)(dim8_raw(m_BottomColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomColor.blue * m_statisticalEngine.power)));
+  m_layer[1](NUMLEDS-1, NUMLEDS-1) = CRGB((byte)(dim8_raw(m_TopColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopColor.blue * m_statisticalEngine.power)));
   
-  m_layer[2]((NUMLEDS/2-1), (NUMLEDS/2-1)) = CRGB((byte)(dim8_raw(m_BottomMiddleColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomMiddleColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_BottomMiddleColor.blue * m_statisticalEngine.powerDb)));
-  m_layer[3](NUMLEDS/2, NUMLEDS/2) = CRGB((byte)(dim8_raw(m_TopMiddleColor.red * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopMiddleColor.green * m_statisticalEngine.powerDb)), (byte)(dim8_raw(m_TopMiddleColor.blue * m_statisticalEngine.powerDb)));
+  m_layer[2]((NUMLEDS/2-1), (NUMLEDS/2-1)) = CRGB((byte)(dim8_raw(m_BottomMiddleColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomMiddleColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_BottomMiddleColor.blue * m_statisticalEngine.power)));
+  m_layer[3](NUMLEDS/2, NUMLEDS/2) = CRGB((byte)(dim8_raw(m_TopMiddleColor.red * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopMiddleColor.green * m_statisticalEngine.power)), (byte)(dim8_raw(m_TopMiddleColor.blue * m_statisticalEngine.power)));
   
   m_layer[4] = m_layer[0];
   m_layer[5] = m_layer[1];
@@ -706,10 +744,10 @@ void WaterFallFireStreamer::Randomize()
   m_TopFadeToColor = GetRandomNonGrayColor();
   m_BottomMiddleFadeToColor = GetRandomNonGrayColor();
   m_TopMiddleFadeToColor = GetRandomNonGrayColor();
-  SetFadeToColor(m_bottomFadeController, m_BottomColor, m_BottomFadeToColor, m_fadeLength);
-  SetFadeToColor(m_topFadeController, m_TopColor, m_TopFadeToColor, m_fadeLength);
-  SetFadeToColor(m_bottomMiddleFadeController, m_BottomMiddleColor, m_BottomMiddleFadeToColor, m_fadeLength);
-  SetFadeToColor(m_topMiddleFadeController, m_TopMiddleColor, m_TopMiddleFadeToColor, m_fadeLength);
+  m_bottomFadeController.ConfigureFadeController(m_BottomColor, m_BottomFadeToColor, m_fadeLength);
+  m_topFadeController.ConfigureFadeController(m_TopColor, m_TopFadeToColor, m_fadeLength);
+  m_bottomMiddleFadeController.ConfigureFadeController(m_BottomMiddleColor, m_BottomMiddleFadeToColor, m_fadeLength);
+  m_topMiddleFadeController.ConfigureFadeController(m_TopMiddleColor, m_TopMiddleFadeToColor, m_fadeLength);
 }
 void WaterFallFireStreamer::End()
 {
@@ -721,7 +759,7 @@ void WaterFallFireStreamer::End()
                                              , StatisticalEngine &statisticalEngine
                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SolidColorTower\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SolidColorTower with Duration: " << duration << "\n";
   return new SolidColorTower(duration, statisticalEngine, callee);
 }
 void SolidColorTower::Start()
@@ -783,7 +821,7 @@ void SolidColorTower::End()
                                                    , StatisticalEngine &statisticalEngine
                                                    , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SolidColorTower\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SolidColorTower with Duration: " << duration << "\n";
   return new FadingSolidColorTower(duration, statisticalEngine, callee);
 }
 void FadingSolidColorTower::Start()
@@ -807,11 +845,11 @@ void FadingSolidColorTower::Tick1()
   if (m_statisticalEngine.power >= SILENCE_THRESHOLD)
   {
     CRGB color;
-    m_currentColor = FadeColor(m_fadeController);
+    m_fadeController.IncrementFade(1);
     ++m_renderCount;
-    color.red = m_currentColor.red * m_statisticalEngine.powerDb;
-    color.blue = m_currentColor.blue * m_statisticalEngine.powerDb;
-    color.green = m_currentColor.green * m_statisticalEngine.powerDb;
+    color.red = m_fadeController.GetCurrentColor().red * m_statisticalEngine.power;
+    color.blue = m_fadeController.GetCurrentColor().blue * m_statisticalEngine.power;
+    color.green = m_fadeController.GetCurrentColor().green * m_statisticalEngine.power;
     m_layer[0] = color;
   }
   else
@@ -839,8 +877,9 @@ void FadingSolidColorTower::Tick2()
     if(true == debugMode && debugLevel >= 4) Serial << i << "|" << level << "\t";
   }
   if(true == debugMode && debugLevel >= 4) Serial << "\n";
-  m_finalColor = GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ));
-  SetFadeToColor(m_fadeController, m_currentColor, m_finalColor, m_desiredFadeCount);
+  m_fadeController.ConfigureFadeController( m_fadeController.GetCurrentColor()
+                                          , GetColor(maxBinSave, m_statisticalEngine.GetFFTBinIndexForFrequency(MAX_DISPLAYED_FREQ))
+                                          , m_desiredFadeCount );
 }
 void FadingSolidColorTower::End()
 {
@@ -852,18 +891,18 @@ void FadingSolidColorTower::End()
                                                     , StatisticalEngine &statisticalEngine
                                                     , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New PowerBarWithBassSprite\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New PowerBarWithBassSprite with Duration: " << duration << "\n";
   return new PowerBarWithBassSprite(duration, statisticalEngine, callee);
 }
 void PowerBarWithBassSprite::Start()
 {
   if(true == debugMode && debugLevel >= 1) Serial << "PowerBarWithBassSprite Start\n";
   m_powerBarColor = GetRandomColor(0, 100, 150, 255, 0, 100);
-  SetFadeToColor(m_powerBarFadeController, m_powerBarColor, GetRandomColor(0, 100, 150, 255, 0, 100), 50);
+  m_powerBarFadeController.ConfigureFadeController(m_powerBarColor, GetRandomColor(0, 100, 150, 255, 0, 100), 50);
   m_bassPowerBarColor = GetRandomColor(150, 255, 0, 100, 0, 100);
-  SetFadeToColor(m_bassPowerBarFadeController, m_bassPowerBarColor, GetRandomColor(150, 255, 0, 100, 0, 100), 50);
+  m_bassPowerBarFadeController.ConfigureFadeController(m_bassPowerBarColor, GetRandomColor(150, 255, 0, 100, 0, 100), 50);
   m_maxBassSpriteColor = GetRandomColor(0, 100, 0, 100, 150, 255);
-  SetFadeToColor(m_maxBassSpriteFadeController, m_maxBassSpriteColor, GetRandomColor(0, 100, 0, 100, 150, 255), 50);
+  m_maxBassSpriteFadeController.ConfigureFadeController(m_maxBassSpriteColor, GetRandomColor(0, 100, 0, 100, 150, 255), 50);
   m_sprites[0].position = 0;
   m_sprites[0].color = m_bassPowerBarColor;
   m_sprites[1].position = 0;
@@ -883,7 +922,7 @@ bool PowerBarWithBassSprite::Loop()
   unsigned long currentTime = millis();
   if(true == debugMode && debugLevel >= 3) Serial << "PowerBarWithBassSprite Loop: " << currentTime-m_resetTimer << " | " << m_duration << "\n";
   if(currentTime-m_timers[0] >= 0) {ResetTimer(0); Tick1(); updateRequired = true;}
-  if(currentTime-m_timers[1] >= 500) {ResetTimer(1); Tick2(); updateRequired = true;}
+  if(currentTime-m_timers[1] >= 100) {ResetTimer(1); Tick2(); updateRequired = true;}
   if(currentTime-m_timers[2] >= 1) {ResetTimer(2); Tick3(); updateRequired = true;}
   if(currentTime-m_timers[3] >= m_powerBarChangeColorTime) {ResetTimer(3); Tick4(); updateRequired = true;}
   if(currentTime-m_timers[4] >= m_bassPowerBarChangeColorTime) {ResetTimer(4); Tick5(); updateRequired = true;}
@@ -897,11 +936,16 @@ void PowerBarWithBassSprite::Tick1()
   m_layer[0] = CRGB::Black;
   int bassMin = 0;
   int bassMax = 0;
-  m_powerBarColor = FadeColor(m_powerBarFadeController);
-  m_bassPowerBarColor = FadeColor(m_bassPowerBarFadeController);
-  m_maxBassSpriteColor = FadeColor(m_maxBassSpriteFadeController);
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 5, SoundLevelOutputType_Level);
-  float  level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500.0, 2, SoundLevelOutputType_Beat);
+  m_powerBarFadeController.IncrementFade(1);
+  m_powerBarColor = m_powerBarFadeController.GetCurrentColor();
+  m_powerBarFadeController.IncrementFade(1);
+  m_powerBarColor = m_powerBarFadeController.GetCurrentColor();
+  m_powerBarFadeController.IncrementFade(1);
+  m_powerBarColor = m_powerBarFadeController.GetCurrentColor();
+  m_maxBassSpriteFadeController.IncrementFade(1);
+  m_powerBarColor = m_maxBassSpriteFadeController.GetCurrentColor();
+  float level1 = m_statisticalEngine.power;
+  float level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500.0, 20, SoundLevelOutputType_Beat);
   int power = level1 * (NUMLEDS - 2);
   int bassSize = level2 * (NUMLEDS*0.10);
   if(m_sprites[0].position <= power + 1)
@@ -964,19 +1008,19 @@ void PowerBarWithBassSprite::Tick3()
 void PowerBarWithBassSprite::Tick4()
 {
   m_powerBarChangeColorTime = random(5001);
-  SetFadeToColor(m_powerBarFadeController, m_powerBarColor, GetRandomColor(0, 100, 150, 255, 0, 100), 50);
+  m_powerBarFadeController.ConfigureFadeController(m_powerBarColor, GetRandomColor(0, 100, 150, 255, 0, 100), 50);
 }
 
 void PowerBarWithBassSprite::Tick5()
 {
   m_bassPowerBarChangeColorTime = random(5001);
-  SetFadeToColor(m_bassPowerBarFadeController, m_bassPowerBarColor, GetRandomColor(150, 255, 0, 100, 0, 100), 50);
+  m_bassPowerBarFadeController.ConfigureFadeController(m_bassPowerBarColor, GetRandomColor(150, 255, 0, 100, 0, 100), 50);
 }
 
 void PowerBarWithBassSprite::Tick6()
 {
   m_bassPowerMaxChangeColorTime = random(5001); 
-  SetFadeToColor(m_maxBassSpriteFadeController, m_maxBassSpriteColor, GetRandomColor(0, 100, 0, 100, 150, 255), 50);
+  m_maxBassSpriteFadeController.ConfigureFadeController(m_maxBassSpriteColor, GetRandomColor(0, 100, 0, 100, 150, 255), 50);
 }
 
 void PowerBarWithBassSprite::End()
@@ -989,7 +1033,7 @@ void PowerBarWithBassSprite::End()
                                                     , StatisticalEngine &statisticalEngine
                                                     , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New RandomFrequencySprites\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New RandomFrequencySprites with Duration: " << duration << "\n";
   return new RandomFrequencySprites(duration, statisticalEngine, callee);
 }
 void RandomFrequencySprites::Start()
@@ -1058,7 +1102,7 @@ void RandomFrequencySprites::End()
                                            , StatisticalEngine &statisticalEngine
                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New FFTAmplitudes\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FFTAmplitudes with Duration: " << duration << "\n";
   return new FFTAmplitudes(duration, statisticalEngine, callee);
 }
 void FFTAmplitudes::Start()
@@ -1091,7 +1135,7 @@ void FFTAmplitudes::Tick1()
   {
     float lowerFrequencyRange = i*freqWidth;
     float upperFrequencyRange = i*freqWidth+freqWidth;
-    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 20, SoundLevelOutputType_Level);
+    float  level = GetNormalizedSoundLevelDbForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 5, SoundLevelOutputType_Level);
     level = m_gainmultiplier*m_gainIntigrator*level/m_gainLimitMax;
     if(level < 0.0) level = 0.0;
     if(level > 1.0) level = 1.0;
@@ -1122,7 +1166,7 @@ void FFTAmplitudes::End()
                                                          , StatisticalEngine &statisticalEngine
                                                          , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New FrequencySpriteSpiral\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FrequencySpriteSpiral with Duration: " << duration << "\n";
   return new FrequencySpriteSpiral(duration, statisticalEngine, callee);
 }
 void FrequencySpriteSpiral::Start()
@@ -1187,7 +1231,7 @@ void FrequencySpriteSpiral::Tick1()
   float  maxLevelSave = 0.0;
   for(int i = 0; i < BINS; ++i)
   {
-    float  level = GetNormalizedSoundLevelForBin(i, 0, SoundLevelOutputType_Beat);
+    float  level = GetNormalizedSoundLevelForBin(i, 5, SoundLevelOutputType_Beat);
     if(level > maxLevelSave)
     {
       maxLevelSave = level;
@@ -1231,7 +1275,7 @@ void FrequencySpriteSpiral::End()
                                                                            , StatisticalEngine &statisticalEngine
                                                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New RandomHighLowFrequencyAmplitudeStreamer\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New RandomHighLowFrequencyAmplitudeStreamer with Duration: " << duration << "\n";
   return new RandomHighLowFrequencyAmplitudeStreamer(duration, statisticalEngine, callee);
 }
 void RandomHighLowFrequencyAmplitudeStreamer::Start()
@@ -1255,13 +1299,13 @@ void RandomHighLowFrequencyAmplitudeStreamer::Tick1()
 {
   ShiftStrip(m_layer[0], Up, 1);
   ShiftStrip(m_layer[1], Down, 1);
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, m_triggerFrequencyLow, 0, SoundLevelOutputType_Beat); 
+  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, m_triggerFrequencyLow, 0, SoundLevelOutputType_Level); 
   CRGB color = GetColor(m_triggerFrequencyLow, MAX_DISPLAYED_FREQ);
   color.red = color.red * level1;
   color.blue = color.blue * level1;
   color.green = color.green * level1; 
   m_layer[0](0, 0) = color;
-  float  level2 = GetNormalizedSoundLevelForFrequencyRange(m_triggerFrequencyHigh, MAX_DISPLAYED_FREQ, 0, SoundLevelOutputType_Beat);  
+  float  level2 = GetNormalizedSoundLevelForFrequencyRange(m_triggerFrequencyHigh, MAX_DISPLAYED_FREQ, 0, SoundLevelOutputType_Level);  
   CRGB color2 = GetColor(m_triggerFrequencyHigh, MAX_DISPLAYED_FREQ);
   color2.red = color2.red * level2;
   color2.blue = color2.blue * level2;
@@ -1293,7 +1337,7 @@ void RandomHighLowFrequencyAmplitudeStreamer::End()
                                                                            , StatisticalEngine &statisticalEngine
                                                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New OutwardAmplitudeWithFloatingBassSprites\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New OutwardAmplitudeWithFloatingBassSprites with Duration: " << duration << "\n";
   return new OutwardAmplitudeWithFloatingBassSprites(duration, statisticalEngine, callee);
 }
 void OutwardAmplitudeWithFloatingBassSprites::Start()
@@ -1324,14 +1368,16 @@ void OutwardAmplitudeWithFloatingBassSprites::Tick1()
 {
   int bottomCenter = NUMLEDS/2-1;
   int topCenter = NUMLEDS/2;
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0.0, MAX_DISPLAYED_FREQ, 5, SoundLevelOutputType_Level);
+  float  level1 = m_statisticalEngine.power;
   float  level2 = GetNormalizedSoundLevelForFrequencyRange(0.0, 500, 2, SoundLevelOutputType_Beat);
   int barHeight = ((NUMLEDS/2-1))*level1;
   int bassSize = level2 * (0.1 * NUMLEDS);
   int bottomPeak = bottomCenter;
   int topPeak = topCenter;
-  m_BottomColor = FadeColor(m_bottomFadeController);
-  m_TopColor = FadeColor(m_topFadeController);
+  m_bottomFadeController.IncrementFade(1);
+  m_BottomColor = m_bottomFadeController.GetCurrentColor();
+  m_topFadeController.IncrementFade(1);
+  m_TopColor = m_topFadeController.GetCurrentColor();
   m_layer[0] = CRGB::Black;
   if(barHeight >= ((NUMLEDS/2-1)))
   {
@@ -1395,8 +1441,8 @@ void OutwardAmplitudeWithFloatingBassSprites::Random()
   m_BottomFadeToColor = GetRandomNonGrayColor();
   m_TopFadeToColor = GetRandomNonGrayColor();
   m_fadeLength = random(0, 2001);
-  SetFadeToColor(m_bottomFadeController, m_BottomColor, m_BottomFadeToColor, m_fadeLength);
-  SetFadeToColor(m_topFadeController, m_TopColor, m_TopFadeToColor, m_fadeLength);
+  m_bottomFadeController.ConfigureFadeController(m_BottomColor, m_BottomFadeToColor, m_fadeLength);
+  m_topFadeController.ConfigureFadeController(m_TopColor, m_TopFadeToColor, m_fadeLength);
 }
 void OutwardAmplitudeWithFloatingBassSprites::End()
 {
@@ -1409,7 +1455,7 @@ void OutwardAmplitudeWithFloatingBassSprites::End()
                                                              , StatisticalEngine &statisticalEngine
                                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New VerticalFFTAmplitudeTower\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New VerticalFFTAmplitudeTower with Duration: " << duration << "\n";
   return new VerticalFFTAmplitudeTower(duration, statisticalEngine, callee);
 }
 void VerticalFFTAmplitudeTower::Start()
@@ -1466,7 +1512,7 @@ void VerticalFFTAmplitudeTower::Tick1()
   {
     for(int i = 0; i < NUMLEDS; ++i)
     {
-      float  level = GetNormalizedSoundLevelForBin(i/ledsPerBin, 0, SoundLevelOutputType_Beat);
+      float  level = GetNormalizedSoundLevelForBin(i/ledsPerBin, 0, SoundLevelOutputType_Level);
       if(true == debugMode && debugLevel >= 5) Serial << i << " | " << level << "\n";
       CRGB color = GetColor(i, NUMLEDS);
       m_layer[0][i] = CRGB((byte)(dim8_raw(color.red * level)), (byte)(dim8_raw(color.green * level)), (byte)(dim8_raw(color.blue * level)));
@@ -1488,7 +1534,7 @@ void VerticalFFTAmplitudeTower::End()
                                                             , StatisticalEngine &statisticalEngine
                                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New MultiRangeAmplitudeTower\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New MultiRangeAmplitudeTower with Duration: " << duration << "\n";
   return new MultiRangeAmplitudeTower(duration, statisticalEngine, callee);
 }
 void MultiRangeAmplitudeTower::Start()
@@ -1520,7 +1566,7 @@ void MultiRangeAmplitudeTower::Tick1()
     int upperLedPosition = i*rangeHeight+rangeHeight-1;
     float lowerFrequencyRange = i*rangeFrequency;
     float upperFrequencyRange = i*rangeFrequency+rangeFrequency;
-    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 5, SoundLevelOutputType_Level);   
+    float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 5, SoundLevelOutputType_Beat);   
     if(true == debugMode && debugLevel >= 3) Serial << i << "|" << level << "\t";
     int onLEDs = level*(upperLedPosition-lowerLedPosition - 1);
     m_layer[0](lowerLedPosition, lowerLedPosition + onLEDs) = m_powerBarColor;    
@@ -1557,7 +1603,7 @@ void MultiRangeAmplitudeTower::End()
                                                                  , StatisticalEngine &statisticalEngine
                                                                  , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New SimultaneousFrequencyStreamer\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New SimultaneousFrequencyStreamer with Duration: " << duration << "\n";
   return new SimultaneousFrequencyStreamer(duration, statisticalEngine, callee);
 }
 void SimultaneousFrequencyStreamer::Start()
@@ -1587,42 +1633,42 @@ bool SimultaneousFrequencyStreamer::Loop()
 }
 void SimultaneousFrequencyStreamer::Tick1()
 { 
-  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0*MAX_DISPLAYED_FREQ/8, 1*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level1 = GetNormalizedSoundLevelForFrequencyRange(0*MAX_DISPLAYED_FREQ/8, 1*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[8] = CRGB((byte)(dim8_raw(m_randomColors[0].red * level1))
                        , (byte)(dim8_raw(m_randomColors[0].green * level1))
                        , (byte)(dim8_raw(m_randomColors[0].blue * level1)));
                      
-  float  level2 = GetNormalizedSoundLevelForFrequencyRange(1*MAX_DISPLAYED_FREQ/8, 2*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level2 = GetNormalizedSoundLevelForFrequencyRange(1*MAX_DISPLAYED_FREQ/8, 2*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[9] = CRGB((byte)(dim8_raw(m_randomColors[1].red * level2))
                        , (byte)(dim8_raw(m_randomColors[1].green * level2))
                        , (byte)(dim8_raw(m_randomColors[1].blue * level2)));
                     
-  float  level3 = GetNormalizedSoundLevelForFrequencyRange(2*MAX_DISPLAYED_FREQ/8, 3*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level3 = GetNormalizedSoundLevelForFrequencyRange(2*MAX_DISPLAYED_FREQ/8, 3*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[10] = CRGB((byte)(dim8_raw(m_randomColors[2].red * level3))
                          , (byte)(dim8_raw(m_randomColors[2].green * level3))
                          , (byte)(dim8_raw(m_randomColors[2].blue * level3)));
                                             
-  float  level4 = GetNormalizedSoundLevelForFrequencyRange(3*MAX_DISPLAYED_FREQ/8, 4*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level4 = GetNormalizedSoundLevelForFrequencyRange(3*MAX_DISPLAYED_FREQ/8, 4*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[11] = CRGB((byte)(dim8_raw(m_randomColors[3].red * level4))
                          , (byte)(dim8_raw(m_randomColors[3].green * level4))
                          , (byte)(dim8_raw(m_randomColors[3].blue * level4)));
                      
-  float  level5 = GetNormalizedSoundLevelForFrequencyRange(4*MAX_DISPLAYED_FREQ/8, 5*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level5 = GetNormalizedSoundLevelForFrequencyRange(4*MAX_DISPLAYED_FREQ/8, 5*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[12] = CRGB((byte)(dim8_raw(m_randomColors[4].red * level5))
                          , (byte)(dim8_raw(m_randomColors[4].green * level5))
                          , (byte)(dim8_raw(m_randomColors[4].blue * level5)));
                    
-  float  level6 = GetNormalizedSoundLevelForFrequencyRange(5*MAX_DISPLAYED_FREQ/8, 6*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level6 = GetNormalizedSoundLevelForFrequencyRange(5*MAX_DISPLAYED_FREQ/8, 6*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[13] = CRGB((byte)(dim8_raw(m_randomColors[5].red * level6))
                          , (byte)(dim8_raw(m_randomColors[5].green * level6))
                          , (byte)(dim8_raw(m_randomColors[5].blue * level6)));
                     
-  float  level7 = GetNormalizedSoundLevelForFrequencyRange(6*MAX_DISPLAYED_FREQ/8, 7*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level7 = GetNormalizedSoundLevelForFrequencyRange(6*MAX_DISPLAYED_FREQ/8, 7*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[14] = CRGB((byte)(dim8_raw(m_randomColors[6].red * level7))
                          , (byte)(dim8_raw(m_randomColors[6].green * level7))
                          , (byte)(dim8_raw(m_randomColors[6].blue * level7)));
                      
-  float  level8 = GetNormalizedSoundLevelForFrequencyRange(7*MAX_DISPLAYED_FREQ/8, 8*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Beat);
+  float  level8 = GetNormalizedSoundLevelForFrequencyRange(7*MAX_DISPLAYED_FREQ/8, 8*MAX_DISPLAYED_FREQ/8, 0, SoundLevelOutputType_Level);
   m_randomColors[15] = CRGB((byte)(dim8_raw(m_randomColors[7].red * level8))
                          , (byte)(dim8_raw(m_randomColors[7].green * level8))
                          , (byte)(dim8_raw(m_randomColors[7].blue * level8)));
@@ -1722,7 +1768,7 @@ void SimultaneousFrequencyStreamer::End()
                                              , StatisticalEngine &statisticalEngine
                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New MinMaxAmplitude\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New MinMaxAmplitude with Duration: " << duration << "\n";
   return new MinMaxAmplitude(duration, statisticalEngine, callee);
 }
 void MinMaxAmplitude::Start()
@@ -1754,17 +1800,17 @@ void MinMaxAmplitude::Tick1()
   float lowerFrequencyRange = m_activeBand*freqWidth;
   float upperFrequencyRange = m_activeBand*freqWidth+freqWidth;
   aSprite.color = GetColor(m_activeBand, m_numBands);
-  db amp = m_statisticalEngine.GetAverageDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, 0, BinDataType::INSTANT);
-  db avg = m_statisticalEngine.GetAverageDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  db maximum = m_statisticalEngine.GetMaxDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  db minimum = m_statisticalEngine.GetMinDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  MinMaxDb mm = m_statisticalEngine.GetFFTBinMinMaxAverageDbOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
-  int powerAmp = (amp/MAX_DB) * (NUMLEDS - 1);
-  int powerAvg = (avg/MAX_DB) * (NUMLEDS - 1);
-  int powerMinMaxMax = (mm.max/MAX_DB) * (NUMLEDS - 1);
-  int powerMinMaxMin = (mm.min/MAX_DB) * (NUMLEDS - 1);
-  int powerMax = (maximum/MAX_DB) * (NUMLEDS - 1);
-  int powerMin = (minimum/MAX_DB) * (NUMLEDS - 1);
+  float amp = m_statisticalEngine.GetAverageOfFreqRange(lowerFrequencyRange, upperFrequencyRange, 0, BinDataType::INSTANT);
+  float avg = m_statisticalEngine.GetAverageOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  float maximum = m_statisticalEngine.GetMaxOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  float minimum = m_statisticalEngine.GetMinOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  MinMax mm = m_statisticalEngine.GetFFTBinMinMaxAverageOfFreqRange(lowerFrequencyRange, upperFrequencyRange, BIN_SAVE_LENGTH-1, BinDataType::INSTANT);
+  int powerAmp = (amp/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerAvg = (avg/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMinMaxMax = (mm.max/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMinMaxMin = (mm.min/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMax = (maximum/(float)ADDBITS) * (NUMLEDS - 1);
+  int powerMin = (minimum/(float)ADDBITS) * (NUMLEDS - 1);
   
   if(powerMinMaxMin < 0) powerMinMaxMin = 0;
   if(powerMinMaxMax < 0) powerMinMaxMax = 0;
@@ -1814,7 +1860,7 @@ void MinMaxAmplitude::End()
                                             , StatisticalEngine &statisticalEngine
                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ChasingSprites\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ChasingSprites with Duration: " << duration << "\n";
   return new ChasingSprites(duration, statisticalEngine, callee);
 }
 void ChasingSprites::Start()
@@ -2020,7 +2066,7 @@ void ChasingSprites::End()
                                                     , StatisticalEngine &statisticalEngine
                                                     , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New FrequencyColorStreamer\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FrequencyColorStreamer with Duration: " << duration << "\n";
   return new FrequencyColorStreamer(duration, statisticalEngine, callee);
 }
 void FrequencyColorStreamer::Start()
@@ -2077,7 +2123,7 @@ void FrequencyColorStreamer::End()
                                                                , StatisticalEngine &statisticalEngine
                                                                , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New FrequencyColorSpinningTower\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New FrequencyColorSpinningTower with Duration: " << duration << "\n";
   return new FrequencyColorSpinningTower(duration, statisticalEngine, callee);
 }
 void FrequencyColorSpinningTower::Start()
@@ -2109,7 +2155,14 @@ void FrequencyColorSpinningTower::Tick1()
     float  level = GetNormalizedSoundLevelForFrequencyRange(lowerFrequencyRange, upperFrequencyRange, 0, SoundLevelOutputType_Beat);    
     CRGB color = GetColor(rotatedIndex, NUMSTRIPS);
     if(true == debugMode && debugLevel >= 3) Serial << i << "|" << level << "\t";
-    m_strips[i] = CRGB((byte)(dim8_raw(color.red*level)), (byte)(dim8_raw(color.green*level)), (byte)(dim8_raw(color.blue*level)));
+    if(m_statisticalEngine.power >= SILENCE_THRESHOLD)
+    {
+      m_strips[i] = CRGB((byte)(dim8_raw(color.red*level)), (byte)(dim8_raw(color.green*level)), (byte)(dim8_raw(color.blue*level)));
+    }
+    else
+    {
+      m_strips[i] = CRGB::Black;
+    }
   }
   if(true == debugMode && debugLevel >= 3) Serial << "\n";
 }
@@ -2127,7 +2180,7 @@ void FrequencyColorSpinningTower::End()
                                                           , StatisticalEngine &statisticalEngine
                                                           , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New UpDownFrequencyColorStreamer\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New UpDownFrequencyColorStreamer with Duration: " << duration << "\n";
   return new UpDownFrequencyColorStreamer(duration, statisticalEngine, callee);
 }
 void UpDownFrequencyColorStreamer::Start()
@@ -2195,7 +2248,7 @@ void UpDownFrequencyColorStreamer::End()
                                                               , StatisticalEngine &statisticalEngine
                                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New UpDownMaxFrequencyStreamer\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New UpDownMaxFrequencyStreamer with Duration: " << duration << "\n";
   return new UpDownMaxFrequencyStreamer(duration, statisticalEngine, callee);
 }
 void UpDownMaxFrequencyStreamer::Start()
@@ -2268,7 +2321,7 @@ void UpDownMaxFrequencyStreamer::End()
                                            , StatisticalEngine &statisticalEngine
                                            , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingRainbow\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingRainbow with Duration: " << duration << "\n";
   return new FadingColors2(duration, statisticalEngine, callee);
 }
 void FadingColors2::Start()
@@ -2298,10 +2351,10 @@ bool FadingColors2::Loop()
 }
 void FadingColors2::Tick0()
 {
-  SetFadeToColor(m_fadeController0, m_currentColor1, m_currentColor2, m_desiredRenderCount0);
+  m_fadeController0.ConfigureFadeController(m_fadeController1.GetCurrentColor(), m_fadeController2.GetCurrentColor(), m_desiredRenderCount0);
   for(int i = 0; i < NUMLEDS; ++i)
   {
-    m_layer[0][i] = FadeColor(m_fadeController0);
+    m_layer[0][i] = m_fadeController0.GetCurrentColor();
     ++m_renderCount0;
   }
   for(int i = 0; i < NUMSTRIPS; ++i)
@@ -2311,12 +2364,12 @@ void FadingColors2::Tick0()
 }
 void FadingColors2::Tick1()
 {
-  m_currentColor1 = FadeColor(m_fadeController1);
+  m_fadeController1.IncrementFade(1);
   ++m_renderCount1;
 }
 void FadingColors2::Tick2()
 {
-  m_currentColor2 = FadeColor(m_fadeController2);
+  m_currentColor2 = m_fadeController2.IncrementFade(1);
   ++m_renderCount2;
 }
 void FadingColors2::Tick3()
@@ -2334,9 +2387,9 @@ void FadingColors2::Tick4()
 void FadingColors2::Random()
 {
   m_fadeToColor1 = GetColor(random(0,m_numColors), m_numColors);
-  SetFadeToColor(m_fadeController1, m_currentColor1, m_fadeToColor1, m_desiredRenderCount1);
+  m_fadeController1.ConfigureFadeController(m_currentColor1, m_fadeToColor1, m_desiredRenderCount1);
   m_fadeToColor2 = GetColor(random(0,m_numColors), m_numColors);
-  SetFadeToColor(m_fadeController2, m_currentColor2, m_fadeToColor2, m_desiredRenderCount2);
+  m_fadeController2.ConfigureFadeController(m_currentColor2, m_fadeToColor2, m_desiredRenderCount2);
 }
 void FadingColors2::End()
 {
@@ -2349,7 +2402,7 @@ void FadingColors2::End()
                                               , StatisticalEngine &statisticalEngine
                                               , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingRainbow\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingRainbow with Duration: " << duration << "\n";
   return new ScrollingRainbow(duration, statisticalEngine, callee);
 }
 void ScrollingRainbow::Start()
@@ -2371,7 +2424,7 @@ bool ScrollingRainbow::Loop()
 }
 void ScrollingRainbow::Tick1()
 {
-  m_currentColor = FadeColor(m_fadeController);
+  m_currentColor = m_fadeController.IncrementFade(1);
   m_layer[0][0] = CRGB {(byte)dim8_raw(m_currentColor.red), (byte)dim8_raw(m_currentColor.green), (byte)dim8_raw(m_currentColor.blue)};
   for(int i = 0; i < NUMSTRIPS; ++i)
   {
@@ -2383,7 +2436,7 @@ void ScrollingRainbow::Tick2()
 {
   int count = m_currentColorCount%m_numColors;
   m_fadeToColor = GetColor(count, m_numColors);
-  SetFadeToColor(m_fadeController, m_currentColor, m_fadeToColor, m_colorLength);
+  m_fadeController.ConfigureFadeController(m_currentColor, m_fadeToColor, m_colorLength);
   ++m_currentColorCount;
 }
 void ScrollingRainbow::Tick3()
@@ -2400,7 +2453,7 @@ void ScrollingRainbow::End()
                                                                      , StatisticalEngine &statisticalEngine
                                                                      , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingFrequencyColorRectangles\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingFrequencyColorRectangles with Duration: " << duration << "\n";
   return new ScrollingFrequencyColorRectangles(duration, statisticalEngine, callee);
 }
 void ScrollingFrequencyColorRectangles::Start()
@@ -2502,7 +2555,7 @@ void ScrollingFrequencyColorRectangles::End()
                                                              , StatisticalEngine &statisticalEngine
                                                              , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingFrequencySprites\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingFrequencySprites with Duration: " << duration << "\n";
   return new ScrollingFrequencySprites(duration, statisticalEngine, callee);
 }
 void ScrollingFrequencySprites::Start()
@@ -2568,7 +2621,7 @@ void ScrollingFrequencySprites::End()
                                                                   , StatisticalEngine &statisticalEngine
                                                                   , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingSpeedFrequencySprites\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingSpeedFrequencySprites with Duration: " << duration << "\n";
   return new ScrollingSpeedFrequencySprites(duration, statisticalEngine, callee);
 }
 void ScrollingSpeedFrequencySprites::Start()
@@ -2675,7 +2728,7 @@ void ScrollingSpeedFrequencySprites::End()
                                                             , StatisticalEngine &statisticalEngine
                                                             , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New ScrollingAmplitudeSprite\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New ScrollingAmplitudeSprite with Duration: " << duration << "\n";
   return new ScrollingAmplitudeSprite(duration, statisticalEngine, callee);
 }
 void ScrollingAmplitudeSprite::Start()
@@ -2700,7 +2753,7 @@ bool ScrollingAmplitudeSprite::Loop()
 void ScrollingAmplitudeSprite::Tick1()
 {
   float  level = m_statisticalEngine.power;
-  m_sprite.color = FadeColor(m_fadeController);
+  m_sprite.color = m_fadeController.IncrementFade(1);
   if(m_count % m_waitCount == 0)
   {
     switch(m_sprite.direction)
@@ -2741,7 +2794,7 @@ void ScrollingAmplitudeSprite::Random()
   m_waitCount = random(1,(BIN_SAVE_LENGTH/10) + 1);
   m_randomTime = random(5000, m_maxRandomTime);
   m_fadeToColor = GetRandomNonGrayColor();
-  SetFadeToColor(m_fadeController, m_sprite.color, m_fadeToColor, m_fadeLength*m_waitCount);
+  m_fadeController.ConfigureFadeController(m_sprite.color, m_fadeToColor, m_fadeLength*m_waitCount);
   m_sprite.color = GetRandomNonGrayColor();
 }
 
@@ -2757,7 +2810,7 @@ void ScrollingAmplitudeSprite::End()
                                        , StatisticalEngine &statisticalEngine
                                        , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New Opposites\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New Opposites with Duration: " << duration << "\n";
   return new Opposites(duration, statisticalEngine, callee);
 }
 void Opposites::Start()
@@ -2852,7 +2905,7 @@ void Opposites::End()
                                    , StatisticalEngine &statisticalEngine
                                    , VisualizationsCalleeInterface *callee )
 {
-  if(true == debugMode && debugLevel >= 2) Serial << "New Snake\n";
+  if(true == debugMode && debugLevel >= 0) Serial << "New Snake with Duration: " << duration << "\n";
   return new Snake(duration, statisticalEngine, callee);
 }
 void Snake::Start()
@@ -2897,7 +2950,7 @@ void Snake::Tick1()
   color.blue = color.blue * maxLevelSave;
   color.green = color.green * maxLevelSave;
   m_layer[0](0,0) = color;
-  if (m_statisticalEngine.power>SILENCE_THRESHOLD)
+  if (m_statisticalEngine.power > SILENCE_THRESHOLD)
   {
     m_layer[0](0,0) = color;
   }
