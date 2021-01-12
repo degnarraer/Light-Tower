@@ -80,7 +80,8 @@ void Visualization::DeleteAllNewedObjects()
 void Visualization::Setup()
 {
   if(true == debugVisualization) Serial << "Setup Visualization\n"; 
-  m_MyPixelStruct.Clear();
+  m_PixelArray = new PixelArray(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+  m_PixelArray->Clear();
   SetupVisualization();
 }
 bool Visualization::CanRunMyTask()
@@ -91,43 +92,42 @@ void Visualization::RunMyTask()
 {
   MergeSubViews();
   RunVisualization();
-  m_LEDController.UpdateLEDs(m_MyPixelStruct);
+  m_LEDController.UpdateLEDs(m_PixelArray);
 }
 
 void Visualization::MergeSubViews()
 {
-  m_MyPixelStruct.Clear();
+  m_PixelArray->Clear();
   for(int v = 0; v < m_MyViews.size(); ++v)
   {
     View *aView = m_MyViews.get(v);
-    PixelStruct &aPixelStruct = aView->GetPixelStruct();
-    for(int y = 0; y < SCREEN_HEIGHT; ++y)
+    for(int y = 0; y < m_PixelArray->GetHeight(); ++y)
     {
-      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      for(int x = 0; x < m_PixelArray->GetWidth(); ++x)
       {
-        if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
-        if(
-          aPixelStruct.Pixel[x][y].red != 0 ||
-          aPixelStruct.Pixel[x][y].green != 0 ||
-          aPixelStruct.Pixel[x][y].blue != 0
-          )
+        if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
+        if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )
+        {
+          switch(aView->GetMergeType())
           {
-            switch(aView->GetMergeType())
+            case MergeType_Layer:
+              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
+              m_PixelArray->SetPixel(x, y, aView->GetPixel(x, y));
+            break;
+            case MergeType_Add:
             {
-              case MergeType_Layer:
-                if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
-                m_MyPixelStruct.Pixel[x][y] = aPixelStruct.Pixel[x][y];
-              break;
-              case MergeType_Add:
-                if(true == debugLEDs) Serial << "Add Pixel " << x << "|" << y << " to: " << "\tR:" << aPixelStruct.Pixel[x][y].red << "\tG:" << aPixelStruct.Pixel[x][y].green << "\tB:" << aPixelStruct.Pixel[x][y].blue << "\n";
-                m_MyPixelStruct.Pixel[x][y].red = qadd8(aPixelStruct.Pixel[x][y].red, m_MyPixelStruct.Pixel[x][y].red);
-                m_MyPixelStruct.Pixel[x][y].blue = qadd8(aPixelStruct.Pixel[x][y].blue, m_MyPixelStruct.Pixel[x][y].blue);
-                m_MyPixelStruct.Pixel[x][y].green = qadd8(aPixelStruct.Pixel[x][y].green, m_MyPixelStruct.Pixel[x][y].green);
-              break;
-              default:
-              break;
+              if(true == debugLEDs) Serial << "Add Pixel " << x << "|" << y << " to: " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
+              CRGB pixel;
+              pixel.red = qadd8(aView->GetPixel(x, y).red, m_PixelArray->GetPixel(x, y).red);
+              pixel.blue = qadd8(aView->GetPixel(x, y).blue, m_PixelArray->GetPixel(x, y).blue);
+              pixel.green = qadd8(aView->GetPixel(x, y).green, m_PixelArray->GetPixel(x, y).green);
+              m_PixelArray->SetPixel(x, y, pixel);
             }
+            break;
+            default:
+            break;
           }
+        }
       }
     }
   }

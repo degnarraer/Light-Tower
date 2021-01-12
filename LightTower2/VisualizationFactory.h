@@ -25,10 +25,13 @@
 class VUMeter: public Visualization
 {
   public:
-    VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController){}
+    VUMeter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController)
+    {
+      if(true == debugMemory) Serial << "New: VUMeter\n";
+    }
     virtual ~VUMeter()
     {
-      if(true == debugMemory) Serial << "VUMeter: Deleted";
+      if(true == debugMemory) Serial << "Deleted: VUMeter\n";
     }
 
     //Visualization
@@ -49,10 +52,13 @@ class VUMeter8Band: public Visualization
 {
   public:
     VUMeter8Band( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                : Visualization( StatisticalEngineModelInterface, LEDController){}
+                : Visualization( StatisticalEngineModelInterface, LEDController)
+    {
+      if(true == debugMemory) Serial << "New: VUMeter8Band\n";
+    }
     virtual ~VUMeter8Band()
     {
-      if(true == debugMemory) Serial << "VUMeter8Band: Deleted";
+      if(true == debugMemory) Serial << "Deleted: VUMeter8Band\n";
     }
 
     //Visualization
@@ -116,10 +122,13 @@ class VUMeter3Band: public Visualization
 {
   public:
     VUMeter3Band( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                : Visualization( StatisticalEngineModelInterface, LEDController){}
+                : Visualization( StatisticalEngineModelInterface, LEDController)
+    {
+      if(true == debugMemory) Serial << "New: VUMeter3Band\n";
+    }
     virtual ~VUMeter3Band()
     {
-      if(true == debugMemory) Serial << "VUMeter3Band: Deleted";
+      if(true == debugMemory) Serial << "Deleted: VUMeter3Band\n";
     }
 
     //Visualization
@@ -153,8 +162,8 @@ class Waterfall: public Visualization
 {
   public:
     Waterfall( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-             : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~Waterfall() { if(true == debugMemory) Serial << "Waterfall: Deleted"; }
+             : Visualization( StatisticalEngineModelInterface, LEDController) { if(true == debugMemory) Serial << "New: Waterfall\n"; }
+    virtual ~Waterfall() { if(true == debugMemory) Serial << "Deleted: Waterfall\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -174,8 +183,8 @@ class Fire: public Visualization
 {
   public:
     Fire( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-        : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~Fire(){ if(true == debugMemory) Serial << "Fire: Deleted"; }
+        : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: Fire\n"; }
+    virtual ~Fire(){ if(true == debugMemory) Serial << "Deleted: Fire\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -195,8 +204,8 @@ class WaterFireFromCenter: public Visualization
 {
   public:
     WaterFireFromCenter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                       : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~WaterFireFromCenter() { if(true == debugMemory) Serial << "Fire: Deleted"; }
+                       : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: WaterFireFromCenter\n"; }
+    virtual ~WaterFireFromCenter() { if(true == debugMemory) Serial << "Deleted: WaterFireFromCenter\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -222,8 +231,8 @@ class WaterFireFromEdge: public Visualization
 {
   public:
     WaterFireFromEdge( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                       : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~WaterFireFromEdge() { if(true == debugMemory) Serial << "Fire: Deleted"; }
+                       : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: WaterFireFromEdge\n"; }
+    virtual ~WaterFireFromEdge() { if(true == debugMemory) Serial << "Deleted: WaterFireFromEdge\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -251,8 +260,8 @@ class VerticalBandTower: public Visualization
 {
   public:
     VerticalBandTower( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                     : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~VerticalBandTower(){ if(true == debugMemory) Serial << "VerticalBandTower: Deleted"; }
+                     : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: VerticalBandTower\n"; }
+    virtual ~VerticalBandTower(){ if(true == debugMemory) Serial << "Deleted: VerticalBandTower\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -267,8 +276,8 @@ class ScrollingBands: public Visualization
 {
   public:
     ScrollingBands( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                  : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~ScrollingBands(){ if(true == debugMemory) Serial << "VerticalBandTower: Deleted"; }
+                  : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: ScrollingBands\n"; }
+    virtual ~ScrollingBands(){ if(true == debugMemory) Serial << "Deleted: ScrollingBands\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -329,8 +338,8 @@ class ScrollingMaxBand: public Visualization
 {
   public:
     ScrollingMaxBand( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                    : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~ScrollingMaxBand(){ if(true == debugMemory) Serial << "ScrollingMaxBand: Deleted"; }
+                    : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: ScrollingMaxBand\n"; }
+    virtual ~ScrollingMaxBand(){ if(true == debugMemory) Serial << "Deleted: ScrollingMaxBand\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController);
@@ -349,8 +358,8 @@ class RotatingSprites: public Visualization
 {
   public:
     RotatingSprites( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-                   : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~RotatingSprites(){ if(true == debugMemory) Serial << "ScrollingMaxBand: Deleted"; }
+                   : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: RotatingSprites\n"; }
+    virtual ~RotatingSprites(){ if(true == debugMemory) Serial << "Deleted: RotatingSprites\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
@@ -418,8 +427,8 @@ class BallShooter: public Visualization
 {
   public:
     BallShooter( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) 
-               : Visualization( StatisticalEngineModelInterface, LEDController){}
-    virtual ~BallShooter(){ if(true == debugMemory) Serial << "BallShooter: Deleted"; }
+               : Visualization( StatisticalEngineModelInterface, LEDController){ if(true == debugMemory) Serial << "New: BallShooter\n"; }
+    virtual ~BallShooter(){ if(true == debugMemory) Serial << "Deleted: BallShooter\n"; }
 
     //Visualization
     static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)

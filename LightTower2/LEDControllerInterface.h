@@ -26,7 +26,37 @@
 #include "Streaming.h"
 
 
+
 typedef CRGBArray<NUMLEDS> LEDStrip;
+
+template <typename T>
+T** Create2DArray(unsigned nrows, unsigned ncols, const T& val = T())
+{
+   if (nrows == 0){}
+        //throw std::invalid_argument("number of rows is 0");
+   if (ncols == 0){}
+        //throw std::invalid_argument("number of columns is 0");
+   T** ptr = NULL;
+   T* pool = NULL;
+
+   ptr = new T*[nrows];  // allocate pointers (can throw here)
+   pool = new T[nrows*ncols]{val};  // allocate pool (can throw here)
+
+   // now point the row pointers to the appropriate positions in
+   // the memory pool
+   for (unsigned i = 0; i < nrows; ++i, pool += ncols )
+       ptr[i] = pool;
+
+   // Done.
+   return ptr;
+}
+
+template <typename T>
+void Delete2DArray(T** arr)
+{
+   delete [] arr[0];  // remove the pool
+   delete [] arr;     // remove the pointers
+}
 
 struct PixelStruct
 { 
@@ -47,6 +77,63 @@ struct PixelStruct
       }
     }
 };
+
+class PixelArray
+{
+  public:
+    PixelArray(int X, int Y, int W, int H): m_X(X), m_Y(Y),  m_W(W), m_H(H)
+    {
+      m_Pixel = Create2DArray<CRGB>(m_W, m_H, CRGB::Black);
+    }
+    virtual ~PixelArray()
+    {
+      if(true == debugMemory) Serial << "Delete: PixelArray\n";
+      Delete2DArray(m_Pixel);
+    }
+    void Clear()
+    {
+      for(int x = 0; x < m_W; ++x)
+      {
+        for(int y = 0; y < m_H; ++y)
+        {
+          m_Pixel[x][y] = CRGB::Black;
+        }
+      }
+    }
+    void SetPosition(int X, int Y)
+    {
+      m_X = X;
+      m_Y = Y;
+    }
+    CRGB GetPixel(int X, int Y)
+    {
+      if( (X >= m_X) && (X < m_X + m_W) && (Y >= m_Y) && (Y < m_Y + m_H) )
+      {
+        return m_Pixel[X - m_X][Y - m_Y];
+      }
+      else
+      {
+        return CRGB::Black;
+      }
+    }
+    void SetPixel(int X, int Y, CRGB value)
+    {
+      if( (X >= m_X) && (X < m_X + m_W) && (Y >= m_Y) && (Y < m_Y + m_H) )
+      {
+        m_Pixel[X - m_X][Y - m_Y] = value;
+      }
+    }
+    int GetWidth(){ return m_W; }
+    int GetHeight(){ return m_H; }
+  private:
+    CRGB** m_Pixel;
+    int m_X = 0;
+    int m_Y = 0;
+    int m_W = 0;
+    int m_H = 0;
+  
+};
+
 class LEDController
 {
   public:
@@ -70,6 +157,23 @@ class LEDController
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelStruct.Pixel[x][y];
+          m_LEDStrip[x][y].red =(byte)dim8_raw(bufColor.red);
+          m_LEDStrip[x][y].green = (byte)dim8_raw(bufColor.green);
+          m_LEDStrip[x][y].blue = (byte)dim8_raw(bufColor.blue);
+          if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
+        }
+        if(true == debugLEDs) Serial << "\n";
+      }
+      FastLED.show();
+    }
+    void UpdateLEDs(PixelArray *pixelArray)
+    {
+      if(true == debugLEDs) Serial << "******LED Controller LEDs******\n";
+      for(int y = 0; y < SCREEN_HEIGHT; ++ y)
+      {
+        for(int x = 0; x < SCREEN_WIDTH; ++x)
+        {
+          CRGB bufColor = pixelArray->GetPixel(x, y);
           m_LEDStrip[x][y].red =(byte)dim8_raw(bufColor.red);
           m_LEDStrip[x][y].green = (byte)dim8_raw(bufColor.green);
           m_LEDStrip[x][y].blue = (byte)dim8_raw(bufColor.blue);

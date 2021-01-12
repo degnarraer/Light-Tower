@@ -38,12 +38,11 @@ class Visualization: public Task
                
     virtual ~Visualization()
     {
-      if(true == debugMemory) Serial << "Delete Visualization\n";
+      if(true == debugMemory) Serial << "Delete: Visualization\n";
       DeleteAllNewedObjects();
     }
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController &m_LEDController;
-    PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
     
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;
@@ -64,7 +63,7 @@ class Visualization: public Task
     LinkedList<Model*> m_MyModels = LinkedList<Model*>();
     LinkedList<View*> m_MyNewedViews = LinkedList<View*>();
     LinkedList<Model*> m_MyNewedModels = LinkedList<Model*>();
-    PixelStruct m_MyPixelStruct;
+    PixelArray *m_PixelArray;
     void MergeSubViews();
 };
 

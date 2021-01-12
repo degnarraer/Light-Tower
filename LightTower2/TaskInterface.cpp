@@ -56,7 +56,7 @@ void TaskScheduler::RunScheduler()
 }
 void TaskScheduler::AddTask(Task &task)
 {
-  if(true == debugTasks || true == debugMemory) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
+  if(true == debugTasks) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
   m_MyTasks.add(&task);
   if(false == task.GetIsSetup())
   {

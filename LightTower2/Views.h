@@ -55,23 +55,39 @@ class View: public Task
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
-                                                              , m_H(H){}
+                                                              , m_H(H)
+    {
+      if(true == debugMemory) Serial << "New: View\n";
+    }
     View(String Title, position X, position Y, size W, size H, MergeType MergeType): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
                                                               , m_H(H)
-                                                              , m_MergeType(MergeType){}
+                                                              , m_MergeType(MergeType)
+    {
+      if(true == debugMemory) Serial << "New: View\n";
+    }
     virtual ~View()
     {
-      if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
+      if(true == debugMemory) Serial << "Delete: View\n";
+      delete m_PixelArray;
     }
-    void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
+    void SetPosition(position X, position Y)
+    { 
+      m_X = X; 
+      m_Y = Y;
+      m_PixelArray->SetPosition(m_X, m_Y);
+    }
     void SetSize(size W, size H){ m_W = W; m_H = H; }
     void AddSubView(View &SubView)
     { 
       m_SubViews.add(&SubView);
       AddTask(SubView);
+    }
+    CRGB GetPixel(int X, int Y)
+    {
+      return m_PixelArray->GetPixel(X, Y);
     }
     bool RemoveSubView(View &SubView)
     {
@@ -98,9 +114,8 @@ class View: public Task
     }
     MergeType GetMergeType(){ return m_MergeType; }
     void RemoveAllSubViews(){}
-    PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
   protected:
-    PixelStruct m_MyPixelStruct;
+    PixelArray *m_PixelArray;
     position m_X;
     position m_Y;
     size m_W;
@@ -133,14 +148,23 @@ class VerticalBarView: public View
 {
   public:
     VerticalBarView(String title): View(title, 0, 0, 0, 0)
-                                 , ModelWithNewValueNotification<Position>(title){}
+                                 , ModelWithNewValueNotification<Position>(title)
+    {
+      if(true == debugMemory) Serial << "New: VerticalBarView\n";
+    }
     VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H)
-                                                                         , ModelWithNewValueNotification<Position>(title){}
+                                                                         , ModelWithNewValueNotification<Position>(title)
+    {
+      if(true == debugMemory) Serial << "New: VerticalBarView\n";
+    }
     VerticalBarView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
-                                                                                              , ModelWithNewValueNotification<Position>(title){}
+                                                                                              , ModelWithNewValueNotification<Position>(title)
+    {
+      if(true == debugMemory) Serial << "New: VerticalBarView\n";
+    }
     virtual ~VerticalBarView()
     {
-      if(true == debugMemory) Serial << "Delete VerticalBarView\n";  
+      if(true == debugMemory) Serial << "Delete: VerticalBarView\n";  
     }
     void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
     void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
@@ -175,11 +199,17 @@ class BassSpriteView: public View
                     , public ModelEventNotificationCallee<float>
 {
   public:
-    BassSpriteView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H){}
-    BassSpriteView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType){}
+    BassSpriteView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H)
+    {
+      if(true == debugMemory) Serial << "New: BassSpriteView\n";
+    }
+    BassSpriteView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
+    {
+      if(true == debugMemory) Serial << "New: BassSpriteView\n";
+    }
     virtual ~BassSpriteView()
     {
-      if(true == debugMemory) Serial << "Delete BassSpriteView\n";  
+      if(true == debugMemory) Serial << "Delete: BassSpriteView\n";  
     }
     void ConnectModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
 
@@ -211,7 +241,10 @@ class ScrollingView: public View
                  , size W
                  , size H)
                  : View(title, X, Y, W, H)
-                 , m_ScrollDirection(scrollDirection){}
+                 , m_ScrollDirection(scrollDirection)
+    {
+      if(true == debugMemory) Serial << "New: ScrollingView\n";  
+    }
     ScrollingView( String title
                  , ScrollDirection scrollDirection
                  , position X
@@ -220,10 +253,13 @@ class ScrollingView: public View
                  , size H
                  , MergeType MergeType)
                  : View(title, X, Y, W, H, MergeType)
-                 , m_ScrollDirection(scrollDirection){}
+                 , m_ScrollDirection(scrollDirection)
+    {
+      if(true == debugMemory) Serial << "New: ScrollingView\n";  
+    }
     virtual ~ScrollingView()
     {
-      if(true == debugMemory) Serial << "Delete ScrollingView\n";  
+      if(true == debugMemory) Serial << "Delete: ScrollingView\n";  
     }
     
   private:
@@ -244,7 +280,10 @@ class ColorSpriteView: public View
                    , position X
                    , position Y
                    , size W, size H)
-                   : View(title, X, Y, W, H){}
+                   : View(title, X, Y, W, H)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
     ColorSpriteView( String title
                    , position X
                    , position Y
@@ -252,7 +291,10 @@ class ColorSpriteView: public View
                    , size H
                    , CRGB Color)
                    : View(title, X, Y, W, H)
-                   , m_MyColor(Color){}
+                   , m_MyColor(Color)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
     ColorSpriteView( String title
                    , position X
                    , position Y
@@ -261,15 +303,21 @@ class ColorSpriteView: public View
                    , CRGB Color
                    , MergeType MergeType)
                    : View(title, X, Y, W, H, MergeType)
-                   , m_MyColor(Color){}
+                   , m_MyColor(Color)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
     ColorSpriteView( String title
                    , position X
                    , position Y
                    , size W
                    , size H
                    , MergeType MergeType)
-                   : View(title, X, Y, W, H, MergeType){}
-    virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete ColorSpriteView\n"; }
+                   : View(title, X, Y, W, H, MergeType)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
+    virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete: ColorSpriteView\n"; }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
     void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
     
@@ -279,6 +327,7 @@ class ColorSpriteView: public View
     { 
       m_X = value.X;
       m_Y = value.Y;
+      m_PixelArray->SetPosition(m_X, m_Y);
     }
     
   private:
@@ -301,7 +350,10 @@ class FadingView: public View
               , size H)
               : View(title, X, Y, W, H)
               , m_FadeLength(FadeLength)
-              , m_Direction(Direction){}
+              , m_Direction(Direction)
+    {
+      if(true == debugMemory) Serial << "New: FadingView\n";  
+    }
     FadingView( String title
               , unsigned int FadeLength
               , Direction Direction
@@ -312,10 +364,13 @@ class FadingView: public View
               , MergeType MergeType)
               : View(title, X, Y, W, H, MergeType)
               , m_FadeLength(FadeLength)
-              , m_Direction(Direction){}
+              , m_Direction(Direction)
+    {
+      if(true == debugMemory) Serial << "New: FadingView\n";  
+    }
     virtual ~FadingView()
     {
-      if(true == debugMemory) Serial << "Delete FadingView\n";  
+      if(true == debugMemory) Serial << "Delete: FadingView\n";  
     }
     
   private:
@@ -329,9 +384,9 @@ class FadingView: public View
         switch(m_Direction)
         {
           case Direction_Up:
-            for(int x = 0; x < SCREEN_WIDTH; ++x)
+            for(int x = m_X; x < m_X+m_W; ++x)
             {
-              for(int y = 0; y < SCREEN_HEIGHT; ++y)
+              for(int y = m_Y; y < m_Y+m_H; ++y)
               {
                 if((x >= m_X) && (x < (m_X + m_W)) && (y > m_Y) && (y < (m_Y + m_H)))
                 {
@@ -341,10 +396,10 @@ class FadingView: public View
             }
             break;
           case Direction_Down:
-            for(unsigned int x = 0; x < SCREEN_WIDTH; ++x)
+            for(unsigned int x = m_X; x < m_X+m_W; ++x)
             {
               unsigned int index = 0;
-              for(unsigned int y = SCREEN_HEIGHT-1; y > 0; --y)
+              for(unsigned int y = m_Y+m_H-1; y > m_Y; --y)
               {
                 if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
                 {
@@ -362,9 +417,11 @@ class FadingView: public View
     void PerformFade(unsigned int x, unsigned int y, unsigned int i)
     {
       float normalizedFade = 1.0 - ((float)i / (float)m_FadeLength);
-      m_MyPixelStruct.Pixel[x][y].red = m_MyPixelStruct.Pixel[x][y].red * normalizedFade;
-      m_MyPixelStruct.Pixel[x][y].green = m_MyPixelStruct.Pixel[x][y].green * normalizedFade;
-      m_MyPixelStruct.Pixel[x][y].blue = m_MyPixelStruct.Pixel[x][y].blue * normalizedFade;
+      CRGB pixel;
+      pixel.red = m_PixelArray->GetPixel(x, y).red * normalizedFade;
+      pixel.green = m_PixelArray->GetPixel(x, y).green * normalizedFade;
+      pixel.blue = m_PixelArray->GetPixel(x, y).blue * normalizedFade;
+      m_PixelArray->SetPixel(x, y, pixel);
     }
     Direction m_Direction = Direction_Down;
     unsigned int m_FadeLength = 0;
@@ -380,7 +437,10 @@ class RotatingView: public View
                 , size W
                 , size H)
                 : View(title, X, Y, W, H)
-                , m_Direction(Direction){}
+                , m_Direction(Direction)
+    {
+      if(true == debugMemory) Serial << "New: RotatingView\n";  
+    }
     RotatingView( String title
                 , Direction Direction
                 , position X
@@ -389,26 +449,33 @@ class RotatingView: public View
                 , size H
                 , MergeType MergeType)
                 : View(title, X, Y, W, H, MergeType)
-                , m_Direction(Direction){}
+                , m_Direction(Direction)
+    {
+      if(true == debugMemory) Serial << "New: RotatingView\n";  
+    }
     virtual ~RotatingView()
     {
-      if(true == debugMemory) Serial << "Delete RotatingView\n";  
+      if(true == debugMemory) Serial << "Delete: RotatingView\n";
+      delete m_ResultingPixels; 
     }
     
   private:
     //View
-    void SetupView(){}
+    void SetupView()
+    {
+      m_ResultingPixels = new PixelArray(m_X, m_Y, m_W, m_H);
+    }
     bool CanRunViewTask()
     { 
-      //m_MyPixelStruct.Clear(); 
+      m_PixelArray->Clear(); 
       return true; 
     }
     void RunViewTask()
     {
       ++m_Count;
-      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      for(int x = m_X; x < m_X+m_W; ++x)
       {
-        for(int y = 0; y < SCREEN_HEIGHT; ++y)
+        for(int y = m_Y; y < m_Y+m_H; ++y)
         {
           if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H)))
           {
@@ -419,7 +486,7 @@ class RotatingView: public View
                 unsigned int rotation = m_Count % m_H;
                 int source = y-rotation;
                 if(source < m_Y) { source = m_H - (rotation - y); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[x][source];
+                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
               }
               break;
               case Direction_Down:
@@ -427,7 +494,7 @@ class RotatingView: public View
                 unsigned int rotation = m_Count % m_H;
                 int source = y+rotation;
                 if(source >= m_Y + m_H) { source = m_Y - (m_H - (y + rotation)); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[x][source];
+                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
               }
               break;
               case Direction_Right:
@@ -435,7 +502,7 @@ class RotatingView: public View
                 unsigned int rotation = m_Count % m_W;
                 int source = x+rotation;
                 if(source >= m_X + m_W) { source = m_X - (m_W - (x + rotation)); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[source][y];
+                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
               }
               break;
               case Direction_Left:
@@ -443,7 +510,7 @@ class RotatingView: public View
                 unsigned int rotation = m_Count % m_W;
                 int source = x-rotation;
                 if(source < m_X) { source = m_W - (rotation - x); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[source][y];
+                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
               }
               break;
               default:
@@ -452,9 +519,9 @@ class RotatingView: public View
           }
         }
       }
-      m_MyPixelStruct = m_ResultingPixels;
+      *m_PixelArray = *m_ResultingPixels;
     }
-    PixelStruct m_ResultingPixels;
+    PixelArray *m_ResultingPixels;
     Direction m_Direction = Direction_Right;
     unsigned int m_Count = 0;
 };

@@ -97,7 +97,7 @@ class ModelEventNotificationCaller
     ModelEventNotificationCaller<T>(){}
     virtual ~ModelEventNotificationCaller<T>()
     {
-      if(true == debugMemory) Serial << "Delete ModelEventNotificationCaller\n";  
+      if(true == debugMemory) Serial << "Delete: ModelEventNotificationCaller\n";  
     }
     void RegisterForNotification(ModelEventNotificationCallee<T> &callee)
     {
@@ -139,10 +139,13 @@ class StatisticalEngineModelInterface;
 class Model: public Task
 {
   public: 
-    Model(String Title): Task(Title){}
+    Model(String Title): Task(Title)
+    {
+      if(true == debugMemory) Serial << "New: Model\n";  
+    }
     virtual ~Model()
     {
-      if(true == debugMemory) Serial << "Delete Model\n";  
+      if(true == debugMemory) Serial << "Delete: Model\n";  
     }
 
     //ModelEventNotificationCaller
@@ -217,10 +220,13 @@ class StatisticalEngineModelInterface : public Task
                                       , MicrophoneMeasureCalleeInterface
 {
   public:
-    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){}
+    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface")
+    {
+      if(true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n";  
+    }
     virtual ~StatisticalEngineModelInterface()
     {
-      if(true == debugMemory) Serial << "Delete StatisticalEngineModelInterface\n";  
+      if(true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";  
     }
 
     //StatisticalEngine Getters
@@ -252,11 +258,12 @@ class DataModel: public Model
              : Model(Title)
              , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
      {
+        if(true == debugMemory) Serial << "New: DataModel\n";
         m_StatisticalEngineModelInterface.RegisterAsUser(*this);
      }
     virtual ~DataModel()
     {
-      if(true == debugMemory) Serial << "Delete DataModel\n";
+      if(true == debugMemory) Serial << "Delete: DataModel\n";
       m_StatisticalEngineModelInterface.DeRegisterAsUser(*this);
     }
 
@@ -292,10 +299,13 @@ class ModelWithNewValueNotification: public Model
                                    , public ModelEventNotificationCaller<T>
 {
   public:
-    ModelWithNewValueNotification<T>(String Title): Model(Title){}
+    ModelWithNewValueNotification<T>(String Title): Model(Title)
+    {
+      if(true == debugMemory) Serial << "New: ModelWithNewValueNotification\n";
+    }
     virtual ~ModelWithNewValueNotification<T>()
     {
-      if(true == debugMemory) Serial << "Delete ModelWithNewValueNotification\n";  
+      if(true == debugMemory) Serial << "Delete: ModelWithNewValueNotification\n";
     }
     
   protected:
@@ -328,10 +338,13 @@ class DataModelWithNewValueNotification: public DataModel
                                        , public ModelEventNotificationCaller<T>
 {
   public:
-    DataModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface){}
+    DataModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface)
+    {
+      if(true == debugMemory) Serial << "New: DataModelWithNewValueNotification\n";
+    }
     virtual ~DataModelWithNewValueNotification<T>()
     {
-      if(true == debugMemory) Serial << "Delete DataModelWithNewValueNotification\n";  
+      if(true == debugMemory) Serial << "Delete: DataModelWithNewValueNotification\n";
     }
   
   protected:
@@ -361,10 +374,13 @@ class DataModelWithNewValueNotification: public DataModel
 class SoundPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface){}
+    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+    {
+      if(true == debugMemory) Serial << "New: SoundPowerModel\n";
+    }
     virtual ~SoundPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete SoundPowerModel\n";  
+      if(true == debugMemory) Serial << "Delete: SoundPowerModel\n";
     }
     
      //Model
@@ -384,10 +400,13 @@ class BandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
     BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
-                                                                                                                     , m_Band(Band){}
+                                                                                                                     , m_Band(Band)
+    {
+      if(true == debugMemory) Serial << "New: BandPowerModel\n";
+    }
     virtual ~BandPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete BandPowerModel\n";  
+      if(true == debugMemory) Serial << "Delete: BandPowerModel\n";
     }
     
      //Model
@@ -419,10 +438,13 @@ class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float
                               : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
                               , m_Band(band)
                               , m_Depth(depth)
-                              , m_TotalBands(totalBands){}
+                              , m_TotalBands(totalBands)
+    {
+      if(true == debugMemory) Serial << "New: ReducedBandsBandPowerModel\n";
+    }
     virtual ~ReducedBandsBandPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete ReducedBandsBandPowerModel\n";  
+      if(true == debugMemory) Serial << "Delete: ReducedBandsBandPowerModel\n";
     }
     
      //Model
@@ -451,10 +473,13 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
     RandomColorFadingModel( String Title
                           , unsigned long Duration)
                           : ModelWithNewValueNotification<CRGB>(Title)
-                          , m_Duration(Duration){}
+                          , m_Duration(Duration)
+    {
+      if(true == debugMemory) Serial << "New: RandomColorFadingModel\n";
+    }
     virtual ~RandomColorFadingModel()
     {
-      if(true == debugMemory) Serial << "Delete RandomColorFadingModel\n";  
+      if(true == debugMemory) Serial << "Delete: RandomColorFadingModel\n";
     }
   private:
      //Model
@@ -482,10 +507,13 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
                      , unsigned int Denominator)
                      : ModelWithNewValueNotification<CRGB>(Title)
                      , m_Numerator(Numerator)
-                     , m_Denominator(Denominator){}
+                     , m_Denominator(Denominator)
+    {
+      if(true == debugMemory) Serial << "New: RainbowColorModel\n";
+    }
     virtual ~RainbowColorModel()
     {
-      if(true == debugMemory) Serial << "Delete RainbowColorModel\n";  
+      if(true == debugMemory) Serial << "Delete: RainbowColorModel\n";
     }
   private:
      unsigned int m_Numerator;
@@ -508,10 +536,13 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
                    , CRGB Color
                    , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
                    : DataModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
-                   , m_InputColor(Color){}
+                   , m_InputColor(Color)
+    {
+      if(true == debugMemory) Serial << "New: ColorPowerModel\n";
+    }
     virtual ~ColorPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete ColorPowerModel\n";  
+      if(true == debugMemory) Serial << "Delete: ColorPowerModel\n";
     }
   protected:
     //StatisticalEngineModelInterfaceUsers
@@ -547,10 +578,13 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
     SettableColorPowerModel( String Title )
-                           : ModelWithNewValueNotification<CRGB>(Title){}
+                           : ModelWithNewValueNotification<CRGB>(Title)
+    {
+      if(true == debugMemory) Serial << "New: SettableColorPowerModel\n";
+    }
     virtual ~SettableColorPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete SettableColorPowerModel\n";  
+      if(true == debugMemory) Serial << "Delete: SettableColorPowerModel\n";
     }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
     void ConnectPowerModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
@@ -582,10 +616,13 @@ class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData
   public:
     MaximumBandModel( String Title, unsigned int Depth, StatisticalEngineModelInterface &StatisticalEngineModelInterface )
                     : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
-                    , m_Depth(Depth){}
+                    , m_Depth(Depth)
+    {
+      if(true == debugMemory) Serial << "New: MaximumBandPowerModel\n";
+    }
     virtual ~MaximumBandModel()
     {
-      if(true == debugMemory) Serial << "Delete MaximumBandPowerModel\n";  
+      if(true == debugMemory) Serial << "Delete: MaximumBandPowerModel\n";
     }
   protected:
     //StatisticalEngineModelInterfaceUsers
@@ -624,10 +661,13 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
     BandDataColorModel( String Title )
-                      : ModelWithNewValueNotification<CRGB>(Title){}
+                      : ModelWithNewValueNotification<CRGB>(Title)
+    {
+      if(true == debugMemory) Serial << "New: BandDataColorModel\n";
+    }
     virtual ~BandDataColorModel()
     {
-      if(true == debugMemory) Serial << "Delete BandDataColorModel\n";  
+      if(true == debugMemory) Serial << "Delete: BandDataColorModel\n";
     }
     void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this); }
   private:
@@ -667,9 +707,16 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
                             , float maxInitialVelocity)
                             : ModelWithNewValueNotification<Position>(title)
                             , m_GravitationalScaler(gravitationalScaler)
-                            , m_MaxInitialVelocity(maxInitialVelocity){}
+                            , m_MaxInitialVelocity(maxInitialVelocity)
+    {
+      if(true == debugMemory) Serial << "New: GravitationalModel\n";
+    }
+    virtual ~GravitationalModel()
+    {
+      if(true == debugMemory) Serial << "Delete: GravitationalModel\n";
+    }
     
-  void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this); }
   
   private:
     unsigned long m_StartTime;
