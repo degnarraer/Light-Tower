@@ -13,9 +13,13 @@ void View::MergeSubViews()
   for(int v = 0; v < m_SubViews.size(); ++v)
   {
     View *aView = m_SubViews.get(v);
-    for(int x = m_X; x < m_X+m_W; ++x)
+    int aX = aView->GetPixelArray()->GetX();
+    int aY = aView->GetPixelArray()->GetY();
+    int aWidth = aView->GetPixelArray()->GetWidth();
+    int aHeight = aView->GetPixelArray()->GetHeight();
+    for(int x = aX; x < aX + aWidth; ++x)
     {
-      for(int y = m_Y; y < m_Y+m_H; ++y)
+      for(int y = aY; y < aY + aHeight; ++y)
       {
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
         if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )
@@ -52,7 +56,7 @@ void VerticalBarView::RunViewTask()
   if(true == debugLEDs) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << " Scaled Height: " << m_ScaledHeight << "\n";
   for(int x = m_X; x<m_X+m_W; ++x)
   {
-    for(int y = 0; y<m_Y+m_H; ++y)
+    for(int y = m_Y; y<m_Y+m_H; ++y)
     {
       if( (x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < m_ScaledHeight) )
       {

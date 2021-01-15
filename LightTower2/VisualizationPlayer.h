@@ -26,6 +26,7 @@
 #include "LEDControllerInterface.h"
 
 
+extern "C" char* sbrk(int incr);
 class VisualizationPlayer : public Task
 {
   public:
@@ -49,11 +50,24 @@ class VisualizationPlayer : public Task
     bool CanRunMyTask();
     void RunMyTask();
     
+    
+    
     Visualization *m_CurrentVisualization;
     Visualization *m_PreviousVisualization;
     typedef Visualization* (* GetInstanceFunctionPointer)(StatisticalEngineModelInterface &, LEDController &);
     LinkedList<GetInstanceFunctionPointer> m_MyVisiualizationInstantiations = LinkedList<GetInstanceFunctionPointer>();
     LinkedList<Visualization*> m_MyQueue = LinkedList<Visualization*>();
+    
+    void PrintFreeMemory(String text)
+    {
+      if(true == debugFreeMemory ) Serial << text << freeMemory() << "\n";
+    }
+    
+    int freeMemory()
+    {
+      char top;
+      return &top - reinterpret_cast<char*>(sbrk(0));
+    }
 };
 
 #endif

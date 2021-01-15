@@ -101,9 +101,13 @@ void Visualization::MergeSubViews()
   for(int v = 0; v < m_MyViews.size(); ++v)
   {
     View *aView = m_MyViews.get(v);
-    for(int y = 0; y < m_PixelArray->GetHeight(); ++y)
+    int aX = aView->GetPixelArray()->GetX();
+    int aY = aView->GetPixelArray()->GetY();
+    int aWidth = aView->GetPixelArray()->GetWidth();
+    int aHeight = aView->GetPixelArray()->GetHeight();
+    for(int x = aX; x < aX + aWidth; ++x)
     {
-      for(int x = 0; x < m_PixelArray->GetWidth(); ++x)
+      for(int y = aY; y < aY + aHeight; ++y)
       {
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
         if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )

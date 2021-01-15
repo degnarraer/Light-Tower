@@ -40,6 +40,7 @@ class Visualization: public Task
     {
       if(true == debugMemory) Serial << "Delete: Visualization\n";
       DeleteAllNewedObjects();
+      delete m_PixelArray;
     }
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController &m_LEDController;

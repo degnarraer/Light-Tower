@@ -36,7 +36,7 @@ void VisualizationPlayer::Setup()
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = BallShooter::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = ScrollingBands::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }
@@ -67,7 +67,9 @@ void VisualizationPlayer::GetNextVisualization()
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
+  PrintFreeMemory("Before");
   m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
+  PrintFreeMemory("After");
   AddTask(*m_CurrentVisualization);
   m_StartTime = millis();
   if(true == debugMemory) Serial << "VisualizationPlayer::Getting Next Visualization: Task Count: " << GetTaskCount() << "\n";
@@ -78,7 +80,9 @@ void VisualizationPlayer::GetRandomVisualization()
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
   GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
+  PrintFreeMemory("Before");
   m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
+  PrintFreeMemory("After");
   AddTask(*m_CurrentVisualization);
   m_StartTime = millis();
   if(true == debugMemory) Serial << "VisualizationPlayer::Getting Next Visualization: Task Count: " << GetTaskCount() << "\n";

@@ -28,12 +28,6 @@
 #include "Models.h"
 #include <LinkedList.h>
 
-
-
-typedef int position;
-typedef int size;
-
-
 enum MergeType
 {
   MergeType_Layer,
@@ -113,6 +107,7 @@ class View: public Task
       }
     }
     MergeType GetMergeType(){ return m_MergeType; }
+    PixelArray* GetPixelArray(){ return m_PixelArray; }
     void RemoveAllSubViews(){}
   protected:
     PixelArray *m_PixelArray;
@@ -467,7 +462,7 @@ class RotatingView: public View
     }
     bool CanRunViewTask()
     { 
-      m_PixelArray->Clear(); 
+      m_ResultingPixels->Clear();
       return true; 
     }
     void RunViewTask()
@@ -477,49 +472,52 @@ class RotatingView: public View
       {
         for(int y = m_Y; y < m_Y+m_H; ++y)
         {
-          if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H)))
+          switch(m_Direction)
           {
-            switch(m_Direction)
+            case Direction_Up:
             {
-              case Direction_Up:
-              {
-                unsigned int rotation = m_Count % m_H;
-                int source = y-rotation;
-                if(source < m_Y) { source = m_H - (rotation - y); }
-                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-              }
-              break;
-              case Direction_Down:
-              {
-                unsigned int rotation = m_Count % m_H;
-                int source = y+rotation;
-                if(source >= m_Y + m_H) { source = m_Y - (m_H - (y + rotation)); }
-                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-              }
-              break;
-              case Direction_Right:
-              {
-                unsigned int rotation = m_Count % m_W;
-                int source = x+rotation;
-                if(source >= m_X + m_W) { source = m_X - (m_W - (x + rotation)); }
-                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-              }
-              break;
-              case Direction_Left:
-              {
-                unsigned int rotation = m_Count % m_W;
-                int source = x-rotation;
-                if(source < m_X) { source = m_W - (rotation - x); }
-                m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-              }
-              break;
-              default:
-              break;
+              unsigned int rotation = m_Count % m_H;
+              int source = y-rotation;
+              if(source < m_Y) { source = m_H - (rotation - y); }
+              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
             }
+            break;
+            case Direction_Down:
+            {
+              unsigned int rotation = m_Count % m_H;
+              int source = y+rotation;
+              if(source >= m_Y + m_H) { source = m_Y - (m_H - (y + rotation)); }
+              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+            }
+            break;
+            case Direction_Right:
+            {
+              unsigned int rotation = m_Count % m_W;
+              int source = x+rotation;
+              if(source >= m_X + m_W) { source = m_X - (m_W - (x + rotation)); }
+              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+            }
+            break;
+            case Direction_Left:
+            {
+              unsigned int rotation = m_Count % m_W;
+              int source = x-rotation;
+              if(source < m_X) { source = m_W - (rotation - x); }
+              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+            }
+            break;
+            default:
+            break;
           }
         }
       }
-      *m_PixelArray = *m_ResultingPixels;
+      for(position x = m_ResultingPixels->GetX(); x < m_ResultingPixels->GetX() + m_ResultingPixels->GetWidth(); ++x)
+      {
+        for(position y = m_ResultingPixels->GetY(); y < m_ResultingPixels->GetY() + m_ResultingPixels->GetHeight(); ++y)
+        {
+          m_PixelArray->SetPixel(x, y, m_ResultingPixels->GetPixel(x, y));
+        }
+      }
     }
     PixelArray *m_ResultingPixels;
     Direction m_Direction = Direction_Right;
