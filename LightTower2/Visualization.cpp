@@ -105,11 +105,12 @@ void Visualization::MergeSubViews()
     int aY = aView->GetPixelArray()->GetY();
     int aWidth = aView->GetPixelArray()->GetWidth();
     int aHeight = aView->GetPixelArray()->GetHeight();
-    for(int x = aX; x < aX + aWidth; ++x)
+    for(int x = aX; x <= aX + aWidth - 1; ++x)
     {
-      for(int y = aY; y < aY + aHeight; ++y)
+      for(int y = aY; y <= aY + aHeight - 1; ++y)
       {
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
+        assert((x >= 0) && (x <= SCREEN_WIDTH - 1) && (y >= 0) && (y <= SCREEN_HEIGHT - 1));
         if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )
         {
           switch(aView->GetMergeType())

@@ -49,9 +49,7 @@ class VisualizationPlayer : public Task
     void Setup();
     bool CanRunMyTask();
     void RunMyTask();
-    
-    
-    
+        
     Visualization *m_CurrentVisualization;
     Visualization *m_PreviousVisualization;
     typedef Visualization* (* GetInstanceFunctionPointer)(StatisticalEngineModelInterface &, LEDController &);

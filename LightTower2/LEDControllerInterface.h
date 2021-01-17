@@ -25,6 +25,9 @@
 #include "Tunes.h"
 #include "Streaming.h"
 
+#define __ASSERT_USE_STDERR // do this before including assert.h
+#include <assert.h>
+
 typedef CRGBArray<NUMLEDS> LEDStrip;
 typedef int position;
 typedef unsigned int size;
@@ -32,7 +35,7 @@ typedef unsigned int size;
 class PixelArray
 {
   public:
-    PixelArray(position X, position Y, size W, size H): m_X(X), m_Y(Y),  m_W(W), m_H(H)
+    PixelArray(position x, position y, size w, size h): m_X(x), m_Y(y),  m_W(w), m_H(h)
     {
       m_Pixels = Create2DArray<CRGB>(m_W, m_H, CRGB::Black);
     }
@@ -51,27 +54,42 @@ class PixelArray
         }
       }
     }
-    void SetPosition(position X, position Y)
+    void SetPosition(position x, position y)
     {
-      m_X = X;
-      m_Y = Y;
+      m_X = x;
+      m_Y = y;
     }
-    CRGB GetPixel(position X, position Y)
+    CRGB GetPixel(position x, position y)
     {
-      if( (X >= m_X) && (X < m_X + m_W) && (Y >= m_Y) && (Y < m_Y + m_H) )
+      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
       {
-        return m_Pixels[X - m_X][Y - m_Y];
+        return m_Pixels[x - m_X][y - m_Y];
       }
       else
       {
         return CRGB::Black;
       }
     }
-    void SetPixel(position X, position Y, CRGB value)
+    void SetPixel(position x, position y, CRGB value)
     {
-      if( (X >= m_X) && (X < m_X + m_W) && (Y >= m_Y) && (Y < m_Y + m_H) )
+      assert((x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1));
+      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
       {
-        m_Pixels[X - m_X][Y - m_Y] = value;
+        m_Pixels[x - m_X][y - m_Y] = value;
+      }
+    }
+    void operator = (PixelArray &pa)
+    {
+      m_X = pa.GetX();
+      m_Y = pa.GetY();
+      m_W = pa.GetWidth();
+      m_H = pa.GetHeight();
+      for(position x = m_X; x <= m_X + m_W - 1; ++x)
+      {
+        for(position y = m_Y; y <= m_Y + m_H - 1; ++y)
+        {
+          m_Pixels[x][y] = pa.GetPixel(x, y);
+        }
       }
     }
     size GetWidth(){ return m_W; }

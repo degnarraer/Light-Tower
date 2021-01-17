@@ -32,11 +32,11 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
   m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   
-  bool testVisualization = false;
+  bool testVisualization = true;
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = ScrollingBands::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = RotatingSprites::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }

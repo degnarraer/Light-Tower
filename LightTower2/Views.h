@@ -19,8 +19,6 @@
 #ifndef Views_H
 #define Views_H
 
-
-#include <assert.h>
 #include "LEDControllerInterface.h"
 #include "TaskInterface.h"
 #include "Streaming.h"
@@ -122,7 +120,10 @@ class View: public Task
     
     //Task
     void Setup();
-    bool CanRunMyTask(){ return CanRunViewTask(); }
+    bool CanRunMyTask()
+    {
+      return CanRunViewTask(); 
+    }
     void RunMyTask()
     {
       MergeSubViews();
@@ -427,17 +428,20 @@ class RotatingView: public View
   public:
     RotatingView( String title
                 , Direction Direction
+                , unsigned int updatePeriodMillis
                 , position X
                 , position Y
                 , size W
                 , size H)
                 : View(title, X, Y, W, H)
                 , m_Direction(Direction)
+                , m_updatePeriodMillis(updatePeriodMillis)
     {
       if(true == debugMemory) Serial << "New: RotatingView\n";  
     }
     RotatingView( String title
                 , Direction Direction
+                , unsigned int updatePeriodMillis
                 , position X
                 , position Y
                 , size W
@@ -445,65 +449,80 @@ class RotatingView: public View
                 , MergeType MergeType)
                 : View(title, X, Y, W, H, MergeType)
                 , m_Direction(Direction)
+                , m_updatePeriodMillis(updatePeriodMillis)
     {
       if(true == debugMemory) Serial << "New: RotatingView\n";  
     }
     virtual ~RotatingView()
     {
       if(true == debugMemory) Serial << "Delete: RotatingView\n";
-      delete m_ResultingPixels; 
+      delete m_ResultingPixelArray; 
     }
     
   private:
+    unsigned long m_startMillis;
+    unsigned long m_currentMillis;
+    unsigned int m_updatePeriodMillis;
+    unsigned long m_lapsedTime;
+    PixelArray *m_ResultingPixelArray;
+    Direction m_Direction = Direction_Right;
+    
     //View
     void SetupView()
     {
-      m_ResultingPixels = new PixelArray(m_X, m_Y, m_W, m_H);
+      m_ResultingPixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
+      m_ResultingPixelArray->Clear();
+      m_PixelArray->Clear();
+      m_startMillis = millis();
     }
     bool CanRunViewTask()
-    { 
-      m_ResultingPixels->Clear();
-      return true; 
+    {
+      m_currentMillis = millis();
+      m_lapsedTime = m_currentMillis - m_startMillis;
+      if(m_lapsedTime >= m_updatePeriodMillis)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
     }
     void RunViewTask()
     {
-      ++m_Count;
-      for(int x = m_X; x < m_X+m_W; ++x)
+      m_startMillis = millis();
+      for(int x = m_X; x <= m_X+m_W-1; ++x)
       {
-        for(int y = m_Y; y < m_Y+m_H; ++y)
+        for(int y = m_Y; y <= m_Y+m_H-1; ++y)
         {
           switch(m_Direction)
           {
             case Direction_Up:
             {
-              unsigned int rotation = m_Count % m_H;
-              int source = y-rotation;
-              if(source < m_Y) { source = m_H - (rotation - y); }
-              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+              int source = y-1;
+              if(source < m_Y) { source = m_Y + m_H - 1; }
+              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
             }
             break;
             case Direction_Down:
             {
-              unsigned int rotation = m_Count % m_H;
-              int source = y+rotation;
-              if(source >= m_Y + m_H) { source = m_Y - (m_H - (y + rotation)); }
-              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+              int source = y+1;
+              if(source >= m_Y + m_H - 1) { source = m_Y; }
+              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
             }
             break;
             case Direction_Right:
             {
-              unsigned int rotation = m_Count % m_W;
-              int source = x+rotation;
-              if(source >= m_X + m_W) { source = m_X - (m_W - (x + rotation)); }
-              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+              int source = x-1;
+              if(source < m_X) { source = m_X + m_W - 1; }
+              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
             }
             break;
             case Direction_Left:
             {
-              unsigned int rotation = m_Count % m_W;
-              int source = x-rotation;
-              if(source < m_X) { source = m_W - (rotation - x); }
-              m_ResultingPixels->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+              int source = x+1;
+              if(source >= m_X + m_W - 1) { source = m_W; }
+              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
             }
             break;
             default:
@@ -511,16 +530,7 @@ class RotatingView: public View
           }
         }
       }
-      for(position x = m_ResultingPixels->GetX(); x < m_ResultingPixels->GetX() + m_ResultingPixels->GetWidth(); ++x)
-      {
-        for(position y = m_ResultingPixels->GetY(); y < m_ResultingPixels->GetY() + m_ResultingPixels->GetHeight(); ++y)
-        {
-          m_PixelArray->SetPixel(x, y, m_ResultingPixels->GetPixel(x, y));
-        }
-      }
+      *m_PixelArray = *m_ResultingPixelArray;
     }
-    PixelArray *m_ResultingPixels;
-    Direction m_Direction = Direction_Right;
-    unsigned int m_Count = 0;
 };
 #endif

@@ -40,6 +40,7 @@ const bool   debugModels = false;
 const bool   debugGravitationalModel = false;
 const bool   debugMemory = false;
 const bool   debugFreeMemory = true;
+const bool   debugAssertions = true;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
@@ -55,7 +56,8 @@ const bool   debugRequired = ( debugMode ||
                                debugModels ||
                                debugGravitationalModel ||
                                debugMemory ||
-                               debugFreeMemory );
+                               debugFreeMemory ||
+                               debugAssertions);
 
 // LED SETUP
 static const unsigned int NUMLEDS = 60;

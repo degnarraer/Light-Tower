@@ -21,6 +21,26 @@
 #include <Arduino.h>
 #include "Statistical_Engine.h"
 
+
+// handle diagnostic informations given by assertion and abort program execution:
+void __assert(const char *__func, const char *__file, int __lineno, const char *__sexp)
+{
+    // transmit diagnostic informations through serial link. 
+    if(true == debugAssertions)
+    {
+      Serial.println(__func);
+      Serial.println(__file);
+      Serial.println(__lineno, DEC);
+      Serial.println(__sexp);
+      Serial.flush();
+    }
+    else
+    {
+      // abort program execution.
+      abort();
+    }
+}
+
 CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
@@ -346,9 +366,9 @@ float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
 
 float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands)
 {
-  assert(("Output Band must be less than total bands", band < TotalBands));
-  assert(("Must convert to a smaller number of Bands", TotalBands <= m_NumBands));
-  assert(("Cannot convert to 0 Bands", TotalBands > 0));
+  assert(band < TotalBands);
+  assert(TotalBands <= m_NumBands);
+  assert(TotalBands > 0);
   int bandSeparation = m_NumBands / TotalBands;
   int startBand = band * bandSeparation;
   int endBand = startBand + bandSeparation;

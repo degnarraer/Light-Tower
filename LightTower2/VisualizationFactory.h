@@ -370,6 +370,19 @@ class RotatingSprites: public Visualization
     }
     void SetupVisualization()
     {
+      AddView(m_RotateView1);
+      m_RotateView1.AddSubView(m_RotateView0);
+      
+      m_RotateView0.AddSubView(m_Sprite0);
+      m_RotateView0.AddSubView(m_Sprite1);
+      m_RotateView0.AddSubView(m_Sprite2);
+      m_RotateView0.AddSubView(m_Sprite3);
+      
+      AddView(m_Sprite0);
+      AddView(m_Sprite1);
+      AddView(m_Sprite2);
+      AddView(m_Sprite3);
+      
       AddModel(m_PowerModel0);
       
       AddModel(m_ColorModel0);
@@ -396,21 +409,11 @@ class RotatingSprites: public Visualization
       m_Sprite1.ConnectColorModel(m_PowerColorModel1);
       m_Sprite2.ConnectColorModel(m_PowerColorModel2);
       m_Sprite3.ConnectColorModel(m_PowerColorModel3);
-      
-      m_RotateView0.AddSubView(m_Sprite0);
-      m_RotateView0.AddSubView(m_Sprite1);
-      m_RotateView0.AddSubView(m_Sprite2);
-      m_RotateView0.AddSubView(m_Sprite3);
-      AddView(m_RotateView0);
     }
     bool CanRunVisualization(){ return true; }
     void RunVisualization(){}
   private:
     SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
-    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, 0, 1, 1);
-    ColorSpriteView m_Sprite1 = ColorSpriteView("Sprite 1", 1, 0, 1, 1);
-    ColorSpriteView m_Sprite2 = ColorSpriteView("Sprite 2", 2, 0, 1, 1);
-    ColorSpriteView m_Sprite3 = ColorSpriteView("Sprite 3", 3, 0, 1, 1);
     RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 10000);
     RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 10000);
     RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 10000);
@@ -419,7 +422,12 @@ class RotatingSprites: public Visualization
     SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model 1");
     SettableColorPowerModel m_PowerColorModel2 = SettableColorPowerModel("Settable Power Model 2");
     SettableColorPowerModel m_PowerColorModel3 = SettableColorPowerModel("Settable Power Model 3");
-    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);;
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
+    ColorSpriteView m_Sprite1 = ColorSpriteView("Sprite 1", 1, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
+    ColorSpriteView m_Sprite2 = ColorSpriteView("Sprite 2", 2, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
+    ColorSpriteView m_Sprite3 = ColorSpriteView("Sprite 3", 3, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Up, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Right, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
 };
 
 //********* Ball Shooter *********
