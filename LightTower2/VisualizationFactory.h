@@ -426,8 +426,8 @@ class RotatingSprites: public Visualization
     ColorSpriteView m_Sprite1 = ColorSpriteView("Sprite 1", 1, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
     ColorSpriteView m_Sprite2 = ColorSpriteView("Sprite 2", 2, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
     ColorSpriteView m_Sprite3 = ColorSpriteView("Sprite 3", 3, SCREEN_HEIGHT/2, 1, 1, MergeType_Layer);
-    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Up, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
-    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Right, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Right, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Up, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
 };
 
 //********* Ball Shooter *********

@@ -97,7 +97,7 @@ void Visualization::RunMyTask()
 
 void Visualization::MergeSubViews()
 {
-  m_PixelArray->Clear();
+  //m_PixelArray->Clear();
   for(int v = 0; v < m_MyViews.size(); ++v)
   {
     View *aView = m_MyViews.get(v);
