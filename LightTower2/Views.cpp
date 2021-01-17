@@ -1,13 +1,6 @@
 
 #include "Views.h"
 
-void View::Setup()
-{
-  if(true == debugLEDs) Serial << "Setup View\n";
-  m_PixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
-  SetupView();
-}
-
 void View::MergeSubViews()
 {
   for(int v = 0; v < m_SubViews.size(); ++v)
@@ -21,7 +14,6 @@ void View::MergeSubViews()
     {
       for(int y = aY; y <= aY + aHeight - 1; ++y)
       {
-        assert((x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1));
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
         if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )
         {
