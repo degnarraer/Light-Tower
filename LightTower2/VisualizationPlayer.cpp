@@ -32,7 +32,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
   m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   
-  bool testVisualization = true;
+  bool testVisualization = false;
   if(true == testVisualization)
   {
     m_Duration = 10000000;

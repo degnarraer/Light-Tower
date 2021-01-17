@@ -409,10 +409,10 @@ class RotatingSprites: public Visualization
     void RunVisualization(){}
   private:
     SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
-    RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 10000);
-    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 10000);
-    RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 10000);
-    RandomColorFadingModel m_ColorModel3 = RandomColorFadingModel("Color Fading Model 3", 10000);
+    RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 1000);
+    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 1000);
+    RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 1000);
+    RandomColorFadingModel m_ColorModel3 = RandomColorFadingModel("Color Fading Model 3", 1000);
     SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model 0");
     SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model 1");
     SettableColorPowerModel m_PowerColorModel2 = SettableColorPowerModel("Settable Power Model 2");

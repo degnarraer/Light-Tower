@@ -72,7 +72,6 @@ class PixelArray
     }
     void SetPixel(position x, position y, CRGB value)
     {
-      assert((x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1));
       if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
       {
         m_Pixels[x - m_X][y - m_Y] = value;
