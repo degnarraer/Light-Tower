@@ -286,8 +286,11 @@ class ScrollingBands: public Visualization
     void RunVisualization();
   private:
   
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Right, 5000, RotationType_Static, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Upward Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
+    
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 5000, RotationType_Static, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     ScrollingView m_ScrollingView1 = ScrollingView("Downward Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView1 = FadingView("FadingView 1", SCREEN_HEIGHT, Direction_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     

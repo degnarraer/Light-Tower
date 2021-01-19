@@ -410,19 +410,21 @@ void ScrollingBands::SetupVisualization()
   m_Sprite6.ConnectColorModel(m_PowerColorModel6);
   m_Sprite7.ConnectColorModel(m_PowerColorModel7);
 
-  m_ScrollingView0.AddSubView(m_Sprite0);
-  m_ScrollingView0.AddSubView(m_Sprite1);
-  m_ScrollingView0.AddSubView(m_Sprite2);
-  m_ScrollingView0.AddSubView(m_Sprite3);
-  
-  m_ScrollingView1.AddSubView(m_Sprite4);
-  m_ScrollingView1.AddSubView(m_Sprite5);
-  m_ScrollingView1.AddSubView(m_Sprite6);
-  m_ScrollingView1.AddSubView(m_Sprite7);
-  
+  m_RotateView0.AddSubView(m_Sprite0);
+  m_RotateView0.AddSubView(m_Sprite1);
+  m_RotateView0.AddSubView(m_Sprite2);
+  m_RotateView0.AddSubView(m_Sprite3);
+  m_RotateView1.AddSubView(m_Sprite4);
+  m_RotateView1.AddSubView(m_Sprite5);
+  m_RotateView1.AddSubView(m_Sprite6);
+  m_RotateView1.AddSubView(m_Sprite7);
+
+  m_ScrollingView0.AddSubView(m_RotateView0);
+  m_ScrollingView1.AddSubView(m_RotateView1);
+
   m_FadingView0.AddSubView(m_ScrollingView0);
   m_FadingView1.AddSubView(m_ScrollingView1);
-  
+
   AddView(m_FadingView0);
   AddView(m_FadingView1);
 }

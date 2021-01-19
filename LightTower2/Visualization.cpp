@@ -50,11 +50,11 @@ void Visualization::SetupView()
 }
 bool Visualization::CanRunViewTask()
 {
+  MergeSubViews(true);
   return CanRunVisualization();
 }
 void Visualization::RunViewTask()
 {
-  MergeSubViews(true);
   RunVisualization();
   m_LEDController.UpdateLEDs(m_PixelArray);
 }

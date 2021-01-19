@@ -391,5 +391,7 @@ class RotatingView: public View
     void SetupView();
     bool CanRunViewTask();
     void RunViewTask();
+    void ScrollView();
+    void RotateView();
 };
 #endif

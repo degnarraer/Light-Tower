@@ -57,11 +57,11 @@ void View::Setup()
 }
 bool View::CanRunMyTask()
 {
+  MergeSubViews(false);
   return CanRunViewTask(); 
 }
 void View::RunMyTask()
 {
-  MergeSubViews(false);
   RunViewTask();
 }
 void View::MergeSubViews(bool clearViewBeforeMerge)
@@ -294,6 +294,18 @@ void RotatingView::SetupView()
 }
 bool RotatingView::CanRunViewTask()
 {
+  switch(m_RotationType)
+  {
+    case RotationType_Static:
+      RotateView();
+    break;
+    case RotationType_Scroll:
+    break;
+    default:
+    break;
+  }
+  *m_PixelArray = *m_ResultingPixelArray;
+   
   m_currentMillis = millis();
   m_lapsedTime = m_currentMillis - m_startMillis;
   if(m_lapsedTime >= m_updatePeriodMillis)
@@ -308,91 +320,105 @@ bool RotatingView::CanRunViewTask()
 void RotatingView::RunViewTask()
 {
   m_startMillis = millis();
-  ++m_Count;
+  switch(m_RotationType)
+  {
+    case RotationType_Static:
+      ++m_Count;
+      RotateView();
+    break;
+    case RotationType_Scroll:
+      ScrollView();
+    break;
+    default:
+    break;
+  }
+  *m_PixelArray = *m_ResultingPixelArray;
+}
+void RotatingView::ScrollView()
+{
   for(int x = m_X; x <= m_X+m_W-1; ++x)
   {
     for(int y = m_Y; y <= m_Y+m_H-1; ++y)
     {
-      switch(m_RotationType)
+      switch(m_Direction)
       {
-        case RotationType_Static:
-          switch(m_Direction)
-          {
-            case Direction_Up:
-            {
-              int offset = m_Count%m_H;
-              int source = y-offset;
-              if(source < m_Y) { source = m_Y + m_H + source; }
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-            }
-            break;
-            case Direction_Down:
-            {
-              int offset = m_Count%m_H;
-              int source = y+offset;
-              if(source > m_Y + m_H - 1) { source = source - (m_Y + m_H); }
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-            }
-            break;
-            case Direction_Right:
-            {
-              int offset = m_Count%m_W;
-              int source = x-offset;
-              if(source < m_X) { source = m_X + m_W + source; }
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-            }
-            break;
-            case Direction_Left:
-            {
-              int offset = m_Count%m_W;
-              int source = x+offset;
-              if(source > m_X + m_W - 1) { source = source - (m_X + m_W); };
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-            }
-            break;
-            default:
-            break;
-          }
+        case Direction_Up:
+        {
+          int source = y-1;
+          if(source < m_Y) { source = m_Y + m_H - 1; }
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+        }
         break;
-        case RotationType_Scroll:
-          switch(m_Direction)
-          {
-            case Direction_Up:
-            {
-              int source = y-1;
-              if(source < m_Y) { source = m_Y + m_H - 1; }
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-            }
-            break;
-            case Direction_Down:
-            {
-              int source = y+1;
-              if(source >= m_Y + m_H - 1) { source = m_Y; }
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-            }
-            break;
-            case Direction_Right:
-            {
-              int source = x-1;
-              if(source < m_X) { source = m_X + m_W - 1; }
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-            }
-            break;
-            case Direction_Left:
-            {
-              int source = x+1;
-              if(source >= m_X + m_W - 1) { source = m_X; };
-              m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-            }
-            break;
-            default:
-            break;
-          }
+        case Direction_Down:
+        {
+          int source = y+1;
+          if(source >= m_Y + m_H - 1) { source = m_Y; }
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+        }
+        break;
+        case Direction_Right:
+        {
+          int source = x-1;
+          if(source < m_X) { source = m_X + m_W - 1; }
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+        }
+        break;
+        case Direction_Left:
+        {
+          int source = x+1;
+          if(source >= m_X + m_W - 1) { source = m_X; };
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+        }
         break;
         default:
         break;
       }
     }
   }
-  *m_PixelArray = *m_ResultingPixelArray;
+}
+void RotatingView::RotateView()
+{
+  for(int x = m_X; x <= m_X+m_W-1; ++x)
+  {
+    for(int y = m_Y; y <= m_Y+m_H-1; ++y)
+    {
+      switch(m_Direction)
+      {
+        case Direction_Up:
+        {
+          int offset = m_Count%m_H;
+          int source = y-offset;
+          if(source < m_Y) { source = m_Y + m_H + source; }
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+        }
+        break;
+        case Direction_Down:
+        {
+          int offset = m_Count%m_H;
+          int source = y+offset;
+          if(source > m_Y + m_H - 1) { source = source - (m_Y + m_H); }
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
+        }
+        break;
+        case Direction_Right:
+        {
+          int offset = m_Count%m_W;
+          int source = x-offset;
+          if(source < m_X) { source = m_X + m_W + source; }
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+        }
+        break;
+        case Direction_Left:
+        {
+          int offset = m_Count%m_W;
+          int source = x+offset;
+          if(source > m_X + m_W - 1) { source = source - (m_X + m_W); };
+          m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
+        }
+        break;
+        default:
+        break;
+      }
+    }
+  }
 }

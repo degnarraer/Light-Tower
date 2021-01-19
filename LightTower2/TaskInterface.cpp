@@ -42,10 +42,10 @@ void TaskScheduler::RunScheduler()
   for(int t = 0; t < m_MyTasks.size(); ++t)
   {
     Task *aTask = m_MyTasks.get(t);
+    aTask->RunScheduler();
     if(true==aTask->CanRunMyTask())
     {
       if(true == debugTasks) Serial << "TaskScheduler Running Task: " << aTask->GetTaskTitle() << "\n";
-      aTask->RunScheduler();
       aTask->RunMyTask();
     }
     else
