@@ -67,7 +67,8 @@ void View::RunMyTask()
 void View::MergeSubViews(bool clearViewBeforeMerge)
 {
   if(true == clearViewBeforeMerge) m_PixelArray->Clear();
-  for(int v = 0; v < m_SubViews.size(); ++v)
+  //Z Order is 1st subview added on top, last subview added on bottom
+  for(int v = m_SubViews.size() - 1; v <= 0; --v)
   {
     View *aView = m_SubViews.get(v);
     int aX = aView->GetPixelArray()->GetX();
