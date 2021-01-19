@@ -93,20 +93,9 @@ class View: public Task
     MergeType m_MergeType = MergeType_Layer;
     
     //Task
-    void Setup()
-    {
-      if(true == debugLEDs) Serial << "Setup View\n";
-      m_PixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
-      SetupView();
-    }
-    bool CanRunMyTask()
-    {
-      return CanRunViewTask(); 
-    }
-    void RunMyTask()
-    {
-      RunViewTask();
-    }
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
 
     //View
     virtual void SetupView() = 0;

@@ -18,7 +18,7 @@
  
 #include "Visualization.h"
 
-
+//************** VisualizationEventNotificationCallerInterface **************
 void VisualizationEventNotificationCallerInterface::RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
 {
   if(true == debugModelNotifications) Serial << "VisualizationEventNotificationCallerInterface: Add: ";        
@@ -42,6 +42,8 @@ void VisualizationEventNotificationCallerInterface::SendVisualizationCompleteNot
     myCallees.get(i)->VisualizationCompleteNotificationFrom(source);
   }
 }
+
+//************** Visualization **************
 void Visualization::SetupView()
 {
   SetupVisualization();

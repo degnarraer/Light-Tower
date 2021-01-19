@@ -49,6 +49,21 @@ PixelArray* View::GetPixelArray()
 { 
   return m_PixelArray; 
 }
+void View::Setup()
+{
+  if(true == debugLEDs) Serial << "Setup View\n";
+  m_PixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
+  SetupView();
+}
+bool View::CanRunMyTask()
+{
+  return CanRunViewTask(); 
+}
+void View::RunMyTask()
+{
+  MergeSubViews(false);
+  RunViewTask();
+}
 void View::MergeSubViews(bool clearViewBeforeMerge)
 {
   if(true == clearViewBeforeMerge) m_PixelArray->Clear();
