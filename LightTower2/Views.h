@@ -71,47 +71,13 @@ class View: public Task
       if(true == debugMemory) Serial << "Delete: View\n";
       delete m_PixelArray;
     }
-    void SetPosition(position X, position Y)
-    { 
-      m_X = X; 
-      m_Y = Y;
-      m_PixelArray->SetPosition(m_X, m_Y);
-    }
-    void SetSize(size W, size H){ m_W = W; m_H = H; }
-    void AddSubView(View &SubView)
-    { 
-      m_SubViews.add(&SubView);
-      AddTask(SubView);
-    }
-    CRGB GetPixel(int X, int Y)
-    {
-      return m_PixelArray->GetPixel(X, Y);
-    }
-    bool RemoveSubView(View &SubView)
-    {
-      bool viewFound = false;
-      for(int i = 0; i < m_SubViews.size(); ++i)
-      {
-        if(m_SubViews.get(i) == &SubView)
-        {
-          viewFound = true;
-          m_SubViews.remove(i);
-          break;
-        }
-      }
-      if(true == viewFound)
-      {
-        if(true == debugTasks || true == debugMemory) Serial << "View Successfully Removed Subview.\n";
-        return true;
-      }
-      else
-      {
-        if(true == debugTasks || true == debugMemory) Serial << "View failed to Remove Subview.\n";
-        return false;
-      }
-    }
-    MergeType GetMergeType(){ return m_MergeType; }
-    PixelArray* GetPixelArray(){ return m_PixelArray; }
+    void SetPosition(position X, position Y);
+    void SetSize(size W, size H);
+    void AddSubView(View &SubView);
+    CRGB GetPixel(int X, int Y);
+    bool RemoveSubView(View &SubView);
+    MergeType GetMergeType();
+    PixelArray* GetPixelArray();
     void RemoveAllSubViews(){}
   protected:
     PixelArray *m_PixelArray;
@@ -119,9 +85,10 @@ class View: public Task
     position m_Y;
     size m_W;
     size m_H;
-    void MergeSubViews();
-  private:
+  protected:
     LinkedList<View*> m_SubViews = LinkedList<View*>();
+    void MergeSubViews(bool clearViewBeforeMerge);
+  private:
     View *m_ParentView;
     MergeType m_MergeType = MergeType_Layer;
     
@@ -138,7 +105,6 @@ class View: public Task
     }
     void RunMyTask()
     {
-      MergeSubViews();
       RunViewTask();
     }
 
@@ -182,24 +148,20 @@ class VerticalBarView: public View
     Position m_Peak;
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float value) { m_HeightScalar = value; }
-    void NewValueNotification(CRGB value) { m_Color = value; }
+    void NewValueNotification(float value);
+    void NewValueNotification(CRGB value);
     
   private:
     //View
-    void SetupView() {}
-    bool CanRunViewTask() { return true; }
+    void SetupView();
+    bool CanRunViewTask();
     void RunViewTask();
 
     //Model
-    void SetupModel(){}
-    bool CanRunModelTask(){ return true;}
-    void RunModelTask()
-    {
-      m_Peak.X = m_X;
-      m_Peak.Y = m_ScaledHeight;
-    }
-    void UpdateValue(){ SetCurrentValue(m_Peak); }
+    void SetupModel();
+    bool CanRunModelTask();
+    void RunModelTask();
+    void UpdateValue();
 };
 
 class BassSpriteView: public View
@@ -271,8 +233,8 @@ class ScrollingView: public View
     
   private:
     //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
+    void SetupView();
+    bool CanRunViewTask();
     void RunViewTask();
     enum ScrollDirection m_ScrollDirection = ScrollDirection_Up;
 };
@@ -325,24 +287,20 @@ class ColorSpriteView: public View
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
     virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete: ColorSpriteView\n"; }
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
-    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller);
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller);
     
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB value) { m_MyColor = value; }
-    void NewValueNotification(Position value) 
-    { 
-      m_X = value.X;
-      m_Y = value.Y;
-      m_PixelArray->SetPosition(m_X, m_Y);
-    }
+    void NewValueNotification(CRGB value);
+    void NewValueNotification(Position value);
     
   private:
-    //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask();
     CRGB m_MyColor = CRGB::Black;
+    
+    //View
+    void SetupView();
+    bool CanRunViewTask();
+    void RunViewTask();
 };
 
 class FadingView: public View
@@ -351,11 +309,11 @@ class FadingView: public View
     FadingView( String title
               , unsigned int FadeLength
               , Direction Direction
-              , position X
-              , position Y
-              , size W
-              , size H)
-              : View(title, X, Y, W, H)
+              , position x
+              , position y
+              , size w
+              , size h)
+              : View(title, x, y, w, h)
               , m_FadeLength(FadeLength)
               , m_Direction(Direction)
     {
@@ -364,12 +322,12 @@ class FadingView: public View
     FadingView( String title
               , unsigned int FadeLength
               , Direction Direction
-              , position X
-              , position Y
-              , size W
-              , size H
+              , position x
+              , position y
+              , size w
+              , size h
               , MergeType MergeType)
-              : View(title, X, Y, W, H, MergeType)
+              : View(title, x, y, w, h, MergeType)
               , m_FadeLength(FadeLength)
               , m_Direction(Direction)
     {
@@ -381,57 +339,14 @@ class FadingView: public View
     }
     
   private:
-    //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask()
-    {
-      if(m_FadeLength > 0)
-      {
-        switch(m_Direction)
-        {
-          case Direction_Up:
-            for(int x = m_X; x < m_X+m_W; ++x)
-            {
-              for(int y = m_Y; y < m_Y+m_H; ++y)
-              {
-                if((x >= m_X) && (x < (m_X + m_W)) && (y > m_Y) && (y < (m_Y + m_H)))
-                {
-                  PerformFade(x, y, y);
-                }
-              }
-            }
-            break;
-          case Direction_Down:
-            for(unsigned int x = m_X; x < m_X+m_W; ++x)
-            {
-              unsigned int index = 0;
-              for(unsigned int y = m_Y+m_H-1; y > m_Y; --y)
-              {
-                if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
-                {
-                  PerformFade(x, y, index);
-                }
-                ++index;
-              }
-            }
-            break;
-          default:
-          break;
-        }
-      }
-    }
-    void PerformFade(unsigned int x, unsigned int y, unsigned int i)
-    {
-      float normalizedFade = 1.0 - ((float)i / (float)m_FadeLength);
-      CRGB pixel;
-      pixel.red = m_PixelArray->GetPixel(x, y).red * normalizedFade;
-      pixel.green = m_PixelArray->GetPixel(x, y).green * normalizedFade;
-      pixel.blue = m_PixelArray->GetPixel(x, y).blue * normalizedFade;
-      m_PixelArray->SetPixel(x, y, pixel);
-    }
     Direction m_Direction = Direction_Down;
     unsigned int m_FadeLength = 0;
+    void PerformFade(unsigned int x, unsigned int y, unsigned int i);
+
+    //View
+    void SetupView();
+    bool CanRunViewTask();
+    void RunViewTask();
 };
 
 class RotatingView: public View
@@ -484,116 +399,8 @@ class RotatingView: public View
     RotationType m_RotationType;
     unsigned int m_Count = 0;
     //View
-    void SetupView()
-    {
-      m_ResultingPixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
-      m_ResultingPixelArray->Clear();
-      m_PixelArray->Clear();
-      m_startMillis = millis();
-    }
-    bool CanRunViewTask()
-    {
-      m_currentMillis = millis();
-      m_lapsedTime = m_currentMillis - m_startMillis;
-      if(m_lapsedTime >= m_updatePeriodMillis)
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    void RunViewTask()
-    {
-      m_startMillis = millis();
-      ++m_Count;
-      for(int x = m_X; x <= m_X+m_W-1; ++x)
-      {
-        for(int y = m_Y; y <= m_Y+m_H-1; ++y)
-        {
-          switch(m_RotationType)
-          {
-            case RotationType_Static:
-              switch(m_Direction)
-              {
-                case Direction_Up:
-                {
-                  int offset = m_Count%m_H;
-                  int source = y-offset;
-                  if(source < m_Y) { source = m_Y + m_H + source; }
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-                }
-                break;
-                case Direction_Down:
-                {
-                  int offset = m_Count%m_H;
-                  int source = y+offset;
-                  if(source > m_Y + m_H - 1) { source = source - (m_Y + m_H); }
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-                }
-                break;
-                case Direction_Right:
-                {
-                  int offset = m_Count%m_W;
-                  int source = x-offset;
-                  if(source < m_X) { source = m_X + m_W + source; }
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-                }
-                break;
-                case Direction_Left:
-                {
-                  int offset = m_Count%m_W;
-                  int source = x+offset;
-                  if(source > m_X + m_W - 1) { source = source - (m_X + m_W); };
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-                }
-                break;
-                default:
-                break;
-              }
-            break;
-            case RotationType_Scroll:
-              switch(m_Direction)
-              {
-                case Direction_Up:
-                {
-                  int source = y-1;
-                  if(source < m_Y) { source = m_Y + m_H - 1; }
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-                }
-                break;
-                case Direction_Down:
-                {
-                  int source = y+1;
-                  if(source >= m_Y + m_H - 1) { source = m_Y; }
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
-                }
-                break;
-                case Direction_Right:
-                {
-                  int source = x-1;
-                  if(source < m_X) { source = m_X + m_W - 1; }
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-                }
-                break;
-                case Direction_Left:
-                {
-                  int source = x+1;
-                  if(source >= m_X + m_W - 1) { source = m_X; };
-                  m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
-                }
-                break;
-                default:
-                break;
-              }
-            break;
-            default:
-            break;
-          }
-        }
-      }
-      *m_PixelArray = *m_ResultingPixelArray;
-    }
+    void SetupView();
+    bool CanRunViewTask();
+    void RunViewTask();
 };
 #endif

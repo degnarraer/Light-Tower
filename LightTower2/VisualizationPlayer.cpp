@@ -36,7 +36,7 @@ void VisualizationPlayer::Setup()
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = RotatingSprites::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = VUMeter::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }

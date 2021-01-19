@@ -442,7 +442,7 @@ Visualization* ScrollingMaxBand::GetInstance(StatisticalEngineModelInterface &St
 }
 void ScrollingMaxBand::SetupVisualization()
 {
-  AddView(m_ScrollingView);
+  AddSubView(m_ScrollingView);
   AddModel(m_MaxBandModel);
   AddModel(m_BandDataColorModel);
   m_ScrollingView.AddSubView(m_Sprite0);

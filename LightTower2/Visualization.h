@@ -27,12 +27,12 @@ class VisualizationEventNotificationCallerInterface
     LinkedList<VisualizationEventNotificationCalleeInterface*> myCallees = LinkedList<VisualizationEventNotificationCalleeInterface*>();
 };
 
-class Visualization: public Task
+class Visualization: public View
                    , VisualizationEventNotificationCallerInterface
 {
   public:
     Visualization( StatisticalEngineModelInterface &StatisticalEngineModelInterface, 
-                   LEDController &LEDController) : Task("Visualization")
+                   LEDController &LEDController) : View("Visualization", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
                                                  , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
                                                  , m_LEDController(LEDController){}
                
@@ -40,19 +40,19 @@ class Visualization: public Task
     {
       if(true == debugMemory) Serial << "Delete: Visualization\n";
       DeleteAllNewedObjects();
-      delete m_PixelArray;
     }
     StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
     LEDController &m_LEDController;
+
+    //View
+    void SetupView();
+    bool CanRunViewTask();
+    void RunViewTask();
     
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;
     virtual void RunVisualization() = 0;
 
-    //Task Interface
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
   protected:
     void AddView(View &view);
     void AddNewedView(View &view);
@@ -60,12 +60,9 @@ class Visualization: public Task
     void AddNewedModel(Model &model);
     void DeleteAllNewedObjects();
   private:
-    LinkedList<View*> m_MyViews = LinkedList<View*>();
     LinkedList<Model*> m_MyModels = LinkedList<Model*>();
     LinkedList<View*> m_MyNewedViews = LinkedList<View*>();
     LinkedList<Model*> m_MyNewedModels = LinkedList<Model*>();
-    PixelArray *m_PixelArray;
-    void MergeSubViews();
 };
 
 #endif
