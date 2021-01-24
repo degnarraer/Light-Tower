@@ -40,11 +40,48 @@ class VUMeter: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
-    SoundPowerModel m_SoundPower = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_SoundPower = SoundPowerModel("Sound Power Model", 2, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 3, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Model", 5000);
     VerticalBarView m_VerticalBar = VerticalBarView("Vertical Bar", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     GravitationalModel m_GravitationalModel = GravitationalModel("GravitationalModel0", 0.01, 0.0);
-    ColorSpriteView m_PeakSprite = ColorSpriteView("PeakSprite", 0, 30, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    BassSpriteView m_PeakSprite0 = BassSpriteView("PeakBassSprite", 4, 4, 0, 6, CRGB::Red, 0, 0, MergeType_Layer);
+};
+
+//********* SolidColorTower *********
+class SolidColorTower: public Visualization
+{
+  public:
+    SolidColorTower( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController)
+    {
+      if(true == debugMemory) Serial << "New: SolidColorTower\n";
+    }
+    virtual ~SolidColorTower()
+    {
+      if(true == debugMemory) Serial << "Deleted: SolidColorTower\n";
+    }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+    {
+      if(true == debugMemory) Serial << "SolidColorTower: Get Instance\n";
+      SolidColorTower *vis = new SolidColorTower(StatisticalEngineModelInterface, LEDController);
+      return vis;
+    }
+    void SetupVisualization()
+    {
+      AddView(m_ColorView0);
+      AddModel(m_MaximumBandPowerModel);
+      AddModel(m_ColorFadingModel0);
+      m_ColorFadingModel0.ConnectBandDataModel(m_MaximumBandPowerModel);
+      m_ColorView0.ConnectColorModel(m_ColorFadingModel0);
+    }
+    bool CanRunVisualization(){ return true; }
+    void RunVisualization(){}
+  private:
+    MaximumBandModel m_MaximumBandPowerModel = MaximumBandModel("Maximum Band Model 0", 10, m_StatisticalEngineModelInterface);
+    ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 1000, 500);
+    ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Red, MergeType_Layer);
 };
 
 //********* 8 Band VUMeter *********
@@ -173,7 +210,7 @@ class Waterfall: public Visualization
   private:
     ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, SCREEN_HEIGHT - 1, 4, 1);
-    SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Fading Model", 10000);
     SettableColorPowerModel m_PowerColorModel = SettableColorPowerModel("Settable Power Model");
 };
@@ -194,7 +231,7 @@ class Fire: public Visualization
   private:    
     ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, 0, 4, 1);
-    SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Fading Model", 10000);
     SettableColorPowerModel m_PowerColorModel = SettableColorPowerModel("Settable Power Model");
 };
@@ -215,13 +252,13 @@ class WaterFireFromCenter: public Visualization
   private:
     ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT/2);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, SCREEN_HEIGHT/2, 4, 1);
-    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model", 10000);
     SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model");
     
     ScrollingView m_ScrollingView1 = ScrollingView("Water Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT/2);
     ColorSpriteView m_Sprite1 = ColorSpriteView("Water Sprite 0", 0, SCREEN_HEIGHT/2-1, 4, 1);
-    SoundPowerModel m_PowerModel1 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel1 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model", 10000);
     SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model");
 };
@@ -243,14 +280,14 @@ class WaterFireFromEdge: public Visualization
     ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, 0, 4, 1);
-    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model", 10000);
     SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model");
     
     ScrollingView m_ScrollingView1 = ScrollingView("Water Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView1 = FadingView("FadingView 1", SCREEN_HEIGHT, Direction_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     ColorSpriteView m_Sprite1 = ColorSpriteView("Water Sprite 0", 0, SCREEN_HEIGHT-1, 4, 1);
-    SoundPowerModel m_PowerModel1 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel1 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model", 10000);
     SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model");
 };
@@ -411,7 +448,7 @@ class RotatingSprites: public Visualization
     bool CanRunVisualization(){ return true; }
     void RunVisualization(){}
   private:
-    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", m_StatisticalEngineModelInterface);
+    SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 1, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 1000);
     RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 1000);
     RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 1000);
@@ -544,49 +581,49 @@ class BallShooter: public Visualization
     bool CanRunVisualization(){ return true; }
     void RunVisualization(){}
   private:
-    VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite0 = ColorSpriteView("PeakSprite0", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, 8);
     GravitationalModel m_GravitationalModel0 = GravitationalModel("GravitationalModel0", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite1 = ColorSpriteView("PeakSprite1", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, 8);
     GravitationalModel m_GravitationalModel1 = GravitationalModel("GravitationalModel1", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 1, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 1, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite2 = ColorSpriteView("PeakSprite2", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, 8);
     GravitationalModel m_GravitationalModel2 = GravitationalModel("GravitationalModel2", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar 3", 1, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar 3", 1, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite3 = ColorSpriteView("PeakSprite3", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel3 = RainbowColorModel("Color Model 3", 3, 8);
     GravitationalModel m_GravitationalModel3 = GravitationalModel("GravitationalModel3", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar 4", 2, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar 4", 2, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite4 = ColorSpriteView("PeakSprite4", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower4 = ReducedBandsBandPowerModel("Sound Power Model 4", 4, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel4 = RainbowColorModel("Color Model 4", 4, 8);
     GravitationalModel m_GravitationalModel4 = GravitationalModel("GravitationalModel2", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar 5", 2, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar 5", 2, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite5 = ColorSpriteView("PeakSprite5", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel5 = RainbowColorModel("Color Model 5", 5, 8);
     GravitationalModel m_GravitationalModel5 = GravitationalModel("GravitationalModel5", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar 6", 3, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar 6", 3, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite6 = ColorSpriteView("PeakSprite6", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel6 = RainbowColorModel("Color Model 6", 6, 8);
     GravitationalModel m_GravitationalModel6 = GravitationalModel("GravitationalModel6", 1.0, 10.0);
     
-    VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar 7", 3, 0, 1, SCREEN_HEIGHT/3, MergeType_Add);
+    VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar 7", 3, 0, 1, SCREEN_HEIGHT/2, MergeType_Add);
     ColorSpriteView m_PeakSprite7 = ColorSpriteView("PeakSprite7", 0, 0, SCREEN_WIDTH, 2, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 5, 8, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7, 8);

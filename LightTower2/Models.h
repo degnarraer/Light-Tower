@@ -154,6 +154,7 @@ class Model: public Task
   protected:
     CRGB GetColor(unsigned int numerator, unsigned int denominator);
     CRGB GetRandomNonGrayColor();
+    CRGB FadeColor(CRGB color, float scalar);
   private:
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
@@ -374,7 +375,11 @@ class DataModelWithNewValueNotification: public DataModel
 class SoundPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    SoundPowerModel(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+    SoundPowerModel( String Title
+                   , unsigned int depth
+                   , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+                   : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+                   , m_Depth(depth)
     {
       if(true == debugMemory) Serial << "New: SoundPowerModel\n";
     }
@@ -384,16 +389,46 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
     }
     
      //Model
-    void UpdateValue() { SetCurrentValue(m_StatisticalEngineModelInterface.GetNormalizedSoundPower()); }
+    void UpdateValue() 
+    {
+      SetCurrentValue(m_Result);
+    }
 
   protected:
     //StatisticalEngineModelInterfaceUsers
     bool RequiresFFT() { return false; }
   private:
-     //Model
+    float m_Result = 0.0;
+    unsigned int m_Depth = 0;
+    unsigned int m_CircularBufferIndex = 0;
+    float m_RunningAverageCircularBuffer[POWER_SAVE_LENGTH] = {0}; 
+    //Model
     void SetupModel(){}
     bool CanRunModelTask(){ return true; }
-    void RunModelTask(){}
+    void RunModelTask()
+    {
+      int bufferIndex = m_CircularBufferIndex % POWER_SAVE_LENGTH;
+      m_RunningAverageCircularBuffer[bufferIndex] = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
+      float total = 0.0;
+      int count = 0;
+      int depth = m_Depth;
+      if(depth > POWER_SAVE_LENGTH - 1) depth = POWER_SAVE_LENGTH - 1;
+      for(int i = 0; i <= depth; ++i)
+      {
+        int index = bufferIndex + i; 
+        if(index <= POWER_SAVE_LENGTH - 1)
+        {
+          total += m_RunningAverageCircularBuffer[index];
+        }
+        else
+        {
+          total += m_RunningAverageCircularBuffer[index - POWER_SAVE_LENGTH];
+        }
+        ++count;
+      }
+      m_Result = total / count;
+      ++m_CircularBufferIndex;
+    }
 };
 
 class BandPowerModel: public DataModelWithNewValueNotification<float>
@@ -499,6 +534,50 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
     void StartFadingNextColor();
 };
 
+class ColorFadingModel: public ModelWithNewValueNotification<CRGB>
+                      , public ModelEventNotificationCallee<CRGB>
+                      , public ModelEventNotificationCallee<BandData>
+{
+  public:
+    ColorFadingModel( String Title
+                    , unsigned long Duration
+                    , unsigned long minimumUpdateTime)
+                    : ModelWithNewValueNotification<CRGB>(Title)
+                    , m_Duration(Duration)
+                    , m_MinimumUpdateTime(minimumUpdateTime)
+    {
+      if(true == debugMemory) Serial << "New: ColorFadingModel\n";
+    }
+    virtual ~ColorFadingModel()
+    {
+      if(true == debugMemory) Serial << "Delete: ColorFadingModel\n";
+    }
+    
+  void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this); }
+  void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
+  
+  private:
+     //Model
+    void UpdateValue();
+    void SetupModel();
+    bool CanRunModelTask();
+    void RunModelTask();
+    
+    //ModelEventNotificationCallee
+    void NewValueNotification(CRGB value);
+    void NewValueNotification(BandData value);
+    
+    //This
+    CRGB m_CurrentColor;
+    CRGB m_StartColor;
+    CRGB m_EndColor;
+    unsigned long m_Duration;
+    unsigned long m_CurrentDuration;
+    unsigned long m_CurrentTime;
+    unsigned long m_StartTime;
+    unsigned long m_MinimumUpdateTime;
+};
+
 class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
@@ -560,9 +639,7 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
     void RunModelTask() 
     {    
       float normalizedPower = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
-      m_OutputColor.red = (byte)(m_InputColor.red * normalizedPower);
-      m_OutputColor.green = (byte)(m_InputColor.green * normalizedPower);
-      m_OutputColor.blue = (byte)(m_InputColor.blue * normalizedPower);
+      m_OutputColor = FadeColor(m_InputColor, normalizedPower);
       if(true == debugModels) Serial << "ColorPowerModel normalizedPower: " << normalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
     
@@ -600,9 +677,7 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     bool CanRunModelTask(){ return true; }
     void RunModelTask() 
     {
-      m_OutputColor.red = (byte)(m_InputColor.red * m_NormalizedPower);
-      m_OutputColor.green = (byte)(m_InputColor.green * m_NormalizedPower);
-      m_OutputColor.blue = (byte)(m_InputColor.blue * m_NormalizedPower);
+      m_OutputColor = FadeColor(m_InputColor, m_NormalizedPower);
       if(true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
     
@@ -683,10 +758,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     bool CanRunModelTask(){ return true; }
     void RunModelTask() 
     {
-      if(m_NormalizedPower > 1.0) m_NormalizedPower = 1.0;
-      m_OutputColor.red = (byte)(m_InputColor.red * m_NormalizedPower);
-      m_OutputColor.green = (byte)(m_InputColor.green * m_NormalizedPower);
-      m_OutputColor.blue = (byte)(m_InputColor.blue * m_NormalizedPower);
+      m_OutputColor = FadeColor(m_InputColor, m_NormalizedPower);
       if(true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
     

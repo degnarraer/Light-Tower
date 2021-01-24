@@ -153,6 +153,38 @@ void VerticalBarView::UpdateValue()
   SetCurrentValue(m_Peak); 
 }
 
+//*************** BassSpriteView ***************
+void BassSpriteView::NewValueNotification(float value)
+{
+  m_Scaler = value;
+}
+void BassSpriteView::NewValueNotification(Position value) 
+{ 
+  m_X = value.X;
+  m_Y = value.Y;
+  m_PixelArray->SetPosition(m_X, m_Y);
+}
+void BassSpriteView::SetupView(){}
+bool BassSpriteView::CanRunViewTask(){ return true; }
+void BassSpriteView::RunViewTask()
+{
+  m_CurrentWidth = round(((m_Scaler*((float)m_MaxWidth - (float)m_MinWidth)) + m_MinWidth)/2.0);
+  m_CurrentHeight = round(((m_Scaler*((float)m_MaxHeight - (float)m_MinHeight)) + m_MinHeight)/2.0);
+  for(int x = m_X; x<=m_X+m_W-1; ++x)
+  {
+    for(int y = m_Y; y<=m_Y+m_H-1; ++y)
+    {
+      if( (x >= m_X - m_CurrentWidth) && (x <= m_X + m_CurrentWidth) && (y >= m_Y - m_CurrentHeight) && (y <= m_Y + m_CurrentHeight) )
+      {
+        m_PixelArray->SetPixel(x, y, m_MyColor);
+      }
+      else
+      {
+        m_PixelArray->SetPixel(x, y, CRGB::Black);
+      }
+    }
+  }
+}
 
 //*************** ScrollingView ***************
 void ScrollingView::SetupView(){}
@@ -214,12 +246,17 @@ void ScrollingView::RunViewTask()
 //*************** ScrollingView ***************
 void ColorSpriteView::ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
 void ColorSpriteView::ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
+void ColorSpriteView::ConnectBandPowerModel(ModelEventNotificationCaller<BandData> &caller) { caller.RegisterForNotification(*this); }
 void ColorSpriteView::NewValueNotification(CRGB value) { m_MyColor = value; }
 void ColorSpriteView::NewValueNotification(Position value) 
 { 
   m_X = value.X;
   m_Y = value.Y;
   m_PixelArray->SetPosition(m_X, m_Y);
+}
+void ColorSpriteView::NewValueNotification(BandData value)
+{
+  m_MyColor = (CRGB){ value.Color.Red * value.Power, value.Color.Green * value.Power, value.Color.Blue * value.Power };
 }
 void ColorSpriteView::SetupView(){}
 bool ColorSpriteView::CanRunViewTask(){ return true; }

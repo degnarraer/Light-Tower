@@ -155,13 +155,41 @@ class VerticalBarView: public View
 
 class BassSpriteView: public View
                     , public ModelEventNotificationCallee<float>
+                    , public ModelEventNotificationCallee<Position>
 {
   public:
-    BassSpriteView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H)
+    BassSpriteView( String title
+                  , int minWidth
+                  , int maxWidth
+                  , int minHeight
+                  , int maxHeight
+                  , CRGB color
+                  , position x
+                  , position y )
+                  : View(title, x, y, maxWidth, maxHeight)
+                  , m_MinWidth(minWidth)
+                  , m_MaxWidth(maxWidth)
+                  , m_MinHeight(minHeight)
+                  , m_MaxHeight(maxHeight)
+                  , m_MyColor(color)
     {
       if(true == debugMemory) Serial << "New: BassSpriteView\n";
     }
-    BassSpriteView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
+    BassSpriteView( String title
+                  , int minWidth
+                  , int maxWidth
+                  , int minHeight
+                  , int maxHeight
+                  , CRGB color
+                  , position x
+                  , position y
+                  , MergeType mergeType)
+                  : View(title, x, y, maxWidth, maxHeight, mergeType)
+                  , m_MinWidth(minWidth)
+                  , m_MaxWidth(maxWidth)
+                  , m_MinHeight(minHeight)
+                  , m_MaxHeight(maxHeight)
+                  , m_MyColor(color)
     {
       if(true == debugMemory) Serial << "New: BassSpriteView\n";
     }
@@ -169,16 +197,26 @@ class BassSpriteView: public View
     {
       if(true == debugMemory) Serial << "Delete: BassSpriteView\n";  
     }
-    void ConnectModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectPowerModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this); }
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float Value);
+    void NewValueNotification(float value);
+    void NewValueNotification(Position value);
     
   private:
     //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask(){}
+    CRGB m_MyColor = CRGB::Black;
+    float m_Scaler = 0;
+    int m_MinHeight = 1;
+    int m_MaxHeight = 1;
+    int m_CurrentHeight = 1;
+    int m_MinWidth = 1;
+    int m_MaxWidth = 1;
+    int m_CurrentWidth = 1;
+    void SetupView();
+    bool CanRunViewTask();
+    void RunViewTask();
 };
 
 
@@ -232,6 +270,7 @@ class ScrollingView: public View
 class ColorSpriteView: public View
                      , public ModelEventNotificationCallee<CRGB>
                      , public ModelEventNotificationCallee<Position>
+                     , public ModelEventNotificationCallee<BandData>
 {
   public:
     ColorSpriteView( String title
@@ -278,10 +317,12 @@ class ColorSpriteView: public View
     virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete: ColorSpriteView\n"; }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller);
     void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller);
+    void ConnectBandPowerModel(ModelEventNotificationCaller<BandData> &caller);
     
     //ModelEventNotificationCallee
     void NewValueNotification(CRGB value);
     void NewValueNotification(Position value);
+    void NewValueNotification(BandData value);
     
   private:
     CRGB m_MyColor = CRGB::Black;

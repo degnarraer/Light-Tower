@@ -26,16 +26,19 @@ Visualization* VUMeter::GetInstance(StatisticalEngineModelInterface &Statistical
 }
 void VUMeter::SetupVisualization()
 {
-  AddView(m_PeakSprite);
+  AddView(m_PeakSprite0);
   AddView(m_VerticalBar);
+
   AddModel(m_SoundPower);
+  AddModel(m_BandPower0);
   AddModel(m_VerticalBar);
   AddModel(m_ColorModel);
   AddModel(m_GravitationalModel);
   m_VerticalBar.ConnectBarHeightModel(m_SoundPower);
   m_VerticalBar.ConnectBarColorModel(m_ColorModel);
   m_GravitationalModel.ConnectPositionModel(m_VerticalBar);
-  m_PeakSprite.ConnectPositionModel(m_GravitationalModel);
+  m_PeakSprite0.ConnectPowerModel(m_BandPower0);
+  m_PeakSprite0.ConnectPositionModel(m_GravitationalModel);
 }
 bool VUMeter::CanRunVisualization(){ return true; }
 void VUMeter::RunVisualization(){}
