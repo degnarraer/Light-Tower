@@ -2,28 +2,28 @@
 #include "Views.h"
 
 //*************** View ***************
-void View::SetPosition(position X, position Y)
+void View::SetPosition(position x, position y)
 { 
-  m_X = X; 
-  m_Y = Y;
-  m_PixelArray->SetPosition(m_X, m_Y);
+  m_X = x; 
+  m_Y = y;
+  m_PixelArray->SetPosition(x, y);
 }
-void View::SetSize(size W, size H){ m_W = W; m_H = H; }
-void View::AddSubView(View &SubView)
+void View::SetSize(size w, size h){ m_W = w; m_H = h; }
+void View::AddSubView(View &subView)
 { 
-  m_SubViews.add(&SubView);
-  AddTask(SubView);
+  m_SubViews.add(&subView);
+  AddTask(subView);
 }
-CRGB View::GetPixel(int X, int Y)
+CRGB View::GetPixel(int x, int y)
 {
-  return m_PixelArray->GetPixel(X, Y);
+  return m_PixelArray->GetPixel(x, y);
 }
-bool View::RemoveSubView(View &SubView)
+bool View::RemoveSubView(View &subView)
 {
   bool viewFound = false;
   for(int i = 0; i < m_SubViews.size(); ++i)
   {
-    if(m_SubViews.get(i) == &SubView)
+    if(m_SubViews.get(i) == &subView)
     {
       viewFound = true;
       m_SubViews.remove(i);
@@ -58,7 +58,7 @@ void View::Setup()
 bool View::CanRunMyTask()
 {
   MergeSubViews(false);
-  return CanRunViewTask(); 
+  return CanRunViewTask();
 }
 void View::RunMyTask()
 {
@@ -71,10 +71,10 @@ void View::MergeSubViews(bool clearViewBeforeMerge)
   for(int v = m_SubViews.size() - 1; v >= 0; --v)
   {
     View *aView = m_SubViews.get(v);
-    int aX = aView->GetPixelArray()->GetX();
-    int aY = aView->GetPixelArray()->GetY();
-    int aWidth = aView->GetPixelArray()->GetWidth();
-    int aHeight = aView->GetPixelArray()->GetHeight();
+    position aX = aView->GetPixelArray()->GetX();
+    position aY = aView->GetPixelArray()->GetY();
+    size aWidth = aView->GetPixelArray()->GetWidth();
+    size aHeight = aView->GetPixelArray()->GetHeight();
     for(int x = aX; x <= aX + aWidth - 1; ++x)
     {
       for(int y = aY; y <= aY + aHeight - 1; ++y)
@@ -85,8 +85,10 @@ void View::MergeSubViews(bool clearViewBeforeMerge)
           switch(aView->GetMergeType())
           {
             case MergeType_Layer:
+            {
               if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
               m_PixelArray->SetPixel(x, y, aView->GetPixel(x, y));
+            }
             break;
             case MergeType_Add:
             {
@@ -131,8 +133,8 @@ void VerticalBarView::RunViewTask()
   }
 }
 
-void VerticalBarView::NewValueNotification(float value) { m_HeightScalar = value; }
-void VerticalBarView::NewValueNotification(CRGB value) { m_Color = value; }
+void VerticalBarView::NewValueNotification(float value, String context) { m_HeightScalar = value; }
+void VerticalBarView::NewValueNotification(CRGB value, String context) { m_Color = value; }
 //Model
 void VerticalBarView::SetupModel()
 {
@@ -154,11 +156,11 @@ void VerticalBarView::UpdateValue()
 }
 
 //*************** BassSpriteView ***************
-void BassSpriteView::NewValueNotification(float value)
+void BassSpriteView::NewValueNotification(float value, String context)
 {
   m_Scaler = value;
 }
-void BassSpriteView::NewValueNotification(Position value) 
+void BassSpriteView::NewValueNotification(Position value, String context) 
 { 
   m_X = value.X;
   m_Y = value.Y;
@@ -244,19 +246,32 @@ void ScrollingView::RunViewTask()
 }
 
 //*************** ScrollingView ***************
-void ColorSpriteView::ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
-void ColorSpriteView::ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
-void ColorSpriteView::ConnectBandPowerModel(ModelEventNotificationCaller<BandData> &caller) { caller.RegisterForNotification(*this); }
-void ColorSpriteView::NewValueNotification(CRGB value) { m_MyColor = value; }
-void ColorSpriteView::NewValueNotification(Position value) 
-{ 
-  m_X = value.X;
-  m_Y = value.Y;
+void ColorSpriteView::ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this, ""); }
+void ColorSpriteView::ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this, "Position"); }
+void ColorSpriteView::ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this, "X"); }
+void ColorSpriteView::ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this, "Y"); }
+void ColorSpriteView::ConnectBandPowerModel(ModelEventNotificationCaller<BandData> &caller) { caller.RegisterForNotification(*this, ""); }
+void ColorSpriteView::NewValueNotification(CRGB value, String context) { m_MyColor = value; }
+void ColorSpriteView::NewValueNotification(Position value, String context) 
+{
+  if(context == "Position")
+  {
+    m_X = value.X;
+    m_Y = value.Y;
+  }
+  if(context == "X")
+  {
+    m_X = value.X;
+  }
+  if(context == "Y")
+  {
+    m_Y = value.Y;
+  }
   m_PixelArray->SetPosition(m_X, m_Y);
 }
-void ColorSpriteView::NewValueNotification(BandData value)
+void ColorSpriteView::NewValueNotification(BandData value, String context)
 {
-  m_MyColor = (CRGB){ value.Color.Red * value.Power, value.Color.Green * value.Power, value.Color.Blue * value.Power };
+  m_MyColor = FadeColor(value.Color, value.Power);
 }
 void ColorSpriteView::SetupView(){}
 bool ColorSpriteView::CanRunViewTask(){ return true; }

@@ -32,7 +32,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
   m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
-  
+
   bool testVisualization = true;
   if(true == testVisualization)
   {

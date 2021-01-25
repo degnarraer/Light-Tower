@@ -46,9 +46,9 @@ class PixelArray
     }
     void Clear()
     {
-      for(int x = 0; x < m_W; ++x)
+      for(int x = 0; x <= m_W-1; ++x)
       {
-        for(int y = 0; y < m_H; ++y)
+        for(int y = 0; y <= m_H-1; ++y)
         {
           m_Pixels[x][y] = CRGB::Black;
         }

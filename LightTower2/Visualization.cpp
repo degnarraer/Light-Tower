@@ -24,17 +24,38 @@ void VisualizationEventNotificationCallerInterface::RegisterForNotification(Visu
   if(true == debugModelNotifications) Serial << "VisualizationEventNotificationCallerInterface: Add: ";        
   myCallees.add(&callee);
 }
+void VisualizationEventNotificationCallerInterface::RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee, String context)
+{
+  CallerInterfaceData cid;
+  cid.Callee = &callee;
+  cid.Context = context;
+  myCalleesWithContext.add(cid);
+}
 void VisualizationEventNotificationCallerInterface::DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
+{
+  for(int i = 0; i < myCallees.size(); ++i)
   {
-    for(int i = 0; i < myCallees.size(); ++i)
+    if(myCallees.get(i) == &callee)
     {
-      if(myCallees.get(i) == &callee)
-      {
-        myCallees.remove(i);
-        break;
-      }
+      myCallees.remove(i);
+      break;
     }
   }
+}
+void VisualizationEventNotificationCallerInterface::DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee, String context)
+{
+  CallerInterfaceData cid;
+  cid.Callee = &callee;
+  cid.Context = context;
+  for(int i = 0; i < myCalleesWithContext.size(); ++i)
+  {
+    if(myCalleesWithContext.get(i) == cid)
+    {
+      myCalleesWithContext.remove(i);
+      break;
+    }
+  }
+}
 void VisualizationEventNotificationCallerInterface::SendVisualizationCompleteNotificationToCalleesFrom(VisualizationEventNotificationCallerInterface &source)
 {
   for(int i = 0; i < myCallees.size(); ++i)

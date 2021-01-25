@@ -189,7 +189,7 @@ void ColorFadingModel::ColorFadingModel::UpdateValue()
   SetCurrentValue( m_CurrentColor );
 }
 
-void ColorFadingModel::NewValueNotification(CRGB value) 
+void ColorFadingModel::NewValueNotification(CRGB value, String context) 
 {
   m_CurrentTime = millis();
   m_CurrentDuration = m_CurrentTime - m_StartTime;
@@ -201,7 +201,7 @@ void ColorFadingModel::NewValueNotification(CRGB value)
   }
 }
 
-void ColorFadingModel::NewValueNotification(BandData value) 
+void ColorFadingModel::NewValueNotification(BandData value, String context) 
 {
   m_CurrentTime = millis();
   m_CurrentDuration = m_CurrentTime - m_StartTime;

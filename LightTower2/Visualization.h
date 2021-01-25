@@ -20,11 +20,24 @@ public:
 class VisualizationEventNotificationCallerInterface
 {
   public:
+    struct CallerInterfaceData
+    {
+      VisualizationEventNotificationCalleeInterface* Callee;
+      String Context;
+      bool operator==(const CallerInterfaceData& c)
+      {
+        return (true == ((c.Callee == Callee) && (c.Context == Context)))? true:false;
+      }
+    };
     void RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee);
+    void RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee, String context);
     void DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee);
+    void DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee, String context);
     void SendVisualizationCompleteNotificationToCalleesFrom(VisualizationEventNotificationCallerInterface &source);
   private:
+    
     LinkedList<VisualizationEventNotificationCalleeInterface*> myCallees = LinkedList<VisualizationEventNotificationCalleeInterface*>();
+    LinkedList<CallerInterfaceData> myCalleesWithContext = LinkedList<CallerInterfaceData>();
 };
 
 class Visualization: public View

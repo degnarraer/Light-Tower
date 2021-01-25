@@ -38,6 +38,11 @@ struct BandData
   {
     return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color)))? false:true;
   }
+  friend Print& operator<<(Print& os, const BandData& bd)
+  {
+    os << bd.Power << "|" << bd.Power << "|" << bd.Color.red << "|" << bd.Color.green << "|" << bd.Color.blue;
+    return os;
+  }
 };
 
 
@@ -52,6 +57,11 @@ struct Position
   bool operator!=(const Position& a)
   {
     return (true == ((a.X == X) && (a.Y == Y)))? false:true;
+  }
+  friend Print& operator<<(Print& os, const Position& pos)
+  {
+    os << pos.X << "|" << pos.Y;
+    return os;
   }
 };
 struct Size
@@ -87,7 +97,7 @@ template <class T>
 class ModelEventNotificationCallee
 {
   public:
-    virtual void NewValueNotification(T Value) = 0;
+    virtual void NewValueNotification(T Value, String context) = 0;
 };
 
 template <class T>
@@ -99,39 +109,55 @@ class ModelEventNotificationCaller
     {
       if(true == debugMemory) Serial << "Delete: ModelEventNotificationCaller\n";  
     }
-    void RegisterForNotification(ModelEventNotificationCallee<T> &callee)
-    {
+    void RegisterForNotification(ModelEventNotificationCallee<T> &callee, String context)
+    {  
+      CallerInterfaceData<T> cid;
+      cid.Callee = &callee;
+      cid.Context = context;
       if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";        
-      m_MyCallees.add(&callee);
-      callee.NewValueNotification(GetCurrentValue());
+      m_MyCalleesWithContext.add(cid);
+      callee.NewValueNotification(GetCurrentValue(), context);
     }
-    void DeRegisterForNotification(ModelEventNotificationCallee<T> &callee)
-    {
-      for(int i = 0; i < m_MyCallees.size(); ++i)
+    void DeRegisterForNotification(ModelEventNotificationCallee<T> &callee, String context)
+    {  
+      CallerInterfaceData<T> cid;
+      cid.Callee = &callee;
+      cid.Context = context;
+      for(int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if(m_MyCallees.get(i) == &callee)
+        if(m_MyCalleesWithContext.get(i) == cid)
         {
-          m_MyCallees.remove(i);
+          m_MyCalleesWithContext.remove(i);
           break;
         }
       }
     }
     bool HasUser()
     {
-      return (m_MyCallees.size() > 0)? true:false;
+      return (m_MyCalleesWithContext.size() > 0)? true:false;
     }
     void SendNewValueNotificationToCallees(T value)
     {
-      for(int i = 0; i < m_MyCallees.size(); ++i)
+      for(int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\n"; 
-        m_MyCallees.get(i)->NewValueNotification(value);
+        if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\t" << "Value: " << value << "\n"; 
+        m_MyCalleesWithContext.get(i).Callee->NewValueNotification(value, m_MyCalleesWithContext.get(i).Context);
       }
     }
     virtual void UpdateValue() = 0;
     virtual T GetCurrentValue() = 0;
   private:
-    LinkedList<ModelEventNotificationCallee<T>*> m_MyCallees = LinkedList<ModelEventNotificationCallee<T>*>();
+    template <class C>
+    struct CallerInterfaceData
+    {
+      ModelEventNotificationCallee<C>* Callee;
+      String Context;
+      bool operator==(const CallerInterfaceData<C>& cid)
+      {
+        return (true == ((cid.Callee == Callee) && (cid.Context == Context)))? true:false;
+      }
+    };
+    LinkedList<CallerInterfaceData<T>> m_MyCalleesWithContext = LinkedList<CallerInterfaceData<T>>();
 };
 
 class StatisticalEngineModelInterface;
@@ -553,8 +579,8 @@ class ColorFadingModel: public ModelWithNewValueNotification<CRGB>
       if(true == debugMemory) Serial << "Delete: ColorFadingModel\n";
     }
     
-  void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this); }
-  void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
+  void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this, ""); }
+  void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this, ""); }
   
   private:
      //Model
@@ -564,8 +590,8 @@ class ColorFadingModel: public ModelWithNewValueNotification<CRGB>
     void RunModelTask();
     
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB value);
-    void NewValueNotification(BandData value);
+    void NewValueNotification(CRGB value, String context);
+    void NewValueNotification(BandData value, String context);
     
     //This
     CRGB m_CurrentColor;
@@ -644,8 +670,8 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
     }
     
     //ModelEventNotificationCallee
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
-    void NewValueNotification(CRGB Value) { m_InputColor = Value; }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this, ""); }
+    void NewValueNotification(CRGB Value, String context) { m_InputColor = Value; }
 };
 
 
@@ -663,8 +689,8 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     {
       if(true == debugMemory) Serial << "Delete: SettableColorPowerModel\n";
     }
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this); }
-    void ConnectPowerModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this, ""); }
+    void ConnectPowerModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this, ""); }
   private:
      CRGB m_InputColor = CRGB::Black;
      CRGB m_OutputColor = CRGB::Black;
@@ -682,8 +708,8 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     }
     
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB Value) { m_InputColor = Value; }
-    void NewValueNotification(float Value) { m_NormalizedPower = Value; }
+    void NewValueNotification(CRGB Value, String context) { m_InputColor = Value; }
+    void NewValueNotification(float Value, String context) { m_NormalizedPower = Value; }
 };
 
 class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData>
@@ -744,7 +770,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     {
       if(true == debugMemory) Serial << "Delete: BandDataColorModel\n";
     }
-    void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this, ""); }
   private:
     CRGB m_InputColor = CRGB::Black;
     CRGB m_OutputColor = CRGB::Black;
@@ -763,7 +789,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     }
     
     //ModelEventNotificationCallee
-    void NewValueNotification(BandData Value) 
+    void NewValueNotification(BandData Value, String context) 
     { 
       m_InputColor = Value.Color;
       m_NormalizedPower = Value.Power;
@@ -788,7 +814,7 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
       if(true == debugMemory) Serial << "Delete: GravitationalModel\n";
     }
     
-    void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this, ""); }
   
   private:
     unsigned long m_StartTime;
@@ -825,7 +851,7 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
     }
     
     //ModelEventNotificationCallee
-    void NewValueNotification(Position value) 
+    void NewValueNotification(Position value, String context) 
     { 
       m_LowerPositionLimit = value;
     }

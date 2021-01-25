@@ -79,28 +79,85 @@ class View: public Task
     MergeType GetMergeType();
     PixelArray* GetPixelArray();
     void RemoveAllSubViews(){}
+    
+    //Task
+    virtual void Setup();
+    virtual bool CanRunMyTask();
+    virtual void RunMyTask();
   protected:
     PixelArray *m_PixelArray;
     position m_X;
     position m_Y;
     size m_W;
     size m_H;
-  protected:
     LinkedList<View*> m_SubViews = LinkedList<View*>();
     void MergeSubViews(bool clearViewBeforeMerge);
+    CRGB FadeColor(CRGB color, float scalar)
+    {
+      byte fadeAmount = (byte)(scalar*255);
+      if(fadeAmount > 255) fadeAmount = 255;
+      fadeAmount = 255 - fadeAmount;
+      return color.fadeLightBy(fadeAmount);
+    }
+  
   private:
     View *m_ParentView;
     MergeType m_MergeType = MergeType_Layer;
-    
-    //Task
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
 
     //View
     virtual void SetupView() = 0;
     virtual bool CanRunViewTask() = 0;
     virtual void RunViewTask() = 0;
+};
+
+class SubView: public View
+{
+  public:
+    SubView( String title
+           , bool clearBeforeMergeSubViews
+           , position x
+           , position y
+           , size w
+           , size h )
+           : View(title, x, y, w, h)
+           , m_ClearBeforeMergeSubViews(clearBeforeMergeSubViews)
+    {
+      if(true == debugMemory) Serial << "New: SubView\n";
+    }
+    SubView( String title
+           , bool clearBeforeMergeSubViews
+           , position x
+           , position y
+           , size w
+           , size h
+           , MergeType mergeType)
+           : View(title, x, y, w, h, mergeType)
+           , m_ClearBeforeMergeSubViews(clearBeforeMergeSubViews)
+    {
+      if(true == debugMemory) Serial << "New: SubView\n";
+    }
+    virtual ~SubView()
+    {
+      if(true == debugMemory) Serial << "Delete: SubView\n";  
+    }
+    virtual bool CanRunMyTask() override
+    {
+      if(true == m_ClearBeforeMergeSubViews)
+      {
+        m_PixelArray->Clear();
+      }
+      return View::CanRunMyTask();
+    }
+  private:
+    bool m_ClearBeforeMergeSubViews = false;
+    
+    //View
+    void SetupView(){}
+    bool CanRunViewTask()
+    {
+      return true;
+    }
+    void RunViewTask(){}
 };
 
 class VerticalBarView: public View
@@ -128,8 +185,8 @@ class VerticalBarView: public View
     {
       if(true == debugMemory) Serial << "Delete: VerticalBarView\n";  
     }
-    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
-    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this, ""); }
+    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this, ""); }
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
@@ -137,8 +194,8 @@ class VerticalBarView: public View
     Position m_Peak;
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float value);
-    void NewValueNotification(CRGB value);
+    void NewValueNotification(float value, String context);
+    void NewValueNotification(CRGB value, String context);
     
   private:
     //View
@@ -197,12 +254,14 @@ class BassSpriteView: public View
     {
       if(true == debugMemory) Serial << "Delete: BassSpriteView\n";  
     }
-    void ConnectPowerModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
-    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this); }
+    void ConnectPowerModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this, ""); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, ""); }
+    void ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "X"); }
+    void ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Y"); }
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float value);
-    void NewValueNotification(Position value);
+    void NewValueNotification(float value, String context);
+    void NewValueNotification(Position value, String context);
     
   private:
     //View
@@ -218,7 +277,6 @@ class BassSpriteView: public View
     bool CanRunViewTask();
     void RunViewTask();
 };
-
 
 enum ScrollDirection
 {
@@ -274,55 +332,58 @@ class ColorSpriteView: public View
 {
   public:
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W, size H)
-                   : View(title, X, Y, W, H)
+                   , position x
+                   , position y
+                   , size w
+                   , size h)
+                   : View(title, x, y, w, h)
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W
-                   , size H
+                   , position x
+                   , position y
+                   , size w
+                   , size h
                    , CRGB Color)
-                   : View(title, X, Y, W, H)
+                   : View(title, x, y, w, h)
                    , m_MyColor(Color)
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W
-                   , size H
+                   , position x
+                   , position y
+                   , size w
+                   , size h
                    , CRGB Color
                    , MergeType MergeType)
-                   : View(title, X, Y, W, H, MergeType)
+                   : View(title, x, y, w, h, MergeType)
                    , m_MyColor(Color)
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W
-                   , size H
+                   , position x
+                   , position y
+                   , size w
+                   , size h
                    , MergeType MergeType)
-                   : View(title, X, Y, W, H, MergeType)
+                   : View(title, x, y, w, h, MergeType)
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
     virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete: ColorSpriteView\n"; }
     void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller);
     void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller);
+    void ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller);
+    void ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller);
     void ConnectBandPowerModel(ModelEventNotificationCaller<BandData> &caller);
     
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB value);
-    void NewValueNotification(Position value);
-    void NewValueNotification(BandData value);
+    void NewValueNotification(CRGB value, String context);
+    void NewValueNotification(Position value, String context);
+    void NewValueNotification(BandData value, String context);
     
   private:
     CRGB m_MyColor = CRGB::Black;
