@@ -162,21 +162,42 @@ void BassSpriteView::NewValueNotification(float value, String context)
 }
 void BassSpriteView::NewValueNotification(Position value, String context) 
 { 
-  m_X = value.X;
-  m_Y = value.Y;
+  m_CenterX = value.X;
+  m_CenterY = value.Y;
+  m_TopX = m_CenterX + m_MaxWidth;
+  m_BottomX = m_CenterX - m_MaxWidth;
+  m_TopY = m_CenterY + m_MaxHeight;
+  m_BottomY = m_CenterY - m_MaxHeight;
+  if(context == "Position")
+  {
+    m_X = m_BottomX;
+    m_Y = m_BottomY;
+  }
+  else if(context == "X")
+  {
+    m_X = m_BottomX;
+  }
+  else if(context == "Y")
+  {
+    m_Y = m_BottomY;
+  }
   m_PixelArray->SetPosition(m_X, m_Y);
 }
 void BassSpriteView::SetupView(){}
 bool BassSpriteView::CanRunViewTask(){ return true; }
 void BassSpriteView::RunViewTask()
 {
-  m_CurrentWidth = round(((m_Scaler*((float)m_MaxWidth - (float)m_MinWidth)) + m_MinWidth)/2.0);
-  m_CurrentHeight = round(((m_Scaler*((float)m_MaxHeight - (float)m_MinHeight)) + m_MinHeight)/2.0);
-  for(int x = m_X; x<=m_X+m_W-1; ++x)
+  m_CurrentWidth = round((m_Scaler*((float)m_MaxWidth - (float)m_MinWidth)) + m_MinWidth);
+  m_CurrentHeight = round((m_Scaler*((float)m_MaxHeight - (float)m_MinHeight)) + m_MinHeight);
+  for(int x = m_BottomX; x <= m_TopX; ++x)
   {
-    for(int y = m_Y; y<=m_Y+m_H-1; ++y)
+    for(int y = m_BottomY; y <= m_TopY; ++y)
     {
-      if( (x >= m_X - m_CurrentWidth) && (x <= m_X + m_CurrentWidth) && (y >= m_Y - m_CurrentHeight) && (y <= m_Y + m_CurrentHeight) )
+      if( (x == m_CenterX && true == m_ShowCenterX) || (y == m_CenterY && true == m_ShowCenterY) )
+      {
+        m_PixelArray->SetPixel(x, y, m_MyCenterColor);
+      }
+      else if( (x >= m_CenterX - m_CurrentWidth) && (x <= m_CenterX + m_CurrentWidth) && (y >= m_CenterY - m_CurrentHeight) && (y <= m_CenterY + m_CurrentHeight) )
       {
         m_PixelArray->SetPixel(x, y, m_MyColor);
       }
@@ -245,7 +266,7 @@ void ScrollingView::RunViewTask()
   }
 }
 
-//*************** ScrollingView ***************
+//*************** ColorSpriteView ***************
 void ColorSpriteView::ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this, ""); }
 void ColorSpriteView::ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this, "Position"); }
 void ColorSpriteView::ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this, "X"); }
@@ -309,10 +330,10 @@ void FadingView::RunViewTask()
         }
         break;
       case Direction_Down:
-        for(unsigned int x = m_X; x < m_X+m_W; ++x)
+        for(int x = m_X; x < m_X+m_W; ++x)
         {
           unsigned int index = 0;
-          for(unsigned int y = m_Y+m_H-1; y > m_Y; --y)
+          for(int y = m_Y+m_H-1; y > m_Y; --y)
           {
             if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
             {
@@ -347,20 +368,19 @@ void RotatingView::SetupView()
 }
 bool RotatingView::CanRunViewTask()
 {
+  m_currentMillis = millis();
+  m_lapsedTime = m_currentMillis - m_startMillis;
   switch(m_RotationType)
   {
     case RotationType_Static:
       RotateView();
+      *m_PixelArray = *m_ResultingPixelArray;
     break;
     case RotationType_Scroll:
     break;
     default:
     break;
   }
-  *m_PixelArray = *m_ResultingPixelArray;
-   
-  m_currentMillis = millis();
-  m_lapsedTime = m_currentMillis - m_startMillis;
   if(m_lapsedTime >= m_updatePeriodMillis)
   {
     return true;

@@ -30,7 +30,7 @@
 
 typedef CRGBArray<NUMLEDS> LEDStrip;
 typedef int position;
-typedef unsigned int size;
+typedef int size;
 
 class PixelArray
 {

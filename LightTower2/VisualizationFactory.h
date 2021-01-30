@@ -45,7 +45,7 @@ class VUMeter: public Visualization
     RandomColorFadingModel m_ColorModel = RandomColorFadingModel("Color Model", 5000);
     VerticalBarView m_VerticalBar = VerticalBarView("Vertical Bar", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     GravitationalModel m_GravitationalModel = GravitationalModel("GravitationalModel0", 0.01, 0.0);
-    BassSpriteView m_PeakSprite0 = BassSpriteView("PeakBassSprite", 4, 4, 0, 6, CRGB::Red, 0, 0, MergeType_Layer);
+    BassSpriteView m_PeakSprite0 = BassSpriteView("PeakBassSprite", 0, 0, 4, 4, 0, 6, CRGB::Red, CRGB::Green, false, true, MergeType_Layer);
 };
 
 //********* SolidColorTower *********
@@ -444,6 +444,13 @@ class RotatingSprites: public Visualization
     }
     void SetupVisualization()
     {
+
+      AddView(m_RotateView0);
+      AddModel(m_ColorModel0);
+      m_Sprite0.ConnectColorModel(m_ColorModel0);
+      m_RotateView0.AddSubView(m_Sprite0);
+
+      /*
       AddView(m_RotateView1);
       m_RotateView1.AddSubView(m_RotateView0);
 
@@ -474,10 +481,11 @@ class RotatingSprites: public Visualization
       m_PowerColorModel2.ConnectPowerModel(m_PowerModel0);
       m_PowerColorModel3.ConnectPowerModel(m_PowerModel0);
 
-      m_Sprite0.ConnectColorModel(m_PowerColorModel0);
-      m_Sprite1.ConnectColorModel(m_PowerColorModel1);
-      m_Sprite2.ConnectColorModel(m_PowerColorModel2);
-      m_Sprite3.ConnectColorModel(m_PowerColorModel3);
+      m_Sprite0.ConnectColorModel(m_ColorModel0);
+      m_Sprite1.ConnectColorModel(m_ColorModel1);
+      m_Sprite2.ConnectColorModel(m_ColorModel2);
+      m_Sprite3.ConnectColorModel(m_ColorModel3);
+      */
     }
     bool CanRunVisualization() {
       return true;

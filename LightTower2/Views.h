@@ -101,7 +101,6 @@ class View: public Task
     }
   
   private:
-    View *m_ParentView;
     MergeType m_MergeType = MergeType_Layer;
 
     //View
@@ -120,7 +119,7 @@ class SubView: public View
            , size w
            , size h )
            : View(title, x, y, w, h)
-           , m_ClearBeforeMergeSubViews(clearBeforeMergeSubViews)
+           , m_ClearBeforeMergingSubViews(clearBeforeMergeSubViews)
     {
       if(true == debugMemory) Serial << "New: SubView\n";
     }
@@ -132,7 +131,7 @@ class SubView: public View
            , size h
            , MergeType mergeType)
            : View(title, x, y, w, h, mergeType)
-           , m_ClearBeforeMergeSubViews(clearBeforeMergeSubViews)
+           , m_ClearBeforeMergingSubViews(clearBeforeMergeSubViews)
     {
       if(true == debugMemory) Serial << "New: SubView\n";
     }
@@ -142,14 +141,14 @@ class SubView: public View
     }
     virtual bool CanRunMyTask() override
     {
-      if(true == m_ClearBeforeMergeSubViews)
+      if(true == m_ClearBeforeMergingSubViews)
       {
         m_PixelArray->Clear();
       }
       return View::CanRunMyTask();
     }
   private:
-    bool m_ClearBeforeMergeSubViews = false;
+    bool m_ClearBeforeMergingSubViews = false;
     
     //View
     void SetupView(){}
@@ -216,37 +215,49 @@ class BassSpriteView: public View
 {
   public:
     BassSpriteView( String title
+                  , position x
+                  , position y
                   , int minWidth
                   , int maxWidth
                   , int minHeight
                   , int maxHeight
                   , CRGB color
-                  , position x
-                  , position y )
-                  : View(title, x, y, maxWidth, maxHeight)
+                  , CRGB centerColor
+                  , bool showCenterX
+                  , bool showCenterY )
+                  : View(title, x, y, maxWidth*2+1, maxHeight*2+1)
                   , m_MinWidth(minWidth)
                   , m_MaxWidth(maxWidth)
                   , m_MinHeight(minHeight)
                   , m_MaxHeight(maxHeight)
                   , m_MyColor(color)
+                  , m_MyCenterColor(centerColor)
+                  , m_ShowCenterX(showCenterX)
+                  , m_ShowCenterY(showCenterY)
     {
       if(true == debugMemory) Serial << "New: BassSpriteView\n";
     }
     BassSpriteView( String title
+                  , position x
+                  , position y
                   , int minWidth
                   , int maxWidth
                   , int minHeight
                   , int maxHeight
                   , CRGB color
-                  , position x
-                  , position y
+                  , CRGB centerColor
+                  , bool showCenterX
+                  , bool showCenterY 
                   , MergeType mergeType)
-                  : View(title, x, y, maxWidth, maxHeight, mergeType)
+                  : View(title, x, y, maxWidth*2+1, maxHeight*2+1, mergeType)
                   , m_MinWidth(minWidth)
                   , m_MaxWidth(maxWidth)
                   , m_MinHeight(minHeight)
                   , m_MaxHeight(maxHeight)
                   , m_MyColor(color)
+                  , m_MyCenterColor(centerColor)
+                  , m_ShowCenterX(showCenterX)
+                  , m_ShowCenterY(showCenterY)
     {
       if(true == debugMemory) Serial << "New: BassSpriteView\n";
     }
@@ -255,7 +266,7 @@ class BassSpriteView: public View
       if(true == debugMemory) Serial << "Delete: BassSpriteView\n";  
     }
     void ConnectPowerModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this, ""); }
-    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, ""); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Position"); }
     void ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "X"); }
     void ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Y"); }
 
@@ -266,7 +277,16 @@ class BassSpriteView: public View
   private:
     //View
     CRGB m_MyColor = CRGB::Black;
+    CRGB m_MyCenterColor = CRGB::Black;
+    bool m_ShowCenterX;
+    bool m_ShowCenterY;
     float m_Scaler = 0;
+    int m_CenterY = 0;
+    int m_CenterX = 0;
+    int m_BottomY = 0;
+    int m_BottomX = 0;
+    int m_TopY = 0;
+    int m_TopX = 0;
     int m_MinHeight = 1;
     int m_MaxHeight = 1;
     int m_CurrentHeight = 1;
@@ -487,7 +507,7 @@ class RotatingView: public View
     unsigned long m_lapsedTime;
     PixelArray *m_ResultingPixelArray;
     Direction m_Direction = Direction_Right;
-    RotationType m_RotationType;
+    RotationType m_RotationType = RotationType_Static;
     unsigned int m_Count = 0;
     //View
     void SetupView();

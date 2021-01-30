@@ -36,7 +36,7 @@ void VUMeter::SetupVisualization()
   AddModel(m_GravitationalModel);
   m_VerticalBar.ConnectBarHeightModel(m_SoundPower);
   m_VerticalBar.ConnectBarColorModel(m_ColorModel);
-  m_GravitationalModel.ConnectPositionModel(m_VerticalBar);
+  m_GravitationalModel.ConnectYPositionModel(m_VerticalBar);
   m_PeakSprite0.ConnectPowerModel(m_BandPower0);
   m_PeakSprite0.ConnectYPositionModel(m_GravitationalModel);
 }

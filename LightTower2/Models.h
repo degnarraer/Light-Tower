@@ -15,7 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
- 
+
 #ifndef Models_H
 #define Models_H
 #include "TaskInterface.h"
@@ -32,11 +32,11 @@ struct BandData
   CRGB Color;
   bool operator==(const BandData& a)
   {
-    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color)))? true:false;
+    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? true : false;
   }
   bool operator!=(const BandData& a)
   {
-    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color)))? false:true;
+    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? false : true;
   }
   friend Print& operator<<(Print& os, const BandData& bd)
   {
@@ -52,11 +52,11 @@ struct Position
   int Y;
   bool operator==(const Position& a)
   {
-    return (true == ((a.X == X) && (a.Y == Y)))? true:false;
+    return (true == ((a.X == X) && (a.Y == Y))) ? true : false;
   }
   bool operator!=(const Position& a)
   {
-    return (true == ((a.X == X) && (a.Y == Y)))? false:true;
+    return (true == ((a.X == X) && (a.Y == Y))) ? false : true;
   }
   friend Print& operator<<(Print& os, const Position& pos)
   {
@@ -70,11 +70,11 @@ struct Size
   unsigned int H;
   bool operator==(const Size& a)
   {
-    return (true == ((a.W == W) && (a.H == H)))? true:false;
+    return (true == ((a.W == W) && (a.H == H))) ? true : false;
   }
   bool operator!=(const Size& a)
   {
-    return (true == ((a.W == W) && (a.H == H)))? false:true;
+    return (true == ((a.W == W) && (a.H == H))) ? false : true;
   }
 };
 struct Coordinates
@@ -83,11 +83,11 @@ struct Coordinates
   struct Size Size;
   bool operator==(const Coordinates& a)
   {
-    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H==Size.H)))? true:false;
+    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? true : false;
   }
   bool operator!=(const Coordinates& a)
   {
-    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H==Size.H)))? false:true;
+    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? false : true;
   }
 };
 
@@ -104,28 +104,28 @@ template <class T>
 class ModelEventNotificationCaller
 {
   public:
-    ModelEventNotificationCaller<T>(){}
+    ModelEventNotificationCaller<T>() {}
     virtual ~ModelEventNotificationCaller<T>()
     {
-      if(true == debugMemory) Serial << "Delete: ModelEventNotificationCaller\n";  
+      if (true == debugMemory) Serial << "Delete: ModelEventNotificationCaller\n";
     }
     void RegisterForNotification(ModelEventNotificationCallee<T> &callee, String context)
-    {  
+    {
       CallerInterfaceData<T> cid;
       cid.Callee = &callee;
       cid.Context = context;
-      if(true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";        
+      if (true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";
       m_MyCalleesWithContext.add(cid);
       callee.NewValueNotification(GetCurrentValue(), context);
     }
     void DeRegisterForNotification(ModelEventNotificationCallee<T> &callee, String context)
-    {  
+    {
       CallerInterfaceData<T> cid;
       cid.Callee = &callee;
       cid.Context = context;
-      for(int i = 0; i < m_MyCalleesWithContext.size(); ++i)
+      for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if(m_MyCalleesWithContext.get(i) == cid)
+        if (m_MyCalleesWithContext.get(i) == cid)
         {
           m_MyCalleesWithContext.remove(i);
           break;
@@ -134,13 +134,13 @@ class ModelEventNotificationCaller
     }
     bool HasUser()
     {
-      return (m_MyCalleesWithContext.size() > 0)? true:false;
+      return (m_MyCalleesWithContext.size() > 0) ? true : false;
     }
     void SendNewValueNotificationToCallees(T value)
     {
-      for(int i = 0; i < m_MyCalleesWithContext.size(); ++i)
+      for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if(true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\t" << "Value: " << value << "\n"; 
+        if (true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\t" << "Value: " << value << "\n";
         m_MyCalleesWithContext.get(i).Callee->NewValueNotification(value, m_MyCalleesWithContext.get(i).Context);
       }
     }
@@ -154,7 +154,7 @@ class ModelEventNotificationCaller
       String Context;
       bool operator==(const CallerInterfaceData<C>& cid)
       {
-        return (true == ((cid.Callee == Callee) && (cid.Context == Context)))? true:false;
+        return (true == ((cid.Callee == Callee) && (cid.Context == Context))) ? true : false;
       }
     };
     LinkedList<CallerInterfaceData<T>> m_MyCalleesWithContext = LinkedList<CallerInterfaceData<T>>();
@@ -164,19 +164,19 @@ class StatisticalEngineModelInterface;
 
 class Model: public Task
 {
-  public: 
+  public:
     Model(String Title): Task(Title)
     {
-      if(true == debugMemory) Serial << "New: Model\n";  
+      if (true == debugMemory) Serial << "New: Model\n";
     }
     virtual ~Model()
     {
-      if(true == debugMemory) Serial << "Delete: Model\n";  
+      if (true == debugMemory) Serial << "Delete: Model\n";
     }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
-    
+
   protected:
     CRGB GetColor(unsigned int numerator, unsigned int denominator);
     CRGB GetRandomNonGrayColor();
@@ -215,9 +215,9 @@ class StatisticalEngineModelInterfaceUserTracker
     }
     void DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
     {
-      for(int i = 0; i < m_MyUsers.size(); ++i)
+      for (int i = 0; i < m_MyUsers.size(); ++i)
       {
-        if(m_MyUsers.get(i) == &user)
+        if (m_MyUsers.get(i) == &user)
         {
           m_MyUsers.remove(i);
           break;
@@ -227,9 +227,9 @@ class StatisticalEngineModelInterfaceUserTracker
     bool UsersRequireFFT()
     {
       bool result = false;
-      for(int u = 0; u < m_MyUsers.size(); ++u)
+      for (int u = 0; u < m_MyUsers.size(); ++u)
       {
-        if(true == m_MyUsers.get(u)->RequiresFFT())
+        if (true == m_MyUsers.get(u)->RequiresFFT())
         {
           result = true;
           break;
@@ -237,36 +237,46 @@ class StatisticalEngineModelInterfaceUserTracker
       }
       return result;
     }
-    private:
-      LinkedList<StatisticalEngineModelInterfaceUsers*> m_MyUsers = LinkedList<StatisticalEngineModelInterfaceUsers*>();
+  private:
+    LinkedList<StatisticalEngineModelInterfaceUsers*> m_MyUsers = LinkedList<StatisticalEngineModelInterfaceUsers*>();
 };
 
 class StatisticalEngineModelInterface : public Task
-                                      , public StatisticalEngineModelInterfaceUserTracker
-                                      , ADCInterruptHandler 
-                                      , MicrophoneMeasureCalleeInterface
+  , public StatisticalEngineModelInterfaceUserTracker
+  , ADCInterruptHandler
+  , MicrophoneMeasureCalleeInterface
 {
   public:
     StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface")
     {
-      if(true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n";  
+      if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n";
     }
     virtual ~StatisticalEngineModelInterface()
     {
-      if(true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";  
+      if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";
     }
 
     //StatisticalEngine Getters
-    unsigned int GetNumberOfBands() { return m_StatisticalEngine.GetNumberOfBands(); }
-    float GetNormalizedSoundPower() { return m_StatisticalEngine.GetNormalizedSoundPower(); }
-    float GetBandAverage(unsigned int band, unsigned int depth) { return m_StatisticalEngine.GetBandAverage(band, depth); }
-    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) { return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands); }
-  
+    unsigned int GetNumberOfBands() {
+      return m_StatisticalEngine.GetNumberOfBands();
+    }
+    float GetNormalizedSoundPower() {
+      return m_StatisticalEngine.GetNormalizedSoundPower();
+    }
+    float GetBandAverage(unsigned int band, unsigned int depth) {
+      return m_StatisticalEngine.GetBandAverage(band, depth);
+    }
+    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) {
+      return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands);
+    }
+
     //ADCInterruptHandler
-    void HandleADCInterrupt() { m_StatisticalEngine.HandleADCInterrupt(); }
-    
+    void HandleADCInterrupt() {
+      m_StatisticalEngine.HandleADCInterrupt();
+    }
+
     //MicrophoneMeasureCalleeInterface
-    void MicrophoneStateChange(SoundState){}
+    void MicrophoneStateChange(SoundState) {}
 
   private:
     StatisticalEngine m_StatisticalEngine;
@@ -277,31 +287,31 @@ class StatisticalEngineModelInterface : public Task
 };
 
 class DataModel: public Model
-               , public StatisticalEngineModelInterfaceUsers
+  , public StatisticalEngineModelInterfaceUsers
 {
-  public: 
+  public:
     DataModel( String Title
-             , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
-             : Model(Title)
-             , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
-     {
-        if(true == debugMemory) Serial << "New: DataModel\n";
-        m_StatisticalEngineModelInterface.RegisterAsUser(*this);
-     }
+               , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+      : Model(Title)
+      , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
+    {
+      if (true == debugMemory) Serial << "New: DataModel\n";
+      m_StatisticalEngineModelInterface.RegisterAsUser(*this);
+    }
     virtual ~DataModel()
     {
-      if(true == debugMemory) Serial << "Delete: DataModel\n";
+      if (true == debugMemory) Serial << "Delete: DataModel\n";
       m_StatisticalEngineModelInterface.DeRegisterAsUser(*this);
     }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
-    
+
     //StatisticalEngineModelInterfaceUsers
     virtual bool RequiresFFT() = 0;
-    
+
   protected:
-    StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;  
+    StatisticalEngineModelInterface &m_StatisticalEngineModelInterface;
   private:
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
@@ -323,18 +333,18 @@ class DataModel: public Model
 
 template <class T>
 class ModelWithNewValueNotification: public Model
-                                   , public ModelEventNotificationCaller<T>
+  , public ModelEventNotificationCaller<T>
 {
   public:
     ModelWithNewValueNotification<T>(String Title): Model(Title)
     {
-      if(true == debugMemory) Serial << "New: ModelWithNewValueNotification\n";
+      if (true == debugMemory) Serial << "New: ModelWithNewValueNotification\n";
     }
     virtual ~ModelWithNewValueNotification<T>()
     {
-      if(true == debugMemory) Serial << "Delete: ModelWithNewValueNotification\n";
+      if (true == debugMemory) Serial << "Delete: ModelWithNewValueNotification\n";
     }
-    
+
   protected:
     void NewCalleeRegistered(ModelEventNotificationCallee<T> &callee)
     {
@@ -342,12 +352,12 @@ class ModelWithNewValueNotification: public Model
     }
     T GetCurrentValue()
     {
-      return m_CurrentValue; 
+      return m_CurrentValue;
     }
     void SetCurrentValue(T value)
     {
       m_CurrentValue = value;
-      if(m_PreviousValue != m_CurrentValue)
+      if (m_PreviousValue != m_CurrentValue)
       {
         m_PreviousValue = m_CurrentValue;
         this->SendNewValueNotificationToCallees(m_CurrentValue);
@@ -362,27 +372,27 @@ class ModelWithNewValueNotification: public Model
 
 template <class T>
 class DataModelWithNewValueNotification: public DataModel
-                                       , public ModelEventNotificationCaller<T>
+  , public ModelEventNotificationCaller<T>
 {
   public:
     DataModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface)
     {
-      if(true == debugMemory) Serial << "New: DataModelWithNewValueNotification\n";
+      if (true == debugMemory) Serial << "New: DataModelWithNewValueNotification\n";
     }
     virtual ~DataModelWithNewValueNotification<T>()
     {
-      if(true == debugMemory) Serial << "Delete: DataModelWithNewValueNotification\n";
+      if (true == debugMemory) Serial << "Delete: DataModelWithNewValueNotification\n";
     }
-  
+
   protected:
     T GetCurrentValue()
     {
-      return m_CurrentValue; 
+      return m_CurrentValue;
     }
     void SetCurrentValue(T value)
     {
       m_CurrentValue = value;
-      if(m_CurrentValue != m_PreviousValue)
+      if (m_CurrentValue != m_PreviousValue)
       {
         m_PreviousValue = m_CurrentValue;
         this->SendNewValueNotificationToCallees(m_CurrentValue);
@@ -404,33 +414,37 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
     SoundPowerModel( String Title
                    , unsigned int depth
                    , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
-                   : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
-                   , m_Depth(depth)
+      : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+      , m_Depth(depth)
     {
-      if(true == debugMemory) Serial << "New: SoundPowerModel\n";
+      if (true == debugMemory) Serial << "New: SoundPowerModel\n";
     }
     virtual ~SoundPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete: SoundPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: SoundPowerModel\n";
     }
-    
-     //Model
-    void UpdateValue() 
+
+    //Model
+    void UpdateValue()
     {
       SetCurrentValue(m_Result);
     }
 
   protected:
     //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() { return false; }
+    bool RequiresFFT() {
+      return false;
+    }
   private:
     float m_Result = 0.0;
     unsigned int m_Depth = 0;
     unsigned int m_CircularBufferIndex = 0;
-    float m_RunningAverageCircularBuffer[POWER_SAVE_LENGTH] = {0}; 
+    float m_RunningAverageCircularBuffer[POWER_SAVE_LENGTH] = {0};
     //Model
-    void SetupModel(){}
-    bool CanRunModelTask(){ return true; }
+    void SetupModel() {}
+    bool CanRunModelTask() {
+      return true;
+    }
     void RunModelTask()
     {
       int bufferIndex = m_CircularBufferIndex % POWER_SAVE_LENGTH;
@@ -438,11 +452,11 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
       float total = 0.0;
       int count = 0;
       int depth = m_Depth;
-      if(depth > POWER_SAVE_LENGTH - 1) depth = POWER_SAVE_LENGTH - 1;
-      for(int i = 0; i <= depth; ++i)
+      if (depth > POWER_SAVE_LENGTH - 1) depth = POWER_SAVE_LENGTH - 1;
+      for (int i = 0; i <= depth; ++i)
       {
-        int index = bufferIndex + i; 
-        if(index <= POWER_SAVE_LENGTH - 1)
+        int index = bufferIndex + i;
+        if (index <= POWER_SAVE_LENGTH - 1)
         {
           total += m_RunningAverageCircularBuffer[index];
         }
@@ -461,89 +475,97 @@ class BandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
     BandPowerModel(String Title, unsigned int Band, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
-                                                                                                                     , m_Band(Band)
+      , m_Band(Band)
     {
-      if(true == debugMemory) Serial << "New: BandPowerModel\n";
+      if (true == debugMemory) Serial << "New: BandPowerModel\n";
     }
     virtual ~BandPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete: BandPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: BandPowerModel\n";
     }
-    
-     //Model
+
+    //Model
     void UpdateValue()
     {
       float value = (m_StatisticalEngineModelInterface.GetBandAverage(m_Band, 1) / (float)ADDBITS);
-      if(true == debugModels) Serial << "BandPowerModel value: " << value << " for band: " << m_Band << "\n";
+      if (true == debugModels) Serial << "BandPowerModel value: " << value << " for band: " << m_Band << "\n";
       SetCurrentValue( value );
     }
   protected:
     //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() { return true; }
+    bool RequiresFFT() {
+      return true;
+    }
   private:
-     //Model
+    //Model
     unsigned int m_Band = 0;
-    void SetupModel(){}
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask(){}
+    void SetupModel() {}
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask() {}
 };
 
 class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
     ReducedBandsBandPowerModel( String Title
-                              , unsigned int band
-                              , unsigned int depth
-                              , unsigned int totalBands
-                              , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
-                              : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
-                              , m_Band(band)
-                              , m_Depth(depth)
-                              , m_TotalBands(totalBands)
+                                , unsigned int band
+                                , unsigned int depth
+                                , unsigned int totalBands
+                                , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+      : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+      , m_Band(band)
+      , m_Depth(depth)
+      , m_TotalBands(totalBands)
     {
-      if(true == debugMemory) Serial << "New: ReducedBandsBandPowerModel\n";
+      if (true == debugMemory) Serial << "New: ReducedBandsBandPowerModel\n";
     }
     virtual ~ReducedBandsBandPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete: ReducedBandsBandPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: ReducedBandsBandPowerModel\n";
     }
-    
-     //Model
+
+    //Model
     void UpdateValue()
     {
       float value = (m_StatisticalEngineModelInterface.GetBandAverageForABandOutOfNBands(m_Band, m_Depth, m_TotalBands) / (float)ADDBITS);
-      if(true == debugModels) Serial << "ReducedBandsBandPowerModel value: " << value << " for band: " << m_Band << " of " << m_TotalBands << " bands\n";
+      if (true == debugModels) Serial << "ReducedBandsBandPowerModel value: " << value << " for band: " << m_Band << " of " << m_TotalBands << " bands\n";
       SetCurrentValue( value );
     }
   protected:
     //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() { return true; }
+    bool RequiresFFT() {
+      return true;
+    }
   private:
-     //Model
+    //Model
     unsigned int m_Band = 0;
     unsigned int m_Depth = 0;
     unsigned int m_TotalBands = 0;
-    void SetupModel(){}
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask(){}
+    void SetupModel() {}
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask() {}
 };
 
 class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
     RandomColorFadingModel( String Title
-                          , unsigned long Duration)
-                          : ModelWithNewValueNotification<CRGB>(Title)
-                          , m_Duration(Duration)
+                            , unsigned long Duration)
+      : ModelWithNewValueNotification<CRGB>(Title)
+      , m_Duration(Duration)
     {
-      if(true == debugMemory) Serial << "New: RandomColorFadingModel\n";
+      if (true == debugMemory) Serial << "New: RandomColorFadingModel\n";
     }
     virtual ~RandomColorFadingModel()
     {
-      if(true == debugMemory) Serial << "Delete: RandomColorFadingModel\n";
+      if (true == debugMemory) Serial << "Delete: RandomColorFadingModel\n";
     }
   private:
-     //Model
+    //Model
     void UpdateValue();
     void SetupModel();
     bool CanRunModelTask();
@@ -561,38 +583,42 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
 };
 
 class ColorFadingModel: public ModelWithNewValueNotification<CRGB>
-                      , public ModelEventNotificationCallee<CRGB>
-                      , public ModelEventNotificationCallee<BandData>
+  , public ModelEventNotificationCallee<CRGB>
+  , public ModelEventNotificationCallee<BandData>
 {
   public:
     ColorFadingModel( String Title
-                    , unsigned long Duration
-                    , unsigned long minimumUpdateTime)
-                    : ModelWithNewValueNotification<CRGB>(Title)
-                    , m_Duration(Duration)
-                    , m_MinimumUpdateTime(minimumUpdateTime)
+                      , unsigned long Duration
+                      , unsigned long minimumUpdateTime)
+      : ModelWithNewValueNotification<CRGB>(Title)
+      , m_Duration(Duration)
+      , m_MinimumUpdateTime(minimumUpdateTime)
     {
-      if(true == debugMemory) Serial << "New: ColorFadingModel\n";
+      if (true == debugMemory) Serial << "New: ColorFadingModel\n";
     }
     virtual ~ColorFadingModel()
     {
-      if(true == debugMemory) Serial << "Delete: ColorFadingModel\n";
+      if (true == debugMemory) Serial << "Delete: ColorFadingModel\n";
     }
-    
-  void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this, ""); }
-  void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this, ""); }
-  
+
+    void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) {
+      Caller.RegisterForNotification(*this, "");
+    }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) {
+      Caller.RegisterForNotification(*this, "");
+    }
+
   private:
-     //Model
+    //Model
     void UpdateValue();
     void SetupModel();
     bool CanRunModelTask();
     void RunModelTask();
-    
+
     //ModelEventNotificationCallee
     void NewValueNotification(CRGB value, String context);
     void NewValueNotification(BandData value, String context);
-    
+
     //This
     CRGB m_CurrentColor;
     CRGB m_StartColor;
@@ -610,142 +636,170 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
     RainbowColorModel( String Title
                      , unsigned int Numerator
                      , unsigned int Denominator)
-                     : ModelWithNewValueNotification<CRGB>(Title)
-                     , m_Numerator(Numerator)
-                     , m_Denominator(Denominator)
+      : ModelWithNewValueNotification<CRGB>(Title)
+      , m_Numerator(Numerator)
+      , m_Denominator(Denominator)
     {
-      if(true == debugMemory) Serial << "New: RainbowColorModel\n";
+      if (true == debugMemory) Serial << "New: RainbowColorModel\n";
     }
     virtual ~RainbowColorModel()
     {
-      if(true == debugMemory) Serial << "Delete: RainbowColorModel\n";
+      if (true == debugMemory) Serial << "Delete: RainbowColorModel\n";
     }
   private:
-     unsigned int m_Numerator;
-     unsigned int m_Denominator;
-     CRGB m_Color = CRGB::Black;
-     //Model
-    void UpdateValue(){ SetCurrentValue(m_Color); }
-    void SetupModel(){ }
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask() { m_Color = GetColor(m_Numerator, m_Denominator); }
+    unsigned int m_Numerator;
+    unsigned int m_Denominator;
+    CRGB m_Color = CRGB::Black;
+    //Model
+    void UpdateValue() {
+      SetCurrentValue(m_Color);
+    }
+    void SetupModel() { }
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask() {
+      m_Color = GetColor(m_Numerator, m_Denominator);
+    }
 
     //This
 };
 
 class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
-                     , public ModelEventNotificationCallee<CRGB>
+  , public ModelEventNotificationCallee<CRGB>
 {
   public:
     ColorPowerModel( String Title
-                   , CRGB Color
-                   , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
-                   : DataModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
-                   , m_InputColor(Color)
+                     , CRGB Color
+                     , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
+      : DataModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
+      , m_InputColor(Color)
     {
-      if(true == debugMemory) Serial << "New: ColorPowerModel\n";
+      if (true == debugMemory) Serial << "New: ColorPowerModel\n";
     }
     virtual ~ColorPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete: ColorPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: ColorPowerModel\n";
     }
   protected:
     //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() { return true; }
+    bool RequiresFFT() {
+      return true;
+    }
   private:
-     CRGB m_InputColor = CRGB::Black;
-     CRGB m_OutputColor = CRGB::Black;
-     //Model
+    CRGB m_InputColor = CRGB::Black;
+    CRGB m_OutputColor = CRGB::Black;
+    //Model
     void UpdateValue()
     {
       SetCurrentValue( m_OutputColor );
     }
-    void SetupModel(){ }
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask() 
-    {    
+    void SetupModel() { }
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask()
+    {
       float normalizedPower = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
       m_OutputColor = FadeColor(m_InputColor, normalizedPower);
-      if(true == debugModels) Serial << "ColorPowerModel normalizedPower: " << normalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+      if (true == debugModels) Serial << "ColorPowerModel normalizedPower: " << normalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
-    
+
     //ModelEventNotificationCallee
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this, ""); }
-    void NewValueNotification(CRGB Value, String context) { m_InputColor = Value; }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) {
+      Caller.RegisterForNotification(*this, "");
+    }
+    void NewValueNotification(CRGB Value, String context) {
+      m_InputColor = Value;
+    }
 };
 
 
 class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
-                             , public ModelEventNotificationCallee<CRGB>
-                             , public ModelEventNotificationCallee<float>
+  , public ModelEventNotificationCallee<CRGB>
+  , public ModelEventNotificationCallee<float>
 {
   public:
     SettableColorPowerModel( String Title )
-                           : ModelWithNewValueNotification<CRGB>(Title)
+      : ModelWithNewValueNotification<CRGB>(Title)
     {
-      if(true == debugMemory) Serial << "New: SettableColorPowerModel\n";
+      if (true == debugMemory) Serial << "New: SettableColorPowerModel\n";
     }
     virtual ~SettableColorPowerModel()
     {
-      if(true == debugMemory) Serial << "Delete: SettableColorPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: SettableColorPowerModel\n";
     }
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) { Caller.RegisterForNotification(*this, ""); }
-    void ConnectPowerModel(ModelEventNotificationCaller<float> &Caller) { Caller.RegisterForNotification(*this, ""); }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &Caller) {
+      Caller.RegisterForNotification(*this, "");
+    }
+    void ConnectPowerModel(ModelEventNotificationCaller<float> &Caller) {
+      Caller.RegisterForNotification(*this, "");
+    }
   private:
-     CRGB m_InputColor = CRGB::Black;
-     CRGB m_OutputColor = CRGB::Black;
-     float m_NormalizedPower = 0;
-     //Model
-    void UpdateValue(){
+    CRGB m_InputColor = CRGB::Black;
+    CRGB m_OutputColor = CRGB::Black;
+    float m_NormalizedPower = 0;
+    //Model
+    void UpdateValue() {
       SetCurrentValue( m_OutputColor );
     }
-    void SetupModel(){ }
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask() 
+    void SetupModel() { }
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask()
     {
       m_OutputColor = FadeColor(m_InputColor, m_NormalizedPower);
-      if(true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+      if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
-    
+
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB Value, String context) { m_InputColor = Value; }
-    void NewValueNotification(float Value, String context) { m_NormalizedPower = Value; }
+    void NewValueNotification(CRGB Value, String context) {
+      m_InputColor = Value;
+    }
+    void NewValueNotification(float Value, String context) {
+      m_NormalizedPower = Value;
+    }
 };
 
 class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData>
-{
-  public:
+  {
+public:
     MaximumBandModel( String Title, unsigned int Depth, StatisticalEngineModelInterface &StatisticalEngineModelInterface )
-                    : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
-                    , m_Depth(Depth)
+      : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
+      , m_Depth(Depth)
     {
-      if(true == debugMemory) Serial << "New: MaximumBandPowerModel\n";
+      if (true == debugMemory) Serial << "New: MaximumBandPowerModel\n";
     }
     virtual ~MaximumBandModel()
     {
-      if(true == debugMemory) Serial << "Delete: MaximumBandPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: MaximumBandPowerModel\n";
     }
-  protected:
+protected:
     //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() { return true; }
-  private:
-     BandData m_MaxBandData;
-     unsigned int m_Depth = 0;
-     //Model
-    void UpdateValue(){
+    bool RequiresFFT() {
+      return true;
+    }
+private:
+    BandData m_MaxBandData;
+    unsigned int m_Depth = 0;
+    //Model
+    void UpdateValue() {
       SetCurrentValue( m_MaxBandData );
     }
-    void SetupModel(){ }
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask() 
+    void SetupModel() { }
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask()
     {
       unsigned int maxBandIndex = 0;
       float maxBandPowerValue = 0.0;
       unsigned int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
-      for(int b = 0; b < m_StatisticalEngineModelInterface.GetNumberOfBands(); ++b)
+      for (int b = 0; b < m_StatisticalEngineModelInterface.GetNumberOfBands(); ++b)
       {
         float power = m_StatisticalEngineModelInterface.GetBandAverage(b, m_Depth) / (float)ADDBITS;
-        if(power > maxBandPowerValue)
+        if (power > maxBandPowerValue)
         {
           maxBandPowerValue = power;
           maxBandIndex = b;
@@ -753,69 +807,75 @@ class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData
       }
       m_MaxBandData.Power = maxBandPowerValue;
       m_MaxBandData.Band = maxBandIndex;
-      m_MaxBandData.Color = GetColor(maxBandIndex, numBands-1); 
+      m_MaxBandData.Color = GetColor(maxBandIndex, numBands - 1);
     }
-};
+  };
 
 class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
-                        , public ModelEventNotificationCallee<BandData>
+  , public ModelEventNotificationCallee<BandData>
 {
   public:
     BandDataColorModel( String Title )
-                      : ModelWithNewValueNotification<CRGB>(Title)
+      : ModelWithNewValueNotification<CRGB>(Title)
     {
-      if(true == debugMemory) Serial << "New: BandDataColorModel\n";
+      if (true == debugMemory) Serial << "New: BandDataColorModel\n";
     }
     virtual ~BandDataColorModel()
     {
-      if(true == debugMemory) Serial << "Delete: BandDataColorModel\n";
+      if (true == debugMemory) Serial << "Delete: BandDataColorModel\n";
     }
-    void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) { Caller.RegisterForNotification(*this, ""); }
+    void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) {
+      Caller.RegisterForNotification(*this, "");
+    }
   private:
     CRGB m_InputColor = CRGB::Black;
     CRGB m_OutputColor = CRGB::Black;
     float m_NormalizedPower = 0;
-    
+
     //Model
-    void UpdateValue(){
+    void UpdateValue() {
       SetCurrentValue( m_OutputColor );
     }
-    void SetupModel(){ }
-    bool CanRunModelTask(){ return true; }
-    void RunModelTask() 
+    void SetupModel() { }
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask()
     {
       m_OutputColor = FadeColor(m_InputColor, m_NormalizedPower);
-      if(true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+      if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
-    
+
     //ModelEventNotificationCallee
-    void NewValueNotification(BandData Value, String context) 
-    { 
+    void NewValueNotification(BandData Value, String context)
+    {
       m_InputColor = Value.Color;
       m_NormalizedPower = Value.Power;
     }
 };
 
 class GravitationalModel: public ModelWithNewValueNotification<Position>
-                              , public ModelEventNotificationCallee<Position>
+  , public ModelEventNotificationCallee<Position>
 {
   public:
     GravitationalModel( String title
-                            , float gravitationalScaler
-                            , float maxInitialVelocity)
-                            : ModelWithNewValueNotification<Position>(title)
-                            , m_GravitationalScaler(gravitationalScaler)
-                            , m_MaxInitialVelocity(maxInitialVelocity)
+                        , float gravitationalScaler
+                        , float maxInitialVelocity)
+      : ModelWithNewValueNotification<Position>(title)
+      , m_GravitationalScaler(gravitationalScaler)
+      , m_MaxInitialVelocity(maxInitialVelocity)
     {
-      if(true == debugMemory) Serial << "New: GravitationalModel\n";
+      if (true == debugMemory) Serial << "New: GravitationalModel\n";
     }
     virtual ~GravitationalModel()
     {
-      if(true == debugMemory) Serial << "Delete: GravitationalModel\n";
+      if (true == debugMemory) Serial << "Delete: GravitationalModel\n";
     }
-    
-    void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this, ""); }
-  
+
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this, "Position"); }
+    void ConnectXPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this, "X"); }
+    void ConnectYPositionModel(ModelEventNotificationCaller<Position> &Caller) { Caller.RegisterForNotification(*this, "Y"); }
+
   private:
     unsigned long m_StartTime;
     unsigned long m_CurrentTime;
@@ -827,11 +887,14 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
     Position m_Position = { 0, 0 };
     Position m_LowerPositionLimit = { 0, 0 };
     Position m_StartingPosition = { 0, 0 };
-    
+
     //Model
-    void UpdateValue(){ SetCurrentValue( m_Position ); }
+    void UpdateValue() 
+    {
+      SetCurrentValue( m_Position );
+    }
     void SetupModel()
-    { 
+    {
       m_StartTime = millis();
       m_CurrentTime = m_StartTime;
       m_PreviousLoopTime = m_StartTime;
@@ -840,46 +903,57 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
     {
       return true;
     }
-    void RunModelTask() 
+    void RunModelTask()
     {
       m_CurrentTime = millis();
       m_Duration = (m_CurrentTime - m_StartTime) / 1000.0;
       m_Position.Y = m_StartingPosition.Y + (GetGravitationalPosition(m_Duration, m_InitialVelocity, m_GravitationalScaler) * LEDS_PER_METER);
-      if(m_Position.Y < m_LowerPositionLimit.Y) StartExperiment();
-      if(true == debugModels || (true == debugGravitationalModel)) Serial << "GravitationalModel: \tPosition.Y " << m_Position.Y << "\tStart Position.Y " << m_StartingPosition.Y << "\n";
+      if (m_Position.Y < m_LowerPositionLimit.Y) StartExperiment();
+      if (true == debugModels || (true == debugGravitationalModel)) Serial << "GravitationalModel: \tPosition.Y " << m_Position.Y << "\tStart Position.Y " << m_StartingPosition.Y << "\n";
       m_PreviousLoopTime = m_CurrentTime;
     }
-    
+
     //ModelEventNotificationCallee
-    void NewValueNotification(Position value, String context) 
-    { 
-      m_LowerPositionLimit = value;
+    void NewValueNotification(Position value, String context)
+    {
+      if(context == "Position")
+      {
+        m_LowerPositionLimit = value;
+      }
+      else if (context == "X")
+      {
+        m_LowerPositionLimit.X = value.X;
+      }
+      else if(context == "Y")
+      {
+        m_LowerPositionLimit.Y = value.Y;
+      }
     }
     void StartExperiment()
     {
       m_StartTime = millis();
-      float dT = (m_CurrentTime - m_PreviousLoopTime)/1000.0;
+      float dT = (m_CurrentTime - m_PreviousLoopTime) / 1000.0;
       int dY = m_LowerPositionLimit.Y - m_Position.Y;   //Delta Pixels
       float dM = (float)dY / (float)LEDS_PER_METER;  //Delta Meters
-      if(dT == 0)
+      if (dT == 0)
       {
         m_InitialVelocity = m_MaxInitialVelocity;
       }
       else
       {
-        m_InitialVelocity = dM/dT;
+        m_InitialVelocity = dM / dT;
       }
-      if(m_InitialVelocity > m_MaxInitialVelocity) m_InitialVelocity = m_MaxInitialVelocity;
-      m_Position = m_LowerPositionLimit;
-      m_StartingPosition = m_LowerPositionLimit;
-      if(true == debugModels || (true == debugGravitationalModel)) Serial << "GravitationalModel: \tdY: " << dY << "\tdM: " << dM <<  "\tdT: " << dT << "\tInitial Velocity: " << m_InitialVelocity << "\n";
+      if (m_InitialVelocity > m_MaxInitialVelocity) m_InitialVelocity = m_MaxInitialVelocity;
+      m_Position.Y = m_LowerPositionLimit.Y;
+      m_StartingPosition.Y = m_LowerPositionLimit.Y;
+      if (true == debugModels || (true == debugGravitationalModel)) Serial << "GravitationalModel: \tdY: " << dY << "\tdM: " << dM <<  "\tdT: " << dT << "\tInitial Velocity: " << m_InitialVelocity << "\n";
     }
-    float GetGravitationalPosition(float t, float initialVelocity, float gravitationalScaler) 
+    float GetGravitationalPosition(float t, float initialVelocity, float gravitationalScaler)
     {
-      //Returns distance an object falls in meters for t seconds 
+      //Returns distance an object falls in meters for t seconds
       float d = 0;
       const float g = -9.802 * gravitationalScaler;
-      d = initialVelocity*t + ((0.5 * g) * (pow(t, 2)));
+      d = initialVelocity * t + ((0.5 * g) * (pow(t, 2)));
       return d;
     }
 };

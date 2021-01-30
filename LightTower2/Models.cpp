@@ -149,11 +149,10 @@ void RandomColorFadingModel::UpdateValue()
 }
 void RandomColorFadingModel::StartFadingNextColor()
 {
+  m_StartTime = millis();
   m_StartColor = m_CurrentColor;
   m_EndColor = GetRandomNonGrayColor();
-  m_StartTime = millis();
 }
-
 void RandomColorFadingModel::SetupModel()
 {
   m_StartColor = GetRandomNonGrayColor();
@@ -166,21 +165,20 @@ bool RandomColorFadingModel::CanRunModelTask()
 }
 void RandomColorFadingModel::RunModelTask()
 {
-    float normalization = 1.0;
-    m_CurrentTime = millis();
-    m_CurrentDuration = m_CurrentTime - m_StartTime;
-    if(m_CurrentDuration > m_Duration)
-    {
-      StartFadingNextColor();
-    }
-    else
-    {
-      normalization = (float)m_CurrentDuration / (float)m_Duration;
-      if(true == debugModels) Serial << "FadeController: Current Duration: " << m_CurrentDuration << " Duration: " << m_Duration << " Fade Normalizatilon:" << normalization << "\n";
-      m_CurrentColor.red = (byte)(m_StartColor.red + (((float)m_EndColor.red - (float)m_StartColor.red)*normalization));
-      m_CurrentColor.green = (byte)(m_StartColor.green + (((float)m_EndColor.green - (float)m_StartColor.green)*normalization));
-      m_CurrentColor.blue = (byte)(m_StartColor.blue + (((float)m_EndColor.blue - (float)m_StartColor.blue)*normalization));
-    }
+  m_CurrentTime = millis();
+  m_CurrentDuration = m_CurrentTime - m_StartTime;
+  if(m_CurrentDuration > m_Duration)
+  {
+    StartFadingNextColor();
+  }
+  else
+  {
+    float normalization = (float)m_CurrentDuration / (float)m_Duration;
+    if(true == debugModels) Serial << "FadeController: Current Duration: " << m_CurrentDuration << " Duration: " << m_Duration << " Fade Normalizatilon:" << normalization << "\n";
+    m_CurrentColor.red = (byte)(m_StartColor.red + (((float)m_EndColor.red - (float)m_StartColor.red)*normalization));
+    m_CurrentColor.green = (byte)(m_StartColor.green + (((float)m_EndColor.green - (float)m_StartColor.green)*normalization));
+    m_CurrentColor.blue = (byte)(m_StartColor.blue + (((float)m_EndColor.blue - (float)m_StartColor.blue)*normalization));
+  }
 }
 
 void ColorFadingModel::ColorFadingModel::UpdateValue()
