@@ -86,6 +86,104 @@ class SolidColorTower: public Visualization
     ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Red, MergeType_Layer);
 };
 
+//********* Vertical Bass Sprite Tower *********
+class VerticalBassSpriteTower: public Visualization
+{
+  public:
+    VerticalBassSpriteTower( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController) : Visualization( StatisticalEngineModelInterface, LEDController)
+    {
+      if (true == debugMemory) Serial << "New: SolidColorTower\n";
+    }
+    virtual ~VerticalBassSpriteTower()
+    {
+      if (true == debugMemory) Serial << "Deleted: SolidColorTower\n";
+    }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+    {
+      if (true == debugMemory) Serial << "VerticalBassSpriteTower: Get Instance\n";
+      VerticalBassSpriteTower *vis = new VerticalBassSpriteTower(StatisticalEngineModelInterface, LEDController);
+      return vis;
+    }
+    void SetupVisualization()
+    {
+      AddView(m_BassSprite0);
+      AddView(m_BassSprite1);
+      AddView(m_BassSprite2);
+      AddView(m_BassSprite3);
+      AddView(m_BassSprite4);
+      AddView(m_BassSprite5);
+      AddView(m_BassSprite6);
+      AddView(m_BassSprite7);
+      
+      AddModel(m_BandPower0);
+      AddModel(m_BandPower1);
+      AddModel(m_BandPower2);
+      AddModel(m_BandPower3);
+      AddModel(m_BandPower4);
+      AddModel(m_BandPower5);
+      AddModel(m_BandPower6);
+      AddModel(m_BandPower7);
+
+      AddModel(m_ColorModel0);
+      AddModel(m_ColorModel1);
+      AddModel(m_ColorModel2);
+      AddModel(m_ColorModel3);
+      AddModel(m_ColorModel4);
+      AddModel(m_ColorModel5);
+      AddModel(m_ColorModel6);
+      AddModel(m_ColorModel7);
+      
+      m_BassSprite0.ConnectPowerModel(m_BandPower0);
+      m_BassSprite1.ConnectPowerModel(m_BandPower1);
+      m_BassSprite2.ConnectPowerModel(m_BandPower2);
+      m_BassSprite3.ConnectPowerModel(m_BandPower3);
+      m_BassSprite4.ConnectPowerModel(m_BandPower4);
+      m_BassSprite5.ConnectPowerModel(m_BandPower5);
+      m_BassSprite6.ConnectPowerModel(m_BandPower6);
+      m_BassSprite7.ConnectPowerModel(m_BandPower7);
+      
+      m_BassSprite0.ConnectColorModel(m_ColorModel0);
+      m_BassSprite1.ConnectColorModel(m_ColorModel1);
+      m_BassSprite2.ConnectColorModel(m_ColorModel2);
+      m_BassSprite3.ConnectColorModel(m_ColorModel3);
+      m_BassSprite4.ConnectColorModel(m_ColorModel4);
+      m_BassSprite5.ConnectColorModel(m_ColorModel5);
+      m_BassSprite6.ConnectColorModel(m_ColorModel6);
+      m_BassSprite7.ConnectColorModel(m_ColorModel7);
+    }
+    bool CanRunVisualization() {
+      return true;
+    }
+    void RunVisualization() {}
+  private:
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower4 = ReducedBandsBandPowerModel("Sound Power Model 4", 4, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 0, 8, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 0, 8, m_StatisticalEngineModelInterface);
+    BassSpriteView m_BassSprite0 = BassSpriteView("PeakBassSprite0", 0, 1*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite1 = BassSpriteView("PeakBassSprite1", 0, 2*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite2 = BassSpriteView("PeakBassSprite2", 0, 3*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite3 = BassSpriteView("PeakBassSprite3", 0, 4*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite4 = BassSpriteView("PeakBassSprite4", 0, 5*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite5 = BassSpriteView("PeakBassSprite5", 0, 6*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite6 = BassSpriteView("PeakBassSprite6", 0, 7*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite7 = BassSpriteView("PeakBassSprite7", 0, 8*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 1", 0, 8);
+    RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, 8);
+    RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 1", 2, 8);
+    RainbowColorModel m_ColorModel3 = RainbowColorModel("Color Model 1", 3, 8);
+    RainbowColorModel m_ColorModel4 = RainbowColorModel("Color Model 1", 4, 8);
+    RainbowColorModel m_ColorModel5 = RainbowColorModel("Color Model 1", 5, 8);
+    RainbowColorModel m_ColorModel6 = RainbowColorModel("Color Model 1", 6, 8);
+    RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 1", 7, 8);
+};
+
 //********* 8 Band VUMeter *********
 class VUMeter8Band: public Visualization
 {

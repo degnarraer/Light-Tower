@@ -53,6 +53,8 @@ void View::Setup()
 {
   if(true == debugLEDs) Serial << "Setup View\n";
   m_PixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
+  m_PixelArray->Clear();
+  m_PixelArray->SetPosition(m_X, m_Y);
   SetupView();
 }
 bool View::CanRunMyTask()
@@ -156,34 +158,22 @@ void VerticalBarView::UpdateValue()
 }
 
 //*************** BassSpriteView ***************
+void BassSpriteView::NewValueNotification(CRGB value, String context)
+{
+  m_MyColor = value;
+}
 void BassSpriteView::NewValueNotification(float value, String context)
 {
   m_Scaler = value;
 }
 void BassSpriteView::NewValueNotification(Position value, String context) 
 { 
-  m_CenterX = value.X;
-  m_CenterY = value.Y;
-  m_TopX = m_CenterX + m_MaxWidth;
-  m_BottomX = m_CenterX - m_MaxWidth;
-  m_TopY = m_CenterY + m_MaxHeight;
-  m_BottomY = m_CenterY - m_MaxHeight;
-  if(context == "Position")
-  {
-    m_X = m_BottomX;
-    m_Y = m_BottomY;
-  }
-  else if(context == "X")
-  {
-    m_X = m_BottomX;
-  }
-  else if(context == "Y")
-  {
-    m_Y = m_BottomY;
-  }
-  m_PixelArray->SetPosition(m_X, m_Y);
+  SetPosition(value.X, value.Y, context);
 }
-void BassSpriteView::SetupView(){}
+void BassSpriteView::SetupView()
+{
+  SetPosition(m_X, m_Y, "Position");
+}
 bool BassSpriteView::CanRunViewTask(){ return true; }
 void BassSpriteView::RunViewTask()
 {
@@ -207,6 +197,29 @@ void BassSpriteView::RunViewTask()
       }
     }
   }
+}
+void BassSpriteView::SetPosition(position x, position y, String context)
+{
+  m_CenterX = x;
+  m_CenterY = y;
+  m_TopX = m_CenterX + m_MaxWidth;
+  m_BottomX = m_CenterX - m_MaxWidth;
+  m_TopY = m_CenterY + m_MaxHeight;
+  m_BottomY = m_CenterY - m_MaxHeight;
+  if(context == "Position")
+  {
+    m_X = m_BottomX;
+    m_Y = m_BottomY;
+  }
+  else if(context == "X")
+  {
+    m_X = m_BottomX;
+  }
+  else if(context == "Y")
+  {
+    m_Y = m_BottomY;
+  }
+  m_PixelArray->SetPosition(m_X, m_Y);
 }
 
 //*************** ScrollingView ***************

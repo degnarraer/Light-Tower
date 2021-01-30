@@ -210,6 +210,7 @@ class VerticalBarView: public View
 };
 
 class BassSpriteView: public View
+                    , public ModelEventNotificationCallee<CRGB>
                     , public ModelEventNotificationCallee<float>
                     , public ModelEventNotificationCallee<Position>
 {
@@ -265,12 +266,14 @@ class BassSpriteView: public View
     {
       if(true == debugMemory) Serial << "Delete: BassSpriteView\n";  
     }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this, ""); }
     void ConnectPowerModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this, ""); }
     void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Position"); }
     void ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "X"); }
     void ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Y"); }
 
     //ModelEventNotificationCallee
+    void NewValueNotification(CRGB value, String context);
     void NewValueNotification(float value, String context);
     void NewValueNotification(Position value, String context);
     
@@ -281,12 +284,12 @@ class BassSpriteView: public View
     bool m_ShowCenterX;
     bool m_ShowCenterY;
     float m_Scaler = 0;
-    int m_CenterY = 0;
-    int m_CenterX = 0;
-    int m_BottomY = 0;
-    int m_BottomX = 0;
-    int m_TopY = 0;
-    int m_TopX = 0;
+    position m_CenterY = 0;
+    position m_CenterX = 0;
+    position m_BottomY = 0;
+    position m_BottomX = 0;
+    position m_TopY = 0;
+    position m_TopX = 0;
     int m_MinHeight = 1;
     int m_MaxHeight = 1;
     int m_CurrentHeight = 1;
@@ -296,6 +299,7 @@ class BassSpriteView: public View
     void SetupView();
     bool CanRunViewTask();
     void RunViewTask();
+    void SetPosition(position x, position y, String context);
 };
 
 enum ScrollDirection
