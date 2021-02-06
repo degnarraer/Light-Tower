@@ -785,4 +785,46 @@ class BallShooter: public Visualization
     RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7, 8);
     GravitationalModel m_GravitationalModel7 = GravitationalModel("GravitationalModel7", 1.0, 10.0);
 };
+
+//********* Power Per Bin Tower *********
+class PowerPerBinTower: public Visualization
+{
+  public:
+    PowerPerBinTower( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+                    : Visualization( StatisticalEngineModelInterface, LEDController) {
+      if (true == debugMemory) Serial << "New: PowerPerBinTower\n";
+    }
+    virtual ~PowerPerBinTower() {
+      if (true == debugMemory) Serial << "Deleted: PowerPerBinTower\n";
+    }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+    {
+      if(true == debugMemory) Serial << "PowerPerBinTower: Get Instance\n";
+      PowerPerBinTower *vis = new PowerPerBinTower(StatisticalEngineModelInterface, LEDController);
+      return vis;
+    }
+    void SetupVisualization()
+    {
+      int binWidth = floor((float)BINS / (float)NUMLEDS);
+      for(int i = 0; i < NUMLEDS; ++i)
+      {
+        ColorSpriteView *sprite = new ColorSpriteView("Sprite0", 0, i, SCREEN_WIDTH, 1, MergeType_Layer);
+        AddNewedView(*sprite);
+        BinPowerModel *binPowerModel = new BinPowerModel("Bin Power Model 0", i*binWidth, i*binWidth + binWidth, m_StatisticalEngineModelInterface);
+        AddNewedModel(*binPowerModel);
+        RainbowColorModel *colorModel = new RainbowColorModel("Rainbow Color Model", i, NUMLEDS);
+        AddNewedModel(*colorModel);
+        SettableColorPowerModel *PowerColorModel = new SettableColorPowerModel("Settable Power Model");
+        AddNewedModel(*PowerColorModel);
+        PowerColorModel->ConnectPowerModel(*binPowerModel);
+        PowerColorModel->ConnectColorModel(*colorModel);
+        sprite->ConnectColorModel(*PowerColorModel);
+      }
+    }
+    bool CanRunVisualization() { return true; }
+    void RunVisualization() {}
+  private:
+};
 #endif

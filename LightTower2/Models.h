@@ -242,9 +242,9 @@ class StatisticalEngineModelInterfaceUserTracker
 };
 
 class StatisticalEngineModelInterface : public Task
-  , public StatisticalEngineModelInterfaceUserTracker
-  , ADCInterruptHandler
-  , MicrophoneMeasureCalleeInterface
+                                      , public StatisticalEngineModelInterfaceUserTracker
+                                      , ADCInterruptHandler
+                                      , MicrophoneMeasureCalleeInterface
 {
   public:
     StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface")
@@ -268,6 +268,10 @@ class StatisticalEngineModelInterface : public Task
     }
     float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) {
       return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands);
+    }
+    float GetNormalizedBinValue(unsigned int bin)
+    {
+      return m_StatisticalEngine.GetNormalizedBinValue(bin);
     }
 
     //ADCInterruptHandler
@@ -955,6 +959,50 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
       const float g = -9.802 * gravitationalScaler;
       d = initialVelocity * t + ((0.5 * g) * (pow(t, 2)));
       return d;
+    }
+};
+
+class BinPowerModel: public DataModelWithNewValueNotification<float>
+{
+  public:
+    BinPowerModel( String title
+                 , unsigned int startBin
+                 , unsigned int endBin
+                 , StatisticalEngineModelInterface &statisticalEngineModelInterface )
+                 : DataModelWithNewValueNotification<float>(title, statisticalEngineModelInterface)
+                 , m_StartBin(startBin)
+                 , m_EndBin(endBin)
+    {
+      if (true == debugMemory) Serial << "New: BinPowerModel\n";
+    }
+    virtual ~BinPowerModel()
+    {
+      if (true == debugMemory) Serial << "Delete: BinPowerModel\n";
+    }
+  private:
+    unsigned int m_StartBin = 0;
+    unsigned int m_EndBin = 0;
+    float m_Result;
+    //Model
+    bool RequiresFFT() { return true; }
+    void UpdateValue() 
+    {
+      SetCurrentValue( m_Result );
+    }
+    void SetupModel()
+    {
+    }
+    bool CanRunModelTask()
+    {
+      return true;
+    }
+    void RunModelTask()
+    {
+      m_Result = 0.0;
+      for(int i = m_StartBin; i<= m_EndBin; ++i)
+      {
+        m_Result += m_StatisticalEngineModelInterface.GetNormalizedBinValue(i);
+      }
     }
 };
 #endif

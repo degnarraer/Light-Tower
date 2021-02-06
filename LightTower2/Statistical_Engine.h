@@ -106,6 +106,9 @@ class StatisticalEngine : public Task
   int GetBandValue(unsigned int band, unsigned int depth);
   float GetBandAverage(unsigned band, unsigned int depth);
   float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
+
+  //Bin Data Getters
+  float GetNormalizedBinValue(unsigned int bin);
   
   private:
     bool m_ProcessFFT = true;

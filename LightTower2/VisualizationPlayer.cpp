@@ -33,12 +33,14 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBassSpriteTower::GetInstance);
+  m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
 
-  bool testVisualization = false;
+
+  bool testVisualization = true;
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = VerticalBassSpriteTower::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = PowerPerBinTower::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }
