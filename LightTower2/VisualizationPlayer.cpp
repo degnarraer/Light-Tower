@@ -34,7 +34,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBassSpriteTower::GetInstance);
 
-  bool testVisualization = true;
+  bool testVisualization = false;
   if(true == testVisualization)
   {
     m_Duration = 10000000;

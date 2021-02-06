@@ -147,7 +147,7 @@ class LEDController
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelArray->GetPixel(x, y);
-          if(false)
+          if(true)
           {
             m_LEDStrip[x][y].red =(byte)dim8_raw(bufColor.red);
             m_LEDStrip[x][y].green = (byte)dim8_raw(bufColor.green);
