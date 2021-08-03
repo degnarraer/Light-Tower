@@ -36,7 +36,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
 
 
-  bool testVisualization = true;
+  bool testVisualization = false;
   if(true == testVisualization)
   {
     m_Duration = 10000000;

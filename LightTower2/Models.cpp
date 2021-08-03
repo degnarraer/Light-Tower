@@ -26,107 +26,26 @@ CRGB Model::FadeColor(CRGB color, float scalar)
 }
 CRGB Model::GetColor(unsigned int numerator, unsigned int denominator)
 {
-  const int colorCount = 7.0;
-  float calculation = ((float)((float)numerator/(float)denominator)*colorCount);
-  double whole;
-  double fractional = modf(calculation, &whole);
-  CRGB value;
-  CRGB value1;
-  CRGB value2;
-
-  int switchValue1 = (int)whole;
-  int switchValue2 = (int)whole + 1;
-  if(switchValue2 > colorCount - 1) switchValue2 = colorCount - 1;
-  
-  switch(switchValue1)
-  {
-    case 0:
-      value1 = CRGB::Red;
-    break;
-    case 1:
-      value1 = CRGB::Orange;
-    break;
-    case 2:
-      value1 = CRGB::Yellow;
-    break;
-    case 3:
-      value1 = CRGB::Green;
-    break;
-    case 4:
-      value1 = CRGB::Blue;
-    break;
-    case 5:
-      value1 = CRGB::Indigo;
-    break;
-    case 6:
-      value1 = CRGB::Violet;
-    break;
-    default:
-      value1 = CRGB::Violet;
-    break;
-  }
-  switch(switchValue2)
-  {
-    case 0:
-      value2 = CRGB::Red;
-    break;
-    case 1:
-      value2 = CRGB::Orange;
-    break;
-    case 2:
-      value2 = CRGB::Yellow;
-    break;
-    case 3:
-      value2 = CRGB::Green;
-    break;
-    case 4:
-      value2 = CRGB::Blue;
-    break;
-    case 5:
-      value2 = CRGB::Indigo;
-    break;
-    case 6:
-      value2 = CRGB::Violet;
-    break;
-    default:
-      value2 = CRGB::Violet;
-    break;
-  }
-  value.red = value1.red + fractional*(value2.red - value1.red);
-  value.green = value1.green + fractional*(value2.green - value1.green);
-  value.blue = value1.blue + fractional*(value2.blue - value1.blue);
-  return value;
+  CHSV hsv;
+  CRGB rgb;
+  byte hue = (byte)round(((float)numerator/(float)denominator*(float)255));
+  byte saturation = 255;
+  byte value = 255;
+  hsv = CHSV(hue, saturation, value);
+  hsv2rgb_rainbow(hsv, rgb);
+  return rgb;
 }
-CRGB Model::GetRandomNonGrayColor()
-{
-  byte threshold = 25;
-  byte red = random(0, 255);
-  byte green = random(0, 255);
-  byte blue = random(0, 255);
 
-  int redGreenDiff = abs(red - green);
-  int blueRedDiff = abs(blue - red);
-  int greenBlueDiff = abs(green - blue);
-  
-  if(redGreenDiff < threshold && blueRedDiff < threshold && greenBlueDiff < threshold)
-  {
-    if(redGreenDiff < threshold)
-    {
-      red += threshold;
-      if(red > 255) red-= 255;
-    }
-    else if(blueRedDiff < threshold)
-    {
-      blue += threshold;
-      if(blue > 255) blue-= 255;
-    }
-    else if(greenBlueDiff < threshold)
-    {
-      green += threshold;
-      if(green > 255) green-= 255;
-    }
-  }
-  return {red, green, blue};
+CRGB Model::GetRandomNonGrayColor()
+{ 
+  CHSV hsv;
+  CRGB rgb;
+  byte hue = random(0, 255);
+  byte saturation = 255;
+  byte value = 255;
+  hsv = CHSV(hue, saturation, value);
+  hsv2rgb_rainbow(hsv, rgb);
+  return rgb;
 }
 void StatisticalEngineModelInterface::Setup()
 { 

@@ -753,7 +753,9 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     }
     void RunModelTask()
     {
-      m_OutputColor = FadeColor(m_InputColor, m_NormalizedPower);
+      CHSV hsv = rgb2hsv_approximate(m_InputColor);
+      hsv.value = hsv.value*m_NormalizedPower;
+      hsv2rgb_rainbow(hsv, m_OutputColor);
       if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
 

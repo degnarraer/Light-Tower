@@ -807,7 +807,7 @@ class PowerPerBinTower: public Visualization
     }
     void SetupVisualization()
     {
-      int binWidth = floor((float)BINS / (float)NUMLEDS);
+      int binWidth = floor(((float)BINS / (float)NUMLEDS) / 4);
       for(int i = 0; i < NUMLEDS; ++i)
       {
         ColorSpriteView *sprite = new ColorSpriteView("Sprite0", 0, i, SCREEN_WIDTH, 1, MergeType_Layer);
