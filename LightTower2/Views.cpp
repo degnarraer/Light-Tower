@@ -381,42 +381,33 @@ void RotatingView::SetupView()
 }
 bool RotatingView::CanRunViewTask()
 {
+  return true;
+}
+void RotatingView::RunViewTask()
+{
   m_currentMillis = millis();
   m_lapsedTime = m_currentMillis - m_startMillis;
   switch(m_RotationType)
   {
-    case RotationType_Static:
+    case RotationType_Rotate:
+      if(m_lapsedTime >= m_updatePeriodMillis)
+      {
+        ++m_Count;
+      }
       RotateView();
-      *m_PixelArray = *m_ResultingPixelArray;
     break;
     case RotationType_Scroll:
+      if(m_lapsedTime >= m_updatePeriodMillis)
+      {
+        ScrollView();
+      }
     break;
     default:
     break;
   }
   if(m_lapsedTime >= m_updatePeriodMillis)
   {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-void RotatingView::RunViewTask()
-{
-  m_startMillis = millis();
-  switch(m_RotationType)
-  {
-    case RotationType_Static:
-      ++m_Count;
-      RotateView();
-    break;
-    case RotationType_Scroll:
-      ScrollView();
-    break;
-    default:
-    break;
+    m_startMillis = millis();
   }
   *m_PixelArray = *m_ResultingPixelArray;
 }

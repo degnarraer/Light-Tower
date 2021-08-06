@@ -34,7 +34,7 @@ enum MergeType
 };
 enum RotationType
 {
-  RotationType_Static,
+  RotationType_Rotate,
   RotationType_Scroll
 };
 
@@ -148,7 +148,7 @@ class SubView: public View
       return View::CanRunMyTask();
     }
   private:
-    bool m_ClearBeforeMergingSubViews = false;
+    bool m_ClearBeforeMergingSubViews = true;
     
     //View
     void SetupView(){}
@@ -511,7 +511,7 @@ class RotatingView: public View
     unsigned long m_lapsedTime;
     PixelArray *m_ResultingPixelArray;
     Direction m_Direction = Direction_Right;
-    RotationType m_RotationType = RotationType_Static;
+    RotationType m_RotationType = RotationType_Rotate;
     unsigned int m_Count = 0;
     //View
     void SetupView();

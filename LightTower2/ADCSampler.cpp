@@ -132,7 +132,7 @@ unsigned int ADCSampler::GetSamplingRate()
   return samplingRate;
 }
 
-uint16_t* ADCSampler::GetFilledBuffer(int *bufferLength)
+uint16_t* ADCSampler::GetData(int *bufferLength)
 {
   if(true == debugMode && debugLevel >= 3) Serial << "Read Buffer: " << adcDMAIndex << "|" << adcTransferIndex << "\n";
   *bufferLength = BUFFER_SIZE;

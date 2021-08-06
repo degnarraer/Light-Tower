@@ -47,8 +47,8 @@ void setup()
   if(true == debugRequired) Serial << "Main Program: TUNES: FFT_MAX: " << FFT_MAX << "\n";
   if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << m_Scheduler.GetTaskCount() << "\n";
   m_Scheduler.AddTask(m_CalculateFPS);
-  m_Scheduler.AddTask(m_VisualizationPlayer);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
+  m_Scheduler.AddTask(m_VisualizationPlayer);
   if(true == debugMode && debugLevel >= 0) Serial.println("Main Program: Setup Complete");
   if(true == debugRequired) Serial << "Main Program: TUNES: Task Count: " << m_Scheduler.GetTaskCount() << "\n";
 }

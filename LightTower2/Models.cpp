@@ -17,36 +17,53 @@
 */
  
 #include "Models.h"
-CRGB Model::FadeColor(CRGB color, float scalar)
+
+bool BandData::operator == (const BandData& a)
 {
-  byte fadeAmount = (byte)(scalar*255);
-  if(fadeAmount > 255) fadeAmount = 255;
-  fadeAmount = 255 - fadeAmount;
-  return color.fadeLightBy(fadeAmount);
+  return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? true : false;
 }
-CRGB Model::GetColor(unsigned int numerator, unsigned int denominator)
+bool BandData::operator != (const BandData& a)
 {
-  CHSV hsv;
-  CRGB rgb;
-  byte hue = (byte)round(((float)numerator/(float)denominator*(float)255));
-  byte saturation = 255;
-  byte value = 255;
-  hsv = CHSV(hue, saturation, value);
-  hsv2rgb_rainbow(hsv, rgb);
-  return rgb;
+  return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? false : true;
+}
+Print& operator << (Print& os, const BandData& bd)
+{
+  os << bd.Power << "|" << bd.Power << "|" << bd.Color.red << "|" << bd.Color.green << "|" << bd.Color.blue;
+  return os;
 }
 
-CRGB Model::GetRandomNonGrayColor()
-{ 
-  CHSV hsv;
-  CRGB rgb;
-  byte hue = random(0, 255);
-  byte saturation = 255;
-  byte value = 255;
-  hsv = CHSV(hue, saturation, value);
-  hsv2rgb_rainbow(hsv, rgb);
-  return rgb;
+bool Position::operator==(const Position& a)
+{
+  return (true == ((a.X == X) && (a.Y == Y))) ? true : false;
 }
+bool Position::operator!=(const Position& a)
+{
+  return (true == ((a.X == X) && (a.Y == Y))) ? false : true;
+}
+Print& operator<<(Print& os, const Position& pos)
+{
+  os << pos.X << "|" << pos.Y;
+  return os;
+}
+
+bool Size::operator==(const Size& a)
+{
+  return (true == ((a.W == W) && (a.H == H))) ? true : false;
+}
+bool Size::operator!=(const Size& a)
+{
+  return (true == ((a.W == W) && (a.H == H))) ? false : true;
+}
+
+bool Coordinates::operator==(const Coordinates& a)
+{
+  return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? true : false;
+}
+bool Coordinates::operator!=(const Coordinates& a)
+{
+  return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? false : true;
+}
+
 void StatisticalEngineModelInterface::Setup()
 { 
   m_StatisticalEngine.ConnectCallback(this);
@@ -59,6 +76,118 @@ bool StatisticalEngineModelInterface::CanRunMyTask()
 }
 void StatisticalEngineModelInterface::RunMyTask()
 {
+}
+
+//StatisticalEngine Getters
+unsigned int StatisticalEngineModelInterface::GetNumberOfBands() {
+  return m_StatisticalEngine.GetNumberOfBands();
+}
+float StatisticalEngineModelInterface::GetNormalizedSoundPower() {
+  return m_StatisticalEngine.GetNormalizedSoundPower();
+}
+float StatisticalEngineModelInterface::GetBandAverage(unsigned int band, unsigned int depth) {
+  return m_StatisticalEngine.GetBandAverage(band, depth);
+}
+float StatisticalEngineModelInterface::GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) {
+  return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands);
+}
+float StatisticalEngineModelInterface::GetBandValue(unsigned int band, unsigned int depth) {
+  return m_StatisticalEngine.GetBandValue(band, depth);
+}
+float StatisticalEngineModelInterface::GetNormalizedBinValue(unsigned int bin)
+{
+  return m_StatisticalEngine.GetNormalizedBinValue(bin);
+}
+//ADCInterruptHandler
+void StatisticalEngineModelInterface::HandleADCInterrupt() {
+  m_StatisticalEngine.HandleADCInterrupt();
+}
+
+void Model::Setup()
+{
+  SetupModel();
+}
+bool Model::CanRunMyTask()
+{
+  return CanRunModelTask();
+}
+void Model::RunMyTask()
+{
+  RunModelTask();
+  UpdateValue();
+}
+CRGB Model::FadeColor(CRGB color, float scalar)
+{
+  CHSV hsv = rgb2hsv_approximate(color);
+  CRGB rgb;
+  hsv.value = (uint8_t )floor(hsv.value*scalar);
+  hsv2rgb_rainbow(hsv, rgb);
+  return rgb;
+}
+CRGB Model::GetColor(unsigned int numerator, unsigned int denominator)
+{
+  CHSV hsv;
+  CRGB rgb;
+  uint8_t  hue = (uint8_t )floor(((float)numerator/(float)denominator*(float)255));
+  uint8_t  saturation = 255;
+  uint8_t  value = 255;
+  hsv = CHSV(hue, saturation, value);
+  hsv2rgb_rainbow(hsv, rgb);
+  return rgb;
+}
+CRGB Model::GetRandomNonGrayColor()
+{ 
+  CHSV hsv;
+  CRGB rgb;
+  uint8_t  hue = (uint8_t )random(0, 256);
+  uint8_t  saturation = 255;
+  uint8_t  value = 255;
+  hsv = CHSV(hue, saturation, value);
+  hsv2rgb_rainbow(hsv, rgb);
+  return rgb;
+}
+
+void StatisticalEngineModelInterfaceUserTracker::RegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
+{
+  m_MyUsers.add(&user);
+}
+void StatisticalEngineModelInterfaceUserTracker::DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
+{
+  for (int i = 0; i < m_MyUsers.size(); ++i)
+  {
+    if (m_MyUsers.get(i) == &user)
+    {
+      m_MyUsers.remove(i);
+      break;
+    }
+  }
+}
+bool StatisticalEngineModelInterfaceUserTracker::UsersRequireFFT()
+{
+  bool result = false;
+  for (int u = 0; u < m_MyUsers.size(); ++u)
+  {
+    if (true == m_MyUsers.get(u)->RequiresFFT())
+    {
+      result = true;
+      break;
+    }
+  }
+  return result;
+}
+
+void DataModel::Setup()
+{
+  SetupModel();
+}
+bool DataModel::CanRunMyTask()
+{
+  return CanRunModelTask();
+}
+void DataModel::RunMyTask()
+{
+  RunModelTask();
+  UpdateValue();
 }
 
 void RandomColorFadingModel::UpdateValue()

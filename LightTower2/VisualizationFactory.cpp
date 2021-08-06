@@ -52,8 +52,33 @@ Visualization* VUMeter8Band::GetInstance(StatisticalEngineModelInterface &Statis
 }
 void VUMeter8Band::SetupVisualization()
 {
-  AddView(m_VerticalBar0);
+  AddView(m_FloorSprite0);
+  AddView(m_FloorSprite1);
+  AddView(m_FloorSprite2);
+  AddView(m_FloorSprite3);
+  AddView(m_FloorSprite4);
+  AddView(m_FloorSprite5);
+  AddView(m_FloorSprite6);
+  AddView(m_FloorSprite7);
+  
   AddView(m_PeakSprite0);
+  AddView(m_PeakSprite1);
+  AddView(m_PeakSprite2);
+  AddView(m_PeakSprite3);
+  AddView(m_PeakSprite4);
+  AddView(m_PeakSprite5);
+  AddView(m_PeakSprite6);
+  AddView(m_PeakSprite7);
+  
+  AddView(m_VerticalBar0);
+  AddView(m_VerticalBar1);
+  AddView(m_VerticalBar2);
+  AddView(m_VerticalBar3);
+  AddView(m_VerticalBar4);
+  AddView(m_VerticalBar5);
+  AddView(m_VerticalBar6);
+  AddView(m_VerticalBar7);
+  
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
   m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
   m_PeakSprite0.ConnectYPositionModel(m_GravitationalModel0);
@@ -63,8 +88,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar0);
   AddModel(m_GravitationalModel0); 
   
-  AddView(m_VerticalBar1);
-  AddView(m_PeakSprite1);
   m_VerticalBar1.ConnectBarHeightModel(m_BandPower1);
   m_VerticalBar1.ConnectBarColorModel(m_ColorModel1);
   m_PeakSprite1.ConnectYPositionModel(m_GravitationalModel1);
@@ -74,8 +97,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar1);
   AddModel(m_GravitationalModel1);
   
-  AddView(m_VerticalBar2);
-  AddView(m_PeakSprite2);
   m_VerticalBar2.ConnectBarHeightModel(m_BandPower2);
   m_VerticalBar2.ConnectBarColorModel(m_ColorModel2);
   m_PeakSprite2.ConnectYPositionModel(m_GravitationalModel2);
@@ -85,8 +106,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar2);
   AddModel(m_GravitationalModel2);
   
-  AddView(m_VerticalBar3);
-  AddView(m_PeakSprite3);
   m_VerticalBar3.ConnectBarHeightModel(m_BandPower3);
   m_VerticalBar3.ConnectBarColorModel(m_ColorModel3);
   m_PeakSprite3.ConnectYPositionModel(m_GravitationalModel3);
@@ -96,8 +115,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar3);
   AddModel(m_GravitationalModel3);
   
-  AddView(m_VerticalBar4);
-  AddView(m_PeakSprite4);
   m_VerticalBar4.ConnectBarHeightModel(m_BandPower4);
   m_VerticalBar4.ConnectBarColorModel(m_ColorModel4);
   m_PeakSprite4.ConnectYPositionModel(m_GravitationalModel4);
@@ -107,8 +124,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar4);
   AddModel(m_GravitationalModel4);
   
-  AddView(m_VerticalBar5);
-  AddView(m_PeakSprite5);
   m_VerticalBar5.ConnectBarHeightModel(m_BandPower5);
   m_VerticalBar5.ConnectBarColorModel(m_ColorModel5);
   m_PeakSprite5.ConnectYPositionModel(m_GravitationalModel5);
@@ -118,8 +133,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar5);
   AddModel(m_GravitationalModel5);
   
-  AddView(m_VerticalBar6);
-  AddView(m_PeakSprite6);
   m_VerticalBar6.ConnectBarHeightModel(m_BandPower6);
   m_VerticalBar6.ConnectBarColorModel(m_ColorModel6);
   m_PeakSprite6.ConnectYPositionModel(m_GravitationalModel6);
@@ -129,8 +142,6 @@ void VUMeter8Band::SetupVisualization()
   AddModel(m_VerticalBar6);
   AddModel(m_GravitationalModel6);
   
-  AddView(m_VerticalBar7);
-  AddView(m_PeakSprite7);
   m_VerticalBar7.ConnectBarHeightModel(m_BandPower7);
   m_VerticalBar7.ConnectBarColorModel(m_ColorModel7);
   m_PeakSprite7.ConnectYPositionModel(m_GravitationalModel7);
@@ -152,19 +163,28 @@ Visualization* VUMeter3Band::GetInstance(StatisticalEngineModelInterface &Statis
 }
 void VUMeter3Band::SetupVisualization()
 {
+  AddView(m_FloorSprite0);
+  AddView(m_FloorSprite1);
+  AddView(m_FloorSprite2);
+  
   AddView(m_VerticalBar0);
+  AddView(m_VerticalBar1);
+  AddView(m_VerticalBar2);
+  
   AddView(m_PeakSprite0);
+  AddView(m_PeakSprite1);
+  AddView(m_PeakSprite2);
+  
   AddModel(m_BandPower0);
   AddModel(m_ColorModel0);
   AddModel(m_VerticalBar0);
+  
   AddModel(m_GravitationalModel0);
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
   m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
   m_PeakSprite0.ConnectYPositionModel(m_GravitationalModel0);
   m_GravitationalModel0.ConnectPositionModel(m_VerticalBar0);
   
-  AddView(m_VerticalBar1);
-  AddView(m_PeakSprite1);
   AddModel(m_BandPower1);
   AddModel(m_ColorModel1);
   AddModel(m_VerticalBar1);
@@ -174,8 +194,6 @@ void VUMeter3Band::SetupVisualization()
   m_PeakSprite1.ConnectYPositionModel(m_GravitationalModel1);
   m_GravitationalModel1.ConnectPositionModel(m_VerticalBar1);
   
-  AddView(m_VerticalBar2);
-  AddView(m_PeakSprite2);
   AddModel(m_BandPower2);
   AddModel(m_ColorModel2);
   AddModel(m_VerticalBar2);
@@ -332,7 +350,7 @@ void VerticalBandTower::SetupVisualization()
     if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numVisualizations << "\n";
     ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight);
     AddNewedView(*sprite);
-    ReducedBandsBandPowerModel *bandPower = new ReducedBandsBandPowerModel("Sound Power Model", i, 0, numVisualizations, m_StatisticalEngineModelInterface);
+    BandPowerModel *bandPower = new BandPowerModel("Band Power Model", i, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
     RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numVisualizations);
     AddNewedModel(*colorModel);

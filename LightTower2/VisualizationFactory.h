@@ -210,48 +210,56 @@ class VUMeter8Band: public Visualization
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations);
     GravitationalModel m_GravitationalModel0 = GravitationalModel("GravitationalModel0", 0.01, 0.0);
     ColorSpriteView m_PeakSprite0 = ColorSpriteView("PeakSprite0", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite0 = ColorSpriteView("FloorSprite0", 0, 0 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, numVisualizations);
     GravitationalModel m_GravitationalModel1 = GravitationalModel("GravitationalModel1", 0.01, 0.0);
     ColorSpriteView m_PeakSprite1 = ColorSpriteView("PeakSprite1", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite1 = ColorSpriteView("FloorSprite1", 0, 1 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, numVisualizations);
     GravitationalModel m_GravitationalModel2 = GravitationalModel("GravitationalModel2", 0.01, 0.0);
     ColorSpriteView m_PeakSprite2 = ColorSpriteView("PeakSprite2", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite2 = ColorSpriteView("FloorSprite2", 0, 2 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar3 = VerticalBarView("Vertical Bar 3", 0, 3 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel3 = RainbowColorModel("Color Model 3", 3, numVisualizations);
     GravitationalModel m_GravitationalModel3 = GravitationalModel("GravitationalModel3", 0.01, 0.0);
     ColorSpriteView m_PeakSprite3 = ColorSpriteView("PeakSprite3", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite3 = ColorSpriteView("FloorSprite3", 0, 3 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar4 = VerticalBarView("Vertical Bar 4", 0, 4 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower4 = ReducedBandsBandPowerModel("Sound Power Model 4", 4, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel4 = RainbowColorModel("Color Model 4", 4, numVisualizations);
     GravitationalModel m_GravitationalModel4 = GravitationalModel("GravitationalModel2", 0.01, 0.0);
     ColorSpriteView m_PeakSprite4 = ColorSpriteView("PeakSprite4", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite4 = ColorSpriteView("FloorSprite4", 0, 4 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar5 = VerticalBarView("Vertical Bar 5", 0, 5 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel5 = RainbowColorModel("Color Model 5", 5, numVisualizations);
     GravitationalModel m_GravitationalModel5 = GravitationalModel("GravitationalModel5", 0.01, 0.0);
     ColorSpriteView m_PeakSprite5 = ColorSpriteView("PeakSprite5", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite5 = ColorSpriteView("FloorSprite5", 0, 5 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar6 = VerticalBarView("Vertical Bar 6", 0, 6 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel6 = RainbowColorModel("Color Model 6", 6, numVisualizations);
     GravitationalModel m_GravitationalModel6 = GravitationalModel("GravitationalModel6", 0.01, 0.0);
     ColorSpriteView m_PeakSprite6 = ColorSpriteView("PeakSprite6", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite6 = ColorSpriteView("FloorSprite6", 0, 6 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar7 = VerticalBarView("Vertical Bar 7", 0, 7 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel7 = RainbowColorModel("Color Model 7", 7, numVisualizations);
     GravitationalModel m_GravitationalModel7 = GravitationalModel("GravitationalModel7", 0.01, 0.0);
     ColorSpriteView m_PeakSprite7 = ColorSpriteView("PeakSprite7", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite7 = ColorSpriteView("FloorSprite7", 0, 7 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20,20,20}, MergeType_Layer);
 };
 
 //********* 3 Band VUMeter *********
@@ -280,18 +288,21 @@ class VUMeter3Band: public Visualization
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations);
     GravitationalModel m_GravitationalModel0 = GravitationalModel("GravitationalModel0", 0.01, 0.0);
     ColorSpriteView m_PeakSprite0 = ColorSpriteView("PeakSprite0", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite0 = ColorSpriteView("FloorSprite0", 0, 0 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20, 20, 20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar1 = VerticalBarView("Vertical Bar 1", 0, 1 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 1, 3, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, numVisualizations);
     GravitationalModel m_GravitationalModel1 = GravitationalModel("GravitationalModel1", 0.01, 0.0);
     ColorSpriteView m_PeakSprite1 = ColorSpriteView("PeakSprite1", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite1 = ColorSpriteView("FloorSprite1", 0, 1 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20, 20, 20}, MergeType_Layer);
 
     VerticalBarView m_VerticalBar2 = VerticalBarView("Vertical Bar 2", 0, 2 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 1, 3, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 2", 2, numVisualizations);
     GravitationalModel m_GravitationalModel2 = GravitationalModel("GravitationalModel2", 0.01, 0.0);
     ColorSpriteView m_PeakSprite2 = ColorSpriteView("PeakSprite2", 0, 0, SCREEN_WIDTH, 1, CRGB::Red, MergeType_Add);
+    ColorSpriteView m_FloorSprite2 = ColorSpriteView("FloorSprite2", 0, 2 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, 1, (CRGB){20, 20, 20}, MergeType_Layer);
 };
 
 //********* Waterfall *********
@@ -447,11 +458,11 @@ class ScrollingBands: public Visualization
     void RunVisualization();
   private:
 
-    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Right, 5000, RotationType_Static, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Right, 5000, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Upward Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
 
-    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 5000, RotationType_Static, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 5000, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     ScrollingView m_ScrollingView1 = ScrollingView("Downward Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView1 = FadingView("FadingView 1", SCREEN_HEIGHT, Direction_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
 
@@ -542,20 +553,13 @@ class RotatingSprites: public Visualization
     }
     void SetupVisualization()
     {
-
-      AddView(m_RotateView0);
-      AddModel(m_ColorModel0);
-      m_Sprite0.ConnectColorModel(m_ColorModel0);
-      m_RotateView0.AddSubView(m_Sprite0);
-
-      /*
       AddView(m_RotateView1);
       m_RotateView1.AddSubView(m_RotateView0);
 
       m_RotateView0.AddSubView(m_Sprite0);
-      m_RotateView0.AddSubView(m_Sprite1);
-      m_RotateView0.AddSubView(m_Sprite2);
-      m_RotateView0.AddSubView(m_Sprite3);
+      //m_RotateView0.AddSubView(m_Sprite1);
+      //m_RotateView0.AddSubView(m_Sprite2);
+      //m_RotateView0.AddSubView(m_Sprite3);
 
       AddModel(m_PowerModel0);
 
@@ -579,11 +583,10 @@ class RotatingSprites: public Visualization
       m_PowerColorModel2.ConnectPowerModel(m_PowerModel0);
       m_PowerColorModel3.ConnectPowerModel(m_PowerModel0);
 
-      m_Sprite0.ConnectColorModel(m_ColorModel0);
-      m_Sprite1.ConnectColorModel(m_ColorModel1);
-      m_Sprite2.ConnectColorModel(m_ColorModel2);
-      m_Sprite3.ConnectColorModel(m_ColorModel3);
-      */
+      m_Sprite0.ConnectColorModel(m_PowerColorModel0);
+      m_Sprite1.ConnectColorModel(m_PowerColorModel1);
+      m_Sprite2.ConnectColorModel(m_PowerColorModel2);
+      m_Sprite3.ConnectColorModel(m_PowerColorModel3);
     }
     bool CanRunVisualization() {
       return true;
@@ -591,10 +594,10 @@ class RotatingSprites: public Visualization
     void RunVisualization() {}
   private:
     SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
-    RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 1000);
-    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 1000);
-    RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 1000);
-    RandomColorFadingModel m_ColorModel3 = RandomColorFadingModel("Color Fading Model 3", 1000);
+    RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 5000);
+    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 5000);
+    RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 5000);
+    RandomColorFadingModel m_ColorModel3 = RandomColorFadingModel("Color Fading Model 3", 5000);
     SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model 0");
     SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model 1");
     SettableColorPowerModel m_PowerColorModel2 = SettableColorPowerModel("Settable Power Model 2");
@@ -603,8 +606,8 @@ class RotatingSprites: public Visualization
     ColorSpriteView m_Sprite1 = ColorSpriteView("Sprite 1", 1, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
     ColorSpriteView m_Sprite2 = ColorSpriteView("Sprite 2", 2, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
     ColorSpriteView m_Sprite3 = ColorSpriteView("Sprite 3", 3, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
-    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Down, 100, RotationType_Scroll, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
-    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Right, 100, RotationType_Static, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Down, 0, RotationType_Scroll, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Right, 500, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
 };
 
 //********* Ball Shooter *********

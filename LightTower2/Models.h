@@ -30,67 +30,35 @@ struct BandData
   float Power;
   unsigned int Band;
   CRGB Color;
-  bool operator==(const BandData& a)
-  {
-    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? true : false;
-  }
-  bool operator!=(const BandData& a)
-  {
-    return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? false : true;
-  }
-  friend Print& operator<<(Print& os, const BandData& bd)
-  {
-    os << bd.Power << "|" << bd.Power << "|" << bd.Color.red << "|" << bd.Color.green << "|" << bd.Color.blue;
-    return os;
-  }
+  bool operator==(const BandData& a);
+  bool operator!=(const BandData& a);
+  friend Print& operator<<(Print& os, const BandData& bd);
 };
-
 
 struct Position
 {
   int X;
   int Y;
-  bool operator==(const Position& a)
-  {
-    return (true == ((a.X == X) && (a.Y == Y))) ? true : false;
-  }
-  bool operator!=(const Position& a)
-  {
-    return (true == ((a.X == X) && (a.Y == Y))) ? false : true;
-  }
-  friend Print& operator<<(Print& os, const Position& pos)
-  {
-    os << pos.X << "|" << pos.Y;
-    return os;
-  }
+  bool operator==(const Position& a);
+  bool operator!=(const Position& a);
+  friend Print& operator<<(Print& os, const Position& pos);
 };
+
 struct Size
 {
   unsigned int W;
   unsigned int H;
-  bool operator==(const Size& a)
-  {
-    return (true == ((a.W == W) && (a.H == H))) ? true : false;
-  }
-  bool operator!=(const Size& a)
-  {
-    return (true == ((a.W == W) && (a.H == H))) ? false : true;
-  }
+  bool operator==(const Size& a);
+  bool operator!=(const Size& a);
 };
+
 struct Coordinates
 {
   struct Position Position;
   struct Size Size;
-  bool operator==(const Coordinates& a)
-  {
-    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? true : false;
-  }
-  bool operator!=(const Coordinates& a)
-  {
-    return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? false : true;
-  }
+  bool operator==(const Coordinates& a);
+  bool operator!=(const Coordinates& a);
 };
-
 
 template <class T> class ModelEventNotificationCaller;
 template <class T>
@@ -165,14 +133,8 @@ class StatisticalEngineModelInterface;
 class Model: public Task
 {
   public:
-    Model(String Title): Task(Title)
-    {
-      if (true == debugMemory) Serial << "New: Model\n";
-    }
-    virtual ~Model()
-    {
-      if (true == debugMemory) Serial << "Delete: Model\n";
-    }
+    Model(String Title): Task(Title) { if (true == debugMemory) Serial << "New: Model\n"; }
+    virtual ~Model() { if (true == debugMemory) Serial << "Delete: Model\n"; }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
@@ -185,19 +147,9 @@ class Model: public Task
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
-    void Setup()
-    {
-      SetupModel();
-    }
-    bool CanRunMyTask()
-    {
-      return CanRunModelTask();
-    }
-    void RunMyTask()
-    {
-      RunModelTask();
-      UpdateValue();
-    }
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
 };
 
 class StatisticalEngineModelInterfaceUsers
@@ -209,34 +161,9 @@ class StatisticalEngineModelInterfaceUsers
 class StatisticalEngineModelInterfaceUserTracker
 {
   public:
-    void RegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
-    {
-      m_MyUsers.add(&user);
-    }
-    void DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
-    {
-      for (int i = 0; i < m_MyUsers.size(); ++i)
-      {
-        if (m_MyUsers.get(i) == &user)
-        {
-          m_MyUsers.remove(i);
-          break;
-        }
-      }
-    }
-    bool UsersRequireFFT()
-    {
-      bool result = false;
-      for (int u = 0; u < m_MyUsers.size(); ++u)
-      {
-        if (true == m_MyUsers.get(u)->RequiresFFT())
-        {
-          result = true;
-          break;
-        }
-      }
-      return result;
-    }
+    void RegisterAsUser(StatisticalEngineModelInterfaceUsers &user);
+    void DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user);
+    bool UsersRequireFFT();
   private:
     LinkedList<StatisticalEngineModelInterfaceUsers*> m_MyUsers = LinkedList<StatisticalEngineModelInterfaceUsers*>();
 };
@@ -247,43 +174,26 @@ class StatisticalEngineModelInterface : public Task
                                       , MicrophoneMeasureCalleeInterface
 {
   public:
-    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface")
-    {
-      if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n";
-    }
-    virtual ~StatisticalEngineModelInterface()
-    {
-      if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";
-    }
+    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){ if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n"; }
+    virtual ~StatisticalEngineModelInterface(){if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";}
 
     //StatisticalEngine Getters
-    unsigned int GetNumberOfBands() {
-      return m_StatisticalEngine.GetNumberOfBands();
-    }
-    float GetNormalizedSoundPower() {
-      return m_StatisticalEngine.GetNormalizedSoundPower();
-    }
-    float GetBandAverage(unsigned int band, unsigned int depth) {
-      return m_StatisticalEngine.GetBandAverage(band, depth);
-    }
-    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) {
-      return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands);
-    }
-    float GetNormalizedBinValue(unsigned int bin)
-    {
-      return m_StatisticalEngine.GetNormalizedBinValue(bin);
-    }
+    unsigned int GetNumberOfBands();
+    float GetNormalizedSoundPower();
+    float GetBandAverage(unsigned int band, unsigned int depth);
+    float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands);
+    float GetBandValue(unsigned int band, unsigned int depth);
+    float GetNormalizedBinValue(unsigned int bin);
 
     //ADCInterruptHandler
-    void HandleADCInterrupt() {
-      m_StatisticalEngine.HandleADCInterrupt();
-    }
-
+    void HandleADCInterrupt();
+    
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState) {}
 
   private:
-    StatisticalEngine m_StatisticalEngine;
+    ADCSampler m_sampler;
+    StatisticalEngine m_StatisticalEngine = StatisticalEngine(&m_sampler);
     //Task
     void Setup();
     bool CanRunMyTask();
@@ -291,7 +201,7 @@ class StatisticalEngineModelInterface : public Task
 };
 
 class DataModel: public Model
-  , public StatisticalEngineModelInterfaceUsers
+               , public StatisticalEngineModelInterfaceUsers
 {
   public:
     DataModel( String Title
@@ -320,24 +230,14 @@ class DataModel: public Model
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
-    void Setup()
-    {
-      SetupModel();
-    }
-    bool CanRunMyTask()
-    {
-      return CanRunModelTask();
-    }
-    void RunMyTask()
-    {
-      RunModelTask();
-      UpdateValue();
-    }
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
 };
 
 template <class T>
 class ModelWithNewValueNotification: public Model
-  , public ModelEventNotificationCaller<T>
+                                   , public ModelEventNotificationCaller<T>
 {
   public:
     ModelWithNewValueNotification<T>(String Title): Model(Title)
@@ -558,9 +458,9 @@ class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
     RandomColorFadingModel( String Title
-                            , unsigned long Duration)
-      : ModelWithNewValueNotification<CRGB>(Title)
-      , m_Duration(Duration)
+                          , unsigned long Duration)
+    : ModelWithNewValueNotification<CRGB>(Title)
+    , m_Duration(Duration)
     {
       if (true == debugMemory) Serial << "New: RandomColorFadingModel\n";
     }
@@ -742,7 +642,8 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
   private:
     CRGB m_InputColor = CRGB::Black;
     CRGB m_OutputColor = CRGB::Black;
-    float m_NormalizedPower = 0;
+    CHSV m_HSV = rgb2hsv_approximate(m_InputColor);
+    float m_NormalizedPower = 0.0;
     //Model
     void UpdateValue() {
       SetCurrentValue( m_OutputColor );
@@ -753,15 +654,16 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     }
     void RunModelTask()
     {
-      CHSV hsv = rgb2hsv_approximate(m_InputColor);
-      hsv.value = hsv.value*m_NormalizedPower;
+      CHSV hsv = m_HSV;
+      hsv.value = (uint8_t ) round(((float)hsv.value * m_NormalizedPower));
       hsv2rgb_rainbow(hsv, m_OutputColor);
-      if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
+      if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower<< " Input Color:  R:" << m_InputColor.red << " G:" << m_InputColor.green << " B:" << m_InputColor.blue << "\tResulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
 
     //ModelEventNotificationCallee
     void NewValueNotification(CRGB Value, String context) {
       m_InputColor = Value;
+      m_HSV = rgb2hsv_approximate(m_InputColor);
     }
     void NewValueNotification(float Value, String context) {
       m_NormalizedPower = Value;
@@ -836,6 +738,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
   private:
     CRGB m_InputColor = CRGB::Black;
     CRGB m_OutputColor = CRGB::Black;
+    CHSV m_HSV = rgb2hsv_approximate(m_InputColor);
     float m_NormalizedPower = 0;
 
     //Model
@@ -848,7 +751,9 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     }
     void RunModelTask()
     {
-      m_OutputColor = FadeColor(m_InputColor, m_NormalizedPower);
+      CHSV hsv = m_HSV;
+      hsv.value = (uint8_t ) round(((float)hsv.value * m_NormalizedPower));
+      hsv2rgb_rainbow(hsv, m_OutputColor);
       if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
 
@@ -856,6 +761,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     void NewValueNotification(BandData Value, String context)
     {
       m_InputColor = Value.Color;
+      m_HSV = rgb2hsv_approximate(m_InputColor);
       m_NormalizedPower = Value.Power;
     }
 };

@@ -129,15 +129,14 @@ class LEDController
   public:
     LEDController()
     {
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP1, GRB>(m_LEDStrip[0], NUMLEDS);
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP2, GRB>(m_LEDStrip[1], NUMLEDS);
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP3, GRB>(m_LEDStrip[2], NUMLEDS);
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP4, GRB>(m_LEDStrip[3], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP1, GRB>(m_LEDStrip[0], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP2, GRB>(m_LEDStrip[1], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP3, GRB>(m_LEDStrip[2], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP4, GRB>(m_LEDStrip[3], NUMLEDS);
       FastLED.setBrightness(255);
     }
     void Setup()
     {
-      
     }
     void UpdateLEDs(PixelArray *pixelArray)
     {
@@ -147,16 +146,12 @@ class LEDController
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelArray->GetPixel(x, y);
-          if(true)
-          {
-            m_LEDStrip[x][y].red =(byte)dim8_raw(bufColor.red);
-            m_LEDStrip[x][y].green = (byte)dim8_raw(bufColor.green);
-            m_LEDStrip[x][y].blue = (byte)dim8_raw(bufColor.blue);
-          }
-          else
-          {
-            m_LEDStrip[x][y] = bufColor;
-          }
+          if(bufColor.red <= 1) bufColor.red = 0;
+          if(bufColor.green <= 1) bufColor.green = 0;
+          if(bufColor.blue <= 1) bufColor.blue = 0;
+          m_LEDStrip[x][y].red = bufColor.red; //(byte)dim8_raw(bufColor.red);
+          m_LEDStrip[x][y].green = bufColor.green; //(byte)dim8_raw(bufColor.green);
+          m_LEDStrip[x][y].blue = bufColor.blue; //(byte)dim8_raw(bufColor.blue);
           if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";
