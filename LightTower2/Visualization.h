@@ -58,9 +58,11 @@ class Visualization: public View
     LEDController &m_LEDController;
 
     //View
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
     
     virtual void SetupVisualization() = 0;
     virtual bool CanRunVisualization() = 0;

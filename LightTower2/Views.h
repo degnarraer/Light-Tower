@@ -82,8 +82,10 @@ class View: public Task
     
     //Task
     virtual void Setup();
-    virtual bool CanRunMyTask();
-    virtual void RunMyTask();
+    virtual void RunMyPreTask();
+    virtual bool CanRunMyScheduledTask();
+    virtual void RunMyScheduledTask();
+    virtual void RunMyPostTask();
   protected:
     PixelArray *m_PixelArray;
     position m_X;
@@ -104,9 +106,11 @@ class View: public Task
     MergeType m_MergeType = MergeType_Layer;
 
     //View
-    virtual void SetupView() = 0;
-    virtual bool CanRunViewTask() = 0;
-    virtual void RunViewTask() = 0;
+    virtual void SetupMyView() = 0;
+    virtual void RunMyViewPreTask() = 0;
+    virtual bool CanRunMyViewScheduledTask() = 0;
+    virtual void RunMyViewScheduledTask() = 0;
+    virtual void RunMyViewPostTask() = 0;
 };
 
 class SubView: public View
@@ -139,24 +143,26 @@ class SubView: public View
     {
       if(true == debugMemory) Serial << "Delete: SubView\n";  
     }
-    virtual bool CanRunMyTask() override
+    virtual bool CanRunMyScheduledTask() override
     {
       if(true == m_ClearBeforeMergingSubViews)
       {
         m_PixelArray->Clear();
       }
-      return View::CanRunMyTask();
+      return View::CanRunMyScheduledTask();
     }
   private:
     bool m_ClearBeforeMergingSubViews = true;
     
     //View
-    void SetupView(){}
-    bool CanRunViewTask()
+    void SetupMyView(){}
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask()
     {
       return true;
     }
-    void RunViewTask(){}
+    void RunMyViewScheduledTask(){}
+    void RunMyViewPostTask(){}
 };
 
 class VerticalBarView: public View
@@ -198,9 +204,11 @@ class VerticalBarView: public View
     
   private:
     //View
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
 
     //Model
     void SetupModel();
@@ -296,9 +304,11 @@ class BassSpriteView: public View
     int m_MinWidth = 1;
     int m_MaxWidth = 1;
     int m_CurrentWidth = 1;
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
     void SetPosition(position x, position y, String context);
 };
 
@@ -342,9 +352,11 @@ class ScrollingView: public View
     
   private:
     //View
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
     enum ScrollDirection m_ScrollDirection = ScrollDirection_Up;
 };
 
@@ -413,9 +425,11 @@ class ColorSpriteView: public View
     CRGB m_MyColor = CRGB::Black;
     
     //View
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
 };
 
 class FadingView: public View
@@ -459,9 +473,11 @@ class FadingView: public View
     void PerformFade(unsigned int x, unsigned int y, unsigned int i);
 
     //View
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
 };
 
 class RotatingView: public View
@@ -514,9 +530,11 @@ class RotatingView: public View
     RotationType m_RotationType = RotationType_Rotate;
     unsigned int m_Count = 0;
     //View
-    void SetupView();
-    bool CanRunViewTask();
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask();
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
     void ScrollView();
     void RotateView();
 };

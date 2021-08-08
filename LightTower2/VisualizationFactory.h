@@ -553,61 +553,28 @@ class RotatingSprites: public Visualization
     }
     void SetupVisualization()
     {
-      AddView(m_RotateView1);
-      m_RotateView1.AddSubView(m_RotateView0);
-
-      m_RotateView0.AddSubView(m_Sprite0);
-      //m_RotateView0.AddSubView(m_Sprite1);
-      //m_RotateView0.AddSubView(m_Sprite2);
-      //m_RotateView0.AddSubView(m_Sprite3);
+      AddView(m_RotateView0);
+      m_RotateView0.AddSubView(m_RotateView1);
+      m_RotateView1.AddSubView(m_Sprite0);
 
       AddModel(m_PowerModel0);
-
       AddModel(m_ColorModel0);
-      AddModel(m_ColorModel1);
-      AddModel(m_ColorModel2);
-      AddModel(m_ColorModel3);
-
       AddModel(m_PowerColorModel0);
-      AddModel(m_PowerColorModel1);
-      AddModel(m_PowerColorModel2);
-      AddModel(m_PowerColorModel3);
-
       m_PowerColorModel0.ConnectColorModel(m_ColorModel0);
-      m_PowerColorModel1.ConnectColorModel(m_ColorModel1);
-      m_PowerColorModel2.ConnectColorModel(m_ColorModel2);
-      m_PowerColorModel3.ConnectColorModel(m_ColorModel3);
-
       m_PowerColorModel0.ConnectPowerModel(m_PowerModel0);
-      m_PowerColorModel1.ConnectPowerModel(m_PowerModel0);
-      m_PowerColorModel2.ConnectPowerModel(m_PowerModel0);
-      m_PowerColorModel3.ConnectPowerModel(m_PowerModel0);
-
-      m_Sprite0.ConnectColorModel(m_PowerColorModel0);
-      m_Sprite1.ConnectColorModel(m_PowerColorModel1);
-      m_Sprite2.ConnectColorModel(m_PowerColorModel2);
-      m_Sprite3.ConnectColorModel(m_PowerColorModel3);
+      m_Sprite0.ConnectColorModel(m_ColorModel0);
     }
     bool CanRunVisualization() {
       return true;
     }
     void RunVisualization() {}
   private:
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Up, 0, RotationType_Scroll, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 100, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, 0, 1, 1, MergeType_Layer);
     SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
     RandomColorFadingModel m_ColorModel0 = RandomColorFadingModel("Color Fading Model 0", 5000);
-    RandomColorFadingModel m_ColorModel1 = RandomColorFadingModel("Color Fading Model 1", 5000);
-    RandomColorFadingModel m_ColorModel2 = RandomColorFadingModel("Color Fading Model 2", 5000);
-    RandomColorFadingModel m_ColorModel3 = RandomColorFadingModel("Color Fading Model 3", 5000);
     SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model 0");
-    SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model 1");
-    SettableColorPowerModel m_PowerColorModel2 = SettableColorPowerModel("Settable Power Model 2");
-    SettableColorPowerModel m_PowerColorModel3 = SettableColorPowerModel("Settable Power Model 3");
-    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
-    ColorSpriteView m_Sprite1 = ColorSpriteView("Sprite 1", 1, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
-    ColorSpriteView m_Sprite2 = ColorSpriteView("Sprite 2", 2, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
-    ColorSpriteView m_Sprite3 = ColorSpriteView("Sprite 3", 3, SCREEN_HEIGHT / 2, 1, 1, MergeType_Layer);
-    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Down, 0, RotationType_Scroll, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
-    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Right, 500, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
 };
 
 //********* Ball Shooter *********

@@ -123,9 +123,11 @@ class StatisticalEngine : public Task
     void UpdateRunningAverageBandArray();
   
     //Task Interface
-    void          Setup();
-    bool          CanRunMyTask();
-    void          RunMyTask();
+    void Setup();
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask();
+    void RunMyScheduledTask();
+    void RunMyPostTask(){}
 
     //Mic Data Variable
     SampledDataInterface *m_Sampler;

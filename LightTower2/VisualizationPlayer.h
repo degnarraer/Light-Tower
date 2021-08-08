@@ -47,8 +47,10 @@ class VisualizationPlayer : public Task
     
     //Task Interface
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask();
+    void RunMyScheduledTask();
+    void RunMyPostTask(){}
         
     Visualization *m_CurrentVisualization;
     Visualization *m_PreviousVisualization;

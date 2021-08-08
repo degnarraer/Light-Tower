@@ -48,11 +48,11 @@ void StatisticalEngine::Setup()
   m_Sampler->SetSampleRateAndStart(SAMPLE_RATE);
 }
 
-bool StatisticalEngine::CanRunMyTask()
+bool StatisticalEngine::CanRunMyScheduledTask()
 {
   if(true == m_Sampler->IsAvailable())
   {
-    if(true == calculateFPS2.CanRunMyTask()) { calculateFPS2.RunMyTask(); }
+    if(true == calculateFPS2.CanRunMyScheduledTask()) { calculateFPS2.RunMyScheduledTask(); }
     return true;
   }
   else
@@ -60,7 +60,7 @@ bool StatisticalEngine::CanRunMyTask()
     return false;
   }
 }
-void StatisticalEngine::RunMyTask()
+void StatisticalEngine::RunMyScheduledTask()
 {
   GetSampledSoundData();
 }

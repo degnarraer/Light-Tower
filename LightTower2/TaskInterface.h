@@ -51,8 +51,10 @@ class Task
     bool RemoveTask(Task &task);
     void RunScheduler();
     virtual void Setup() = 0;
-    virtual bool CanRunMyTask() = 0;
-    virtual void RunMyTask() = 0;
+    virtual void RunMyPreTask() = 0;
+    virtual bool CanRunMyScheduledTask() = 0;
+    virtual void RunMyScheduledTask() = 0;
+    virtual void RunMyPostTask() = 0;
   private:
     TaskScheduler m_Scheduler;
     bool m_IsSetup = false;
@@ -76,7 +78,8 @@ class CalculateFPS: public Task
       m_startMillis = millis();
       m_frameCount = 0;
     }
-    bool CanRunMyTask()
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask()
     {
       ++m_frameCount;
       m_currentMillis = millis();
@@ -90,12 +93,13 @@ class CalculateFPS: public Task
         return false;
       }
     }
-    void RunMyTask()
+    void RunMyScheduledTask()
     {
       m_startMillis = millis();
       if(true == debugFPS) Serial << "FPS for " << m_Title << ": " << m_frameCount / (m_lapsedTime/1000.0) << "\n";
       m_frameCount = 0;
     }
+    void RunMyPostTask(){}
   private:
     unsigned long m_startMillis;
     unsigned long m_currentMillis;

@@ -22,7 +22,8 @@
 #include "VisualizationPlayer.h"
 #include "Models.h"
 
-StatisticalEngineModelInterface m_StatisticalEngineModelInterface;
+ADCSampler m_sampler;
+StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(&m_sampler);
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;

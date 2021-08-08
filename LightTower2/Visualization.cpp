@@ -65,16 +65,16 @@ void VisualizationEventNotificationCallerInterface::SendVisualizationCompleteNot
 }
 
 //************** Visualization **************
-void Visualization::SetupView()
+void Visualization::SetupMyView()
 {
   SetupVisualization();
 }
-bool Visualization::CanRunViewTask()
+bool Visualization::CanRunMyViewScheduledTask()
 {
   MergeSubViews(true);
   return CanRunVisualization();
 }
-void Visualization::RunViewTask()
+void Visualization::RunMyViewScheduledTask()
 {
   RunVisualization();
   m_LEDController.UpdateLEDs(m_PixelArray);

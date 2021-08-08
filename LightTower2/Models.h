@@ -148,8 +148,10 @@ class Model: public Task
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask();
+    void RunMyScheduledTask();
+    void RunMyPostTask(){}
 };
 
 class StatisticalEngineModelInterfaceUsers
@@ -174,8 +176,11 @@ class StatisticalEngineModelInterface : public Task
                                       , MicrophoneMeasureCalleeInterface
 {
   public:
-    StatisticalEngineModelInterface() : Task("StatisticalEngineModelInterface"){ if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n"; }
-    virtual ~StatisticalEngineModelInterface(){if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";}
+    StatisticalEngineModelInterface(SampledDataInterface *sampler) : Task("StatisticalEngineModelInterface")
+                                                                   , m_sampler(sampler)
+    { if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n"; }
+    virtual ~StatisticalEngineModelInterface()
+    {if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";}
 
     //StatisticalEngine Getters
     unsigned int GetNumberOfBands();
@@ -192,12 +197,14 @@ class StatisticalEngineModelInterface : public Task
     void MicrophoneStateChange(SoundState) {}
 
   private:
-    ADCSampler m_sampler;
-    StatisticalEngine m_StatisticalEngine = StatisticalEngine(&m_sampler);
+    SampledDataInterface *m_sampler;
+    StatisticalEngine m_StatisticalEngine = StatisticalEngine(m_sampler);
     //Task
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask();
+    void RunMyScheduledTask();
+    void RunMyPostTask(){}
 };
 
 class DataModel: public Model
@@ -231,8 +238,10 @@ class DataModel: public Model
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask();
+    void RunMyScheduledTask();
+    void RunMyPostTask(){}
 };
 
 template <class T>

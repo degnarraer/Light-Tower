@@ -69,12 +69,12 @@ void StatisticalEngineModelInterface::Setup()
   m_StatisticalEngine.ConnectCallback(this);
   AddTask(m_StatisticalEngine);
 }
-bool StatisticalEngineModelInterface::CanRunMyTask()
+bool StatisticalEngineModelInterface::CanRunMyScheduledTask()
 { 
   m_StatisticalEngine.SetProcessFFTStatus(UsersRequireFFT());
   return true; 
 }
-void StatisticalEngineModelInterface::RunMyTask()
+void StatisticalEngineModelInterface::RunMyScheduledTask()
 {
 }
 
@@ -107,11 +107,11 @@ void Model::Setup()
 {
   SetupModel();
 }
-bool Model::CanRunMyTask()
+bool Model::CanRunMyScheduledTask()
 {
   return CanRunModelTask();
 }
-void Model::RunMyTask()
+void Model::RunMyScheduledTask()
 {
   RunModelTask();
   UpdateValue();
@@ -180,11 +180,11 @@ void DataModel::Setup()
 {
   SetupModel();
 }
-bool DataModel::CanRunMyTask()
+bool DataModel::CanRunMyScheduledTask()
 {
   return CanRunModelTask();
 }
-void DataModel::RunMyTask()
+void DataModel::RunMyScheduledTask()
 {
   RunModelTask();
   UpdateValue();

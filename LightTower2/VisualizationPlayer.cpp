@@ -36,11 +36,11 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
 
 
-  bool testVisualization = true;
+  bool testVisualization = false;
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = VUMeter3Band::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = RotatingSprites::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }
@@ -49,11 +49,11 @@ void VisualizationPlayer::Setup()
     GetRandomVisualization();
   }
 }
-bool VisualizationPlayer::CanRunMyTask()
+bool VisualizationPlayer::CanRunMyScheduledTask()
 { 
   return true;
 }
-void VisualizationPlayer::RunMyTask()
+void VisualizationPlayer::RunMyScheduledTask()
 {
   m_CurrentTime = millis();
   m_CurrentDuration = m_CurrentTime - m_StartTime;

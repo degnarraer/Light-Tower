@@ -55,16 +55,24 @@ void View::Setup()
   m_PixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
   m_PixelArray->Clear();
   m_PixelArray->SetPosition(m_X, m_Y);
-  SetupView();
+  SetupMyView();
 }
-bool View::CanRunMyTask()
+void View::RunMyPreTask()
+{
+  RunMyViewPreTask();
+}
+bool View::CanRunMyScheduledTask()
 {
   MergeSubViews(false);
-  return CanRunViewTask();
+  return CanRunMyViewScheduledTask();
 }
-void View::RunMyTask()
+void View::RunMyScheduledTask()
 {
-  RunViewTask();
+  RunMyViewScheduledTask();
+}
+void View::RunMyPostTask()
+{
+  RunMyViewPostTask();
 }
 void View::MergeSubViews(bool clearViewBeforeMerge)
 {
@@ -77,9 +85,9 @@ void View::MergeSubViews(bool clearViewBeforeMerge)
     position aY = aView->GetPixelArray()->GetY();
     size aWidth = aView->GetPixelArray()->GetWidth();
     size aHeight = aView->GetPixelArray()->GetHeight();
-    for(int x = aX; x <= aX + aWidth - 1; ++x)
+    for(int x = aX; x < aX+aWidth; ++x)
     {
-      for(int y = aY; y <= aY + aHeight - 1; ++y)
+      for(int y = aY; y < aY+aHeight; ++y)
       {
         if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
         if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )
@@ -112,9 +120,9 @@ void View::MergeSubViews(bool clearViewBeforeMerge)
 }
 
 //*************** VerticalBarView ***************
-void VerticalBarView::SetupView() {}
-bool VerticalBarView::CanRunViewTask() { return true; }
-void VerticalBarView::RunViewTask()
+void VerticalBarView::SetupMyView() {}
+bool VerticalBarView::CanRunMyViewScheduledTask() { return true; }
+void VerticalBarView::RunMyViewScheduledTask()
 {
   m_ScaledHeight = (m_Y + round(m_HeightScalar*(float)m_H));
   if(m_ScaledHeight > m_Y + m_H) m_ScaledHeight = m_Y + m_H;
@@ -170,12 +178,12 @@ void BassSpriteView::NewValueNotification(Position value, String context)
 { 
   SetPosition(value.X, value.Y, context);
 }
-void BassSpriteView::SetupView()
+void BassSpriteView::SetupMyView()
 {
   SetPosition(m_X, m_Y, "Position");
 }
-bool BassSpriteView::CanRunViewTask(){ return true; }
-void BassSpriteView::RunViewTask()
+bool BassSpriteView::CanRunMyViewScheduledTask(){ return true; }
+void BassSpriteView::RunMyViewScheduledTask()
 {
   m_CurrentWidth = round((m_Scaler*((float)m_MaxWidth - (float)m_MinWidth)) + m_MinWidth);
   m_CurrentHeight = round((m_Scaler*((float)m_MaxHeight - (float)m_MinHeight)) + m_MinHeight);
@@ -223,12 +231,12 @@ void BassSpriteView::SetPosition(position x, position y, String context)
 }
 
 //*************** ScrollingView ***************
-void ScrollingView::SetupView(){}
-bool ScrollingView::CanRunViewTask()
+void ScrollingView::SetupMyView(){}
+bool ScrollingView::CanRunMyViewScheduledTask()
 {
   return true; 
 }
-void ScrollingView::RunViewTask()
+void ScrollingView::RunMyViewScheduledTask()
 {
   switch(m_ScrollDirection)
   {
@@ -307,14 +315,14 @@ void ColorSpriteView::NewValueNotification(BandData value, String context)
 {
   m_MyColor = FadeColor(value.Color, value.Power);
 }
-void ColorSpriteView::SetupView(){}
-bool ColorSpriteView::CanRunViewTask(){ return true; }
-void ColorSpriteView::ColorSpriteView::RunViewTask()
+void ColorSpriteView::SetupMyView(){}
+bool ColorSpriteView::CanRunMyViewScheduledTask(){ return true; }
+void ColorSpriteView::ColorSpriteView::RunMyViewScheduledTask()
 {
   if(true == debugView) Serial << "Coords: " << m_X << "|" << m_Y << "|" << m_W << "|" << m_H << "\n";
-  for(int x = m_X; x <= m_X + m_W - 1; ++x)
+  for(int x = m_X; x < m_X+m_W; ++x)
   {
-    for(int y = m_Y; y <= m_Y + m_H - 1; ++y)
+    for(int y = m_Y; y < m_Y+m_H; ++y)
     {
       m_PixelArray->SetPixel(x, y, m_MyColor);
     }
@@ -322,18 +330,18 @@ void ColorSpriteView::ColorSpriteView::RunViewTask()
 }
 
 //*************** FadingView ***************
-void FadingView::SetupView(){}
-bool FadingView::CanRunViewTask(){ return true; }
-void FadingView::RunViewTask()
+void FadingView::SetupMyView(){}
+bool FadingView::CanRunMyViewScheduledTask(){ return true; }
+void FadingView::RunMyViewScheduledTask()
 {
   if(m_FadeLength > 0)
   {
     switch(m_Direction)
     {
       case Direction_Up:
-        for(int x = m_X; x < m_X+m_W; ++x)
+        for(int x = m_X; x<m_X+m_W; ++x)
         {
-          for(int y = m_Y; y < m_Y+m_H; ++y)
+          for(int y = m_Y; y<m_Y+m_H; ++y)
           {
             if((x >= m_X) && (x < (m_X + m_W)) && (y > m_Y) && (y < (m_Y + m_H)))
             {
@@ -346,7 +354,7 @@ void FadingView::RunViewTask()
         for(int x = m_X; x < m_X+m_W; ++x)
         {
           unsigned int index = 0;
-          for(int y = m_Y+m_H-1; y > m_Y; --y)
+          for(int y = m_Y+m_H-1; y >= m_Y; --y)
           {
             if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
             {
@@ -372,18 +380,32 @@ void FadingView::PerformFade(unsigned int x, unsigned int y, unsigned int i)
 }
 
 //*************** RotatingView ***************
-void RotatingView::SetupView()
+void RotatingView::SetupMyView()
 {
   m_ResultingPixelArray = new PixelArray(m_X, m_Y, m_W, m_H);
   m_ResultingPixelArray->Clear();
   m_PixelArray->Clear();
   m_startMillis = millis();
 }
-bool RotatingView::CanRunViewTask()
+void RotatingView::RunMyViewPreTask()
 {
+  switch(m_RotationType)
+  {
+    case RotationType_Rotate:
+      m_ResultingPixelArray->Clear();
+      m_PixelArray->Clear();
+    break;
+    case RotationType_Scroll:
+    break;
+    default:
+    break;
+  }
+}
+bool RotatingView::CanRunMyViewScheduledTask()
+{ 
   return true;
 }
-void RotatingView::RunViewTask()
+void RotatingView::RunMyViewScheduledTask()
 {
   m_currentMillis = millis();
   m_lapsedTime = m_currentMillis - m_startMillis;
@@ -413,37 +435,37 @@ void RotatingView::RunViewTask()
 }
 void RotatingView::ScrollView()
 {
-  for(int x = m_X; x <= m_X+m_W-1; ++x)
+  for(int x = m_X; x < m_X+m_W; ++x)
   {
-    for(int y = m_Y; y <= m_Y+m_H-1; ++y)
+    for(int y = m_Y; y < m_Y+m_H; ++y)
     {
       switch(m_Direction)
       {
         case Direction_Up:
         {
           int source = y-1;
-          if(source < m_Y) { source = m_Y + m_H - 1; }
+          if(source < m_Y) { source = m_Y; }
           m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
         }
         break;
         case Direction_Down:
         {
           int source = y+1;
-          if(source >= m_Y + m_H - 1) { source = m_Y; }
+          if(source >= m_Y + m_H) { source = m_Y+m_H-1; }
           m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(x, source));
         }
         break;
         case Direction_Right:
         {
           int source = x-1;
-          if(source < m_X) { source = m_X + m_W - 1; }
+          if(source < m_X) { source = m_X; }
           m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
         }
         break;
         case Direction_Left:
         {
           int source = x+1;
-          if(source >= m_X + m_W - 1) { source = m_X; };
+          if(source >= m_X + m_W - 1) { source = m_X + m_W - 1; }
           m_ResultingPixelArray->SetPixel(x, y, m_PixelArray->GetPixel(source, y));
         }
         break;
@@ -455,9 +477,9 @@ void RotatingView::ScrollView()
 }
 void RotatingView::RotateView()
 {
-  for(int x = m_X; x <= m_X+m_W-1; ++x)
+  for(int x = m_X; x < m_X+m_W; ++x)
   {
-    for(int y = m_Y; y <= m_Y+m_H-1; ++y)
+    for(int y = m_Y; y < m_Y+m_H; ++y)
     {
       switch(m_Direction)
       {
