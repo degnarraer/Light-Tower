@@ -26,7 +26,7 @@ Visualization* VUMeter::GetInstance(StatisticalEngineModelInterface &Statistical
 }
 void VUMeter::SetupVisualization()
 {
-  AddView(m_PeakSprite0);
+  AddView(m_PeakSprite0, false);
   AddView(m_VerticalBar);
 
   AddModel(m_SoundPower);
@@ -78,6 +78,8 @@ void VUMeter8Band::SetupVisualization()
   AddView(m_VerticalBar5);
   AddView(m_VerticalBar6);
   AddView(m_VerticalBar7);
+  
+  AddView(m_Background);
   
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
   m_VerticalBar0.ConnectBarColorModel(m_ColorModel0);
@@ -167,13 +169,15 @@ void VUMeter3Band::SetupVisualization()
   AddView(m_FloorSprite1);
   AddView(m_FloorSprite2);
   
-  AddView(m_VerticalBar0);
-  AddView(m_VerticalBar1);
-  AddView(m_VerticalBar2);
-  
   AddView(m_PeakSprite0);
   AddView(m_PeakSprite1);
   AddView(m_PeakSprite2);
+  
+  AddView(m_VerticalBar0);
+  AddView(m_VerticalBar1);
+  AddView(m_VerticalBar2);
+
+  AddView(m_Background);
   
   AddModel(m_BandPower0);
   AddModel(m_ColorModel0);
@@ -377,6 +381,9 @@ Visualization* ScrollingBands::GetInstance(StatisticalEngineModelInterface &Stat
 }
 void ScrollingBands::SetupVisualization()
 {
+  AddView(m_FadingView0, false);
+  AddView(m_FadingView1, true);
+  
   AddModel(m_BandPower0);
   AddModel(m_BandPower1);
   AddModel(m_BandPower2);
@@ -445,9 +452,6 @@ void ScrollingBands::SetupVisualization()
 
   m_FadingView0.AddSubView(m_ScrollingView0);
   m_FadingView1.AddSubView(m_ScrollingView1);
-
-  AddView(m_FadingView0);
-  AddView(m_FadingView1);
 }
 bool ScrollingBands::CanRunVisualization()
 {

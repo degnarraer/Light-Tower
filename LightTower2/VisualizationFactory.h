@@ -205,6 +205,9 @@ class VUMeter8Band: public Visualization
     void RunVisualization();
   private:
     float numVisualizations = 8.0;
+
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
+    
     VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 1, numVisualizations, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations);
@@ -283,6 +286,9 @@ class VUMeter3Band: public Visualization
     void RunVisualization();
   private:
     float numVisualizations = 3.0;
+    
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
+    
     VerticalBarView m_VerticalBar0 = VerticalBarView("Vertical Bar 0", 0, 0 * SCREEN_HEIGHT / numVisualizations, SCREEN_WIDTH, SCREEN_HEIGHT / numVisualizations, MergeType_Add);
     ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 1, 3, m_StatisticalEngineModelInterface);
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 0", 0, numVisualizations);
@@ -553,16 +559,16 @@ class RotatingSprites: public Visualization
     }
     void SetupVisualization()
     {
-      AddView(m_RotateView0);
-      m_RotateView0.AddSubView(m_RotateView1);
-      m_RotateView1.AddSubView(m_Sprite0);
+      AddView(m_RotateView0, true);
+      m_RotateView0.AddSubView(m_RotateView1, true, 0, 0, SCREEN_WIDTH, 1);
+      m_RotateView1.AddSubView(m_Sprite0, true);
 
       AddModel(m_PowerModel0);
       AddModel(m_ColorModel0);
       AddModel(m_PowerColorModel0);
       m_PowerColorModel0.ConnectColorModel(m_ColorModel0);
       m_PowerColorModel0.ConnectPowerModel(m_PowerModel0);
-      m_Sprite0.ConnectColorModel(m_ColorModel0);
+      m_Sprite0.ConnectColorModel(m_PowerColorModel0);
     }
     bool CanRunVisualization() {
       return true;

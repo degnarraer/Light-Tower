@@ -29,7 +29,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
-  //m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
+  m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
   m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBassSpriteTower::GetInstance);
@@ -40,7 +40,7 @@ void VisualizationPlayer::Setup()
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = RotatingSprites::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = VUMeter8Band::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }

@@ -71,7 +71,7 @@ void Visualization::SetupMyView()
 }
 bool Visualization::CanRunMyViewScheduledTask()
 {
-  MergeSubViews(true);
+  MergeSubViews();
   return CanRunVisualization();
 }
 void Visualization::RunMyViewScheduledTask()
@@ -81,7 +81,11 @@ void Visualization::RunMyViewScheduledTask()
 }
 void Visualization::AddView(View &view)
 {
-  AddSubView(view);
+  AddSubView(view, true);
+}
+void Visualization::AddView(View &view, bool clearViewBeforeMerge)
+{
+  AddSubView(view, clearViewBeforeMerge);
 }
 void Visualization::AddModel(Model &model)
 { 
@@ -96,7 +100,12 @@ void Visualization::AddNewedModel(Model &model)
 }
 void Visualization::AddNewedView(View &view)
 {
-  AddSubView(view);
+  AddSubView(view, true);
+  m_MyNewedViews.add(&view);
+}
+void Visualization::AddNewedView(View &view, bool clearViewBeforeMerge)
+{
+  AddSubView(view, clearViewBeforeMerge);
   m_MyNewedViews.add(&view);
 }
 void Visualization::DeleteAllNewedObjects()

@@ -11,7 +11,30 @@ void View::SetPosition(position x, position y)
 void View::SetSize(size w, size h){ m_W = w; m_H = h; }
 void View::AddSubView(View &subView)
 { 
-  m_SubViews.add(&subView);
+  SubViewClearStruct sVCD;
+  sVCD.SubView = &subView;
+  m_SubViewClearStructs.add(sVCD);
+  AddTask(subView);
+}
+void View::AddSubView(View &subView, bool clearViewBeforeMerge)
+{ 
+  SubViewClearStruct sVCD;
+  sVCD.SubView = &subView;
+  sVCD.ClearViewBeforeMerge = clearViewBeforeMerge;
+  m_SubViewClearStructs.add(sVCD);
+  AddTask(subView);
+}
+void View::AddSubView(View &subView, bool clearViewBeforeMerge, position x, position y, size width, size height )
+{
+  SubViewClearStruct sVCS;
+  sVCS.SubView = &subView;
+  sVCS.ClearViewBeforeMerge = clearViewBeforeMerge;
+  sVCS.SpecifiedClearArea = true;
+  sVCS.X_To_Clear = x;
+  sVCS.Y_To_Clear = y;
+  sVCS.W_To_Clear = width;
+  sVCS.H_To_Clear = height;
+  m_SubViewClearStructs.add(sVCS);
   AddTask(subView);
 }
 CRGB View::GetPixel(int x, int y)
@@ -21,12 +44,12 @@ CRGB View::GetPixel(int x, int y)
 bool View::RemoveSubView(View &subView)
 {
   bool viewFound = false;
-  for(int i = 0; i < m_SubViews.size(); ++i)
+  for(int i = 0; i < m_SubViewClearStructs.size(); ++i)
   {
-    if(m_SubViews.get(i) == &subView)
+    if(m_SubViewClearStructs.get(i).SubView == &subView)
     {
       viewFound = true;
-      m_SubViews.remove(i);
+      m_SubViewClearStructs.remove(i);
       break;
     }
   }
@@ -63,50 +86,61 @@ void View::RunMyPreTask()
 }
 bool View::CanRunMyScheduledTask()
 {
-  MergeSubViews(false);
   return CanRunMyViewScheduledTask();
 }
 void View::RunMyScheduledTask()
 {
+  MergeSubViews();
   RunMyViewScheduledTask();
 }
 void View::RunMyPostTask()
 {
   RunMyViewPostTask();
 }
-void View::MergeSubViews(bool clearViewBeforeMerge)
+void View::MergeSubViews()
 {
-  if(true == clearViewBeforeMerge) m_PixelArray->Clear();
   //Z Order is 1st subview added on top, last subview added on bottom
-  for(int v = m_SubViews.size() - 1; v >= 0; --v)
+  for(int v = m_SubViewClearStructs.size() - 1; v >= 0; --v)
   {
-    View *aView = m_SubViews.get(v);
-    position aX = aView->GetPixelArray()->GetX();
-    position aY = aView->GetPixelArray()->GetY();
-    size aWidth = aView->GetPixelArray()->GetWidth();
-    size aHeight = aView->GetPixelArray()->GetHeight();
+    View *subView = m_SubViewClearStructs.get(v).SubView;
+    position aX = subView->GetPixelArray()->GetX();
+    position aY = subView->GetPixelArray()->GetY();
+    size aWidth = subView->GetPixelArray()->GetWidth();
+    size aHeight = subView->GetPixelArray()->GetHeight();
     for(int x = aX; x < aX+aWidth; ++x)
     {
       for(int y = aY; y < aY+aHeight; ++y)
       {
-        if(true == debugLEDs) Serial << "Pixel Value " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
-        if( aView->GetPixel(x, y).red != 0 || aView->GetPixel(x, y).green != 0 || aView->GetPixel(x, y).blue != 0 )
+        SubViewClearStruct sVCS = m_SubViewClearStructs.get(v);
+        if( true == sVCS.ClearViewBeforeMerge )
         {
-          switch(aView->GetMergeType())
+          if( false == sVCS.SpecifiedClearArea )
+          {
+            m_PixelArray->SetPixel(x, y, CRGB::Black);
+          }
+          else if( x >= sVCS.X_To_Clear && x < sVCS.X_To_Clear + sVCS.W_To_Clear && y >= sVCS.Y_To_Clear && y < sVCS.Y_To_Clear + sVCS.H_To_Clear )
+          {
+            m_PixelArray->SetPixel(x, y, CRGB::Black);
+          }
+        }
+        if( true == debugLEDs ) Serial << "Pixel Value " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
+        if( subView->GetPixel(x, y).red != 0 || subView->GetPixel(x, y).green != 0 || subView->GetPixel(x, y).blue != 0 )
+        {
+          switch(subView->GetMergeType())
           {
             case MergeType_Layer:
             {
-              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
-              m_PixelArray->SetPixel(x, y, aView->GetPixel(x, y));
+              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
+              m_PixelArray->SetPixel(x, y, subView->GetPixel(x, y));
             }
             break;
             case MergeType_Add:
             {
-              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << aView->GetPixel(x, y).red << "\tG:" << aView->GetPixel(x, y).green << "\tB:" << aView->GetPixel(x, y).blue << "\n";
+              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
               CRGB pixel;
-              pixel.red = qadd8(aView->GetPixel(x, y).red, m_PixelArray->GetPixel(x, y).red);
-              pixel.blue = qadd8(aView->GetPixel(x, y).blue, m_PixelArray->GetPixel(x, y).blue);
-              pixel.green = qadd8(aView->GetPixel(x, y).green, m_PixelArray->GetPixel(x, y).green);
+              pixel.red = qadd8(subView->GetPixel(x, y).red, m_PixelArray->GetPixel(x, y).red);
+              pixel.blue = qadd8(subView->GetPixel(x, y).blue, m_PixelArray->GetPixel(x, y).blue);
+              pixel.green = qadd8(subView->GetPixel(x, y).green, m_PixelArray->GetPixel(x, y).green);
               m_PixelArray->SetPixel(x, y, pixel);
             }
             break;
@@ -149,7 +183,7 @@ void VerticalBarView::NewValueNotification(CRGB value, String context) { m_Color
 void VerticalBarView::SetupModel()
 {
   m_Peak.X = m_X;
-  m_Peak.Y = m_ScaledHeight;
+  m_Peak.Y = m_ScaledHeight - 1;
 }
 bool VerticalBarView::CanRunModelTask()
 {
@@ -158,7 +192,7 @@ bool VerticalBarView::CanRunModelTask()
 void VerticalBarView::RunModelTask()
 {
   m_Peak.X = m_X;
-  m_Peak.Y = m_ScaledHeight;
+  m_Peak.Y = m_ScaledHeight - 1;
 }
 void VerticalBarView::UpdateValue()
 { 

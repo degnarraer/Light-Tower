@@ -70,7 +70,9 @@ class Visualization: public View
 
   protected:
     void AddView(View &view);
+    void AddView(View &view, bool clearViewBeforeMerge);
     void AddNewedView(View &view);
+    void AddNewedView(View &view, bool clearViewBeforeMerge);
     void AddModel(Model &model);
     void AddNewedModel(Model &model);
     void DeleteAllNewedObjects();

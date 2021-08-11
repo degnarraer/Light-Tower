@@ -73,7 +73,9 @@ class View: public Task
     }
     void SetPosition(position X, position Y);
     void SetSize(size W, size H);
-    void AddSubView(View &SubView);
+    void AddSubView(View &subView);
+    void AddSubView(View &subView, bool clearViewBeforeMerge);
+    void AddSubView(View &subView, bool clearViewBeforeMerge, position x, position y, size width, size height );
     CRGB GetPixel(int X, int Y);
     bool RemoveSubView(View &SubView);
     MergeType GetMergeType();
@@ -92,8 +94,18 @@ class View: public Task
     position m_Y;
     size m_W;
     size m_H;
-    LinkedList<View*> m_SubViews = LinkedList<View*>();
-    void MergeSubViews(bool clearViewBeforeMerge);
+    struct SubViewClearStruct
+    {
+      View* SubView = NULL;
+      bool ClearViewBeforeMerge = false;
+      bool SpecifiedClearArea = false;
+      position X_To_Clear = 0;
+      position Y_To_Clear = 0;
+      size W_To_Clear = 0;
+      size H_To_Clear = 0;
+    };
+    LinkedList<SubViewClearStruct> m_SubViewClearStructs  = LinkedList<SubViewClearStruct>();
+    void MergeSubViews();
     CRGB FadeColor(CRGB color, float scalar)
     {
       byte fadeAmount = (byte)(scalar*255);
@@ -104,7 +116,6 @@ class View: public Task
   
   private:
     MergeType m_MergeType = MergeType_Layer;
-
     //View
     virtual void SetupMyView() = 0;
     virtual void RunMyViewPreTask() = 0;
