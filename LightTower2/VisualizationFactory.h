@@ -46,6 +46,7 @@ class VUMeter: public Visualization
     VerticalBarView m_VerticalBar = VerticalBarView("Vertical Bar", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     GravitationalModel m_GravitationalModel = GravitationalModel("GravitationalModel0", 0.01, 0.0);
     BassSpriteView m_PeakSprite0 = BassSpriteView("PeakBassSprite", 0, 0, 4, 4, 0, 6, CRGB::Red, CRGB::Green, false, true, MergeType_Layer);
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
 };
 
 //********* SolidColorTower *********
@@ -84,6 +85,7 @@ class SolidColorTower: public Visualization
     MaximumBandModel m_MaximumBandPowerModel = MaximumBandModel("Maximum Band Model 0", 10, m_StatisticalEngineModelInterface);
     ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 1000, 500);
     ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Red, MergeType_Layer);
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
 };
 
 //********* Vertical Bass Sprite Tower *********
@@ -108,15 +110,25 @@ class VerticalBassSpriteTower: public Visualization
     }
     void SetupVisualization()
     {
-      AddView(m_BassSprite0);
-      AddView(m_BassSprite1);
-      AddView(m_BassSprite2);
-      AddView(m_BassSprite3);
-      AddView(m_BassSprite4);
-      AddView(m_BassSprite5);
-      AddView(m_BassSprite6);
-      AddView(m_BassSprite7);
-      
+      AddView(m_RotateView1, false);
+      m_RotateView1.AddSubView(m_BassSprite0A, false);
+      m_RotateView1.AddSubView(m_BassSprite1A, false);
+      m_RotateView1.AddSubView(m_BassSprite2A, false);
+      m_RotateView1.AddSubView(m_BassSprite3A, false);
+      m_RotateView1.AddSubView(m_BassSprite4A, false);
+      m_RotateView1.AddSubView(m_BassSprite5A, false);
+      m_RotateView1.AddSubView(m_BassSprite6A, false);
+      m_RotateView1.AddSubView(m_BassSprite7A, false);
+      m_RotateView1.AddSubView(m_BassSprite0B, false);
+      m_RotateView1.AddSubView(m_BassSprite1B, false);
+      m_RotateView1.AddSubView(m_BassSprite2B, false);
+      m_RotateView1.AddSubView(m_BassSprite3B, false);
+      m_RotateView1.AddSubView(m_BassSprite4B, false);
+      m_RotateView1.AddSubView(m_BassSprite5B, false);
+      m_RotateView1.AddSubView(m_BassSprite6B, false);
+      m_RotateView1.AddSubView(m_BassSprite7B, false);
+      AddView(m_Background, true);
+
       AddModel(m_BandPower0);
       AddModel(m_BandPower1);
       AddModel(m_BandPower2);
@@ -135,29 +147,74 @@ class VerticalBassSpriteTower: public Visualization
       AddModel(m_ColorModel6);
       AddModel(m_ColorModel7);
       
-      m_BassSprite0.ConnectPowerModel(m_BandPower0);
-      m_BassSprite1.ConnectPowerModel(m_BandPower1);
-      m_BassSprite2.ConnectPowerModel(m_BandPower2);
-      m_BassSprite3.ConnectPowerModel(m_BandPower3);
-      m_BassSprite4.ConnectPowerModel(m_BandPower4);
-      m_BassSprite5.ConnectPowerModel(m_BandPower5);
-      m_BassSprite6.ConnectPowerModel(m_BandPower6);
-      m_BassSprite7.ConnectPowerModel(m_BandPower7);
+      m_BassSprite0A.ConnectPowerModel(m_BandPower0);
+      m_BassSprite1A.ConnectPowerModel(m_BandPower1);
+      m_BassSprite2A.ConnectPowerModel(m_BandPower2);
+      m_BassSprite3A.ConnectPowerModel(m_BandPower3);
+      m_BassSprite4A.ConnectPowerModel(m_BandPower4);
+      m_BassSprite5A.ConnectPowerModel(m_BandPower5);
+      m_BassSprite6A.ConnectPowerModel(m_BandPower6);
+      m_BassSprite7A.ConnectPowerModel(m_BandPower7);
+      m_BassSprite0B.ConnectPowerModel(m_BandPower0);
+      m_BassSprite1B.ConnectPowerModel(m_BandPower1);
+      m_BassSprite2B.ConnectPowerModel(m_BandPower2);
+      m_BassSprite3B.ConnectPowerModel(m_BandPower3);
+      m_BassSprite4B.ConnectPowerModel(m_BandPower4);
+      m_BassSprite5B.ConnectPowerModel(m_BandPower5);
+      m_BassSprite6B.ConnectPowerModel(m_BandPower6);
+      m_BassSprite7B.ConnectPowerModel(m_BandPower7);
       
-      m_BassSprite0.ConnectColorModel(m_ColorModel0);
-      m_BassSprite1.ConnectColorModel(m_ColorModel1);
-      m_BassSprite2.ConnectColorModel(m_ColorModel2);
-      m_BassSprite3.ConnectColorModel(m_ColorModel3);
-      m_BassSprite4.ConnectColorModel(m_ColorModel4);
-      m_BassSprite5.ConnectColorModel(m_ColorModel5);
-      m_BassSprite6.ConnectColorModel(m_ColorModel6);
-      m_BassSprite7.ConnectColorModel(m_ColorModel7);
+      m_BassSprite0A.ConnectColorModel(m_ColorModel0);
+      m_BassSprite1A.ConnectColorModel(m_ColorModel1);
+      m_BassSprite2A.ConnectColorModel(m_ColorModel2);
+      m_BassSprite3A.ConnectColorModel(m_ColorModel3);
+      m_BassSprite4A.ConnectColorModel(m_ColorModel4);
+      m_BassSprite5A.ConnectColorModel(m_ColorModel5);
+      m_BassSprite6A.ConnectColorModel(m_ColorModel6);
+      m_BassSprite7A.ConnectColorModel(m_ColorModel7);      
+      m_BassSprite0B.ConnectColorModel(m_ColorModel0);
+      m_BassSprite1B.ConnectColorModel(m_ColorModel1);
+      m_BassSprite2B.ConnectColorModel(m_ColorModel2);
+      m_BassSprite3B.ConnectColorModel(m_ColorModel3);
+      m_BassSprite4B.ConnectColorModel(m_ColorModel4);
+      m_BassSprite5B.ConnectColorModel(m_ColorModel5);
+      m_BassSprite6B.ConnectColorModel(m_ColorModel6);
+      m_BassSprite7B.ConnectColorModel(m_ColorModel7);
     }
     bool CanRunVisualization() {
       return true;
     }
     void RunVisualization() {}
   private:
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
+    
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 1000, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    
+    BassSpriteView m_BassSprite0A = BassSpriteView("PeakBassSprite0", 0, 1*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite0B = BassSpriteView("PeakBassSprite0", 2, 1*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+        
+    BassSpriteView m_BassSprite1A = BassSpriteView("PeakBassSprite1", 1, 2*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite1B = BassSpriteView("PeakBassSprite1", 3, 2*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
+    
+    BassSpriteView m_BassSprite2A = BassSpriteView("PeakBassSprite2", 0, 3*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite2B = BassSpriteView("PeakBassSprite2", 2, 3*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
+    BassSpriteView m_BassSprite3A = BassSpriteView("PeakBassSprite3", 1, 4*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite3B = BassSpriteView("PeakBassSprite3", 3, 4*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
+    BassSpriteView m_BassSprite4A = BassSpriteView("PeakBassSprite4", 0, 5*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite4B = BassSpriteView("PeakBassSprite4", 2, 5*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
+    BassSpriteView m_BassSprite5A = BassSpriteView("PeakBassSprite5", 1, 6*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite5B = BassSpriteView("PeakBassSprite5", 3, 6*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
+    BassSpriteView m_BassSprite6A = BassSpriteView("PeakBassSprite6", 0, 7*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite6B = BassSpriteView("PeakBassSprite6", 2, 7*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
+    BassSpriteView m_BassSprite7A = BassSpriteView("PeakBassSprite7", 1, 8*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    BassSpriteView m_BassSprite7B = BassSpriteView("PeakBassSprite7", 3, 8*SCREEN_HEIGHT/9, 0, 0, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
+    
     ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 8, m_StatisticalEngineModelInterface);
     ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 8, m_StatisticalEngineModelInterface);
     ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 8, m_StatisticalEngineModelInterface);
@@ -166,14 +223,6 @@ class VerticalBassSpriteTower: public Visualization
     ReducedBandsBandPowerModel m_BandPower5 = ReducedBandsBandPowerModel("Sound Power Model 5", 5, 0, 8, m_StatisticalEngineModelInterface);
     ReducedBandsBandPowerModel m_BandPower6 = ReducedBandsBandPowerModel("Sound Power Model 6", 6, 0, 8, m_StatisticalEngineModelInterface);
     ReducedBandsBandPowerModel m_BandPower7 = ReducedBandsBandPowerModel("Sound Power Model 7", 7, 0, 8, m_StatisticalEngineModelInterface);
-    BassSpriteView m_BassSprite0 = BassSpriteView("PeakBassSprite0", 0, 1*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite1 = BassSpriteView("PeakBassSprite1", 0, 2*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite2 = BassSpriteView("PeakBassSprite2", 0, 3*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite3 = BassSpriteView("PeakBassSprite3", 0, 4*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite4 = BassSpriteView("PeakBassSprite4", 0, 5*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite5 = BassSpriteView("PeakBassSprite5", 0, 6*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite6 = BassSpriteView("PeakBassSprite6", 0, 7*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
-    BassSpriteView m_BassSprite7 = BassSpriteView("PeakBassSprite7", 0, 8*SCREEN_HEIGHT/9, 4, 4, 0, SCREEN_HEIGHT/10, CRGB::Red, (CRGB){20,20,20}, false, true, MergeType_Add);
     RainbowColorModel m_ColorModel0 = RainbowColorModel("Color Model 1", 0, 8);
     RainbowColorModel m_ColorModel1 = RainbowColorModel("Color Model 1", 1, 8);
     RainbowColorModel m_ColorModel2 = RainbowColorModel("Color Model 1", 2, 8);
@@ -329,6 +378,7 @@ class Waterfall: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, SCREEN_HEIGHT - 1, 4, 1);
     SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
@@ -379,6 +429,7 @@ class WaterFireFromCenter: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, SCREEN_HEIGHT / 2, 4, 1);
     SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
@@ -410,6 +461,7 @@ class WaterFireFromEdge: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, 0, 4, 1);
@@ -464,6 +516,7 @@ class ScrollingBands: public Visualization
     void RunVisualization();
   private:
 
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Right, 5000, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Upward Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
@@ -604,9 +657,12 @@ class BallShooter: public Visualization
     }
     void SetupVisualization()
     {
-      AddView(m_SubView1);
-      AddView(m_SubView0);
+      AddView(m_RotateView1, false);
+      AddView(m_Background, true);
 
+      m_RotateView1.AddSubView(m_SubView0, false);
+      m_RotateView1.AddSubView(m_SubView1, false);
+      
       m_SubView0.AddSubView(m_PeakSprite0);
       m_SubView0.AddSubView(m_PeakSprite1);
       m_SubView0.AddSubView(m_PeakSprite2);
@@ -710,6 +766,8 @@ class BallShooter: public Visualization
     }
     void RunVisualization() {}
   private:
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 100, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     SubView m_SubView0 = SubView("SubView0", true, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     SubView m_SubView1 = SubView("SubView1", true, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     
