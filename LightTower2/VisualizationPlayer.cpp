@@ -26,6 +26,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(Waterfall::GetInstance);
   m_MyVisiualizationInstantiations.add(Fire::GetInstance);
   m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
+  m_MyVisiualizationInstantiations.add(WaterFireFromEdge::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
@@ -40,7 +41,7 @@ void VisualizationPlayer::Setup()
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = BallShooter::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = WaterFireFromEdge::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }

@@ -28,6 +28,7 @@ void VUMeter::SetupVisualization()
 {
   AddView(m_PeakSprite0, false);
   AddView(m_VerticalBar);
+  AddView(m_Background);
 
   AddModel(m_SoundPower);
   AddModel(m_BandPower0);
@@ -78,7 +79,6 @@ void VUMeter8Band::SetupVisualization()
   AddView(m_VerticalBar5);
   AddView(m_VerticalBar6);
   AddView(m_VerticalBar7);
-  
   AddView(m_Background);
   
   m_VerticalBar0.ConnectBarHeightModel(m_BandPower0);
@@ -307,9 +307,14 @@ Visualization* WaterFireFromEdge::GetInstance(StatisticalEngineModelInterface &S
 }
 void WaterFireFromEdge::SetupVisualization()
 {
-  AddView(m_FadingView0);
+  AddView(m_FadingView0, false);
+  AddView(m_FadingView1, true);
+  
   m_FadingView0.AddSubView(m_ScrollingView0);
   m_ScrollingView0.AddSubView(m_Sprite0);
+  m_FadingView1.AddSubView(m_ScrollingView1);
+  m_ScrollingView1.AddSubView(m_Sprite1);
+  
   AddModel(m_PowerModel0);
   AddModel(m_ColorModel0);
   AddModel(m_PowerColorModel0);
@@ -317,9 +322,6 @@ void WaterFireFromEdge::SetupVisualization()
   m_PowerColorModel0.ConnectPowerModel(m_PowerModel0);
   m_Sprite0.ConnectColorModel(m_PowerColorModel0);
   
-  AddView(m_FadingView1);
-  m_FadingView1.AddSubView(m_ScrollingView1);
-  m_ScrollingView1.AddSubView(m_Sprite1);
   AddModel(m_PowerModel1);
   AddModel(m_ColorModel1);
   AddModel(m_PowerColorModel1);

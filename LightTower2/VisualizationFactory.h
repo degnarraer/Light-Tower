@@ -85,7 +85,6 @@ class SolidColorTower: public Visualization
     MaximumBandModel m_MaximumBandPowerModel = MaximumBandModel("Maximum Band Model 0", 10, m_StatisticalEngineModelInterface);
     ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 1000, 500);
     ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Red, MergeType_Layer);
-    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
 };
 
 //********* Vertical Bass Sprite Tower *********
@@ -111,6 +110,8 @@ class VerticalBassSpriteTower: public Visualization
     void SetupVisualization()
     {
       AddView(m_RotateView1, false);
+      AddView(m_Background, true);
+      
       m_RotateView1.AddSubView(m_BassSprite0A, false);
       m_RotateView1.AddSubView(m_BassSprite1A, false);
       m_RotateView1.AddSubView(m_BassSprite2A, false);
@@ -127,7 +128,6 @@ class VerticalBassSpriteTower: public Visualization
       m_RotateView1.AddSubView(m_BassSprite5B, false);
       m_RotateView1.AddSubView(m_BassSprite6B, false);
       m_RotateView1.AddSubView(m_BassSprite7B, false);
-      AddView(m_Background, true);
 
       AddModel(m_BandPower0);
       AddModel(m_BandPower1);
@@ -378,7 +378,6 @@ class Waterfall: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
-    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Down, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, SCREEN_HEIGHT - 1, 4, 1);
     SoundPowerModel m_PowerModel = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
@@ -429,7 +428,6 @@ class WaterFireFromCenter: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
-    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, SCREEN_HEIGHT / 2, SCREEN_WIDTH, SCREEN_HEIGHT / 2);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, SCREEN_HEIGHT / 2, 4, 1);
     SoundPowerModel m_PowerModel0 = SoundPowerModel("Sound Power Model", 0, m_StatisticalEngineModelInterface);
@@ -461,7 +459,6 @@ class WaterFireFromEdge: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
-    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Fire Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
     ColorSpriteView m_Sprite0 = ColorSpriteView("Fire Sprite 0", 0, 0, 4, 1);
@@ -515,8 +512,6 @@ class ScrollingBands: public Visualization
     bool CanRunVisualization();
     void RunVisualization();
   private:
-
-    ColorSpriteView m_Background = ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
     RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Right, 5000, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
     ScrollingView m_ScrollingView0 = ScrollingView("Upward Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     FadingView m_FadingView0 = FadingView("FadingView 0", SCREEN_HEIGHT, Direction_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Add);
