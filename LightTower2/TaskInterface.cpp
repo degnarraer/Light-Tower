@@ -42,21 +42,23 @@ void TaskScheduler::RunScheduler()
   for(int t = 0; t < m_MyTasks.size(); ++t)
   {
     Task *aTask = m_MyTasks.get(t);
-    if(true==aTask->CanRunMyTask())
+    aTask->RunMyPreTask();
+    aTask->RunScheduler();
+    if(true==aTask->CanRunMyScheduledTask())
     {
       if(true == debugTasks) Serial << "TaskScheduler Running Task: " << aTask->GetTaskTitle() << "\n";
-      aTask->RunScheduler();
-      aTask->RunMyTask();
+      aTask->RunMyScheduledTask();
     }
     else
     {
       if(true == debugTasks) Serial << "TaskScheduler Task Not Ready: " << aTask->GetTaskTitle() << "\n";
     }
+    aTask->RunMyPostTask();
   }
 }
 void TaskScheduler::AddTask(Task &task)
 {
-  if(true == debugTasks || true == debugMemory) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
+  if(true == debugTasks) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
   m_MyTasks.add(&task);
   if(false == task.GetIsSetup())
   {

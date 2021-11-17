@@ -24,6 +24,8 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include "ADCSampler.h"
+
+#define __ASSERT_USE_STDERR // do this before including assert.h
 #include <assert.h>
 
 enum SoundState
@@ -78,10 +80,11 @@ public:
 
 class StatisticalEngine : public Task
                         , public MicrophoneMeasureCallerInterface
-{ 
+{
   public:
-    StatisticalEngine()
+    StatisticalEngine(SampledDataInterface *sampler)
       : Task("StatisticalEngine")
+      , m_Sampler(sampler)
       , m_Power(0)
       , m_PowerDb(0){}
   
@@ -103,12 +106,15 @@ class StatisticalEngine : public Task
   unsigned int GetNumberOfBands() { return m_NumBands; }
   int GetBandValue(unsigned int band, unsigned int depth);
   float GetBandAverage(unsigned band, unsigned int depth);
-  float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
+  int GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
+
+  //Bin Data Getters
+  float GetNormalizedBinValue(unsigned int bin);
   
   private:
     bool m_ProcessFFT = true;
     //BAND Circular Buffer
-    static const unsigned int m_NumBands = 8; //8 or 31
+    static const unsigned int m_NumBands = 31; //8 or 31
     int BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
     int BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
@@ -117,12 +123,14 @@ class StatisticalEngine : public Task
     void UpdateRunningAverageBandArray();
   
     //Task Interface
-    void          Setup();
-    bool          CanRunMyTask();
-    void          RunMyTask();
+    void Setup();
+    void RunMyPreTask(){}
+    bool CanRunMyScheduledTask();
+    void RunMyScheduledTask();
+    void RunMyPostTask(){}
 
     //Mic Data Variable
-    ADCSampler    m_Sampler;
+    SampledDataInterface *m_Sampler;
     float m_Power;
     float m_PowerDb;
     int16_t m_data[FFT_MAX];

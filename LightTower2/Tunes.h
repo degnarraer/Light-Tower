@@ -28,7 +28,7 @@ const int    debugLevel = 1;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = true;
+const bool   debugFPS = false;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = false;
@@ -39,6 +39,8 @@ const bool   debugLEDs = false;
 const bool   debugModels = false;
 const bool   debugGravitationalModel = false;
 const bool   debugMemory = false;
+const bool   debugFreeMemory = false;
+const bool   debugAssertions = false;
 const bool   debugRequired = ( debugMode || 
                                debugNanInf || 
                                debugPlotMic || 
@@ -53,7 +55,9 @@ const bool   debugRequired = ( debugMode ||
                                debugLEDs ||
                                debugModels ||
                                debugGravitationalModel ||
-                               debugMemory);
+                               debugMemory ||
+                               debugFreeMemory ||
+                               debugAssertions);
 
 // LED SETUP
 static const unsigned int NUMLEDS = 60;
@@ -71,11 +75,12 @@ const float MAX_DISPLAYED_FREQ = 10000.0;
 
 //FFT Tunes
 const int FFT_MAX = 512;
-const unsigned int SAMPLE_RATE = 26000;
+const unsigned int SAMPLE_RATE = 20000;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
 const unsigned int BAND_SAVE_LENGTH = 10;
+const unsigned int POWER_SAVE_LENGTH = 10;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.05;

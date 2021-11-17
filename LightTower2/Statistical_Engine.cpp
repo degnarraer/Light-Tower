@@ -21,18 +21,38 @@
 #include <Arduino.h>
 #include "Statistical_Engine.h"
 
+
+// handle diagnostic informations given by assertion and abort program execution:
+void __assert(const char *__func, const char *__file, int __lineno, const char *__sexp)
+{
+    // transmit diagnostic informations through serial link. 
+    if(true == debugAssertions)
+    {
+      Serial.println(__func);
+      Serial.println(__file);
+      Serial.println(__lineno, DEC);
+      Serial.println(__sexp);
+      Serial.flush();
+    }
+    else
+    {
+      // abort program execution.
+      abort();
+    }
+}
+
 CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
   calculateFPS2.Setup();
-  m_Sampler.SetSampleRateAndStart(SAMPLE_RATE);
+  m_Sampler->SetSampleRateAndStart(SAMPLE_RATE);
 }
 
-bool StatisticalEngine::CanRunMyTask()
+bool StatisticalEngine::CanRunMyScheduledTask()
 {
-  if(true == m_Sampler.IsAvailable())
+  if(true == m_Sampler->IsAvailable())
   {
-    if(true == calculateFPS2.CanRunMyTask()) { calculateFPS2.RunMyTask(); }
+    if(true == calculateFPS2.CanRunMyScheduledTask()) { calculateFPS2.RunMyScheduledTask(); }
     return true;
   }
   else
@@ -40,21 +60,21 @@ bool StatisticalEngine::CanRunMyTask()
     return false;
   }
 }
-void StatisticalEngine::RunMyTask()
+void StatisticalEngine::RunMyScheduledTask()
 {
   GetSampledSoundData();
 }
 
 void StatisticalEngine::HandleADCInterrupt()
 {
-  m_Sampler.HandleADCInterrupt();
+  m_Sampler->HandleADCInterrupt();
 }
 
 void StatisticalEngine::GetSampledSoundData()
 {
   int i = 0;
   while( i < MAX_BUFFERS_TO_PROCESS && 
-         m_Sampler.GetNumberOfReadings() > 0 &&
+         m_Sampler->GetNumberOfReadings() > 0 &&
          true == NewDataReady() )
   {
     if(true == debugMode && debugLevel >= 3) Serial << "StatisticalEngine: Processing Sound Data\n";
@@ -67,10 +87,10 @@ void StatisticalEngine::GetSampledSoundData()
 
 bool StatisticalEngine::NewDataReady()
 {
-  if (true == m_Sampler.IsAvailable())
+  if (true == m_Sampler->IsAvailable())
   {
     int bufferLength = 0;
-    uint16_t* cBuf = m_Sampler.GetFilledBuffer(&bufferLength);
+    uint16_t* cBuf = m_Sampler->GetData(&bufferLength);
     for (int i = 0; i < bufferLength; i=i+NUM_CHANNELS)
     {
       m_data[i/NUM_CHANNELS] = cBuf[i+2];
@@ -80,7 +100,7 @@ bool StatisticalEngine::NewDataReady()
         m_AmpGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10((float)ADDBITS - cBuf[1])/log10((float)ADDBITS)));
       }
     }
-    m_Sampler.SetReadCompleted();
+    m_Sampler->SetReadCompleted();
     if(true == debugMode && debugLevel >= 3) Serial << "Amp Gain: " << m_AmpGain << "\tFFT Gain: " << m_FFTGain << "\n";
     return true;
   }
@@ -343,12 +363,11 @@ float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
   if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   return result;
 }
-
-float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands)
+int StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands)
 {
-  assert(("Output Band must be less than total bands", band < TotalBands));
-  assert(("Must convert to a smaller number of Bands", TotalBands <= m_NumBands));
-  assert(("Cannot convert to 0 Bands", TotalBands > 0));
+  assert(band < TotalBands);
+  assert(TotalBands <= m_NumBands);
+  assert(TotalBands > 0);
   int bandSeparation = m_NumBands / TotalBands;
   int startBand = band * bandSeparation;
   int endBand = startBand + bandSeparation;
@@ -358,7 +377,18 @@ float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsign
     result += GetBandAverage(b, depth);
   }
   if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
-  return result;
+  return (int)round(result);
+}
+float StatisticalEngine::GetNormalizedBinValue(unsigned int bin)
+{
+  if(bin < BINS)
+  {
+    return m_data[bin] / (float)ADDBITS;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 float StatisticalEngine::GetNormalizedSoundPower()

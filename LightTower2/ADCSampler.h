@@ -30,7 +30,21 @@ public:
     virtual void HandleADCInterrupt() = 0;
 };
 
-class ADCSampler: public ADCInterruptHandler {
+class SampledDataInterface
+{
+  public:
+    virtual void SetSampleRateAndStart(unsigned int samplingRate) = 0;
+    virtual void End() = 0;
+    virtual void HandleADCInterrupt() = 0;
+    virtual bool IsAvailable() = 0;
+    virtual unsigned int GetSamplingRate() = 0;
+    virtual uint16_t* GetData(int *bufferLength) = 0;
+    virtual unsigned int GetNumberOfReadings() = 0;
+    virtual void SetReadCompleted() = 0;
+};
+
+class ADCSampler: public SampledDataInterface
+                , ADCInterruptHandler {
   public:
     ADCSampler();
     void SetSampleRateAndStart(unsigned int samplingRate);
@@ -38,13 +52,13 @@ class ADCSampler: public ADCInterruptHandler {
     void HandleADCInterrupt();
     bool IsAvailable();
     unsigned int GetSamplingRate();
-    uint16_t* GetFilledBuffer(int *bufferLength);
+    uint16_t* GetData(int *bufferLength);
     unsigned int GetNumberOfReadings();
-    void StartNextBuffer();
     void SetReadCompleted();
+  private:
+    void StartNextBuffer();
     unsigned int adcDMAIndex;        //!< This hold the index of the next DMA buffer
     unsigned int adcTransferIndex;   //!< This hold the last filled buffer
-  private:
     unsigned int samplingRate;
     volatile bool dataReady;
     volatile bool bufferOverflow;

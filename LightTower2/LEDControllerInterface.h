@@ -25,54 +25,133 @@
 #include "Tunes.h"
 #include "Streaming.h"
 
+#define __ASSERT_USE_STDERR // do this before including assert.h
+#include <assert.h>
 
 typedef CRGBArray<NUMLEDS> LEDStrip;
+typedef int position;
+typedef int size;
 
-struct PixelStruct
-{ 
-  CRGB (Pixel[SCREEN_WIDTH][SCREEN_HEIGHT]);
+class PixelArray
+{
   public:
-    PixelStruct()
+    PixelArray(position x, position y, size w, size h): m_X(x), m_Y(y),  m_W(w), m_H(h)
     {
-      Clear();
+      m_Pixels = Create2DArray<CRGB>(m_W, m_H, CRGB::Black);
+    }
+    virtual ~PixelArray()
+    {
+      if(true == debugMemory) Serial << "Delete: PixelArray\n";
+      Delete2DArray(m_Pixels);
     }
     void Clear()
     {
-      for(int x = 0; x < SCREEN_WIDTH; ++x)
+      for(int x = 0; x <= m_W-1; ++x)
       {
-        for(int y = 0; y < SCREEN_HEIGHT; ++y)
+        for(int y = 0; y <= m_H-1; ++y)
         {
-          Pixel[x][y] = CRGB::Black;
+          m_Pixels[x][y] = CRGB::Black;
         }
       }
     }
+    void SetPosition(position x, position y)
+    {
+      m_X = x;
+      m_Y = y;
+    }
+    CRGB GetPixel(position x, position y)
+    {
+      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
+      {
+        return m_Pixels[x - m_X][y - m_Y];
+      }
+      else
+      {
+        return CRGB::Black;
+      }
+    }
+    void SetPixel(position x, position y, CRGB value)
+    {
+      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
+      {
+        m_Pixels[x - m_X][y - m_Y] = value;
+      }
+    }
+    void operator = (PixelArray &pa)
+    {
+      m_X = pa.GetX();
+      m_Y = pa.GetY();
+      m_W = pa.GetWidth();
+      m_H = pa.GetHeight();
+      for(position x = m_X; x <= m_X + m_W - 1; ++x)
+      {
+        for(position y = m_Y; y <= m_Y + m_H - 1; ++y)
+        {
+          m_Pixels[x][y] = pa.GetPixel(x, y);
+        }
+      }
+    }
+    size GetWidth(){ return m_W; }
+    size GetHeight(){ return m_H; }
+    position GetX(){ return m_X; }
+    position GetY(){ return m_Y; }
+  private:
+    CRGB** m_Pixels;
+    position m_X = 0;
+    position m_Y = 0;
+    size m_W = 0;
+    size m_H = 0;
+    
+    template <typename T>
+    T** Create2DArray(unsigned nrows, unsigned ncols, const T& val = T())
+    {
+       T** ptr = NULL;
+       T* pool = NULL;
+    
+       ptr = new T*[nrows];  // allocate pointers (can throw here)
+       pool = new T[nrows*ncols]{val};  // allocate pool (can throw here)
+       for (unsigned i = 0; i < nrows; ++i, pool += ncols )
+           ptr[i] = pool;
+
+       return ptr;
+    }
+    
+    template <typename T>
+    void Delete2DArray(T** arr)
+    {
+      delete [] arr[0];  // remove the pool
+      delete [] arr;     // remove the pointers 
+    }
 };
+
 class LEDController
 {
   public:
     LEDController()
     {
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP1, GRB>(m_LEDStrip[0], NUMLEDS);
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP2, GRB>(m_LEDStrip[1], NUMLEDS);
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP3, GRB>(m_LEDStrip[2], NUMLEDS);
-      FastLED.addLeds<WS2812, DATA_PIN_STRIP4, GRB>(m_LEDStrip[3], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP1, GRB>(m_LEDStrip[0], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP2, GRB>(m_LEDStrip[1], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP3, GRB>(m_LEDStrip[2], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP4, GRB>(m_LEDStrip[3], NUMLEDS);
       FastLED.setBrightness(255);
     }
     void Setup()
     {
-      
     }
-    void UpdateLEDs(PixelStruct &pixelStruct)
+    void UpdateLEDs(PixelArray *pixelArray)
     {
       if(true == debugLEDs) Serial << "******LED Controller LEDs******\n";
       for(int y = 0; y < SCREEN_HEIGHT; ++ y)
       {
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
-          CRGB bufColor = pixelStruct.Pixel[x][y];
-          m_LEDStrip[x][y].red =(byte)dim8_raw(bufColor.red);
-          m_LEDStrip[x][y].green = (byte)dim8_raw(bufColor.green);
-          m_LEDStrip[x][y].blue = (byte)dim8_raw(bufColor.blue);
+          CRGB bufColor = pixelArray->GetPixel(x, y);
+          if(bufColor.red <= 1) bufColor.red = 0;
+          if(bufColor.green <= 1) bufColor.green = 0;
+          if(bufColor.blue <= 1) bufColor.blue = 0;
+          m_LEDStrip[x][y].red = bufColor.red; //(byte)dim8_raw(bufColor.red);
+          m_LEDStrip[x][y].green = bufColor.green; //(byte)dim8_raw(bufColor.green);
+          m_LEDStrip[x][y].blue = bufColor.blue; //(byte)dim8_raw(bufColor.blue);
           if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";

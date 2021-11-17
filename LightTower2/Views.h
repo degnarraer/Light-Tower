@@ -19,8 +19,6 @@
 #ifndef Views_H
 #define Views_H
 
-
-#include <assert.h>
 #include "LEDControllerInterface.h"
 #include "TaskInterface.h"
 #include "Streaming.h"
@@ -28,16 +26,16 @@
 #include "Models.h"
 #include <LinkedList.h>
 
-
-
-typedef int position;
-typedef int size;
-
-
 enum MergeType
 {
   MergeType_Layer,
-  MergeType_Add
+  MergeType_Add,
+  MergeType_Swap
+};
+enum RotationType
+{
+  RotationType_Rotate,
+  RotationType_Scroll
 };
 
 enum Direction
@@ -55,75 +53,127 @@ class View: public Task
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
-                                                              , m_H(H){}
+                                                              , m_H(H)
+    {
+      if(true == debugMemory) Serial << "New: View\n";
+    }
     View(String Title, position X, position Y, size W, size H, MergeType MergeType): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
                                                               , m_H(H)
-                                                              , m_MergeType(MergeType){}
+                                                              , m_MergeType(MergeType)
+    {
+      if(true == debugMemory) Serial << "New: View\n";
+    }
     virtual ~View()
     {
-      if(true == debugMode && debugLevel >= 1) Serial << "Delete View\n";
+      if(true == debugMemory) Serial << "Delete: View\n";
+      delete m_PixelArray;
     }
-    void SetPosition(position X, position Y){ m_X = X; m_Y = Y; }
-    void SetSize(size W, size H){ m_W = W; m_H = H; }
-    void AddSubView(View &SubView)
-    { 
-      m_SubViews.add(&SubView);
-      AddTask(SubView);
-    }
-    bool RemoveSubView(View &SubView)
-    {
-      bool viewFound = false;
-      for(int i = 0; i < m_SubViews.size(); ++i)
-      {
-        if(m_SubViews.get(i) == &SubView)
-        {
-          viewFound = true;
-          m_SubViews.remove(i);
-          break;
-        }
-      }
-      if(true == viewFound)
-      {
-        if(true == debugTasks || true == debugMemory) Serial << "View Successfully Removed Subview.\n";
-        return true;
-      }
-      else
-      {
-        if(true == debugTasks || true == debugMemory) Serial << "View failed to Remove Subview.\n";
-        return false;
-      }
-    }
-    MergeType GetMergeType(){ return m_MergeType; }
+    void SetPosition(position X, position Y);
+    void SetSize(size W, size H);
+    void AddSubView(View &subView);
+    void AddSubView(View &subView, bool clearViewBeforeMerge);
+    void AddSubView(View &subView, bool clearViewBeforeMerge, position x, position y, size width, size height );
+    CRGB GetPixel(int X, int Y);
+    bool RemoveSubView(View &SubView);
+    MergeType GetMergeType();
+    PixelArray* GetPixelArray();
     void RemoveAllSubViews(){}
-    PixelStruct& GetPixelStruct() { return m_MyPixelStruct; }
+    
+    //Task
+    virtual void Setup();
+    virtual void RunMyPreTask();
+    virtual bool CanRunMyScheduledTask();
+    virtual void RunMyScheduledTask();
+    virtual void RunMyPostTask();
   protected:
-    PixelStruct m_MyPixelStruct;
+    PixelArray *m_PixelArray;
     position m_X;
     position m_Y;
     size m_W;
     size m_H;
-  private:
-    LinkedList<View*> m_SubViews = LinkedList<View*>();
-    View *m_ParentView;
-    MergeType m_MergeType = MergeType_Layer;
-    
-    //Task
-    void Setup();
-    bool CanRunMyTask(){ return CanRunViewTask(); }
-    void RunMyTask()
+    struct SubViewClearStruct
     {
-      MergeSubViews();
-      RunViewTask();
-    }
-
-    //View
+      View* SubView = NULL;
+      bool ClearViewBeforeMerge = false;
+      bool SpecifiedClearArea = false;
+      position X_To_Clear = 0;
+      position Y_To_Clear = 0;
+      size W_To_Clear = 0;
+      size H_To_Clear = 0;
+    };
+    LinkedList<SubViewClearStruct> m_SubViewClearStructs  = LinkedList<SubViewClearStruct>();
     void MergeSubViews();
-    virtual void SetupView() = 0;
-    virtual bool CanRunViewTask() = 0;
-    virtual void RunViewTask() = 0;
+    CRGB FadeColor(CRGB color, float scalar)
+    {
+      byte fadeAmount = (byte)(scalar*255);
+      if(fadeAmount > 255) fadeAmount = 255;
+      fadeAmount = 255 - fadeAmount;
+      return color.fadeLightBy(fadeAmount);
+    }
+  
+  private:
+    MergeType m_MergeType = MergeType_Layer;
+    //View
+    virtual void SetupMyView() = 0;
+    virtual void RunMyViewPreTask() = 0;
+    virtual bool CanRunMyViewScheduledTask() = 0;
+    virtual void RunMyViewScheduledTask() = 0;
+    virtual void RunMyViewPostTask() = 0;
+};
+
+class SubView: public View
+{
+  public:
+    SubView( String title
+           , bool clearBeforeMergeSubViews
+           , position x
+           , position y
+           , size w
+           , size h )
+           : View(title, x, y, w, h)
+           , m_ClearBeforeMergingSubViews(clearBeforeMergeSubViews)
+    {
+      if(true == debugMemory) Serial << "New: SubView\n";
+    }
+    SubView( String title
+           , bool clearBeforeMergeSubViews
+           , position x
+           , position y
+           , size w
+           , size h
+           , MergeType mergeType)
+           : View(title, x, y, w, h, mergeType)
+           , m_ClearBeforeMergingSubViews(clearBeforeMergeSubViews)
+    {
+      if(true == debugMemory) Serial << "New: SubView\n";
+    }
+    virtual ~SubView()
+    {
+      if(true == debugMemory) Serial << "Delete: SubView\n";  
+    }
+    virtual bool CanRunMyScheduledTask() override
+    {
+      if(true == m_ClearBeforeMergingSubViews)
+      {
+        m_PixelArray->Clear();
+      }
+      return View::CanRunMyScheduledTask();
+    }
+  private:
+    bool m_ClearBeforeMergingSubViews = true;
+    
+    //View
+    void SetupMyView(){}
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask()
+    {
+      return true;
+    }
+    void RunMyViewScheduledTask(){}
+    void RunMyViewPostTask(){}
 };
 
 class VerticalBarView: public View
@@ -133,17 +183,26 @@ class VerticalBarView: public View
 {
   public:
     VerticalBarView(String title): View(title, 0, 0, 0, 0)
-                                 , ModelWithNewValueNotification<Position>(title){}
+                                 , ModelWithNewValueNotification<Position>(title)
+    {
+      if(true == debugMemory) Serial << "New: VerticalBarView\n";
+    }
     VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H)
-                                                                         , ModelWithNewValueNotification<Position>(title){}
+                                                                         , ModelWithNewValueNotification<Position>(title)
+    {
+      if(true == debugMemory) Serial << "New: VerticalBarView\n";
+    }
     VerticalBarView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
-                                                                                              , ModelWithNewValueNotification<Position>(title){}
+                                                                                              , ModelWithNewValueNotification<Position>(title)
+    {
+      if(true == debugMemory) Serial << "New: VerticalBarView\n";
+    }
     virtual ~VerticalBarView()
     {
-      if(true == debugMemory) Serial << "Delete VerticalBarView\n";  
+      if(true == debugMemory) Serial << "Delete: VerticalBarView\n";  
     }
-    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
-    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectBarHeightModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this, ""); }
+    void ConnectBarColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this, ""); }
   private:
     CRGB m_Color = CRGB::Green;
     float m_HeightScalar;
@@ -151,48 +210,118 @@ class VerticalBarView: public View
     Position m_Peak;
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float value) { m_HeightScalar = value; }
-    void NewValueNotification(CRGB value) { m_Color = value; }
+    void NewValueNotification(float value, String context);
+    void NewValueNotification(CRGB value, String context);
     
   private:
     //View
-    void SetupView() {}
-    bool CanRunViewTask() { return true; }
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
 
     //Model
-    void SetupModel(){}
-    bool CanRunModelTask(){ return true;}
-    void RunModelTask()
-    {
-      m_Peak.X = m_X;
-      m_Peak.Y = m_ScaledHeight;
-    }
-    void UpdateValue(){ SetCurrentValue(m_Peak); }
+    void SetupModel();
+    bool CanRunModelTask();
+    void RunModelTask();
+    void UpdateValue();
 };
 
 class BassSpriteView: public View
+                    , public ModelEventNotificationCallee<CRGB>
                     , public ModelEventNotificationCallee<float>
+                    , public ModelEventNotificationCallee<Position>
 {
   public:
-    BassSpriteView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H){}
-    BassSpriteView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType){}
+    BassSpriteView( String title
+                  , position x
+                  , position y
+                  , int minWidth
+                  , int maxWidth
+                  , int minHeight
+                  , int maxHeight
+                  , CRGB color
+                  , CRGB centerColor
+                  , bool showCenterX
+                  , bool showCenterY )
+                  : View(title, x, y, maxWidth*2+1, maxHeight*2+1)
+                  , m_MinWidth(minWidth)
+                  , m_MaxWidth(maxWidth)
+                  , m_MinHeight(minHeight)
+                  , m_MaxHeight(maxHeight)
+                  , m_MyColor(color)
+                  , m_MyCenterColor(centerColor)
+                  , m_ShowCenterX(showCenterX)
+                  , m_ShowCenterY(showCenterY)
+    {
+      if(true == debugMemory) Serial << "New: BassSpriteView\n";
+    }
+    BassSpriteView( String title
+                  , position x
+                  , position y
+                  , int minWidth
+                  , int maxWidth
+                  , int minHeight
+                  , int maxHeight
+                  , CRGB color
+                  , CRGB centerColor
+                  , bool showCenterX
+                  , bool showCenterY 
+                  , MergeType mergeType)
+                  : View(title, x, y, maxWidth*2+1, maxHeight*2+1, mergeType)
+                  , m_MinWidth(minWidth)
+                  , m_MaxWidth(maxWidth)
+                  , m_MinHeight(minHeight)
+                  , m_MaxHeight(maxHeight)
+                  , m_MyColor(color)
+                  , m_MyCenterColor(centerColor)
+                  , m_ShowCenterX(showCenterX)
+                  , m_ShowCenterY(showCenterY)
+    {
+      if(true == debugMemory) Serial << "New: BassSpriteView\n";
+    }
     virtual ~BassSpriteView()
     {
-      if(true == debugMemory) Serial << "Delete BassSpriteView\n";  
+      if(true == debugMemory) Serial << "Delete: BassSpriteView\n";  
     }
-    void ConnectModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this); }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this, ""); }
+    void ConnectPowerModel(ModelEventNotificationCaller<float> &caller) { caller.RegisterForNotification(*this, ""); }
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Position"); }
+    void ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "X"); }
+    void ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller){ caller.RegisterForNotification(*this, "Y"); }
 
     //ModelEventNotificationCallee
-    void NewValueNotification(float Value);
+    void NewValueNotification(CRGB value, String context);
+    void NewValueNotification(float value, String context);
+    void NewValueNotification(Position value, String context);
     
   private:
     //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask(){}
+    CRGB m_MyColor = CRGB::Black;
+    CRGB m_MyCenterColor = CRGB::Black;
+    bool m_ShowCenterX;
+    bool m_ShowCenterY;
+    float m_Scaler = 0;
+    position m_CenterY = 0;
+    position m_CenterX = 0;
+    position m_BottomY = 0;
+    position m_BottomX = 0;
+    position m_TopY = 0;
+    position m_TopX = 0;
+    int m_MinHeight = 1;
+    int m_MaxHeight = 1;
+    int m_CurrentHeight = 1;
+    int m_MinWidth = 1;
+    int m_MaxWidth = 1;
+    int m_CurrentWidth = 1;
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
+    void SetPosition(position x, position y, String context);
 };
-
 
 enum ScrollDirection
 {
@@ -211,7 +340,10 @@ class ScrollingView: public View
                  , size W
                  , size H)
                  : View(title, X, Y, W, H)
-                 , m_ScrollDirection(scrollDirection){}
+                 , m_ScrollDirection(scrollDirection)
+    {
+      if(true == debugMemory) Serial << "New: ScrollingView\n";  
+    }
     ScrollingView( String title
                  , ScrollDirection scrollDirection
                  , position X
@@ -220,17 +352,22 @@ class ScrollingView: public View
                  , size H
                  , MergeType MergeType)
                  : View(title, X, Y, W, H, MergeType)
-                 , m_ScrollDirection(scrollDirection){}
+                 , m_ScrollDirection(scrollDirection)
+    {
+      if(true == debugMemory) Serial << "New: ScrollingView\n";  
+    }
     virtual ~ScrollingView()
     {
-      if(true == debugMemory) Serial << "Delete ScrollingView\n";  
+      if(true == debugMemory) Serial << "Delete: ScrollingView\n";  
     }
     
   private:
     //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask();
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
     enum ScrollDirection m_ScrollDirection = ScrollDirection_Up;
 };
 
@@ -238,55 +375,72 @@ class ScrollingView: public View
 class ColorSpriteView: public View
                      , public ModelEventNotificationCallee<CRGB>
                      , public ModelEventNotificationCallee<Position>
+                     , public ModelEventNotificationCallee<BandData>
 {
   public:
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W, size H)
-                   : View(title, X, Y, W, H){}
+                   , position x
+                   , position y
+                   , size w
+                   , size h)
+                   : View(title, x, y, w, h)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W
-                   , size H
+                   , position x
+                   , position y
+                   , size w
+                   , size h
                    , CRGB Color)
-                   : View(title, X, Y, W, H)
-                   , m_MyColor(Color){}
+                   : View(title, x, y, w, h)
+                   , m_MyColor(Color)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W
-                   , size H
+                   , position x
+                   , position y
+                   , size w
+                   , size h
                    , CRGB Color
                    , MergeType MergeType)
-                   : View(title, X, Y, W, H, MergeType)
-                   , m_MyColor(Color){}
+                   : View(title, x, y, w, h, MergeType)
+                   , m_MyColor(Color)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
     ColorSpriteView( String title
-                   , position X
-                   , position Y
-                   , size W
-                   , size H
+                   , position x
+                   , position y
+                   , size w
+                   , size h
                    , MergeType MergeType)
-                   : View(title, X, Y, W, H, MergeType){}
-    virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete ColorSpriteView\n"; }
-    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller) { caller.RegisterForNotification(*this); }
-    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller) { caller.RegisterForNotification(*this); }
+                   : View(title, x, y, w, h, MergeType)
+    {
+      if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
+    }
+    virtual ~ColorSpriteView() { if(true == debugMemory) Serial << "Delete: ColorSpriteView\n"; }
+    void ConnectColorModel(ModelEventNotificationCaller<CRGB> &caller);
+    void ConnectPositionModel(ModelEventNotificationCaller<Position> &caller);
+    void ConnectXPositionModel(ModelEventNotificationCaller<Position> &caller);
+    void ConnectYPositionModel(ModelEventNotificationCaller<Position> &caller);
+    void ConnectBandPowerModel(ModelEventNotificationCaller<BandData> &caller);
     
     //ModelEventNotificationCallee
-    void NewValueNotification(CRGB value) { m_MyColor = value; }
-    void NewValueNotification(Position value) 
-    { 
-      m_X = value.X;
-      m_Y = value.Y;
-    }
+    void NewValueNotification(CRGB value, String context);
+    void NewValueNotification(Position value, String context);
+    void NewValueNotification(BandData value, String context);
     
   private:
-    //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask();
     CRGB m_MyColor = CRGB::Black;
+    
+    //View
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
 };
 
 class FadingView: public View
@@ -295,79 +449,46 @@ class FadingView: public View
     FadingView( String title
               , unsigned int FadeLength
               , Direction Direction
-              , position X
-              , position Y
-              , size W
-              , size H)
-              : View(title, X, Y, W, H)
+              , position x
+              , position y
+              , size w
+              , size h)
+              : View(title, x, y, w, h)
               , m_FadeLength(FadeLength)
-              , m_Direction(Direction){}
+              , m_Direction(Direction)
+    {
+      if(true == debugMemory) Serial << "New: FadingView\n";  
+    }
     FadingView( String title
               , unsigned int FadeLength
               , Direction Direction
-              , position X
-              , position Y
-              , size W
-              , size H
+              , position x
+              , position y
+              , size w
+              , size h
               , MergeType MergeType)
-              : View(title, X, Y, W, H, MergeType)
+              : View(title, x, y, w, h, MergeType)
               , m_FadeLength(FadeLength)
-              , m_Direction(Direction){}
+              , m_Direction(Direction)
+    {
+      if(true == debugMemory) Serial << "New: FadingView\n";  
+    }
     virtual ~FadingView()
     {
-      if(true == debugMemory) Serial << "Delete FadingView\n";  
+      if(true == debugMemory) Serial << "Delete: FadingView\n";  
     }
     
   private:
-    //View
-    void SetupView(){}
-    bool CanRunViewTask(){ return true; }
-    void RunViewTask()
-    {
-      if(m_FadeLength > 0)
-      {
-        switch(m_Direction)
-        {
-          case Direction_Up:
-            for(int x = 0; x < SCREEN_WIDTH; ++x)
-            {
-              for(int y = 0; y < SCREEN_HEIGHT; ++y)
-              {
-                if((x >= m_X) && (x < (m_X + m_W)) && (y > m_Y) && (y < (m_Y + m_H)))
-                {
-                  PerformFade(x, y, y);
-                }
-              }
-            }
-            break;
-          case Direction_Down:
-            for(unsigned int x = 0; x < SCREEN_WIDTH; ++x)
-            {
-              unsigned int index = 0;
-              for(unsigned int y = SCREEN_HEIGHT-1; y > 0; --y)
-              {
-                if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H - 1)))
-                {
-                  PerformFade(x, y, index);
-                }
-                ++index;
-              }
-            }
-            break;
-          default:
-          break;
-        }
-      }
-    }
-    void PerformFade(unsigned int x, unsigned int y, unsigned int i)
-    {
-      float normalizedFade = 1.0 - ((float)i / (float)m_FadeLength);
-      m_MyPixelStruct.Pixel[x][y].red = m_MyPixelStruct.Pixel[x][y].red * normalizedFade;
-      m_MyPixelStruct.Pixel[x][y].green = m_MyPixelStruct.Pixel[x][y].green * normalizedFade;
-      m_MyPixelStruct.Pixel[x][y].blue = m_MyPixelStruct.Pixel[x][y].blue * normalizedFade;
-    }
     Direction m_Direction = Direction_Down;
     unsigned int m_FadeLength = 0;
+    void PerformFade(unsigned int x, unsigned int y, unsigned int i);
+
+    //View
+    void SetupMyView();
+    void RunMyViewPreTask(){}
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
 };
 
 class RotatingView: public View
@@ -375,87 +496,57 @@ class RotatingView: public View
   public:
     RotatingView( String title
                 , Direction Direction
+                , unsigned int updatePeriodMillis
+                , RotationType rotationType
                 , position X
                 , position Y
                 , size W
                 , size H)
                 : View(title, X, Y, W, H)
-                , m_Direction(Direction){}
+                , m_Direction(Direction)
+                , m_updatePeriodMillis(updatePeriodMillis)
+                , m_RotationType(rotationType)
+    {
+      if(true == debugMemory) Serial << "New: RotatingView\n";  
+    }
     RotatingView( String title
                 , Direction Direction
+                , unsigned int updatePeriodMillis
+                , RotationType rotationType
                 , position X
                 , position Y
                 , size W
                 , size H
                 , MergeType MergeType)
                 : View(title, X, Y, W, H, MergeType)
-                , m_Direction(Direction){}
+                , m_Direction(Direction)
+                , m_updatePeriodMillis(updatePeriodMillis)
+                , m_RotationType(rotationType)
+    {
+      if(true == debugMemory) Serial << "New: RotatingView\n";  
+    }
     virtual ~RotatingView()
     {
-      if(true == debugMemory) Serial << "Delete RotatingView\n";  
+      if(true == debugMemory) Serial << "Delete: RotatingView\n";
+      delete m_ResultingPixelArray; 
     }
     
   private:
-    //View
-    void SetupView(){}
-    bool CanRunViewTask()
-    { 
-      //m_MyPixelStruct.Clear(); 
-      return true; 
-    }
-    void RunViewTask()
-    {
-      ++m_Count;
-      for(int x = 0; x < SCREEN_WIDTH; ++x)
-      {
-        for(int y = 0; y < SCREEN_HEIGHT; ++y)
-        {
-          if((x >= m_X) && (x < (m_X + m_W)) && (y >= m_Y) && (y < (m_Y + m_H)))
-          {
-            switch(m_Direction)
-            {
-              case Direction_Up:
-              {
-                unsigned int rotation = m_Count % m_H;
-                int source = y-rotation;
-                if(source < m_Y) { source = m_H - (rotation - y); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[x][source];
-              }
-              break;
-              case Direction_Down:
-              {
-                unsigned int rotation = m_Count % m_H;
-                int source = y+rotation;
-                if(source >= m_Y + m_H) { source = m_Y - (m_H - (y + rotation)); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[x][source];
-              }
-              break;
-              case Direction_Right:
-              {
-                unsigned int rotation = m_Count % m_W;
-                int source = x+rotation;
-                if(source >= m_X + m_W) { source = m_X - (m_W - (x + rotation)); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[source][y];
-              }
-              break;
-              case Direction_Left:
-              {
-                unsigned int rotation = m_Count % m_W;
-                int source = x-rotation;
-                if(source < m_X) { source = m_W - (rotation - x); }
-                m_ResultingPixels.Pixel[x][y] = m_MyPixelStruct.Pixel[source][y];
-              }
-              break;
-              default:
-              break;
-            }
-          }
-        }
-      }
-      m_MyPixelStruct = m_ResultingPixels;
-    }
-    PixelStruct m_ResultingPixels;
+    unsigned long m_startMillis;
+    unsigned long m_currentMillis;
+    unsigned int m_updatePeriodMillis;
+    unsigned long m_lapsedTime;
+    PixelArray *m_ResultingPixelArray;
     Direction m_Direction = Direction_Right;
+    RotationType m_RotationType = RotationType_Rotate;
     unsigned int m_Count = 0;
+    //View
+    void SetupMyView();
+    void RunMyViewPreTask();
+    bool CanRunMyViewScheduledTask();
+    void RunMyViewScheduledTask();
+    void RunMyViewPostTask(){}
+    void ScrollView();
+    void RotateView();
 };
 #endif
