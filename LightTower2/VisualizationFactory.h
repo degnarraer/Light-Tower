@@ -856,4 +856,95 @@ class PowerPerBinTower: public Visualization
     void RunVisualization() {}
   private:
 };
+
+//********* Rotating 4 Sprites View *********
+class Rotating4Sprites: public Visualization
+{
+  public:
+    Rotating4Sprites( StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+      : Visualization( StatisticalEngineModelInterface, LEDController) {
+      if (true == debugMemory) Serial << "New: Rotating4Sprites\n";
+    }
+    virtual ~Rotating4Sprites() {
+      if (true == debugMemory) Serial << "Deleted: Rotating4Sprites\n";
+    }
+
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+    {
+      if (true == debugMemory) Serial << "Rotating4Sprites: Get Instance\n";
+      Rotating4Sprites *vis = new Rotating4Sprites(StatisticalEngineModelInterface, LEDController);
+      return vis;
+    }
+    void SetupVisualization()
+    {
+      AddView(m_RotateView0, true);
+      
+      m_RotateView0.AddSubView(m_RotateView1, true, 0, 0, SCREEN_WIDTH, 1);
+      
+      m_RotateView1.AddSubView(m_Sprite0, false);
+      m_RotateView1.AddSubView(m_Sprite1, false);
+      m_RotateView1.AddSubView(m_Sprite2, false);
+      m_RotateView1.AddSubView(m_Sprite3, true);
+
+      AddModel(m_BandPower0);
+      AddModel(m_BandPower1);
+      AddModel(m_BandPower2);
+      AddModel(m_BandPower3);
+      
+      AddModel(m_ColorModel0);
+      AddModel(m_ColorModel1);
+      AddModel(m_ColorModel2);
+      AddModel(m_ColorModel3);
+      
+      AddModel(m_PowerColorModel0);
+      AddModel(m_PowerColorModel1);
+      AddModel(m_PowerColorModel2);
+      AddModel(m_PowerColorModel3);
+      
+      m_PowerColorModel0.ConnectColorModel(m_ColorModel0);
+      m_PowerColorModel1.ConnectColorModel(m_ColorModel1);
+      m_PowerColorModel2.ConnectColorModel(m_ColorModel2);
+      m_PowerColorModel3.ConnectColorModel(m_ColorModel3);
+      
+      m_PowerColorModel0.ConnectPowerModel(m_BandPower0);
+      m_PowerColorModel1.ConnectPowerModel(m_BandPower1);
+      m_PowerColorModel2.ConnectPowerModel(m_BandPower2);
+      m_PowerColorModel3.ConnectPowerModel(m_BandPower3);
+      
+      m_Sprite0.ConnectColorModel(m_PowerColorModel0);
+      m_Sprite1.ConnectColorModel(m_PowerColorModel1);
+      m_Sprite2.ConnectColorModel(m_PowerColorModel2);
+      m_Sprite3.ConnectColorModel(m_PowerColorModel3);
+    }
+    bool CanRunVisualization() {
+      return true;
+    }
+    void RunVisualization() {}
+  private:
+    RotatingView m_RotateView0 = RotatingView("Rotating View 0", Direction_Up, 0, RotationType_Scroll, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    RotatingView m_RotateView1 = RotatingView("Rotating View 1", Direction_Left, 100, RotationType_Rotate, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, MergeType_Layer);
+    
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite 0", 0, 0, 1, 1, MergeType_Layer);
+    ColorSpriteView m_Sprite1 = ColorSpriteView("Sprite 1", 1, 0, 1, 1, MergeType_Layer);
+    ColorSpriteView m_Sprite2 = ColorSpriteView("Sprite 2", 2, 0, 1, 1, MergeType_Layer);
+    ColorSpriteView m_Sprite3 = ColorSpriteView("Sprite 3", 3, 0, 1, 1, MergeType_Layer);
+    
+    ReducedBandsBandPowerModel m_BandPower0 = ReducedBandsBandPowerModel("Sound Power Model 0", 0, 0, 4, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower1 = ReducedBandsBandPowerModel("Sound Power Model 1", 1, 0, 4, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower2 = ReducedBandsBandPowerModel("Sound Power Model 2", 2, 0, 4, m_StatisticalEngineModelInterface);
+    ReducedBandsBandPowerModel m_BandPower3 = ReducedBandsBandPowerModel("Sound Power Model 3", 3, 0, 4, m_StatisticalEngineModelInterface);
+    
+    RainbowColorModel m_ColorModel0 = RainbowColorModel("Rainbow Color Model", 1, 4);
+    RainbowColorModel m_ColorModel1 = RainbowColorModel("Rainbow Color Model", 2, 4);
+    RainbowColorModel m_ColorModel2 = RainbowColorModel("Rainbow Color Model", 3, 4);
+    RainbowColorModel m_ColorModel3 = RainbowColorModel("Rainbow Color Model", 4, 4);
+    
+    SettableColorPowerModel m_PowerColorModel0 = SettableColorPowerModel("Settable Power Model 0");
+    SettableColorPowerModel m_PowerColorModel1 = SettableColorPowerModel("Settable Power Model 1");
+    SettableColorPowerModel m_PowerColorModel2 = SettableColorPowerModel("Settable Power Model 2");
+    SettableColorPowerModel m_PowerColorModel3 = SettableColorPowerModel("Settable Power Model 3");
+};
+
+
 #endif

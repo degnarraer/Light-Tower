@@ -183,7 +183,7 @@ void VerticalBarView::NewValueNotification(CRGB value, String context) { m_Color
 void VerticalBarView::SetupModel()
 {
   m_Peak.X = m_X;
-  m_Peak.Y = m_ScaledHeight - 1;
+  m_Peak.Y = m_ScaledHeight;
 }
 bool VerticalBarView::CanRunModelTask()
 {
@@ -192,7 +192,7 @@ bool VerticalBarView::CanRunModelTask()
 void VerticalBarView::RunModelTask()
 {
   m_Peak.X = m_X;
-  m_Peak.Y = m_ScaledHeight - 1;
+  m_Peak.Y = m_ScaledHeight;
 }
 void VerticalBarView::UpdateValue()
 { 
