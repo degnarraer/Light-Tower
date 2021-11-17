@@ -203,9 +203,9 @@ void RandomColorFadingModel::StartFadingNextColor()
 }
 void RandomColorFadingModel::SetupModel()
 {
-  m_CurrentColor = m_StartColor = GetRandomNonGrayColor();
+  m_StartColor = GetRandomNonGrayColor();
   m_EndColor = GetRandomNonGrayColor();
-  m_CurrentTime = m_StartTime = millis();
+  m_StartTime = millis();
 }
 bool RandomColorFadingModel::CanRunModelTask()
 { 
@@ -261,7 +261,6 @@ void ColorFadingModel::NewValueNotification(BandData value, String context)
 void ColorFadingModel::SetupModel()
 {
   m_StartColor = CRGB::Black;
-  m_CurrentColor = CRGB::Black;
   m_EndColor = CRGB::Black;
 }
 bool ColorFadingModel::CanRunModelTask()

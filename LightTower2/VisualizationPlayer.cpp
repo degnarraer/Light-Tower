@@ -35,13 +35,13 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBassSpriteTower::GetInstance);
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
-  m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
+
 
   bool testVisualization = false;
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = Rotating4Sprites::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = WaterFireFromEdge::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }
