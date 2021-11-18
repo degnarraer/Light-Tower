@@ -19,8 +19,13 @@
 #ifndef I2S_Device_H
 #define I2S_Device_H 
 
+//BUFFER SIZING
 #define SAMPLE_SIZE (m_BitsPerSample/8)
 #define BYTES_TO_READ SAMPLE_SIZE * m_BufferSize
+
+//DEBUGGING
+#define DEBUG_DATA true
+#define DEBUG_QUEUE false
 
 #include "Task.h"
 #include "driver/i2s.h"
@@ -60,21 +65,13 @@ class I2S_Device: public Task
               , int SerialDataOutPin );
     virtual ~I2S_Device()
     {
-      delete m_Buffer;
-      delete m_LeftChannel_Buffer;
-      delete m_RightChannel_Buffer;
+
     }
-    const String MicrophoneNotification = "Microphone";
-    const String SpeakerNotification = "Speaker";
+    const String MicrophoneNotification = "MicDataReady";
+    const String SpeakerNotification = "SpkrDataSent";
     
     void StartDevice();
     void StopDevice();
-    SampledData_t GetMicrophoneData() { return {m_Buffer, m_BufferSize}; }
-    void SetSpeakerData(SampledData_t sampledData)
-    {
-       m_Buffer = sampledData.Samples;
-       WriteSamples(m_Buffer);
-    }
     
     //Task Interface
     void Setup();
@@ -95,10 +92,7 @@ class I2S_Device: public Task
     const int m_SerialDataOutPin;
     const i2s_port_t m_I2S_PORT;
     QueueHandle_t m_i2s_event_queue = NULL;
-    int32_t *m_Buffer;
-    int32_t *m_LeftChannel_Buffer;
-    int32_t *m_RightChannel_Buffer;
-    int ReadSamples(int32_t *samples);
+    int ReadSamples();
     int WriteSamples(int32_t *samples);
     void InstallDevice();
     void ProcessEventQueue();

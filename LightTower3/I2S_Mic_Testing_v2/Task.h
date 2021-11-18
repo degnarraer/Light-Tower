@@ -56,8 +56,8 @@ class Task
     virtual void RunMyTask() = 0;
   protected:
     TaskScheduler m_Scheduler;
-  private:
     DataManager &m_DataManager;
+  private:
     bool m_IsSetup = false;
     String m_Title;
     void SetTaskTitle(String title) { m_Title = title; } 

@@ -61,9 +61,7 @@ void I2S_Device::StopDevice()
 //Task Interface
 void I2S_Device::Setup()
 {
-  m_Buffer = (int32_t*)malloc(BYTES_TO_READ * 2);
-  m_LeftChannel_Buffer = (int32_t*)malloc(BYTES_TO_READ);
-  m_RightChannel_Buffer = (int32_t*)malloc(BYTES_TO_READ);
+  m_DataManager.SetSoundBufferMemorySize(m_BitsPerSample, m_BufferSize, m_i2s_channel);
 }
 bool I2S_Device::CanRunMyTask()
 { 
@@ -74,32 +72,44 @@ void I2S_Device::RunMyTask()
   ProcessEventQueue();
 }
 
-int I2S_Device::ReadSamples(int32_t *samples)
+int I2S_Device::ReadSamples()
 {
     // read from i2s
     size_t bytes_read = 0;
     size_t bytes_to_read = BYTES_TO_READ * 2;
-    i2s_read(m_I2S_PORT, samples, bytes_to_read, &bytes_read, portMAX_DELAY);
+    int32_t *SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize * m_i2s_channel);
+    int32_t *RightChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize);
+    int32_t *LeftChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize);
+    
+    i2s_read(m_I2S_PORT, SoundBufferData, bytes_to_read, &bytes_read, portMAX_DELAY);
     int samples_to_read = bytes_to_read / (SAMPLE_SIZE * 2);
     int samples_read = bytes_read / (SAMPLE_SIZE * 2);
-    if(samples_read != samples_to_read) Serial.println("Error Reading All Samples");
+    if(samples_read != samples_to_read){if(false == DEBUG_DATA)Serial.println("Error Reading All Samples");}
     for(int i = 0; i < samples_to_read; ++i)
     {
-      m_RightChannel_Buffer[i] = samples[i];
-      m_LeftChannel_Buffer[i] = samples[i+1];
-      /*
-      Serial.print(-100000000);
-      Serial.print(",");
-      Serial.print(100000000);
-      Serial.print(",");
-      Serial.print(m_RightChannel_Buffer[i]);
-      Serial.print(",");
-      Serial.print(m_RightChannel_Buffer[i]);
-      Serial.print(",");
-      Serial.print(m_RightChannel_Buffer[i]);
-      Serial.println();
-      */
+      RightChannel_SoundBufferData[i] = SoundBufferData[i];
+      LeftChannel_SoundBufferData[i] = SoundBufferData[i+1];
     }
+    m_DataManager.SetSoundBufferData(SoundBufferData);
+    m_DataManager.SetRightChannelSoundBufferData(RightChannel_SoundBufferData);
+    m_DataManager.SetLeftChannelSoundBufferData(LeftChannel_SoundBufferData);
+    if(DEBUG_DATA)
+    {
+      for(int i = 0; i < samples_to_read; ++i)
+      {
+        Serial.print(-100000000);
+        Serial.print(",");
+        Serial.print(100000000);
+        Serial.print(",");
+        Serial.print(m_DataManager.GetRightChannelSoundBufferData(i));
+        Serial.print(",");
+        Serial.print(m_DataManager.GetLeftChannelSoundBufferData(i));
+        Serial.println(); 
+      }
+    }
+    delete SoundBufferData;
+    delete RightChannel_SoundBufferData;
+    delete LeftChannel_SoundBufferData;
     return samples_read;
 }
 
@@ -112,7 +122,7 @@ int I2S_Device::WriteSamples(int32_t *samples)
     
     int samples_to_write = bytes_to_write / (m_BitsPerSample/8);
     int samples_written = bytes_written / (m_BitsPerSample/8);
-    if(samples_written != samples_to_write) Serial.println("Error Writting All Samples");
+    if(samples_written != samples_to_write){if(false == DEBUG_DATA)Serial.println("Error Writting All Samples");}
     return samples_written;
 }
 
@@ -146,24 +156,24 @@ void I2S_Device::InstallDevice()
   // This function must be called before any I2S driver read/write operations.
   err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount*2, &m_i2s_event_queue);
   if (err != ESP_OK) {
-    Serial.printf("i2s Driver: Failed installing driver: %d\n", err);
+    if(false == DEBUG_DATA)Serial.printf("i2s Driver: Failed installing driver: %d\n", err);
     while (true);
   }
   if (m_i2s_event_queue == NULL)
   {
-    Serial.println("i2s Driver: Failed to setup event queue.");
+    if(false == DEBUG_DATA)Serial.println("i2s Driver: Failed to setup event queue.");
   }
   err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
   if (err != ESP_OK) {
-    Serial.printf("i2s Driver: Failed setting clock: %d\n", err);
+    if(false == DEBUG_DATA)Serial.printf("i2s Driver: Failed setting clock: %d\n", err);
     while (true);
   }
   err = i2s_set_pin(m_I2S_PORT, &pin_config);
   if (err != ESP_OK) {
-    Serial.printf("i2s Driver: Failed setting pin: %d\n", err);
+    if(false == DEBUG_DATA)Serial.printf("i2s Driver: Failed setting pin: %d\n", err);
     while (true);
   }
-  Serial.println("i2s Driver: Driver Installed."); 
+  if(false == DEBUG_DATA)Serial.println("i2s Driver: Driver Installed."); 
 }
 
 void I2S_Device::ProcessEventQueue()
@@ -171,7 +181,7 @@ void I2S_Device::ProcessEventQueue()
   i2s_event_t i2sEvent = {};
   uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);
       
-  Serial << "Queue: " << i2sMsgCount << "\n";
+  if(DEBUG_QUEUE)Serial << "Queue: " << i2sMsgCount << "\n";
 
   // Iterate over all events in the i2s event queue
   for (uint8_t i = 0; i < i2sMsgCount; i++)
@@ -182,21 +192,21 @@ void I2S_Device::ProcessEventQueue()
           switch (i2sEvent.type)
           {
               case I2S_EVENT_DMA_ERROR:
-                  Serial.println("I2S_EVENT_DMA_ERROR");
+                  if(DEBUG_QUEUE)Serial.println("I2S_EVENT_DMA_ERROR");
                   break;
               case I2S_EVENT_TX_DONE:
-                  //Serial.println("TX COMPLETED");
+                  if(DEBUG_QUEUE)Serial.println("TX COMPLETED");
                   SendNotificationToCallees(SpeakerNotification);
                   break;
               case I2S_EVENT_RX_DONE:
                   {
-                    //Serial.println("RX STARTED");
-                    ReadSamples(m_Buffer);
+                    if(DEBUG_QUEUE)Serial.println("RX STARTED");
+                    ReadSamples();
                     SendNotificationToCallees(MicrophoneNotification);
                   }
                   break;
               case I2S_EVENT_MAX:
-                  Serial.println("I2S_EVENT_MAX");
+                  if(DEBUG_QUEUE)Serial.println("I2S_EVENT_MAX");
                   break;
           }
       }
