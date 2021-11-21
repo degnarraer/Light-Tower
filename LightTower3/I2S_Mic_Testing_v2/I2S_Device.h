@@ -19,13 +19,9 @@
 #ifndef I2S_Device_H
 #define I2S_Device_H 
 
-//BUFFER SIZING
-#define SAMPLE_SIZE (m_BitsPerSample/8)
-#define BYTES_TO_READ SAMPLE_SIZE * m_BufferSize
-
 //DEBUGGING
-#define DEBUG_DATA true
-#define DEBUG_QUEUE false
+#define DEBUG_DATA false
+#define DEBUG_QUEUE true
 
 #include "Task.h"
 #include "driver/i2s.h"
@@ -62,22 +58,25 @@ class I2S_Device: public Task
               , int SerialClockPin
               , int WordSelectPin
               , int SerialDataInPin
-              , int SerialDataOutPin );
-    virtual ~I2S_Device()
-    {
-
-    }
-    const String MicrophoneNotification = "MicDataReady";
-    const String SpeakerNotification = "SpkrDataSent";
+              , int SerialDataOutPin
+              , String Notification_RX
+              , String Notification_TX );
+    virtual ~I2S_Device();
     
     void StartDevice();
     void StopDevice();
+    int32_t* GetSoundBufferData(){return m_SoundBufferData;}
+    int32_t* GetRightSoundBufferData(){return m_RightChannel_SoundBufferData;}
+    int32_t* GetLeftSoundBufferData(){return m_LeftChannel_SoundBufferData;}
     
     //Task Interface
     void Setup();
     bool CanRunMyTask();
     void RunMyTask();
-  private:
+  private:    
+    int32_t *m_SoundBufferData;
+    int32_t *m_LeftChannel_SoundBufferData;
+    int32_t *m_RightChannel_SoundBufferData;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
     const i2s_bits_per_sample_t m_BitsPerSample;
@@ -91,6 +90,8 @@ class I2S_Device: public Task
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
     const i2s_port_t m_I2S_PORT;
+    const String m_Notification_RX;
+    const String m_Notification_TX;
     QueueHandle_t m_i2s_event_queue = NULL;
     int ReadSamples();
     int WriteSamples(int32_t *samples);

@@ -18,37 +18,37 @@
 
 #ifndef I2S_FFT_CALCULATOR_H
 #define I2S_FFT_CALCULATOR_H
+#define FFT_LENGTH 1024
+#define DEBUG_FFT_CALCULATOR false
+#define DEBUG_FFT_CALCULATOR_LOOPS false
+#define DEBUG_FFT_CALCULATOR_INPUTDATA false
+#define DEBUG_FFT_CALCULATOR_OUTPUTDATA false
 
 #include "EventSystem.h"
+#include "Task.h"
+#include <Adafruit_ZeroFFT.h>
 
 class FFT_Calculator: public Task, EventSystemCallee
 {
   public:
-    FFT_Calculator(String Title, DataManager &DataManager): m_DataManager(DataManager)
-                                                            , Task(Title, m_DataManager){}
-    virtual ~FFT_Calculator()
-    {
-    }
-    CalculateFFT()
-    {
-    }
+    FFT_Calculator(String Title, DataManager &DataManager); //
+    virtual ~FFT_Calculator();
 
+    //Task Interface
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
+    
     //EventSystemCallee Interface
-    EventSystemNotification(String context)
-    {
-      if(MicrophoneDataReady == context)
-      {
-        
-      }
-      if(MicrophoneRightDataReady == context)
-      {
-        
-      }
-      if(MicrophoneLeftDataReady == context)
-      {
-        
-      }
-    }
+    void EventSystemNotification(String context);
+    
+  private:
+    int16_t m_FFT_Right_Data[FFT_LENGTH];
+    int32_t m_FFT_Right_Buffer_Data[FFT_LENGTH];
+    int m_FFT_Right_Buffer_Index = 0;
+    int16_t m_FFT_Left_Data[FFT_LENGTH];
+    int32_t m_FFT_Left_Buffer_Data[FFT_LENGTH];
+    int m_FFT_Left_Buffer_Index = 0;
 };
 
 

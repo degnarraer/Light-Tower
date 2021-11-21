@@ -19,52 +19,30 @@
 #ifndef I2S_EventHander_H
 #define I2S_EventHander_H
 
+#define DEBUG_EVENT_HANDLER false
+
 #include "EventSystem.h"
 #include "I2S_Device.h"
 
 class I2S_EventHandler: public Task, EventSystemCallee
 {
   public:
-    I2S_EventHandler(String Title, DataManager &DataManager): m_DataManager(DataManager)
-                                                            , Task(Title, m_DataManager){}
-    virtual ~I2S_EventHandler()
-    {
-      delete m_Mic;
-    }
+    I2S_EventHandler(String Title, DataManager &DataManager);
+    virtual ~I2S_EventHandler();
+    
     //Task
-    void Setup()
-    {
-      m_Mic = new I2S_Device( "Mic"
-                            , m_DataManager
-                            , I2S_NUM_0
-                            , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
-                            , 44100
-                            , I2S_BITS_PER_SAMPLE_32BIT
-                            , I2S_CHANNEL_FMT_RIGHT_LEFT
-                            , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                            , I2S_CHANNEL_STEREO
-                            , 8
-                            , 500
-                            , 12
-                            , 13
-                            , 14
-                            , I2S_PIN_NO_CHANGE );
-      AddTask(*m_Mic);
-      m_Mic->RegisterForEventNotification(this, m_Mic->MicrophoneNotification);
-      m_Mic->StartDevice();
-    }
-    bool CanRunMyTask() { return true; }
-    void RunMyTask(){}
+    void Setup();
+    bool CanRunMyTask();
+    void RunMyTask();
+    
     //Event System Callee
-    void EventSystemNotification(String context)
-    {
-      if(m_Mic->MicrophoneNotification == context)
-      {
-      }
-    }
+    void EventSystemNotification(String context);
+  
   private:
     I2S_Device *m_Mic;
     DataManager &m_DataManager;
+    const String MicrophoneNotificationRX = "MicDataReady";
+    const String MicrophoneNotificationTX = "SpkrDataSent";
 };
 
 #endif
