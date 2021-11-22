@@ -40,9 +40,10 @@ class I2S_EventHandler: public Task, EventSystemCallee
   
   private:
     I2S_Device *m_Mic;
+    I2S_Device *m_Speaker;
     DataManager &m_DataManager;
     const String MicrophoneNotificationRX = "MicDataReady";
-    const String MicrophoneNotificationTX = "SpkrDataSent";
+    const String SpeakerNotificationTX = "SpkrDataSent";
 };
 
 #endif

@@ -4,12 +4,11 @@
 TaskHandle_t Task1; //240 MHz CPU
 TaskHandle_t Task0; //80 MHz CPU
 
-
 DataManager m_DataManager;
-TaskScheduler m_Task0_Scheduler(m_DataManager);
-TaskScheduler m_Task1_Scheduler(m_DataManager);
-I2S_EventHandler m_i2S_EventHandler("Event Handler", m_DataManager);
-FFT_Calculator m_FFT_Calculator("FFT Calculator", m_DataManager);
+TaskScheduler m_Task0_Scheduler("Task_0_Scheduler", m_DataManager);
+TaskScheduler m_Task1_Scheduler("Task_1_Scheduler", m_DataManager);
+I2S_EventHandler m_i2S_EventHandler("Event_Handler", m_DataManager);
+FFT_Calculator m_FFT_Calculator("FFT_Calculator", m_DataManager);
 
 void setup() {
   Serial.begin(500000);

@@ -23,10 +23,6 @@ void Task::AddTask(Task &task)
 {
   m_Scheduler.AddTask(task);
 }
-void Task::AddTasks(LinkedList<Task*> &tasks)
-{
-  m_Scheduler.AddTasks(tasks);
-}
 bool Task::RemoveTask(Task &task)
 {
   m_Scheduler.RemoveTask(task);
@@ -49,18 +45,25 @@ void TaskScheduler::RunScheduler()
 }
 void TaskScheduler::AddTask(Task &task)
 {
-  m_MyTasks.add(&task);
+  bool taskFound = false;
+  for(int i = 0; i < m_MyTasks.size(); ++i)
+  {
+    if(m_MyTasks.get(i) == &task)
+    {
+      taskFound = true;
+      break;
+    }
+  }
+  if(true != taskFound)
+  {
+    if(true == DEBUG_TASKS) Serial << m_Title << ": Adding Task: " << task.GetTaskTitle() << "\n";
+    m_MyTasks.add(&task);
+  }
   if(false == task.GetIsSetup())
   {
+    if(true == DEBUG_TASKS) Serial << m_Title << ": Setting Up Task: " << task.GetTaskTitle() << "\n";
     task.Setup();
     task.SetIsSetup(true);
-  }
-}
-void TaskScheduler::AddTasks(LinkedList<Task*> &tasks)
-{
-  for(int t = 0; t < tasks.size(); ++t)
-  {
-    m_MyTasks.add(tasks.get(t));
   }
 }
 bool TaskScheduler::RemoveTask(Task &task)
@@ -71,6 +74,7 @@ bool TaskScheduler::RemoveTask(Task &task)
     if(m_MyTasks.get(i) == &task)
     {
       taskFound = true;
+      if(true == DEBUG_TASKS) Serial << m_Title << ": Removing Task: " << m_MyTasks.get(i)->GetTaskTitle() << "\n";
       m_MyTasks.remove(i);
       break;
     }

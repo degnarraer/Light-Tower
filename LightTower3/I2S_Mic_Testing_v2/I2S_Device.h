@@ -20,8 +20,9 @@
 #define I2S_Device_H 
 
 //DEBUGGING
-#define DEBUG_DATA false
-#define DEBUG_QUEUE true
+#define DEBUG_DATA_RX false
+#define DEBUG_DATA_TX false
+#define DEBUG_QUEUE false
 
 #include "Task.h"
 #include "driver/i2s.h"
@@ -68,6 +69,16 @@ class I2S_Device: public Task
     int32_t* GetSoundBufferData(){return m_SoundBufferData;}
     int32_t* GetRightSoundBufferData(){return m_RightChannel_SoundBufferData;}
     int32_t* GetLeftSoundBufferData(){return m_LeftChannel_SoundBufferData;}
+    
+    void SetSoundBufferData(int32_t *SoundBufferData)
+    {
+      for(int i = 0; i < m_BufferSize * m_i2s_channel; ++i)
+      {
+        m_SoundBufferData[i] = SoundBufferData[i] * 0.5; //ADD VOLUME HERE
+      }
+      WriteSamples(m_SoundBufferData);
+      if(true == DEBUG_DATA_TX) Serial <<  m_Title << "Sound Buffer Data Ready\n";
+    }
     
     //Task Interface
     void Setup();

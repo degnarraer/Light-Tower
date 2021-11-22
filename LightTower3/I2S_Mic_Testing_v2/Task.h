@@ -19,6 +19,9 @@
 #ifndef Task_H
 #define Task_H
 
+//DEBUGGING
+#define DEBUG_TASKS true
+
 #include <Arduino.h>
 #include <LinkedList.h>
 #include "DataManager.h"
@@ -27,22 +30,23 @@ class Task;
 class TaskScheduler
 {
   public:
-    TaskScheduler(DataManager &dataManager):m_DataManager(dataManager){}
+    TaskScheduler(String Title, DataManager &dataManager): m_DataManager(dataManager)
+                                                         , m_Title(Title){}
     void RunScheduler();
     void AddTask(Task &task);
-    void AddTasks(LinkedList<Task*> &tasks);
     bool RemoveTask(Task &task);
     unsigned int GetTaskCount() { return m_MyTasks.size(); }
   private:
+    const String m_Title;
     DataManager &m_DataManager;
     LinkedList<Task*> m_MyTasks = LinkedList<Task*>();
 };
 class Task
 {
   public:
-    Task(String title, DataManager &DataManager): m_Title(title)
+    Task(String Title, DataManager &DataManager): m_Title(Title)
                                                 , m_DataManager(DataManager)
-                                                , m_Scheduler(TaskScheduler(DataManager)){}
+                                                , m_Scheduler(TaskScheduler(Title+"_Schedular", DataManager)){}
     String GetTaskTitle() { return m_Title; }
     bool GetIsSetup() { return m_IsSetup; }
     bool SetIsSetup(bool IsSetup) { m_IsSetup = IsSetup; }
@@ -57,10 +61,9 @@ class Task
   protected:
     TaskScheduler m_Scheduler;
     DataManager &m_DataManager;
+    const String m_Title;
   private:
-    bool m_IsSetup = false;
-    String m_Title;
-    void SetTaskTitle(String title) { m_Title = title; } 
+    bool m_IsSetup = false; 
 };
 
 #endif

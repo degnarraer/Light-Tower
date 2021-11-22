@@ -28,8 +28,8 @@ I2S_EventHandler::~I2S_EventHandler()
 
 void I2S_EventHandler::Setup()
 {
-  Serial << "Setup Event Handler\n";
-  m_Mic = new I2S_Device( "Mic"
+  if(true == DEBUG_EVENT_HANDLER)Serial << "Setup i2s Event Handler: " << m_Title << "\n";
+  m_Mic = new I2S_Device( "Microphone"
                         , m_DataManager
                         , I2S_NUM_0
                         , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
@@ -39,16 +39,36 @@ void I2S_EventHandler::Setup()
                         , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                         , I2S_CHANNEL_STEREO
                         , 10
-                        , 256
+                        , 128
                         , 12
                         , 13
                         , 14
                         , I2S_PIN_NO_CHANGE
                         , MicrophoneNotificationRX
                         , "" );
+    m_Speaker = new I2S_Device( "Speaker"
+                              , m_DataManager
+                              , I2S_NUM_1
+                              , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                              , 44100
+                              , I2S_BITS_PER_SAMPLE_32BIT
+                              , I2S_CHANNEL_FMT_RIGHT_LEFT
+                              , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                              , I2S_CHANNEL_STEREO
+                              , 10
+                              , 128
+                              , 26
+                              , 25
+                              , I2S_PIN_NO_CHANGE
+                              , 33
+                              , ""
+                              , SpeakerNotificationTX );
   AddTask(*m_Mic);
+  AddTask(*m_Speaker);
   m_Mic->RegisterForEventNotification(this, MicrophoneNotificationRX);
+  m_Speaker->RegisterForEventNotification(this, SpeakerNotificationTX);
   m_Mic->StartDevice();
+  m_Speaker->StartDevice();
 }
 
 bool I2S_EventHandler::CanRunMyTask()
@@ -68,5 +88,6 @@ void I2S_EventHandler::EventSystemNotification(String context)
     m_DataManager.SetSoundBufferData(m_Mic->GetSoundBufferData());
     m_DataManager.SetRightChannelSoundBufferData(m_Mic->GetRightSoundBufferData());
     m_DataManager.SetLeftChannelSoundBufferData(m_Mic->GetLeftSoundBufferData());
+    m_Speaker->SetSoundBufferData(m_Mic->GetSoundBufferData());
   }
 }
