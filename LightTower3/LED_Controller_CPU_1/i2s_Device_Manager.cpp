@@ -16,17 +16,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "i2s_EventHandler.h"
+#include "i2s_Device_Manager.h"
 
-I2S_EventHandler::I2S_EventHandler(String Title, DataManager &DataManager): m_DataManager(DataManager)
+I2S_Device_Manager::I2S_Device_Manager(String Title, DataManager &DataManager): m_DataManager(DataManager)
                                                                           , Task(Title, m_DataManager){}
-I2S_EventHandler::~I2S_EventHandler()
+I2S_Device_Manager::~I2S_Device_Manager()
 {
   m_Mic->DeRegisterForEventNotification(this, MicrophoneNotificationRX);
   delete m_Mic;
 }
 
-void I2S_EventHandler::Setup()
+void I2S_Device_Manager::Setup()
 {
   if(true == DEBUG_EVENT_HANDLER)Serial << "Setup i2s Event Handler: " << m_Title << "\n";
   m_Mic = new I2S_Device( "Microphone"
@@ -73,17 +73,17 @@ void I2S_EventHandler::Setup()
   m_Speaker->StartDevice();
 }
 
-bool I2S_EventHandler::CanRunMyTask()
+bool I2S_Device_Manager::CanRunMyTask()
 { 
   return false;
 }
 
-void I2S_EventHandler::RunMyTask()
+void I2S_Device_Manager::RunMyTask()
 {
   
 }
 
-void I2S_EventHandler::EventSystemNotification(String context)
+void I2S_Device_Manager::EventSystemNotification(String context)
 {
   if(MicrophoneNotificationRX == context)
   {

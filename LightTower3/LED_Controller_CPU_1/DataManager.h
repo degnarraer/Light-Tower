@@ -1,3 +1,20 @@
+/*
+    Light Tower by Rob Shockency
+    Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifndef DataManager_H
 #define DataManager_H
@@ -8,56 +25,23 @@
 class DataManager: public EventSystemCaller 
 {
   public:
-    DataManager()
-    {
-      ResisterNotificationContext(MicrophoneDataReady);
-      ResisterNotificationContext(MicrophoneRightDataReady);
-      ResisterNotificationContext(MicrophoneLeftDataReady);
-    }
-    virtual ~DataManager()
-    {
-      delete m_SoundBufferData;
-      delete m_LeftChannel_SoundBufferData;
-      delete m_RightChannel_SoundBufferData;
-    }
+    DataManager();
+    virtual ~DataManager();
 
     //Microphone Data
     const String MicrophoneDataReady = "MicDataReady";
     const String MicrophoneRightDataReady = "MicRightChannelDataReady";
     const String MicrophoneLeftDataReady = "MicLeftChannelDataReady";
-    void SetMicrophoneSoundBufferMemorySize(size_t BitsPerSample, size_t Samples, size_t Channels)
-    {
-      m_Samples = Samples;
-      m_Channels = Channels;
-      m_BitsPerSample = BitsPerSample;
-      m_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_Samples * m_Channels);
-      m_LeftChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_Samples);
-      m_RightChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_Samples);
-    }
-    size_t GetSampleCount(){return m_Samples;}
-    size_t GetChannels(){return m_Channels;}
-    size_t GetBitsPerSample(){return m_BitsPerSample;}
-    int32_t GetSoundBufferData(int index){return m_SoundBufferData[index];}
-    void SetSoundBufferData(int32_t *SoundBufferData)
-    {
-      memcpy(m_SoundBufferData, SoundBufferData, sizeof(int32_t) * m_Samples * m_Channels);
-      if(true == DEBUG_DATA_MANAGER) Serial << "Data Ready\n";
-      SendNotificationToCallees(MicrophoneDataReady);
-    }
-    int32_t GetRightChannelSoundBufferData(int index){return m_RightChannel_SoundBufferData[index];}
-    void SetRightChannelSoundBufferData(int32_t *SoundBufferData)
-    {
-      memcpy(m_RightChannel_SoundBufferData, SoundBufferData, sizeof(int32_t) * m_Samples);
-      if(true == DEBUG_DATA_MANAGER) Serial << "Right Data Ready\n";
-      SendNotificationToCallees(MicrophoneRightDataReady);
-    }
-    int32_t GetLeftChannelSoundBufferData(int index){return m_LeftChannel_SoundBufferData[index];}
-    void SetLeftChannelSoundBufferData(int32_t *SoundBufferData)
-    {
-      memcpy(m_LeftChannel_SoundBufferData, SoundBufferData, sizeof(int32_t) * m_Samples);
-      if(true == DEBUG_DATA_MANAGER) Serial << "Left Data Ready\n";
-      SendNotificationToCallees(MicrophoneLeftDataReady);
-    }
+    void SetMicrophoneSoundBufferMemorySize(size_t BitsPerSample, size_t Samples, size_t Channels);
+    size_t GetSampleCount();
+    size_t GetChannels();
+    size_t GetBitsPerSample();
+    int32_t GetSoundBufferData(int index);
+    void SetSoundBufferData(int32_t *SoundBufferData);
+    int32_t GetRightChannelSoundBufferData(int index);
+    void SetRightChannelSoundBufferData(int32_t *SoundBufferData);
+    int32_t GetLeftChannelSoundBufferData(int index);
+    void SetLeftChannelSoundBufferData(int32_t *SoundBufferData);
   private:
 
     //Microphone Data

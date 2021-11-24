@@ -1,26 +1,35 @@
-#include "I2S_EventHandler.h"
+#include "I2S_Device_Manager.h"
 #include "FFT_Calculator.h"
-#include <HardwareSerial.h>
+#include "SerialDataLink.h"
 
 TaskHandle_t Task1; //240 MHz CPU
 TaskHandle_t Task0; //80 MHz CPU
-HardwareSerial &hSerial = Serial2;
 
 DataManager m_DataManager;
+
+//Task Schedulers
 TaskScheduler m_Task0_Scheduler("Task_0_Scheduler", m_DataManager);
 TaskScheduler m_Task1_Scheduler("Task_1_Scheduler", m_DataManager);
-I2S_EventHandler m_i2S_EventHandler("Event_Handler", m_DataManager);
+
+//Tasks
+I2S_Device_Manager m_I2S_Device_Manager("I2S_Event_Handler", m_DataManager);
 FFT_Calculator m_FFT_Calculator("FFT_Calculator", m_DataManager);
+SerialDataLink m_SerialDataLink("Serial_Data_Link", m_DataManager);
 
 void setup() {
   Serial.begin(500000);
-  hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
   delay(500);
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n"; // In MHz
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n"; // In MHz
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n"; // In Hz
-  m_Task0_Scheduler.AddTask(m_i2S_EventHandler);
+
+  //Task 0 Tasks
+  m_Task0_Scheduler.AddTask(m_I2S_Device_Manager);
   m_Task0_Scheduler.AddTask(m_FFT_Calculator);
+  
+  //Task 1 Tasks
+  m_Task1_Scheduler.AddTask(m_SerialDataLink);
+  
   xTaskCreatePinnedToCore(
       Task0Loop,  // Function to implement the task
       "Task0",    // Name of the task
@@ -30,6 +39,7 @@ void setup() {
       &Task0,     // Task handle.
       0);         // Core where the task should run
   delay(500);
+  
   xTaskCreatePinnedToCore(
       Task1Loop,  // Function to implement the task
       "Task1",    // Name of the task
@@ -43,22 +53,9 @@ void setup() {
 
 void Task1Loop(void * parameter)
 {
-  String sData = "";
   while(true)
   {
     m_Task1_Scheduler.RunScheduler();
-    byte ch;
-    if (hSerial.available())
-    {
-      ch = hSerial.read();
-      sData += (char)ch;
-      if (ch=='\n') 
-      {
-        sData.trim();
-        Serial << "Data Received from CPU 2: " << sData << "\n";
-        sData = "";
-      }
-    }
     delay(1);
   }
 }

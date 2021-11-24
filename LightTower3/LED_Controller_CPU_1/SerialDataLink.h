@@ -16,34 +16,39 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef I2S_EventHander_H
-#define I2S_EventHander_H
+#ifndef SerialDataLink_H
+#define SerialDataLink_H
 
-#define DEBUG_EVENT_HANDLER false
+#include "Task.h"
+#include <HardwareSerial.h>
 
-#include "EventSystem.h"
-#include "I2S_Device.h"
-
-class I2S_EventHandler: public Task, EventSystemCallee
+class SerialDataLink: public Task
 {
   public:
-    I2S_EventHandler(String Title, DataManager &DataManager);
-    virtual ~I2S_EventHandler();
+    SerialDataLink(String Title, DataManager &DataManager): Task(Title, DataManager){}
+    virtual ~SerialDataLink(){}
+
+    void Setup()
+    {
+      hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
+    }
+    bool CanRunMyTask(){return (hSerial.available());}
+    void RunMyTask()
+    {
+      byte ch;
+      ch = hSerial.read();
+      m_StringData += (char)ch;
+      if (ch=='\n') 
+      {
+        m_StringData.trim();
+        Serial << "Data Received from CPU 2: " << m_StringData << "\n";
+        m_StringData = "";
+      }
+    }
     
-    //Task
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
-    
-    //Event System Callee
-    void EventSystemNotification(String context);
-  
   private:
-    I2S_Device *m_Mic;
-    I2S_Device *m_Speaker;
-    DataManager &m_DataManager;
-    const String MicrophoneNotificationRX = "MicDataReady";
-    const String SpeakerNotificationTX = "SpkrDataSent";
+  HardwareSerial &hSerial = Serial2;
+  String m_StringData = "";
 };
 
 #endif
