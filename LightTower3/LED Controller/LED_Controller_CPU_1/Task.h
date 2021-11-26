@@ -20,7 +20,7 @@
 #define Task_H
 
 //DEBUGGING
-#define DEBUG_TASKS true
+#define DEBUG_TASKS false
 
 #include <Arduino.h>
 #include <LinkedList.h>

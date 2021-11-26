@@ -19,7 +19,7 @@
 #include "i2s_Device_Manager.h"
 
 I2S_Device_Manager::I2S_Device_Manager(String Title, DataManager &DataManager): m_DataManager(DataManager)
-                                                                          , Task(Title, m_DataManager){}
+                                                                              , Task(Title, m_DataManager){}
 I2S_Device_Manager::~I2S_Device_Manager()
 {
   m_Mic->DeRegisterForEventNotification(this, MicrophoneNotificationRX);
@@ -38,8 +38,8 @@ void I2S_Device_Manager::Setup()
                         , I2S_CHANNEL_FMT_RIGHT_LEFT
                         , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                         , I2S_CHANNEL_STEREO
-                        , 10
-                        , 50
+                        , I2S_BUFFER_COUNT
+                        , I2S_BUFFER_SIZE
                         , 12
                         , 13
                         , 14
@@ -56,8 +56,8 @@ void I2S_Device_Manager::Setup()
                               , I2S_CHANNEL_FMT_RIGHT_LEFT
                               , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                               , I2S_CHANNEL_STEREO
-                              , 10
-                              , 50
+                              , I2S_BUFFER_COUNT
+                              , I2S_BUFFER_SIZE
                               , 26
                               , 25
                               , I2S_PIN_NO_CHANGE
@@ -87,9 +87,9 @@ void I2S_Device_Manager::EventSystemNotification(String context)
 {
   if(MicrophoneNotificationRX == context)
   {
-    m_DataManager.SetSoundBufferData(m_Mic->GetSoundBufferData());
-    m_DataManager.SetRightChannelSoundBufferData(m_Mic->GetRightSoundBufferData());
-    m_DataManager.SetLeftChannelSoundBufferData(m_Mic->GetLeftSoundBufferData());
+    m_DataManager.SetValue<int32_t>("Sound_Buffer_Data", m_Mic->GetSoundBufferData(), m_Mic->GetBufferCount());
+    m_DataManager.SetValue<int32_t>("Right_Channel_Sound_Buffer_Data", m_Mic->GetRightSoundBufferData(), m_Mic->GetSampleCount());
+    m_DataManager.SetValue<int32_t>("Left_Channel_Sound_Buffer_Data", m_Mic->GetLeftSoundBufferData(), m_Mic->GetSampleCount());
     m_Speaker->SetSoundBufferData(m_Mic->GetSoundBufferData());
   }
 }

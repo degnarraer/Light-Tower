@@ -72,12 +72,17 @@ class I2S_Device: public Task
     int32_t* GetLeftSoundBufferData();
     void SetSoundBufferData(int32_t *SoundBufferData);
     void SetMuteState(Mute_State_t MuteState);
+    size_t GetSampleCount() { return m_SampleCount; }
+    size_t GetBufferCount() { return m_TotalBuffers; }
     
     //Task Interface
     void Setup();
     bool CanRunMyTask();
     void RunMyTask();
-  private:    
+  private:
+    size_t m_SampleCount;
+    size_t m_BytesToRead;
+    size_t m_TotalBuffers;
     int32_t *m_SoundBufferData;
     int32_t *m_LeftChannel_SoundBufferData;
     int32_t *m_RightChannel_SoundBufferData;

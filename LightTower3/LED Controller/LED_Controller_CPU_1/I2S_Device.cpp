@@ -121,6 +121,9 @@ void I2S_Device::Setup()
     m_RightChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize);
     m_LeftChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize);
     m_DataManager.SetMicrophoneSoundBufferMemorySize(m_BitsPerSample, m_BufferSize, m_i2s_channel);
+    m_BytesToRead  = (m_BitsPerSample/8) * m_BufferSize * m_i2s_channel;
+    m_SampleCount = m_BytesToRead / ((m_BitsPerSample/8) * m_i2s_channel);
+    m_TotalBuffers = m_BufferSize * m_i2s_channel;
     SetMuteState(m_MuteState);
 }
 
@@ -138,17 +141,15 @@ int I2S_Device::ReadSamples()
 {
   // read from i2s
   size_t bytes_read = 0;
-  size_t bytes_to_read = (m_BitsPerSample/8) * m_BufferSize * m_i2s_channel;
-  
-  i2s_read(m_I2S_PORT, m_SoundBufferData, bytes_to_read, &bytes_read, portMAX_DELAY);
-  if(bytes_read != bytes_to_read)Serial.println("Error Reading All Bytes");
+  size_t samples_read = 0;
+  i2s_read(m_I2S_PORT, m_SoundBufferData, m_BytesToRead, &bytes_read, portMAX_DELAY);
+  samples_read = m_BytesToRead / ((m_BitsPerSample/8) * m_i2s_channel);
+  if(bytes_read != m_BytesToRead)Serial.println("Error Reading All Bytes");
 
-  int samples_to_read = bytes_to_read / ((m_BitsPerSample/8) * m_i2s_channel);
-  int samples_read = bytes_read / ((m_BitsPerSample/8) * m_i2s_channel);
   
   if(I2S_CHANNEL_STEREO == m_i2s_channel)
   {
-    for(int i = 0; i < samples_to_read; ++i)
+    for(int i = 0; i < samples_read; ++i)
     {
       m_RightChannel_SoundBufferData[i] = m_SoundBufferData[i];
       m_LeftChannel_SoundBufferData[i] = m_SoundBufferData[i+1];
@@ -156,7 +157,7 @@ int I2S_Device::ReadSamples()
   }
   if(DEBUG_DATA_RX)
   {
-    for(int i = 0; i < samples_to_read; ++i)
+    for(int i = 0; i < samples_read; ++i)
     {
       Serial.print(-100000000);
       Serial.print(",");
@@ -164,13 +165,13 @@ int I2S_Device::ReadSamples()
       Serial.print(",");
       if(I2S_CHANNEL_STEREO == m_i2s_channel)
       {
-        Serial.print(m_DataManager.GetRightChannelSoundBufferData(i));
+        //DataManager Serial.print(m_DataManager.GetRightChannelSoundBufferData(i));
         Serial.print(",");
-        Serial.print(m_DataManager.GetLeftChannelSoundBufferData(i));
+        //DataManager Serial.print(m_DataManager.GetLeftChannelSoundBufferData(i));
       }
       else
       {
-        Serial.print(m_DataManager.GetSoundBufferData(i));
+        //DataManager Serial.print(m_DataManager.GetSoundBufferData(i));
       }
       Serial.println(); 
     }

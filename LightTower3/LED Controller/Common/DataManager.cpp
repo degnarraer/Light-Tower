@@ -23,6 +23,7 @@ DataManager::DataManager()
   ResisterNotificationContext(MicrophoneDataReady);
   ResisterNotificationContext(MicrophoneRightDataReady);
   ResisterNotificationContext(MicrophoneLeftDataReady);
+  ResisterNotificationContext(FFTDataReady);
 }
 
 DataManager::~DataManager()

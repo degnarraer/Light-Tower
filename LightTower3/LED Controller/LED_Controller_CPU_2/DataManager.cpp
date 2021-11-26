@@ -16,34 +16,4 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef I2S_EventHander_H
-#define I2S_EventHander_H
-
-#define DEBUG_EVENT_HANDLER false
-
-#include "EventSystem.h"
-#include "I2S_Device.h"
-
-class I2S_EventHandler: public Task, EventSystemCallee
-{
-  public:
-    I2S_EventHandler(String Title, DataManager &DataManager);
-    virtual ~I2S_EventHandler();
-    
-    //Task
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
-    
-    //Event System Callee
-    void EventSystemNotification(String context);
-  
-  private:
-    I2S_Device *m_Mic;
-    I2S_Device *m_Speaker;
-    DataManager &m_DataManager;
-    const String MicrophoneNotificationRX = "MicDataReady";
-    const String SpeakerNotificationTX = "SpkrDataSent";
-};
-
-#endif
+#include "DataManager.h"

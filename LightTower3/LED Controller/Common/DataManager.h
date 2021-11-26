@@ -32,6 +32,7 @@ class DataManager: public EventSystemCaller
     const String MicrophoneDataReady = "MicDataReady";
     const String MicrophoneRightDataReady = "MicRightChannelDataReady";
     const String MicrophoneLeftDataReady = "MicLeftChannelDataReady";
+    const String FFTDataReady = "FFT Data Ready";
     void SetMicrophoneSoundBufferMemorySize(size_t BitsPerSample, size_t Samples, size_t Channels);
     size_t GetSampleCount();
     size_t GetChannels();
@@ -42,6 +43,9 @@ class DataManager: public EventSystemCaller
     void SetRightChannelSoundBufferData(int32_t *SoundBufferData);
     int32_t GetLeftChannelSoundBufferData(int index);
     void SetLeftChannelSoundBufferData(int32_t *SoundBufferData);
+
+    //FFT Data
+    
   private:
 
     //Microphone Data

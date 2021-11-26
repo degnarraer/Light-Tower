@@ -18,7 +18,9 @@
 
 #ifndef EventSystem_H
 #define EventSystem_H
+
 #define DEBUG_EVENT_SYSTEM false
+
 #include <LinkedList.h>
 #include "Streaming.h"
 

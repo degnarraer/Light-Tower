@@ -1,5 +1,5 @@
-#include "I2S_EventHandler.h"
 #include <HardwareSerial.h>
+#include "Task.h"
 
 TaskHandle_t Task1; //240 MHz CPU
 TaskHandle_t Task0; //80 MHz CPU
@@ -8,7 +8,6 @@ HardwareSerial &hSerial = Serial2;
 DataManager m_DataManager;
 TaskScheduler m_Task0_Scheduler("Task_0_Scheduler", m_DataManager);
 TaskScheduler m_Task1_Scheduler("Task_1_Scheduler", m_DataManager);
-I2S_EventHandler m_i2S_EventHandler("Event_Handler", m_DataManager);
 
 void setup() {
   Serial.begin(500000);
@@ -18,7 +17,6 @@ void setup() {
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n"; // In MHz
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n"; // In MHz
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n"; // In Hz
-  m_Task0_Scheduler.AddTask(m_i2S_EventHandler);
   xTaskCreatePinnedToCore(
       Task0Loop,  // Function to implement the task
       "Task0",    // Name of the task

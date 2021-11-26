@@ -18,7 +18,7 @@
 
 #ifndef I2S_FFT_CALCULATOR_H
 #define I2S_FFT_CALCULATOR_H
-#define FFT_LENGTH 2048
+
 #define DEBUG_FFT_CALCULATOR false
 #define DEBUG_FFT_CALCULATOR_LOOPS false
 #define DEBUG_FFT_CALCULATOR_INPUTDATA false
@@ -28,7 +28,9 @@
 #include "Task.h"
 #include <Adafruit_ZeroFFT.h>
 
-class FFT_Calculator: public Task, EventSystemCallee
+class FFT_Calculator: public Task
+                    , EventSystemCallee
+                    , EventSystemCaller
 {
   public:
     FFT_Calculator(String Title, DataManager &DataManager); //

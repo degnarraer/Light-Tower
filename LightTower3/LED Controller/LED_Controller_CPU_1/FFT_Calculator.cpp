@@ -24,14 +24,14 @@ FFT_Calculator::FFT_Calculator(String Title, DataManager &DataManager): Task(Tit
 }
 FFT_Calculator::~FFT_Calculator()
 {
-  m_DataManager.DeRegisterForEventNotification(this, m_DataManager.MicrophoneRightDataReady);
-  m_DataManager.DeRegisterForEventNotification(this, m_DataManager.MicrophoneLeftDataReady);
+  m_DataManager.DeRegisterForEventNotification(this, "Right_Channel_Sound_Buffer_Data");
+  m_DataManager.DeRegisterForEventNotification(this, "Left_Channel_Sound_Buffer_Data");
 }
 void FFT_Calculator::Setup()
 {
   if(true == DEBUG_FFT_CALCULATOR) Serial << "Setup FFT Calculator\n";
-  m_DataManager.RegisterForEventNotification(this, m_DataManager.MicrophoneRightDataReady);
-  m_DataManager.RegisterForEventNotification(this, m_DataManager.MicrophoneLeftDataReady);
+  m_DataManager.RegisterForEventNotification(this, "Right_Channel_Sound_Buffer_Data");
+  m_DataManager.RegisterForEventNotification(this, "Left_Channel_Sound_Buffer_Data");
 }
 bool FFT_Calculator::CanRunMyTask()
 {
@@ -44,15 +44,16 @@ void FFT_Calculator::RunMyTask()
 void FFT_Calculator::EventSystemNotification(String context)
 {
 
-  if(m_DataManager.MicrophoneDataReady == context)
+  //DataManager
+  if(String("Sound_Buffer_Data") == context)
   {
   }
-  else if(m_DataManager.MicrophoneRightDataReady == context)
+  else if(String("Right_Channel_Sound_Buffer_Data") == context)
   {
-    for(int i = 0; i < m_DataManager.GetSampleCount(); ++i)
+    for(int i = 0; i < I2S_BUFFER_SIZE; ++i)
     {
-      if(true == DEBUG_FFT_CALCULATOR_LOOPS)Serial << "Right Loop Count: "<< i << " of " << m_DataManager.GetSampleCount() << "\n";
-      m_FFT_Right_Buffer_Data[m_FFT_Right_Buffer_Index] = m_DataManager.GetRightChannelSoundBufferData(i);
+      if(true == DEBUG_FFT_CALCULATOR_LOOPS)Serial << "Right Loop Count: "<< i << " of " << I2S_BUFFER_SIZE << "\n";
+      m_FFT_Right_Buffer_Data[m_FFT_Right_Buffer_Index] = m_DataManager.GetValueAtIndex<int32_t>("Right_Channel_Sound_Buffer_Data", I2S_BUFFER_SIZE, i);
       ++m_FFT_Right_Buffer_Index;
       if(m_FFT_Right_Buffer_Index >= FFT_LENGTH)
       {
@@ -83,12 +84,12 @@ void FFT_Calculator::EventSystemNotification(String context)
       }
     }    
   }
-  else if(m_DataManager.MicrophoneLeftDataReady == context)
+  else if(String("Left_Channel_Sound_Buffer_Data") == context)
   {
-    for(int i = 0; i < m_DataManager.GetSampleCount(); ++i)
+    for(int i = 0; i < I2S_BUFFER_SIZE; ++i)
     {
-      if(true == DEBUG_FFT_CALCULATOR_LOOPS)Serial << "Left Loop Count: "<< i << " of " << m_DataManager.GetSampleCount() << "\n";
-      m_FFT_Left_Buffer_Data[m_FFT_Left_Buffer_Index] = m_DataManager.GetLeftChannelSoundBufferData(i);
+      if(true == DEBUG_FFT_CALCULATOR_LOOPS)Serial << "Left Loop Count: "<< i << " of " << I2S_BUFFER_SIZE << "\n";
+      m_FFT_Left_Buffer_Data[m_FFT_Left_Buffer_Index] = m_DataManager.GetValueAtIndex<int32_t>("Left_Channel_Sound_Buffer_Data", I2S_BUFFER_SIZE, i);
       ++m_FFT_Left_Buffer_Index;
       if(m_FFT_Left_Buffer_Index >= FFT_LENGTH)
       {
