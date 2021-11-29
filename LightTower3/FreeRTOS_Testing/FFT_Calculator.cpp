@@ -30,15 +30,14 @@ void FFT_Calculator::Setup(size_t BufferCount)
   m_BufferCount = BufferCount;
   m_FFT_Right_Buffer_Data = (int32_t*)malloc(m_BufferCount);
   m_FFT_Left_Buffer_Data = (int32_t*)malloc(m_BufferCount);
+  m_BytesToRead = sizeof(int32_t) * FFT_LENGTH;
   
   Serial << m_Title << ": Creating Right FFT queue.\n";
-  m_BytesToRead = sizeof(int16_t) * FFT_LENGTH;
-  m_FFT_Right_Data_Buffer_queue = xQueueCreate( 10, m_BytesToRead );
+  m_FFT_Right_Data_Buffer_queue = xQueueCreate(10, m_BufferCount );
   if(m_FFT_Right_Data_Buffer_queue == NULL){Serial.println("Error creating the Right Channel FFT queue");}
   
   Serial << m_Title << ": Creating Left FFT queue.\n";
-  m_BytesToRead = sizeof(int16_t) * FFT_LENGTH;
-  m_FFT_Left_Data_Buffer_queue = xQueueCreate( 10, m_BytesToRead );
+  m_FFT_Left_Data_Buffer_queue = xQueueCreate(10, m_BufferCount );
   if(m_FFT_Left_Data_Buffer_queue == NULL){Serial.println("Error creating the Left Channel FFT queue");}
 }
 

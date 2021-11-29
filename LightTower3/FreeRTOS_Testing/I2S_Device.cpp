@@ -152,7 +152,7 @@ int I2S_Device::ReadSamples()
       m_LeftChannel_SoundBufferData[i] = m_SoundBufferData[i+1];
     }
     if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial.println("Error Setting Queue"); }
-    //if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial.println("Error Setting Queue"); }
+    if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial.println("Error Setting Queue"); }
   }
   return samples_read;
 }
