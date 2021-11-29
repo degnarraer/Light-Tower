@@ -28,7 +28,7 @@ I2S_Device_Manager::~I2S_Device_Manager()
 
 void I2S_Device_Manager::Setup()
 {
-  if(true == DEBUG_EVENT_HANDLER)Serial << "Setup i2s Event Handler: " << m_Title << "\n";
+  if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler: " << m_Title << "\n";
   m_Mic = new I2S_Device( "Microphone"
                         , m_DataManager
                         , I2S_NUM_0
@@ -85,11 +85,13 @@ void I2S_Device_Manager::RunMyTask()
 
 void I2S_Device_Manager::EventSystemNotification(String context)
 {
-  if(MicrophoneNotificationRX == context)
+  if(true == EVENT_HANDLER_DEBUG) Serial << "Event Called\n";
+  if(true == context.equals(MicrophoneNotificationRX))
   {
+    if(true == EVENT_HANDLER_DEBUG) Serial << "Mic Data Received\n";
+    m_Speaker->SetSoundBufferData(m_Mic->GetSoundBufferData());
     m_DataManager.SetValue<int32_t>("Sound_Buffer_Data", m_Mic->GetSoundBufferData(), m_Mic->GetBufferCount());
     m_DataManager.SetValue<int32_t>("Right_Channel_Sound_Buffer_Data", m_Mic->GetRightSoundBufferData(), m_Mic->GetSampleCount());
     m_DataManager.SetValue<int32_t>("Left_Channel_Sound_Buffer_Data", m_Mic->GetLeftSoundBufferData(), m_Mic->GetSampleCount());
-    m_Speaker->SetSoundBufferData(m_Mic->GetSoundBufferData());
   }
 }

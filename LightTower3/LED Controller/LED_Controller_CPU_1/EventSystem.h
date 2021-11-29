@@ -19,7 +19,8 @@
 #ifndef EventSystem_H
 #define EventSystem_H
 
-#define DEBUG_EVENT_SYSTEM false
+#define EVENT_SYSTEM_DEBUG false
+#define EVENT_SYSTEM_REGISTRATION_DEBUG false
 
 #include <LinkedList.h>
 #include "Streaming.h"
@@ -35,18 +36,23 @@ class EventSystemCaller
   public:
     bool RegisterForEventNotification(EventSystemCallee *callee, String context)
     {
-      if(true == DEBUG_EVENT_SYSTEM) Serial << "Try Registerring for Event Notification: " << context << "\n";
+      if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Try Registerring for Event: " << context << "\n";
       CallerInterfaceData cid;
       cid.Callee = callee;
       cid.Context = context;
-      for (int i = 0; i < m_MyNotificationContexts.size(); ++i)
+      bool found = false;
+      for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if (m_MyNotificationContexts.get(i) == context)
+        if (m_MyCalleesWithContext.get(i).Callee == callee && m_MyCalleesWithContext.get(i).Context == context)
         {
-          if(true == DEBUG_EVENT_SYSTEM) Serial << "Registered for Event Notification: " << context << "\n";
-          m_MyCalleesWithContext.add(cid);
-          return true;
+          found = true;
         }
+      }
+      if(false == found)
+      {
+        m_MyCalleesWithContext.add(cid);
+        if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Registered for Event: " << context << "\n";
+        return true;
       }
       return false;
     }
@@ -55,13 +61,13 @@ class EventSystemCaller
       CallerInterfaceData cid;
       cid.Callee = callee;
       cid.Context = context;
-      if(true == DEBUG_EVENT_SYSTEM) Serial << "Try DeRegistering for Event Notification: " << context << "\n";
+      if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Try DeRegistering for Event: " << context << "\n";
       for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
         if (m_MyCalleesWithContext.get(i) == cid)
         {
-          if(true == DEBUG_EVENT_SYSTEM) Serial << "DeRegistered for Event Notification: " << context << "\n";
           m_MyCalleesWithContext.remove(i);
+          if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "DeRegistered for Event: " << context << "\n";
           return true;
         }
       }
@@ -69,12 +75,12 @@ class EventSystemCaller
     }
     void SendNotificationToCallees(String context)
     {
-      if(true == DEBUG_EVENT_SYSTEM) Serial << "Try Sending Event Notification: " << context << "\n";
+      if(true == EVENT_SYSTEM_DEBUG) Serial << "Try Sending Event Notification: " << context << "\n";
       for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
         if(context == m_MyCalleesWithContext.get(i).Context)
         {
-          if(true == DEBUG_EVENT_SYSTEM) Serial << "Sent Event Notification: " << context << "\n";
+          if(true == EVENT_SYSTEM_DEBUG) Serial << "Sent Event Notification: " << context << "\n";
           m_MyCalleesWithContext.get(i).Callee->EventSystemNotification(context);
         }
       }
@@ -82,19 +88,19 @@ class EventSystemCaller
   protected:
     bool ResisterNotificationContext(String notificationContext)
     {
-      if(true == DEBUG_EVENT_SYSTEM) Serial << "Try Registering Notification: " << notificationContext << "\n";
+      if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Try Registering Notification: " << notificationContext << "\n";
       bool found = false;
       for (int i = 0; i < m_MyNotificationContexts.size(); ++i)
       {
         if (m_MyNotificationContexts.get(i) == notificationContext)
         {
-          if(true == DEBUG_EVENT_SYSTEM) Serial << "Notification Registration Failed: " << notificationContext << "\n";
+          if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Notification Registration Failed: " << notificationContext << "\n";
           found = true;
         }
       }
       if(false == found)
       {
-        if(true == DEBUG_EVENT_SYSTEM) Serial << "Notification Registration Success: " << notificationContext << "\n";
+        if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Notification Registration Success: " << notificationContext << "\n";
         m_MyNotificationContexts.add(notificationContext);
         return true;
       }
@@ -102,17 +108,17 @@ class EventSystemCaller
     }
     bool DeResisterNotificationContext(String notificationContext)
     {
-      if(true == DEBUG_EVENT_SYSTEM) Serial << "Try DeRegistering Notification: " << notificationContext << "\n";
+      if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Try DeRegistering Notification: " << notificationContext << "\n";
       for (int i = 0; i < m_MyNotificationContexts.size(); ++i)
       {
         if (m_MyNotificationContexts.get(i) == notificationContext)
         {
-          Serial << "Notification DeRegistration Success: " << notificationContext << "\n";
+          if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Notification DeRegistration Success: " << notificationContext << "\n";
           m_MyNotificationContexts.remove(i);
           return true;
         }
       }
-      Serial << "Notification DeRegistration Fail: " << notificationContext << "\n";
+      if(true == EVENT_SYSTEM_REGISTRATION_DEBUG) Serial << "Notification DeRegistration Fail: " << notificationContext << "\n";
       return false;
     }
   private:

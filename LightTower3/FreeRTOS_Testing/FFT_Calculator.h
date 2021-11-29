@@ -18,39 +18,44 @@
 
 #ifndef I2S_FFT_CALCULATOR_H
 #define I2S_FFT_CALCULATOR_H
+#define FFT_LENGTH 2048
 
 #define FFT_CALCULATOR_DEBUG false
 #define FFT_CALCULATOR_LOOPS_DEBUG false
 #define FFT_CALCULATOR_INPUTDATA_DEBUG false
 #define FFT_CALCULATOR_OUTPUTDATA_DEBUG false
 
-#include "EventSystem.h"
-#include "Task.h"
-#include <Adafruit_ZeroFFT.h>
 
-class FFT_Calculator: public Task
-                    , EventSystemCallee
-                    , EventSystemCaller
+#include <Arduino.h>
+#include <Adafruit_ZeroFFT.h>
+#include "Streaming.h"
+
+class FFT_Calculator
 {
   public:
-    FFT_Calculator(String Title, DataManager &DataManager); //
+    FFT_Calculator(String Title);
     virtual ~FFT_Calculator();
-
-    //Task Interface
-    void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
-    
-    //EventSystemCallee Interface
-    void EventSystemNotification(String context);
+    void Setup(size_t BufferCount);
+    void ProcessEventQueue();
+    QueueHandle_t GetFFTRightDataQueue() { return m_FFT_Right_Data_Buffer_queue; }
+    QueueHandle_t GetFFTLeftDataQueue() { return m_FFT_Left_Data_Buffer_queue; }
     
   private:
+    size_t m_BufferCount = 0;
+    String m_Title;
+    QueueHandle_t m_FFT_Right_Data_Buffer_queue = NULL;
+    QueueHandle_t m_FFT_Left_Data_Buffer_queue = NULL;
+    int m_BytesToRead = 0;
+
     int16_t m_FFT_Right_Data[FFT_LENGTH];
-    int32_t m_FFT_Right_Buffer_Data[FFT_LENGTH];
-    int m_FFT_Right_Buffer_Index = 0;
     int16_t m_FFT_Left_Data[FFT_LENGTH];
-    int32_t m_FFT_Left_Buffer_Data[FFT_LENGTH];
+    int32_t* m_FFT_Right_Buffer_Data;
+    int32_t* m_FFT_Left_Buffer_Data;
+    int m_FFT_Right_Buffer_Index = 0;
     int m_FFT_Left_Buffer_Index = 0;
+
+    void ProcessRightFFTQueue(int messageCount);
+    void ProcessLeftFFTQueue(int messageCount);
 };
 
 

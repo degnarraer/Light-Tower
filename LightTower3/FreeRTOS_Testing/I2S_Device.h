@@ -25,10 +25,9 @@
 #define QUEUE_DEBUG false
 #define QUEUE_INDEPTH_DEBUG false
 
-#include "Task.h"
+#include <Arduino.h>
 #include "driver/i2s.h"
 #include "Streaming.h"
-#include "EventSystem.h"
 
 enum Mute_State_t
 {
@@ -42,12 +41,10 @@ struct SampledData_t
   int Count;
 };
 
-class I2S_Device: public Task
-                , public EventSystemCaller
+class I2S_Device
 {
   public:
     I2S_Device( String Title
-              , DataManager &DataManager
               , i2s_port_t i2S_PORT
               , i2s_mode_t Mode
               , int SampleRate
@@ -61,13 +58,14 @@ class I2S_Device: public Task
               , int WordSelectPin
               , int SerialDataInPin
               , int SerialDataOutPin
-              , int MutePin
-              , String Notification_RX
-              , String Notification_TX );
+              , int MutePin );
     virtual ~I2S_Device();
     
     void StartDevice();
     void StopDevice();
+    QueueHandle_t GetDataBufferQueue() { return m_i2s_Data_Buffer_Queue; }
+    QueueHandle_t GetRightDataBufferQueue() { return m_i2s_Right_Data_Buffer_queue; }
+    QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }
     int32_t* GetSoundBufferData();
     int32_t* GetRightSoundBufferData();
     int32_t* GetLeftSoundBufferData();
@@ -75,14 +73,16 @@ class I2S_Device: public Task
     void SetMuteState(Mute_State_t MuteState);
     size_t GetSampleCount() { return m_SampleCount; }
     size_t GetBufferCount() { return m_TotalBuffers; }
-    
-    //Task Interface
+    size_t GetBytesToRead() {return m_BytesToRead; }
+    size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
+    void ProcessEventQueue();
   private:
+    String m_Title;
     size_t m_SampleCount;
+    size_t m_BytesPerSample;
     size_t m_BytesToRead;
+    size_t m_ChannelBytesToRead;
     size_t m_TotalBuffers;
     int32_t *m_SoundBufferData;
     int32_t *m_LeftChannel_SoundBufferData;
@@ -102,13 +102,13 @@ class I2S_Device: public Task
     const int m_MutePin;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
     const i2s_port_t m_I2S_PORT;
-    const String m_Notification_RX;
-    const String m_Notification_TX;
     QueueHandle_t m_i2s_event_queue = NULL;
+    QueueHandle_t m_i2s_Data_Buffer_Queue = NULL;
+    QueueHandle_t m_i2s_Right_Data_Buffer_queue = NULL;
+    QueueHandle_t m_i2s_Left_Data_Buffer_queue = NULL;
     int ReadSamples();
     int WriteSamples(int32_t *samples);
     void InstallDevice();
-    void ProcessEventQueue();
 };
 
 #endif

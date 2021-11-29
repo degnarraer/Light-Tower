@@ -19,7 +19,7 @@
 #ifndef DataManagerConfig_H
 #define DataManagerConfig_H 
 
-#define I2S_BUFFER_SIZE 50
+#define I2S_BUFFER_SIZE 100
 #define I2S_BUFFER_COUNT 10
 #define FFT_LENGTH 2048
 
@@ -40,12 +40,13 @@ class DataManagerConfig
       return DataItems;
     }
   private:
-    DataItemConfig_t DataItems[4]
+    DataItemConfig_t DataItems[5]
     {
       {"Sound_Buffer_Data",                   DataType_Int32_t,     I2S_BUFFER_SIZE * 2 },
       {"Right_Channel_Sound_Buffer_Data",     DataType_Int32_t,     I2S_BUFFER_SIZE     },
       {"Left_Channel_Sound_Buffer_Data",      DataType_Int32_t,     I2S_BUFFER_SIZE     },
-      {"FFT_Bin_Data",                        DataType_Int16_t,     FFT_LENGTH          }
+      {"FFT_Bin_Data",                        DataType_Int16_t,     FFT_LENGTH          },
+      {"Test",                                DataType_Int32_t,     10                  }
     };
 };
 

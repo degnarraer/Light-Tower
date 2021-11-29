@@ -56,12 +56,12 @@ void TaskScheduler::AddTask(Task &task)
   }
   if(true != taskFound)
   {
-    if(true == DEBUG_TASKS) Serial << m_Title << ": Adding Task: " << task.GetTaskTitle() << "\n";
+    if(true == TASKS_DEBUG) Serial << m_Title << ": Adding Task: " << task.GetTaskTitle() << "\n";
     m_MyTasks.add(&task);
   }
   if(false == task.GetIsSetup())
   {
-    if(true == DEBUG_TASKS) Serial << m_Title << ": Setting Up Task: " << task.GetTaskTitle() << "\n";
+    if(true == TASKS_DEBUG) Serial << m_Title << ": Setting Up Task: " << task.GetTaskTitle() << "\n";
     task.Setup();
     task.SetIsSetup(true);
   }
@@ -74,7 +74,7 @@ bool TaskScheduler::RemoveTask(Task &task)
     if(m_MyTasks.get(i) == &task)
     {
       taskFound = true;
-      if(true == DEBUG_TASKS) Serial << m_Title << ": Removing Task: " << m_MyTasks.get(i)->GetTaskTitle() << "\n";
+      if(true == TASKS_DEBUG) Serial << m_Title << ": Removing Task: " << m_MyTasks.get(i)->GetTaskTitle() << "\n";
       m_MyTasks.remove(i);
       break;
     }

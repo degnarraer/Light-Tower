@@ -21,29 +21,22 @@
 
 #define EVENT_HANDLER_DEBUG false
 
-#include "EventSystem.h"
 #include "I2S_Device.h"
+#include "FFT_Calculator.h"
 
-class I2S_Device_Manager: public Task, EventSystemCallee
+class I2S_Manager
 {
   public:
-    I2S_Device_Manager(String Title, DataManager &DataManager);
-    virtual ~I2S_Device_Manager();
-    
-    //Task
+    I2S_Manager(String Title, FFT_Calculator &fftCalculator);
+    virtual ~I2S_Manager();
     void Setup();
-    bool CanRunMyTask();
-    void RunMyTask();
-    
-    //Event System Callee
-    void EventSystemNotification(String context);
-  
+    void RunTask();
+    void ProcessEventQueue();
   private:
+    String m_Title;
+    FFT_Calculator &m_FFT_Calculator;
     I2S_Device *m_Mic;
     I2S_Device *m_Speaker;
-    DataManager &m_DataManager;
-    const String MicrophoneNotificationRX = "MicDataReady";
-    const String SpeakerNotificationTX = "SpkrDataSent";
 };
 
 #endif

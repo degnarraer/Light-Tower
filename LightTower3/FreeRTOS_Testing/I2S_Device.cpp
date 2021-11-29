@@ -19,7 +19,6 @@
 #include "I2S_Device.h"
 
 I2S_Device::I2S_Device ( String Title
-                       , DataManager &DataManager
                        , i2s_port_t i2S_PORT
                        , i2s_mode_t Mode
                        , int SampleRate
@@ -33,10 +32,8 @@ I2S_Device::I2S_Device ( String Title
                        , int WordSelectPin
                        , int SerialDataInPin
                        , int SerialDataOutPin
-                       , int MutePin
-                       , String Notification_RX
-                       , String Notification_TX )
-                       : Task(Title, DataManager)
+                       , int MutePin )
+                       : m_Title(Title)
                        , m_I2S_PORT(i2S_PORT)
                        , m_i2s_Mode(Mode)
                        , m_SampleRate(SampleRate)
@@ -51,18 +48,38 @@ I2S_Device::I2S_Device ( String Title
                        , m_SerialDataInPin(SerialDataInPin)
                        , m_SerialDataOutPin(SerialDataOutPin)
                        , m_MutePin(MutePin)
-                       , m_Notification_RX(Notification_RX)
-                       , m_Notification_TX(Notification_TX)
                        {
-                        String empty = "";
-                        if(empty != m_Notification_RX) ResisterNotificationContext(m_Notification_RX);
-                        if(empty != m_Notification_TX) ResisterNotificationContext(m_Notification_TX);
                        }
 I2S_Device::~I2S_Device()
 {
-  String empty = "";
-  if(empty != m_Notification_RX) DeResisterNotificationContext(m_Notification_RX);
-  if(empty != m_Notification_TX) DeResisterNotificationContext(m_Notification_TX);
+}
+
+void I2S_Device::Setup()
+{
+    m_BytesPerSample = m_BitsPerSample/8;
+    m_BytesToRead  = m_BytesPerSample * m_BufferSize * m_i2s_channel;
+    m_ChannelBytesToRead = m_BytesPerSample * m_BufferSize;
+    m_SampleCount = m_BytesToRead / (m_BytesPerSample * m_i2s_channel);
+    m_TotalBuffers = m_BufferSize * m_i2s_channel;
+
+    Serial << m_Title << ": Allocating Memory.\n";    
+    m_SoundBufferData = (int32_t*)malloc(m_BytesToRead);
+    m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
+    m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
+   
+    Serial << m_Title << ": Creating Sound Buffer queue.\n";
+    m_i2s_Data_Buffer_Queue = xQueueCreate( 10, m_BytesToRead );
+    if(m_i2s_Data_Buffer_Queue == NULL){Serial.println("Error creating the queue");}
+    
+    Serial << m_Title << ": Creating Right Channel Sound Buffer queue.\n";
+    m_i2s_Right_Data_Buffer_queue = xQueueCreate( 10, m_ChannelBytesToRead );
+    if(m_i2s_Right_Data_Buffer_queue == NULL){Serial.println("Error creating the queue");}
+
+    Serial << m_Title << ": Creating Left Channel Sound Buffer queue.\n";
+    m_i2s_Left_Data_Buffer_queue = xQueueCreate( 10, m_ChannelBytesToRead );
+    if(m_i2s_Left_Data_Buffer_queue == NULL){Serial.println("Error creating the queue");}
+    
+    SetMuteState(m_MuteState);
 }
 
 void I2S_Device::StartDevice()
@@ -115,37 +132,18 @@ void I2S_Device::SetMuteState(Mute_State_t MuteState)
   }
 }
 
-void I2S_Device::Setup()
-{
-    m_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize * m_i2s_channel);
-    m_RightChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize);
-    m_LeftChannel_SoundBufferData = (int32_t*)malloc((m_BitsPerSample/8) * m_BufferSize);
-    m_BytesToRead  = (m_BitsPerSample/8) * m_BufferSize * m_i2s_channel;
-    m_SampleCount = m_BytesToRead / ((m_BitsPerSample/8) * m_i2s_channel);
-    m_TotalBuffers = m_BufferSize * m_i2s_channel;
-    SetMuteState(m_MuteState);
-}
-
-bool I2S_Device::CanRunMyTask()
-{ 
-  return (m_i2s_event_queue != NULL);
-}
-
-void I2S_Device::RunMyTask()
-{
-  ProcessEventQueue();
-}
-
 int I2S_Device::ReadSamples()
 {
+  *m_SoundBufferData = {0};
+  *m_RightChannel_SoundBufferData = {0};
+  *m_LeftChannel_SoundBufferData = {0};
   // read from i2s
   size_t bytes_read = 0;
   size_t samples_read = 0;
   i2s_read(m_I2S_PORT, m_SoundBufferData, m_BytesToRead, &bytes_read, portMAX_DELAY);
-  samples_read = m_BytesToRead / ((m_BitsPerSample/8) * m_i2s_channel);
+  samples_read = m_BytesToRead / (m_BytesPerSample * m_i2s_channel);
   if(bytes_read != m_BytesToRead)Serial.println("Error Reading All Bytes");
-
-  
+  if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
   if(I2S_CHANNEL_STEREO == m_i2s_channel)
   {
     for(int i = 0; i < samples_read; ++i)
@@ -153,27 +151,8 @@ int I2S_Device::ReadSamples()
       m_RightChannel_SoundBufferData[i] = m_SoundBufferData[i];
       m_LeftChannel_SoundBufferData[i] = m_SoundBufferData[i+1];
     }
-  }
-  if(DATA_RX_DEBUG)
-  {
-    for(int i = 0; i < samples_read; ++i)
-    {
-      Serial.print(-100000000);
-      Serial.print(",");
-      Serial.print(100000000);
-      Serial.print(",");
-      if(I2S_CHANNEL_STEREO == m_i2s_channel)
-      {
-        //DataManager Serial.print(m_DataManager.GetRightChannelSoundBufferData(i));
-        Serial.print(",");
-        //DataManager Serial.print(m_DataManager.GetLeftChannelSoundBufferData(i));
-      }
-      else
-      {
-        //DataManager Serial.print(m_DataManager.GetSoundBufferData(i));
-      }
-      Serial.println(); 
-    }
+    if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial.println("Error Setting Queue"); }
+    //if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial.println("Error Setting Queue"); }
   }
   return samples_read;
 }
@@ -185,8 +164,8 @@ int I2S_Device::WriteSamples(int32_t *samples)
   size_t bytes_to_write = (m_BitsPerSample/8) * m_i2s_channel * m_BufferSize;
   i2s_write(m_I2S_PORT, samples, bytes_to_write, &bytes_written, portMAX_DELAY);
   
-  int samples_to_write = bytes_to_write / (m_BitsPerSample/8);
-  int samples_written = bytes_written / (m_BitsPerSample/8);
+  int samples_to_write = bytes_to_write / (m_BytesPerSample);
+  int samples_written = bytes_written / (m_BytesPerSample);
   if(samples_written != samples_to_write){if(false == QUEUE_DEBUG)Serial.println("Error Writting All Samples");}
   return samples_written;
 }
@@ -243,16 +222,19 @@ void I2S_Device::InstallDevice()
 
 void I2S_Device::ProcessEventQueue()
 {
-  i2s_event_t i2sEvent = {};
-  uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue); 
-  if(true == QUEUE_DEBUG)Serial << m_Title << " Queue: " << i2sMsgCount << "\n";
-  
-  // Iterate over all events in the i2s event queue
-  for (uint8_t i = 0; i < i2sMsgCount; ++i)
+  if(NULL != m_i2s_event_queue)
   {
-    // Take next event from queue
-    if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, portMAX_DELAY) == pdTRUE )
+    i2s_event_t i2sEvent = {};
+    uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);
+    if(true == QUEUE_DEBUG) Serial << m_Title << " Queue Count: " << i2sMsgCount << "\n";
+    
+    // Iterate over all events in the i2s event queue
+    for (uint8_t i = 0; i < i2sMsgCount; ++i)
     {
+      if(true == QUEUE_DEBUG)Serial << m_Title << " Queue: " << i+1 << " of " << i2sMsgCount << "\n";
+      // Take next event from queue
+      if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, portMAX_DELAY) == pdTRUE )
+      {
         switch (i2sEvent.type)
         {
             case I2S_EVENT_DMA_ERROR:
@@ -260,19 +242,18 @@ void I2S_Device::ProcessEventQueue()
                 break;
             case I2S_EVENT_TX_DONE:
                 if(true == QUEUE_INDEPTH_DEBUG)Serial << m_Title << " TX\n";
-                SendNotificationToCallees(m_Notification_TX);
                 break;
             case I2S_EVENT_RX_DONE:
                 {
                   if(true == QUEUE_INDEPTH_DEBUG)Serial << m_Title << " RX\n";
                   ReadSamples();
-                  SendNotificationToCallees(m_Notification_RX);
                 }
                 break;
             case I2S_EVENT_MAX:
                 Serial.println("I2S_EVENT_MAX");
                 break;
         }
-    }
+      }
+    } 
   }
 }
