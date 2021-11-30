@@ -16,27 +16,29 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef I2S_EventHander_H
-#define I2S_EventHander_H
+#ifndef SerialDataLink_H
+#define SerialDataLink_H
+#define QUEUE_SIZE 10
 
-#define EVENT_HANDLER_DEBUG false
+#include <HardwareSerial.h>
+#include <Arduino.h>
+#include "Streaming.h"
+#include "Serial_Datalink_Config.h"
 
-#include "I2S_Device.h"
-#include "FFT_Calculator.h"
-
-class I2S_Manager
+class SerialDataLink: NamedItem
 {
   public:
-    I2S_Manager(String Title, FFT_Calculator &fftCalculator);
-    virtual ~I2S_Manager();
+    SerialDataLink(String Title);
+    virtual ~SerialDataLink();
+
     void Setup();
-    void RunTask();
+    void CheckForNewSerialData();
     void ProcessEventQueue();
   private:
-    String m_Title;
-    FFT_Calculator &m_FFT_Calculator;
-    I2S_Device *m_Mic;
-    I2S_Device *m_Speaker;
+  DataItem_t* m_Config = NULL;
+  size_t m_ConfigCount = 0;
+  HardwareSerial &hSerial = Serial2;
+  String m_InboundStringData = "";
 };
 
 #endif

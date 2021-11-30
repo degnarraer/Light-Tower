@@ -30,8 +30,9 @@
 #include <Arduino.h>
 #include <Adafruit_ZeroFFT.h>
 #include "Streaming.h"
+#include "DataTypes.h"
 
-class FFT_Calculator
+class FFT_Calculator: NamedItem
 {
   public:
     FFT_Calculator(String Title);
@@ -45,7 +46,6 @@ class FFT_Calculator
     size_t m_InputByteCount = 0;
     int m_SampleRate = 0;
     int m_FFT_Length = 0;
-    String m_Title;
     QueueHandle_t m_FFT_Right_Data_Buffer_queue = NULL;
     QueueHandle_t m_FFT_Left_Data_Buffer_queue = NULL;
     int m_BytesToRead = 0;
@@ -60,6 +60,7 @@ class FFT_Calculator
     int m_FFT_Right_Buffer_Index = 0;
     int m_FFT_Left_Buffer_Index = 0;
 
+    void ProcessFFTQueue(int messageCount, QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer);
     void ProcessRightFFTQueue(int messageCount);
     void ProcessLeftFFTQueue(int messageCount);
     float GetFreqForBin(unsigned int bin);

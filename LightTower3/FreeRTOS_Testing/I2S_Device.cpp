@@ -33,8 +33,7 @@ I2S_Device::I2S_Device ( String Title
                        , int SerialDataInPin
                        , int SerialDataOutPin
                        , int MutePin )
-                       : m_Title(Title)
-                       , m_I2S_PORT(i2S_PORT)
+                       : m_I2S_PORT(i2S_PORT)
                        , m_i2s_Mode(Mode)
                        , m_SampleRate(SampleRate)
                        , m_BitsPerSample(i2s_BitsPerSample)
@@ -48,8 +47,9 @@ I2S_Device::I2S_Device ( String Title
                        , m_SerialDataInPin(SerialDataInPin)
                        , m_SerialDataOutPin(SerialDataOutPin)
                        , m_MutePin(MutePin)
-                       {
-                       }
+{
+  m_Title = Title;
+}
 I2S_Device::~I2S_Device()
 {
 }

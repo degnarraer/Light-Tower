@@ -28,6 +28,7 @@
 #include <Arduino.h>
 #include "driver/i2s.h"
 #include "Streaming.h"
+#include "DataTypes.h"
 
 enum Mute_State_t
 {
@@ -41,7 +42,7 @@ struct SampledData_t
   int Count;
 };
 
-class I2S_Device
+class I2S_Device: NamedItem
 {
   public:
     I2S_Device( String Title
@@ -77,7 +78,6 @@ class I2S_Device
     void Setup();
     void ProcessEventQueue();
   private:
-    String m_Title;
     size_t m_SampleCount;
     size_t m_BytesPerSample;
     size_t m_BytesToRead;

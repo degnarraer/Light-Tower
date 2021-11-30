@@ -1,11 +1,15 @@
-#include "I2S_Manager.h"
+#include "Manager.h"
 #include "FFT_Calculator.h"
+#include "Serial_Datalink.h"
 
 TaskHandle_t Task0;
 TaskHandle_t Task1;
+TaskHandle_t Task2;
+TaskHandle_t Task3;
 
 FFT_Calculator m_FFT_Calculator = FFT_Calculator("FFT Calculator");
-I2S_Manager* m_I2S_Manager = new I2S_Manager("I2S Manager", m_FFT_Calculator);
+Manager* m_Manager = new Manager("Manager", m_FFT_Calculator);
+SerialDataLink* m_SerialDatalink = new SerialDataLink("Serial Datalink");
 
 void setup() {
   Serial.begin(500000);
@@ -14,27 +18,56 @@ void setup() {
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
 
-  m_I2S_Manager->Setup();
+  m_Manager->Setup();
+  m_SerialDatalink->Setup();
   
-  xTaskCreatePinnedToCore(
+  xTaskCreatePinnedToCore
+  (
     Task0Loop,            // Function to implement the task
     "Task0",              // Name of the task
-    50000,                 // Stack size in words
+    5000,                // Stack size in words
     NULL,                 // Task input parameter
-    1,                   // Priority of the task
+    1,                    // Priority of the task
     &Task0,               // Task handle.
-    0);                   // Core where the task should run
-  delay(500); 
+    0                     // Core where the task should run
+  );
+  delay(500);
    
-  xTaskCreatePinnedToCore(
+  xTaskCreatePinnedToCore
+  (
     Task1Loop,            // Function to implement the task
     "Task1",              // Name of the task
-    50000,                 // Stack size in words
+    5000,                // Stack size in words
     NULL,                 // Task input parameter
     1,                    // Priority of the task
     &Task1,               // Task handle.
-    0);                   // Core where the task should run
+    0                     // Core where the task should run
+  );                   
   delay(500);
+
+  xTaskCreatePinnedToCore
+  (
+    Task2Loop,            // Function to implement the task
+    "Task2",              // Name of the task
+    1000,                 // Stack size in words
+    NULL,                 // Task input parameter
+    1,                    // Priority of the task
+    &Task2,               // Task handle.
+    1                     // Core where the task should run
+  );                   
+  delay(500); 
+
+  xTaskCreatePinnedToCore
+  (
+    Task3Loop,            // Function to implement the task
+    "Task3",              // Name of the task
+    1000,                 // Stack size in words
+    NULL,                 // Task input parameter
+    1,                    // Priority of the task
+    &Task3,               // Task handle.
+    1                     // Core where the task should run
+  );                   
+  delay(500); 
 
 }
 
@@ -47,7 +80,7 @@ void Task0Loop(void * parameter)
 {
   while(true)
   {
-    m_I2S_Manager->RunTask();
+    m_Manager->RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -56,6 +89,22 @@ void Task1Loop(void * parameter)
   while(true)
   {
     m_FFT_Calculator.ProcessEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+void Task2Loop(void * parameter)
+{
+  while(true)
+  {
+    m_SerialDatalink->ProcessEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+void Task3Loop(void * parameter)
+{
+  while(true)
+  {
+    m_SerialDatalink->CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

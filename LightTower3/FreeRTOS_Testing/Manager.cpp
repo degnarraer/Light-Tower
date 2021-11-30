@@ -18,17 +18,19 @@
 #define I2S_BUFFER_COUNT 10
 #define I2S_BUFFER_SIZE 200
 
-#include "i2s_Manager.h"
+#include "Manager.h"
 
-I2S_Manager::I2S_Manager(String Title, FFT_Calculator &fftCalculator): m_Title(Title)
-                                                                     , m_FFT_Calculator(fftCalculator){}
-I2S_Manager::~I2S_Manager()
+Manager::Manager(String Title, FFT_Calculator &fftCalculator): m_FFT_Calculator(fftCalculator)
+{
+  m_Title = Title;
+}
+Manager::~Manager()
 {
   delete m_Mic;
   delete m_Speaker;
 }
 
-void I2S_Manager::Setup()
+void Manager::Setup()
 {
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
   m_Mic = new I2S_Device( "Microphone"
@@ -70,19 +72,19 @@ void I2S_Manager::Setup()
   m_Speaker->StartDevice();
 }
 
-void I2S_Manager::RunTask()
+void Manager::RunTask()
 {
   m_Mic->ProcessEventQueue();
   m_Speaker->ProcessEventQueue();
   ProcessEventQueue();
 }
 
-void I2S_Manager::ProcessEventQueue()
+void Manager::ProcessEventQueue()
 {
   if(NULL != m_Mic->GetDataBufferQueue())
   {
     uint8_t i2sMicBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "I2S_Manager Mic Data Buffer Queue: " << i2sMicBufferMsgCount << "\n";
+    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << i2sMicBufferMsgCount << "\n";
     
     for (uint8_t i = 0; i < i2sMicBufferMsgCount; ++i)
     {
@@ -102,14 +104,14 @@ void I2S_Manager::ProcessEventQueue()
   if(NULL != m_Mic->GetRightDataBufferQueue())
   {
     uint8_t i2sMicRightBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetRightDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "I2S_Manager Mic Right Data Buffer Queue: " << i2sMicRightBufferMsgCount << "\n";
+    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Right Data Buffer Queue: " << i2sMicRightBufferMsgCount << "\n";
     
     for (uint8_t i = 0; i < i2sMicRightBufferMsgCount; ++i)
     {
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetChannelBytesToRead());
       if ( xQueueReceive(m_Mic->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "I2S_Manager Adding to FFT Right Data Queue\n";
+        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Right Data Queue\n";
         if(xQueueSend(m_FFT_Calculator.GetFFTRightDataQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
       }
       else
@@ -123,14 +125,14 @@ void I2S_Manager::ProcessEventQueue()
   if(NULL != m_Mic->GetLeftDataBufferQueue())
   {
     uint8_t i2sMicLeftBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetLeftDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "I2S_Manager Mic Left Data Buffer Queue: " << i2sMicLeftBufferMsgCount << "\n";
+    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Left Data Buffer Queue: " << i2sMicLeftBufferMsgCount << "\n";
     
     for (uint8_t i = 0; i < i2sMicLeftBufferMsgCount; ++i)
     {
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetChannelBytesToRead());
       if ( xQueueReceive(m_Mic->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "I2S_Manager Adding to FFT Left Data Queue\n";
+        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
         if(xQueueSend(m_FFT_Calculator.GetFFTLeftDataQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
       }
       else
