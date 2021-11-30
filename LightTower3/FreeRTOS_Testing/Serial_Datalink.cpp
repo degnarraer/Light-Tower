@@ -36,7 +36,7 @@ void SerialDataLink::Setup()
   DataItemConfig_t* ConfigFile = ConfigFileGetter->GetConfig();
   m_ConfigCount = ConfigFileGetter->GetConfigCount();
   size_t ConfigBytes = sizeof(DataItem_t) * m_ConfigCount;
-  Serial << GetTitle() << ": Allocating " << m_ConfigCount << " DataItem_t's for a total of " << ConfigBytes << " bytes of Memory\n";
+  Serial << GetTitle() << ": Allocating " << m_ConfigCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
   m_Config = (DataItem_t*)malloc(ConfigBytes);
   for(int i = 0; i < m_ConfigCount; ++i)
   {
