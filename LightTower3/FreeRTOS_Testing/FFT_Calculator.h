@@ -18,7 +18,8 @@
 
 #ifndef I2S_FFT_CALCULATOR_H
 #define I2S_FFT_CALCULATOR_H
-#define FFT_LENGTH 2048
+
+#define NUMBER_OF_BANDS 32
 
 #define FFT_CALCULATOR_DEBUG false
 #define FFT_CALCULATOR_LOOPS_DEBUG false
@@ -35,20 +36,25 @@ class FFT_Calculator
   public:
     FFT_Calculator(String Title);
     virtual ~FFT_Calculator();
-    void Setup(size_t BufferCount);
+    void Setup(size_t InputByteCount, int SampleRate, int FFT_Length);
     void ProcessEventQueue();
     QueueHandle_t GetFFTRightDataQueue() { return m_FFT_Right_Data_Buffer_queue; }
     QueueHandle_t GetFFTLeftDataQueue() { return m_FFT_Left_Data_Buffer_queue; }
     
   private:
-    size_t m_BufferCount = 0;
+    size_t m_InputByteCount = 0;
+    int m_SampleRate = 0;
+    int m_FFT_Length = 0;
     String m_Title;
     QueueHandle_t m_FFT_Right_Data_Buffer_queue = NULL;
     QueueHandle_t m_FFT_Left_Data_Buffer_queue = NULL;
     int m_BytesToRead = 0;
 
-    int16_t m_FFT_Right_Data[FFT_LENGTH];
-    int16_t m_FFT_Left_Data[FFT_LENGTH];
+    int16_t* m_FFT_Right_Data;
+    int16_t* m_FFT_Left_Data;
+    int16_t* m_Right_Band_Values;
+    int16_t* m_Left_Band_Values;
+
     int32_t* m_FFT_Right_Buffer_Data;
     int32_t* m_FFT_Left_Buffer_Data;
     int m_FFT_Right_Buffer_Index = 0;
@@ -56,6 +62,7 @@ class FFT_Calculator
 
     void ProcessRightFFTQueue(int messageCount);
     void ProcessLeftFFTQueue(int messageCount);
+    float GetFreqForBin(unsigned int bin);
 };
 
 

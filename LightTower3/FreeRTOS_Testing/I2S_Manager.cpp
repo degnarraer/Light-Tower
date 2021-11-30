@@ -65,9 +65,9 @@ void I2S_Manager::Setup()
 
   m_Mic->Setup();
   m_Speaker->Setup();
+  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 4096);
   m_Mic->StartDevice();
   m_Speaker->StartDevice();
-  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead());
 }
 
 void I2S_Manager::RunTask()

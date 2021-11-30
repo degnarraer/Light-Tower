@@ -93,18 +93,6 @@ void I2S_Device::StopDevice()
   i2s_stop(m_I2S_PORT);
 }
 
-int32_t* I2S_Device::GetSoundBufferData()
-{
-  return m_SoundBufferData;
-}
-int32_t* I2S_Device::GetRightSoundBufferData()
-{
-  return m_RightChannel_SoundBufferData;
-}
-int32_t* I2S_Device::GetLeftSoundBufferData()
-{
-  return m_LeftChannel_SoundBufferData;
-}
 void I2S_Device::SetSoundBufferData(int32_t *SoundBufferData)
 {
   for(int i = 0; i < m_BufferSize * m_i2s_channel; ++i)
@@ -114,6 +102,7 @@ void I2S_Device::SetSoundBufferData(int32_t *SoundBufferData)
   WriteSamples(m_SoundBufferData);
   if(true == DATA_TX_DEBUG) Serial <<  m_Title << "Sound Buffer Data Ready\n";
 }
+
 void I2S_Device::SetMuteState(Mute_State_t MuteState)
 {
   pinMode(m_MutePin, OUTPUT);

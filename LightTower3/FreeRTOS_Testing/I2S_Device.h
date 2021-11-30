@@ -66,15 +66,14 @@ class I2S_Device
     QueueHandle_t GetDataBufferQueue() { return m_i2s_Data_Buffer_Queue; }
     QueueHandle_t GetRightDataBufferQueue() { return m_i2s_Right_Data_Buffer_queue; }
     QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }
-    int32_t* GetSoundBufferData();
-    int32_t* GetRightSoundBufferData();
-    int32_t* GetLeftSoundBufferData();
+
     void SetSoundBufferData(int32_t *SoundBufferData);
     void SetMuteState(Mute_State_t MuteState);
     size_t GetSampleCount() { return m_SampleCount; }
     size_t GetBufferCount() { return m_TotalBuffers; }
     size_t GetBytesToRead() {return m_BytesToRead; }
     size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
+    int GetSampleRate() { return m_SampleRate; }
     void Setup();
     void ProcessEventQueue();
   private:

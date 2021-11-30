@@ -19,17 +19,17 @@ void setup() {
   xTaskCreatePinnedToCore(
     Task0Loop,            // Function to implement the task
     "Task0",              // Name of the task
-    20000,                // Stack size in words
+    50000,                 // Stack size in words
     NULL,                 // Task input parameter
-    10,                    // Priority of the task
+    1,                   // Priority of the task
     &Task0,               // Task handle.
-    1);                   // Core where the task should run
+    0);                   // Core where the task should run
   delay(500); 
    
   xTaskCreatePinnedToCore(
     Task1Loop,            // Function to implement the task
     "Task1",              // Name of the task
-    20000,                // Stack size in words
+    50000,                 // Stack size in words
     NULL,                 // Task input parameter
     1,                    // Priority of the task
     &Task1,               // Task handle.
