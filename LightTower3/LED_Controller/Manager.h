@@ -16,4 +16,27 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "DataManager.h"
+#ifndef I2S_EventHander_H
+#define I2S_EventHander_H
+
+#define EVENT_HANDLER_DEBUG false
+
+#include <I2S_Device.h>
+#include "FFT_Calculator.h"
+#include <DataTypes.h>
+
+class Manager: NamedItem
+{
+  public:
+    Manager(String Title, FFT_Calculator &fftCalculator);
+    virtual ~Manager();
+    void Setup();
+    void RunTask();
+    void ProcessEventQueue();
+  private:
+    FFT_Calculator &m_FFT_Calculator;
+    I2S_Device *m_Mic;
+    I2S_Device *m_Speaker;
+};
+
+#endif
