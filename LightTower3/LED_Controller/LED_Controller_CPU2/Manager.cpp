@@ -20,14 +20,13 @@
 
 #include "Manager.h"
 
-Manager::Manager(String Title, FFT_Calculator &fftCalculator): m_FFT_Calculator(fftCalculator)
+Manager::Manager(String Title)
 {
   m_Title = Title;
 }
 Manager::~Manager()
 {
   delete m_Mic;
-  delete m_Speaker;
 }
 
 void Manager::Setup()
@@ -47,11 +46,11 @@ void Manager::Setup()
                         , 13
                         , 14
                         , I2S_PIN_NO_CHANGE
-                        , 32 );
+                        , I2S_PIN_NO_CHANGE );
                         
     m_Speaker = new I2S_Device( "Speaker"
                               , I2S_NUM_1
-                              , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_TX)
+                              , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                               , 44100
                               , I2S_BITS_PER_SAMPLE_32BIT
                               , I2S_CHANNEL_FMT_RIGHT_LEFT
@@ -67,7 +66,6 @@ void Manager::Setup()
 
   m_Mic->Setup();
   m_Speaker->Setup();
-  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 4096);
   m_Mic->StartDevice();
   m_Speaker->StartDevice();
 }
@@ -91,18 +89,15 @@ void Manager::ProcessEventQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetBytesToRead());
       if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
-        {
-          DataBuffer[j] = j*100; 
-        }
-        m_Speaker->SetSoundBufferData(DataBuffer);
-        if(false)
+        if(true)
         {
           for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
           {
             Serial << DataBuffer[j] << "\n";
           } 
         }
+        m_Speaker->SetSoundBufferData(DataBuffer);
+        
       }
       else
       {
@@ -123,7 +118,6 @@ void Manager::ProcessEventQueue()
       if ( xQueueReceive(m_Mic->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Right Data Queue\n";
-        if(xQueueSend(m_FFT_Calculator.GetFFTRightDataQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
       }
       else
       {
@@ -144,7 +138,6 @@ void Manager::ProcessEventQueue()
       if ( xQueueReceive(m_Mic->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
-        if(xQueueSend(m_FFT_Calculator.GetFFTLeftDataQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
       }
       else
       {

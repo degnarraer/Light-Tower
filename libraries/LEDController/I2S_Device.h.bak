@@ -72,7 +72,7 @@ class I2S_Device: NamedItem
     void SetMuteState(Mute_State_t MuteState);
     size_t GetSampleCount() { return m_SampleCount; }
     size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
-    size_t GetBytesToRead() {return m_TotalBytesToRead; }
+    size_t GetBytesToRead() {return m_BytesToRead; }
     size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
     int GetSampleRate() { return m_SampleRate; }
     void Setup();
@@ -81,7 +81,7 @@ class I2S_Device: NamedItem
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
-    size_t m_TotalBytesToRead;
+    size_t m_BytesToRead;
     size_t m_ChannelBytesToRead;
     int32_t *m_SoundBufferData;
     int32_t *m_LeftChannel_SoundBufferData;
