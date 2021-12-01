@@ -22,15 +22,17 @@
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
+#include <DataTypes.h>
 #include "Streaming.h"
-#include "Serial_Datalink_Config.h"
 
-class SerialDataLink: NamedItem
+class SerialDataLinkCore: NamedItem
 {
   public:
-    SerialDataLink(String Title);
-    virtual ~SerialDataLink();
-
+    SerialDataLinkCore(String Title);
+    virtual ~SerialDataLinkCore();
+	virtual DataItemConfig_t* GetConfig() = 0;
+	virtual size_t GetConfigCount() = 0;
+	
     void Setup();
     void CheckForNewSerialData();
     void ProcessEventQueue();

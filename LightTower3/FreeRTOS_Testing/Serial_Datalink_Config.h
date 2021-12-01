@@ -19,16 +19,17 @@
 #ifndef SerialDataLinkConfig_H
 #define SerialDataLinkConfig_H
 
-#include "DataTypes.h"
+#include <Serial_Datalink_Core.h>
+#include <DataTypes.h>
 #include "Manager.h"
 
 
 class Manager;
-class SerialDataLinkConfig
+class SerialDataLink: public SerialDataLinkCore
 {
   public:
-    SerialDataLinkConfig() {}
-    virtual ~SerialDataLinkConfig(){}
+    SerialDataLink(String Title): SerialDataLinkCore(Title) {}
+    virtual ~SerialDataLink(){}
     DataItemConfig_t* GetConfig() { return ItemConfig; }
     size_t GetConfigCount() { return m_ConfigCount; }
   private:
@@ -38,11 +39,6 @@ class SerialDataLinkConfig
     {
       { "FFT_Bin_Data", DataType_Int16_t, 1 }
     };
-
-    QueueHandle_t MakeQueueHandle()
-    {
-      
-    }
 
 };
 

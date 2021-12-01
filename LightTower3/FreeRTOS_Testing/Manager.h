@@ -23,7 +23,7 @@
 
 #include "I2S_Device.h"
 #include "FFT_Calculator.h"
-#include "DataTypes.h"
+#include <DataTypes.h>
 
 class Manager: NamedItem
 {

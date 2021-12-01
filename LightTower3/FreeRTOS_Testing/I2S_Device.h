@@ -28,7 +28,7 @@
 #include <Arduino.h>
 #include "driver/i2s.h"
 #include "Streaming.h"
-#include "DataTypes.h"
+#include <DataTypes.h>
 
 enum Mute_State_t
 {

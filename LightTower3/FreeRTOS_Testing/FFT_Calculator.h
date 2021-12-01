@@ -30,7 +30,7 @@
 #include <Arduino.h>
 #include <Adafruit_ZeroFFT.h>
 #include "Streaming.h"
-#include "DataTypes.h"
+#include <DataTypes.h>
 
 class FFT_Calculator: NamedItem
 {

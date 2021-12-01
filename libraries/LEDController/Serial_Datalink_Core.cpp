@@ -16,25 +16,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Serial_Datalink.h"
+#include <Serial_Datalink_Core.h>
 
-SerialDataLink::SerialDataLink(String Title)
+SerialDataLinkCore::SerialDataLinkCore(String Title)
 {
   m_Title = Title;
 }
-SerialDataLink::~SerialDataLink()
+SerialDataLinkCore::~SerialDataLinkCore()
 {
 
 }
 
-void SerialDataLink::Setup()
+void SerialDataLinkCore::Setup()
 {
   hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
   delay(500);
 
-  SerialDataLinkConfig* ConfigFileGetter = new SerialDataLinkConfig();
-  DataItemConfig_t* ConfigFile = ConfigFileGetter->GetConfig();
-  m_ConfigCount = ConfigFileGetter->GetConfigCount();
+  DataItemConfig_t* ConfigFile = GetConfig();
+  m_ConfigCount = GetConfigCount();
   size_t ConfigBytes = sizeof(DataItem_t) * m_ConfigCount;
   Serial << GetTitle() << ": Allocating " << m_ConfigCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
   m_Config = (DataItem_t*)malloc(ConfigBytes);
@@ -106,10 +105,9 @@ void SerialDataLink::Setup()
     m_Config[i].Object = Object;
     Serial << GetTitle() << ": Successfully Saved DataItem " << i+1 << " of " << m_ConfigCount << "\n"; 
   }
-  delete ConfigFileGetter;
 }
 
-void SerialDataLink::CheckForNewSerialData()
+void SerialDataLinkCore::CheckForNewSerialData()
 {
   if(true == hSerial.available())
   {
@@ -125,7 +123,7 @@ void SerialDataLink::CheckForNewSerialData()
   }
 }
 
-void SerialDataLink::ProcessEventQueue()
+void SerialDataLinkCore::ProcessEventQueue()
 {
   if(NULL != m_Config)
   {
