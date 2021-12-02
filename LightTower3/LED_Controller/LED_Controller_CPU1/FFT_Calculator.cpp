@@ -18,9 +18,8 @@
 
 #include "FFT_Calculator.h"
 
-FFT_Calculator::FFT_Calculator(String Title)
+FFT_Calculator::FFT_Calculator(String Title): NamedItem(Title)
 {
-  m_Title = Title;
 }
 FFT_Calculator::~FFT_Calculator()
 {

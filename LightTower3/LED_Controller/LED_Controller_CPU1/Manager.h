@@ -20,12 +20,15 @@
 #define I2S_EventHander_H
 
 #define EVENT_HANDLER_DEBUG false
+#define PRINT_DATA_DEBUG false
+#define SAWTOOTH_OUTPUT_DATA_DEBUG false
 
 #include <I2S_Device.h>
 #include "FFT_Calculator.h"
 #include <DataTypes.h>
 
-class Manager: NamedItem
+class Manager: public NamedItem
+             , public I2S_Device_Callback
 {
   public:
     Manager(String Title, FFT_Calculator &fftCalculator);
@@ -33,6 +36,25 @@ class Manager: NamedItem
     void Setup();
     void RunTask();
     void ProcessEventQueue();
+
+    //I2S_Device_Callback
+    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count)
+    {
+      if(DeviceTitle == m_Mic->GetTitle())
+      {
+        for(int i = 0; i < Count; ++i)
+        {
+           if(true == SAWTOOTH_OUTPUT_DATA_DEBUG)
+           {
+            DataBuffer[i] = i;
+           }
+           DataBuffer[i] = DataBuffer[i] * 0.001;  // SET VOLUME HERE
+        } 
+      }
+    }
+    void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
+    
   private:
     FFT_Calculator &m_FFT_Calculator;
     I2S_Device *m_Mic;

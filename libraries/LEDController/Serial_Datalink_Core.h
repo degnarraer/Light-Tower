@@ -25,7 +25,7 @@
 #include <DataTypes.h>
 #include "Streaming.h"
 
-class SerialDataLinkCore: NamedItem
+class SerialDataLinkCore: public NamedItem
 {
   public:
     SerialDataLinkCore(String Title);

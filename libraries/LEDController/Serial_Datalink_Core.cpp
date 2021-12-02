@@ -18,9 +18,8 @@
 
 #include <Serial_Datalink_Core.h>
 
-SerialDataLinkCore::SerialDataLinkCore(String Title)
+SerialDataLinkCore::SerialDataLinkCore(String Title): NamedItem(Title)
 {
-  m_Title = Title;
 }
 SerialDataLinkCore::~SerialDataLinkCore()
 {

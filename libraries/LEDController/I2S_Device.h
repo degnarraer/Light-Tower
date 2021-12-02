@@ -42,7 +42,17 @@ struct SampledData_t
   int Count;
 };
 
-class I2S_Device: NamedItem
+class I2S_Device_Callback
+{
+	public:
+		I2S_Device_Callback(){}
+		virtual ~I2S_Device_Callback(){}
+		virtual void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+};
+
+class I2S_Device: public NamedItem
 {
   public:
     I2S_Device( String Title
@@ -61,7 +71,7 @@ class I2S_Device: NamedItem
               , int SerialDataOutPin
               , int MutePin );
     virtual ~I2S_Device();
-    
+    void ResgisterForDataBufferRXCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
     void StartDevice();
     void StopDevice();
     QueueHandle_t GetDataBufferQueue() { return m_i2s_Data_Buffer_Queue; }
@@ -78,6 +88,7 @@ class I2S_Device: NamedItem
     void Setup();
     void ProcessEventQueue();
   private:
+	I2S_Device_Callback* m_Callee = NULL;
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;

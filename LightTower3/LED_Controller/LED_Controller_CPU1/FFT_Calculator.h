@@ -32,7 +32,7 @@
 #include "Streaming.h"
 #include <DataTypes.h>
 
-class FFT_Calculator: NamedItem
+class FFT_Calculator: public NamedItem
 {
   public:
     FFT_Calculator(String Title);

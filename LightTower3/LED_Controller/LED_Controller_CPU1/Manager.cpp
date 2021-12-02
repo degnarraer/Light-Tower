@@ -16,13 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define I2S_BUFFER_COUNT 10
-#define I2S_BUFFER_SIZE 200
+#define I2S_BUFFER_SIZE 100
+
 
 #include "Manager.h"
 
-Manager::Manager(String Title, FFT_Calculator &fftCalculator): m_FFT_Calculator(fftCalculator)
+Manager::Manager(String Title, FFT_Calculator &fftCalculator): NamedItem(Title)
+                                                             , m_FFT_Calculator(fftCalculator)
 {
-  m_Title = Title;
 }
 Manager::~Manager()
 {
@@ -51,7 +52,7 @@ void Manager::Setup()
                         
     m_Speaker = new I2S_Device( "Speaker"
                               , I2S_NUM_1
-                              , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_TX)
+                              , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                               , 44100
                               , I2S_BITS_PER_SAMPLE_32BIT
                               , I2S_CHANNEL_FMT_RIGHT_LEFT
@@ -65,6 +66,7 @@ void Manager::Setup()
                               , 33
                               , I2S_PIN_NO_CHANGE );
 
+  m_Mic->ResgisterForDataBufferRXCallback(this);
   m_Mic->Setup();
   m_Speaker->Setup();
   m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 4096);
@@ -91,12 +93,8 @@ void Manager::ProcessEventQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetBytesToRead());
       if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
-        {
-          DataBuffer[j] = j*100; 
-        }
         m_Speaker->SetSoundBufferData(DataBuffer);
-        if(false)
+        if(true == PRINT_DATA_DEBUG)
         {
           for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
           {

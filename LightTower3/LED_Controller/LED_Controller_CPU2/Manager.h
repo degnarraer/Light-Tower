@@ -20,11 +20,13 @@
 #define I2S_EventHander_H
 
 #define EVENT_HANDLER_DEBUG false
+#define PRINT_DATA_DEBUG true
 
 #include <I2S_Device.h>
 #include <DataTypes.h>
 
-class Manager: NamedItem
+class Manager: public NamedItem
+             , public I2S_Device_Callback
 {
   public:
     Manager(String Title);
@@ -32,6 +34,12 @@ class Manager: NamedItem
     void Setup();
     void RunTask();
     void ProcessEventQueue();
+
+    //I2S_Device_Callback
+    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
+    void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
+    
   private:
     I2S_Device *m_Mic;
     I2S_Device *m_Speaker;

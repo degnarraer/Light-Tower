@@ -16,13 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define I2S_BUFFER_COUNT 10
-#define I2S_BUFFER_SIZE 200
+#define I2S_BUFFER_SIZE 100
 
 #include "Manager.h"
 
-Manager::Manager(String Title)
+Manager::Manager(String Title): NamedItem(Title)
 {
-  m_Title = Title;
 }
 Manager::~Manager()
 {
@@ -34,7 +33,7 @@ void Manager::Setup()
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
   m_Mic = new I2S_Device( "Microphone"
                         , I2S_NUM_0
-                        , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
+                        , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
                         , 44100
                         , I2S_BITS_PER_SAMPLE_32BIT
                         , I2S_CHANNEL_FMT_RIGHT_LEFT
@@ -89,7 +88,7 @@ void Manager::ProcessEventQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetBytesToRead());
       if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        if(true)
+        if(true == PRINT_DATA_DEBUG)
         {
           for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
           {
@@ -97,7 +96,6 @@ void Manager::ProcessEventQueue()
           } 
         }
         m_Speaker->SetSoundBufferData(DataBuffer);
-        
       }
       else
       {

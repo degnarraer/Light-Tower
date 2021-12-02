@@ -4,11 +4,13 @@
 class NamedItem
 {
   public:
+	NamedItem(String Title): m_Title(Title){}
+	virtual ~NamedItem(){}
     String GetTitle()
     { 
       return m_Title;
     }
-  protected:
+  private:
     String m_Title;
 };
 
