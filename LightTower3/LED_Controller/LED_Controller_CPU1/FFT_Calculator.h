@@ -39,16 +39,29 @@ class FFT_Calculator: public NamedItem
     virtual ~FFT_Calculator();
     void Setup(size_t InputByteCount, int SampleRate, int FFT_Length);
     void ProcessEventQueue();
-    QueueHandle_t GetFFTRightDataQueue() { return m_FFT_Right_Data_Buffer_queue; }
-    QueueHandle_t GetFFTLeftDataQueue() { return m_FFT_Left_Data_Buffer_queue; }
+
+    //Input Data Queue
+    QueueHandle_t GetFFTRightDataInputQueue() { return m_FFT_Right_Data_Input_Buffer_queue; }
+    QueueHandle_t GetFFTLeftDataInputQueue() { return m_FFT_Left_Data_Input_Buffer_queue; }
+
+    
+    //Output Data Queue
+    QueueHandle_t GetFFTRightBandDataOutputQueue() { return m_FFT_Right_BandData_Output_Buffer_queue; }
+    size_t GetFFTRightBandDataBufferSize() { return m_BandOutputByteCount; }
+    QueueHandle_t GetFFTLeftBandDataOutputQueue() { return m_FFT_Left_BandData_Output_Buffer_queue; }
+    size_t GetFFTLeftBandDataBufferSize() { return m_BandOutputByteCount; }
     
   private:
     size_t m_InputByteCount = 0;
     int m_SampleRate = 0;
     int m_FFT_Length = 0;
-    QueueHandle_t m_FFT_Right_Data_Buffer_queue = NULL;
-    QueueHandle_t m_FFT_Left_Data_Buffer_queue = NULL;
-    int m_BytesToRead = 0;
+    QueueHandle_t m_FFT_Right_Data_Input_Buffer_queue = NULL;
+    QueueHandle_t m_FFT_Left_Data_Input_Buffer_queue = NULL;
+    size_t m_BytesToRead = 0;
+
+    QueueHandle_t m_FFT_Right_BandData_Output_Buffer_queue = NULL;
+    QueueHandle_t m_FFT_Left_BandData_Output_Buffer_queue = NULL;
+    size_t m_BandOutputByteCount = 0;
 
     int16_t* m_FFT_Right_Data;
     int16_t* m_FFT_Left_Data;

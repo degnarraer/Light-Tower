@@ -25,13 +25,16 @@
 
 #include <I2S_Device.h>
 #include "FFT_Calculator.h"
+#include "Serial_Datalink_Config.h"
 #include <DataTypes.h>
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
 {
   public:
-    Manager(String Title, FFT_Calculator &fftCalculator);
+    Manager( String Title
+           , FFT_Calculator &FFTCalculator
+           , SerialDataLink &SerialDataLink );
     virtual ~Manager();
     void Setup();
     void RunTask();
@@ -57,8 +60,15 @@ class Manager: public NamedItem
     
   private:
     FFT_Calculator &m_FFT_Calculator;
+    SerialDataLink &m_SerialDataLink;
     I2S_Device *m_Mic;
     I2S_Device *m_Speaker;
+
+    void ProcessDataBufferQueue();
+    void ProcessRightChannelDataBufferQueue();
+    void ProcessLeftChannelDataBufferQueue();
+    void ProcessRightFFTDataBufferQueue();
+    void ProcessLeftFFTDataBufferQueue();
 };
 
 #endif

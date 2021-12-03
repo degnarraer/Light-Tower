@@ -21,8 +21,11 @@
 
 #include "Manager.h"
 
-Manager::Manager(String Title, FFT_Calculator &fftCalculator): NamedItem(Title)
-                                                             , m_FFT_Calculator(fftCalculator)
+Manager::Manager( String Title
+                , FFT_Calculator& FFTCalculator
+                , SerialDataLink& SerialDataLink): NamedItem(Title)
+                                                 , m_FFT_Calculator(FFTCalculator)
+                                                 , m_SerialDataLink(SerialDataLink)
 {
 }
 Manager::~Manager()
@@ -83,6 +86,15 @@ void Manager::RunTask()
 
 void Manager::ProcessEventQueue()
 {
+  ProcessDataBufferQueue();
+  ProcessRightChannelDataBufferQueue();
+  ProcessLeftChannelDataBufferQueue();
+  ProcessRightFFTDataBufferQueue();
+  ProcessLeftFFTDataBufferQueue();
+}
+
+void Manager::ProcessDataBufferQueue()
+{
   if(NULL != m_Mic->GetDataBufferQueue())
   {
     uint8_t i2sMicBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetDataBufferQueue());
@@ -109,7 +121,10 @@ void Manager::ProcessEventQueue()
       delete DataBuffer;
     }
   }
-  
+}
+
+void Manager::ProcessRightChannelDataBufferQueue()
+{
   if(NULL != m_Mic->GetRightDataBufferQueue())
   {
     uint8_t i2sMicRightBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetRightDataBufferQueue());
@@ -121,7 +136,7 @@ void Manager::ProcessEventQueue()
       if ( xQueueReceive(m_Mic->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Right Data Queue\n";
-        if(xQueueSend(m_FFT_Calculator.GetFFTRightDataQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+        if(xQueueSend(m_FFT_Calculator.GetFFTRightDataInputQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
       }
       else
       {
@@ -130,7 +145,10 @@ void Manager::ProcessEventQueue()
       delete DataBuffer;
     }
   }
-  
+}
+
+void Manager::ProcessLeftChannelDataBufferQueue()
+{
   if(NULL != m_Mic->GetLeftDataBufferQueue())
   {
     uint8_t i2sMicLeftBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetLeftDataBufferQueue());
@@ -142,7 +160,7 @@ void Manager::ProcessEventQueue()
       if ( xQueueReceive(m_Mic->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
-        if(xQueueSend(m_FFT_Calculator.GetFFTLeftDataQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+        if(xQueueSend(m_FFT_Calculator.GetFFTLeftDataInputQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
       }
       else
       {
@@ -151,5 +169,50 @@ void Manager::ProcessEventQueue()
       delete DataBuffer;
     }
   }
+}
 
+void Manager::ProcessRightFFTDataBufferQueue()
+{
+  if(NULL != m_FFT_Calculator.GetFFTRightBandDataOutputQueue())
+  {
+    uint8_t RightBandDataOutputQueueCount = uxQueueMessagesWaiting(m_FFT_Calculator.GetFFTRightBandDataOutputQueue());
+    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager FFT Right Data Band Output Queue: " << RightBandDataOutputQueueCount << "\n";
+    for (uint8_t i = 0; i < RightBandDataOutputQueueCount; ++i)
+    {
+      int16_t* DataBuffer = (int16_t*)malloc(m_FFT_Calculator.GetFFTRightBandDataBufferSize());
+      if ( xQueueReceive(m_FFT_Calculator.GetFFTRightBandDataOutputQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      {
+        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to Serial Data Link ""FFT_RBand_Data"" Queue\n";
+        //if(xQueueSend(m_SerialDataLink.GetQueueHandleForDataItem("FFT_RBand_Data"), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+      }
+      else
+      {
+        Serial << "Error Receiving Queue!";
+      }
+      delete DataBuffer;
+    }
+  }
+}
+
+void Manager::ProcessLeftFFTDataBufferQueue()
+{
+  if(NULL != m_FFT_Calculator.GetFFTLeftBandDataOutputQueue())
+  {
+    uint8_t LeftBandDataOutputQueueCount = uxQueueMessagesWaiting(m_FFT_Calculator.GetFFTLeftBandDataOutputQueue());
+    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager FFT Left Data Band Output Queue: " << LeftBandDataOutputQueueCount << "\n";
+    for (uint8_t i = 0; i < LeftBandDataOutputQueueCount; ++i)
+    {
+      int16_t* DataBuffer = (int16_t*)malloc(m_FFT_Calculator.GetFFTLeftBandDataBufferSize());
+      if ( xQueueReceive(m_FFT_Calculator.GetFFTLeftBandDataOutputQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      {
+        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
+        //if(xQueueSend(m_SerialDataLink.GetQueueHandleForDataItem("FFT_LBand_Data"), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+      }
+      else
+      {
+        Serial << "Error Receiving Queue!";
+      }
+      delete DataBuffer;
+    }
+  }
 }

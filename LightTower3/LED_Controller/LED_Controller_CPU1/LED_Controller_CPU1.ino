@@ -8,8 +8,8 @@ TaskHandle_t Task2;
 TaskHandle_t Task3;
 
 FFT_Calculator m_FFT_Calculator = FFT_Calculator("FFT Calculator");
-Manager* m_Manager = new Manager("Manager", m_FFT_Calculator);
-SerialDataLink* m_SerialDatalink = new SerialDataLink("Serial Datalink");
+SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
+Manager* m_Manager = new Manager("Manager", m_FFT_Calculator, m_SerialDatalink);
 
 void setup() {
   Serial.begin(500000);
@@ -19,7 +19,7 @@ void setup() {
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
 
   m_Manager->Setup();
-  m_SerialDatalink->Setup();
+  m_SerialDatalink.Setup();
   
   xTaskCreatePinnedToCore
   (
@@ -96,7 +96,7 @@ void Task2Loop(void * parameter)
 {
   while(true)
   {
-    m_SerialDatalink->ProcessEventQueue();
+    m_SerialDatalink.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -104,7 +104,7 @@ void Task3Loop(void * parameter)
 {
   while(true)
   {
-    m_SerialDatalink->CheckForNewSerialData();
+    m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

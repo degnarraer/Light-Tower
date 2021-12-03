@@ -119,7 +119,6 @@ QueueHandle_t SerialDataLinkCore::GetQueueHandleForDataItem(String Name)
 			}
 		}
 	}
-	return NULL;
 }
 
 void SerialDataLinkCore::CheckForNewSerialData()

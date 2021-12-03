@@ -36,7 +36,6 @@ class SerialDataLinkCore: public NamedItem
     void Setup();
     void CheckForNewSerialData();
     void ProcessEventQueue();
-	QueueHandle_t GetQueueHandleForDataItem(String Name);
   private:
   DataItem_t* m_DataItem = NULL;
   size_t m_DataItemCount = 0;

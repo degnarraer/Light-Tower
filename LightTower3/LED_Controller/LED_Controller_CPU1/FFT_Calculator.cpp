@@ -33,35 +33,44 @@ void FFT_Calculator::Setup(size_t InputByteCount, int SampleRate, int FFT_Length
   Serial << "FFT Config: " << m_InputByteCount << " | " << m_SampleRate << " | " << m_FFT_Length << "\n";
 
   Serial << GetTitle() << ": Allocating Memory.\n";
+  m_BandOutputByteCount = sizeof(int16_t) * NUMBER_OF_BANDS;
   m_FFT_Right_Buffer_Data = (int32_t*)malloc(m_InputByteCount);
   m_FFT_Left_Buffer_Data = (int32_t*)malloc(m_InputByteCount);
   m_FFT_Right_Data = (int16_t*)malloc(sizeof(int16_t) * m_FFT_Length);
   m_FFT_Left_Data = (int16_t*)malloc(sizeof(int16_t) * m_FFT_Length);
-  m_Right_Band_Values = (int16_t*)malloc(sizeof(int16_t) * NUMBER_OF_BANDS);
-  m_Left_Band_Values = (int16_t*)malloc(sizeof(int16_t) * NUMBER_OF_BANDS);
+  m_Right_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
+  m_Left_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
   m_BytesToRead = sizeof(int32_t) * m_FFT_Length;
   
-  Serial << GetTitle() << ": Creating Right FFT queue.\n";
-  m_FFT_Right_Data_Buffer_queue = xQueueCreate(10, m_InputByteCount );
-  if(m_FFT_Right_Data_Buffer_queue == NULL){Serial.println("Error creating the Right Channel FFT queue");}
+  Serial << GetTitle() << ": Creating Right FFT Input Buffer queue.\n";
+  m_FFT_Right_Data_Input_Buffer_queue = xQueueCreate(10, m_InputByteCount );
+  if(m_FFT_Right_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Right Channel FFT Input Data queue");}
   
-  Serial << GetTitle() << ": Creating Left FFT queue.\n";
-  m_FFT_Left_Data_Buffer_queue = xQueueCreate(10, m_InputByteCount );
-  if(m_FFT_Left_Data_Buffer_queue == NULL){Serial.println("Error creating the Left Channel FFT queue");}
+  Serial << GetTitle() << ": Creating Left FFT Input Buffer queue.\n";
+  m_FFT_Left_Data_Input_Buffer_queue = xQueueCreate(10, m_InputByteCount );
+  if(m_FFT_Left_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Left Channel FFT Input Data  queue");}
+  
+  Serial << GetTitle() << ": Creating Right FFT Output Band Data queue.\n";
+  m_FFT_Right_BandData_Output_Buffer_queue = xQueueCreate(10, m_BandOutputByteCount );
+  if(m_FFT_Right_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Right Channel FFT Output Band Data queue");}
+  
+  Serial << GetTitle() << ": Creating Left FFT Output Band Data queue.\n";
+  m_FFT_Left_BandData_Output_Buffer_queue = xQueueCreate(10, m_BandOutputByteCount );
+  if(m_FFT_Left_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Left Channel FFT Output Band queue");}
 }
 
 void FFT_Calculator::ProcessEventQueue()
 {
-  if(NULL != m_FFT_Right_Data_Buffer_queue)
+  if(NULL != m_FFT_Right_Data_Input_Buffer_queue)
   {
-    uint8_t fftRightDataBufferMsgCount = uxQueueMessagesWaiting(m_FFT_Right_Data_Buffer_queue);
+    uint8_t fftRightDataBufferMsgCount = uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue);
     if(true == FFT_CALCULATOR_DEBUG) Serial << "FFT Right Data Buffer Queue: " << fftRightDataBufferMsgCount << "\n";
     ProcessRightFFTQueue(fftRightDataBufferMsgCount);
   }
   
-  if(NULL != m_FFT_Left_Data_Buffer_queue)
+  if(NULL != m_FFT_Left_Data_Input_Buffer_queue)
   {
-    uint8_t fftLeftDataBufferMsgCount = uxQueueMessagesWaiting(m_FFT_Left_Data_Buffer_queue);
+    uint8_t fftLeftDataBufferMsgCount = uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue);
     if(true == FFT_CALCULATOR_DEBUG) Serial << "FFT Left Data Buffer Queue: " << fftLeftDataBufferMsgCount << "\n";
     ProcessLeftFFTQueue(fftLeftDataBufferMsgCount);
   }
@@ -146,7 +155,7 @@ void FFT_Calculator::ProcessRightFFTQueue(int messageCount)
 {
   for(uint8_t i = 0; i < messageCount; ++i)
   {
-    if ( xQueueReceive(m_FFT_Right_Data_Buffer_queue, m_FFT_Right_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
+    if ( xQueueReceive(m_FFT_Right_Data_Input_Buffer_queue, m_FFT_Right_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
       if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << "Data R: ";
@@ -214,6 +223,7 @@ void FFT_Calculator::ProcessRightFFTQueue(int messageCount)
         }
       } 
     }
+    if(xQueueSend(m_FFT_Right_BandData_Output_Buffer_queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
   }
 }
 
@@ -221,7 +231,7 @@ void FFT_Calculator::ProcessLeftFFTQueue(int messageCount)
 {
   for(uint8_t i = 0; i < messageCount; ++i)
   {
-    if ( xQueueReceive(m_FFT_Left_Data_Buffer_queue, m_FFT_Left_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
+    if ( xQueueReceive(m_FFT_Left_Data_Input_Buffer_queue, m_FFT_Left_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
       if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << "Data L: ";
@@ -291,6 +301,7 @@ void FFT_Calculator::ProcessLeftFFTQueue(int messageCount)
         }
       } 
     }
+    if(xQueueSend(m_FFT_Left_BandData_Output_Buffer_queue, m_Left_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
   }
 }
 float FFT_Calculator::GetFreqForBin(unsigned int bin)
