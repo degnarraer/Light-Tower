@@ -24,12 +24,13 @@
 #define SAWTOOTH_OUTPUT_DATA_DEBUG false
 
 #include <I2S_Device.h>
+#include <DataTypes.h>
 #include "FFT_Calculator.h"
 #include "Serial_Datalink_Config.h"
-#include <DataTypes.h>
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
+             , public CommonUtils
 {
   public:
     Manager( String Title

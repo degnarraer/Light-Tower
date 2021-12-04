@@ -41,22 +41,11 @@ void FFT_Calculator::Setup(size_t InputByteCount, int SampleRate, int FFT_Length
   m_Right_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
   m_Left_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
   m_BytesToRead = sizeof(int32_t) * m_FFT_Length;
-  
-  Serial << GetTitle() << ": Creating Right FFT Input Buffer queue.\n";
-  m_FFT_Right_Data_Input_Buffer_queue = xQueueCreate(10, m_InputByteCount );
-  if(m_FFT_Right_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Right Channel FFT Input Data queue");}
-  
-  Serial << GetTitle() << ": Creating Left FFT Input Buffer queue.\n";
-  m_FFT_Left_Data_Input_Buffer_queue = xQueueCreate(10, m_InputByteCount );
-  if(m_FFT_Left_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Left Channel FFT Input Data  queue");}
-  
-  Serial << GetTitle() << ": Creating Right FFT Output Band Data queue.\n";
-  m_FFT_Right_BandData_Output_Buffer_queue = xQueueCreate(10, m_BandOutputByteCount );
-  if(m_FFT_Right_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Right Channel FFT Output Band Data queue");}
-  
-  Serial << GetTitle() << ": Creating Left FFT Output Band Data queue.\n";
-  m_FFT_Left_BandData_Output_Buffer_queue = xQueueCreate(10, m_BandOutputByteCount );
-  if(m_FFT_Left_Data_Input_Buffer_queue == NULL){Serial.println("Error creating the Left Channel FFT Output Band queue");}
+
+  CreateQueue(m_FFT_Right_Data_Input_Buffer_queue, m_InputByteCount, 10, FFT_CALCULATOR_DEBUG);
+  CreateQueue(m_FFT_Left_Data_Input_Buffer_queue, m_InputByteCount, 10, FFT_CALCULATOR_DEBUG);
+  CreateQueue(m_FFT_Right_BandData_Output_Buffer_queue, m_BandOutputByteCount, 10, FFT_CALCULATOR_DEBUG);
+  CreateQueue(m_FFT_Left_BandData_Output_Buffer_queue, m_BandOutputByteCount, 10, FFT_CALCULATOR_DEBUG); 
 }
 
 void FFT_Calculator::ProcessEventQueue()
