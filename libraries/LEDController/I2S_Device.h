@@ -26,9 +26,10 @@
 #define QUEUE_INDEPTH_DEBUG false
 
 #include <Arduino.h>
+#include <DataTypes.h>
+#include <Helpers.h>
 #include "driver/i2s.h"
 #include "Streaming.h"
-#include <DataTypes.h>
 
 enum Mute_State_t
 {
@@ -53,6 +54,7 @@ class I2S_Device_Callback
 };
 
 class I2S_Device: public NamedItem
+				, public CommonUtils
 {
   public:
     I2S_Device( String Title

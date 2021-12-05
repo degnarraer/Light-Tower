@@ -19,7 +19,7 @@
 #ifndef I2S_EventHander_H
 #define I2S_EventHander_H
 
-#define EVENT_HANDLER_DEBUG false
+#define EVENT_HANDLER_DEBUG true
 #define PRINT_DATA_DEBUG false
 #define SAWTOOTH_OUTPUT_DATA_DEBUG false
 
