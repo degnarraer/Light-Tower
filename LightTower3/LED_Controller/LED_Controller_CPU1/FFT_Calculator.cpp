@@ -42,7 +42,6 @@ void FFT_Calculator::Setup(size_t InputByteCount, int SampleRate, int FFT_Length
   m_Left_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
   m_BytesToRead = sizeof(int32_t) * m_FFT_Length;
 
-  
   CreateQueue(m_FFT_Right_Data_Input_Buffer_queue, m_InputByteCount, 10, true);
   CreateQueue(m_FFT_Left_Data_Input_Buffer_queue, m_InputByteCount, 10, true);
   CreateQueue(m_FFT_Right_BandData_Output_Buffer_queue, m_BandOutputByteCount, 10, true);

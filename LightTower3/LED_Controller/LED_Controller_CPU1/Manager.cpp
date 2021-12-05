@@ -125,50 +125,18 @@ void Manager::ProcessDataBufferQueue()
 
 void Manager::ProcessRightChannelDataBufferQueue()
 {
-  if(NULL != m_Mic->GetRightDataBufferQueue())
-  {
-    uint8_t i2sMicRightBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetRightDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Right Data Buffer Queue: " << i2sMicRightBufferMsgCount << "\n";
-    
-    for (uint8_t i = 0; i < i2sMicRightBufferMsgCount; ++i)
-    {
-      int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetChannelBytesToRead());
-      if ( xQueueReceive(m_Mic->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
-      {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Right Data Queue\n";
-        if(xQueueSend(m_FFT_Calculator.GetFFTRightDataInputQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-      }
-      else
-      {
-        Serial << "Error Receiving Queue!";
-      }
-      delete DataBuffer;
-    }
-  }
+  MoveDataFromQueueToQueue<int32_t>( m_Mic->GetRightDataBufferQueue()
+                                   , m_FFT_Calculator.GetFFTRightDataInputQueue()
+                                   , m_Mic->GetChannelBytesToRead()
+                                   , EVENT_HANDLER_DEBUG );
 }
 
 void Manager::ProcessLeftChannelDataBufferQueue()
 {
-  if(NULL != m_Mic->GetLeftDataBufferQueue())
-  {
-    uint8_t i2sMicLeftBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetLeftDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Left Data Buffer Queue: " << i2sMicLeftBufferMsgCount << "\n";
-    
-    for (uint8_t i = 0; i < i2sMicLeftBufferMsgCount; ++i)
-    {
-      int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetChannelBytesToRead());
-      if ( xQueueReceive(m_Mic->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
-      {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
-        if(xQueueSend(m_FFT_Calculator.GetFFTLeftDataInputQueue(), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-      }
-      else
-      {
-        Serial << "Error Receiving Queue!";
-      }
-      delete DataBuffer;
-    }
-  }
+  MoveDataFromQueueToQueue<int32_t>( m_Mic->GetLeftDataBufferQueue()
+                                   , m_FFT_Calculator.GetFFTLeftDataInputQueue()
+                                   , m_Mic->GetChannelBytesToRead()
+                                   , EVENT_HANDLER_DEBUG );
 }
 
 void Manager::ProcessRightFFTDataBufferQueue()
