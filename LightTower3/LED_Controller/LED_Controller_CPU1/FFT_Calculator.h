@@ -28,13 +28,11 @@
 
 
 #include <Arduino.h>
-#include <DataTypes.h>
-#include <Helpers.h>
 #include <Adafruit_ZeroFFT.h>
 #include "Streaming.h"
+#include <DataTypes.h>
 
 class FFT_Calculator: public NamedItem
-                    , public CommonUtils
 {
   public:
     FFT_Calculator(String Title);

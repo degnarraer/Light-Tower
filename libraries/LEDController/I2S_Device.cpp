@@ -67,9 +67,17 @@ void I2S_Device::Setup()
     m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
     m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
    
-	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, QUEUE_DEBUG);
-	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, QUEUE_DEBUG);
-	CreateQueue(m_i2s_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, QUEUE_DEBUG);
+    Serial << GetTitle() << ": Creating Sound Buffer queue.\n";
+    m_i2s_Data_Buffer_Queue = xQueueCreate( 10, m_TotalBytesToRead );
+    if(m_i2s_Data_Buffer_Queue == NULL){Serial.println("Error creating the queue");}
+    
+    Serial << GetTitle() << ": Creating Right Channel Sound Buffer queue.\n";
+    m_i2s_Right_Data_Buffer_queue = xQueueCreate( 10, m_ChannelBytesToRead );
+    if(m_i2s_Right_Data_Buffer_queue == NULL){Serial.println("Error creating the queue");}
+
+    Serial << GetTitle() << ": Creating Left Channel Sound Buffer queue.\n";
+    m_i2s_Left_Data_Buffer_queue = xQueueCreate( 10, m_ChannelBytesToRead );
+    if(m_i2s_Left_Data_Buffer_queue == NULL){Serial.println("Error creating the queue");}
     
     SetMuteState(m_MuteState);
 }
