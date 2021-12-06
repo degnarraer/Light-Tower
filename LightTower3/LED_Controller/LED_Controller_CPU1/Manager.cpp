@@ -72,7 +72,7 @@ void Manager::Setup()
   m_Mic->ResgisterForDataBufferRXCallback(this);
   m_Mic->Setup();
   m_Speaker->Setup();
-  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 4096);
+  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 2048);
   m_Mic->StartDevice();
   m_Speaker->StartDevice();
 }
@@ -106,13 +106,6 @@ void Manager::ProcessDataBufferQueue()
       if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         m_Speaker->SetSoundBufferData(DataBuffer);
-        if(true == PRINT_DATA_DEBUG)
-        {
-          for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
-          {
-            Serial << DataBuffer[j] << "\n";
-          } 
-        }
       }
       else
       {
@@ -141,46 +134,16 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 
 void Manager::ProcessRightFFTDataBufferQueue()
 {
-  if(NULL != m_FFT_Calculator.GetFFTRightBandDataOutputQueue())
-  {
-    uint8_t RightBandDataOutputQueueCount = uxQueueMessagesWaiting(m_FFT_Calculator.GetFFTRightBandDataOutputQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager FFT Right Data Band Output Queue: " << RightBandDataOutputQueueCount << "\n";
-    for (uint8_t i = 0; i < RightBandDataOutputQueueCount; ++i)
-    {
-      int16_t* DataBuffer = (int16_t*)malloc(m_FFT_Calculator.GetFFTRightBandDataBufferSize());
-      if ( xQueueReceive(m_FFT_Calculator.GetFFTRightBandDataOutputQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
-      {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to Serial Data Link ""FFT_RBand_Data"" Queue\n";
-        //if(xQueueSend(m_SerialDataLink.GetQueueHandleForDataItem("FFT_RBand_Data"), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-      }
-      else
-      {
-        Serial << "Error Receiving Queue!";
-      }
-      delete DataBuffer;
-    }
-  }
+  MoveDataFromQueueToQueue<int16_t>( m_FFT_Calculator.GetFFTRightBandDataOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("FFT_RBand_Data")
+                                   , m_FFT_Calculator.GetFFTRightBandDataBufferSize()
+                                   , EVENT_HANDLER_DEBUG );
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()
 {
-  if(NULL != m_FFT_Calculator.GetFFTLeftBandDataOutputQueue())
-  {
-    uint8_t LeftBandDataOutputQueueCount = uxQueueMessagesWaiting(m_FFT_Calculator.GetFFTLeftBandDataOutputQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager FFT Left Data Band Output Queue: " << LeftBandDataOutputQueueCount << "\n";
-    for (uint8_t i = 0; i < LeftBandDataOutputQueueCount; ++i)
-    {
-      int16_t* DataBuffer = (int16_t*)malloc(m_FFT_Calculator.GetFFTLeftBandDataBufferSize());
-      if ( xQueueReceive(m_FFT_Calculator.GetFFTLeftBandDataOutputQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
-      {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
-        //if(xQueueSend(m_SerialDataLink.GetQueueHandleForDataItem("FFT_LBand_Data"), DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-      }
-      else
-      {
-        Serial << "Error Receiving Queue!";
-      }
-      delete DataBuffer;
-    }
-  }
+  MoveDataFromQueueToQueue<int16_t>( m_FFT_Calculator.GetFFTLeftBandDataOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("FFT_LBand_Data")
+                                   , m_FFT_Calculator.GetFFTLeftBandDataBufferSize()
+                                   , EVENT_HANDLER_DEBUG );
 }

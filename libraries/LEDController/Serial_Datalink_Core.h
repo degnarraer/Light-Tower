@@ -19,13 +19,17 @@
 #ifndef SerialDataLink_H
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
+#define QUEUE_DEBUG false
+#define SERIAL_TX_DEBUG true
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <DataTypes.h>
+#include <Helpers.h>
 #include "Streaming.h"
 
 class SerialDataLinkCore: public NamedItem
+						, public CommonUtils
 {
   public:
     SerialDataLinkCore(String Title);
@@ -46,7 +50,8 @@ class SerialDataLinkCore: public NamedItem
   template <class T>
   void EncodeAndTransmitData(String Name, void* Object, size_t Count)
   {
-	  String Header = "<" + Name + ">";
+	  String Header = "<NAME=" + Name + ">";
+	  Header += "<COUNT=" +  String(Count) + ">";
 	  String DataToSend = "";
 	  DataToSend += Header;
 	  for(int i = 0; i < Count; ++i)
@@ -55,8 +60,19 @@ class SerialDataLinkCore: public NamedItem
 		  DataToSend += String(item);
 		  if(i < Count) DataToSend += ",";
 	  }
-	  DataToSend += "\n";
+	  DataToSend += "<END>\n";
+	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
 	  hSerial.print(DataToSend);
+  }
+  
+  template <class T>
+  void ProcessData(int i)
+  {
+	T* DataBuffer = (T*)malloc(sizeof(T) * m_DataItem[i].Count);
+	if ( xQueueReceive(m_DataItem[i].QueueHandle, DataBuffer, portMAX_DELAY) != pdTRUE ){Serial.println("Error Reading Queue");}
+	memcpy(m_DataItem[i].Object, DataBuffer, sizeof(T) * m_DataItem[i].Count);
+	EncodeAndTransmitData<T>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
+	delete DataBuffer;
   }
 };
 

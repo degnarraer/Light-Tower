@@ -33,63 +33,48 @@ void SerialDataLinkCore::Setup()
 
   DataItemConfig_t* ConfigFile = GetConfig();
   m_DataItemCount = GetConfigCount();
+  Serial << "Count: " << m_DataItemCount << "\n";
   size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
   Serial << GetTitle() << ": Allocating " << m_DataItemCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
-  m_DataItem = (DataItem_t*)malloc(ConfigBytes);
+  m_DataItem = new DataItem_t[m_DataItemCount];
   for(int i = 0; i < m_DataItemCount; ++i)
   {
     void* Object;
-    QueueHandle_t QueueHandle = NULL;
     switch(ConfigFile[i].DataType)
     {
       case DataType_Int16_t:
       {
         size_t bytes = sizeof(int16_t) * ConfigFile[i].Count;
-        Serial << GetTitle() << ": Allocating " << ConfigFile[i].Count << " " << DataTypeStrings[ConfigFile[i].DataType] << " for a total of " << bytes << " bytes of Memory\n";
-        Object = (int16_t*)malloc(bytes);
-        QueueHandle = xQueueCreate(QUEUE_SIZE, bytes );
-        if(QueueHandle == NULL){ Serial << "Error creating " << ConfigFile[i].Name << " queue\n"; }
-        else { Serial << GetTitle() << ": " << bytes << " bytes wide by " << QUEUE_SIZE << " bytes deep Queue Created for a total of " << bytes * QUEUE_SIZE << " bytes\n"; }
+		Object = malloc(bytes);
+        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Int32_t:
       {
         size_t bytes = sizeof(int32_t) * ConfigFile[i].Count;
-        Serial << GetTitle() << ": Allocating " << ConfigFile[i].Count << " " << DataTypeStrings[ConfigFile[i].DataType] << " for a total of " << bytes << " bytes of Memory\n";
-        Object = (int32_t*)malloc(bytes);
-        QueueHandle = xQueueCreate(QUEUE_SIZE, bytes );
-        if(QueueHandle == NULL){ Serial << "Error creating " << ConfigFile[i].Name << " queue\n"; }
-        else { Serial << GetTitle() << ": " << bytes << " bytes wide by " << QUEUE_SIZE << " bytes deep Queue Created for a total of " << bytes * QUEUE_SIZE << " bytes\n"; }
+		Object = malloc(bytes);
+        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Uint16_t:
       {
         size_t bytes = sizeof(uint16_t) * ConfigFile[i].Count;
-        Serial << GetTitle() << ": Allocating " << ConfigFile[i].Count << " " << DataTypeStrings[ConfigFile[i].DataType] << " for a total of " << bytes << " bytes of Memory\n";
-        Object = (uint16_t*)malloc(bytes);
-        QueueHandle = xQueueCreate(QUEUE_SIZE, bytes );
-        if(QueueHandle == NULL){ Serial << "Error creating " << ConfigFile[i].Name << " queue\n"; }
-        else { Serial << GetTitle() << ": " << bytes << " bytes wide by " << QUEUE_SIZE << " bytes deep Queue Created for a total of " << bytes * QUEUE_SIZE << " bytes\n"; }
+		Object = malloc(bytes);
+        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Uint32_t:
       {
         size_t bytes = sizeof(uint32_t) * ConfigFile[i].Count;
-        Serial << GetTitle() << ": Allocating " << ConfigFile[i].Count << " " << DataTypeStrings[ConfigFile[i].DataType] << " for a total of " << bytes << " bytes of Memory\n";
-        Object = (uint32_t*)malloc(bytes);
-        QueueHandle = xQueueCreate(QUEUE_SIZE, bytes );
-        if(QueueHandle == NULL){ Serial << "Error creating " << ConfigFile[i].Name << " queue\n"; }
-        else { Serial << GetTitle() << ": " << bytes << " bytes wide by " << QUEUE_SIZE << " bytes deep Queue Created for a total of " << bytes * QUEUE_SIZE << " bytes\n"; }
+		Object = malloc(bytes);
+        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_String:
       {
         size_t bytes = sizeof(String) * ConfigFile[i].Count;
-        Serial << GetTitle() << ": Allocating " << ConfigFile[i].Count << " " << DataTypeStrings[ConfigFile[i].DataType] << " for a total of " << bytes << " bytes of Memory\n";
-        Object = (String*)malloc(bytes);
-        QueueHandle = xQueueCreate(QUEUE_SIZE, bytes );
-        if(QueueHandle == NULL){ Serial << "Error creating " << ConfigFile[i].Name << " queue\n"; }
-        else { Serial << GetTitle() << ": " << bytes << " bytes wide by " << QUEUE_SIZE << " bytes deep Queue Created for a total of " << bytes * QUEUE_SIZE << " bytes\n"; }
+		Object = malloc(bytes);
+        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       default:
@@ -97,11 +82,10 @@ void SerialDataLinkCore::Setup()
       break;
     }
     Serial << GetTitle() << ": Try Saving DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
-    m_DataItem[i].Name = ConfigFile[i].Name;
+	m_DataItem[i].Name = ConfigFile[i].Name;
     m_DataItem[i].DataType = ConfigFile[i].DataType;
     m_DataItem[i].Count = ConfigFile[i].Count;
-    m_DataItem[i].QueueHandle = QueueHandle;
-	m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
+    m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
     m_DataItem[i].Object = Object;
     Serial << GetTitle() << ": Successfully Saved DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
   }
@@ -146,32 +130,38 @@ void SerialDataLinkCore::ProcessEventQueue()
     {
       if(NULL != m_DataItem[i].QueueHandle)
       {
-        uint8_t queueCount = uxQueueMessagesWaiting(m_DataItem[i].QueueHandle);
-        for(int j = 0; j < queueCount; ++j)
+		uint8_t queueCount = uxQueueMessagesWaiting(m_DataItem[i].QueueHandle);
+        if(true == QUEUE_DEBUG) Serial << "Count : " << queueCount << "\n";
+		for(int j = 0; j < queueCount; ++j)
         {
-			if(Transciever_TX == m_DataItem[i].TransceiverConfig || Transciever_TXRX == m_DataItem[i].TransceiverConfig)
+			switch(m_DataItem[i].DataType)
 			{
-				switch(m_DataItem[i].DataType)
+				case DataType_Int16_t:
 				{
-					case DataType_Int16_t:
-						EncodeAndTransmitData<int16_t>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
-					break;
-					case DataType_Int32_t:
-						EncodeAndTransmitData<int32_t>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
-					break;
-					case DataType_Uint16_t:
-						EncodeAndTransmitData<uint16_t>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
-					break;
-					case DataType_Uint32_t:
-						EncodeAndTransmitData<uint32_t>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
-					break;
-					case DataType_String:
-						//EncodeAndTransmitData<String>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
-					break;
-					default:
-					  Serial << "Error, unsupported data type";
-					break;
+					ProcessData<int16_t>(i);
 				}
+				break;
+				case DataType_Int32_t:
+				{	
+					ProcessData<int32_t>(i);
+				}
+				break;
+				case DataType_Uint16_t:
+				{
+					ProcessData<uint16_t>(i);
+				}
+				break;
+				case DataType_Uint32_t:
+				{
+					ProcessData<uint32_t>(i);
+				}
+				break;
+				case DataType_String:
+					//EncodeAndTransmitData<String>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
+				break;
+				default:
+				  Serial << "Error, unsupported data type";
+				break;
 			}
         }
       }

@@ -19,7 +19,7 @@
 #ifndef I2S_EventHander_H
 #define I2S_EventHander_H
 
-#define EVENT_HANDLER_DEBUG true
+#define EVENT_HANDLER_DEBUG false
 #define PRINT_DATA_DEBUG false
 #define SAWTOOTH_OUTPUT_DATA_DEBUG false
 
@@ -54,6 +54,7 @@ class Manager: public NamedItem
             DataBuffer[i] = i;
            }
            DataBuffer[i] = DataBuffer[i] * 0.001;  // SET VOLUME HERE
+           if(true == PRINT_DATA_DEBUG) Serial.println(DataBuffer[i]);
         } 
       }
     }
