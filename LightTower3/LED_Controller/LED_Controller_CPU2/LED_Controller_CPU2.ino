@@ -22,14 +22,15 @@ void setup() {
   (
     Task0Loop,            // Function to implement the task
     "Task0",              // Name of the task
-    5000,                // Stack size in words
+    10000,                // Stack size in words
     NULL,                 // Task input parameter
     1,                    // Priority of the task
     &Task0,               // Task handle.
     0                     // Core where the task should run
   );
   delay(500);
-   
+
+   /*
   xTaskCreatePinnedToCore
   (
     Task1Loop,            // Function to implement the task
@@ -53,7 +54,7 @@ void setup() {
     0                     // Core where the task should run
   );                   
   delay(500);
-
+*/
 }
 
 void loop() {
@@ -66,6 +67,7 @@ void Task0Loop(void * parameter)
   while(true)
   {
     m_Manager.RunTask();
+    m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

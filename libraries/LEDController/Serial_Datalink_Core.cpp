@@ -30,6 +30,7 @@ void SerialDataLinkCore::Setup()
 {
   Serial << GetTitle() << " Configuring Serial Communication\n";
   hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
+  hSerial.flush();
   delay(500);
 
   DataItemConfig_t* ConfigFile = GetConfig();
@@ -109,18 +110,17 @@ QueueHandle_t SerialDataLinkCore::GetQueueHandleForDataItem(String Name)
 
 void SerialDataLinkCore::CheckForNewSerialData()
 {
-  if(true == hSerial.available())
+  for(int i = 0; i < hSerial.available(); ++i)
   {
-    Serial << "Serial Available\n";
-    byte ch;
-    ch = hSerial.read();
-    m_InboundStringData += (char)ch;
-    if (ch=='\n') 
-    {
-      m_InboundStringData.trim();
-      if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
-      m_InboundStringData = "";
-    } 
+	byte ch;
+	ch = hSerial.read();
+	m_InboundStringData += (char)ch;
+	if (ch=='\n') 
+	{
+	  m_InboundStringData.trim();
+	  if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
+	  m_InboundStringData = "";
+	}
   }
 }
 
