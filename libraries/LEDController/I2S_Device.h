@@ -22,7 +22,7 @@
 //DEBUGGING
 #define DATA_RX_DEBUG false
 #define DATA_TX_DEBUG false
-#define QUEUE_DEBUG true
+#define QUEUE_DEBUG false
 #define QUEUE_INDEPTH_DEBUG false
 
 #include <Arduino.h>

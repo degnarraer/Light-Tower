@@ -22,7 +22,7 @@
 #define NUMBER_OF_BANDS 32
 
 #define FFT_CALCULATOR_DEBUG false
-#define FFT_CALCULATOR_QUEUE_DEBUG true
+#define FFT_CALCULATOR_QUEUE_DEBUG false
 #define FFT_CALCULATOR_LOOPS_DEBUG false
 #define FFT_CALCULATOR_INPUTDATA_DEBUG false
 #define FFT_CALCULATOR_OUTPUTDATA_DEBUG false
@@ -76,9 +76,9 @@ class FFT_Calculator: public NamedItem
     int m_FFT_Right_Buffer_Index = 0;
     int m_FFT_Left_Buffer_Index = 0;
 
-    void ProcessFFTQueue(int messageCount, QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer);
-    void ProcessRightFFTQueue(int messageCount);
-    void ProcessLeftFFTQueue(int messageCount);
+    void ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer);
+    void ProcessRightFFTQueue();
+    void ProcessLeftFFTQueue();
     float GetFreqForBin(unsigned int bin);
 };
 

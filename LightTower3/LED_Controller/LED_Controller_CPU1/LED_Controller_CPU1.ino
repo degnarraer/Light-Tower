@@ -25,9 +25,9 @@ void setup() {
   (
     Task0Loop,            // Function to implement the task
     "Task0",              // Name of the task
-    10000,                // Stack size in words
+    20000,                // Stack size in words
     NULL,                 // Task input parameter
-    10,                    // Priority of the task
+    1,                    // Priority of the task
     &Task0,               // Task handle.
     0                     // Core where the task should run
   );
@@ -37,7 +37,7 @@ void setup() {
   (
     Task1Loop,            // Function to implement the task
     "Task1",              // Name of the task
-    10000,                // Stack size in words
+    20000,                // Stack size in words
     NULL,                 // Task input parameter
     1,                    // Priority of the task
     &Task1,               // Task handle.
@@ -49,9 +49,9 @@ void setup() {
   (
     Task2Loop,            // Function to implement the task
     "Task2",              // Name of the task
-    10000,                 // Stack size in words
+    10000,                // Stack size in words
     NULL,                 // Task input parameter
-    10,                    // Priority of the task
+    1,                    // Priority of the task
     &Task2,               // Task handle.
     1                     // Core where the task should run
   );                   
@@ -63,7 +63,7 @@ void setup() {
     "Task3",              // Name of the task
     10000,                 // Stack size in words
     NULL,                 // Task input parameter
-    10,                    // Priority of the task
+    1,                    // Priority of the task
     &Task3,               // Task handle.
     1                     // Core where the task should run
   );                   
