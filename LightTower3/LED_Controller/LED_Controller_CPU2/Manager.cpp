@@ -25,13 +25,13 @@ Manager::Manager(String Title): NamedItem(Title)
 }
 Manager::~Manager()
 {
-  delete m_Mic;
+  delete m_ESP32;
 }
 
 void Manager::Setup()
 {
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
-  m_Mic = new I2S_Device( "Microphone"
+  m_ESP32 = new I2S_Device( "ESP32"
                         , I2S_NUM_0
                         , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
                         , 44100
@@ -63,34 +63,32 @@ void Manager::Setup()
                               , 33
                               , I2S_PIN_NO_CHANGE );
 
-  m_Mic->Setup();
+  m_ESP32->Setup();
   m_Speaker->Setup();
-  m_Mic->StartDevice();
+  m_ESP32->StartDevice();
   m_Speaker->StartDevice();
 }
 
 void Manager::RunTask()
 {
-  m_Mic->ProcessEventQueue();
+  m_ESP32->ProcessEventQueue();
   m_Speaker->ProcessEventQueue();
   ProcessEventQueue();
 }
 
 void Manager::ProcessEventQueue()
 {
-  if(NULL != m_Mic->GetDataBufferQueue())
+  if(NULL != m_ESP32->GetDataBufferQueue())
   {
-    uint8_t i2sMicBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << i2sMicBufferMsgCount << "\n";
-    
-    for (uint8_t i = 0; i < i2sMicBufferMsgCount; ++i)
+    if(uxQueueMessagesWaiting(m_ESP32->GetDataBufferQueue()) > 0)
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetBytesToRead());
-      if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Data Buffer Queue: " << uxQueueMessagesWaiting(m_ESP32->GetDataBufferQueue()) << "\n";
+      int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetBytesToRead());
+      if ( xQueueReceive(m_ESP32->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_DATA_DEBUG)
         {
-          for(int j = 0; j < m_Mic->GetSampleCount(); ++j)
+          for(int j = 0; j < m_ESP32->GetSampleCount(); ++j)
           {
             Serial << DataBuffer[j] << "\n";
           } 
@@ -105,15 +103,13 @@ void Manager::ProcessEventQueue()
     }
   }
   
-  if(NULL != m_Mic->GetRightDataBufferQueue())
+  if(NULL != m_ESP32->GetRightDataBufferQueue())
   {
-    uint8_t i2sMicRightBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetRightDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Right Data Buffer Queue: " << i2sMicRightBufferMsgCount << "\n";
-    
-    for (uint8_t i = 0; i < i2sMicRightBufferMsgCount; ++i)
+    if(uxQueueMessagesWaiting(m_ESP32->GetRightDataBufferQueue()) > 0)
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetChannelBytesToRead());
-      if ( xQueueReceive(m_Mic->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Right Data Buffer Queue: " << uxQueueMessagesWaiting(m_ESP32->GetRightDataBufferQueue()) << "\n";
+      int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetChannelBytesToRead());
+      if ( xQueueReceive(m_ESP32->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Right Data Queue\n";
       }
@@ -125,15 +121,13 @@ void Manager::ProcessEventQueue()
     }
   }
   
-  if(NULL != m_Mic->GetLeftDataBufferQueue())
+  if(NULL != m_ESP32->GetLeftDataBufferQueue())
   {
-    uint8_t i2sMicLeftBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetLeftDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Left Data Buffer Queue: " << i2sMicLeftBufferMsgCount << "\n";
-    
-    for (uint8_t i = 0; i < i2sMicLeftBufferMsgCount; ++i)
+    if(uxQueueMessagesWaiting(m_ESP32->GetLeftDataBufferQueue()) > 0)
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetChannelBytesToRead());
-      if ( xQueueReceive(m_Mic->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Left Data Buffer Queue: " << uxQueueMessagesWaiting(m_ESP32->GetLeftDataBufferQueue()) << "\n";
+      int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetChannelBytesToRead());
+      if ( xQueueReceive(m_ESP32->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
       }

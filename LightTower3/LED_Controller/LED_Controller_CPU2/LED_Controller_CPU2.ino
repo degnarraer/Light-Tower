@@ -4,10 +4,9 @@
 TaskHandle_t Task0;
 TaskHandle_t Task1;
 TaskHandle_t Task2;
-TaskHandle_t Task3;
 
-Manager* m_Manager = new Manager("Manager");
-SerialDataLink* m_SerialDatalink = new SerialDataLink("Serial Datalink");
+Manager m_Manager = Manager("Manager");
+SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
 
 void setup() {
   Serial.begin(500000);
@@ -16,8 +15,8 @@ void setup() {
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
 
-  m_Manager->Setup();
-  m_SerialDatalink->Setup();
+  m_SerialDatalink.Setup();
+  m_Manager.Setup();
   
   xTaskCreatePinnedToCore
   (
@@ -42,6 +41,18 @@ void setup() {
     0                     // Core where the task should run
   );                   
   delay(500);
+   
+  xTaskCreatePinnedToCore
+  (
+    Task2Loop,            // Function to implement the task
+    "Task2",              // Name of the task
+    5000,                // Stack size in words
+    NULL,                 // Task input parameter
+    1,                    // Priority of the task
+    &Task2,               // Task handle.
+    0                     // Core where the task should run
+  );                   
+  delay(500);
 
 }
 
@@ -54,7 +65,7 @@ void Task0Loop(void * parameter)
 {
   while(true)
   {
-    m_Manager->RunTask();
+    m_Manager.RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -62,8 +73,15 @@ void Task1Loop(void * parameter)
 {
   while(true)
   {
-    m_SerialDatalink->ProcessEventQueue();
-    m_SerialDatalink->CheckForNewSerialData();
+    m_SerialDatalink.ProcessEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+void Task2Loop(void * parameter)
+{
+  while(true)
+  {
+    m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

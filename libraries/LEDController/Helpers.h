@@ -22,13 +22,10 @@ class CommonUtils
 				{
 					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
 				}
-				else
+				else if(uxQueueSpacesAvailable(GiveToQueue) > 0)
 				{
-					if(uxQueueSpacesAvailable(GiveToQueue) > 0)
-					{
-						if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-					}
-				}					
+					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+				}				
 			  }
 			  else
 			  {

@@ -210,7 +210,10 @@ void FFT_Calculator::ProcessRightFFTQueue()
         }
       } 
     }
-    if(xQueueSend(m_FFT_Right_BandData_Output_Buffer_queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+    if(uxQueueSpacesAvailable(m_FFT_Right_Data_Input_Buffer_queue) > 0)
+    {
+      if(xQueueSend(m_FFT_Right_BandData_Output_Buffer_queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+    }
   }
 }
 
@@ -289,7 +292,10 @@ void FFT_Calculator::ProcessLeftFFTQueue()
         }
       } 
     }
-    if(xQueueSend(m_FFT_Left_BandData_Output_Buffer_queue, m_Left_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+    if(uxQueueSpacesAvailable(m_FFT_Left_BandData_Output_Buffer_queue) > 0)
+    {
+      if(xQueueSend(m_FFT_Left_BandData_Output_Buffer_queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+    }
   }
 }
 float FFT_Calculator::GetFreqForBin(unsigned int bin)

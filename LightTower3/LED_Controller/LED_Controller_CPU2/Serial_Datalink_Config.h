@@ -39,7 +39,7 @@ class SerialDataLink: public NamedItem
     static const size_t m_ConfigCount = 1;
     DataItemConfig_t ItemConfig[m_ConfigCount]
     {
-      { "FFT_Bin_Data", DataType_Int16_t, 1, Transciever_TX }
+      { "FFT_Bin_Data", DataType_Int16_t, 32, Transciever_RX }
     };
 
 };

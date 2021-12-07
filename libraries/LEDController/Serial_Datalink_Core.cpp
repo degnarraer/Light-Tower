@@ -28,6 +28,7 @@ SerialDataLinkCore::~SerialDataLinkCore()
 
 void SerialDataLinkCore::Setup()
 {
+  Serial << GetTitle() << " Configuring Serial Communication\n";
   hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
   delay(500);
 
@@ -110,13 +111,14 @@ void SerialDataLinkCore::CheckForNewSerialData()
 {
   if(true == hSerial.available())
   {
+    Serial << "Serial Available\n";
     byte ch;
     ch = hSerial.read();
     m_InboundStringData += (char)ch;
     if (ch=='\n') 
     {
       m_InboundStringData.trim();
-      Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
+      if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
       m_InboundStringData = "";
     } 
   }
@@ -130,11 +132,9 @@ void SerialDataLinkCore::ProcessEventQueue()
     {
       if(NULL != m_DataItem[i].QueueHandle)
       {
-		uint8_t queueCount = uxQueueMessagesWaiting(m_DataItem[i].QueueHandle);
-		//for(int j = 0; j < queueCount; ++j)
-        if(queueCount > 0)
+        if(uxQueueMessagesWaiting(m_DataItem[i].QueueHandle) > 0)
 		{
-			if(true == QUEUE_DEBUG) Serial << GetTitle() << " Queue Count : " << queueCount << "\n";
+			if(true == QUEUE_DEBUG) Serial << GetTitle() << " Queue Count : " << uxQueueMessagesWaiting(m_DataItem[i].QueueHandle) << "\n";
 			switch(m_DataItem[i].DataType)
 			{
 				case DataType_Int16_t:

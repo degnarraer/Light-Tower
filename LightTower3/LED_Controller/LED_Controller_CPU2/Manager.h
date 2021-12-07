@@ -20,7 +20,7 @@
 #define I2S_EventHander_H
 
 #define EVENT_HANDLER_DEBUG false
-#define PRINT_DATA_DEBUG true
+#define PRINT_DATA_DEBUG false
 
 #include <I2S_Device.h>
 #include <DataTypes.h>
@@ -41,7 +41,7 @@ class Manager: public NamedItem
     void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
     
   private:
-    I2S_Device *m_Mic;
+    I2S_Device *m_ESP32;
     I2S_Device *m_Speaker;
 };
 

@@ -21,6 +21,7 @@
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
 #define SERIAL_TX_DEBUG false
+#define SERIAL_RX_DEBUG true
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -60,9 +61,32 @@ class SerialDataLinkCore: public NamedItem
 		  DataToSend += String(item);
 		  if(i < Count) DataToSend += ",";
 	  }
+	  DataToSend += "<END>";
+	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
+	  hSerial.println(DataToSend);
+  }
+  
+  
+  template <class T>
+  void DecodeAndStoreData(String Data)
+  {
+	  //size_t length = Data.Length();
+	  
+	  /*
+	  String Header = "<NAME=" + Name + ">";
+	  Header += "<COUNT=" +  String(Count) + ">";
+	  String DataToSend = "";
+	  DataToSend += Header;
+	  for(int i = 0; i < Count; ++i)
+	  {
+		  T item = *((T*)Object + i);
+		  DataToSend += String(item);
+		  if(i < Count) DataToSend += ",";
+	  }
 	  DataToSend += "<END>\n";
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
 	  hSerial.print(DataToSend);
+	  */
   }
   
   template <class T>
