@@ -6,7 +6,7 @@ class CommonUtils
 {
 	public:
 		template <class T>
-		void MoveDataFromQueueToQueue(QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool DebugMessage)
+		void MoveDataFromQueueToQueue(QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
 		  if(NULL != TakeFromQueue && NULL != GiveToQueue)
 		  {
@@ -18,7 +18,17 @@ class CommonUtils
 			  if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 			  {
 				if(true == DebugMessage)Serial << "Adding Data to Queue\n";
-				if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+				if(true == WaitForOpenSlot)
+				{
+					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+				}
+				else
+				{
+					if(uxQueueSpacesAvailable(GiveToQueue) > 0)
+					{
+						if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+					}
+				}					
 			  }
 			  else
 			  {

@@ -53,14 +53,12 @@ void FFT_Calculator::ProcessEventQueue()
   if(NULL != m_FFT_Right_Data_Input_Buffer_queue)
   {
     uint8_t fftRightDataBufferMsgCount = uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue);
-    if(true == FFT_CALCULATOR_DEBUG) Serial << "FFT Right Data Buffer Queue: " << fftRightDataBufferMsgCount << "\n";
     ProcessRightFFTQueue(fftRightDataBufferMsgCount);
   }
   
   if(NULL != m_FFT_Left_Data_Input_Buffer_queue)
   {
     uint8_t fftLeftDataBufferMsgCount = uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue);
-    if(true == FFT_CALCULATOR_DEBUG) Serial << "FFT Left Data Buffer Queue: " << fftLeftDataBufferMsgCount << "\n";
     ProcessLeftFFTQueue(fftLeftDataBufferMsgCount);
   }
 }
@@ -68,7 +66,9 @@ void FFT_Calculator::ProcessEventQueue()
 void FFT_Calculator::ProcessFFTQueue(int messageCount, QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer)
 {
   for(uint8_t i = 0; i < messageCount; ++i)
+  //if(messageCount > 0)
   {
+    if(true == FFT_CALCULATOR_QUEUE_DEBUG) Serial << "FFT Data Buffer Queue Count: " << messageCount << "\n";
     if ( xQueueReceive(Queue, InputDataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
@@ -143,7 +143,9 @@ void FFT_Calculator::ProcessFFTQueue(int messageCount, QueueHandle_t& Queue, int
 void FFT_Calculator::ProcessRightFFTQueue(int messageCount)
 {
   for(uint8_t i = 0; i < messageCount; ++i)
+  //if(messageCount > 0)
   {
+    if(true == FFT_CALCULATOR_QUEUE_DEBUG) Serial << "FFT Right Data Buffer Queue Count: " << messageCount << "\n";
     if ( xQueueReceive(m_FFT_Right_Data_Input_Buffer_queue, m_FFT_Right_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
@@ -219,7 +221,9 @@ void FFT_Calculator::ProcessRightFFTQueue(int messageCount)
 void FFT_Calculator::ProcessLeftFFTQueue(int messageCount)
 {
   for(uint8_t i = 0; i < messageCount; ++i)
+  //if(messageCount > 0)
   {
+    if(true == FFT_CALCULATOR_QUEUE_DEBUG) Serial << "FFT Left Data Buffer Queue Count: " << messageCount << "\n";
     if ( xQueueReceive(m_FFT_Left_Data_Input_Buffer_queue, m_FFT_Left_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {

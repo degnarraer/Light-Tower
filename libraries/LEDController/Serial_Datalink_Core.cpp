@@ -131,9 +131,10 @@ void SerialDataLinkCore::ProcessEventQueue()
       if(NULL != m_DataItem[i].QueueHandle)
       {
 		uint8_t queueCount = uxQueueMessagesWaiting(m_DataItem[i].QueueHandle);
-        if(true == QUEUE_DEBUG) Serial << "Count : " << queueCount << "\n";
-		for(int j = 0; j < queueCount; ++j)
-        {
+		//for(int j = 0; j < queueCount; ++j)
+        if(queueCount > 0)
+		{
+			if(true == QUEUE_DEBUG) Serial << GetTitle() << " Queue Count : " << queueCount << "\n";
 			switch(m_DataItem[i].DataType)
 			{
 				case DataType_Int16_t:

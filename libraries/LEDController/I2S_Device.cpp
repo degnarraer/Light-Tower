@@ -212,13 +212,12 @@ void I2S_Device::ProcessEventQueue()
   if(NULL != m_i2s_event_queue)
   {
     i2s_event_t i2sEvent = {};
-    uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);
-    if(true == QUEUE_DEBUG) Serial << GetTitle() << " Queue Count: " << i2sMsgCount << "\n";
-    
+    uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);    
     // Iterate over all events in the i2s event queue
-    for (uint8_t i = 0; i < i2sMsgCount; ++i)
-    {
-      if(true == QUEUE_DEBUG)Serial << GetTitle() << " Queue: " << i+1 << " of " << i2sMsgCount << "\n";
+    //for (uint8_t i = 0; i < i2sMsgCount; ++i)
+    if(i2sMsgCount > 0)
+	{
+	  if(true == QUEUE_DEBUG)Serial << GetTitle() << " Queue Count: " << i2sMsgCount << "\n";
       // Take next event from queue
       if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, portMAX_DELAY) == pdTRUE )
       {

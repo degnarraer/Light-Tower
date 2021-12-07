@@ -16,7 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #define I2S_BUFFER_COUNT 10
-#define I2S_BUFFER_SIZE 100
+#define I2S_BUFFER_SIZE 200
 
 
 #include "Manager.h"
@@ -72,7 +72,7 @@ void Manager::Setup()
   m_Mic->ResgisterForDataBufferRXCallback(this);
   m_Mic->Setup();
   m_Speaker->Setup();
-  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 2048);
+  m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 1024);
   m_Mic->StartDevice();
   m_Speaker->StartDevice();
 }
@@ -98,10 +98,10 @@ void Manager::ProcessDataBufferQueue()
   if(NULL != m_Mic->GetDataBufferQueue())
   {
     uint8_t i2sMicBufferMsgCount = uxQueueMessagesWaiting(m_Mic->GetDataBufferQueue());
-    if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << i2sMicBufferMsgCount << "\n";
-    
-    for (uint8_t i = 0; i < i2sMicBufferMsgCount; ++i)
+    //for (uint8_t i = 0; i < i2sMicBufferMsgCount; ++i)
+    if(i2sMicBufferMsgCount > 0)
     {
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << i2sMicBufferMsgCount << "\n";
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetBytesToRead());
       if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
@@ -121,7 +121,8 @@ void Manager::ProcessRightChannelDataBufferQueue()
   MoveDataFromQueueToQueue<int32_t>( m_Mic->GetRightDataBufferQueue()
                                    , m_FFT_Calculator.GetFFTRightDataInputQueue()
                                    , m_Mic->GetChannelBytesToRead()
-                                   , EVENT_HANDLER_DEBUG );
+                                   , false
+                                   , false );
 }
 
 void Manager::ProcessLeftChannelDataBufferQueue()
@@ -129,7 +130,8 @@ void Manager::ProcessLeftChannelDataBufferQueue()
   MoveDataFromQueueToQueue<int32_t>( m_Mic->GetLeftDataBufferQueue()
                                    , m_FFT_Calculator.GetFFTLeftDataInputQueue()
                                    , m_Mic->GetChannelBytesToRead()
-                                   , EVENT_HANDLER_DEBUG );
+                                   , false
+                                   , false );
 }
 
 void Manager::ProcessRightFFTDataBufferQueue()
@@ -137,7 +139,8 @@ void Manager::ProcessRightFFTDataBufferQueue()
   MoveDataFromQueueToQueue<int16_t>( m_FFT_Calculator.GetFFTRightBandDataOutputQueue()
                                    , m_SerialDataLink.GetQueueHandleForDataItem("FFT_RBand_Data")
                                    , m_FFT_Calculator.GetFFTRightBandDataBufferSize()
-                                   , EVENT_HANDLER_DEBUG );
+                                   , false
+                                   , false );
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()
@@ -145,5 +148,6 @@ void Manager::ProcessLeftFFTDataBufferQueue()
   MoveDataFromQueueToQueue<int16_t>( m_FFT_Calculator.GetFFTLeftBandDataOutputQueue()
                                    , m_SerialDataLink.GetQueueHandleForDataItem("FFT_LBand_Data")
                                    , m_FFT_Calculator.GetFFTLeftBandDataBufferSize()
-                                   , EVENT_HANDLER_DEBUG );
+                                   , false
+                                   , false );
 }
