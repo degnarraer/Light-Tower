@@ -75,6 +75,7 @@ void Manager::Setup()
   m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 4096);
   m_Mic->StartDevice();
   m_Speaker->StartDevice();
+  BT_Sink.start("LED Controller");
 }
 
 void Manager::RunTask()
