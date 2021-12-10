@@ -121,7 +121,6 @@ void SerialDataLinkCore::CheckForNewSerialData()
 	  if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
 	  m_InboundStringData = "";
 	}
-	esp_task_wdt_feed();
   }
 }
 
@@ -165,7 +164,6 @@ void SerialDataLinkCore::ProcessEventQueue()
 				  Serial << "Error, unsupported data type";
 				break;
 			}
-			esp_task_wdt_feed();
         }
       }
     } 

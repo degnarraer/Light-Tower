@@ -105,15 +105,14 @@ void ManagerTaskLoop(void * parameter)
   for(;;)
   {
     m_Manager.RunTask();
-    yield();
   }
 }
 void FFTTaskLoop(void * parameter)
 {
   for(;;)
   {
-    m_FFT_Calculator.ProcessEventQueue();
     yield();
+    m_FFT_Calculator.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -124,6 +123,5 @@ void SerialDataLinkTaskLoop(void * parameter)
   {
     m_SerialDatalink.ProcessEventQueue();
     m_SerialDatalink.CheckForNewSerialData();
-    yield();
   }
 }

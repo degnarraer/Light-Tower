@@ -30,7 +30,6 @@
 #include "FFT_Calculator.h"
 #include "Serial_Datalink_Config.h"
 #include "Bluetooth_Device.h"
-#include "esp_task_wdt.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
