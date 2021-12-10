@@ -29,6 +29,8 @@
 
 #include "FFT_Calculator.h"
 #include "Serial_Datalink_Config.h"
+#include "Bluetooth_Device.h"
+#include "esp_task_wdt.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -37,7 +39,10 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , FFT_Calculator &FFTCalculator
-           , SerialDataLink &SerialDataLink );
+           , SerialDataLink &SerialDataLink
+           , Bluetooth_Device &BT
+           , I2S_Device &Mic
+           , I2S_Device &Speaker );
     virtual ~Manager();
     void Setup();
     void RunTask();
@@ -46,7 +51,7 @@ class Manager: public NamedItem
     //I2S_Device_Callback
     void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count)
     {
-      if(DeviceTitle == m_Mic->GetTitle())
+      if(DeviceTitle == m_Mic.GetTitle())
       {
         for(int i = 0; i < Count; ++i)
         {
@@ -65,8 +70,10 @@ class Manager: public NamedItem
   private:
     FFT_Calculator &m_FFT_Calculator;
     SerialDataLink &m_SerialDataLink;
-    I2S_Device *m_Mic;
-    I2S_Device *m_Speaker;
+    Bluetooth_Device &m_BT;
+    I2S_Device &m_Mic;
+    I2S_Device &m_Speaker;
+    
     enum InputType
     {
       InputType_Microphone,

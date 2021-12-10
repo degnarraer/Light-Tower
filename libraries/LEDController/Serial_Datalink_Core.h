@@ -28,6 +28,7 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "Streaming.h"
+#include "esp_task_wdt.h"
 
 class SerialDataLinkCore: public NamedItem
 						, public CommonUtils

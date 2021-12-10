@@ -33,6 +33,11 @@ class Bluetooth_Device: public NamedItem
     virtual ~Bluetooth_Device();
 	void Setup()
 	{
+		InstallDevice();
+	}
+	void InstallDevice()
+	{
+		Serial << "Configuring Bluetooth\n";
 		m_BTSink.set_stream_reader(read_data_stream);
 		m_BTSink.set_on_data_received(data_received_callback);
 
@@ -58,7 +63,14 @@ class Bluetooth_Device: public NamedItem
 		m_BTSink.set_pin_config(my_pin_config);
 		m_BTSink.set_i2s_config(i2s_config);
 		m_BTSink.set_i2s_port(I2S_NUM_1);
-		m_BTSink.start("Test", true);
+	}
+	void StartDevice()
+	{
+		m_BTSink.start("Massive Cock");
+	}
+	void StopDevice()
+	{
+		m_BTSink.stop();
 	}
   private:
 	BluetoothA2DPSink m_BTSink;
