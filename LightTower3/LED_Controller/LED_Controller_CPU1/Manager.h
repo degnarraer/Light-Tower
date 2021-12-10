@@ -26,7 +26,6 @@
 #include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-#include <BluetoothA2DPSink.h>
 
 #include "FFT_Calculator.h"
 #include "Serial_Datalink_Config.h"
@@ -68,12 +67,15 @@ class Manager: public NamedItem
     SerialDataLink &m_SerialDataLink;
     I2S_Device *m_Mic;
     I2S_Device *m_Speaker;
-    BluetoothA2DPSink BT_Sink;
-
     enum InputType
     {
       InputType_Microphone,
       InputType_Bluetooth
+    };
+    enum OutputType
+    {
+      OutputType_DAC,
+      OutputType_Bluetooth
     };
 
     void ProcessDataBufferQueue();

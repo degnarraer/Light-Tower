@@ -37,6 +37,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
+   
   m_Mic = new I2S_Device( "Microphone"
                         , I2S_NUM_0
                         , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
@@ -45,14 +46,14 @@ void Manager::Setup()
                         , I2S_CHANNEL_FMT_RIGHT_LEFT
                         , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                         , I2S_CHANNEL_STEREO
-                        , I2S_BUFFER_COUNT
-                        , I2S_BUFFER_SIZE
-                        , 12
-                        , 13
-                        , 14
-                        , I2S_PIN_NO_CHANGE
-                        , 32 );
-                        
+                        , I2S_BUFFER_COUNT          // Buffer Count
+                        , I2S_BUFFER_SIZE           // Buffer Size
+                        , 12                        // Serial Clock Pin
+                        , 13                        // Word Selection Pin
+                        , 14                        // Serial Data In Pin
+                        , I2S_PIN_NO_CHANGE         // Serial Data Out Pin
+                        , 32 );                     // Mute Pin
+    /*                    
     m_Speaker = new I2S_Device( "Speaker"
                               , I2S_NUM_1
                               , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
@@ -61,27 +62,30 @@ void Manager::Setup()
                               , I2S_CHANNEL_FMT_RIGHT_LEFT
                               , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                               , I2S_CHANNEL_STEREO
-                              , I2S_BUFFER_COUNT
-                              , I2S_BUFFER_SIZE
-                              , 25
-                              , 26
-                              , I2S_PIN_NO_CHANGE
-                              , 33
-                              , I2S_PIN_NO_CHANGE );
-
+                              , I2S_BUFFER_COUNT          // Buffer Count
+                              , I2S_BUFFER_SIZE           // Buffer Size
+                              , 25                        // Serial Clock Pin
+                              , 26                        // Word Selection Pin
+                              , I2S_PIN_NO_CHANGE         // Serial Data In Pin
+                              , 33                        // Serial Data Out Pin
+                              , I2S_PIN_NO_CHANGE );      // Mute Pin
+  */
+  
+  //Setup Sound Inputs
   m_Mic->ResgisterForDataBufferRXCallback(this);
   m_Mic->Setup();
-  m_Speaker->Setup();
   m_FFT_Calculator.Setup(m_Mic->GetChannelBytesToRead(), m_Mic->GetSampleRate(), 4096);
+  
+  //m_Speaker->Setup();
+  //m_Speaker->StartDevice();
   m_Mic->StartDevice();
-  m_Speaker->StartDevice();
-  BT_Sink.start("LED Controller");
+
 }
 
 void Manager::RunTask()
 {
   m_Mic->ProcessEventQueue();
-  m_Speaker->ProcessEventQueue();
+  //m_Speaker->ProcessEventQueue();
   ProcessEventQueue();
 }
 
@@ -104,7 +108,7 @@ void Manager::ProcessDataBufferQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic->GetBytesToRead());
       if ( xQueueReceive(m_Mic->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        m_Speaker->SetSoundBufferData(DataBuffer);
+        //m_Speaker->SetSoundBufferData(DataBuffer);
       }
       else
       {
