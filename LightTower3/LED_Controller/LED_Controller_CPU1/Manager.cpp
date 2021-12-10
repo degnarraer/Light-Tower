@@ -40,14 +40,10 @@ void Manager::Setup()
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
   
   //Setup Sound Inputs
-  m_BT.Setup();
   m_Mic.ResgisterForDataBufferRXCallback(this);
-  m_Mic.Setup();
-  m_FFT_Calculator.Setup(m_Mic.GetChannelBytesToRead(), m_Mic.GetSampleRate(), 4096);
-  
-  //m_Speaker->Setup();
+
   //m_Speaker->StartDevice();
-  m_Mic.StartDevice();
+  //m_Mic.StartDevice();
   m_BT.StartDevice();
 }
 

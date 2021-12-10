@@ -57,13 +57,21 @@ void setup() {
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
+  
+  m_Mic.Setup();
+  //m_Speaker->Setup();
+  m_BT.Setup();
+  m_Manager.Setup();
+  m_SerialDatalink.Setup();
+  m_FFT_Calculator.Setup(m_Mic.GetChannelBytesToRead(), m_Mic.GetSampleRate(), 4096);
+  
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,          // Function to implement the task
     "ManagerTask",            // Name of the task
-    10000,                    // Stack size in words
+    20000,                    // Stack size in words
     NULL,                     // Task input parameter
-    configMAX_PRIORITIES - 6, // Priority of the task
+    configMAX_PRIORITIES - 3, // Priority of the task
     &ManagerTask,             // Task handle.
     0                         // Core where the task should run
   );
@@ -73,7 +81,7 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    10000,                    // Stack size in words
+    20000,                    // Stack size in words
     NULL,                     // Task input parameter
     configMAX_PRIORITIES - 6, // Priority of the task
     &FFTTask,                   // Task handle.
@@ -85,7 +93,7 @@ void setup() {
   (
     SerialDataLinkTaskLoop,                  // Function to implement the task
     "SerialDataLinkTask",                    // Name of the task
-    10000,                      // Stack size in words
+    20000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 20,  // Priority of the task
     &SerialDataLinkTask,                     // Task handle.
@@ -101,10 +109,11 @@ void loop() {
 
 void ManagerTaskLoop(void * parameter)
 {
-  m_Manager.Setup();
   for(;;)
   {
+    yield();
     m_Manager.RunTask();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 void FFTTaskLoop(void * parameter)
@@ -118,10 +127,11 @@ void FFTTaskLoop(void * parameter)
 }
 void SerialDataLinkTaskLoop(void * parameter)
 {
-  m_SerialDatalink.Setup();
   for(;;)
   {
+    yield();
     m_SerialDatalink.ProcessEventQueue();
-    m_SerialDatalink.CheckForNewSerialData();
+    //m_SerialDatalink.CheckForNewSerialData();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
