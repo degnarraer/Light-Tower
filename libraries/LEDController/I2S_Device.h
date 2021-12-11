@@ -112,6 +112,7 @@ class I2S_Device: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
     const int m_MutePin;
+	bool m_Is_Running = false;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
     const i2s_port_t m_I2S_PORT;
     QueueHandle_t m_i2s_event_queue = NULL;

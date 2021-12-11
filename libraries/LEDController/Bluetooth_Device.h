@@ -25,12 +25,31 @@
 #include "Streaming.h"
 #include <BluetoothA2DPSink.h>
 
+class Bluetooth_Sink_Callback
+{
+	public:
+		Bluetooth_Sink_Callback(){}
+		virtual ~Bluetooth_Sink_Callback(){}
+	
+		//Callbacks called by this class
+		virtual void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+};
+
 class Bluetooth_Sink: public NamedItem
-					  , public CommonUtils
+					, public CommonUtils
 {
   public:
     Bluetooth_Sink( String Title
+				  , BluetoothA2DPSink& BTSink
 				  , i2s_port_t i2S_PORT
+				  , i2s_mode_t Mode
+				  , int SampleRate
+				  , i2s_bits_per_sample_t BitsPerSample
+				  , i2s_channel_fmt_t i2s_Channel_Fmt
+				  , i2s_comm_format_t CommFormat
+				  , i2s_channel_t i2s_channel
 				  , int BufferCount
 				  , int BufferSize
 				  , int SerialClockPin
@@ -38,66 +57,56 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataInPin
 				  , int SerialDataOutPin );			
     virtual ~Bluetooth_Sink();
-	void Setup()
-	{
-		InstallDevice();
-	}
-	void InstallDevice()
-	{
-		Serial << "Configuring Bluetooth\n";
-		m_BTSink.set_stream_reader(read_data_stream);
-		m_BTSink.set_on_data_received(data_received_callback);
-
-		static i2s_config_t i2s_config = {
-		  .mode = (i2s_mode_t) (I2S_MODE_MASTER | I2S_MODE_TX),
-		  .sample_rate = 44100, // updated automatically by A2DP
-		  .bits_per_sample = (i2s_bits_per_sample_t)I2S_BITS_PER_SAMPLE_32BIT,
-		  .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-		  .communication_format = (i2s_comm_format_t) (I2S_COMM_FORMAT_STAND_I2S),
-		  .intr_alloc_flags = 0, // default interrupt priority
-		  .dma_buf_count = m_BufferCount,
-		  .dma_buf_len = m_BufferSize,
-		  .use_apll = true,
-		  .tx_desc_auto_clear = true // avoiding noise in case of data unavailability
-		};
-		i2s_pin_config_t my_pin_config = 
-		{
-			.bck_io_num = m_SerialClockPin,
-			.ws_io_num = m_WordSelectPin,
-			.data_out_num = m_SerialDataOutPin,
-			.data_in_num = m_SerialDataInPin
-		};
-		m_BTSink.set_pin_config(my_pin_config);
-		m_BTSink.set_i2s_config(i2s_config);
-		m_BTSink.set_i2s_port(m_i2S_PORT);
-	}
-	void StartDevice()
-	{
-		m_BTSink.start("Massive Cock");
-	}
-	void StopDevice()
-	{
-		m_BTSink.stop();
-	}
-  private:
-	BluetoothA2DPSink m_BTSink;
-	i2s_port_t m_i2S_PORT;
-	const int m_BufferCount;
-	int m_BufferSize;
-	int m_SerialClockPin;
-	int m_WordSelectPin;
-	int m_SerialDataInPin;
-	int m_SerialDataOutPin;
+	void Setup();
 	
-	static void data_received_callback() 
-	{
-	}
+	//Callbacks from BluetoothSink  
+	void data_received_callback();
+	void read_data_stream(const uint8_t *data, uint32_t length);
+	
+	//Callback Registrtion to this class
+	void ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee);
 
-	static void read_data_stream(const uint8_t *data, uint32_t length)
-	{
-		
-	}
+	void InstallDevice();
+	void StartDevice();
+	void StopDevice();
+	void ProcessEventQueue();
+	
+	size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
+    size_t GetBytesToRead() {return m_TotalBytesToRead; }
+    size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
+    int GetSampleRate() { return m_SampleRate; }
+
+  private:
+	Bluetooth_Sink_Callback* m_Callee = NULL;
+	BluetoothA2DPSink& m_BTSink;
+	i2s_port_t m_I2S_PORT;
+    size_t m_SampleCount;
+    size_t m_ChannelSampleCount;
+    size_t m_BytesPerSample;
+    size_t m_TotalBytesToRead;
+    size_t m_ChannelBytesToRead;
+    int32_t *m_SoundBufferData;
+    int32_t *m_LeftChannel_SoundBufferData;
+    int32_t *m_RightChannel_SoundBufferData;
+    const int m_SampleRate;
+    const i2s_mode_t m_i2s_Mode;
+    const i2s_bits_per_sample_t m_BitsPerSample;
+    const i2s_comm_format_t m_CommFormat;
+    const i2s_channel_fmt_t m_Channel_Fmt;
+    const i2s_channel_t m_i2s_channel;
+    const int m_BufferCount;
+    const int m_BufferSize;
+    const int m_SerialClockPin;
+    const int m_WordSelectPin;
+    const int m_SerialDataInPin;
+    const int m_SerialDataOutPin;
+	bool m_Is_Running = false;
+    QueueHandle_t m_Data_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Data_Buffer_queue = NULL;
+    QueueHandle_t m_Left_Data_Buffer_queue = NULL;
 
 };
+
+
 
 #endif

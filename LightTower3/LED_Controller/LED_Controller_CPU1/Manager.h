@@ -31,6 +31,17 @@
 #include "Serial_Datalink_Config.h"
 #include "Bluetooth_Device.h"
 
+enum InputType_t
+{
+  InputType_Microphone,
+  InputType_Bluetooth
+};
+enum OutputType_t
+{
+  OutputType_DAC,
+  OutputType_Bluetooth
+};
+
 class Manager: public NamedItem
              , public I2S_Device_Callback
              , public CommonUtils
@@ -46,6 +57,27 @@ class Manager: public NamedItem
     void Setup();
     void RunTask();
     void ProcessEventQueue();
+    void SetInputType(InputType_t Type)
+    {
+      m_InputType = Type;
+      switch(m_InputType)
+      {
+        case InputType_Microphone:
+          m_BT.StopDevice();
+          m_FFT_Calculator.Setup(m_Mic.GetBytesToRead(), m_Mic.GetSampleRate(), 2048);
+          m_Mic.StartDevice();
+          m_Speaker.StartDevice();
+        break;
+        case InputType_Bluetooth:
+          m_Speaker.StopDevice();
+          m_Mic.StopDevice();
+          m_FFT_Calculator.Setup(m_BT.GetBytesToRead(), m_BT.GetSampleRate(), 2048);
+          m_BT.StartDevice();
+        break;
+        default:
+        break;
+      }
+    }
 
     //I2S_Device_Callback
     void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count)
@@ -65,24 +97,15 @@ class Manager: public NamedItem
     }
     void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
     void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
-    
+
   private:
     FFT_Calculator &m_FFT_Calculator;
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT;
     I2S_Device &m_Mic;
     I2S_Device &m_Speaker;
-    
-    enum InputType
-    {
-      InputType_Microphone,
-      InputType_Bluetooth
-    };
-    enum OutputType
-    {
-      OutputType_DAC,
-      OutputType_Bluetooth
-    };
+    InputType_t m_InputType;
+    OutputType_t m_OutputType;
 
     void ProcessDataBufferQueue();
     void ProcessRightChannelDataBufferQueue();

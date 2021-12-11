@@ -71,7 +71,6 @@ class SerialDataLinkCore: public NamedItem
   void DecodeAndStoreData(String Data)
   {
 	  //size_t length = Data.Length();
-	  
 	  /*
 	  String Header = "<NAME=" + Name + ">";
 	  Header += "<COUNT=" +  String(Count) + ">";

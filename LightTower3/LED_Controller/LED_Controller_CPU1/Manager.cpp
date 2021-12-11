@@ -38,19 +38,32 @@ Manager::~Manager()
 void Manager::Setup()
 {
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
-  
-  //Setup Sound Inputs
-  m_Mic.ResgisterForDataBufferRXCallback(this);
-
-  //m_Speaker->StartDevice();
-  //m_Mic.StartDevice();
-  m_BT.StartDevice();
+  SetInputType(InputType_Bluetooth);
 }
 
 void Manager::RunTask()
 {
-  m_Mic.ProcessEventQueue();
-  //m_Speaker.ProcessEventQueue();
+  switch(m_InputType)
+  {
+    case InputType_Microphone:
+      m_Mic.ProcessEventQueue();
+      m_Speaker.ProcessEventQueue();
+    break;
+    case InputType_Bluetooth:
+      m_BT.ProcessEventQueue();
+    break;
+    default:
+    break;
+  }
+  switch(m_OutputType)
+  {
+    case OutputType_DAC:
+    break;
+    case OutputType_Bluetooth:
+    break;
+    default:
+    break;
+  }
   ProcessEventQueue();
 }
 
@@ -73,7 +86,7 @@ void Manager::ProcessDataBufferQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_Mic.GetBytesToRead());
       if ( xQueueReceive(m_Mic.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        //m_Speaker->SetSoundBufferData(DataBuffer);
+        m_Speaker.SetSoundBufferData(DataBuffer);
       }
       else
       {

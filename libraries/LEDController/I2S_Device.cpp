@@ -61,29 +61,32 @@ void I2S_Device::Setup()
     m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
     m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
-
-    Serial << GetTitle() << ": Allocating Memory.\n";    
-    m_SoundBufferData = (int32_t*)malloc(m_TotalBytesToRead);
-    m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
-    m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
-
-
-	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
-	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
-	CreateQueue(m_i2s_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
-    
     SetMuteState(m_MuteState);
 }
 
 void I2S_Device::StartDevice()
 {
-  InstallDevice();
-  i2s_start(m_I2S_PORT);
+	if(false == m_Is_Running)
+	{
+	  InstallDevice();
+	  i2s_start(m_I2S_PORT);
+	  m_Is_Running = true;
+	}
 }
 
 void I2S_Device::StopDevice()
 {
-  i2s_stop(m_I2S_PORT);
+	if(true == m_Is_Running)
+	{
+		i2s_stop(m_I2S_PORT);
+		delete m_SoundBufferData;
+		delete m_RightChannel_SoundBufferData;
+		delete m_LeftChannel_SoundBufferData;
+		vQueueDelete(m_i2s_Data_Buffer_Queue);
+		vQueueDelete(m_i2s_Right_Data_Buffer_queue);
+		vQueueDelete(m_i2s_Left_Data_Buffer_queue);
+		m_Is_Running = false;
+	}
 }
 
 void I2S_Device::SetSoundBufferData(int32_t *SoundBufferData)
@@ -159,6 +162,16 @@ int I2S_Device::WriteSamples(int32_t *samples)
 
 void I2S_Device::InstallDevice()
 {
+	Serial << "Configuring I2S Device\n";
+	Serial << GetTitle() << ": Allocating Memory.\n";    
+    m_SoundBufferData = (int32_t*)malloc(m_TotalBytesToRead);
+    m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
+    m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
+
+	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
+	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
+	CreateQueue(m_i2s_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
+    
   esp_err_t err;
   // The I2S config as per the example
   const i2s_config_t i2s_config = {

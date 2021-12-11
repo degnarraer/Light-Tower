@@ -34,11 +34,22 @@ void FFT_Calculator::Setup(size_t InputByteCount, int SampleRate, int FFT_Length
 
   Serial << GetTitle() << ": Allocating Memory.\n";
   m_BandOutputByteCount = sizeof(int16_t) * NUMBER_OF_BANDS;
+  delete m_FFT_Right_Buffer_Data;
   m_FFT_Right_Buffer_Data = (int32_t*)malloc(m_InputByteCount);
+  
+  
+  delete m_FFT_Left_Buffer_Data;
   m_FFT_Left_Buffer_Data = (int32_t*)malloc(m_InputByteCount);
+  
+  delete m_FFT_Right_Data;
   m_FFT_Right_Data = (int16_t*)malloc(sizeof(int16_t) * m_FFT_Length);
+  
+  delete m_FFT_Left_Data;
   m_FFT_Left_Data = (int16_t*)malloc(sizeof(int16_t) * m_FFT_Length);
+  
+  delete m_Right_Band_Values;
   m_Right_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
+  
   m_Left_Band_Values = (int16_t*)malloc(m_BandOutputByteCount);
   m_BytesToRead = sizeof(int32_t) * m_FFT_Length;
 
