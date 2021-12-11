@@ -25,12 +25,19 @@
 #include "Streaming.h"
 #include <BluetoothA2DPSink.h>
 
-class Bluetooth_Device: public NamedItem
+class Bluetooth_Sink: public NamedItem
 					  , public CommonUtils
 {
   public:
-    Bluetooth_Device( String Title );			
-    virtual ~Bluetooth_Device();
+    Bluetooth_Sink( String Title
+				  , i2s_port_t i2S_PORT
+				  , int BufferCount
+				  , int BufferSize
+				  , int SerialClockPin
+				  , int WordSelectPin
+				  , int SerialDataInPin
+				  , int SerialDataOutPin );			
+    virtual ~Bluetooth_Sink();
 	void Setup()
 	{
 		InstallDevice();
@@ -48,21 +55,21 @@ class Bluetooth_Device: public NamedItem
 		  .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
 		  .communication_format = (i2s_comm_format_t) (I2S_COMM_FORMAT_STAND_I2S),
 		  .intr_alloc_flags = 0, // default interrupt priority
-		  .dma_buf_count = 8,
-		  .dma_buf_len = 60,
+		  .dma_buf_count = m_BufferCount,
+		  .dma_buf_len = m_BufferSize,
 		  .use_apll = true,
 		  .tx_desc_auto_clear = true // avoiding noise in case of data unavailability
 		};
 		i2s_pin_config_t my_pin_config = 
 		{
-			.bck_io_num = 25,
-			.ws_io_num = 26,
-			.data_out_num = 33,
-			.data_in_num = I2S_PIN_NO_CHANGE
+			.bck_io_num = m_SerialClockPin,
+			.ws_io_num = m_WordSelectPin,
+			.data_out_num = m_SerialDataOutPin,
+			.data_in_num = m_SerialDataInPin
 		};
 		m_BTSink.set_pin_config(my_pin_config);
 		m_BTSink.set_i2s_config(i2s_config);
-		m_BTSink.set_i2s_port(I2S_NUM_1);
+		m_BTSink.set_i2s_port(m_i2S_PORT);
 	}
 	void StartDevice()
 	{
@@ -74,6 +81,13 @@ class Bluetooth_Device: public NamedItem
 	}
   private:
 	BluetoothA2DPSink m_BTSink;
+	i2s_port_t m_i2S_PORT;
+	const int m_BufferCount;
+	int m_BufferSize;
+	int m_SerialClockPin;
+	int m_WordSelectPin;
+	int m_SerialDataInPin;
+	int m_SerialDataOutPin;
 	
 	static void data_received_callback() 
 	{

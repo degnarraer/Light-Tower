@@ -18,9 +18,23 @@
 
 #include "Bluetooth_Device.h"
 
-Bluetooth_Device::Bluetooth_Device ( String Title ): NamedItem(Title)
+Bluetooth_Sink::Bluetooth_Sink ( String Title
+							   , i2s_port_t i2S_PORT
+							   , int BufferCount
+							   , int BufferSize
+							   , int SerialClockPin
+							   , int WordSelectPin
+							   , int SerialDataInPin
+							   , int SerialDataOutPin ): NamedItem(Title)
+													   , m_i2S_PORT(i2S_PORT)
+													   , m_BufferCount(BufferCount)
+													   , m_BufferSize(BufferSize)
+                                                       , m_SerialClockPin(SerialClockPin)
+                                                       , m_WordSelectPin(WordSelectPin)
+													   , m_SerialDataInPin(SerialDataInPin)
+                                                       , m_SerialDataOutPin(SerialDataOutPin)
 {
 }
-Bluetooth_Device::~Bluetooth_Device()
+Bluetooth_Sink::~Bluetooth_Sink()
 {
 }

@@ -39,7 +39,7 @@ class Manager: public NamedItem
     Manager( String Title
            , FFT_Calculator &FFTCalculator
            , SerialDataLink &SerialDataLink
-           , Bluetooth_Device &BT
+           , Bluetooth_Sink &BT
            , I2S_Device &Mic
            , I2S_Device &Speaker );
     virtual ~Manager();
@@ -69,7 +69,7 @@ class Manager: public NamedItem
   private:
     FFT_Calculator &m_FFT_Calculator;
     SerialDataLink &m_SerialDataLink;
-    Bluetooth_Device &m_BT;
+    Bluetooth_Sink &m_BT;
     I2S_Device &m_Mic;
     I2S_Device &m_Speaker;
     

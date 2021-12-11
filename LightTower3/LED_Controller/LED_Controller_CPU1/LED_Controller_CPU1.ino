@@ -11,9 +11,18 @@ TaskHandle_t SerialDataLinkTask;
 
 FFT_Calculator m_FFT_Calculator = FFT_Calculator("FFT Calculator");
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
-Bluetooth_Device m_BT = Bluetooth_Device("Bluetooth");
+
+Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
+                                    , I2S_NUM_1                 // I2S Interface
+                                    , 10                        // Buffer Count
+                                    , 60                        // Buffer Size
+                                    , 25                        // Serial Clock Pin
+                                    , 26                        // Word Selection Pin
+                                    , I2S_PIN_NO_CHANGE         // Serial Data In Pin
+                                    , 33 );                     // Serial Data Out Pin
+
 I2S_Device m_Mic = I2S_Device( "Microphone"
-                             , I2S_NUM_0
+                             , I2S_NUM_0                 // I2S Interface
                              , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
                              , 44100
                              , I2S_BITS_PER_SAMPLE_32BIT
@@ -29,7 +38,7 @@ I2S_Device m_Mic = I2S_Device( "Microphone"
                              , 32 );                     // Mute Pin
                       
 I2S_Device m_Speaker = I2S_Device( "Speaker"
-                                 , I2S_NUM_1
+                                 , I2S_NUM_1                 // I2S Interface
                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                                  , 44100
                                  , I2S_BITS_PER_SAMPLE_32BIT
@@ -131,7 +140,7 @@ void SerialDataLinkTaskLoop(void * parameter)
   {
     yield();
     m_SerialDatalink.ProcessEventQueue();
-    //m_SerialDatalink.CheckForNewSerialData();
+    m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
