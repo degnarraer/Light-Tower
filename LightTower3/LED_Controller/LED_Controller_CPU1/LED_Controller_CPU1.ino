@@ -118,7 +118,7 @@ void setup() {
     NULL,                     // Task input parameter
     configMAX_PRIORITIES - 6, // Priority of the task
     &FFTTask,                   // Task handle.
-    1                         // Core where the task should run
+    0                         // Core where the task should run
   );                   
   delay(500);
 

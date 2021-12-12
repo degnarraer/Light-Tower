@@ -38,7 +38,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
 }
 
 void Manager::RunTask()
