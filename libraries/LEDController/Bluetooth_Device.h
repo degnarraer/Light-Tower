@@ -75,19 +75,24 @@ class Bluetooth_Sink: public NamedItem
     size_t GetBytesToRead() {return m_TotalBytesToRead; }
     size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
     int GetSampleRate() { return m_SampleRate; }
+    QueueHandle_t GetDataBufferQueue() { return m_Data_Buffer_Queue; }
+    QueueHandle_t GetRightDataBufferQueue() { return m_Right_Data_Buffer_Queue; }
+    QueueHandle_t GetLeftDataBufferQueue() { return m_Left_Data_Buffer_Queue; }
 
   private:
 	Bluetooth_Sink_Callback* m_Callee = NULL;
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     size_t m_SampleCount;
+    size_t m_BTCallbackSampleCount = 256;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
-    int32_t *m_SoundBufferData;
-    int32_t *m_LeftChannel_SoundBufferData;
-    int32_t *m_RightChannel_SoundBufferData;
+	int m_ChannelBufferIndex = 0;
+    int32_t *m_SoundBufferData = NULL;
+    int32_t *m_LeftChannel_SoundBufferData = NULL;
+    int32_t *m_RightChannel_SoundBufferData = NULL;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
     const i2s_bits_per_sample_t m_BitsPerSample;
@@ -102,8 +107,8 @@ class Bluetooth_Sink: public NamedItem
     const int m_SerialDataOutPin;
 	bool m_Is_Running = false;
     QueueHandle_t m_Data_Buffer_Queue = NULL;
-    QueueHandle_t m_Right_Data_Buffer_queue = NULL;
-    QueueHandle_t m_Left_Data_Buffer_queue = NULL;
+    QueueHandle_t m_Right_Data_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Data_Buffer_Queue = NULL;
 
 };
 

@@ -94,7 +94,7 @@ void setup() {
   m_Speaker.Setup();
   m_BT.Setup();
   m_Manager.Setup();
-  //m_SerialDatalink.Setup();
+  m_SerialDatalink.Setup();
   
   m_BTSink.set_stream_reader(read_data_stream);
   m_BTSink.set_on_data_received(data_received_callback);
@@ -102,7 +102,7 @@ void setup() {
   (
     ManagerTaskLoop,          // Function to implement the task
     "ManagerTask",            // Name of the task
-    10000,                    // Stack size in words
+    20000,                    // Stack size in words
     NULL,                     // Task input parameter
     configMAX_PRIORITIES - 3, // Priority of the task
     &ManagerTask,             // Task handle.
@@ -118,7 +118,7 @@ void setup() {
     NULL,                     // Task input parameter
     configMAX_PRIORITIES - 6, // Priority of the task
     &FFTTask,                   // Task handle.
-    0                         // Core where the task should run
+    1                         // Core where the task should run
   );                   
   delay(500);
 
@@ -145,7 +145,7 @@ void ManagerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //m_Manager.RunTask();
+    m_Manager.RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -154,8 +154,8 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //m_FFT_Calculator.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    m_FFT_Calculator.ProcessEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 void SerialDataLinkTaskLoop(void * parameter)
@@ -163,8 +163,8 @@ void SerialDataLinkTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //m_SerialDatalink.ProcessEventQueue();
-    //m_SerialDatalink.CheckForNewSerialData();
+    m_SerialDatalink.ProcessEventQueue();
+    m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

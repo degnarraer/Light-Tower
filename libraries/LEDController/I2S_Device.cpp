@@ -82,9 +82,21 @@ void I2S_Device::StopDevice()
 		delete m_SoundBufferData;
 		delete m_RightChannel_SoundBufferData;
 		delete m_LeftChannel_SoundBufferData;
-		vQueueDelete(m_i2s_Data_Buffer_Queue);
-		vQueueDelete(m_i2s_Right_Data_Buffer_queue);
-		vQueueDelete(m_i2s_Left_Data_Buffer_queue);
+		if(m_i2s_Data_Buffer_Queue)
+		{
+			vQueueDelete(m_i2s_Data_Buffer_Queue);
+			m_i2s_Data_Buffer_Queue = NULL;
+		}
+		if(m_i2s_Right_Data_Buffer_queue)
+		{
+			vQueueDelete(m_i2s_Right_Data_Buffer_queue);
+			m_i2s_Right_Data_Buffer_queue = NULL;
+		}
+		if(m_i2s_Left_Data_Buffer_queue)
+		{
+			vQueueDelete(m_i2s_Left_Data_Buffer_queue);
+			m_i2s_Left_Data_Buffer_queue = NULL;
+		}
 		m_Is_Running = false;
 	}
 }

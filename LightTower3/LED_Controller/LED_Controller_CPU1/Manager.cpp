@@ -38,7 +38,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
-  SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::RunTask()
@@ -99,20 +99,48 @@ void Manager::ProcessDataBufferQueue()
 
 void Manager::ProcessRightChannelDataBufferQueue()
 {
-  MoveDataFromQueueToQueue<int32_t>( m_Mic.GetRightDataBufferQueue()
-                                   , m_FFT_Calculator.GetFFTRightDataInputQueue()
-                                   , m_Mic.GetChannelBytesToRead()
-                                   , false
-                                   , false );
+  switch(m_InputType)
+  {
+    case InputType_Microphone:
+      MoveDataFromQueueToQueue<int32_t>( m_Mic.GetRightDataBufferQueue()
+                                       , m_FFT_Calculator.GetFFTRightDataInputQueue()
+                                       , m_Mic.GetChannelBytesToRead()
+                                       , false
+                                       , false );
+    break;
+    case InputType_Bluetooth:
+      MoveDataFromQueueToQueue<int32_t>( m_BT.GetRightDataBufferQueue()
+                                       , m_FFT_Calculator.GetFFTRightDataInputQueue()
+                                       , m_BT.GetChannelBytesToRead()
+                                       , false
+                                       , false );
+    break;
+    default:
+    break;
+  }
 }
 
 void Manager::ProcessLeftChannelDataBufferQueue()
 {
-  MoveDataFromQueueToQueue<int32_t>( m_Mic.GetLeftDataBufferQueue()
-                                   , m_FFT_Calculator.GetFFTLeftDataInputQueue()
-                                   , m_Mic.GetChannelBytesToRead()
-                                   , false
-                                   , false );
+  switch(m_InputType)
+  {
+    case InputType_Microphone:
+      MoveDataFromQueueToQueue<int32_t>( m_Mic.GetLeftDataBufferQueue()
+                                       , m_FFT_Calculator.GetFFTLeftDataInputQueue()
+                                       , m_Mic.GetChannelBytesToRead()
+                                       , false
+                                       , false );
+    break;
+    case InputType_Bluetooth:
+      MoveDataFromQueueToQueue<int32_t>( m_BT.GetLeftDataBufferQueue()
+                                       , m_FFT_Calculator.GetFFTLeftDataInputQueue()
+                                       , m_BT.GetChannelBytesToRead()
+                                       , false
+                                       , false );
+    break;
+    default:
+    break;
+  }
 }
 
 void Manager::ProcessRightFFTDataBufferQueue()

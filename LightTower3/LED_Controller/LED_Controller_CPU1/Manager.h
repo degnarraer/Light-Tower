@@ -64,14 +64,14 @@ class Manager: public NamedItem
       {
         case InputType_Microphone:
           m_BT.StopDevice();
-          m_FFT_Calculator.Setup(m_Mic.GetBytesToRead(), m_Mic.GetSampleRate(), 2048);
+          m_FFT_Calculator.Setup(m_Mic.GetChannelBytesToRead(), m_Mic.GetSampleRate(), 2048);
           m_Mic.StartDevice();
           m_Speaker.StartDevice();
         break;
         case InputType_Bluetooth:
           m_Speaker.StopDevice();
           m_Mic.StopDevice();
-          m_FFT_Calculator.Setup(m_BT.GetBytesToRead(), m_BT.GetSampleRate(), 2048);
+          m_FFT_Calculator.Setup(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 2048);
           m_BT.StartDevice();
         break;
         default:

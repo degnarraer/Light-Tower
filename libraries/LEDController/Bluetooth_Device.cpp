@@ -55,11 +55,12 @@ Bluetooth_Sink::~Bluetooth_Sink()
 
 void Bluetooth_Sink::Setup()
 {
+	Serial << GetTitle() << " Setup\n";
 	m_BytesPerSample = m_BitsPerSample/8;
-	m_ChannelBytesToRead = m_BytesPerSample * m_BufferSize;
-	m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
-	m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
+	m_TotalBytesToRead = m_BytesPerSample * m_BTCallbackSampleCount;
 	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
+	m_ChannelBytesToRead  = m_TotalBytesToRead / 2;
+	m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 }
 void Bluetooth_Sink::ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
 
@@ -69,37 +70,84 @@ void Bluetooth_Sink::data_received_callback()
 }
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
-{
-	/*
-  *m_SoundBufferData = {0};
-  *m_LeftChannel_SoundBufferData = {0};
-  *m_RightChannel_SoundBufferData = {0};
-  
-  for (int i=0; i<length/4; i+=2)
-  {
-	m_SoundBufferData[i] = m_RightChannel_SoundBufferData[i] = (int32_t)data[i];
-	m_SoundBufferData[i+1] = m_LeftChannel_SoundBufferData[i] = (int32_t)data[i+1];
-  }
-  
-  if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, length/4);
-  if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, length/4);
-  if(xQueueSend(m_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << "Bluetooth Sink: Error Setting Data Queue\n"; }
-  if(xQueueSend(m_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << "Bluetooth Sink: Error Setting Right Channel Queue\n"; }
-  if(xQueueSend(m_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << "Bluetooth Sink: Error Setting Left Channel Queue\n"; }
-*/
+{  
+
+	static bool BTSinkQueueFull = false;
+	static bool BTSinkRightQueueFull = false;
+	static bool BTSinkLeftQueueFull = false;
+	static bool BTSinkDataError = false;
+	
+	int SampleCount = length/m_BytesPerSample;
+	if(m_BTCallbackSampleCount != SampleCount)
+	{
+		if(false == BTSinkDataError){ BTSinkDataError = true; Serial << "WARNING! " << GetTitle() << " expects: " << m_BTCallbackSampleCount << " Samples, but instead received: " << SampleCount << "\n"; }
+	}
+	else
+	{
+		if(true == BTSinkDataError){ BTSinkDataError = false; Serial << "WARNING! " <<  GetTitle() << " Data Correct\n"; }
+	}
+	
+	if( m_SoundBufferData 
+	 && m_RightChannel_SoundBufferData 
+	 && m_LeftChannel_SoundBufferData
+	 && m_Data_Buffer_Queue
+	 && m_Right_Data_Buffer_Queue
+	 && m_Left_Data_Buffer_Queue )
+	{
+		for (int i=0; i<SampleCount; i+=2)
+		{
+			m_SoundBufferData[2*m_ChannelBufferIndex] = m_RightChannel_SoundBufferData[m_ChannelBufferIndex] = (int32_t)data[i];
+			m_SoundBufferData[2*m_ChannelBufferIndex+1] = m_LeftChannel_SoundBufferData[m_ChannelBufferIndex] = (int32_t)data[i+1];
+			++m_ChannelBufferIndex;
+			if(m_ChannelBufferIndex > m_ChannelSampleCount)
+			{
+				m_ChannelBufferIndex = 0;
+				if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, m_SampleCount);				
+				if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, m_ChannelSampleCount);
+				if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, m_ChannelSampleCount);
+				if(uxQueueSpacesAvailable(m_Data_Buffer_Queue) > 0)
+				{
+					if(true == BTSinkQueueFull){ BTSinkQueueFull = false; Serial << "WARNONG! " << GetTitle() << ": Data Buffer Queue Sent\n"; }
+					if(xQueueSend(m_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
+				}
+				else
+				{ 
+					if(false == BTSinkQueueFull){ BTSinkQueueFull = true; Serial << "WARNING! " << GetTitle() << ": Bluetooth Sink Data Buffer Queue Full\n"; }
+				}
+				
+				if(uxQueueSpacesAvailable(m_Right_Data_Buffer_Queue) > 0)
+				{
+					if(true == BTSinkRightQueueFull){ BTSinkRightQueueFull = false; Serial << "WARNONG! " << GetTitle() << ": Right Data Buffer Queue Sent\n"; }
+					if(xQueueSend(m_Right_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
+				}
+				else 
+				{ 
+					if(false == BTSinkRightQueueFull){ BTSinkRightQueueFull = true; Serial << "WARNONG! " << GetTitle() << ": Right Data Buffer Queue Full\n"; }
+				}
+				if(uxQueueSpacesAvailable(m_Left_Data_Buffer_Queue) > 0)
+				{
+					if(true == BTSinkLeftQueueFull){ BTSinkLeftQueueFull = false; Serial << "WARNONG! " << GetTitle() << ": Left Data Buffer Queue Sent\n"; }
+					if(xQueueSend(m_Left_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
+				}
+				else
+				{ 
+					if(false == BTSinkLeftQueueFull){ BTSinkLeftQueueFull = true; Serial << "WARNONG! " << GetTitle() << ": Left Data Buffer Queue Full\n"; }
+				}
+			}
+		}
+	}
 }
 
 void Bluetooth_Sink::InstallDevice()
 {
-	Serial << "Configuring Bluetooth\n";
-	Serial << GetTitle() << ": Allocating Memory.\n";    
+	Serial << GetTitle() << ": Installing Device\n";    
 	m_SoundBufferData = (int32_t*)malloc(m_TotalBytesToRead);
 	m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
 	m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
 
 	CreateQueue(m_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
-	CreateQueue(m_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
-	CreateQueue(m_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
+	CreateQueue(m_Right_Data_Buffer_Queue, m_ChannelBytesToRead, 10, true);
+	CreateQueue(m_Left_Data_Buffer_Queue, m_ChannelBytesToRead, 10, true);
 
 	static i2s_config_t i2s_config = {
 	  .mode = m_i2s_Mode,
@@ -120,31 +168,49 @@ void Bluetooth_Sink::InstallDevice()
 		.data_out_num = m_SerialDataOutPin,
 		.data_in_num = m_SerialDataInPin
 	};
+	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_pin_config(my_pin_config);
 	m_BTSink.set_i2s_config(i2s_config);
 	m_BTSink.set_i2s_port(m_I2S_PORT);
+	Serial << GetTitle() << ": Device Installed\n";
 }
 void Bluetooth_Sink::StartDevice()
 {
 	if(false == m_Is_Running)
 	{
+		Serial << GetTitle() << ": Starting\n";
 		InstallDevice();
 		m_BTSink.start("Massive Cock");
 		m_Is_Running = true;
+		Serial << GetTitle() << ": Started\n";
 	}
 }
 void Bluetooth_Sink::StopDevice()
 {
 	if(true == m_Is_Running)
 	{
+		Serial << GetTitle() << ": Stopping\n";
 		m_BTSink.stop();
 		delete m_SoundBufferData;
 		delete m_RightChannel_SoundBufferData;
 		delete m_LeftChannel_SoundBufferData;
-		vQueueDelete(m_Data_Buffer_Queue);
-		vQueueDelete(m_Right_Data_Buffer_queue);
-		vQueueDelete(m_Left_Data_Buffer_queue);
+		if(m_Data_Buffer_Queue)
+		{
+			vQueueDelete(m_Data_Buffer_Queue);
+			m_Data_Buffer_Queue = NULL;
+		}
+		if(m_Right_Data_Buffer_Queue)
+		{
+			vQueueDelete(m_Right_Data_Buffer_Queue);
+			m_Right_Data_Buffer_Queue = NULL;
+		}
+		if(m_Left_Data_Buffer_Queue)
+		{
+			vQueueDelete(m_Left_Data_Buffer_Queue);
+			m_Left_Data_Buffer_Queue = NULL;
+		}
 		m_Is_Running = false;
+		Serial << GetTitle() << ": Stopped\n";
 	}
 }
 void Bluetooth_Sink::ProcessEventQueue()
