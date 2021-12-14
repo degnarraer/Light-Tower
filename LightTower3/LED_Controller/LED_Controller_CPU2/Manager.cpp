@@ -37,7 +37,7 @@ void Manager::Setup()
                         , 44100
                         , I2S_BITS_PER_SAMPLE_32BIT
                         , I2S_CHANNEL_FMT_RIGHT_LEFT
-                        , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                        , i2s_comm_format_t(I2S_COMM_FORMAT_I2S)
                         , I2S_CHANNEL_STEREO
                         , I2S_BUFFER_COUNT
                         , I2S_BUFFER_SIZE
@@ -53,7 +53,7 @@ void Manager::Setup()
                               , 44100
                               , I2S_BITS_PER_SAMPLE_32BIT
                               , I2S_CHANNEL_FMT_RIGHT_LEFT
-                              , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                              , i2s_comm_format_t(I2S_COMM_FORMAT_I2S)
                               , I2S_CHANNEL_STEREO
                               , I2S_BUFFER_COUNT
                               , I2S_BUFFER_SIZE
@@ -111,7 +111,13 @@ void Manager::ProcessEventQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetChannelBytesToRead());
       if ( xQueueReceive(m_ESP32->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Right Data Queue\n";
+        if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
+        {
+          for(int j = 0; j < m_ESP32->GetChannelSampleCount(); ++j)
+          {
+            Serial << DataBuffer[j] << "\n";
+          } 
+        }
       }
       else
       {
@@ -129,7 +135,13 @@ void Manager::ProcessEventQueue()
       int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetChannelBytesToRead());
       if ( xQueueReceive(m_ESP32->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        if(true == EVENT_HANDLER_DEBUG)Serial << "Manager Adding to FFT Left Data Queue\n";
+        if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
+        {
+          for(int j = 0; j < m_ESP32->GetChannelSampleCount(); ++j)
+          {
+            Serial << DataBuffer[j] << "\n";
+          } 
+        }
       }
       else
       {

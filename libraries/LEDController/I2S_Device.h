@@ -31,12 +31,6 @@
 #include "driver/i2s.h"
 #include "Streaming.h"
 
-enum Mute_State_t
-{
-  Mute_State_Un_Muted = 0,
-  Mute_State_Muted,
-};
-
 struct SampledData_t
 {
   int32_t *Samples;
@@ -70,8 +64,7 @@ class I2S_Device: public NamedItem
               , int SerialClockPin
               , int WordSelectPin
               , int SerialDataInPin
-              , int SerialDataOutPin
-              , int MutePin );
+              , int SerialDataOutPin );
     virtual ~I2S_Device();
     void ResgisterForDataBufferRXCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
     void StartDevice();
@@ -81,7 +74,6 @@ class I2S_Device: public NamedItem
     QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }
 
     void SetSoundBufferData(int32_t *SoundBufferData);
-    void SetMuteState(Mute_State_t MuteState);
     size_t GetSampleCount() { return m_SampleCount; }
     size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
     size_t GetBytesToRead() {return m_TotalBytesToRead; }
@@ -111,9 +103,7 @@ class I2S_Device: public NamedItem
     const int m_WordSelectPin;
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
-    const int m_MutePin;
 	bool m_Is_Running = false;
-    Mute_State_t m_MuteState = Mute_State_Un_Muted;
     const i2s_port_t m_I2S_PORT;
     QueueHandle_t m_i2s_event_queue = NULL;
     QueueHandle_t m_i2s_Data_Buffer_Queue = NULL;

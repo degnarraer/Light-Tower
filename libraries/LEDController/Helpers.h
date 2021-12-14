@@ -18,14 +18,10 @@ class CommonUtils
 			  if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 			  {
 				if(true == DebugMessage)Serial << "Adding Data to Queue\n";
-				if(true == WaitForOpenSlot)
+				if(true == WaitForOpenSlot || uxQueueSpacesAvailable(GiveToQueue) > 0)
 				{
 					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-				}
-				else if(uxQueueSpacesAvailable(GiveToQueue) > 0)
-				{
-					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-				}				
+				}			
 			  }
 			  else
 			  {

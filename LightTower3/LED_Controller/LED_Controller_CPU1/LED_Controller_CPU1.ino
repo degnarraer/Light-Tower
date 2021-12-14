@@ -3,6 +3,7 @@
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSink.h>
 
+#define configUSE_TIME_SLICING 1
 #define I2S_BUFFER_COUNT 10
 #define I2S_BUFFER_SIZE 100
 
@@ -21,14 +22,14 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , 44100
                                     , I2S_BITS_PER_SAMPLE_32BIT
                                     , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                    , i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S)
+                                    , i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                     , I2S_CHANNEL_STEREO
                                     , 10                        // Buffer Count
                                     , 60                        // Buffer Size
                                     , 25                        // Serial Clock Pin
                                     , 26                        // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE         // Serial Data In Pin
-                                    , 33  );                    // Serial Data Out Pin
+                                    , 33 );                     // Serial Data Out Pin
                                     
 //Callbacks for Bluetooth Sink
 void data_received_callback() 
@@ -42,46 +43,54 @@ void read_data_stream(const uint8_t *data, uint32_t length)
   m_BT.read_data_stream(data, length);
 }
 
+//Callbacks for Bluetooth Sink
+// for esp_a2d_connection_state_t see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp_a2dp.html#_CPPv426esp_a2d_connection_state_t
+void connection_state_changed(esp_a2d_connection_state_t state, void *ptr){
+  Serial.println(m_BTSink.to_str(state));
+}
 
+//Callbacks for Bluetooth Sink
+// for esp_a2d_audio_state_t see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp_a2dp.html#_CPPv421esp_a2d_audio_state_t
+void audio_state_changed(esp_a2d_audio_state_t state, void *ptr){
+  Serial.println(m_BTSink.to_str(state));
+}
 
-I2S_Device m_Mic = I2S_Device( "Microphone"
-                             , I2S_NUM_0                 // I2S Interface
-                             , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
-                             , 44100
-                             , I2S_BITS_PER_SAMPLE_32BIT
-                             , I2S_CHANNEL_FMT_RIGHT_LEFT
-                             , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                             , I2S_CHANNEL_STEREO
-                             , I2S_BUFFER_COUNT          // Buffer Count
-                             , I2S_BUFFER_SIZE           // Buffer Size
-                             , 12                        // Serial Clock Pin
-                             , 13                        // Word Selection Pin
-                             , 14                        // Serial Data In Pin
-                             , I2S_PIN_NO_CHANGE         // Serial Data Out Pin
-                             , 32 );                     // Mute Pin
+I2S_Device m_Mic_In = I2S_Device( "Microphone In"
+                                , I2S_NUM_0                 // I2S Interface
+                                , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
+                                , 44100
+                                , I2S_BITS_PER_SAMPLE_32BIT
+                                , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                , I2S_CHANNEL_STEREO
+                                , I2S_BUFFER_COUNT          // Buffer Count
+                                , I2S_BUFFER_SIZE           // Buffer Size
+                                , 12                        // Serial Clock Pin
+                                , 13                        // Word Selection Pin
+                                , 14                        // Serial Data In Pin
+                                , I2S_PIN_NO_CHANGE );      // Serial Data Out Pin );
                       
-I2S_Device m_Speaker = I2S_Device( "Speaker"
-                                 , I2S_NUM_1                 // I2S Interface
-                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                 , 44100
-                                 , I2S_BITS_PER_SAMPLE_32BIT
-                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                 , I2S_CHANNEL_STEREO
-                                 , I2S_BUFFER_COUNT          // Buffer Count
-                                 , I2S_BUFFER_SIZE           // Buffer Size
-                                 , 25                        // Serial Clock Pin
-                                 , 26                        // Word Selection Pin
-                                 , I2S_PIN_NO_CHANGE         // Serial Data In Pin
-                                 , 33                        // Serial Data Out Pin
-                                 , I2S_PIN_NO_CHANGE );      // Mute Pin
+I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
+                                  , I2S_NUM_1                 // I2S Interface
+                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                  , 44100
+                                  , I2S_BITS_PER_SAMPLE_32BIT
+                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                  , I2S_CHANNEL_STEREO
+                                  , I2S_BUFFER_COUNT          // Buffer Count
+                                  , I2S_BUFFER_SIZE           // Buffer Size
+                                  , 25                        // Serial Clock Pin
+                                  , 26                        // Word Selection Pin
+                                  , I2S_PIN_NO_CHANGE         // Serial Data In Pin
+                                  , 33 );                     // Serial Data Out Pin
   
 Manager m_Manager = Manager("Manager"
                            , m_FFT_Calculator
                            , m_SerialDatalink
                            , m_BT
-                           , m_Mic
-                           , m_Speaker);
+                           , m_Mic_In
+                           , m_Mic_Out);
 
 void setup() {
   Serial.begin(500000);
@@ -89,9 +98,9 @@ void setup() {
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
-  
-  m_Mic.Setup();
-  m_Speaker.Setup();
+
+  m_Mic_In.Setup();
+  m_Mic_Out.Setup();
   m_BT.Setup();
   m_Manager.Setup();
   m_SerialDatalink.Setup();
@@ -100,13 +109,13 @@ void setup() {
   m_BTSink.set_on_data_received(data_received_callback);
   xTaskCreatePinnedToCore
   (
-    ManagerTaskLoop,          // Function to implement the task
-    "ManagerTask",            // Name of the task
-    20000,                    // Stack size in words
-    NULL,                     // Task input parameter
-    configMAX_PRIORITIES - 3, // Priority of the task
-    &ManagerTask,             // Task handle.
-    0                         // Core where the task should run
+    ManagerTaskLoop,            // Function to implement the task
+    "ManagerTask",              // Name of the task
+    10000,                      // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &ManagerTask,               // Task handle.
+    0                           // Core where the task should run
   );
   delay(500);
    
@@ -114,22 +123,22 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    10000,                    // Stack size in words
-    NULL,                     // Task input parameter
-    configMAX_PRIORITIES - 6, // Priority of the task
+    10000,                      // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 10,  // Priority of the task
     &FFTTask,                   // Task handle.
-    0                         // Core where the task should run
+    0                           // Core where the task should run
   );                   
   delay(500);
 
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkTaskLoop,                  // Function to implement the task
-    "SerialDataLinkTask",                    // Name of the task
+    SerialDataLinkTaskLoop,     // Function to implement the task
+    "SerialDataLinkTask",       // Name of the task
     10000,                      // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 20,  // Priority of the task
-    &SerialDataLinkTask,                     // Task handle.
+    configMAX_PRIORITIES - 10,  // Priority of the task
+    &SerialDataLinkTask,        // Task handle.
     1                           // Core where the task should run
   );     
   delay(500);
@@ -155,7 +164,7 @@ void FFTTaskLoop(void * parameter)
   {
     yield();
     m_FFT_Calculator.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 void SerialDataLinkTaskLoop(void * parameter)

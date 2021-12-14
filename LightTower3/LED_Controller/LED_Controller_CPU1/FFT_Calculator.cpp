@@ -104,6 +104,7 @@ void FFT_Calculator::ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuf
           memset(BandDataBuffer, 0, sizeof(int16_t)*NUMBER_OF_BANDS);
           for(int i = 0; i < m_FFT_Length/2; ++i)
           {
+            yield();
             float freq = GetFreqForBin(i);
             int bandIndex = 0;
             
@@ -180,6 +181,7 @@ void FFT_Calculator::ProcessRightFFTQueue()
           memset(m_Right_Band_Values, 0, sizeof(int16_t)*NUMBER_OF_BANDS);
           for(int i = 0; i < m_FFT_Length/2; ++i)
           {
+            yield();
             float freq = GetFreqForBin(i);
             int bandIndex = 0;
             
@@ -261,7 +263,7 @@ void FFT_Calculator::ProcessLeftFFTQueue()
           memset(m_Left_Band_Values, 0, sizeof(int16_t)*NUMBER_OF_BANDS);
           for(int i = 0; i < m_FFT_Length/2; ++i)
           {
-            
+            yield();
             float freq = GetFreqForBin(i);
             int bandIndex = 0;
             

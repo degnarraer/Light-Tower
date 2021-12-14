@@ -81,6 +81,7 @@ class Bluetooth_Sink: public NamedItem
 
   private:
 	Bluetooth_Sink_Callback* m_Callee = NULL;
+	SimpleExponentialVolumeControl m_VolumeControl;
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     size_t m_SampleCount;

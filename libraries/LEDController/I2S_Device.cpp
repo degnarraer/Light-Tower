@@ -31,8 +31,7 @@ I2S_Device::I2S_Device ( String Title
                        , int SerialClockPin
                        , int WordSelectPin
                        , int SerialDataInPin
-                       , int SerialDataOutPin
-                       , int MutePin )
+                       , int SerialDataOutPin )
                        : NamedItem(Title)
 					   , m_I2S_PORT(i2S_PORT)
                        , m_i2s_Mode(Mode)
@@ -47,7 +46,6 @@ I2S_Device::I2S_Device ( String Title
                        , m_WordSelectPin(WordSelectPin)
                        , m_SerialDataInPin(SerialDataInPin)
                        , m_SerialDataOutPin(SerialDataOutPin)
-                       , m_MutePin(MutePin)
 {
 }
 I2S_Device::~I2S_Device()
@@ -61,7 +59,6 @@ void I2S_Device::Setup()
     m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
     m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
-    SetMuteState(m_MuteState);
 }
 
 void I2S_Device::StartDevice()
@@ -111,24 +108,6 @@ void I2S_Device::SetSoundBufferData(int32_t *SoundBufferData)
   if(true == DATA_TX_DEBUG) Serial <<  GetTitle() << "Sound Buffer Data Ready\n";
 }
 
-void I2S_Device::SetMuteState(Mute_State_t MuteState)
-{
-  pinMode(m_MutePin, OUTPUT);
-  switch(MuteState)
-  {
-    case Mute_State_Un_Muted:
-      digitalWrite(m_MutePin, LOW);
-      m_MuteState = Mute_State_Un_Muted;
-      break;
-    case Mute_State_Muted:
-      digitalWrite(m_MutePin, HIGH);
-      m_MuteState = Mute_State_Muted;
-      break;
-    default:
-      break;
-  }
-}
-
 int I2S_Device::ReadSamples()
 {
   *m_SoundBufferData = {0};
@@ -143,7 +122,18 @@ int I2S_Device::ReadSamples()
   channel_samples_read = bytes_read / (m_BytesPerSample * 2);
   if(bytes_read != m_TotalBytesToRead)Serial << "i2s Driver: " << GetTitle() << " Error Reading All Bytes\n";
   if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, samples_read);
-  if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << "i2s Driver: " << GetTitle() << " Error Setting Data Queue\n"; }
+  
+  static bool MicDataBufferFull = false;
+  if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
+  {
+	if(true == MicDataBufferFull){ MicDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
+    if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Buffer Queue\n"; }
+  }
+  else
+  { 
+	if(false == MicDataBufferFull){ MicDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Full\n"; }
+  }
+  
   if(I2S_CHANNEL_STEREO == m_i2s_channel)
   {
     for(int i = 0; i < channel_samples_read; ++i)
@@ -153,8 +143,30 @@ int I2S_Device::ReadSamples()
     }
 	if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_samples_read);
 	if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_samples_read);
-    if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << "i2s Driver: " << GetTitle() << " Error Setting Right Channel Queue\n"; }
-    if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << "i2s Driver: " << GetTitle() << " Error Setting Left Channel Queue\n"; }
+    
+	
+	static bool MicRightDataBufferFull = false;
+	if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
+	{
+		if(true == MicRightDataBufferFull){ MicRightDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
+		if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Right Data Buffer Queue\n"; }
+    }
+	else
+	{ 
+		if(false == MicRightDataBufferFull){ MicRightDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Right Data Buffer Queue Full\n"; }
+	}
+	
+	
+	static bool MicLeftDataBufferFull = false;
+	if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
+	{
+		if(true == MicLeftDataBufferFull){ MicLeftDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Send Resumed\n"; }
+		if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Left Data Buffer Queue\n"; }
+    }
+	else
+	{ 
+		if(false == MicLeftDataBufferFull){ MicLeftDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Full\n"; }
+	}
   }
   return samples_read;
 }
@@ -168,7 +180,7 @@ int I2S_Device::WriteSamples(int32_t *samples)
   
   int samples_to_write = bytes_to_write / (m_BytesPerSample);
   int samples_written = bytes_written / (m_BytesPerSample);
-  if(samples_written != samples_to_write){ if(false == QUEUE_DEBUG) Serial << "i2s Driver: " << GetTitle() << " Error Writting All Samples\n"; }
+  if(samples_written != samples_to_write){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
   return samples_written;
 }
 
@@ -195,7 +207,7 @@ void I2S_Device::InstallDevice()
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count = m_BufferCount,
     .dma_buf_len = m_BufferSize,
-    .use_apll = true,
+    .use_apll = false,
     .tx_desc_auto_clear = true,
     .fixed_mclk = 0
   };
@@ -212,24 +224,24 @@ void I2S_Device::InstallDevice()
   // This function must be called before any I2S driver read/write operations.
   err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queue);
   if (err != ESP_OK) {
-    if(false == DATA_RX_DEBUG)Serial << "i2s Driver: " << GetTitle() << " Failed installing driver: " << err << "\n";
+    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed installing driver: " << err << "\n";
     while (true);
   }
   if (m_i2s_event_queue == NULL)
   {
-    if(false == DATA_RX_DEBUG)Serial << "i2s Driver: " << GetTitle() << " Failed to setup event queue.\n";
+    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed to setup event queue.\n";
   }
   err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
   if (err != ESP_OK) {
-    if(false == DATA_RX_DEBUG)Serial << "i2s Driver: " << GetTitle() << " Failed setting clock: " << err << "\n";
+    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed setting clock: " << err << "\n";
     while (true);
   }
   err = i2s_set_pin(m_I2S_PORT, &pin_config);
   if (err != ESP_OK) {
-    if(false == DATA_RX_DEBUG)Serial << "i2s Driver: " << GetTitle() << " Failed setting pin: " << err << "\n";
+    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed setting pin: " << err << "\n";
     while (true);
   }
-  if(false == DATA_RX_DEBUG)Serial << "i2s Driver: " << GetTitle() << " Driver Installed.\n";
+  if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Driver Installed.\n";
 }
 
 void I2S_Device::ProcessEventQueue()

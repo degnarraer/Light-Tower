@@ -158,8 +158,9 @@ void Bluetooth_Sink::InstallDevice()
 	  .intr_alloc_flags = 0, // default interrupt priority
 	  .dma_buf_count = m_BufferCount,
 	  .dma_buf_len = m_BufferSize,
-	  .use_apll = true,
-	  .tx_desc_auto_clear = true // avoiding noise in case of data unavailability
+	  .use_apll = false,
+	  .tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
+	  .fixed_mclk = 0
 	};
 	i2s_pin_config_t my_pin_config = 
 	{
@@ -168,10 +169,13 @@ void Bluetooth_Sink::InstallDevice()
 		.data_out_num = m_SerialDataOutPin,
 		.data_in_num = m_SerialDataInPin
 	};
-	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_pin_config(my_pin_config);
 	m_BTSink.set_i2s_config(i2s_config);
 	m_BTSink.set_i2s_port(m_I2S_PORT);
+	m_BTSink.set_bits_per_sample(m_BitsPerSample);
+	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
+	m_BTSink.set_volume_control(&m_VolumeControl);
+	m_BTSink.set_volume(100);
 	Serial << GetTitle() << ": Device Installed\n";
 }
 void Bluetooth_Sink::StartDevice()

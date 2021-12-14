@@ -36,14 +36,25 @@ enum InputType_t
   InputType_Microphone,
   InputType_Bluetooth
 };
-enum OutputType_t
+
+enum DAC_Data_Format_t
 {
-  OutputType_DAC,
-  OutputType_Bluetooth
+  DAC_Data_Format_Default,
+  DAC_Data_Format_LSB16,
+  DAC_Data_Format_LSB20,
+  DAC_Data_Format_LSB24,
 };
+
+enum Mute_State_t
+{
+  Mute_State_Un_Muted = 0,
+  Mute_State_Muted,
+};
+
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
+             , public Bluetooth_Sink_Callback
              , public CommonUtils
 {
   public:
@@ -52,49 +63,18 @@ class Manager: public NamedItem
            , SerialDataLink &SerialDataLink
            , Bluetooth_Sink &BT
            , I2S_Device &Mic
-           , I2S_Device &Speaker );
+           , I2S_Device &Mic_Out );
     virtual ~Manager();
     void Setup();
     void RunTask();
     void ProcessEventQueue();
-    void SetInputType(InputType_t Type)
-    {
-      m_InputType = Type;
-      switch(m_InputType)
-      {
-        case InputType_Microphone:
-          m_BT.StopDevice();
-          m_FFT_Calculator.Setup(m_Mic.GetChannelBytesToRead(), m_Mic.GetSampleRate(), 2048);
-          m_Mic.StartDevice();
-          m_Speaker.StartDevice();
-        break;
-        case InputType_Bluetooth:
-          m_Speaker.StopDevice();
-          m_Mic.StopDevice();
-          m_FFT_Calculator.Setup(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 2048);
-          m_BT.StartDevice();
-        break;
-        default:
-        break;
-      }
-    }
+    void SetInputType(InputType_t Type);
+    void SetDACMuteState(Mute_State_t MuteState);
+    void SetDACDataFormat(DAC_Data_Format_t DAC_Data_Format);
 
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count)
-    {
-      if(DeviceTitle == m_Mic.GetTitle())
-      {
-        for(int i = 0; i < Count; ++i)
-        {
-           if(true == SAWTOOTH_OUTPUT_DATA_DEBUG)
-           {
-            DataBuffer[i] = i;
-           }
-           DataBuffer[i] = DataBuffer[i] * 0.001;  // SET VOLUME HERE
-           if(true == PRINT_DATA_DEBUG) Serial.println(DataBuffer[i]);
-        } 
-      }
-    }
+    //Bluetooth_Callback
+    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count);
     void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
     void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
 
@@ -102,10 +82,11 @@ class Manager: public NamedItem
     FFT_Calculator &m_FFT_Calculator;
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT;
-    I2S_Device &m_Mic;
-    I2S_Device &m_Speaker;
+    I2S_Device &m_Mic_In;
+    I2S_Device &m_Mic_Out;
     InputType_t m_InputType;
-    OutputType_t m_OutputType;
+    Mute_State_t m_MuteState = Mute_State_Un_Muted;
+    DAC_Data_Format_t m_DAC_Data_Format;
 
     void ProcessDataBufferQueue();
     void ProcessRightChannelDataBufferQueue();
