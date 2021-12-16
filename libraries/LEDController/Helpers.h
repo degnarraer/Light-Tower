@@ -38,6 +38,41 @@ class CommonUtils
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}
+		
+		int32_t GetDataBufferValue(char* DataBuffer, size_t BytesPerSample, size_t index)
+		{
+			switch(BytesPerSample)
+			{
+			  case 1:
+				return ((int8_t*)DataBuffer)[index];
+			  break;
+			  case 2:
+				return ((int16_t*)DataBuffer)[index];
+			  break;
+			  case 3:
+			  break;
+			  case 4:
+				return ((int32_t*)DataBuffer)[index];
+			  break;
+			}
+		}
+		void SetDataBufferValue(char* DataBuffer, size_t BytesPerSample, size_t index, int32_t value)
+		{
+			switch(BytesPerSample)
+			{
+			  case 1:
+				((int8_t*)DataBuffer)[index] = (int8_t)value;
+			  break;
+			  case 2:
+				((int16_t*)DataBuffer)[index] = (int16_t)value;
+			  break;
+			  case 3:
+			  break;
+			  case 4:
+				((int32_t*)DataBuffer)[index] = (int32_t)value;
+			  break;
+			}
+		}
 };
 
 #endif

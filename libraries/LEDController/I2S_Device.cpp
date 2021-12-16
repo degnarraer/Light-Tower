@@ -98,11 +98,11 @@ void I2S_Device::StopDevice()
 	}
 }
 
-void I2S_Device::SetSoundBufferData(int32_t *SoundBufferData)
+void I2S_Device::SetSoundBufferData(char *SoundBufferData)
 {
-  for(int i = 0; i < m_BufferSize * m_i2s_channel; ++i)
+  for(int i = 0; i < m_TotalBytesToRead; ++i)
   {
-    m_SoundBufferData[i] = SoundBufferData[i] * 0.1; //ADD VOLUME HERE
+    m_SoundBufferData[i] = SoundBufferData[i]; //ADD VOLUME HERE
   }
   WriteSamples(m_SoundBufferData);
   if(true == DATA_TX_DEBUG) Serial <<  GetTitle() << "Sound Buffer Data Ready\n";
@@ -115,13 +115,11 @@ int I2S_Device::ReadSamples()
   *m_LeftChannel_SoundBufferData = {0};
   // read from i2s
   size_t bytes_read = 0;
-  size_t samples_read = 0;
-  size_t channel_samples_read = 0;
+  size_t channel_bytes_read = 0;
   i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
-  samples_read = bytes_read / m_BytesPerSample;
-  channel_samples_read = bytes_read / (m_BytesPerSample * 2);
-  if(bytes_read != m_TotalBytesToRead)Serial << "i2s Driver: " << GetTitle() << " Error Reading All Bytes\n";
-  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, samples_read);
+  channel_bytes_read = bytes_read / 2;
+  if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes\n";
+  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read);
   
   static bool MicDataBufferFull = false;
   if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
@@ -136,13 +134,19 @@ int I2S_Device::ReadSamples()
   
   if(I2S_CHANNEL_STEREO == m_i2s_channel)
   {
+	  
+	int channel_samples_read = channel_bytes_read / m_BytesPerSample;
     for(int i = 0; i < channel_samples_read; ++i)
     {
-      m_RightChannel_SoundBufferData[i] = m_SoundBufferData[i];
-      m_LeftChannel_SoundBufferData[i] = m_SoundBufferData[i+1];
+	  int DataBufferIndex = m_BytesPerSample * i;
+	  for(int j = 0; j < m_BytesPerSample; ++j)
+	  {
+		m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + j];
+		m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + m_BytesPerSample + j];
+	  }
     }
-	if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_samples_read);
-	if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_samples_read);
+	if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read);
+	if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read);
     
 	
 	static bool MicRightDataBufferFull = false;
@@ -168,29 +172,25 @@ int I2S_Device::ReadSamples()
 		if(false == MicLeftDataBufferFull){ MicLeftDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Full\n"; }
 	}
   }
-  return samples_read;
+  return bytes_read;
 }
 
-int I2S_Device::WriteSamples(int32_t *samples)
+int I2S_Device::WriteSamples(char *samples)
 {
   // write to i2s
   size_t bytes_written = 0;
-  size_t bytes_to_write = (m_BitsPerSample/8) * m_i2s_channel * m_BufferSize;
-  i2s_write(m_I2S_PORT, samples, bytes_to_write, &bytes_written, portMAX_DELAY);
-  
-  int samples_to_write = bytes_to_write / (m_BytesPerSample);
-  int samples_written = bytes_written / (m_BytesPerSample);
-  if(samples_written != samples_to_write){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
-  return samples_written;
+  i2s_write(m_I2S_PORT, samples, m_TotalBytesToRead, &bytes_written, portMAX_DELAY);
+  if(bytes_written != m_TotalBytesToRead){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
+  return bytes_written;
 }
 
 void I2S_Device::InstallDevice()
 {
 	Serial << "Configuring I2S Device\n";
 	Serial << GetTitle() << ": Allocating Memory.\n";    
-    m_SoundBufferData = (int32_t*)malloc(m_TotalBytesToRead);
-    m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
-    m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
+    m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
+    m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
+    m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
 
 	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
 	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);

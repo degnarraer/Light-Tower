@@ -94,17 +94,22 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 	 && m_Right_Data_Buffer_Queue
 	 && m_Left_Data_Buffer_Queue )
 	{
-		for (int i=0; i<SampleCount; i+=2)
+		int channel_samples_read = length / m_BytesPerSample;
+		for(int i = 0; i < channel_samples_read; ++i)
 		{
-			m_SoundBufferData[2*m_ChannelBufferIndex] = m_RightChannel_SoundBufferData[m_ChannelBufferIndex] = (int32_t)data[i];
-			m_SoundBufferData[2*m_ChannelBufferIndex+1] = m_LeftChannel_SoundBufferData[m_ChannelBufferIndex] = (int32_t)data[i+1];
-			++m_ChannelBufferIndex;
-			if(m_ChannelBufferIndex > m_ChannelSampleCount)
+			int DataBufferIndex = m_BytesPerSample * i;
+			for(int j = 0; j < m_BytesPerSample; ++j)
+			{
+			m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + j];
+			m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + m_BytesPerSample + j];
+			}
+			++DataBufferIndex;
+			if(m_ChannelBufferIndex > m_TotalBytesToRead)
 			{
 				m_ChannelBufferIndex = 0;
-				if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, m_SampleCount);				
-				if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, m_ChannelSampleCount);
-				if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, m_ChannelSampleCount);
+				if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, m_TotalBytesToRead);				
+				if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, m_TotalBytesToRead/2);
+				if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, m_TotalBytesToRead/2);
 				if(uxQueueSpacesAvailable(m_Data_Buffer_Queue) > 0)
 				{
 					if(true == BTSinkQueueFull){ BTSinkQueueFull = false; Serial << "WARNONG! " << GetTitle() << ": Data Buffer Queue Sent\n"; }
@@ -141,9 +146,9 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 void Bluetooth_Sink::InstallDevice()
 {
 	Serial << GetTitle() << ": Installing Device\n";    
-	m_SoundBufferData = (int32_t*)malloc(m_TotalBytesToRead);
-	m_RightChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
-	m_LeftChannel_SoundBufferData = (int32_t*)malloc(m_ChannelBytesToRead);
+	m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
+	m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
+	m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
 
 	CreateQueue(m_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
 	CreateQueue(m_Right_Data_Buffer_Queue, m_ChannelBytesToRead, 10, true);

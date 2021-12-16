@@ -31,20 +31,14 @@
 #include "driver/i2s.h"
 #include "Streaming.h"
 
-struct SampledData_t
-{
-  int32_t *Samples;
-  int Count;
-};
-
 class I2S_Device_Callback
 {
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+		virtual void DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count) = 0;
 };
 
 class I2S_Device: public NamedItem
@@ -69,11 +63,12 @@ class I2S_Device: public NamedItem
     void ResgisterForDataBufferRXCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
     void StartDevice();
     void StopDevice();
+	size_t GetBytesPerSample() { return m_BytesPerSample; }
     QueueHandle_t GetDataBufferQueue() { return m_i2s_Data_Buffer_Queue; }
     QueueHandle_t GetRightDataBufferQueue() { return m_i2s_Right_Data_Buffer_queue; }
     QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }
 
-    void SetSoundBufferData(int32_t *SoundBufferData);
+    void SetSoundBufferData(char *SoundBufferData);
     size_t GetSampleCount() { return m_SampleCount; }
     size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
     size_t GetBytesToRead() {return m_TotalBytesToRead; }
@@ -88,9 +83,9 @@ class I2S_Device: public NamedItem
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
-    int32_t *m_SoundBufferData;
-    int32_t *m_LeftChannel_SoundBufferData;
-    int32_t *m_RightChannel_SoundBufferData;
+    char *m_SoundBufferData;
+    char *m_LeftChannel_SoundBufferData;
+    char *m_RightChannel_SoundBufferData;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
     const i2s_bits_per_sample_t m_BitsPerSample;
@@ -110,7 +105,7 @@ class I2S_Device: public NamedItem
     QueueHandle_t m_i2s_Right_Data_Buffer_queue = NULL;
     QueueHandle_t m_i2s_Left_Data_Buffer_queue = NULL;
     int ReadSamples();
-    int WriteSamples(int32_t *samples);
+    int WriteSamples(char *samples);
     void InstallDevice();
 };
 

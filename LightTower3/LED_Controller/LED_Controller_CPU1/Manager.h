@@ -73,8 +73,12 @@ class Manager: public NamedItem
     void SetDACDataFormat(DAC_Data_Format_t DAC_Data_Format);
 
     //I2S_Device_Callback
+    void DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count);
+    void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
+
     //Bluetooth_Callback
-    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count);
+    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
     void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
     void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
 

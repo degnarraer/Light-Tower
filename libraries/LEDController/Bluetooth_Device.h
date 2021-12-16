@@ -32,9 +32,9 @@ class Bluetooth_Sink_Callback
 		virtual ~Bluetooth_Sink_Callback(){}
 	
 		//Callbacks called by this class
-		virtual void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count) = 0;
+		virtual void DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count) = 0;
 };
 
 class Bluetooth_Sink: public NamedItem
@@ -91,9 +91,9 @@ class Bluetooth_Sink: public NamedItem
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
 	int m_ChannelBufferIndex = 0;
-    int32_t *m_SoundBufferData = NULL;
-    int32_t *m_LeftChannel_SoundBufferData = NULL;
-    int32_t *m_RightChannel_SoundBufferData = NULL;
+    char *m_SoundBufferData = NULL;
+    char *m_LeftChannel_SoundBufferData = NULL;
+    char *m_RightChannel_SoundBufferData = NULL;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
     const i2s_bits_per_sample_t m_BitsPerSample;
