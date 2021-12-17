@@ -62,7 +62,7 @@ class Manager: public NamedItem
            , FFT_Calculator &FFTCalculator
            , SerialDataLink &SerialDataLink
            , Bluetooth_Sink &BT
-           , I2S_Device &Mic
+           , I2S_Device &Mic_In
            , I2S_Device &Mic_Out );
     virtual ~Manager();
     void Setup();

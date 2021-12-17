@@ -18,14 +18,14 @@ BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , m_BTSink
                                     , I2S_NUM_1                 // I2S Interface
-                                    , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                    , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_TX)
                                     , 44100
                                     , I2S_BITS_PER_SAMPLE_32BIT
                                     , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S)
                                     , I2S_CHANNEL_STEREO                                    
                                     , 10                        // Buffer Count
-                                    , 60                        // Buffer Size
+                                    , 128                       // Buffer Size
                                     , 25                        // Serial Clock Pin
                                     , 26                        // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE         // Serial Data In Pin
@@ -72,11 +72,11 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                       
 I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
                                   , I2S_NUM_1                 // I2S Interface
-                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                  , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_TX)
                                   , 44100
                                   , I2S_BITS_PER_SAMPLE_32BIT
                                   , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                  , i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S)
+                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_LSB)
                                   , I2S_CHANNEL_STEREO
                                   , I2S_BUFFER_COUNT          // Buffer Count
                                   , I2S_BUFFER_SIZE           // Buffer Size

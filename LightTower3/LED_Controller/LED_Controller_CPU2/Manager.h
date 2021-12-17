@@ -31,7 +31,8 @@ class Manager: public NamedItem
              , public I2S_Device_Callback
 {
   public:
-    Manager(String Title);
+    Manager( String Title
+           , I2S_Device& I2S_In);
     virtual ~Manager();
     void Setup();
     void RunTask();
@@ -43,7 +44,7 @@ class Manager: public NamedItem
     void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
     
   private:
-    I2S_Device *m_ESP32;
+    I2S_Device& m_I2S_In;
 };
 
 #endif

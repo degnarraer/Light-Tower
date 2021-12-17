@@ -26,12 +26,12 @@ Manager::Manager( String Title
                 , FFT_Calculator &FFTCalculator
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Sink &BT
-                , I2S_Device &Mic
+                , I2S_Device &Mic_In
                 , I2S_Device &Mic_Out ): NamedItem(Title)
                                        , m_FFT_Calculator(FFTCalculator)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT(BT)
-                                       , m_Mic_In(Mic)
+                                       , m_Mic_In(Mic_In)
                                        , m_Mic_Out(Mic_Out)
 {
 }
