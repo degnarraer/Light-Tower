@@ -97,14 +97,50 @@ void I2S_Device::StopDevice()
 		m_Is_Running = false;
 	}
 }
+		
+int32_t I2S_Device::GetDataBufferValue(char* DataBuffer, size_t index)
+{
+	switch(m_BytesPerSample)
+	{
+	  case 1:
+		return ((int8_t*)DataBuffer)[index];
+	  break;
+	  case 2:
+		return ((int16_t*)DataBuffer)[index];
+	  break;
+	  case 3:
+	  break;
+	  case 4:
+		return ((int32_t*)DataBuffer)[index];
+	  break;
+	}
+}
 
-void I2S_Device::SetSoundBufferData(char *SoundBufferData)
+void I2S_Device::SetDataBufferValue(char* DataBuffer, size_t index, int32_t value)
+{
+	switch(m_BytesPerSample)
+	{
+	  case 1:
+		((int8_t*)DataBuffer)[index] = (int8_t)value;
+	  break;
+	  case 2:
+		((int16_t*)DataBuffer)[index] = (int16_t)value;
+	  break;
+	  case 3:
+	  break;
+	  case 4:
+		((int32_t*)DataBuffer)[index] = (int32_t)value;
+	  break;
+	}
+}
+
+void I2S_Device::SetSoundBufferData(char *SoundBufferData, size_t ByteCount)
 {
   for(int i = 0; i < m_TotalBytesToRead; ++i)
   {
     m_SoundBufferData[i] = SoundBufferData[i]; //ADD VOLUME HERE
   }
-  WriteSamples(m_SoundBufferData);
+  WriteSamples(m_SoundBufferData, ByteCount);
   if(true == DATA_TX_DEBUG) Serial <<  GetTitle() << "Sound Buffer Data Ready\n";
 }
 
@@ -118,6 +154,7 @@ int I2S_Device::ReadSamples()
   size_t channel_bytes_read = 0;
   i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
   channel_bytes_read = bytes_read / 2;
+  
   if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes\n";
   if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read);
   
@@ -175,12 +212,12 @@ int I2S_Device::ReadSamples()
   return bytes_read;
 }
 
-int I2S_Device::WriteSamples(char *samples)
+int I2S_Device::WriteSamples(char *samples, size_t ByteCount)
 {
   // write to i2s
   size_t bytes_written = 0;
-  i2s_write(m_I2S_PORT, samples, m_TotalBytesToRead, &bytes_written, portMAX_DELAY);
-  if(bytes_written != m_TotalBytesToRead){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
+  i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
+  if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
   return bytes_written;
 }
 

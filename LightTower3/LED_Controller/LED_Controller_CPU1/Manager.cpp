@@ -49,8 +49,8 @@ void Manager::Setup()
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
   
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -161,9 +161,9 @@ void Manager::DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Co
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
-    for(int i = 0; i < Count / m_Mic_In.GetBytesPerSample(); ++i)
+    for(int i = 0; i < m_Mic_In.GetSampleCount(); ++i)
     {
-       if(true == PRINT_DATA_DEBUG) Serial.println(GetDataBufferValue(DataBuffer, m_Mic_In.GetBytesPerSample(), i));
+      if(true == PRINT_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
     } 
   }
 }
@@ -178,7 +178,7 @@ void Manager::ProcessDataBufferQueue()
       char* DataBuffer = (char*)malloc(m_Mic_In.GetBytesToRead());
       if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        m_Mic_Out.SetSoundBufferData(DataBuffer);
+        m_Mic_Out.SetSoundBufferData(DataBuffer, m_Mic_Out.GetBytesToRead());
       }
       else
       {

@@ -67,6 +67,8 @@ class Bluetooth_Sink: public NamedItem
 	void ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee);
 
 	void InstallDevice();
+	void AllocateMemory();
+	void FreeMemory();
 	void StartDevice();
 	void StopDevice();
 	void ProcessEventQueue();

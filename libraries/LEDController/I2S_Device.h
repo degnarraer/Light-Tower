@@ -66,9 +66,11 @@ class I2S_Device: public NamedItem
 	size_t GetBytesPerSample() { return m_BytesPerSample; }
     QueueHandle_t GetDataBufferQueue() { return m_i2s_Data_Buffer_Queue; }
     QueueHandle_t GetRightDataBufferQueue() { return m_i2s_Right_Data_Buffer_queue; }
-    QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }
+    QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }	
+	int32_t GetDataBufferValue(char* DataBuffer, size_t index);
+	void SetDataBufferValue(char* DataBuffer, size_t index, int32_t value);
 
-    void SetSoundBufferData(char *SoundBufferData);
+    void SetSoundBufferData(char *SoundBufferData, size_t ByteCount);
     size_t GetSampleCount() { return m_SampleCount; }
     size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
     size_t GetBytesToRead() {return m_TotalBytesToRead; }
@@ -105,7 +107,7 @@ class I2S_Device: public NamedItem
     QueueHandle_t m_i2s_Right_Data_Buffer_queue = NULL;
     QueueHandle_t m_i2s_Left_Data_Buffer_queue = NULL;
     int ReadSamples();
-    int WriteSamples(char *samples);
+    int WriteSamples(char *samples, size_t ByteCount);
     void InstallDevice();
 };
 

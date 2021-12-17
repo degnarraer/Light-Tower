@@ -37,42 +37,23 @@ void Manager::Setup()
                         , 44100
                         , I2S_BITS_PER_SAMPLE_32BIT
                         , I2S_CHANNEL_FMT_RIGHT_LEFT
-                        , i2s_comm_format_t(I2S_COMM_FORMAT_I2S)
+                        , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                         , I2S_CHANNEL_STEREO
                         , I2S_BUFFER_COUNT
                         , I2S_BUFFER_SIZE
                         , 12
                         , 13
                         , 14
-                        , I2S_PIN_NO_CHANGE
                         , I2S_PIN_NO_CHANGE );
-                        
-    m_Speaker = new I2S_Device( "Speaker"
-                              , I2S_NUM_1
-                              , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                              , 44100
-                              , I2S_BITS_PER_SAMPLE_32BIT
-                              , I2S_CHANNEL_FMT_RIGHT_LEFT
-                              , i2s_comm_format_t(I2S_COMM_FORMAT_I2S)
-                              , I2S_CHANNEL_STEREO
-                              , I2S_BUFFER_COUNT
-                              , I2S_BUFFER_SIZE
-                              , 25
-                              , 26
-                              , I2S_PIN_NO_CHANGE
-                              , 33
-                              , I2S_PIN_NO_CHANGE );
+
 
   m_ESP32->Setup();
-  m_Speaker->Setup();
   m_ESP32->StartDevice();
-  m_Speaker->StartDevice();
 }
 
 void Manager::RunTask()
 {
   m_ESP32->ProcessEventQueue();
-  m_Speaker->ProcessEventQueue();
   ProcessEventQueue();
 }
 
@@ -83,17 +64,16 @@ void Manager::ProcessEventQueue()
     if(uxQueueMessagesWaiting(m_ESP32->GetDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Data Buffer Queue: " << uxQueueMessagesWaiting(m_ESP32->GetDataBufferQueue()) << "\n";
-      int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetBytesToRead());
+      char* DataBuffer = (char*)malloc(m_ESP32->GetBytesToRead());
       if ( xQueueReceive(m_ESP32->GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_DATA_DEBUG)
         {
-          for(int j = 0; j < m_ESP32->GetSampleCount(); ++j)
+          for(int i = 0; i < m_ESP32->GetSampleCount(); ++i)
           {
-            Serial << DataBuffer[j] << "\n";
-          } 
+            Serial << m_ESP32->GetDataBufferValue(DataBuffer, i) << "\n";
+          }
         }
-        m_Speaker->SetSoundBufferData(DataBuffer);
       }
       else
       {
@@ -108,15 +88,15 @@ void Manager::ProcessEventQueue()
     if(uxQueueMessagesWaiting(m_ESP32->GetRightDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Right Data Buffer Queue: " << uxQueueMessagesWaiting(m_ESP32->GetRightDataBufferQueue()) << "\n";
-      int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetChannelBytesToRead());
+      char* DataBuffer = (char*)malloc(m_ESP32->GetChannelBytesToRead());
       if ( xQueueReceive(m_ESP32->GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
         {
-          for(int j = 0; j < m_ESP32->GetChannelSampleCount(); ++j)
+          for(int i = 0; i < m_ESP32->GetSampleCount(); ++i)
           {
-            Serial << DataBuffer[j] << "\n";
-          } 
+            Serial << m_ESP32->GetDataBufferValue(DataBuffer, i) << "\n";
+          }
         }
       }
       else
@@ -132,15 +112,15 @@ void Manager::ProcessEventQueue()
     if(uxQueueMessagesWaiting(m_ESP32->GetLeftDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Left Data Buffer Queue: " << uxQueueMessagesWaiting(m_ESP32->GetLeftDataBufferQueue()) << "\n";
-      int32_t* DataBuffer = (int32_t*)malloc(m_ESP32->GetChannelBytesToRead());
+      char* DataBuffer = (char*)malloc(m_ESP32->GetChannelBytesToRead());
       if ( xQueueReceive(m_ESP32->GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
         {
-          for(int j = 0; j < m_ESP32->GetChannelSampleCount(); ++j)
+          for(int i = 0; i < m_ESP32->GetSampleCount(); ++i)
           {
-            Serial << DataBuffer[j] << "\n";
-          } 
+            Serial << m_ESP32->GetDataBufferValue(DataBuffer, i) << "\n";
+          }
         }
       }
       else
@@ -150,5 +130,4 @@ void Manager::ProcessEventQueue()
       delete DataBuffer;
     }
   }
-
 }

@@ -2,8 +2,6 @@
 #include "Serial_Datalink_Config.h"
 
 TaskHandle_t Task0;
-TaskHandle_t Task1;
-TaskHandle_t Task2;
 
 Manager m_Manager = Manager("Manager");
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
@@ -29,32 +27,6 @@ void setup() {
     0                     // Core where the task should run
   );
   delay(500);
-
-   /*
-  xTaskCreatePinnedToCore
-  (
-    Task1Loop,            // Function to implement the task
-    "Task1",              // Name of the task
-    5000,                // Stack size in words
-    NULL,                 // Task input parameter
-    1,                    // Priority of the task
-    &Task1,               // Task handle.
-    0                     // Core where the task should run
-  );                   
-  delay(500);
-   
-  xTaskCreatePinnedToCore
-  (
-    Task2Loop,            // Function to implement the task
-    "Task2",              // Name of the task
-    5000,                // Stack size in words
-    NULL,                 // Task input parameter
-    1,                    // Priority of the task
-    &Task2,               // Task handle.
-    0                     // Core where the task should run
-  );                   
-  delay(500);
-*/
 }
 
 void loop() {
@@ -67,22 +39,6 @@ void Task0Loop(void * parameter)
   while(true)
   {
     m_Manager.RunTask();
-    m_SerialDatalink.CheckForNewSerialData();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-void Task1Loop(void * parameter)
-{
-  while(true)
-  {
-    m_SerialDatalink.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-void Task2Loop(void * parameter)
-{
-  while(true)
-  {
     m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }

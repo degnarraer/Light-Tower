@@ -51,6 +51,7 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 }
 Bluetooth_Sink::~Bluetooth_Sink()
 {
+	FreeMemory();
 }
 
 void Bluetooth_Sink::Setup()
@@ -142,10 +143,8 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 		}
 	}
 }
-
-void Bluetooth_Sink::InstallDevice()
+void Bluetooth_Sink::AllocateMemory()
 {
-	Serial << GetTitle() << ": Installing Device\n";    
 	m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
 	m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
 	m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
@@ -153,6 +152,33 @@ void Bluetooth_Sink::InstallDevice()
 	CreateQueue(m_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
 	CreateQueue(m_Right_Data_Buffer_Queue, m_ChannelBytesToRead, 10, true);
 	CreateQueue(m_Left_Data_Buffer_Queue, m_ChannelBytesToRead, 10, true);
+}
+void Bluetooth_Sink::FreeMemory()
+{
+	delete m_SoundBufferData;
+	delete m_RightChannel_SoundBufferData;
+	delete m_LeftChannel_SoundBufferData;
+	if(m_Data_Buffer_Queue)
+	{
+		vQueueDelete(m_Data_Buffer_Queue);
+		m_Data_Buffer_Queue = NULL;
+	}
+	if(m_Right_Data_Buffer_Queue)
+	{
+		vQueueDelete(m_Right_Data_Buffer_Queue);
+		m_Right_Data_Buffer_Queue = NULL;
+	}
+	if(m_Left_Data_Buffer_Queue)
+	{
+		vQueueDelete(m_Left_Data_Buffer_Queue);
+		m_Left_Data_Buffer_Queue = NULL;
+	}
+	m_Is_Running = false;
+}
+void Bluetooth_Sink::InstallDevice()
+{
+	Serial << GetTitle() << ": Installing Device\n";    
+
 
 	static i2s_config_t i2s_config = {
 	  .mode = m_i2s_Mode,
@@ -180,7 +206,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
-	m_BTSink.set_volume(100);
+	m_BTSink.set_volume(200);
 	Serial << GetTitle() << ": Device Installed\n";
 }
 void Bluetooth_Sink::StartDevice()
@@ -200,25 +226,7 @@ void Bluetooth_Sink::StopDevice()
 	{
 		Serial << GetTitle() << ": Stopping\n";
 		m_BTSink.stop();
-		delete m_SoundBufferData;
-		delete m_RightChannel_SoundBufferData;
-		delete m_LeftChannel_SoundBufferData;
-		if(m_Data_Buffer_Queue)
-		{
-			vQueueDelete(m_Data_Buffer_Queue);
-			m_Data_Buffer_Queue = NULL;
-		}
-		if(m_Right_Data_Buffer_Queue)
-		{
-			vQueueDelete(m_Right_Data_Buffer_Queue);
-			m_Right_Data_Buffer_Queue = NULL;
-		}
-		if(m_Left_Data_Buffer_Queue)
-		{
-			vQueueDelete(m_Left_Data_Buffer_Queue);
-			m_Left_Data_Buffer_Queue = NULL;
-		}
-		m_Is_Running = false;
+		FreeMemory();
 		Serial << GetTitle() << ": Stopped\n";
 	}
 }
