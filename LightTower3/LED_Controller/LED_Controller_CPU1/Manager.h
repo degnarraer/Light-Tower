@@ -27,7 +27,7 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 
-#include "FFT_Calculator.h"
+#include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include "Bluetooth_Device.h"
 
@@ -59,7 +59,7 @@ class Manager: public NamedItem
 {
   public:
     Manager( String Title
-           , FFT_Calculator &FFTCalculator
+           , Sound_Processor &FFTCalculator
            , SerialDataLink &SerialDataLink
            , Bluetooth_Sink &BT
            , I2S_Device &Mic_In
@@ -83,7 +83,7 @@ class Manager: public NamedItem
     void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
 
   private:
-    FFT_Calculator &m_FFT_Calculator;
+    Sound_Processor &m_Sound_Processor;
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT;
     I2S_Device &m_Mic_In;

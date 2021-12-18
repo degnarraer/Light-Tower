@@ -16,15 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "FFT_Calculator.h"
+#include "Sound_Processor.h"
 
-FFT_Calculator::FFT_Calculator(String Title): NamedItem(Title)
+Sound_Processor::Sound_Processor(String Title): NamedItem(Title)
 {
 }
-FFT_Calculator::~FFT_Calculator()
+Sound_Processor::~Sound_Processor()
 {
 }
-void FFT_Calculator::Setup(size_t InputByteCount, int SampleRate, int FFT_Length)
+void Sound_Processor::Setup(size_t InputByteCount, int SampleRate, int FFT_Length)
 {
   m_InputByteCount = InputByteCount;
   m_SampleRate = SampleRate;
@@ -59,7 +59,7 @@ void FFT_Calculator::Setup(size_t InputByteCount, int SampleRate, int FFT_Length
   CreateQueue(m_FFT_Left_BandData_Output_Buffer_queue, m_BandOutputByteCount, 10, true);
 }
 
-void FFT_Calculator::ProcessEventQueue()
+void Sound_Processor::ProcessEventQueue()
 {
   if(NULL != m_FFT_Right_Data_Input_Buffer_queue)
   {
@@ -72,27 +72,27 @@ void FFT_Calculator::ProcessEventQueue()
   }
 }
 
-void FFT_Calculator::ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer)
+void Sound_Processor::ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer)
 {
   if(uxQueueMessagesWaiting(Queue) > 0)
   {
-    if(true == FFT_CALCULATOR_QUEUE_DEBUG) Serial << "FFT Data Buffer Queue Count: " << uxQueueMessagesWaiting(Queue) << "\n";
+    if(true == Sound_Processor_QUEUE_DEBUG) Serial << "FFT Data Buffer Queue Count: " << uxQueueMessagesWaiting(Queue) << "\n";
     if ( xQueueReceive(Queue, InputDataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << "Data R: ";
+      if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << "Data R: ";
       for(int i = 0; i < m_InputByteCount; ++i)
       {
-        if(true == FFT_CALCULATOR_LOOPS_DEBUG)Serial << "Loop Count: "<< i << " of " << m_InputByteCount << "\n";
+        if(true == Sound_Processor_LOOPS_DEBUG)Serial << "Loop Count: "<< i << " of " << m_InputByteCount << "\n";
         FFTBuffer[BufferIndex] = (InputDataBuffer[i] >> 8) & 0x0000FFFF;
-        if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << InputDataBuffer[i] << "|" << FFTBuffer[BufferIndex] << "\n";
+        if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << InputDataBuffer[i] << "|" << FFTBuffer[BufferIndex] << "\n";
         ++BufferIndex;
         
         if(BufferIndex >= m_FFT_Length)
         {
           BufferIndex = 0;
           ZeroFFT(FFTBuffer, m_FFT_Length);
-          if(true == FFT_CALCULATOR_OUTPUTDATA_DEBUG)
+          if(true == Sound_Processor_OUTPUTDATA_DEBUG)
           {
             Serial << "FFT R: ";
             for(int j = 0; j < m_FFT_Length / 2; ++j)
@@ -148,27 +148,27 @@ void FFT_Calculator::ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuf
   }
 }
 
-void FFT_Calculator::ProcessRightFFTQueue()
+void Sound_Processor::ProcessRightFFTQueue()
 {
   if(uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue) > 0)
   {
-    if(true == FFT_CALCULATOR_QUEUE_DEBUG) Serial << "FFT Right Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue) << "\n";
+    if(true == Sound_Processor_QUEUE_DEBUG) Serial << "FFT Right Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue) << "\n";
     if ( xQueueReceive(m_FFT_Right_Data_Input_Buffer_queue, m_FFT_Right_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << "Data R: ";
+      if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << "Data R: ";
       for(int i = 0; i < m_InputByteCount; ++i)
       {
-        if(true == FFT_CALCULATOR_LOOPS_DEBUG)Serial << "Right Loop Count: "<< i << " of " << m_InputByteCount << "\n";
+        if(true == Sound_Processor_LOOPS_DEBUG)Serial << "Right Loop Count: "<< i << " of " << m_InputByteCount << "\n";
         m_FFT_Right_Data[m_FFT_Right_Buffer_Index] = (m_FFT_Right_Buffer_Data[i] >> 8) & 0x0000FFFF;
-        if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << m_FFT_Right_Buffer_Data[i] << "|" << m_FFT_Right_Data[m_FFT_Right_Buffer_Index] << "\n";
+        if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << m_FFT_Right_Buffer_Data[i] << "|" << m_FFT_Right_Data[m_FFT_Right_Buffer_Index] << "\n";
         ++m_FFT_Right_Buffer_Index;
         
         if(m_FFT_Right_Buffer_Index >= m_FFT_Length)
         {
           m_FFT_Right_Buffer_Index = 0;
           ZeroFFT(m_FFT_Right_Data, m_FFT_Length);
-          if(true == FFT_CALCULATOR_OUTPUTDATA_DEBUG)
+          if(true == Sound_Processor_OUTPUTDATA_DEBUG)
           {
             Serial << "FFT R: ";
             for(int j = 0; j < m_FFT_Length / 2; ++j)
@@ -228,27 +228,27 @@ void FFT_Calculator::ProcessRightFFTQueue()
   }
 }
 
-void FFT_Calculator::ProcessLeftFFTQueue()
+void Sound_Processor::ProcessLeftFFTQueue()
 {
   if(uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue) > 0)
   {
-    if(true == FFT_CALCULATOR_QUEUE_DEBUG) Serial << "FFT Left Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue) << "\n";
+    if(true == Sound_Processor_QUEUE_DEBUG) Serial << "FFT Left Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue) << "\n";
     if ( xQueueReceive(m_FFT_Left_Data_Input_Buffer_queue, m_FFT_Left_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << "Data L: ";
+      if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << "Data L: ";
       for(int i = 0; i < m_InputByteCount; ++i)
       {
-        if(true == FFT_CALCULATOR_LOOPS_DEBUG)Serial << "Left Loop Count: "<< i << " of " << m_InputByteCount << "\n";
+        if(true == Sound_Processor_LOOPS_DEBUG)Serial << "Left Loop Count: "<< i << " of " << m_InputByteCount << "\n";
         m_FFT_Left_Data[m_FFT_Left_Buffer_Index] = (m_FFT_Left_Buffer_Data[i] >> 8) & 0x0000FFFF;
-        if(true == FFT_CALCULATOR_INPUTDATA_DEBUG) Serial << m_FFT_Left_Buffer_Data[i] << "|" << m_FFT_Left_Data[m_FFT_Left_Buffer_Index] << "\n";
+        if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << m_FFT_Left_Buffer_Data[i] << "|" << m_FFT_Left_Data[m_FFT_Left_Buffer_Index] << "\n";
         ++m_FFT_Left_Buffer_Index;
         
         if(m_FFT_Left_Buffer_Index >= m_FFT_Length)
         {
           m_FFT_Left_Buffer_Index = 0;
           ZeroFFT(m_FFT_Left_Data, m_FFT_Length);
-          if(true == FFT_CALCULATOR_OUTPUTDATA_DEBUG)
+          if(true == Sound_Processor_OUTPUTDATA_DEBUG)
           {
             Serial << "FFT L: ";
             for(int j = 0; j < m_FFT_Length / 2; ++j)
@@ -308,7 +308,7 @@ void FFT_Calculator::ProcessLeftFFTQueue()
     }
   }
 }
-float FFT_Calculator::GetFreqForBin(unsigned int bin)
+float Sound_Processor::GetFreqForBin(unsigned int bin)
 {
   if(bin > m_FFT_Length/2) bin = m_FFT_Length/2;
   if(bin < 0) bin = 0;

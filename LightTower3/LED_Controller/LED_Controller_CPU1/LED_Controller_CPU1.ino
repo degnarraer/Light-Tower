@@ -1,5 +1,5 @@
 #include "Manager.h"
-#include "FFT_Calculator.h"
+#include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSink.h>
 
@@ -10,7 +10,7 @@ TaskHandle_t ManagerTask;
 TaskHandle_t FFTTask;
 TaskHandle_t SerialDataLinkTask;
 
-FFT_Calculator m_FFT_Calculator = FFT_Calculator("FFT Calculator");
+Sound_Processor m_Sound_Processor = Sound_Processor("FFT Calculator");
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
 
 BluetoothA2DPSink m_BTSink;
@@ -85,7 +85,7 @@ I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
                                   , 33 );                     // Serial Data Out Pin
   
 Manager m_Manager = Manager("Manager"
-                           , m_FFT_Calculator
+                           , m_Sound_Processor
                            , m_SerialDatalink
                            , m_BT
                            , m_Mic_In
@@ -162,7 +162,7 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_FFT_Calculator.ProcessEventQueue();
+    m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

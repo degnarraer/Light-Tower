@@ -16,16 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef I2S_FFT_CALCULATOR_H
-#define I2S_FFT_CALCULATOR_H
+#ifndef I2S_Sound_Processor_H
+#define I2S_Sound_Processor_H
 
 #define NUMBER_OF_BANDS 32
 
-#define FFT_CALCULATOR_DEBUG false
-#define FFT_CALCULATOR_QUEUE_DEBUG false
-#define FFT_CALCULATOR_LOOPS_DEBUG false
-#define FFT_CALCULATOR_INPUTDATA_DEBUG false
-#define FFT_CALCULATOR_OUTPUTDATA_DEBUG false
+#define Sound_Processor_DEBUG false
+#define Sound_Processor_QUEUE_DEBUG false
+#define Sound_Processor_LOOPS_DEBUG false
+#define Sound_Processor_INPUTDATA_DEBUG false
+#define Sound_Processor_OUTPUTDATA_DEBUG false
 
 
 #include <Arduino.h>
@@ -34,12 +34,12 @@
 #include <Helpers.h>
 #include "Streaming.h"
 
-class FFT_Calculator: public NamedItem
+class Sound_Processor: public NamedItem
                     , public CommonUtils
 {
   public:
-    FFT_Calculator(String Title);
-    virtual ~FFT_Calculator();
+    Sound_Processor(String Title);
+    virtual ~Sound_Processor();
     void Setup(size_t InputByteCount, int SampleRate, int FFT_Length);
     void ProcessEventQueue();
 
