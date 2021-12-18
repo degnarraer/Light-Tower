@@ -244,7 +244,7 @@ void I2S_Device::InstallDevice()
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count = m_BufferCount,
     .dma_buf_len = m_BufferSize,
-    .use_apll = false,
+    .use_apll = true,
     .tx_desc_auto_clear = true,
     .fixed_mclk = 0
   };

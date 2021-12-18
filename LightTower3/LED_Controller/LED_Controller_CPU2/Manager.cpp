@@ -53,7 +53,7 @@ void Manager::ProcessEventQueue()
         {
           for(int i = 0; i < m_I2S_In.GetSampleCount(); ++i)
           {
-            Serial << "i: " << i << ": " << m_I2S_In.GetDataBufferValue(DataBuffer, i) << "\n";
+            Serial << m_I2S_In.GetDataBufferValue(DataBuffer, i) << "\n";
           }
         }
       }

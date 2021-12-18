@@ -87,7 +87,6 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 	{
 		if(true == BTSinkDataError){ BTSinkDataError = false; Serial << "WARNING! " <<  GetTitle() << " Data Correct\n"; }
 	}
-	
 	if( m_SoundBufferData 
 	 && m_RightChannel_SoundBufferData 
 	 && m_LeftChannel_SoundBufferData
@@ -189,8 +188,8 @@ void Bluetooth_Sink::InstallDevice()
 	  .intr_alloc_flags = 1, // default interrupt priority
 	  .dma_buf_count = m_BufferCount,
 	  .dma_buf_len = m_BufferSize,
-	  .use_apll = false,
-	  .tx_desc_auto_clear = false, // avoiding noise in case of data unavailability
+	  .use_apll = true,
+	  .tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
 	  .fixed_mclk = 0
 	};
 	i2s_pin_config_t my_pin_config = 
