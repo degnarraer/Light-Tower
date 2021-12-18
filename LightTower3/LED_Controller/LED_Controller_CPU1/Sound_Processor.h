@@ -16,16 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef I2S_Sound_Processor_H
-#define I2S_Sound_Processor_H
+#ifndef I2S_SOUND_PROCESSOR_H
+#define I2S_SOUND_PROCESSOR_H
 
 #define NUMBER_OF_BANDS 32
 
-#define Sound_Processor_DEBUG false
-#define Sound_Processor_QUEUE_DEBUG false
-#define Sound_Processor_LOOPS_DEBUG false
-#define Sound_Processor_INPUTDATA_DEBUG false
-#define Sound_Processor_OUTPUTDATA_DEBUG false
+#define SOUND_PROCESSOR_DEBUG false
+#define SOUND_PROCESSOR_QUEUE_DEBUG false
+#define SOUND_PROCESSOR_LOOPS_DEBUG false
+#define SOUND_PROCESSOR_INPUTDATA_DEBUG false
+#define SOUND_PROCESSOR_OUTPUTDATA_DEBUG false
 
 
 #include <Arduino.h>
@@ -49,36 +49,46 @@ class Sound_Processor: public NamedItem
 
     
     //Output Data Queue
-    QueueHandle_t GetFFTRightBandDataOutputQueue() { return m_FFT_Right_BandData_Output_Buffer_queue; }
+    QueueHandle_t GetFFTRightBandDataOutputQueue() { return m_FFT_Right_BandData_Output_Buffer_Queue; }
     size_t GetFFTRightBandDataBufferSize() { return m_BandOutputByteCount; }
-    QueueHandle_t GetFFTLeftBandDataOutputQueue() { return m_FFT_Left_BandData_Output_Buffer_queue; }
+    QueueHandle_t GetFFTLeftBandDataOutputQueue() { return m_FFT_Left_BandData_Output_Buffer_Queue; }
     size_t GetFFTLeftBandDataBufferSize() { return m_BandOutputByteCount; }
     
   private:
+    //CONFIGURATION
     size_t m_InputByteCount = 0;
     int m_SampleRate = 0;
     int m_FFT_Length = 0;
-    QueueHandle_t m_FFT_Right_Data_Input_Buffer_queue = NULL;
-    QueueHandle_t m_FFT_Left_Data_Input_Buffer_queue = NULL;
     size_t m_BytesToRead = 0;
 
-    QueueHandle_t m_FFT_Right_BandData_Output_Buffer_queue = NULL;
-    QueueHandle_t m_FFT_Left_BandData_Output_Buffer_queue = NULL;
-    size_t m_BandOutputByteCount = 0;
-
-    int16_t* m_FFT_Right_Data;
-    int16_t* m_FFT_Left_Data;
-    int16_t* m_Right_Band_Values;
-    int16_t* m_Left_Band_Values;
-
+    //CHANNEL DATA INPUT
     int32_t* m_FFT_Right_Buffer_Data;
     int32_t* m_FFT_Left_Buffer_Data;
     int m_FFT_Right_Buffer_Index = 0;
     int m_FFT_Left_Buffer_Index = 0;
+    QueueHandle_t m_FFT_Right_Data_Input_Buffer_queue = NULL;
+    QueueHandle_t m_FFT_Left_Data_Input_Buffer_queue = NULL;
+    
+    //CALCULATED OUTPUTS
+    int16_t* m_FFT_Right_Data;
+    int16_t* m_FFT_Left_Data;
+    
+    int16_t* m_Right_Band_Values;
+    QueueHandle_t m_FFT_Right_BandData_Output_Buffer_Queue = NULL;
+    
+    int16_t* m_Left_Band_Values;
+    QueueHandle_t m_FFT_Left_BandData_Output_Buffer_Queue = NULL;
+    
+    int32_t m_Right_Channel_Power;
+    QueueHandle_t m_Right_Channel_Power_Queue = NULL;
+    
+    int32_t m_Left_Channel_Power;
+    QueueHandle_t m_Left_Channel_Power_Queue = NULL;
+    size_t m_BandOutputByteCount = 0;
 
-    void ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer);
-    void ProcessRightFFTQueue();
-    void ProcessLeftFFTQueue();
+    void ProcessSoundData(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer);
+    void ProcessRightChannelSoundData();
+    void ProcessLeftChannelSoundData();
     float GetFreqForBin(unsigned int bin);
 };
 

@@ -55,44 +55,47 @@ void Sound_Processor::Setup(size_t InputByteCount, int SampleRate, int FFT_Lengt
 
   CreateQueue(m_FFT_Right_Data_Input_Buffer_queue, m_InputByteCount, 10, true);
   CreateQueue(m_FFT_Left_Data_Input_Buffer_queue, m_InputByteCount, 10, true);
-  CreateQueue(m_FFT_Right_BandData_Output_Buffer_queue, m_BandOutputByteCount, 10, true);
-  CreateQueue(m_FFT_Left_BandData_Output_Buffer_queue, m_BandOutputByteCount, 10, true);
+  CreateQueue(m_FFT_Right_BandData_Output_Buffer_Queue, m_BandOutputByteCount, 10, true);
+  CreateQueue(m_FFT_Left_BandData_Output_Buffer_Queue, m_BandOutputByteCount, 10, true);
+  CreateQueue(m_Right_Channel_Power_Queue, sizeof(int32_t), 10, true);
+  CreateQueue(m_Left_Channel_Power_Queue, sizeof(int32_t), 10, true);
+
 }
 
 void Sound_Processor::ProcessEventQueue()
 {
   if(NULL != m_FFT_Right_Data_Input_Buffer_queue)
   {
-    ProcessRightFFTQueue();
+    ProcessRightChannelSoundData();
   }
   
   if(NULL != m_FFT_Left_Data_Input_Buffer_queue)
   {
-    ProcessLeftFFTQueue();
+    ProcessLeftChannelSoundData();
   }
 }
 
-void Sound_Processor::ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer)
+void Sound_Processor::ProcessSoundData(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer)
 {
   if(uxQueueMessagesWaiting(Queue) > 0)
   {
-    if(true == Sound_Processor_QUEUE_DEBUG) Serial << "FFT Data Buffer Queue Count: " << uxQueueMessagesWaiting(Queue) << "\n";
+    if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "FFT Data Buffer Queue Count: " << uxQueueMessagesWaiting(Queue) << "\n";
     if ( xQueueReceive(Queue, InputDataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << "Data R: ";
+      if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << "Data R: ";
       for(int i = 0; i < m_InputByteCount; ++i)
       {
-        if(true == Sound_Processor_LOOPS_DEBUG)Serial << "Loop Count: "<< i << " of " << m_InputByteCount << "\n";
+        if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Loop Count: "<< i << " of " << m_InputByteCount << "\n";
         FFTBuffer[BufferIndex] = (InputDataBuffer[i] >> 8) & 0x0000FFFF;
-        if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << InputDataBuffer[i] << "|" << FFTBuffer[BufferIndex] << "\n";
+        if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << InputDataBuffer[i] << "|" << FFTBuffer[BufferIndex] << "\n";
         ++BufferIndex;
         
         if(BufferIndex >= m_FFT_Length)
         {
           BufferIndex = 0;
           ZeroFFT(FFTBuffer, m_FFT_Length);
-          if(true == Sound_Processor_OUTPUTDATA_DEBUG)
+          if(true == SOUND_PROCESSOR_OUTPUTDATA_DEBUG)
           {
             Serial << "FFT R: ";
             for(int j = 0; j < m_FFT_Length / 2; ++j)
@@ -148,27 +151,27 @@ void Sound_Processor::ProcessFFTQueue(QueueHandle_t& Queue, int32_t* InputDataBu
   }
 }
 
-void Sound_Processor::ProcessRightFFTQueue()
+void Sound_Processor::ProcessRightChannelSoundData()
 {
   if(uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue) > 0)
   {
-    if(true == Sound_Processor_QUEUE_DEBUG) Serial << "FFT Right Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue) << "\n";
+    if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "FFT Right Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Right_Data_Input_Buffer_queue) << "\n";
     if ( xQueueReceive(m_FFT_Right_Data_Input_Buffer_queue, m_FFT_Right_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << "Data R: ";
+      if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << "Data R: ";
       for(int i = 0; i < m_InputByteCount; ++i)
       {
-        if(true == Sound_Processor_LOOPS_DEBUG)Serial << "Right Loop Count: "<< i << " of " << m_InputByteCount << "\n";
+        if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Right Loop Count: "<< i << " of " << m_InputByteCount << "\n";
         m_FFT_Right_Data[m_FFT_Right_Buffer_Index] = (m_FFT_Right_Buffer_Data[i] >> 8) & 0x0000FFFF;
-        if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << m_FFT_Right_Buffer_Data[i] << "|" << m_FFT_Right_Data[m_FFT_Right_Buffer_Index] << "\n";
+        if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << m_FFT_Right_Buffer_Data[i] << "|" << m_FFT_Right_Data[m_FFT_Right_Buffer_Index] << "\n";
         ++m_FFT_Right_Buffer_Index;
         
         if(m_FFT_Right_Buffer_Index >= m_FFT_Length)
         {
           m_FFT_Right_Buffer_Index = 0;
           ZeroFFT(m_FFT_Right_Data, m_FFT_Length);
-          if(true == Sound_Processor_OUTPUTDATA_DEBUG)
+          if(true == SOUND_PROCESSOR_OUTPUTDATA_DEBUG)
           {
             Serial << "FFT R: ";
             for(int j = 0; j < m_FFT_Length / 2; ++j)
@@ -223,32 +226,32 @@ void Sound_Processor::ProcessRightFFTQueue()
     }
     if(uxQueueSpacesAvailable(m_FFT_Right_Data_Input_Buffer_queue) > 0)
     {
-      if(xQueueSend(m_FFT_Right_BandData_Output_Buffer_queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+      if(xQueueSend(m_FFT_Right_BandData_Output_Buffer_Queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
     }
   }
 }
 
-void Sound_Processor::ProcessLeftFFTQueue()
+void Sound_Processor::ProcessLeftChannelSoundData()
 {
   if(uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue) > 0)
   {
-    if(true == Sound_Processor_QUEUE_DEBUG) Serial << "FFT Left Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue) << "\n";
+    if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "FFT Left Data Buffer Queue Count: " << uxQueueMessagesWaiting(m_FFT_Left_Data_Input_Buffer_queue) << "\n";
     if ( xQueueReceive(m_FFT_Left_Data_Input_Buffer_queue, m_FFT_Left_Buffer_Data, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << "Data L: ";
+      if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << "Data L: ";
       for(int i = 0; i < m_InputByteCount; ++i)
       {
-        if(true == Sound_Processor_LOOPS_DEBUG)Serial << "Left Loop Count: "<< i << " of " << m_InputByteCount << "\n";
+        if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Left Loop Count: "<< i << " of " << m_InputByteCount << "\n";
         m_FFT_Left_Data[m_FFT_Left_Buffer_Index] = (m_FFT_Left_Buffer_Data[i] >> 8) & 0x0000FFFF;
-        if(true == Sound_Processor_INPUTDATA_DEBUG) Serial << m_FFT_Left_Buffer_Data[i] << "|" << m_FFT_Left_Data[m_FFT_Left_Buffer_Index] << "\n";
+        if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << m_FFT_Left_Buffer_Data[i] << "|" << m_FFT_Left_Data[m_FFT_Left_Buffer_Index] << "\n";
         ++m_FFT_Left_Buffer_Index;
         
         if(m_FFT_Left_Buffer_Index >= m_FFT_Length)
         {
           m_FFT_Left_Buffer_Index = 0;
           ZeroFFT(m_FFT_Left_Data, m_FFT_Length);
-          if(true == Sound_Processor_OUTPUTDATA_DEBUG)
+          if(true == SOUND_PROCESSOR_OUTPUTDATA_DEBUG)
           {
             Serial << "FFT L: ";
             for(int j = 0; j < m_FFT_Length / 2; ++j)
@@ -302,9 +305,9 @@ void Sound_Processor::ProcessLeftFFTQueue()
         }
       } 
     }
-    if(uxQueueSpacesAvailable(m_FFT_Left_BandData_Output_Buffer_queue) > 0)
+    if(uxQueueSpacesAvailable(m_FFT_Left_BandData_Output_Buffer_Queue) > 0)
     {
-      if(xQueueSend(m_FFT_Left_BandData_Output_Buffer_queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+      if(xQueueSend(m_FFT_Left_BandData_Output_Buffer_Queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
     }
   }
 }
