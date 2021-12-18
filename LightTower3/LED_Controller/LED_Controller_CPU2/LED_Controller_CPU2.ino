@@ -1,5 +1,6 @@
 #include "Manager.h"
 #include "Serial_Datalink_Config.h"
+#include <BluetoothA2DPSource.h>
 
 #define I2S_BUFFER_COUNT 10
 #define I2S_BUFFER_SIZE 100
@@ -8,11 +9,11 @@ TaskHandle_t Task0;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S_NUM_0
-                                , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
+                                , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
                                 , 44100
                                 , I2S_BITS_PER_SAMPLE_32BIT
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                , i2s_comm_format_t(I2S_COMM_FORMAT_I2S)
+                                , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
                                 , I2S_BUFFER_COUNT
                                 , I2S_BUFFER_SIZE
