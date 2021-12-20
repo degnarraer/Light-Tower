@@ -20,7 +20,7 @@
 #define I2S_EventHander_H
 
 #define EVENT_HANDLER_DEBUG false
-#define PRINT_DATA_DEBUG true
+#define PRINT_DATA_DEBUG false
 #define PRINT_RIGHT_CHANNEL_DATA_DEBUG false
 #define PRINT_LEFT_CHANNEL_DATA_DEBUG false
 
