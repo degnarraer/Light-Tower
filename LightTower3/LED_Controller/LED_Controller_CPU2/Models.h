@@ -172,7 +172,6 @@ class StatisticalEngineModelInterfaceUserTracker
 
 class StatisticalEngineModelInterface : public Task
                                       , public StatisticalEngineModelInterfaceUserTracker
-                                      , ADCInterruptHandler
                                       , MicrophoneMeasureCalleeInterface
 {
   public:

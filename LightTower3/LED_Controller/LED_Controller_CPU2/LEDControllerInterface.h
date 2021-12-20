@@ -25,9 +25,6 @@
 #include "Tunes.h"
 #include "Streaming.h"
 
-#define __ASSERT_USE_STDERR // do this before including assert.h
-#include <assert.h>
-
 typedef CRGBArray<NUMLEDS> LEDStrip;
 typedef int position;
 typedef int size;

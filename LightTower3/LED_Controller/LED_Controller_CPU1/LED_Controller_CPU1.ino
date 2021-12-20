@@ -7,7 +7,9 @@
 #define I2S_BUFFER_SIZE 100
 
 TaskHandle_t ManagerTask;
+TaskHandle_t SoundProcessorTask;
 TaskHandle_t FFTTask;
+TaskHandle_t SoundPowerTask;
 TaskHandle_t SerialDataLinkTask;
 
 Sound_Processor m_Sound_Processor = Sound_Processor("FFT Calculator");
@@ -120,12 +122,36 @@ void setup() {
    
   xTaskCreatePinnedToCore
   (
+    SoundProcessorTaskLoop,     // Function to implement the task
+    "SoundProcessorTask",       // Name of the task
+    10000,                      // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 10,  // Priority of the task
+    &SoundProcessorTask,        // Task handle.
+    0                           // Core where the task should run
+  );                   
+  delay(500);
+  
+  xTaskCreatePinnedToCore
+  (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
     10000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &FFTTask,                   // Task handle.
+    0                           // Core where the task should run
+  );                   
+  delay(500);
+  
+  xTaskCreatePinnedToCore
+  (
+    SoundPowerTaskLoop,         // Function to implement the task
+    "SoundPowerTask",           // Name of the task
+    10000,                      // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 10,  // Priority of the task
+    &SoundPowerTask,            // Task handle.
     0                           // Core where the task should run
   );                   
   delay(500);
@@ -157,7 +183,8 @@ void ManagerTaskLoop(void * parameter)
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
-void FFTTaskLoop(void * parameter)
+
+void SoundProcessorTaskLoop(void * parameter)
 {
   for(;;)
   {
@@ -166,6 +193,27 @@ void FFTTaskLoop(void * parameter)
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
+
+void FFTTaskLoop(void * parameter)
+{
+  for(;;)
+  {
+    yield();
+    m_Sound_Processor.ProcessFFTEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SoundPowerTaskLoop(void * parameter)
+{
+  for(;;)
+  {
+    yield();
+    m_Sound_Processor.ProcessSoundPowerEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
 void SerialDataLinkTaskLoop(void * parameter)
 {
   for(;;)

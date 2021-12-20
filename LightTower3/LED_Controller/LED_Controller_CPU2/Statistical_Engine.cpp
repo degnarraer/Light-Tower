@@ -22,30 +22,10 @@
 #include "Statistical_Engine.h"
 
 
-// handle diagnostic informations given by assertion and abort program execution:
-void __assert(const char *__func, const char *__file, int __lineno, const char *__sexp)
-{
-    // transmit diagnostic informations through serial link. 
-    if(true == debugAssertions)
-    {
-      Serial.println(__func);
-      Serial.println(__file);
-      Serial.println(__lineno, DEC);
-      Serial.println(__sexp);
-      Serial.flush();
-    }
-    else
-    {
-      // abort program execution.
-      abort();
-    }
-}
-
 CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
   calculateFPS2.Setup();
-  m_Sampler->SetSampleRateAndStart(SAMPLE_RATE);
 }
 
 bool StatisticalEngine::CanRunMyScheduledTask()
@@ -65,43 +45,18 @@ void StatisticalEngine::RunMyScheduledTask()
   GetSampledSoundData();
 }
 
-void StatisticalEngine::HandleADCInterrupt()
-{
-  m_Sampler->HandleADCInterrupt();
-}
-
 void StatisticalEngine::GetSampledSoundData()
 {
-  int i = 0;
-  while( i < MAX_BUFFERS_TO_PROCESS && 
-         m_Sampler->GetNumberOfReadings() > 0 &&
-         true == NewDataReady() )
-  {
-    if(true == debugMode && debugLevel >= 3) Serial << "StatisticalEngine: Processing Sound Data\n";
-    AnalyzeSound();
-    UpdateSoundState();
-    ++i;
-    if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tIntegrator: " << m_silenceIntegrator << "\tPower: " << m_Power << "\tPower Db: " << m_PowerDb << "\n";
-  }
+/* Get Serial Data then
+   AnalyzeSound();
+   UpdateSoundState();
+*/
 }
 
 bool StatisticalEngine::NewDataReady()
 {
   if (true == m_Sampler->IsAvailable())
   {
-    int bufferLength = 0;
-    uint16_t* cBuf = m_Sampler->GetData(&bufferLength);
-    for (int i = 0; i < bufferLength; i=i+NUM_CHANNELS)
-    {
-      m_data[i/NUM_CHANNELS] = cBuf[i+2];
-      if(i == 0)
-      {
-        m_FFTGain = 1.0 + ((FFT_GAIN - 1) - ((FFT_GAIN - 1) * log10((float)ADDBITS - cBuf[0])/log10((float)ADDBITS)));
-        m_AmpGain = 1.0 + ((POWER_GAIN - 1) - ((POWER_GAIN - 1) * log10((float)ADDBITS - cBuf[1])/log10((float)ADDBITS)));
-      }
-    }
-    m_Sampler->SetReadCompleted();
-    if(true == debugMode && debugLevel >= 3) Serial << "Amp Gain: " << m_AmpGain << "\tFFT Gain: " << m_FFTGain << "\n";
     return true;
   }
   else
@@ -112,59 +67,7 @@ bool StatisticalEngine::NewDataReady()
 
 void StatisticalEngine::AnalyzeSound()
 {
-  float db = 0.0;
-  int avg = 0;
-  int peakToPeak = 0;
-  int signalMax = -MAX_POWER;
-  int signalMin = MAX_POWER;
   
-  if(true == debugMode && debugLevel >= 3) Serial << "Amplitude Gain: " << m_AmpGain << "\t" << "FFT Gain: " << m_FFTGain << "\n";
-  for(int i = 0; i < CHANNEL_SIZE; ++i)
-  {
-      avg += m_data[i];
-  }
-  avg = avg/CHANNEL_SIZE;
-  for(int i=0; i < CHANNEL_SIZE; i++)
-  {
-    int result = ((m_data[i] - avg) * m_AmpGain);
-    if(result > INT16_MAX) result = INT16_MAX;
-    if(result < INT16_MIN) result = INT16_MIN;
-    if (result > signalMax)
-    {
-      signalMax = result;
-    }
-    if (result < signalMin)
-    {
-      signalMin = result;
-    }
-    result = result * m_FFTGain;
-    if(result > INT16_MAX) result = INT16_MAX;
-    if(result < INT16_MIN) result = INT16_MIN;
-    m_data[i] = result;
-  }
-  m_signalMin = signalMin;
-  m_signalMax = signalMax;
-  peakToPeak = m_signalMax - m_signalMin;
-  m_Power = ((float)peakToPeak / (float)ADDBITS);
-  if(peakToPeak > 0)
-  {
-    db = 20*log10(peakToPeak/100.0);
-  }
-  else
-  {
-    db = 0.0;
-  }
-  m_PowerDb = db / MAX_DB;
-  if(m_PowerDb > 1.0) m_PowerDb = 1.0;
-  if(m_PowerDb < 0.0) m_PowerDb = 0.0;
-  if(m_Power > 1.0) m_Power = 1.0;
-  if(m_Power < 0.0) m_Power = 0.0;
-  if(true == m_ProcessFFT)
-  {
-    ZeroFFT(m_data, FFT_MAX);
-    UpdateBandArray();
-  }
-  if(true == debugMode && debugLevel >= 3) Serial << "Min: " << m_signalMin << "\tMax: " << m_signalMax << "\tPower: " << m_Power << "\tPower Db: " << m_PowerDb << "\n";
 }
 
 void StatisticalEngine::UpdateSoundState()

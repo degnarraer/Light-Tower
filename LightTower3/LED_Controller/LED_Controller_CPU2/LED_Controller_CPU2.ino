@@ -1,11 +1,16 @@
 #include "Manager.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSource.h>
+#include "VisualizationPlayer.h"
+#include "Models.h"
+#include "Tunes.h"
 
 #define I2S_BUFFER_COUNT 10
 #define I2S_BUFFER_SIZE 100
 
-TaskHandle_t Task0;
+TaskHandle_t ManagerTask;
+TaskHandle_t SerialDataTask;
+TaskHandle_t VisualizationTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S_NUM_0
@@ -24,6 +29,12 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 Manager m_Manager = Manager("Manager", m_I2S_In);
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
 
+DataSampler m_sampler;
+TaskScheduler m_Scheduler;
+CalculateFPS m_CalculateFPS("Main Loop", 1000);
+StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(&m_sampler);
+VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
+
 void setup() {
   Serial.begin(500000);
   delay(500);
@@ -37,12 +48,36 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    Task0Loop,                      // Function to implement the task
-    "Task0",                        // Name of the task
+    ManagerTaskLoop,                      // Function to implement the task
+    "ManagerTask",                        // Name of the task
     10000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
-    &Task0,                         // Task handle.
+    &ManagerTask,                         // Task handle.
+    0                               // Core where the task should run
+  );
+  delay(500);
+  
+  xTaskCreatePinnedToCore
+  (
+    SerialDataTaskLoop,                      // Function to implement the task
+    "SerialDataTask",                        // Name of the task
+    10000,                          // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 10,      // Priority of the task
+    &SerialDataTask,                         // Task handle.
+    0                               // Core where the task should run
+  );
+  delay(500);
+  
+  xTaskCreatePinnedToCore
+  (
+    VisualizationTaskLoop,                      // Function to implement the task
+    "VisualizationTask",                        // Name of the task
+    10000,                          // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 10,      // Priority of the task
+    &VisualizationTask,                         // Task handle.
     0                               // Core where the task should run
   );
   delay(500);
@@ -53,12 +88,29 @@ void loop() {
 
 }
 
-void Task0Loop(void * parameter)
+void ManagerTaskLoop(void * parameter)
 {
   while(true)
   {
     m_Manager.RunTask();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SerialDataTaskLoop(void * parameter)
+{
+  while(true)
+  {
     m_SerialDatalink.CheckForNewSerialData();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void VisualizationTaskLoop(void * parameter)
+{
+  while(true)
+  {
+    m_Scheduler.RunScheduler();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

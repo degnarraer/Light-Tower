@@ -23,10 +23,7 @@
 #include "TaskInterface.h"
 #include "Streaming.h"
 #include "Tunes.h"
-#include "ADCSampler.h"
-
-#define __ASSERT_USE_STDERR // do this before including assert.h
-#include <assert.h>
+#include "DataSampler.h"
 
 enum SoundState
 {

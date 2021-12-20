@@ -42,12 +42,13 @@ class Sound_Processor: public NamedItem
     virtual ~Sound_Processor();
     void Setup(size_t InputByteCount, int SampleRate, int FFT_Length);
     void ProcessEventQueue();
+    void ProcessFFTEventQueue();
+    void ProcessSoundPowerEventQueue();
 
     //Input Data Queue
     QueueHandle_t GetFFTRightDataInputQueue() { return m_FFT_Right_Data_Input_Buffer_queue; }
     QueueHandle_t GetFFTLeftDataInputQueue() { return m_FFT_Left_Data_Input_Buffer_queue; }
 
-    
     //Output Data Queue
     QueueHandle_t GetFFTRightBandDataOutputQueue() { return m_FFT_Right_BandData_Output_Buffer_Queue; }
     size_t GetFFTRightBandDataBufferSize() { return m_BandOutputByteCount; }
@@ -57,13 +58,17 @@ class Sound_Processor: public NamedItem
   private:
     //CONFIGURATION
     size_t m_InputByteCount = 0;
+    size_t m_BytesToRead = 0;
+    size_t m_BandOutputByteCount = 0;
     int m_SampleRate = 0;
     int m_FFT_Length = 0;
-    size_t m_BytesToRead = 0;
+
+    //Memory Management
+    bool m_MemoryIsAllocated = false;
+    void AllocateMemory();
+    void FreeMemory();
 
     //CHANNEL DATA INPUT
-    int32_t* m_FFT_Right_Buffer_Data;
-    int32_t* m_FFT_Left_Buffer_Data;
     int m_FFT_Right_Buffer_Index = 0;
     int m_FFT_Left_Buffer_Index = 0;
     QueueHandle_t m_FFT_Right_Data_Input_Buffer_queue = NULL;
@@ -73,22 +78,45 @@ class Sound_Processor: public NamedItem
     int16_t* m_FFT_Right_Data;
     int16_t* m_FFT_Left_Data;
     
+    //Right Channel Processed FFT Band Data
+    QueueHandle_t m_FFT_Right_BandData_Input_Buffer_Queue = NULL;
     int16_t* m_Right_Band_Values;
     QueueHandle_t m_FFT_Right_BandData_Output_Buffer_Queue = NULL;
-    
+
+    //Left Channel Processed FFT Band Data
+    QueueHandle_t m_FFT_Left_BandData_Input_Buffer_Queue = NULL;
     int16_t* m_Left_Band_Values;
     QueueHandle_t m_FFT_Left_BandData_Output_Buffer_Queue = NULL;
-    
-    int32_t m_Right_Channel_Power;
-    QueueHandle_t m_Right_Channel_Power_Queue = NULL;
-    
-    int32_t m_Left_Channel_Power;
-    QueueHandle_t m_Left_Channel_Power_Queue = NULL;
-    size_t m_BandOutputByteCount = 0;
 
-    void ProcessSoundData(QueueHandle_t& Queue, int32_t* InputDataBuffer, int& BufferIndex, int16_t* FFTBuffer, int16_t* BandDataBuffer);
+    //Right Channel Calculated Outputs
+    QueueHandle_t m_Right_Channel_Power_Input_Buffer_Queue = NULL;
+    int16_t m_Right_Channel_Power_Normalized;
+    int16_t m_Right_Channel_Db;
+    int16_t m_Right_Channel_Min;
+    int16_t m_Right_Channel_Max;
+    QueueHandle_t m_Right_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_DB_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_Power_Min_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_Power_Max_Output_Buffer_Queue = NULL;
+
+    //Left Channel Calculated Outputs
+    QueueHandle_t m_Left_Channel_Power_Input_Buffer_Queue = NULL;
+    int16_t m_Left_Channel_Power_Normalized;
+    int16_t m_Left_Channel_Db;
+    int16_t m_Left_Channel_Min;
+    int16_t m_Left_Channel_Max;
+    QueueHandle_t m_Left_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_DB_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_Power_Min_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_Power_Max_Output_Buffer_Queue = NULL;
+
     void ProcessRightChannelSoundData();
+    void ProcessRightChannelFFT();
+    void ProcessRightChannelPower();
+    
     void ProcessLeftChannelSoundData();
+    void ProcessLeftChannelFFT();
+    void ProcessLeftChannelPower();
     float GetFreqForBin(unsigned int bin);
 };
 

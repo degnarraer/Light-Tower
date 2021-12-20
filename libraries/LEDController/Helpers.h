@@ -31,6 +31,39 @@ class CommonUtils
 			}
 		  }
 		}
+		template <class T>
+		void MoveDataFromQueueToQueues(QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
+		{
+		  if(NULL != TakeFromQueue)
+		  {
+			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
+			if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+			for (uint8_t i = 0; i < QueueCount; ++i)
+			{
+				T* DataBuffer = (T*)malloc(ByteCount);
+				if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
+				{
+					for(int j = 0; j < GiveToQueueCount; ++j)
+					{	
+						QueueHandle_t GiveToQueue = GiveToQueues[j];
+						if(NULL != GiveToQueue)
+						{
+							if(true == DebugMessage)Serial << "Adding Data to Queue\n";
+							if(true == WaitForOpenSlot || uxQueueSpacesAvailable(GiveToQueue) > 0)
+							{
+								if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+							}
+						}
+					}						
+				}
+				else
+				{
+					Serial << "Error Receiving Queue!";
+				}
+				delete DataBuffer;
+			}
+		  }
+		}
 
 		void CreateQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{

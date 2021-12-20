@@ -16,53 +16,34 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
  
-#ifndef ADCSAMPLER_H
-#define ADCSAMPLER_H
+#ifndef DataSampler_H
+#define DataSampler_H
 
 #include "Tunes.h"
 #include "Streaming.h"
-#include <Arduino.h>
-
-
-class ADCInterruptHandler
-{
-public:
-    virtual void HandleADCInterrupt() = 0;
-};
 
 class SampledDataInterface
 {
   public:
-    virtual void SetSampleRateAndStart(unsigned int samplingRate) = 0;
     virtual void End() = 0;
-    virtual void HandleADCInterrupt() = 0;
     virtual bool IsAvailable() = 0;
     virtual unsigned int GetSamplingRate() = 0;
     virtual uint16_t* GetData(int *bufferLength) = 0;
     virtual unsigned int GetNumberOfReadings() = 0;
-    virtual void SetReadCompleted() = 0;
 };
 
-class ADCSampler: public SampledDataInterface
-                , ADCInterruptHandler {
+class DataSampler: public SampledDataInterface {
   public:
-    ADCSampler();
-    void SetSampleRateAndStart(unsigned int samplingRate){}
+    DataSampler(){}
+    virtual ~DataSampler(){}
     void End(){}
-    void HandleADCInterrupt(){}
     bool IsAvailable(){ return false; }
-    unsigned int GetSamplingRate() { return 1; }
-    uint16_t* GetData(int *bufferLength) { return NULL; }
+    void SetSampleRateAndStart(unsigned int samplingRate){}
+    unsigned int GetSamplingRate() { return 0; };
+    uint16_t* GetData(int *bufferLength){ return NULL; }
     unsigned int GetNumberOfReadings() { return 0; }
-    void SetReadCompleted(){}
   private:
-    void StartNextBuffer(){}
-    unsigned int adcDMAIndex;        //!< This hold the index of the next DMA buffer
-    unsigned int adcTransferIndex;   //!< This hold the last filled buffer
-    unsigned int samplingRate;
-    volatile bool dataReady;
-    volatile bool bufferOverflow;
-    uint16_t adcBuffer[NUMBER_OF_BUFFERS][BUFFER_SIZE];
+
 };
 
 #endif

@@ -64,6 +64,8 @@ static const unsigned int NUMLEDS = 64;
 static const unsigned int NUMSTRIPS = 4;
 static const unsigned int SCREEN_WIDTH = NUMSTRIPS;
 static const unsigned int SCREEN_HEIGHT = NUMLEDS;
+
+//TBD Update This:
 static const float LEDS_PER_METER = 60.0;
 const unsigned int DATA_PIN_STRIP1 = 25;  //MATRIX1 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP2 = 26;  //MATRIX2 PIN ASSIGNMENT
@@ -86,22 +88,6 @@ const unsigned int POWER_SAVE_LENGTH = 10;
 const float SILENCE_THRESHOLD = 0.05;
 const float triggerLevelGain = 1.1;
 
-
-////ALL OF THIS NEEDS REMOVED
-// Sampler Tunes
-/* ch7:A0 ch6:A1 ch5:A2 ch4:A3 ch3:A4 ch2:A5 ch1:A6 ch0:A7 */
-#define ADC_CHANNELS ADC_CHER_CH7 | ADC_CHER_CH5 | ADC_CHER_CH4  //Fixed Gain Mic
-//#define ADC_CHANNELS ADC_CHER_CH6 | ADC_CHER_CH5 | ADC_CHER_CH4  //Auto Gain Mic
-#define ADC_RESOLUTION 12
-const unsigned int NUM_CHANNELS = 3;
-const unsigned int CHANNEL_SIZE = FFT_MAX;
-const unsigned int BUFFER_SIZE = CHANNEL_SIZE*NUM_CHANNELS;
-const unsigned int NUMBER_OF_BUFFERS = 5;  /// Size of circular buffer for holding microphone sample sets
-const unsigned int MAX_BUFFERS_TO_PROCESS = 1;  /// Max number of mic sample sets to process.  This prevents a runnaway from occuring if the CPU cannot keep up
-////END ALL OF THIS NEEDS REMOVED
-
-
-
 //Sound Detection
 const float   SOUND_DETECT_THRESHOLD = 0.05;
 const int     silenceIntegratorMax = 50000;
@@ -114,6 +100,7 @@ const int     silenceSubtractor = -10;
 const int FFT_M = (int)log2(FFT_MAX);
 const int BINS = FFT_MAX / 2;
 const float BINS_DOUBLE = FFT_MAX / 2.0;
+const int ADC_RESOLUTION = 16;
 const int ADDBITS = pow(2,ADC_RESOLUTION);
 const int FFT_GAIN = 1000;
 const int POWER_GAIN = 20;
