@@ -126,7 +126,7 @@ void setup() {
     "SoundProcessorTask",       // Name of the task
     10000,                      // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
+    configMAX_PRIORITIES - 1,  // Priority of the task
     &SoundProcessorTask,        // Task handle.
     0                           // Core where the task should run
   );                   
@@ -152,7 +152,7 @@ void setup() {
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &SoundPowerTask,            // Task handle.
-    0                           // Core where the task should run
+    1                           // Core where the task should run
   );                   
   delay(500);
 

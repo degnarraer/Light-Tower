@@ -30,6 +30,7 @@ void Sound_Processor::Setup(size_t InputByteCount, int SampleRate, int FFT_Lengt
   m_InputByteCount = InputByteCount;
   m_SampleRate = SampleRate;
   m_FFT_Length = FFT_Length;
+  m_InputSampleCount = InputByteCount / sizeof(int32_t);
   m_BandOutputByteCount = sizeof(int16_t) * NUMBER_OF_BANDS;
   m_BytesToRead = sizeof(int32_t) * m_FFT_Length;
   Serial << "FFT Config: " << m_InputByteCount << " | " << m_SampleRate << " | " << m_FFT_Length << "\n";
@@ -224,9 +225,9 @@ void Sound_Processor::ProcessRightChannelPower()
     else
     {
       int peakToPeak = 0;
-      m_Right_Channel_Min = INT_MAX;
-      m_Right_Channel_Max = -INT_MAX;
-      for(int i = 0; i < m_InputByteCount; ++i)
+      m_Right_Channel_Min = INT16_MAX;
+      m_Right_Channel_Max = -INT16_MAX;
+      for(int i = 0; i < m_InputSampleCount; ++i)
       {
         if(DataBuffer[i] < m_Right_Channel_Min) m_Right_Channel_Min = DataBuffer[i];
         if(DataBuffer[i] > m_Right_Channel_Max) m_Right_Channel_Max = DataBuffer[i];

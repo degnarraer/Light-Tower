@@ -49,8 +49,8 @@ void Manager::Setup()
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
   
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
+  //SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -242,6 +242,32 @@ void Manager::ProcessRightFFTDataBufferQueue()
                                    , m_Sound_Processor.GetFFTRightBandDataBufferSize()
                                    , false
                                    , false );
+
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelNormalizedPowerOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("R_Power")
+                                   , m_Sound_Processor.GetRightChannelNormalizedPowerSize()
+                                   , false
+                                   , false );
+  /*                                 
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelDBOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("R_DB")
+                                   , m_Sound_Processor.GetRightChannelDBSize()
+                                   , false
+                                   , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelPowerMinOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("R_Min")
+                                   , m_Sound_Processor.GetRightChannelPowerMinSize()
+                                   , false
+                                   , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelPowerMaxOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("R_Max")
+                                   , m_Sound_Processor.GetRightChannelPowerMaxSize()
+                                   , false
+                                   , false );
+*/
+
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()
@@ -251,4 +277,29 @@ void Manager::ProcessLeftFFTDataBufferQueue()
                                    , m_Sound_Processor.GetFFTLeftBandDataBufferSize()
                                    , false
                                    , false );
+/*
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelNormalizedPowerOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("L_Power")
+                                   , m_Sound_Processor.GetLeftChannelNormalizedPowerSize()
+                                   , false
+                                   , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelDBOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("L_DB")
+                                   , m_Sound_Processor.GetLeftChannelDBSize()
+                                   , false
+                                   , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelPowerMinOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("L_Min")
+                                   , m_Sound_Processor.GetLeftChannelPowerMinSize()
+                                   , false
+                                   , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelPowerMaxOutputQueue()
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("L_Max")
+                                   , m_Sound_Processor.GetLeftChannelPowerMaxSize()
+                                   , false
+                                   , false ); 
+*/                                
 }
