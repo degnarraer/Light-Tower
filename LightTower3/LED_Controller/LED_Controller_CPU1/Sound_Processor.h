@@ -110,25 +110,25 @@ class Sound_Processor: public NamedItem
 
     //Right Channel Calculated Outputs
     QueueHandle_t m_Right_Channel_Power_Input_Buffer_Queue = NULL;
-    int16_t m_Right_Channel_Power_Normalized;
-    int16_t m_Right_Channel_Db;
+    float m_Right_Channel_Power_Normalized;
+    float m_Right_Channel_Db;
     int16_t m_Right_Channel_Min;
     int16_t m_Right_Channel_Max;
-    private: QueueHandle_t m_Right_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
-    private: QueueHandle_t m_Right_Channel_DB_Output_Buffer_Queue = NULL;
-    private: QueueHandle_t m_Right_Channel_Power_Min_Output_Buffer_Queue = NULL;
-    private: QueueHandle_t m_Right_Channel_Power_Max_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_DB_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_Power_Min_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_Power_Max_Output_Buffer_Queue = NULL;
 
     //Left Channel Calculated Outputs
-    private: QueueHandle_t m_Left_Channel_Power_Input_Buffer_Queue = NULL;
-    private: int16_t m_Left_Channel_Power_Normalized;
-    private: int16_t m_Left_Channel_Db;
-    private: int16_t m_Left_Channel_Min;
-    private: int16_t m_Left_Channel_Max;
-    private: QueueHandle_t m_Left_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
-    private: QueueHandle_t m_Left_Channel_DB_Output_Buffer_Queue = NULL;
-    private: QueueHandle_t m_Left_Channel_Power_Min_Output_Buffer_Queue = NULL;
-    private: QueueHandle_t m_Left_Channel_Power_Max_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_Power_Input_Buffer_Queue = NULL;
+    int16_t m_Left_Channel_Power_Normalized;
+    int16_t m_Left_Channel_Db;
+    int16_t m_Left_Channel_Min;
+    int16_t m_Left_Channel_Max;
+    QueueHandle_t m_Left_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_DB_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_Power_Min_Output_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_Power_Max_Output_Buffer_Queue = NULL;
 
 private: 
     void ProcessRightChannelSoundData();

@@ -225,15 +225,21 @@ void Sound_Processor::ProcessRightChannelPower()
     else
     {
       int peakToPeak = 0;
-      m_Right_Channel_Min = INT16_MAX;
-      m_Right_Channel_Max = -INT16_MAX;
+      int minValue = INT16_MAX;
+      int maxValue = -INT16_MAX;
       for(int i = 0; i < m_InputSampleCount; ++i)
       {
-        if(DataBuffer[i] < m_Right_Channel_Min) m_Right_Channel_Min = DataBuffer[i];
-        if(DataBuffer[i] > m_Right_Channel_Max) m_Right_Channel_Max = DataBuffer[i];
+        if(DataBuffer[i] < minValue)
+        {
+          minValue = DataBuffer[i];
+        }
+        if(DataBuffer[i] > maxValue)
+        {
+          maxValue = DataBuffer[i];
+        }
       }
-      peakToPeak = (m_Right_Channel_Max - m_Right_Channel_Min);
-      m_Right_Channel_Power_Normalized = peakToPeak / 2^24; //This needs to know bit size
+      peakToPeak = maxValue - minValue;
+      m_Right_Channel_Power_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Right_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -242,6 +248,10 @@ void Sound_Processor::ProcessRightChannelPower()
       {
         m_Right_Channel_Db = 0;
       }
+      Serial << "Peak to Peak: " << peakToPeak << "\n";
+      Serial << "Power: " << m_Right_Channel_Power_Normalized << "\n";
+      m_Right_Channel_Min = minValue;
+      m_Right_Channel_Max = maxValue;
       if(uxQueueSpacesAvailable(m_Right_Channel_Normalized_Power_Output_Buffer_Queue) > 0)
       {
         if(xQueueSend(m_Right_Channel_Normalized_Power_Output_Buffer_Queue, &m_Right_Channel_Power_Normalized, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
