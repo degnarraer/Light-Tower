@@ -29,6 +29,7 @@ enum DataType_t
   DataType_Uint16_t,
   DataType_Uint32_t,
   DataType_String,
+  DataType_Float,
 };
 
 static const char* DataTypeStrings[] =
@@ -38,6 +39,7 @@ static const char* DataTypeStrings[] =
   "Uint16_t",
   "Uint32_t",
   "String",
+  "Float"
 };
 
 struct DataItemConfig_t

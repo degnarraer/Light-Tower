@@ -79,6 +79,13 @@ void SerialDataLinkCore::Setup()
         CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
+      case DataType_Float:
+      {
+        size_t bytes = sizeof(float) * ConfigFile[i].Count;
+		Object = malloc(bytes);
+        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
+      }
+      break;
       default:
         Serial << "Error, unsupported data type";
       break;
@@ -159,6 +166,11 @@ void SerialDataLinkCore::ProcessEventQueue()
 				break;
 				case DataType_String:
 					//EncodeAndTransmitData<String>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
+				break;
+				case DataType_Float:
+				{
+					ProcessData<float>(i);
+				}
 				break;
 				default:
 				  Serial << "Error, unsupported data type";

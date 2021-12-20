@@ -248,7 +248,7 @@ void Manager::ProcessRightFFTDataBufferQueue()
                                    , m_Sound_Processor.GetRightChannelNormalizedPowerSize()
                                    , false
                                    , false );
-  /*                                 
+                          
   MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelDBOutputQueue()
                                    , m_SerialDataLink.GetQueueHandleForDataItem("R_DB")
                                    , m_Sound_Processor.GetRightChannelDBSize()
@@ -266,7 +266,6 @@ void Manager::ProcessRightFFTDataBufferQueue()
                                    , m_Sound_Processor.GetRightChannelPowerMaxSize()
                                    , false
                                    , false );
-*/
 
 }
 
@@ -277,7 +276,7 @@ void Manager::ProcessLeftFFTDataBufferQueue()
                                    , m_Sound_Processor.GetFFTLeftBandDataBufferSize()
                                    , false
                                    , false );
-/*
+                                   
   MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelNormalizedPowerOutputQueue()
                                    , m_SerialDataLink.GetQueueHandleForDataItem("L_Power")
                                    , m_Sound_Processor.GetLeftChannelNormalizedPowerSize()
@@ -300,6 +299,5 @@ void Manager::ProcessLeftFFTDataBufferQueue()
                                    , m_SerialDataLink.GetQueueHandleForDataItem("L_Max")
                                    , m_Sound_Processor.GetLeftChannelPowerMaxSize()
                                    , false
-                                   , false ); 
-*/                                
+                                   , false );                                
 }
