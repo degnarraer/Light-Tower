@@ -236,7 +236,7 @@ void Sound_Processor::ProcessRightChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Right_Channel_Power_Normalized = peakToPeak / pow(2,24); //This needs to know bit size
+      m_Right_Channel_Power_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Right_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -374,7 +374,7 @@ void Sound_Processor::ProcessLeftChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Left_Channel_Power_Normalized = peakToPeak / pow(2,24); //This needs to know bit size
+      m_Left_Channel_Power_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Left_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -385,7 +385,6 @@ void Sound_Processor::ProcessLeftChannelPower()
       }
       m_Left_Channel_Min = minValue;
       m_Left_Channel_Max = maxValue;
-      Serial << "Power: " << m_Left_Channel_Power_Normalized << "\n";
       PushValueToQueue(&m_Left_Channel_Power_Normalized, m_Left_Channel_Normalized_Power_Output_Buffer_Queue, false);
       PushValueToQueue(&m_Left_Channel_Db, m_Left_Channel_DB_Output_Buffer_Queue, false);
       PushValueToQueue(&m_Left_Channel_Min, m_Left_Channel_Power_Min_Output_Buffer_Queue, false);

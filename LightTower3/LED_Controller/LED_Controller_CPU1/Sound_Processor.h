@@ -121,8 +121,8 @@ class Sound_Processor: public NamedItem
 
     //Left Channel Calculated Outputs
     QueueHandle_t m_Left_Channel_Power_Input_Buffer_Queue = NULL;
-    int16_t m_Left_Channel_Power_Normalized;
-    int16_t m_Left_Channel_Db;
+    float m_Left_Channel_Power_Normalized;
+    float m_Left_Channel_Db;
     int16_t m_Left_Channel_Min;
     int16_t m_Left_Channel_Max;
     QueueHandle_t m_Left_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
