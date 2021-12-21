@@ -207,10 +207,7 @@ void Sound_Processor::ProcessRightChannelFFT()
         }
       }
     }
-    if(uxQueueSpacesAvailable(m_FFT_Right_BandData_Output_Buffer_Queue) > 0)
-    {
-      if(xQueueSend(m_FFT_Right_BandData_Output_Buffer_Queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-    }
+    PushValueToQueue(&m_Right_Band_Values, m_FFT_Right_BandData_Output_Buffer_Queue, false);
     delete DataBuffer;
   }
 }
@@ -224,7 +221,7 @@ void Sound_Processor::ProcessRightChannelPower()
     if ( xQueueReceive(m_Right_Channel_Power_Input_Buffer_Queue, DataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      int peakToPeak = 0;
+      float peakToPeak = 0;
       int minValue = INT16_MAX;
       int maxValue = -INT16_MAX;
       for(int i = 0; i < m_InputSampleCount; ++i)
@@ -239,7 +236,7 @@ void Sound_Processor::ProcessRightChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Right_Channel_Power_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
+      m_Right_Channel_Power_Normalized = peakToPeak / pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Right_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -250,22 +247,10 @@ void Sound_Processor::ProcessRightChannelPower()
       }
       m_Right_Channel_Min = minValue;
       m_Right_Channel_Max = maxValue;
-      if(uxQueueSpacesAvailable(m_Right_Channel_Normalized_Power_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Right_Channel_Normalized_Power_Output_Buffer_Queue, &m_Right_Channel_Power_Normalized, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
-      if(uxQueueSpacesAvailable(m_Right_Channel_DB_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Right_Channel_DB_Output_Buffer_Queue, &m_Right_Channel_Db, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
-      if(uxQueueSpacesAvailable(m_Right_Channel_Power_Min_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Right_Channel_Power_Min_Output_Buffer_Queue, &m_Right_Channel_Min, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
-      if(uxQueueSpacesAvailable(m_Right_Channel_Power_Max_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Right_Channel_Power_Max_Output_Buffer_Queue, &m_Right_Channel_Max, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
+      PushValueToQueue(&m_Right_Channel_Power_Normalized, m_Right_Channel_Normalized_Power_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Right_Channel_Db, m_Right_Channel_DB_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Right_Channel_Min, m_Right_Channel_Power_Min_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Right_Channel_Max, m_Right_Channel_Power_Max_Output_Buffer_Queue, false);
     }
     delete DataBuffer;
   }
@@ -278,12 +263,12 @@ void Sound_Processor::ProcessLeftChannelSoundData()
       NULL != m_Left_Channel_Power_Input_Buffer_Queue )
   {
     QueueHandle_t Queues[2] = { m_FFT_Left_BandData_Input_Buffer_Queue, m_Left_Channel_Power_Input_Buffer_Queue };
-        MoveDataFromQueueToQueues<int32_t>( m_FFT_Left_Data_Input_Buffer_queue
-                                          , Queues
-                                          , 2
-                                          , m_InputByteCount
-                                          , false
-                                          , false );
+    MoveDataFromQueueToQueues<int32_t>( m_FFT_Left_Data_Input_Buffer_queue
+                                      , Queues
+                                      , 2
+                                      , m_InputByteCount
+                                      , false
+                                      , false );
   }
 }
 void Sound_Processor::ProcessLeftChannelFFT()
@@ -361,10 +346,7 @@ void Sound_Processor::ProcessLeftChannelFFT()
         }
       } 
     }
-    if(uxQueueSpacesAvailable(m_FFT_Left_BandData_Output_Buffer_Queue) > 0)
-    {
-      if(xQueueSend(m_FFT_Left_BandData_Output_Buffer_Queue, m_Right_Band_Values, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-    }
+    PushValueToQueue(&m_Left_Band_Values, m_FFT_Left_BandData_Output_Buffer_Queue, false);
   }
 }
 
@@ -377,7 +359,7 @@ void Sound_Processor::ProcessLeftChannelPower()
     if ( xQueueReceive(m_Left_Channel_Power_Input_Buffer_Queue, DataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
     else
     {
-      int peakToPeak = 0;
+      float peakToPeak = 0;
       int minValue = INT16_MAX;
       int maxValue = -INT16_MAX;
       for(int i = 0; i < m_InputSampleCount; ++i)
@@ -392,7 +374,7 @@ void Sound_Processor::ProcessLeftChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Left_Channel_Power_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
+      m_Left_Channel_Power_Normalized = peakToPeak / pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Left_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -403,22 +385,11 @@ void Sound_Processor::ProcessLeftChannelPower()
       }
       m_Left_Channel_Min = minValue;
       m_Left_Channel_Max = maxValue;
-      if(uxQueueSpacesAvailable(m_Left_Channel_Normalized_Power_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Left_Channel_Normalized_Power_Output_Buffer_Queue, &m_Left_Channel_Power_Normalized, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
-      if(uxQueueSpacesAvailable(m_Left_Channel_DB_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Left_Channel_DB_Output_Buffer_Queue, &m_Left_Channel_Db, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
-      if(uxQueueSpacesAvailable(m_Left_Channel_Power_Min_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Left_Channel_Power_Min_Output_Buffer_Queue, &m_Left_Channel_Min, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
-      if(uxQueueSpacesAvailable(m_Left_Channel_Power_Max_Output_Buffer_Queue) > 0)
-      {
-        if(xQueueSend(m_Left_Channel_Power_Max_Output_Buffer_Queue, &m_Left_Channel_Max, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
-      }
+      Serial << "Power: " << m_Left_Channel_Power_Normalized << "\n";
+      PushValueToQueue(&m_Left_Channel_Power_Normalized, m_Left_Channel_Normalized_Power_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Left_Channel_Db, m_Left_Channel_DB_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Left_Channel_Min, m_Left_Channel_Power_Min_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Left_Channel_Max, m_Left_Channel_Power_Max_Output_Buffer_Queue, false);
     }
     delete DataBuffer;
   }

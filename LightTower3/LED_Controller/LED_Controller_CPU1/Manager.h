@@ -21,6 +21,8 @@
 
 #define EVENT_HANDLER_DEBUG false
 #define PRINT_DATA_DEBUG false
+#define PRINT_RIGHT_CHANNEL_DATA_DEBUG false
+#define PRINT_LEFT_CHANNEL_DATA_DEBUG false
 #define SAWTOOTH_OUTPUT_DATA_DEBUG false
 
 #include <I2S_Device.h>
@@ -74,8 +76,8 @@ class Manager: public NamedItem
 
     //I2S_Device_Callback
     void DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
+    void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count);
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count);
 
     //Bluetooth_Callback
     void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}

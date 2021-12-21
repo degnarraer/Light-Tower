@@ -71,6 +71,14 @@ class CommonUtils
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}
+		
+		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot)
+		{
+			if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+			{
+				if(xQueueSend(Queue, &Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+			}
+		}
 };
 
 #endif
