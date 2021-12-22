@@ -1,5 +1,6 @@
 #ifndef Helpers_H
 #define Helpers_H
+#include <DataTypes.h>
 #include "Streaming.h"
 
 class CommonUtils
@@ -78,6 +79,15 @@ class CommonUtils
 			{
 				if(xQueueSend(Queue, &Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
 			}
+		}
+		
+		DataType_t GetDataTypeFromString(String DataType)
+		{
+			for(int i = 0; i < sizeof(DataTypeStrings) / sizeof(DataTypeStrings[0]); ++i)
+			{
+				if(DataType.equals(DataTypeStrings[i]))return (DataType_t)i;
+			}
+			return DataType_Undef;
 		}
 };
 

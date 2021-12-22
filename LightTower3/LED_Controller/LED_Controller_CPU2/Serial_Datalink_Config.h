@@ -20,7 +20,6 @@
 #define SerialDataLinkConfig_H
 
 #include <Serial_Datalink_Core.h>
-#include <DataTypes.h>
 #include "Manager.h"
 
 

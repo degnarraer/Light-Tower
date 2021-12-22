@@ -20,17 +20,16 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG true
+#define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
-#include <DataTypes.h>
 #include <Helpers.h>
 #include "Streaming.h"
 #include <ArduinoJson.h>
 
-class DataSerializer
+class DataSerializer: public CommonUtils
 {
 	public:
 		DataSerializer(){}
@@ -39,40 +38,45 @@ class DataSerializer
 		template <typename T>
 		String Serialize(String Name, String DataType, void* Object, size_t Count)
 		{
-			doc.clear();
-			doc["Name"] = Name;
-			doc["Count"] = Count;
-			doc["DataType"] = DataType;
-			JsonArray data = doc.createNestedArray("data");
+			docOut.clear();
+			docOut["Name"] = Name;
+			docOut["Count"] = Count;
+			docOut["DataType"] = DataType;
+			JsonArray data = docOut.createNestedArray("data");
 			for(int i = 0; i < Count; ++i)
 			{
 				data.add(((T*)Object)[i]);
 			}
 			String Result;
-			serializeJson(doc, Result);
+			serializeJson(docOut, Result);
 			return Result;
 		}
-		template <typename T>
-		String DeSerialize(String Name, void* Object, size_t Count)
+		void DeSerialize(String json)
 		{
-			doc.clear();
-			doc["Name"] = Name;
-			doc["Count"] = Count;
-			JsonArray data = doc.createNestedArray("data");
-			for(int i = 0; i < Count; ++i)
+			DeserializationError error = deserializeJson(docIn, json);
+			// Test if parsing succeeds.
+			if (error)
 			{
-				data.add(((T*)Object)[i]);
+				Serial << "deserializeJson() failed: ";
+				//Serial << error.f_str() << "\n";
+				return;
 			}
-			String Result;
-			serializeJson(doc, Result);
-			return Result;
+			else
+			{
+				//Serial << "deserializeJson() Success: ";
+				String Name = docIn["Name"];
+				int Count = docIn["Count"];
+				String DataTypeString = docIn["DataType"];
+				DataType_t DataType = GetDataTypeFromString(DataTypeString);
+				//Serial << Name << "|" << Count << "|" << DataTypeString << "\n";
+			}
 		}
 	private:
-		StaticJsonDocument<1000> doc;
+		StaticJsonDocument<1000> docIn;
+		StaticJsonDocument<1000> docOut;
 };
 
 class SerialDataLinkCore: public NamedItem
-						, public CommonUtils
 						, public DataSerializer
 {
   public:
@@ -83,7 +87,7 @@ class SerialDataLinkCore: public NamedItem
 	
     void Setup();
     void CheckForNewSerialData();
-    void ProcessEventQueue();
+    void ProcessDataSendEventQueue();
 	QueueHandle_t GetQueueHandleForDataItem(String Name);
   private:
   DataItem_t* m_DataItem = NULL;
@@ -99,26 +103,9 @@ class SerialDataLinkCore: public NamedItem
 	  hSerial.println(DataToSend);
   }
   
-  
-  template <class T>
   void DecodeAndStoreData(String Data)
   {
-	  //size_t length = Data.Length();
-	  /*
-	  String Header = "<NAME=" + Name + ">";
-	  Header += "<COUNT=" +  String(Count) + ">";
-	  String DataToSend = "";
-	  DataToSend += Header;
-	  for(int i = 0; i < Count; ++i)
-	  {
-		  T item = *((T*)Object + i);
-		  DataToSend += String(item);
-		  if(i < Count) DataToSend += ",";
-	  }
-	  DataToSend += "<END>\n";
-	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
-	  hSerial.print(DataToSend);
-	  */
+	  DeSerialize(Data);
   }
   
   template <class T>

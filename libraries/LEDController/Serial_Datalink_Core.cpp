@@ -126,12 +126,13 @@ void SerialDataLinkCore::CheckForNewSerialData()
 	{
 	  m_InboundStringData.trim();
 	  if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
+	  DecodeAndStoreData(m_InboundStringData);
 	  m_InboundStringData = "";
 	}
   }
 }
 
-void SerialDataLinkCore::ProcessEventQueue()
+void SerialDataLinkCore::ProcessDataSendEventQueue()
 {
   if(NULL != m_DataItem)
   {

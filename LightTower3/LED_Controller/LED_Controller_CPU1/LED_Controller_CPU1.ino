@@ -10,7 +10,8 @@ TaskHandle_t ManagerTask;
 TaskHandle_t SoundProcessorTask;
 TaskHandle_t FFTTask;
 TaskHandle_t SoundPowerTask;
-TaskHandle_t SerialDataLinkTask;
+TaskHandle_t SerialDataLinkSendTask;
+TaskHandle_t SerialDataLinkReceiveTask;
 
 Sound_Processor m_Sound_Processor = Sound_Processor("FFT Calculator");
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
@@ -118,7 +119,6 @@ void setup() {
     &ManagerTask,               // Task handle.
     0                           // Core where the task should run
   );
-  delay(500);
    
   xTaskCreatePinnedToCore
   (
@@ -129,8 +129,7 @@ void setup() {
     configMAX_PRIORITIES - 1,  // Priority of the task
     &SoundProcessorTask,        // Task handle.
     0                           // Core where the task should run
-  );                   
-  delay(500);
+  );
   
   xTaskCreatePinnedToCore
   (
@@ -141,8 +140,7 @@ void setup() {
     configMAX_PRIORITIES - 5,   // Priority of the task
     &FFTTask,                   // Task handle.
     0                           // Core where the task should run
-  );                   
-  delay(500);
+  );
   
   xTaskCreatePinnedToCore
   (
@@ -153,20 +151,29 @@ void setup() {
     configMAX_PRIORITIES - 10,  // Priority of the task
     &SoundPowerTask,            // Task handle.
     1                           // Core where the task should run
-  );                   
-  delay(500);
+  );
 
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkTaskLoop,     // Function to implement the task
-    "SerialDataLinkTask",       // Name of the task
-    10000,                      // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
-    &SerialDataLinkTask,        // Task handle.
-    1                           // Core where the task should run
+    SerialDataLinkSendTaskLoop,     // Function to implement the task
+    "SerialDataLinkSendTask",       // Name of the task
+    10000,                          // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 10,      // Priority of the task
+    &SerialDataLinkSendTask,        // Task handle.
+    1                               // Core where the task should run
   );     
-  delay(500);
+  
+  xTaskCreatePinnedToCore
+  (
+    SerialDataLinkReceiveTaskLoop,    // Function to implement the task
+    "SerialDataLinkReceiveTask",      // Name of the task
+    10000,                            // Stack size in words
+    NULL,                             // Task input parameter
+    configMAX_PRIORITIES - 10,        // Priority of the task
+    &SerialDataLinkReceiveTask,       // Task handle.
+    1                                 // Core where the task should run
+  );     
 }
 
 void loop() {
@@ -214,12 +221,21 @@ void SoundPowerTaskLoop(void * parameter)
   }
 }
 
-void SerialDataLinkTaskLoop(void * parameter)
+void SerialDataLinkSendTaskLoop(void * parameter)
 {
   for(;;)
   {
     yield();
-    m_SerialDatalink.ProcessEventQueue();
+    m_SerialDatalink.ProcessDataSendEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SerialDataLinkReceiveTaskLoop(void * parameter)
+{
+  for(;;)
+  {
+    yield();
     m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
