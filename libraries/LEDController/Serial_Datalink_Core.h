@@ -28,9 +28,52 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "Streaming.h"
+#include <ArduinoJson.h>
+
+class DataSerializer
+{
+	public:
+		DataSerializer(){}
+		virtual ~DataSerializer(){}
+		
+		template <typename T>
+		String Serialize(String Name, String DataType, void* Object, size_t Count)
+		{
+			doc.clear();
+			doc["Name"] = Name;
+			doc["Count"] = Count;
+			doc["DataType"] = DataType;
+			JsonArray data = doc.createNestedArray("data");
+			for(int i = 0; i < Count; ++i)
+			{
+				data.add(((T*)Object)[i]);
+			}
+			String Result;
+			serializeJson(doc, Result);
+			return Result;
+		}
+		template <typename T>
+		String DeSerialize(String Name, void* Object, size_t Count)
+		{
+			doc.clear();
+			doc["Name"] = Name;
+			doc["Count"] = Count;
+			JsonArray data = doc.createNestedArray("data");
+			for(int i = 0; i < Count; ++i)
+			{
+				data.add(((T*)Object)[i]);
+			}
+			String Result;
+			serializeJson(doc, Result);
+			return Result;
+		}
+	private:
+		StaticJsonDocument<1000> doc;
+};
 
 class SerialDataLinkCore: public NamedItem
 						, public CommonUtils
+						, public DataSerializer
 {
   public:
     SerialDataLinkCore(String Title);
@@ -49,19 +92,9 @@ class SerialDataLinkCore: public NamedItem
   String m_InboundStringData = "";
   
   template <class T>
-  void EncodeAndTransmitData(String Name, void* Object, size_t Count)
+  void EncodeAndTransmitData(String Name, String DataType, void* Object, size_t Count)
   {
-	  String Header = "<NAME=" + Name + ">";
-	  Header += "<COUNT=" +  String(Count) + ">";
-	  String DataToSend = "";
-	  DataToSend += Header;
-	  for(int i = 0; i < Count; ++i)
-	  {
-		  T item = *((T*)Object + i);
-		  DataToSend += String(item);
-		  if(i < Count-1) DataToSend += ",";
-	  }
-	  DataToSend += "<END>";
+	  String DataToSend = Serialize<T>(Name, DataType, Object, Count);
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
 	  hSerial.println(DataToSend);
   }
@@ -89,12 +122,12 @@ class SerialDataLinkCore: public NamedItem
   }
   
   template <class T>
-  void ProcessData(int i)
+  void ProcessData(DataItem_t DataItem)
   {
-	T* DataBuffer = (T*)malloc(sizeof(T) * m_DataItem[i].Count);
-	if ( xQueueReceive(m_DataItem[i].QueueHandle, DataBuffer, portMAX_DELAY) != pdTRUE ){Serial.println("Error Reading Queue");}
-	memcpy(m_DataItem[i].Object, DataBuffer, sizeof(T) * m_DataItem[i].Count);
-	EncodeAndTransmitData<T>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
+	T* DataBuffer = (T*)malloc(sizeof(T) * DataItem.Count);
+	if ( xQueueReceive(DataItem.QueueHandle, DataBuffer, portMAX_DELAY) != pdTRUE ){Serial.println("Error Reading Queue");}
+	memcpy(DataItem.Object, DataBuffer, sizeof(T) * DataItem.Count);
+	EncodeAndTransmitData<T>(DataItem.Name, DataTypeStrings[DataItem.DataType], DataItem.Object, DataItem.Count);
 	delete DataBuffer;
   }
 };

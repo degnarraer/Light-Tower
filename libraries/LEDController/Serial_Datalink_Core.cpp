@@ -146,22 +146,22 @@ void SerialDataLinkCore::ProcessEventQueue()
 			{
 				case DataType_Int16_t:
 				{
-					ProcessData<int16_t>(i);
+					ProcessData<int16_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_Int32_t:
 				{	
-					ProcessData<int32_t>(i);
+					ProcessData<int32_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_Uint16_t:
 				{
-					ProcessData<uint16_t>(i);
+					ProcessData<uint16_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_Uint32_t:
 				{
-					ProcessData<uint32_t>(i);
+					ProcessData<uint32_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_String:
@@ -169,7 +169,7 @@ void SerialDataLinkCore::ProcessEventQueue()
 				break;
 				case DataType_Float:
 				{
-					ProcessData<float>(i);
+					ProcessData<float>(m_DataItem[i]);
 				}
 				break;
 				default:

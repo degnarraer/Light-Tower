@@ -138,7 +138,7 @@ void setup() {
     "FFTTask",                  // Name of the task
     10000,                      // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
+    configMAX_PRIORITIES - 5,   // Priority of the task
     &FFTTask,                   // Task handle.
     0                           // Core where the task should run
   );                   

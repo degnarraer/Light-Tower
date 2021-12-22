@@ -134,7 +134,7 @@ void Manager::SetInputType(InputType_t Type)
   {
     case InputType_Microphone:
       m_BT.StopDevice();
-      m_Sound_Processor.Setup(m_Mic_In.GetChannelBytesToRead(), m_Mic_In.GetSampleRate(), 4096);
+      m_Sound_Processor.Setup(m_Mic_In.GetChannelBytesToRead(), m_Mic_In.GetSampleRate(), 2048);
       m_Mic_In.StartDevice();
       m_Mic_Out.StartDevice();
       SetDACDataFormat(DAC_Data_Format_LSB24);
@@ -143,7 +143,7 @@ void Manager::SetInputType(InputType_t Type)
     case InputType_Bluetooth:
       m_Mic_Out.StopDevice();
       m_Mic_In.StopDevice();
-      m_Sound_Processor.Setup(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 4096);
+      m_Sound_Processor.Setup(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 2048);
       m_BT.StartDevice();
       SetDACDataFormat(DAC_Data_Format_Default);
       SetDACMuteState(Mute_State_Un_Muted);
@@ -260,13 +260,13 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 void Manager::ProcessRightFFTDataBufferQueue()
 {
   MoveDataFromQueueToQueue<int16_t>( m_Sound_Processor.GetFFTRightBandDataOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleForDataItem("FFT_RBand_Data")
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("FFT_R")
                                    , m_Sound_Processor.GetFFTRightBandDataBufferSize()
                                    , false
                                    , false );
 
   MoveDataFromQueueToQueue<float>( m_Sound_Processor.GetRightChannelNormalizedPowerOutputQueue()
-                                 , m_SerialDataLink.GetQueueHandleForDataItem("R_Power")
+                                 , m_SerialDataLink.GetQueueHandleForDataItem("R_Pow")
                                  , m_Sound_Processor.GetRightChannelNormalizedPowerSize()
                                  , false
                                  , false );
@@ -294,13 +294,13 @@ void Manager::ProcessRightFFTDataBufferQueue()
 void Manager::ProcessLeftFFTDataBufferQueue()
 {
   MoveDataFromQueueToQueue<int16_t>( m_Sound_Processor.GetFFTLeftBandDataOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleForDataItem("FFT_LBand_Data")
+                                   , m_SerialDataLink.GetQueueHandleForDataItem("FFT_L")
                                    , m_Sound_Processor.GetFFTLeftBandDataBufferSize()
                                    , false
                                    , false );
                                    
   MoveDataFromQueueToQueue<float>( m_Sound_Processor.GetLeftChannelNormalizedPowerOutputQueue()
-                                 , m_SerialDataLink.GetQueueHandleForDataItem("L_Power")
+                                 , m_SerialDataLink.GetQueueHandleForDataItem("L_Pow")
                                  , m_Sound_Processor.GetLeftChannelNormalizedPowerSize()
                                  , false
                                  , false );

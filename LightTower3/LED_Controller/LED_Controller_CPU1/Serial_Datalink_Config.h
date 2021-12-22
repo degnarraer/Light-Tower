@@ -38,16 +38,16 @@ class SerialDataLink: public NamedItem
     static const size_t m_ConfigCount = 10;
     DataItemConfig_t ItemConfig[m_ConfigCount]
     {
-      { "FFT_LBand_Data",   DataType_Int16_t,   32,   Transciever_TX },
-      { "FFT_RBand_Data",   DataType_Int16_t,   32,   Transciever_TX },
-      { "R_Power",          DataType_Float,     1,    Transciever_TX },
-      { "L_Power",          DataType_Float,     1,    Transciever_TX },
-      { "R_DB",             DataType_Float,     1,    Transciever_TX },
-      { "L_DB",             DataType_Float,     1,    Transciever_TX },
-      { "R_Min",            DataType_Int16_t,   1,    Transciever_TX },
-      { "L_Min",            DataType_Int16_t,   1,    Transciever_TX },
-      { "L_Max",            DataType_Int16_t,   1,    Transciever_TX },
-      { "L_Max",            DataType_Int16_t,   1,    Transciever_TX },
+      { "FFT_L",     DataType_Int16_t,   32,   Transciever_TX },
+      { "FFT_R",     DataType_Int16_t,   32,   Transciever_TX },
+      { "R_Pow",     DataType_Float,     1,    Transciever_TX },
+      { "L_Pow",     DataType_Float,     1,    Transciever_TX },
+      { "R_DB",      DataType_Float,     1,    Transciever_TX },
+      { "L_DB",      DataType_Float,     1,    Transciever_TX },
+      { "R_Min",     DataType_Int16_t,   1,    Transciever_TX },
+      { "L_Min",     DataType_Int16_t,   1,    Transciever_TX },
+      { "L_Max",     DataType_Int16_t,   1,    Transciever_TX },
+      { "L_Max",     DataType_Int16_t,   1,    Transciever_TX },
     };
 
 };
