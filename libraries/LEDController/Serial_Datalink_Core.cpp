@@ -19,6 +19,7 @@
 #include <Serial_Datalink_Core.h>
 
 SerialDataLinkCore::SerialDataLinkCore(String Title): NamedItem(Title)
+													, DataSerializer(m_DataItem, m_DataItemCount)
 {
 }
 SerialDataLinkCore::~SerialDataLinkCore()

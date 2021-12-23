@@ -35,13 +35,19 @@ class SerialDataLink: public NamedItem
     size_t GetConfigCount() { return m_ConfigCount; }
   private:
     
-    static const size_t m_ConfigCount = 4;
+    static const size_t m_ConfigCount = 10;
     DataItemConfig_t ItemConfig[m_ConfigCount]
     {
-      { "FFT_LBand_Data",   DataType_Int16_t,   32,   Transciever_RX },
-      { "FFT_RBand_Data",   DataType_Int16_t,   32,   Transciever_RX },
-      { "R_Power",          DataType_Int32_t,   1,    Transciever_RX },
-      { "L_Power",          DataType_Int32_t,   1,    Transciever_RX }
+      { "FFT_L",     DataType_Int16_t,   32,   Transciever_RX },
+      { "FFT_R",     DataType_Int16_t,   32,   Transciever_RX },
+      { "R_Pow",     DataType_Float,     1,    Transciever_RX },
+      { "L_Pow",     DataType_Float,     1,    Transciever_RX },
+      { "R_DB",      DataType_Float,     1,    Transciever_RX },
+      { "L_DB",      DataType_Float,     1,    Transciever_RX },
+      { "R_Min",     DataType_Int16_t,   1,    Transciever_RX },
+      { "L_Min",     DataType_Int16_t,   1,    Transciever_RX },
+      { "L_Max",     DataType_Int16_t,   1,    Transciever_RX },
+      { "L_Max",     DataType_Int16_t,   1,    Transciever_RX },
     };
 };
 

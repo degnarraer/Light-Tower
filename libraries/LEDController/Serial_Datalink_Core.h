@@ -32,7 +32,8 @@
 class DataSerializer: public CommonUtils
 {
 	public:
-		DataSerializer(){}
+		DataSerializer(DataItem_t* DataItem, size_t &DataItemCount): m_DataItem(DataItem)
+																   , m_DataItemCount(DataItemCount){}
 		virtual ~DataSerializer(){}
 		
 		template <typename T>
@@ -57,23 +58,32 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				Serial << "deserializeJson() failed: ";
+				Serial << "deserializeJson() failed\n";
 				//Serial << error.f_str() << "\n";
 				return;
 			}
 			else
 			{
-				//Serial << "deserializeJson() Success: ";
-				String Name = docIn["Name"];
-				int Count = docIn["Count"];
-				String DataTypeString = docIn["DataType"];
-				DataType_t DataType = GetDataTypeFromString(DataTypeString);
-				//Serial << Name << "|" << Count << "|" << DataTypeString << "\n";
+				if(NULL != m_DataItem)
+				{
+					Serial << "Checking\n";
+					for(int i = 0; i < m_DataItemCount; ++i)
+					{
+						String ItemName = (m_DataItem[i]).Name;
+						String DocName = docIn["Name"];
+						if(true == ItemName.equals(DocName))
+						{
+							Serial << "Received: " << m_DataItem[i].Name << "\n";
+						}
+					}
+				}
 			}
 		}
 	private:
 		StaticJsonDocument<1000> docIn;
 		StaticJsonDocument<1000> docOut;
+		DataItem_t* m_DataItem;
+		size_t &m_DataItemCount;
 };
 
 class SerialDataLinkCore: public NamedItem
