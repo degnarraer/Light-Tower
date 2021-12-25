@@ -43,65 +43,64 @@ void SerialDataLinkCore::Setup()
   for(int i = 0; i < m_DataItemCount; ++i)
   {
     void* Object;
+	size_t bytes = 0;
+	
     switch(ConfigFile[i].DataType)
     {
       case DataType_Int16_t:
       {
-        size_t bytes = sizeof(int16_t) * ConfigFile[i].Count;
+        bytes = sizeof(int16_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Int32_t:
       {
-        size_t bytes = sizeof(int32_t) * ConfigFile[i].Count;
+        bytes = sizeof(int32_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Uint16_t:
       {
-        size_t bytes = sizeof(uint16_t) * ConfigFile[i].Count;
+        bytes = sizeof(uint16_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Uint32_t:
       {
-        size_t bytes = sizeof(uint32_t) * ConfigFile[i].Count;
+        bytes = sizeof(uint32_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_String:
       {
-        size_t bytes = sizeof(String) * ConfigFile[i].Count;
+        bytes = sizeof(String) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       case DataType_Float:
       {
-        size_t bytes = sizeof(float) * ConfigFile[i].Count;
+        bytes = sizeof(float) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-        CreateQueue(m_DataItem[i].QueueHandle, bytes, QUEUE_SIZE, true);
       }
       break;
       default:
         Serial << "Error, unsupported data type";
       break;
     }
+	CreateQueue(m_DataItem[i].QueueHandle_RX, bytes, QUEUE_SIZE, true);
+	CreateQueue(m_DataItem[i].QueueHandle_TX, bytes, QUEUE_SIZE, true);
     Serial << GetTitle() << ": Try Saving DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
 	m_DataItem[i].Name = ConfigFile[i].Name;
     m_DataItem[i].DataType = ConfigFile[i].DataType;
     m_DataItem[i].Count = ConfigFile[i].Count;
     m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
     m_DataItem[i].Object = Object;
+	SetDataItems(m_DataItem, m_DataItemCount);
     Serial << GetTitle() << ": Successfully Saved DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
   }
 }
 
-QueueHandle_t SerialDataLinkCore::GetQueueHandleForDataItem(String Name)
+QueueHandle_t SerialDataLinkCore::GetQueueHandleRXForDataItem(String Name)
 {
 	if(NULL != m_DataItem)
 	{
@@ -109,7 +108,22 @@ QueueHandle_t SerialDataLinkCore::GetQueueHandleForDataItem(String Name)
 		{
 			if(Name == m_DataItem[i].Name)
 			{
-				return m_DataItem[i].QueueHandle;
+				return m_DataItem[i].QueueHandle_RX;
+			}
+		}
+	}
+	return NULL;
+}
+
+QueueHandle_t SerialDataLinkCore::GetQueueHandleTXForDataItem(String Name)
+{
+	if(NULL != m_DataItem)
+	{
+		for(int i = 0; i < m_DataItemCount; ++i)
+		{
+			if(Name == m_DataItem[i].Name)
+			{
+				return m_DataItem[i].QueueHandle_TX;
 			}
 		}
 	}
@@ -133,37 +147,37 @@ void SerialDataLinkCore::CheckForNewSerialData()
   }
 }
 
-void SerialDataLinkCore::ProcessDataSendEventQueue()
+void SerialDataLinkCore::ProcessDataTXEventQueue()
 {
   if(NULL != m_DataItem)
   {
     for(int i = 0; i < m_DataItemCount; ++i)
     {
-      if(NULL != m_DataItem[i].QueueHandle)
+      if(NULL != m_DataItem[i].QueueHandle_TX)
       {
-        if(uxQueueMessagesWaiting(m_DataItem[i].QueueHandle) > 0)
+        if(uxQueueMessagesWaiting(m_DataItem[i].QueueHandle_TX) > 0)
 		{
-			if(true == QUEUE_DEBUG) Serial << GetTitle() << " Queue Count : " << uxQueueMessagesWaiting(m_DataItem[i].QueueHandle) << "\n";
+			if(true == QUEUE_DEBUG) Serial << GetTitle() << " Queue Count : " << uxQueueMessagesWaiting(m_DataItem[i].QueueHandle_TX) << "\n";
 			switch(m_DataItem[i].DataType)
 			{
 				case DataType_Int16_t:
 				{
-					ProcessData<int16_t>(m_DataItem[i]);
+					ProcessTXData<int16_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_Int32_t:
 				{	
-					ProcessData<int32_t>(m_DataItem[i]);
+					ProcessTXData<int32_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_Uint16_t:
 				{
-					ProcessData<uint16_t>(m_DataItem[i]);
+					ProcessTXData<uint16_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_Uint32_t:
 				{
-					ProcessData<uint32_t>(m_DataItem[i]);
+					ProcessTXData<uint32_t>(m_DataItem[i]);
 				}
 				break;
 				case DataType_String:
@@ -171,7 +185,7 @@ void SerialDataLinkCore::ProcessDataSendEventQueue()
 				break;
 				case DataType_Float:
 				{
-					ProcessData<float>(m_DataItem[i]);
+					ProcessTXData<float>(m_DataItem[i]);
 				}
 				break;
 				default:

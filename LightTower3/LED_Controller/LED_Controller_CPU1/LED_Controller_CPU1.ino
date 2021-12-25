@@ -155,7 +155,7 @@ void setup() {
 
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkSendTaskLoop,     // Function to implement the task
+    SerialDataLinkTXTaskLoop,     // Function to implement the task
     "SerialDataLinkSendTask",       // Name of the task
     10000,                          // Stack size in words
     NULL,                           // Task input parameter
@@ -221,12 +221,12 @@ void SoundPowerTaskLoop(void * parameter)
   }
 }
 
-void SerialDataLinkSendTaskLoop(void * parameter)
+void SerialDataLinkTXTaskLoop(void * parameter)
 {
   for(;;)
   {
     yield();
-    m_SerialDatalink.ProcessDataSendEventQueue();
+    m_SerialDatalink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

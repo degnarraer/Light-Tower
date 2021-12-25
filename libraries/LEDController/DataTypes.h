@@ -58,7 +58,8 @@ struct DataItem_t
   String Name;
   DataType_t DataType;
   size_t Count;
-  QueueHandle_t QueueHandle;
+  QueueHandle_t QueueHandle_RX;
+  QueueHandle_t QueueHandle_TX;
   Transciever_T TransceiverConfig;
   void* Object;
 };

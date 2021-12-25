@@ -248,8 +248,8 @@ void Sound_Processor::ProcessRightChannelPower()
       m_Right_Channel_Max = maxValue;
       PushValueToQueue(&m_Right_Channel_Pow_Normalized, m_Right_Channel_Normalized_Power_Output_Buffer_Queue, false);
       PushValueToQueue(&m_Right_Channel_Db, m_Right_Channel_DB_Output_Buffer_Queue, false);
-      PushValueToQueue(&minValue, m_Right_Channel_Pow_Min_Output_Buffer_Queue, false);
-      PushValueToQueue(&maxValue, m_Right_Channel_Pow_Max_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Right_Channel_Min, m_Right_Channel_Pow_Min_Output_Buffer_Queue, false);
+      PushValueToQueue(&m_Right_Channel_Max, m_Right_Channel_Pow_Max_Output_Buffer_Queue, false);
     }
     delete DataBuffer;
   }
