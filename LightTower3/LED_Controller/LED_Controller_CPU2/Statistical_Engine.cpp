@@ -28,26 +28,49 @@ void StatisticalEngine::Setup()
   //calculateFPS2.Setup();
 }
 
-bool StatisticalEngine::NewDataReady()
+bool StatisticalEngine::NewBandDataReady()
 {
-  bool NewData = false;
-  if(true == GetValueFromQueue(m_Right_Band_Values, m_FFT_Right_BandData_Input_Buffer_Queue, GetFFTRightBandDataBufferSize(), false)){ NewData = true; }
-  if(true == GetValueFromQueue(&m_Right_Channel_Pow_Normalized, m_Right_Channel_Normalized_Power_Input_Buffer_Queue, GetRightChannelNormalizedPowerSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Right_Channel_Db, m_Right_Channel_DB_Input_Buffer_Queue, GetRightChannelDBSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Right_Channel_Min, m_Right_Channel_Pow_Min_Input_Buffer_Queue, GetRightChannelPowerMinSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Right_Channel_Max, m_Right_Channel_Pow_Max_Input_Buffer_Queue, GetRightChannelPowerMaxSize(), false))NewData = true;
-  
-  if(true == GetValueFromQueue(m_Left_Band_Values, m_FFT_Left_BandData_Input_Buffer_Queue, GetFFTLeftBandDataBufferSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Left_Channel_Pow_Normalized, m_Left_Channel_Normalized_Power_Input_Buffer_Queue, GetLeftChannelNormalizedPowerSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Left_Channel_Db, m_Left_Channel_DB_Input_Buffer_Queue, GetLeftChannelDBSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Left_Channel_Min, m_Left_Channel_Pow_Min_Input_Buffer_Queue, GetLeftChannelPowerMinSize(), false))NewData = true;
-  if(true == GetValueFromQueue(&m_Left_Channel_Max, m_Left_Channel_Pow_Max_Input_Buffer_Queue, GetLeftChannelPowerMaxSize(), false))NewData = true;
-  return NewData;
+  bool A = (uxQueueMessagesWaiting(m_FFT_Right_BandData_Input_Buffer_Queue) > 0);
+  bool B = (uxQueueMessagesWaiting(m_FFT_Left_BandData_Input_Buffer_Queue) > 0);
+  Serial << A << "|" << B << "\n";
+  if( A & B )
+  {
+    m_NewBandDataReady = true;
+    return true;
+  }
+  else
+  {
+    m_NewBandDataReady = false;
+    return false;
+  }
+}
+
+bool StatisticalEngine::NewSoundDataReady()
+{
+  bool A = (uxQueueMessagesWaiting(m_Right_Channel_Normalized_Power_Input_Buffer_Queue) > 0);
+  bool B = (uxQueueMessagesWaiting(m_Right_Channel_DB_Input_Buffer_Queue) > 0);
+  bool C = (uxQueueMessagesWaiting(m_Right_Channel_Pow_Min_Input_Buffer_Queue) > 0);
+  bool D = (uxQueueMessagesWaiting(m_Right_Channel_Pow_Max_Input_Buffer_Queue) > 0);
+  bool E = (uxQueueMessagesWaiting(m_Left_Channel_Normalized_Power_Input_Buffer_Queue) > 0);
+  bool F = (uxQueueMessagesWaiting(m_Left_Channel_DB_Input_Buffer_Queue) > 0);
+  bool G = (uxQueueMessagesWaiting(m_Left_Channel_Pow_Min_Input_Buffer_Queue) > 0);
+  bool H = (uxQueueMessagesWaiting(m_Left_Channel_Pow_Max_Input_Buffer_Queue) > 0);
+  Serial << A << "|" << B << "|" << C << "|" << D << "|" << E << "|" << F << "|" << G << "|" << H << "\n";
+  if( A & B & C & D & E & F & G & H )
+  {
+    m_NewSoundDataReady = true;
+    return true;
+  }
+  else
+  {
+    m_NewSoundDataReady = false;
+    return false;
+  }
 }
 
 bool StatisticalEngine::CanRunMyScheduledTask()
 {
-  if(true == NewDataReady())
+  if( true == NewSoundDataReady() || true == NewBandDataReady() )
   {
     //if(true == calculateFPS2.CanRunMyScheduledTask()) { calculateFPS2.RunMyScheduledTask(); }
     return true;
@@ -57,17 +80,40 @@ bool StatisticalEngine::CanRunMyScheduledTask()
     return false;
   }
 }
+
 void StatisticalEngine::RunMyScheduledTask()
 {
-  //To allow the original code to work, we combine the left and right channels into an average
-  m_Power = (m_Right_Channel_Pow_Normalized + m_Left_Channel_Pow_Normalized) / 2;
-  m_PowerDb = (m_Right_Channel_Db + m_Left_Channel_Db ) / 2;
+  if(true == m_NewSoundDataReady)
+  {
+    GetValueFromQueue(&m_Right_Channel_Pow_Normalized, m_Right_Channel_Normalized_Power_Input_Buffer_Queue, GetRightChannelNormalizedPowerSize(), true, false);
+    GetValueFromQueue(&m_Right_Channel_Db, m_Right_Channel_DB_Input_Buffer_Queue, GetRightChannelDBSize(), true, false);
+    GetValueFromQueue(&m_Right_Channel_Min, m_Right_Channel_Pow_Min_Input_Buffer_Queue, GetRightChannelPowerMinSize(), true, false);
+    GetValueFromQueue(&m_Right_Channel_Max, m_Right_Channel_Pow_Max_Input_Buffer_Queue, GetRightChannelPowerMaxSize(), true, false);
+    
+    GetValueFromQueue(&m_Left_Channel_Pow_Normalized, m_Left_Channel_Normalized_Power_Input_Buffer_Queue, GetLeftChannelNormalizedPowerSize(), true, false);
+    GetValueFromQueue(&m_Left_Channel_Db, m_Left_Channel_DB_Input_Buffer_Queue, GetLeftChannelDBSize(), true, false);
+    GetValueFromQueue(&m_Left_Channel_Min, m_Left_Channel_Pow_Min_Input_Buffer_Queue, GetLeftChannelPowerMinSize(), true, false);
+    GetValueFromQueue(&m_Left_Channel_Max, m_Left_Channel_Pow_Max_Input_Buffer_Queue, GetLeftChannelPowerMaxSize(), true, false);
+  
+    //To allow the original code to work, we combine the left and right channels into an average
+    m_Power = (m_Right_Channel_Pow_Normalized + m_Left_Channel_Pow_Normalized) / 2;
+    m_PowerDb = (m_Right_Channel_Db + m_Left_Channel_Db ) / 2;
+    m_signalMin = (m_Right_Channel_Min + m_Left_Channel_Min) / 2;
+    m_signalMax = (m_Right_Channel_Max + m_Left_Channel_Max) / 2;;
+    
+    Serial << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
+    //UpdateSoundState();
+  }
 
-  //m_signalMin;
-  //m_signalMax;
-  //UpdateSoundState();
-  //UpdateBandArray();
+  if(true == m_NewBandDataReady)
+  {
+    //GetValueFromQueue(&m_Right_Band_Values, m_FFT_Right_BandData_Input_Buffer_Queue, GetFFTRightBandDataBufferSize(), true, false);
+    //GetValueFromQueue(&m_Left_Band_Values, m_FFT_Left_BandData_Input_Buffer_Queue, GetFFTLeftBandDataBufferSize(), true, false);
+    //UpdateBandArray(); 
+  }
 }
+
+
 
 void StatisticalEngine::AllocateMemory()
 {
@@ -111,7 +157,6 @@ void StatisticalEngine::FreeMemory()
   vQueueDelete(m_Left_Channel_Pow_Max_Input_Buffer_Queue);
   m_MemoryIsAllocated = false;
 }
-
 
 void StatisticalEngine::UpdateSoundState()
 {
@@ -178,7 +223,7 @@ void StatisticalEngine::UpdateBandArray()
   {
     UpdateRunningAverageBandArray();
   }
-  //if(true == debugMode && debugLevel >= 2) 
+  if(true == debugMode && debugLevel >= 2) 
   {
     Serial << "BAND VALUES: ";
     for(int i = 0; i < m_NumBands; i++)

@@ -140,11 +140,13 @@ class StatisticalEngine : public NamedItem
   private:
     bool m_ProcessFFT = true;
     //BAND Circular Buffer
+    bool m_NewBandDataReady = false;
     static const unsigned int m_NumBands = 32; //Need way to set this
     int BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
     int BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentAverageBandIndex = -1;
+    bool NewBandDataReady();
     void UpdateBandArray();
     void UpdateRunningAverageBandArray();
 
@@ -155,15 +157,15 @@ class StatisticalEngine : public NamedItem
     void RunMyScheduledTask();
     void RunMyPostTask(){}
     
-    //Main Output
+    //Sound State Output
+    bool m_NewSoundDataReady = false;
     float m_Power;
     float m_PowerDb;
     int m_signalMin;
     int m_signalMax;
     float m_AmpGain = 1.0;
     float m_FFTGain = 1.0;
-    
-    bool NewDataReady();
+    bool NewSoundDataReady();
     void UpdateSoundState();
 
  //Sound Detection

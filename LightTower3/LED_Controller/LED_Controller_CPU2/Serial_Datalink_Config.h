@@ -28,8 +28,8 @@ class SerialDataLink: public NamedItem
                     , public SerialDataLinkCore
 {
   public:
-    SerialDataLink(String Title): NamedItem(Title)
-                                , SerialDataLinkCore(Title) {}
+    SerialDataLink(String Title, HardwareSerial &hSerial): NamedItem(Title)
+                                                         , SerialDataLinkCore(Title, hSerial) {}
     virtual ~SerialDataLink(){}
     DataItemConfig_t* GetConfig() { return ItemConfig; }
     size_t GetConfigCount() { return m_ConfigCount; }
@@ -46,7 +46,7 @@ class SerialDataLink: public NamedItem
       { "L_DB",      DataType_Float,     1,    Transciever_RX },
       { "R_Min",     DataType_Int16_t,   1,    Transciever_RX },
       { "L_Min",     DataType_Int16_t,   1,    Transciever_RX },
-      { "L_Max",     DataType_Int16_t,   1,    Transciever_RX },
+      { "R_Max",     DataType_Int16_t,   1,    Transciever_RX },
       { "L_Max",     DataType_Int16_t,   1,    Transciever_RX },
     };
 };

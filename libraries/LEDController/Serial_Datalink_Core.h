@@ -120,7 +120,7 @@ class SerialDataLinkCore: public NamedItem
 						, public DataSerializer
 {
   public:
-    SerialDataLinkCore(String Title);
+    SerialDataLinkCore(String Title, HardwareSerial &hSerial);
     virtual ~SerialDataLinkCore();
 	virtual DataItemConfig_t* GetConfig() = 0;
 	virtual size_t GetConfigCount() = 0;
@@ -134,14 +134,14 @@ class SerialDataLinkCore: public NamedItem
   private:
   DataItem_t* m_DataItem = NULL;
   size_t m_DataItemCount = 0;
-  HardwareSerial &hSerial = Serial2;
+  HardwareSerial &m_hSerial;
   String m_InboundStringData = "";
   
   void EncodeAndTransmitData(String Name, String DataType, void* Object, size_t ByteCount)
   {
 	  String DataToSend = Serialize(Name, DataType, Object, ByteCount);
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
-	  hSerial.println(DataToSend);
+	  m_hSerial.println(DataToSend);
   }
   
   void DecodeAndStoreData(String Data)

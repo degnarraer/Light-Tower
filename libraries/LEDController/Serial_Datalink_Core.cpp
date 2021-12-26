@@ -18,8 +18,9 @@
 
 #include <Serial_Datalink_Core.h>
 
-SerialDataLinkCore::SerialDataLinkCore(String Title): NamedItem(Title)
+SerialDataLinkCore::SerialDataLinkCore(String Title, HardwareSerial &hSerial): NamedItem(Title)
 													, DataSerializer(m_DataItem, m_DataItemCount)
+													, m_hSerial(hSerial)
 {
 }
 SerialDataLinkCore::~SerialDataLinkCore()
@@ -29,12 +30,7 @@ SerialDataLinkCore::~SerialDataLinkCore()
 
 void SerialDataLinkCore::Setup()
 {
-  Serial << GetTitle() << " Configuring Serial Communication\n";
-  hSerial.setRxBufferSize(4096);
-  hSerial.flush();
-  hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
-  hSerial.flush();
-
+  Serial << GetTitle() << ": Allocating Memory\n";
   DataItemConfig_t* ConfigFile = GetConfig();
   m_DataItemCount = GetConfigCount();
   size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
@@ -84,21 +80,20 @@ void SerialDataLinkCore::Setup()
       }
       break;
       default:
-        Serial << "Error, unsupported data type";
+        Serial << GetTitle() << ": Error, unsupported data type";
       break;
     }
 	CreateQueue(m_DataItem[i].QueueHandle_RX, bytes, QUEUE_SIZE, true);
 	CreateQueue(m_DataItem[i].QueueHandle_TX, bytes, QUEUE_SIZE, true);
-    Serial << GetTitle() << ": Try Saving DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
+    Serial << GetTitle() << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
 	m_DataItem[i].Name = ConfigFile[i].Name;
     m_DataItem[i].DataType = ConfigFile[i].DataType;
     m_DataItem[i].Count = ConfigFile[i].Count;
     m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
     m_DataItem[i].Object = Object;
 	SetDataItems(m_DataItem, m_DataItemCount);
-    Serial << GetTitle() << ": Successfully Saved DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
-	CheckForNewSerialData();
-  }
+    Serial << GetTitle() << ": Successfully Configured DataItem " << i+1 << " of " << m_DataItemCount << "\n";
+  }  
 }
 
 QueueHandle_t SerialDataLinkCore::GetQueueHandleRXForDataItem(String Name)
@@ -148,10 +143,10 @@ size_t SerialDataLinkCore::GetByteCountForDataItem(String Name)
 
 void SerialDataLinkCore::CheckForNewSerialData()
 {
-  for(int i = 0; i < hSerial.available(); ++i)
+  for(int i = 0; i < m_hSerial.available(); ++i)
   {
 	byte ch;
-	ch = hSerial.read();
+	ch = m_hSerial.read();
 	m_InboundStringData += (char)ch;
 	if (ch=='\n') 
 	{

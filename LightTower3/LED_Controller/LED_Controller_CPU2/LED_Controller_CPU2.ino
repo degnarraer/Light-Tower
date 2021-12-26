@@ -26,24 +26,37 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , 13
                                 , 14
                                 , I2S_PIN_NO_CHANGE );
-SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
-TaskScheduler m_Scheduler;
-CalculateFPS m_CalculateFPS("Main Loop", 1000);
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 //VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
+HardwareSerial m_hSerial = Serial2;
+SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink", m_hSerial);
 Manager m_Manager = Manager("Manager", m_SerialDatalink, m_StatisticalEngine, m_I2S_In);
+CalculateFPS m_CalculateFPS("Main Loop", 1000);
+TaskScheduler m_Scheduler;
 
 void setup() {
+  
+  //ESP32 Serial Communication
+  m_hSerial.end();
+  m_hSerial.setRxBufferSize(1024);
+  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
+  m_hSerial.updateBaudRate(500000);
+  m_hSerial.flush();
+  
+  //PC Serial Communication
+  Serial.end();
   Serial.begin(500000);
-  delay(500);
+  Serial.flush();
+  
+  Serial << "Serial Datalink Configured\n";
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
 
-  m_SerialDatalink.Setup();
   m_I2S_In.Setup();
   m_Manager.Setup();
+  m_SerialDatalink.Setup();
   
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
@@ -83,9 +96,9 @@ void setup() {
   );
 }
 
-void loop() {
+void loop()
+{
   // put your main code here, to run repeatedly:
-
 }
 
 void ManagerTaskLoop(void * parameter)
@@ -113,7 +126,7 @@ void VisualizationTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    //m_Scheduler.RunScheduler();
+    m_Scheduler.RunScheduler();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

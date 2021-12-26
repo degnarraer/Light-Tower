@@ -81,7 +81,7 @@ class CommonUtils
 			}
 		}
 		
-		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool DebugMessage)
+		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
 			if(NULL != Queue)
 			{
@@ -89,13 +89,17 @@ class CommonUtils
 				if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
 				if(QueueCount > 0)
 				{
-					void* DataBuffer = (void*)malloc(ByteCount);
-					if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
+					if(false == ReadUntilEmpty) QueueCount = 1;
+					for(int i = 0; i < QueueCount; ++i)
 					{
-						memcpy(Value, DataBuffer, ByteCount);
-						return true;
+						void* DataBuffer = (void*)malloc(ByteCount);
+						if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
+						{
+							memcpy(Value, DataBuffer, ByteCount);
+							return true;
+						}
+						delete DataBuffer;
 					}
-					delete DataBuffer;
 				}
 			}
 			return false;
