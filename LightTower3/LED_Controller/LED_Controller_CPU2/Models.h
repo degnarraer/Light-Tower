@@ -130,11 +130,19 @@ class ModelEventNotificationCaller
 
 class StatisticalEngineModelInterface;
 
-class Model: public Task
+class Model: public NamedItem
+           , public Task
 {
   public:
-    Model(String Title): Task(Title) { if (true == debugMemory) Serial << "New: Model\n"; }
-    virtual ~Model() { if (true == debugMemory) Serial << "Delete: Model\n"; }
+    Model(String Title): NamedItem(Title)
+                       , Task(GetTitle()) 
+    { 
+      if (true == debugMemory) Serial << "New Model: " << GetTitle() << "\n";
+    }
+    virtual ~Model()
+    {
+      if (true == debugMemory) Serial << "Delete Model: " << GetTitle() << "\n";
+    }
 
     //ModelEventNotificationCaller
     virtual void UpdateValue() = 0;
@@ -147,6 +155,8 @@ class Model: public Task
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
     virtual void RunModelTask() = 0;
+
+    //Task Interface
     void Setup();
     void RunMyPreTask(){}
     bool CanRunMyScheduledTask();
@@ -170,34 +180,34 @@ class StatisticalEngineModelInterfaceUserTracker
     LinkedList<StatisticalEngineModelInterfaceUsers*> m_MyUsers = LinkedList<StatisticalEngineModelInterfaceUsers*>();
 };
 
-class StatisticalEngineModelInterface : public Task
+class StatisticalEngineModelInterface : public NamedItem
+                                      , public Task
                                       , public StatisticalEngineModelInterfaceUserTracker
                                       , MicrophoneMeasureCalleeInterface
 {
   public:
-    StatisticalEngineModelInterface(StatisticalEngine StatisticalEngine) : Task("StatisticalEngineModelInterface")
-                                                                         , m_StatisticalEngine(StatisticalEngine)
-    { if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n"; }
+    StatisticalEngineModelInterface(StatisticalEngine &StatisticalEngine) : NamedItem("StatisticalEngineModelInterface")
+                                                                          , Task(GetTitle())
+                                                                          , m_StatisticalEngine(StatisticalEngine)
+    { 
+    }
     virtual ~StatisticalEngineModelInterface()
-    {if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";}
+    {
+    }
 
     //StatisticalEngine Getters
-    StatisticalEngine GetStatisticalEngine() { return m_StatisticalEngine; }
     unsigned int GetNumberOfBands();
     float GetNormalizedSoundPower();
     float GetBandAverage(unsigned int band, unsigned int depth);
     float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands);
     float GetBandValue(unsigned int band, unsigned int depth);
-    float GetNormalizedBinValue(unsigned int bin);
-
-    //ADCInterruptHandler
-    void HandleADCInterrupt();
     
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState) {}
-
+    
   private:
     StatisticalEngine &m_StatisticalEngine;
+    
     //Task
     void Setup();
     void RunMyPreTask(){}
@@ -917,7 +927,8 @@ class BinPowerModel: public DataModelWithNewValueNotification<float>
       m_Result = 0.0;
       for(int i = m_StartBin; i<= m_EndBin; ++i)
       {
-        m_Result += m_StatisticalEngineModelInterface.GetNormalizedBinValue(i);
+        //TODO
+        //m_Result += m_StatisticalEngineModelInterface.GetNormalizedBinValue(i);
       }
     }
 };

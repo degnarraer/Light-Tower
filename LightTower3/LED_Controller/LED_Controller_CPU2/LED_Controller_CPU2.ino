@@ -47,39 +47,36 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    ManagerTaskLoop,                      // Function to implement the task
-    "ManagerTask",                        // Name of the task
+    ManagerTaskLoop,                // Function to implement the task
+    "ManagerTask",                  // Name of the task
     10000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
-    &ManagerTask,                         // Task handle.
+    &ManagerTask,                   // Task handle.
     0                               // Core where the task should run
   );
-  delay(500);
   
   xTaskCreatePinnedToCore
   (
-    SerialDataTaskLoop,                      // Function to implement the task
-    "SerialDataTask",                        // Name of the task
+    SerialDataTaskLoop,             // Function to implement the task
+    "SerialDataTask",               // Name of the task
     10000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
-    &SerialDataTask,                         // Task handle.
+    &SerialDataTask,                // Task handle.
     0                               // Core where the task should run
   );
-  delay(500);
   
   xTaskCreatePinnedToCore
   (
-    VisualizationTaskLoop,                      // Function to implement the task
-    "VisualizationTask",                        // Name of the task
-    10000,                          // Stack size in words
+    VisualizationTaskLoop,          // Function to implement the task
+    "VisualizationTask",            // Name of the task
+    50000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
-    &VisualizationTask,                         // Task handle.
+    &VisualizationTask,             // Task handle.
     0                               // Core where the task should run
   );
-  delay(500);
 }
 
 void loop() {
@@ -91,7 +88,7 @@ void ManagerTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_Manager.RunTask();
+    //m_Manager.RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -107,6 +104,9 @@ void SerialDataTaskLoop(void * parameter)
 
 void VisualizationTaskLoop(void * parameter)
 {
+  m_Scheduler.AddTask(m_CalculateFPS);
+  m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
+  m_Scheduler.AddTask(m_VisualizationPlayer);
   while(true)
   {
     m_Scheduler.RunScheduler();

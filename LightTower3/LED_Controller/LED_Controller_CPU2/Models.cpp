@@ -18,6 +18,22 @@
  
 #include "Models.h"
 
+//Task Interface
+void StatisticalEngineModelInterface::Setup()
+{ 
+  Serial << GetTitle() << " Setup\n";
+  m_StatisticalEngine.ConnectCallback(this);
+  AddTask(m_StatisticalEngine);
+}
+bool StatisticalEngineModelInterface::CanRunMyScheduledTask()
+{ 
+  m_StatisticalEngine.SetProcessFFTStatus(UsersRequireFFT());
+  return true; 
+}
+void StatisticalEngineModelInterface::RunMyScheduledTask()
+{
+}
+
 bool BandData::operator == (const BandData& a)
 {
   return (true == ((a.Power == Power) && (a.Band == Band) && (a.Color == Color))) ? true : false;
@@ -64,20 +80,6 @@ bool Coordinates::operator!=(const Coordinates& a)
   return (true == ((a.Position.X == Position.X) && (a.Position.Y == Position.Y) && (a.Size.W == Size.W) && (a.Size.H == Size.H))) ? false : true;
 }
 
-void StatisticalEngineModelInterface::Setup()
-{ 
-  m_StatisticalEngine.ConnectCallback(this);
-  AddTask(m_StatisticalEngine);
-}
-bool StatisticalEngineModelInterface::CanRunMyScheduledTask()
-{ 
-  m_StatisticalEngine.SetProcessFFTStatus(UsersRequireFFT());
-  return true; 
-}
-void StatisticalEngineModelInterface::RunMyScheduledTask()
-{
-}
-
 //StatisticalEngine Getters
 unsigned int StatisticalEngineModelInterface::GetNumberOfBands() {
   return m_StatisticalEngine.GetNumberOfBands();
@@ -93,10 +95,6 @@ float StatisticalEngineModelInterface::GetBandAverageForABandOutOfNBands(unsigne
 }
 float StatisticalEngineModelInterface::GetBandValue(unsigned int band, unsigned int depth) {
   return m_StatisticalEngine.GetBandValue(band, depth);
-}
-float StatisticalEngineModelInterface::GetNormalizedBinValue(unsigned int bin)
-{
-  return 0; //TO DO REMOVE THIS
 }
 
 void Model::Setup()

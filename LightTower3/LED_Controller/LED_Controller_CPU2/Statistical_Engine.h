@@ -19,6 +19,8 @@
 #ifndef StatisticalEngine_H
 #define StatisticalEngine_H
 
+#define STATISTICAL_ENGINE_MEMORY_DEBUG true
+
 #include <limits.h>
 #include "TaskInterface.h"
 #include "Streaming.h"
@@ -75,13 +77,15 @@ public:
     MicrophoneMeasureCalleeInterface *m_cb;
 };
 
-class StatisticalEngine : public Task
+class StatisticalEngine : public NamedItem
+                        , public Task
                         , public MicrophoneMeasureCallerInterface
                         , public CommonUtils
 {
   public:
     StatisticalEngine()
-      : Task("StatisticalEngine")
+      : NamedItem("StatisticalEngine")
+      , Task(GetTitle())
       , m_Power(0)
       , m_PowerDb(0){}
     virtual ~StatisticalEngine()
@@ -143,14 +147,14 @@ class StatisticalEngine : public Task
     int currentAverageBandIndex = -1;
     void UpdateBandArray();
     void UpdateRunningAverageBandArray();
-  
+
     //Task Interface
     void Setup();
     void RunMyPreTask(){}
     bool CanRunMyScheduledTask();
     void RunMyScheduledTask();
     void RunMyPostTask(){}
-
+    
     //Main Output
     float m_Power;
     float m_PowerDb;

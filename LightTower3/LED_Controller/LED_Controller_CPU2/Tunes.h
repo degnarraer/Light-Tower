@@ -22,7 +22,7 @@
 #include <math.h>
 
 //Output Debug Messages
-const bool   debugMode = false;
+const bool   debugMode = true;
 const int    debugLevel = 1;
 
 const bool   debugNanInf = false;
@@ -38,7 +38,7 @@ const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugModels = false;
 const bool   debugGravitationalModel = false;
-const bool   debugMemory = false;
+const bool   debugMemory = true;
 const bool   debugFreeMemory = false;
 const bool   debugAssertions = false;
 const bool   debugRequired = ( debugMode || 

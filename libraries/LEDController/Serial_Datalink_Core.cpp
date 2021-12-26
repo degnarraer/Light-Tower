@@ -36,7 +36,6 @@ void SerialDataLinkCore::Setup()
 
   DataItemConfig_t* ConfigFile = GetConfig();
   m_DataItemCount = GetConfigCount();
-  Serial << "Count: " << m_DataItemCount << "\n";
   size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
   Serial << GetTitle() << ": Allocating " << m_DataItemCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
   m_DataItem = new DataItem_t[m_DataItemCount];

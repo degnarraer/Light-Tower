@@ -24,8 +24,8 @@
 CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
-  calculateFPS2.Setup();
   if(false == m_MemoryIsAllocated) AllocateMemory();
+  calculateFPS2.Setup();
 }
 
 bool StatisticalEngine::NewDataReady()
@@ -63,15 +63,15 @@ void StatisticalEngine::RunMyScheduledTask()
   m_Power = (m_Right_Channel_Pow_Normalized + m_Left_Channel_Pow_Normalized) / 2;
   m_PowerDb = (m_Right_Channel_Db + m_Left_Channel_Db ) / 2;
 
-    m_signalMin;
-    m_signalMax;
-  UpdateSoundState();
-  UpdateBandArray();
+  //m_signalMin;
+  //m_signalMax;
+  //UpdateSoundState();
+  //UpdateBandArray();
 }
 
 void StatisticalEngine::AllocateMemory()
 {
-  //Serial << GetTitle() << ": Allocating Memory.\n";
+  Serial << GetTitle() << ": Allocating Memory.\n";
   m_Right_Band_Values = (int16_t*)malloc(m_BandInputByteCount);
   m_Left_Band_Values = (int16_t*)malloc(m_BandInputByteCount);
   
@@ -92,7 +92,7 @@ void StatisticalEngine::AllocateMemory()
 
 void StatisticalEngine::FreeMemory()
 {
-  //Serial << GetTitle() << ": Freeing Memory.\n";
+  Serial << GetTitle() << ": Freeing Memory.\n";
   
   delete m_Right_Band_Values;
   delete m_Left_Band_Values;
