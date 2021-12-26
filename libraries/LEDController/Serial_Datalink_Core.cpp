@@ -32,7 +32,7 @@ void SerialDataLinkCore::Setup()
   Serial << GetTitle() << " Configuring Serial Communication\n";
   hSerial.setRxBufferSize(4096);
   hSerial.flush();
-  hSerial.begin(400000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
+  hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
   hSerial.flush();
 
   DataItemConfig_t* ConfigFile = GetConfig();

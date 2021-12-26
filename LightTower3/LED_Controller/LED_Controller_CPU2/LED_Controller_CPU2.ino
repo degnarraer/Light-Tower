@@ -113,7 +113,7 @@ void VisualizationTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    m_Scheduler.RunScheduler();
+    //m_Scheduler.RunScheduler();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
