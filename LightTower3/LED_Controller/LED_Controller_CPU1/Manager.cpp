@@ -288,7 +288,6 @@ void Manager::ProcessRightFFTDataBufferQueue()
                                    , m_Sound_Processor.GetRightChannelPowerMaxSize()
                                    , false
                                    , false );
-
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()

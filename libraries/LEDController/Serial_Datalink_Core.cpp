@@ -30,9 +30,10 @@ SerialDataLinkCore::~SerialDataLinkCore()
 void SerialDataLinkCore::Setup()
 {
   Serial << GetTitle() << " Configuring Serial Communication\n";
-  hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
+  hSerial.setRxBufferSize(4096);
   hSerial.flush();
-  delay(500);
+  hSerial.begin(400000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit        
+  hSerial.flush();
 
   DataItemConfig_t* ConfigFile = GetConfig();
   m_DataItemCount = GetConfigCount();
@@ -96,6 +97,7 @@ void SerialDataLinkCore::Setup()
     m_DataItem[i].Object = Object;
 	SetDataItems(m_DataItem, m_DataItemCount);
     Serial << GetTitle() << ": Successfully Saved DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
+	CheckForNewSerialData();
   }
 }
 
@@ -156,7 +158,7 @@ void SerialDataLinkCore::CheckForNewSerialData()
 	  m_InboundStringData.trim();
 	  if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
 	  DecodeAndStoreData(m_InboundStringData);
-	  m_InboundStringData = "";
+	  m_InboundStringData.clear();
 	}
   }
 }

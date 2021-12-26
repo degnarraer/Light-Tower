@@ -9,7 +9,7 @@
 #define I2S_BUFFER_SIZE 100
 
 TaskHandle_t ManagerTask;
-TaskHandle_t SerialDataTask;
+TaskHandle_t SerialDataRXTask;
 TaskHandle_t VisualizationTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
@@ -53,21 +53,21 @@ void setup() {
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
-    10000,                          // Stack size in words
+    30000,                          // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &ManagerTask,                   // Task handle.
     0                               // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    SerialDataTaskLoop,             // Function to implement the task
-    "SerialDataTask",               // Name of the task
-    10000,                          // Stack size in words
+    SerialDataRXTaskLoop,           // Function to implement the task
+    "SerialDataRXTask",             // Name of the task
+    30000,                          // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
-    &SerialDataTask,                // Task handle.
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &SerialDataRXTask,              // Task handle.
     0                               // Core where the task should run
   );
   
@@ -75,9 +75,9 @@ void setup() {
   (
     VisualizationTaskLoop,          // Function to implement the task
     "VisualizationTask",            // Name of the task
-    50000,                         // Stack size in words
+    30000,                          // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
+    configMAX_PRIORITIES - 4,       // Priority of the task
     &VisualizationTask,             // Task handle.
     1                               // Core where the task should run
   );
@@ -92,15 +92,17 @@ void ManagerTaskLoop(void * parameter)
 {
   while(true)
   {
-    //m_Manager.RunTask();
+    yield();
+    m_Manager.RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
-void SerialDataTaskLoop(void * parameter)
+void SerialDataRXTaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -110,7 +112,8 @@ void VisualizationTaskLoop(void * parameter)
 {
   while(true)
   {
-    //m_Scheduler.RunScheduler();
+    yield();
+    m_Scheduler.RunScheduler();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

@@ -262,7 +262,7 @@ void I2S_Device::InstallDevice()
   err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queue);
   if (err != ESP_OK) {
     if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed installing driver: " << err << "\n";
-    while (true);
+    ESP.restart();
   }
   if (m_i2s_event_queue == NULL)
   {
@@ -271,12 +271,12 @@ void I2S_Device::InstallDevice()
   err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
   if (err != ESP_OK) {
     if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed setting clock: " << err << "\n";
-    while (true);
+    ESP.restart();
   }
   err = i2s_set_pin(m_I2S_PORT, &pin_config);
   if (err != ESP_OK) {
     if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed setting pin: " << err << "\n";
-    while (true);
+    ESP.restart();
   }
   if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Driver Installed.\n";
 }

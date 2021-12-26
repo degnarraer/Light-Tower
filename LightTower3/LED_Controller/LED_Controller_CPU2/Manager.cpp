@@ -48,7 +48,10 @@ void Manager::ProcessEventQueue()
   ProcessDataBufferQueue();
   ProcessRightChannelDataBufferQueue();
   ProcessLeftChannelDataBufferQueue();
+  ProcessRightChannelSoundDataQueue();
+  ProcessLeftChannelSoundDataQueue();
 }
+
 void Manager::ProcessDataBufferQueue()
 {
   if(NULL != m_I2S_In.GetDataBufferQueue())
