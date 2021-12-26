@@ -26,14 +26,13 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , 13
                                 , 14
                                 , I2S_PIN_NO_CHANGE );
-Manager m_Manager = Manager("Manager", m_I2S_In);
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
-
-DataSampler m_sampler;
 TaskScheduler m_Scheduler;
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
-StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(&m_sampler);
+StatisticalEngine m_StatisticalEngine = StatisticalEngine();
+StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
+Manager m_Manager = Manager("Manager", m_SerialDatalink, m_StatisticalEngine, m_I2S_In);
 
 void setup() {
   Serial.begin(500000);

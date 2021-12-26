@@ -96,11 +96,7 @@ float StatisticalEngineModelInterface::GetBandValue(unsigned int band, unsigned 
 }
 float StatisticalEngineModelInterface::GetNormalizedBinValue(unsigned int bin)
 {
-  return m_StatisticalEngine.GetNormalizedBinValue(bin);
-}
-//ADCInterruptHandler
-void StatisticalEngineModelInterface::HandleADCInterrupt() {
-  m_StatisticalEngine.HandleADCInterrupt();
+  return 0; //TO DO REMOVE THIS
 }
 
 void Model::Setup()

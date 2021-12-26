@@ -175,13 +175,14 @@ class StatisticalEngineModelInterface : public Task
                                       , MicrophoneMeasureCalleeInterface
 {
   public:
-    StatisticalEngineModelInterface(SampledDataInterface *sampler) : Task("StatisticalEngineModelInterface")
-                                                                   , m_sampler(sampler)
+    StatisticalEngineModelInterface(StatisticalEngine StatisticalEngine) : Task("StatisticalEngineModelInterface")
+                                                                         , m_StatisticalEngine(StatisticalEngine)
     { if (true == debugMemory) Serial << "New: StatisticalEngineModelInterface\n"; }
     virtual ~StatisticalEngineModelInterface()
     {if (true == debugMemory) Serial << "Delete: StatisticalEngineModelInterface\n";}
 
     //StatisticalEngine Getters
+    StatisticalEngine GetStatisticalEngine() { return m_StatisticalEngine; }
     unsigned int GetNumberOfBands();
     float GetNormalizedSoundPower();
     float GetBandAverage(unsigned int band, unsigned int depth);
@@ -196,8 +197,7 @@ class StatisticalEngineModelInterface : public Task
     void MicrophoneStateChange(SoundState) {}
 
   private:
-    SampledDataInterface *m_sampler;
-    StatisticalEngine m_StatisticalEngine = StatisticalEngine(m_sampler);
+    StatisticalEngine &m_StatisticalEngine;
     //Task
     void Setup();
     void RunMyPreTask(){}

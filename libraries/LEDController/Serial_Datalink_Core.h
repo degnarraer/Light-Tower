@@ -20,7 +20,7 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG true
+#define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
 
 #include <HardwareSerial.h>
@@ -43,18 +43,20 @@ class DataSerializer: public CommonUtils
 		
 		String Serialize(String Name, String DataType, void* Object, size_t ByteCount)
 		{
+			int32_t CheckSum = 0;
 			docOut.clear();
 			docOut["Name"] = Name;
 			docOut["Count"] = ByteCount;
 			docOut["DataType"] = DataType;
-			JsonArray data = docOut.createNestedArray("data");
+			JsonArray data = docOut.createNestedArray("Data");
 			for(int i = 0; i < ByteCount; ++i)
 			{
 				char Out[2];
 				uint8_t Value = ((uint8_t*)Object)[i];
-				sprintf(Out, "%02x", Value);
-				data.add(String(Out));
+				CheckSum += Value;
+				data.add(Value);
 			}
+			docOut["CheckSum"] = CheckSum;
 			String Result;
 			serializeJson(docOut, Result);
 			return Result;
@@ -65,8 +67,7 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				Serial << "deserializeJson() failed\n";
-				//Serial << error.f_str() << "\n";
+				Serial << "Deserialize failed: " << error.f_str() << "\n";
 				return;
 			}
 			else
@@ -79,15 +80,38 @@ class DataSerializer: public CommonUtils
 						String DocName = docIn["Name"];
 						if(true == ItemName.equals(DocName))
 						{
-							Serial << "Received: " << m_DataItem[i].Name << "\n";
+							int CheckSumCalc = 0;
+							int CheckSumIn = docIn["CheckSum"];
+							int ByteCountIn = docIn["Count"];
+							int ByteCountCalc = 0;
+							for(int j = 0; j < docIn["Data"].size(); ++j)
+							{
+								CheckSumCalc += (uint8_t)(docIn["Data"][j]);
+								++ByteCountCalc;
+							}
+							if(CheckSumCalc == CheckSumIn && ByteCountCalc == ByteCountIn)
+							{
+								uint8_t* Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);
+								int Index = 0;
+								for(int j = 0; j < docIn["Data"].size(); ++j)
+								{
+									Buffer[Index] = (uint8_t)(docIn["Data"][j]);
+								}
+								PushValueToQueue(&Buffer, m_DataItem[i].QueueHandle_RX, false);
+								delete Buffer;								
+							}
+							else
+							{
+								Serial << "Deserialize failed: Checksum Error\n";
+							}
 						}
 					}
 				}
 			}
 		}
 	private:
-		StaticJsonDocument<1000> docIn;
-		StaticJsonDocument<1000> docOut;
+		StaticJsonDocument<2000> docIn;
+		StaticJsonDocument<2000> docOut;
 		DataItem_t* m_DataItem = NULL;
 		size_t& m_DataItemCount;
 };
@@ -106,6 +130,7 @@ class SerialDataLinkCore: public NamedItem
     void ProcessDataTXEventQueue();
 	QueueHandle_t GetQueueHandleRXForDataItem(String Name);
 	QueueHandle_t GetQueueHandleTXForDataItem(String Name);
+	size_t GetByteCountForDataItem(String Name);
   private:
   DataItem_t* m_DataItem = NULL;
   size_t m_DataItemCount = 0;

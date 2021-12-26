@@ -129,6 +129,21 @@ QueueHandle_t SerialDataLinkCore::GetQueueHandleTXForDataItem(String Name)
 	}
 	return NULL;
 }
+	
+size_t SerialDataLinkCore::GetByteCountForDataItem(String Name)
+{
+	if(NULL != m_DataItem)
+	{
+		for(int i = 0; i < m_DataItemCount; ++i)
+		{
+			if(Name == m_DataItem[i].Name)
+			{
+				return m_DataItem[i].Count;
+			}
+		}
+	}
+	return NULL;
+}
 
 void SerialDataLinkCore::CheckForNewSerialData()
 {

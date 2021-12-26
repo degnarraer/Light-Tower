@@ -19,8 +19,12 @@
 #include "Manager.h"
 
 Manager::Manager( String Title
-                 , I2S_Device& I2S_In): NamedItem(Title)
-                                      , m_I2S_In(I2S_In)
+                , SerialDataLink &SerialDataLink
+                , StatisticalEngine &StatisticalEngine
+                , I2S_Device& I2S_In): NamedItem(Title)
+                                     , m_SerialDataLink(SerialDataLink)
+                                     , m_StatisticalEngine(StatisticalEngine)
+                                     , m_I2S_In(I2S_In)
 {
 }
 Manager::~Manager()
@@ -40,6 +44,12 @@ void Manager::RunTask()
 }
 
 void Manager::ProcessEventQueue()
+{
+  ProcessDataBufferQueue();
+  ProcessRightChannelDataBufferQueue();
+  ProcessLeftChannelDataBufferQueue();
+}
+void Manager::ProcessDataBufferQueue()
 {
   if(NULL != m_I2S_In.GetDataBufferQueue())
   {
@@ -64,7 +74,9 @@ void Manager::ProcessEventQueue()
       delete DataBuffer;
     }
   }
-  
+}
+void Manager::ProcessRightChannelDataBufferQueue()
+{
   if(NULL != m_I2S_In.GetRightDataBufferQueue())
   {
     if(uxQueueMessagesWaiting(m_I2S_In.GetRightDataBufferQueue()) > 0)
@@ -88,7 +100,9 @@ void Manager::ProcessEventQueue()
       delete DataBuffer;
     }
   }
-  
+}
+void Manager::ProcessLeftChannelDataBufferQueue()
+{
   if(NULL != m_I2S_In.GetLeftDataBufferQueue())
   {
     if(uxQueueMessagesWaiting(m_I2S_In.GetLeftDataBufferQueue()) > 0)
@@ -111,5 +125,41 @@ void Manager::ProcessEventQueue()
       }
       delete DataBuffer;
     }
-  }
+  } 
+}
+void Manager::ProcessRightChannelSoundDataQueue()
+{
+  MoveDataFromQueueToQueue<int16_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_R")
+                                   , m_StatisticalEngine.GetFFTRightBandDataInputQueue()
+                                   , m_StatisticalEngine.GetFFTRightBandDataBufferSize()
+                                   , false
+                                   , false );
+
+  MoveDataFromQueueToQueue<float>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Pow")
+                                 , m_StatisticalEngine.GetRightChannelNormalizedPowerInputQueue()
+                                 , m_StatisticalEngine.GetRightChannelNormalizedPowerSize()
+                                 , false
+                                 , false );
+                          
+  MoveDataFromQueueToQueue<float>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_DB")
+                                 , m_StatisticalEngine.GetRightChannelDBInputQueue()
+                                 , m_StatisticalEngine.GetRightChannelDBSize()
+                                 , false
+                                 , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Min")
+                                   , m_StatisticalEngine.GetRightChannelPowerMinInputQueue()
+                                   , m_StatisticalEngine.GetRightChannelPowerMinSize()
+                                   , false
+                                   , false );
+                                   
+  MoveDataFromQueueToQueue<int32_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Max")
+                                   , m_StatisticalEngine.GetRightChannelPowerMaxInputQueue()
+                                   , m_StatisticalEngine.GetRightChannelPowerMaxSize()
+                                   , false
+                                   , false );
+}
+void Manager::ProcessLeftChannelSoundDataQueue()
+{
+  
 }

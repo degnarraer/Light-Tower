@@ -23,7 +23,7 @@
 #include "TaskInterface.h"
 #include "Streaming.h"
 #include "Tunes.h"
-#include "DataSampler.h"
+#include "Helpers.h"
 
 enum SoundState
 {
@@ -77,41 +77,66 @@ public:
 
 class StatisticalEngine : public Task
                         , public MicrophoneMeasureCallerInterface
+                        , public CommonUtils
 {
   public:
-    StatisticalEngine(SampledDataInterface *sampler)
+    StatisticalEngine()
       : Task("StatisticalEngine")
-      , m_Sampler(sampler)
       , m_Power(0)
       , m_PowerDb(0){}
-  
-    void HandleADCInterrupt();
+    virtual ~StatisticalEngine()
+    {
+      FreeMemory();
+    }
     SoundState GetSoundState();
 
-  void SetProcessFFTStatus(bool value) {m_ProcessFFT = value; }
-  bool GetProcessFFTStatus() {return m_ProcessFFT; }
+    void SetProcessFFTStatus(bool value) {m_ProcessFFT = value; }
+    bool GetProcessFFTStatus() {return m_ProcessFFT; }
+    void AllocateMemory();
+    void FreeMemory();
   
-  //Main Data Interface
-  int GetFFTBinIndexForFrequency(float freq);
-  float GetFreqForBin(unsigned int bin);
-  int GetFFTData(int position);  
+    //Main Data Interface
+    int GetFFTBinIndexForFrequency(float freq);
+    float GetFreqForBin(unsigned int bin);
+    int GetFFTData(int position);  
   
-  //Power Getters
-  float GetNormalizedSoundPower();
+    //Right Channel Input Data Queues
+    QueueHandle_t GetFFTRightBandDataInputQueue() { return m_FFT_Right_BandData_Input_Buffer_Queue; }
+    size_t GetFFTRightBandDataBufferSize() { return m_BandInputByteCount; }
+    QueueHandle_t GetRightChannelNormalizedPowerInputQueue() { return m_Right_Channel_Normalized_Power_Input_Buffer_Queue; }
+    size_t GetRightChannelNormalizedPowerSize() { return sizeof(m_Right_Channel_Pow_Normalized); }
+    QueueHandle_t GetRightChannelDBInputQueue() { return m_Right_Channel_DB_Input_Buffer_Queue; }
+    size_t GetRightChannelDBSize() { return sizeof(m_Right_Channel_Db); }
+    QueueHandle_t GetRightChannelPowerMinInputQueue() { return m_Right_Channel_Pow_Min_Input_Buffer_Queue; }
+    size_t GetRightChannelPowerMinSize() { return sizeof(m_Right_Channel_Min); }
+    QueueHandle_t GetRightChannelPowerMaxInputQueue() { return m_Right_Channel_Pow_Max_Input_Buffer_Queue; }
+    size_t GetRightChannelPowerMaxSize() { return sizeof(m_Right_Channel_Max); }
   
-  //Band Data Getters
-  unsigned int GetNumberOfBands() { return m_NumBands; }
-  int GetBandValue(unsigned int band, unsigned int depth);
-  float GetBandAverage(unsigned band, unsigned int depth);
-  int GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
-
-  //Bin Data Getters
-  float GetNormalizedBinValue(unsigned int bin);
+    //Left Channel Input Data Queues
+    QueueHandle_t GetFFTLeftBandDataInputQueue() { return m_FFT_Left_BandData_Input_Buffer_Queue; }
+    size_t GetFFTLeftBandDataBufferSize() { return m_BandInputByteCount; }
+    QueueHandle_t GetLeftChannelNormalizedPowerInputQueue() { return m_Left_Channel_Normalized_Power_Input_Buffer_Queue; }
+    size_t GetLeftChannelNormalizedPowerSize() { return sizeof(m_Left_Channel_Pow_Normalized); }
+    QueueHandle_t GetLeftChannelDBInputQueue() { return m_Left_Channel_DB_Input_Buffer_Queue; }
+    size_t GetLeftChannelDBSize() { return sizeof(m_Left_Channel_Db); }
+    QueueHandle_t GetLeftChannelPowerMinInputQueue() { return m_Left_Channel_Pow_Min_Input_Buffer_Queue; }
+    size_t GetLeftChannelPowerMinSize() { return sizeof(m_Left_Channel_Min); }
+    QueueHandle_t GetLeftChannelPowerMaxInputQueue() { return m_Left_Channel_Pow_Max_Input_Buffer_Queue; }
+    size_t GetLeftChannelPowerMaxSize() { return sizeof(m_Left_Channel_Max); }
+  
+    //Power Getters
+    float GetNormalizedSoundPower();
+    
+    //Band Data Getters
+    unsigned int GetNumberOfBands() { return m_NumBands; }
+    int GetBandValue(unsigned int band, unsigned int depth);
+    float GetBandAverage(unsigned band, unsigned int depth);
+    int GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
     bool m_ProcessFFT = true;
     //BAND Circular Buffer
-    static const unsigned int m_NumBands = 31; //8 or 31
+    static const unsigned int m_NumBands = 32; //Need way to set this
     int BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
     int BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
@@ -126,24 +151,47 @@ class StatisticalEngine : public Task
     void RunMyScheduledTask();
     void RunMyPostTask(){}
 
-    //Mic Data Variable
-    SampledDataInterface *m_Sampler;
+    //Main Output
     float m_Power;
     float m_PowerDb;
-    int16_t m_data[FFT_MAX];
     int m_signalMin;
     int m_signalMax;
     float m_AmpGain = 1.0;
     float m_FFTGain = 1.0;
     
-    void GetSampledSoundData();
     bool NewDataReady();
-    void AnalyzeSound();
-    void  UpdateSoundState();
-    void  setup_AtoD();
+    void UpdateSoundState();
 
  //Sound Detection
   private:
+    bool m_MemoryIsAllocated = false;
+    size_t m_BandInputByteCount = sizeof(int16_t) * m_NumBands;
+    
+    //Right Channel Input Sound Data
+    int16_t* m_Right_Band_Values;
+    QueueHandle_t m_FFT_Right_BandData_Input_Buffer_Queue = NULL;
+    float m_Right_Channel_Pow_Normalized;
+    QueueHandle_t m_Right_Channel_Normalized_Power_Input_Buffer_Queue = NULL;
+    float m_Right_Channel_Db;
+    QueueHandle_t m_Right_Channel_DB_Input_Buffer_Queue = NULL;
+    int16_t m_Right_Channel_Min;
+    QueueHandle_t m_Right_Channel_Pow_Min_Input_Buffer_Queue = NULL;
+    int16_t m_Right_Channel_Max;
+    QueueHandle_t m_Right_Channel_Pow_Max_Input_Buffer_Queue = NULL;
+
+    //Left Channel Input Sound Data
+    int16_t* m_Left_Band_Values;
+    QueueHandle_t m_FFT_Left_BandData_Input_Buffer_Queue = NULL;
+    float m_Left_Channel_Pow_Normalized;
+    QueueHandle_t m_Left_Channel_Normalized_Power_Input_Buffer_Queue = NULL;
+    float m_Left_Channel_Db;
+    QueueHandle_t m_Left_Channel_DB_Input_Buffer_Queue = NULL;
+    int16_t m_Left_Channel_Min;
+    QueueHandle_t m_Left_Channel_Pow_Min_Input_Buffer_Queue = NULL;
+    int16_t m_Left_Channel_Max;
+    QueueHandle_t m_Left_Channel_Pow_Max_Input_Buffer_Queue = NULL;
+
+    //Sound Detection
     const int     m_silenceDetectedThreshold = silenceDetectedThreshold;
     const int     m_soundDetectedThreshold = soundDetectedThreshold;
     const int     m_silenceIntegratorMax = silenceIntegratorMax;

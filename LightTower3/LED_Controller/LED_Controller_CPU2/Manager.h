@@ -26,12 +26,18 @@
 
 #include <I2S_Device.h>
 #include <DataTypes.h>
+#include "Serial_Datalink_Config.h"
+#include "Statistical_Engine.h"
+#include "Helpers.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
+             , public CommonUtils
 {
   public:
     Manager( String Title
+           , SerialDataLink &SerialDataLink
+           , StatisticalEngine &StatisticalEngine
            , I2S_Device& I2S_In);
     virtual ~Manager();
     void Setup();
@@ -44,7 +50,15 @@ class Manager: public NamedItem
     void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
     
   private:
+    SerialDataLink &m_SerialDataLink;
+    StatisticalEngine &m_StatisticalEngine;
     I2S_Device& m_I2S_In;
+    
+    void ProcessDataBufferQueue();
+    void ProcessRightChannelDataBufferQueue();
+    void ProcessLeftChannelDataBufferQueue();
+    void ProcessRightChannelSoundDataQueue();
+    void ProcessLeftChannelSoundDataQueue();
 };
 
 #endif

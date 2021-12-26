@@ -81,6 +81,26 @@ class CommonUtils
 			}
 		}
 		
+		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool DebugMessage)
+		{
+			if(NULL != Queue)
+			{
+				size_t QueueCount = uxQueueMessagesWaiting(Queue);
+				if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+				if(QueueCount > 0)
+				{
+					void* DataBuffer = (void*)malloc(ByteCount);
+					if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
+					{
+						memcpy(Value, DataBuffer, ByteCount);
+						return true;
+					}
+					delete DataBuffer;
+				}
+			}
+			return false;
+		}
+		
 		DataType_t GetDataTypeFromString(String DataType)
 		{
 			for(int i = 0; i < sizeof(DataTypeStrings) / sizeof(DataTypeStrings[0]); ++i)
