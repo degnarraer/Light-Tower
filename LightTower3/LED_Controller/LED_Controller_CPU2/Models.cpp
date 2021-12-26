@@ -22,7 +22,7 @@
 void StatisticalEngineModelInterface::Setup()
 { 
   Serial << GetTitle() << " Setup\n";
-  m_StatisticalEngine.ConnectCallback(this);
+  m_StatisticalEngine.ConnectMicrophoneMeasureCallerInterfaceCallback(this);
   AddTask(m_StatisticalEngine);
 }
 bool StatisticalEngineModelInterface::CanRunMyScheduledTask()

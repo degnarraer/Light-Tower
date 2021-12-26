@@ -21,11 +21,11 @@
 #include "Statistical_Engine.h"
 
 
-CalculateFPS calculateFPS2("Statistical Engine", 1000);
+//CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
   if(false == m_MemoryIsAllocated) AllocateMemory();
-  calculateFPS2.Setup();
+  //calculateFPS2.Setup();
 }
 
 bool StatisticalEngine::NewDataReady()
@@ -49,7 +49,7 @@ bool StatisticalEngine::CanRunMyScheduledTask()
 {
   if(true == NewDataReady())
   {
-    if(true == calculateFPS2.CanRunMyScheduledTask()) { calculateFPS2.RunMyScheduledTask(); }
+    //if(true == calculateFPS2.CanRunMyScheduledTask()) { calculateFPS2.RunMyScheduledTask(); }
     return true;
   }
   else

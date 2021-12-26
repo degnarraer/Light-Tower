@@ -31,7 +31,7 @@ TaskScheduler m_Scheduler;
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
-VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
+//VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 Manager m_Manager = Manager("Manager", m_SerialDatalink, m_StatisticalEngine, m_I2S_In);
 
 void setup() {
@@ -44,6 +44,10 @@ void setup() {
   m_SerialDatalink.Setup();
   m_I2S_In.Setup();
   m_Manager.Setup();
+  
+  m_Scheduler.AddTask(m_CalculateFPS);
+  m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
+  //m_Scheduler.AddTask(m_VisualizationPlayer);
   
   xTaskCreatePinnedToCore
   (
@@ -71,11 +75,11 @@ void setup() {
   (
     VisualizationTaskLoop,          // Function to implement the task
     "VisualizationTask",            // Name of the task
-    50000,                          // Stack size in words
+    50000,                         // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
     &VisualizationTask,             // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   );
 }
 
@@ -104,12 +108,9 @@ void SerialDataTaskLoop(void * parameter)
 
 void VisualizationTaskLoop(void * parameter)
 {
-  m_Scheduler.AddTask(m_CalculateFPS);
-  m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
-  m_Scheduler.AddTask(m_VisualizationPlayer);
   while(true)
   {
-    m_Scheduler.RunScheduler();
+    //m_Scheduler.RunScheduler();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

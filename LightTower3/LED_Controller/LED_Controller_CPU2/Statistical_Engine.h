@@ -70,7 +70,7 @@ public:
 class MicrophoneMeasureCallerInterface
 {
 public:
-    void ConnectCallback(MicrophoneMeasureCalleeInterface *cb)
+    void ConnectMicrophoneMeasureCallerInterfaceCallback(MicrophoneMeasureCalleeInterface *cb)
     {
         m_cb = cb;
     }
