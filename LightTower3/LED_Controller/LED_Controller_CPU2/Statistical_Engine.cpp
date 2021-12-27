@@ -101,7 +101,9 @@ void StatisticalEngine::RunMyScheduledTask()
     m_signalMin = (m_Right_Channel_Min + m_Left_Channel_Min) / 2;
     m_signalMax = (m_Right_Channel_Max + m_Left_Channel_Max) / 2;;
     
-    Serial << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
+    Serial << "Left Channel Data: " << m_Left_Channel_Pow_Normalized << "|" << m_Left_Channel_Db << "|" << m_Left_Channel_Min << "|" << m_Left_Channel_Max << "\n";
+    Serial << "Right Channel Data: " << m_Right_Channel_Pow_Normalized << "|" << m_Right_Channel_Db << "|" << m_Right_Channel_Min << "|" << m_Right_Channel_Max << "\n";
+    Serial << "Combined Channel Data: " << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
     //UpdateSoundState();
   }
 

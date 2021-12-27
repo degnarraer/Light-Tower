@@ -124,12 +124,12 @@ void Sound_Processor::ProcessRightChannelSoundData()
       NULL != m_Right_Channel_Pow_Input_Buffer_Queue )
   {
     QueueHandle_t Queues[2] = { m_FFT_Right_BandData_Input_Buffer_Queue, m_Right_Channel_Pow_Input_Buffer_Queue };
-    MoveDataFromQueueToQueues<int32_t>( m_FFT_Right_Data_Input_Buffer_queue
-                                      , Queues
-                                      , 2
-                                      , m_InputByteCount
-                                      , false
-                                      , false );
+    MoveDataFromQueueToQueues( m_FFT_Right_Data_Input_Buffer_queue
+                             , Queues
+                             , 2
+                             , m_InputByteCount
+                             , false
+                             , false );
   }
 }
 
@@ -221,8 +221,8 @@ void Sound_Processor::ProcessRightChannelPower()
     else
     {
       float peakToPeak = 0;
-      int minValue = INT16_MAX;
-      int maxValue = -INT16_MAX;
+      int32_t minValue = INT32_MAX;
+      int32_t maxValue = -INT32_MAX;
       for(int i = 0; i < m_InputSampleCount; ++i)
       {
         if(DataBuffer[i] < minValue)
@@ -235,7 +235,7 @@ void Sound_Processor::ProcessRightChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Right_Channel_Pow_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
+      m_Right_Channel_Pow_Normalized = peakToPeak / (float)pow(2,32); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Right_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -262,12 +262,12 @@ void Sound_Processor::ProcessLeftChannelSoundData()
       NULL != m_Left_Channel_Pow_Input_Buffer_Queue )
   {
     QueueHandle_t Queues[2] = { m_FFT_Left_BandData_Input_Buffer_Queue, m_Left_Channel_Pow_Input_Buffer_Queue };
-    MoveDataFromQueueToQueues<int32_t>( m_FFT_Left_Data_Input_Buffer_queue
-                                      , Queues
-                                      , 2
-                                      , m_InputByteCount
-                                      , false
-                                      , false );
+    MoveDataFromQueueToQueues( m_FFT_Left_Data_Input_Buffer_queue
+                             , Queues
+                             , 2
+                             , m_InputByteCount
+                             , false
+                             , false );
   }
 }
 void Sound_Processor::ProcessLeftChannelFFT()

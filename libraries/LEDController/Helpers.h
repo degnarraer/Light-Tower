@@ -6,7 +6,6 @@
 class CommonUtils
 {
 	public:
-		template <class T>
 		void MoveDataFromQueueToQueue(QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
 		  if(NULL != TakeFromQueue && NULL != GiveToQueue)
@@ -15,7 +14,7 @@ class CommonUtils
 			if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
-			  T* DataBuffer = (T*)malloc(ByteCount);
+			  uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			  if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 			  {
 				if(true == DebugMessage)Serial << "Adding Data to Queue\n";
@@ -32,7 +31,7 @@ class CommonUtils
 			}
 		  }
 		}
-		template <class T>
+		
 		void MoveDataFromQueueToQueues(QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
 		  if(NULL != TakeFromQueue)
@@ -41,7 +40,7 @@ class CommonUtils
 			if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
-				T* DataBuffer = (T*)malloc(ByteCount);
+				uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 				if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 				{
 					for(int j = 0; j < GiveToQueueCount; ++j)

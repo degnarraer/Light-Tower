@@ -216,18 +216,18 @@ void Manager::ProcessRightChannelDataBufferQueue()
   switch(m_InputType)
   {
     case InputType_Microphone:
-      MoveDataFromQueueToQueue<int32_t>( m_Mic_In.GetRightDataBufferQueue()
-                                       , m_Sound_Processor.GetFFTRightDataInputQueue()
-                                       , m_Mic_In.GetChannelBytesToRead()
-                                       , false
-                                       , false );
+      MoveDataFromQueueToQueue( m_Mic_In.GetRightDataBufferQueue()
+                              , m_Sound_Processor.GetFFTRightDataInputQueue()
+                              , m_Mic_In.GetChannelBytesToRead()
+                              , false
+                              , false );
     break;
     case InputType_Bluetooth:
-      MoveDataFromQueueToQueue<int32_t>( m_BT.GetRightDataBufferQueue()
-                                       , m_Sound_Processor.GetFFTRightDataInputQueue()
-                                       , m_BT.GetChannelBytesToRead()
-                                       , false
-                                       , false );
+      MoveDataFromQueueToQueue( m_BT.GetRightDataBufferQueue()
+                              , m_Sound_Processor.GetFFTRightDataInputQueue()
+                              , m_BT.GetChannelBytesToRead()
+                              , false
+                              , false );
     break;
     default:
     break;
@@ -239,14 +239,14 @@ void Manager::ProcessLeftChannelDataBufferQueue()
   switch(m_InputType)
   {
     case InputType_Microphone:
-      MoveDataFromQueueToQueue<int32_t>( m_Mic_In.GetLeftDataBufferQueue()
+      MoveDataFromQueueToQueue( m_Mic_In.GetLeftDataBufferQueue()
                                        , m_Sound_Processor.GetFFTLeftDataInputQueue()
                                        , m_Mic_In.GetChannelBytesToRead()
                                        , false
                                        , false );
     break;
     case InputType_Bluetooth:
-      MoveDataFromQueueToQueue<int32_t>( m_BT.GetLeftDataBufferQueue()
+      MoveDataFromQueueToQueue( m_BT.GetLeftDataBufferQueue()
                                        , m_Sound_Processor.GetFFTLeftDataInputQueue()
                                        , m_BT.GetChannelBytesToRead()
                                        , false
@@ -259,66 +259,66 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 
 void Manager::ProcessRightFFTDataBufferQueue()
 {
-  MoveDataFromQueueToQueue<int16_t>( m_Sound_Processor.GetFFTRightBandDataOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleTXForDataItem("FFT_R")
-                                   , m_Sound_Processor.GetFFTRightBandDataBufferSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetFFTRightBandDataOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("FFT_R")
+                          , m_Sound_Processor.GetFFTRightBandDataBufferSize()
+                          , false
+                          , false );
 
-  MoveDataFromQueueToQueue<float>( m_Sound_Processor.GetRightChannelNormalizedPowerOutputQueue()
-                                 , m_SerialDataLink.GetQueueHandleTXForDataItem("R_Pow")
-                                 , m_Sound_Processor.GetRightChannelNormalizedPowerSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetRightChannelNormalizedPowerOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("R_Pow")
+                          , m_Sound_Processor.GetRightChannelNormalizedPowerSize()
+                          , false
+                          , false );
                           
-  MoveDataFromQueueToQueue<float>( m_Sound_Processor.GetRightChannelDBOutputQueue()
-                                 , m_SerialDataLink.GetQueueHandleTXForDataItem("R_DB")
-                                 , m_Sound_Processor.GetRightChannelDBSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetRightChannelDBOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("R_DB")
+                          , m_Sound_Processor.GetRightChannelDBSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelPowerMinOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleTXForDataItem("R_Min")
-                                   , m_Sound_Processor.GetRightChannelPowerMinSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetRightChannelPowerMinOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("R_Min")
+                          , m_Sound_Processor.GetRightChannelPowerMinSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetRightChannelPowerMaxOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleTXForDataItem("R_Max")
-                                   , m_Sound_Processor.GetRightChannelPowerMaxSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetRightChannelPowerMaxOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("R_Max")
+                          , m_Sound_Processor.GetRightChannelPowerMaxSize()
+                          , false
+                          , false );
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()
 {
-  MoveDataFromQueueToQueue<int16_t>( m_Sound_Processor.GetFFTLeftBandDataOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleTXForDataItem("FFT_L")
-                                   , m_Sound_Processor.GetFFTLeftBandDataBufferSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetFFTLeftBandDataOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("FFT_L")
+                          , m_Sound_Processor.GetFFTLeftBandDataBufferSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<float>( m_Sound_Processor.GetLeftChannelNormalizedPowerOutputQueue()
-                                 , m_SerialDataLink.GetQueueHandleTXForDataItem("L_Pow")
-                                 , m_Sound_Processor.GetLeftChannelNormalizedPowerSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetLeftChannelNormalizedPowerOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("L_Pow")
+                          , m_Sound_Processor.GetLeftChannelNormalizedPowerSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<float>( m_Sound_Processor.GetLeftChannelDBOutputQueue()
-                                 , m_SerialDataLink.GetQueueHandleTXForDataItem("L_DB")
-                                 , m_Sound_Processor.GetLeftChannelDBSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetLeftChannelDBOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("L_DB")
+                          , m_Sound_Processor.GetLeftChannelDBSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelPowerMinOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleTXForDataItem("L_Min")
-                                   , m_Sound_Processor.GetLeftChannelPowerMinSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetLeftChannelPowerMinOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("L_Min")
+                          , m_Sound_Processor.GetLeftChannelPowerMinSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_Sound_Processor.GetLeftChannelPowerMaxOutputQueue()
-                                   , m_SerialDataLink.GetQueueHandleTXForDataItem("L_Max")
-                                   , m_Sound_Processor.GetLeftChannelPowerMaxSize()
-                                   , false
-                                   , false );                                
+  MoveDataFromQueueToQueue( m_Sound_Processor.GetLeftChannelPowerMaxOutputQueue()
+                          , m_SerialDataLink.GetQueueHandleTXForDataItem("L_Max")
+                          , m_Sound_Processor.GetLeftChannelPowerMaxSize()
+                          , false
+                          , false );                                
 }

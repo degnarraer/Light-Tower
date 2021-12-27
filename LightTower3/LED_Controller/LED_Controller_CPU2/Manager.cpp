@@ -132,65 +132,65 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 }
 void Manager::ProcessRightChannelSoundDataQueue()
 {
-  MoveDataFromQueueToQueue<int16_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_R")
-                                   , m_StatisticalEngine.GetFFTRightBandDataInputQueue()
-                                   , m_StatisticalEngine.GetFFTRightBandDataBufferSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_R")
+                          , m_StatisticalEngine.GetFFTRightBandDataInputQueue()
+                          , m_StatisticalEngine.GetFFTRightBandDataBufferSize()
+                          , false
+                          , false );
 
-  MoveDataFromQueueToQueue<float>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Pow")
-                                 , m_StatisticalEngine.GetRightChannelNormalizedPowerInputQueue()
-                                 , m_StatisticalEngine.GetRightChannelNormalizedPowerSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Pow")
+                          , m_StatisticalEngine.GetRightChannelNormalizedPowerInputQueue()
+                          , m_StatisticalEngine.GetRightChannelNormalizedPowerSize()
+                          , false
+                          , false );
                           
-  MoveDataFromQueueToQueue<float>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_DB")
-                                 , m_StatisticalEngine.GetRightChannelDBInputQueue()
-                                 , m_StatisticalEngine.GetRightChannelDBSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("R_DB")
+                          , m_StatisticalEngine.GetRightChannelDBInputQueue()
+                          , m_StatisticalEngine.GetRightChannelDBSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Min")
-                                   , m_StatisticalEngine.GetRightChannelPowerMinInputQueue()
-                                   , m_StatisticalEngine.GetRightChannelPowerMinSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Min")
+                          , m_StatisticalEngine.GetRightChannelPowerMinInputQueue()
+                          , m_StatisticalEngine.GetRightChannelPowerMinSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Max")
-                                   , m_StatisticalEngine.GetRightChannelPowerMaxInputQueue()
-                                   , m_StatisticalEngine.GetRightChannelPowerMaxSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("R_Max")
+                          , m_StatisticalEngine.GetRightChannelPowerMaxInputQueue()
+                          , m_StatisticalEngine.GetRightChannelPowerMaxSize()
+                          , false
+                          , false );
 }
 void Manager::ProcessLeftChannelSoundDataQueue()
 {
-  MoveDataFromQueueToQueue<int16_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_L")
-                                   , m_StatisticalEngine.GetFFTLeftBandDataInputQueue()
-                                   , m_StatisticalEngine.GetFFTLeftBandDataBufferSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_L")
+                          , m_StatisticalEngine.GetFFTLeftBandDataInputQueue()
+                          , m_StatisticalEngine.GetFFTLeftBandDataBufferSize()
+                          , false
+                          , false );
 
-  MoveDataFromQueueToQueue<float>( m_SerialDataLink.GetQueueHandleRXForDataItem("L_Pow")
-                                 , m_StatisticalEngine.GetLeftChannelNormalizedPowerInputQueue()
-                                 , m_StatisticalEngine.GetLeftChannelNormalizedPowerSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("L_Pow")
+                          , m_StatisticalEngine.GetLeftChannelNormalizedPowerInputQueue()
+                          , m_StatisticalEngine.GetLeftChannelNormalizedPowerSize()
+                          , false
+                          , false );
                           
-  MoveDataFromQueueToQueue<float>( m_SerialDataLink.GetQueueHandleRXForDataItem("L_DB")
-                                 , m_StatisticalEngine.GetLeftChannelDBInputQueue()
-                                 , m_StatisticalEngine.GetLeftChannelDBSize()
-                                 , false
-                                 , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("L_DB")
+                          , m_StatisticalEngine.GetLeftChannelDBInputQueue()
+                          , m_StatisticalEngine.GetLeftChannelDBSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("L_Min")
-                                   , m_StatisticalEngine.GetLeftChannelPowerMinInputQueue()
-                                   , m_StatisticalEngine.GetLeftChannelPowerMinSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("L_Min")
+                          , m_StatisticalEngine.GetLeftChannelPowerMinInputQueue()
+                          , m_StatisticalEngine.GetLeftChannelPowerMinSize()
+                          , false
+                          , false );
                                    
-  MoveDataFromQueueToQueue<int32_t>( m_SerialDataLink.GetQueueHandleRXForDataItem("L_Max")
-                                   , m_StatisticalEngine.GetLeftChannelPowerMaxInputQueue()
-                                   , m_StatisticalEngine.GetLeftChannelPowerMaxSize()
-                                   , false
-                                   , false );
+  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("L_Max")
+                          , m_StatisticalEngine.GetLeftChannelPowerMaxInputQueue()
+                          , m_StatisticalEngine.GetLeftChannelPowerMaxSize()
+                          , false
+                          , false );
 }
