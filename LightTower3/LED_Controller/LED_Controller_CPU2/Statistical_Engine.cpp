@@ -32,7 +32,7 @@ bool StatisticalEngine::NewBandDataReady()
 {
   bool A = (uxQueueMessagesWaiting(m_FFT_Right_BandData_Input_Buffer_Queue) > 0);
   bool B = (uxQueueMessagesWaiting(m_FFT_Left_BandData_Input_Buffer_Queue) > 0);
-  Serial << A << "|" << B << "\n";
+  //Serial << A << "|" << B << "\n";
   if( A & B )
   {
     m_NewBandDataReady = true;
@@ -55,7 +55,7 @@ bool StatisticalEngine::NewSoundDataReady()
   bool F = (uxQueueMessagesWaiting(m_Left_Channel_DB_Input_Buffer_Queue) > 0);
   bool G = (uxQueueMessagesWaiting(m_Left_Channel_Pow_Min_Input_Buffer_Queue) > 0);
   bool H = (uxQueueMessagesWaiting(m_Left_Channel_Pow_Max_Input_Buffer_Queue) > 0);
-  Serial << A << "|" << B << "|" << C << "|" << D << "|" << E << "|" << F << "|" << G << "|" << H << "\n";
+  //Serial << A << "|" << B << "|" << C << "|" << D << "|" << E << "|" << F << "|" << G << "|" << H << "\n";
   if( A & B & C & D & E & F & G & H )
   {
     m_NewSoundDataReady = true;

@@ -13,8 +13,9 @@ TaskHandle_t SoundPowerTask;
 TaskHandle_t SerialDataLinkSendTask;
 TaskHandle_t SerialDataLinkReceiveTask;
 
+HardwareSerial m_hSerial = Serial2;
 Sound_Processor m_Sound_Processor = Sound_Processor("FFT Calculator");
-SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink");
+SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink", m_hSerial);
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
@@ -94,7 +95,14 @@ Manager m_Manager = Manager("Manager"
                            , m_Mic_In
                            , m_Mic_Out);
 
-void setup() {
+void setup() {  
+  //ESP32 Serial Communication
+  m_hSerial.end();
+  m_hSerial.setRxBufferSize(1024);
+  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
+  m_hSerial.updateBaudRate(400000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
+  m_hSerial.flush();
+  
   Serial.begin(500000);
   delay(500);
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";

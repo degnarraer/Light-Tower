@@ -83,21 +83,19 @@ class DataSerializer: public CommonUtils
 							int CheckSumCalc = 0;
 							int CheckSumIn = docIn["CheckSum"];
 							int ByteCountIn = docIn["Count"];
-							int ByteCountCalc = 0;
-							for(int j = 0; j < docIn["Data"].size(); ++j)
+							int ByteCountCalc = docIn["Data"].size();
+							for(int j = 0; j < ByteCountCalc; ++j)
 							{
 								CheckSumCalc += (uint8_t)(docIn["Data"][j]);
-								++ByteCountCalc;
 							}
 							if(CheckSumCalc == CheckSumIn && ByteCountCalc == ByteCountIn)
 							{
 								uint8_t* Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);
-								int Index = 0;
-								for(int j = 0; j < docIn["Data"].size(); ++j)
+								for(int j = 0; j < ByteCountIn; ++j)
 								{
-									Buffer[Index] = (uint8_t)(docIn["Data"][j]);
+									Buffer[j] = (uint8_t)(docIn["Data"][j]);
 								}
-								PushValueToQueue(&Buffer, m_DataItem[i].QueueHandle_RX, false);
+								PushValueToQueue(Buffer, m_DataItem[i].QueueHandle_RX, false);
 								delete Buffer;								
 							}
 							else
@@ -110,8 +108,8 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<2000> docIn;
-		StaticJsonDocument<2000> docOut;
+		StaticJsonDocument<3000> docIn;
+		StaticJsonDocument<3000> docOut;
 		DataItem_t* m_DataItem = NULL;
 		size_t& m_DataItemCount;
 };

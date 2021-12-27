@@ -151,7 +151,7 @@ void SerialDataLinkCore::CheckForNewSerialData()
 	if (ch=='\n') 
 	{
 	  m_InboundStringData.trim();
-	  if(true == SERIAL_RX_DEBUG) Serial << "Data Received from CPU 2: " << m_InboundStringData << "\n";
+	  if(true == SERIAL_RX_DEBUG) Serial << m_InboundStringData << "\n";
 	  DecodeAndStoreData(m_InboundStringData);
 	  m_InboundStringData.clear();
 	}

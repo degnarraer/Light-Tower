@@ -28,8 +28,8 @@ class SerialDataLink: public NamedItem
                     , public SerialDataLinkCore
 {
   public:
-    SerialDataLink(String Title): NamedItem(Title)
-                                , SerialDataLinkCore(Title) {}
+    SerialDataLink(String Title, HardwareSerial &hSerial): NamedItem(Title)
+                                                         , SerialDataLinkCore(Title, hSerial) {}
     virtual ~SerialDataLink(){}
     DataItemConfig_t* GetConfig() { return ItemConfig; }
     size_t GetConfigCount() { return m_ConfigCount; }

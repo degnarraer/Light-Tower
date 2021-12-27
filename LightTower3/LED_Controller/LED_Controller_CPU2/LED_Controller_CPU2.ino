@@ -26,6 +26,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , 13
                                 , 14
                                 , I2S_PIN_NO_CHANGE );
+                                
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 //VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
@@ -41,7 +42,7 @@ void setup() {
   m_hSerial.end();
   m_hSerial.setRxBufferSize(1024);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(500000);
+  m_hSerial.updateBaudRate(400000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
   //PC Serial Communication

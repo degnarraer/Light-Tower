@@ -77,7 +77,7 @@ class CommonUtils
 		{
 			if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
 			{
-				if(xQueueSend(Queue, &Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+				if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
 			}
 		}
 		
