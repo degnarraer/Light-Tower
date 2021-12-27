@@ -50,6 +50,7 @@ I2S_Device::I2S_Device ( String Title
 }
 I2S_Device::~I2S_Device()
 {
+	FreeMemory();
 }
 
 void I2S_Device::Setup()
@@ -76,24 +77,7 @@ void I2S_Device::StopDevice()
 	if(true == m_Is_Running)
 	{
 		i2s_stop(m_I2S_PORT);
-		delete m_SoundBufferData;
-		delete m_RightChannel_SoundBufferData;
-		delete m_LeftChannel_SoundBufferData;
-		if(m_i2s_Data_Buffer_Queue)
-		{
-			vQueueDelete(m_i2s_Data_Buffer_Queue);
-			m_i2s_Data_Buffer_Queue = NULL;
-		}
-		if(m_i2s_Right_Data_Buffer_queue)
-		{
-			vQueueDelete(m_i2s_Right_Data_Buffer_queue);
-			m_i2s_Right_Data_Buffer_queue = NULL;
-		}
-		if(m_i2s_Left_Data_Buffer_queue)
-		{
-			vQueueDelete(m_i2s_Left_Data_Buffer_queue);
-			m_i2s_Left_Data_Buffer_queue = NULL;
-		}
+		FreeMemory();
 		m_Is_Running = false;
 	}
 }
@@ -224,14 +208,7 @@ int I2S_Device::WriteSamples(char *samples, size_t ByteCount)
 void I2S_Device::InstallDevice()
 {
 	Serial << "Configuring I2S Device\n";
-	Serial << GetTitle() << ": Allocating Memory.\n";    
-    m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
-    m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
-    m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
-
-	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
-	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
-	CreateQueue(m_i2s_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
+	AllocateMemory();
     
   esp_err_t err;
   // The I2S config as per the example
@@ -316,4 +293,36 @@ void I2S_Device::ProcessEventQueue()
       }
     } 
   }
+}
+void I2S_Device::AllocateMemory()
+{
+	Serial << GetTitle() << ": Allocating Memory.\n";    
+    m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
+    m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
+    m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
+
+	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
+	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
+	CreateQueue(m_i2s_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
+}
+void I2S_Device::FreeMemory()
+{
+	delete m_SoundBufferData;
+	delete m_RightChannel_SoundBufferData;
+	delete m_LeftChannel_SoundBufferData;
+	if(m_i2s_Data_Buffer_Queue)
+	{
+		vQueueDelete(m_i2s_Data_Buffer_Queue);
+		m_i2s_Data_Buffer_Queue = NULL;
+	}
+	if(m_i2s_Right_Data_Buffer_queue)
+	{
+		vQueueDelete(m_i2s_Right_Data_Buffer_queue);
+		m_i2s_Right_Data_Buffer_queue = NULL;
+	}
+	if(m_i2s_Left_Data_Buffer_queue)
+	{
+		vQueueDelete(m_i2s_Left_Data_Buffer_queue);
+		m_i2s_Left_Data_Buffer_queue = NULL;
+	}
 }

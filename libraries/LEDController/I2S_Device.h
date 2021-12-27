@@ -109,6 +109,8 @@ class I2S_Device: public NamedItem
     int ReadSamples();
     int WriteSamples(char *samples, size_t ByteCount);
     void InstallDevice();
+	void AllocateMemory();
+	void FreeMemory();
 };
 
 #endif

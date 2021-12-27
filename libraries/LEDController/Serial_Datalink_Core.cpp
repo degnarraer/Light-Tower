@@ -25,7 +25,7 @@ SerialDataLinkCore::SerialDataLinkCore(String Title, HardwareSerial &hSerial): N
 }
 SerialDataLinkCore::~SerialDataLinkCore()
 {
-
+	//TBD NEED TO FREE MEMORY USED BY THIS EVEN THOUGH IT IS USED FOR THE LIFETIME...
 }
 
 void SerialDataLinkCore::Setup()

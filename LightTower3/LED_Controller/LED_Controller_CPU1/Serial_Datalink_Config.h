@@ -44,10 +44,10 @@ class SerialDataLink: public NamedItem
       { "L_Pow",     DataType_Float,     1,    Transciever_TX },
       { "R_DB",      DataType_Float,     1,    Transciever_TX },
       { "L_DB",      DataType_Float,     1,    Transciever_TX },
-      { "R_Min",     DataType_Int16_t,   1,    Transciever_TX },
-      { "L_Min",     DataType_Int16_t,   1,    Transciever_TX },
-      { "R_Max",     DataType_Int16_t,   1,    Transciever_TX },
-      { "L_Max",     DataType_Int16_t,   1,    Transciever_TX },
+      { "R_Min",     DataType_Int32_t,   1,    Transciever_TX },
+      { "L_Min",     DataType_Int32_t,   1,    Transciever_TX },
+      { "R_Max",     DataType_Int32_t,   1,    Transciever_TX },
+      { "L_Max",     DataType_Int32_t,   1,    Transciever_TX },
     };
 
 };

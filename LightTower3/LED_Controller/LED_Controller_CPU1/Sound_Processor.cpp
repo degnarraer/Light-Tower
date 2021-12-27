@@ -235,7 +235,7 @@ void Sound_Processor::ProcessRightChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Right_Channel_Pow_Normalized = peakToPeak / (float)pow(2,32); //This needs to know bit size
+      m_Right_Channel_Pow_Normalized = peakToPeak / (float)pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Right_Channel_Db = 20*log10(peakToPeak/100.0);
@@ -373,7 +373,7 @@ void Sound_Processor::ProcessLeftChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Left_Channel_Pow_Normalized = peakToPeak / (float)pow(2,32); //This needs to know bit size
+      m_Left_Channel_Pow_Normalized = peakToPeak / (float)pow(2,24); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Left_Channel_Db = 20*log10(peakToPeak/100.0);

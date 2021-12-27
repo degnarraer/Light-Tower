@@ -104,14 +104,14 @@ void StatisticalEngine::RunMyScheduledTask()
     Serial << "Left Channel Data: " << m_Left_Channel_Pow_Normalized << "|" << m_Left_Channel_Db << "|" << m_Left_Channel_Min << "|" << m_Left_Channel_Max << "\n";
     Serial << "Right Channel Data: " << m_Right_Channel_Pow_Normalized << "|" << m_Right_Channel_Db << "|" << m_Right_Channel_Min << "|" << m_Right_Channel_Max << "\n";
     Serial << "Combined Channel Data: " << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
-    //UpdateSoundState();
+    UpdateSoundState();
   }
 
   if(true == m_NewBandDataReady)
   {
-    //GetValueFromQueue(&m_Right_Band_Values, m_FFT_Right_BandData_Input_Buffer_Queue, GetFFTRightBandDataBufferSize(), true, false);
-    //GetValueFromQueue(&m_Left_Band_Values, m_FFT_Left_BandData_Input_Buffer_Queue, GetFFTLeftBandDataBufferSize(), true, false);
-    //UpdateBandArray(); 
+    GetValueFromQueue(m_Right_Band_Values, m_FFT_Right_BandData_Input_Buffer_Queue, GetFFTRightBandDataBufferSize(), true, false);
+    GetValueFromQueue(m_Left_Band_Values, m_FFT_Left_BandData_Input_Buffer_Queue, GetFFTLeftBandDataBufferSize(), true, false);
+    UpdateBandArray(); 
   }
 }
 
