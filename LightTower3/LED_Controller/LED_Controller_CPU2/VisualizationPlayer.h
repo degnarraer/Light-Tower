@@ -25,7 +25,6 @@
 #include "Statistical_Engine.h"
 #include "LEDControllerInterface.h"
 
-
 class VisualizationPlayer : public Task
 {
   public:

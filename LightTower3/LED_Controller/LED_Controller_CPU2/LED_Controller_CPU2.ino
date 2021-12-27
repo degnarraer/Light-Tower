@@ -29,7 +29,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
-//VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
+VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 HardwareSerial m_hSerial = Serial2;
 SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink", m_hSerial);
 Manager m_Manager = Manager("Manager", m_SerialDatalink, m_StatisticalEngine, m_I2S_In);
@@ -61,13 +61,13 @@ void setup() {
   
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
-  //m_Scheduler.AddTask(m_VisualizationPlayer);
+  m_Scheduler.AddTask(m_VisualizationPlayer);
   
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
-    30000,                          // Stack size in words
+    2000,                           // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &ManagerTask,                   // Task handle.
@@ -78,7 +78,7 @@ void setup() {
   (
     SerialDataRXTaskLoop,           // Function to implement the task
     "SerialDataRXTask",             // Name of the task
-    30000,                          // Stack size in words
+    10000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &SerialDataRXTask,              // Task handle.
@@ -89,7 +89,7 @@ void setup() {
   (
     VisualizationTaskLoop,          // Function to implement the task
     "VisualizationTask",            // Name of the task
-    30000,                          // Stack size in words
+    100000,                         // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 4,       // Priority of the task
     &VisualizationTask,             // Task handle.

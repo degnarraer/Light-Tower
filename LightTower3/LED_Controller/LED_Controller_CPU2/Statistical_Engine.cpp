@@ -115,8 +115,6 @@ void StatisticalEngine::RunMyScheduledTask()
   }
 }
 
-
-
 void StatisticalEngine::AllocateMemory()
 {
   Serial << GetTitle() << ": Allocating Memory.\n";
