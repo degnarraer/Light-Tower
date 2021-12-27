@@ -359,8 +359,8 @@ void Sound_Processor::ProcessLeftChannelPower()
     else
     {
       float peakToPeak = 0;
-      int minValue = INT16_MAX;
-      int maxValue = -INT16_MAX;
+      int32_t minValue = INT32_MAX;
+      int32_t maxValue = -INT32_MAX;
       for(int i = 0; i < m_InputSampleCount; ++i)
       {
         if(DataBuffer[i] < minValue)
@@ -373,7 +373,7 @@ void Sound_Processor::ProcessLeftChannelPower()
         }
       }
       peakToPeak = maxValue - minValue;
-      m_Left_Channel_Pow_Normalized = (float)peakToPeak / (float)pow(2,24); //This needs to know bit size
+      m_Left_Channel_Pow_Normalized = peakToPeak / (float)pow(2,32); //This needs to know bit size
       if(peakToPeak > 0)
       {
         m_Left_Channel_Db = 20*log10(peakToPeak/100.0);
