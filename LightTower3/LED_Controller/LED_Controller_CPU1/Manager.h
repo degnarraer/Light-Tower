@@ -73,7 +73,7 @@ class Manager: public NamedItem
     void SetInputType(InputType_t Type);
     void SetDACMuteState(Mute_State_t MuteState);
     void SetDACDataFormat(DAC_Data_Format_t DAC_Data_Format);
-
+    
     //I2S_Device_Callback
     void DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count);
     void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count);

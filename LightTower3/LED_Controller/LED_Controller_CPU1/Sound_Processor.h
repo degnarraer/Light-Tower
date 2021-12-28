@@ -36,6 +36,7 @@
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
+                     , public QueueManager
 {
   public:
     Sound_Processor(String Title);
@@ -45,35 +46,11 @@ class Sound_Processor: public NamedItem
     void ProcessFFTEventQueue();
     void ProcessSoundPowerEventQueue();
 
-    //Input Data Queues
-    QueueHandle_t GetFFTRightDataInputQueue() { return m_FFT_Right_Data_Input_Buffer_queue; }
-    QueueHandle_t GetFFTLeftDataInputQueue() { return m_FFT_Left_Data_Input_Buffer_queue; }
-       
-    //Right Channel Output Data Queues
-    QueueHandle_t GetFFTRightBandDataOutputQueue() { return m_FFT_Right_BandData_Output_Buffer_Queue; }
-    size_t GetFFTRightBandDataBufferSize() { return m_BandOutputByteCount; }
-    QueueHandle_t GetRightChannelNormalizedPowerOutputQueue() { return m_Right_Channel_Normalized_Power_Output_Buffer_Queue; }
-    size_t GetRightChannelNormalizedPowerSize() { return sizeof(m_Right_Channel_Pow_Normalized); }
-    QueueHandle_t GetRightChannelDBOutputQueue() { return m_Right_Channel_DB_Output_Buffer_Queue; }
-    size_t GetRightChannelDBSize() { return sizeof(m_Right_Channel_Db); }
-    QueueHandle_t GetRightChannelPowerMinOutputQueue() { return m_Right_Channel_Pow_Min_Output_Buffer_Queue; }
-    size_t GetRightChannelPowerMinSize() { return sizeof(m_Right_Channel_Min); }
-    QueueHandle_t GetRightChannelPowerMaxOutputQueue() { return m_Right_Channel_Pow_Max_Output_Buffer_Queue; }
-    size_t GetRightChannelPowerMaxSize() { return sizeof(m_Right_Channel_Max); }
-
-    //Left Channel Output Data Queues
-    QueueHandle_t GetFFTLeftBandDataOutputQueue() { return m_FFT_Left_BandData_Output_Buffer_Queue; }
-    size_t GetFFTLeftBandDataBufferSize() { return m_BandOutputByteCount; }
-    QueueHandle_t GetLeftChannelNormalizedPowerOutputQueue() { return m_Left_Channel_Normalized_Power_Output_Buffer_Queue; }
-    size_t GetLeftChannelNormalizedPowerSize() { return sizeof(m_Left_Channel_Pow_Normalized); }
-    QueueHandle_t GetLeftChannelDBOutputQueue() { return m_Left_Channel_DB_Output_Buffer_Queue; }
-    size_t GetLeftChannelDBSize() { return sizeof(m_Left_Channel_Db); }
-    QueueHandle_t GetLeftChannelPowerMinOutputQueue() { return m_Left_Channel_Pow_Min_Output_Buffer_Queue; }
-    size_t GetLeftChannelPowerMinSize() { return sizeof(m_Left_Channel_Min); }
-    QueueHandle_t GetLeftChannelPowerMaxOutputQueue() { return m_Left_Channel_Pow_Max_Output_Buffer_Queue; }
-    size_t GetLeftChannelPowerMaxSize() { return sizeof(m_Left_Channel_Max); }
-    
+    //QueueManager
+    DataItemConfig_t* GetConfig() { return m_ItemConfig; }
   private:
+    QueueManager* m_QueueManager;
+  
     //CONFIGURATION
     size_t m_InputByteCount = 0;
     size_t m_InputSampleCount = 0;
@@ -90,47 +67,23 @@ class Sound_Processor: public NamedItem
     //CHANNEL DATA INPUT
     int m_FFT_Right_Buffer_Index = 0;
     int m_FFT_Left_Buffer_Index = 0;
-    QueueHandle_t m_FFT_Right_Data_Input_Buffer_queue = NULL;
-    QueueHandle_t m_FFT_Left_Data_Input_Buffer_queue = NULL;
     
     //CALCULATED OUTPUTS
     int16_t* m_FFT_Right_Data;
     int16_t* m_FFT_Left_Data;
     
     //Right Channel Processed FFT Band Data
-    QueueHandle_t m_FFT_Right_BandData_Input_Buffer_Queue = NULL;
     int16_t* m_Right_Band_Values;
-    QueueHandle_t m_FFT_Right_BandData_Output_Buffer_Queue = NULL;
     
     //Left Channel Processed FFT Band Data
-    QueueHandle_t m_FFT_Left_BandData_Input_Buffer_Queue = NULL;
     int16_t* m_Left_Band_Values;
-    private: QueueHandle_t m_FFT_Left_BandData_Output_Buffer_Queue = NULL;
-
 
     //Right Channel Calculated Outputs
-    QueueHandle_t m_Right_Channel_Pow_Input_Buffer_Queue = NULL;
-    float m_Right_Channel_Pow_Normalized;
-    float m_Right_Channel_Db;
-    int32_t m_Right_Channel_Min;
-    int32_t m_Right_Channel_Max;
-    QueueHandle_t m_Right_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
-    QueueHandle_t m_Right_Channel_DB_Output_Buffer_Queue = NULL;
-    QueueHandle_t m_Right_Channel_Pow_Min_Output_Buffer_Queue = NULL;
-    QueueHandle_t m_Right_Channel_Pow_Max_Output_Buffer_Queue = NULL;
+    ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Calculated Outputs
-    QueueHandle_t m_Left_Channel_Pow_Input_Buffer_Queue = NULL;
-    float m_Left_Channel_Pow_Normalized;
-    float m_Left_Channel_Db;
-    int32_t m_Left_Channel_Min;
-    int32_t m_Left_Channel_Max;
-    QueueHandle_t m_Left_Channel_Normalized_Power_Output_Buffer_Queue = NULL;
-    QueueHandle_t m_Left_Channel_DB_Output_Buffer_Queue = NULL;
-    QueueHandle_t m_Left_Channel_Pow_Min_Output_Buffer_Queue = NULL;
-    QueueHandle_t m_Left_Channel_Pow_Max_Output_Buffer_Queue = NULL;
+    ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
-private: 
     void ProcessRightChannelSoundData();
     void ProcessRightChannelFFT();
     void ProcessRightChannelPower();
@@ -139,6 +92,22 @@ private:
     void ProcessLeftChannelFFT();
     void ProcessLeftChannelPower();
     float GetFreqForBin(unsigned int bin);
+
+    //QueueManager Configuration
+    static const size_t m_ConfigCount = 10;
+    DataItemConfig_t m_ItemConfig[m_ConfigCount]
+    {
+      { "R_RAW_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_RX },
+      { "L_RAW_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_RX },
+      { "R_BAND_IN",  DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
+      { "L_BAND_IN",  DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
+      { "R_PSD_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
+      { "L_PSD_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
+      { "R_FFT_OUT",  DataType_Int16_t,               32,                   Transciever_TX },
+      { "L_FFT_OUT",  DataType_Int16_t,               32,                   Transciever_TX },
+      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX },
+      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX }
+    };
 };
 
 

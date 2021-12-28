@@ -47,16 +47,10 @@ bool StatisticalEngine::NewBandDataReady()
 
 bool StatisticalEngine::NewSoundDataReady()
 {
-  bool A = (uxQueueMessagesWaiting(m_Right_Channel_Normalized_Power_Input_Buffer_Queue) > 0);
-  bool B = (uxQueueMessagesWaiting(m_Right_Channel_DB_Input_Buffer_Queue) > 0);
-  bool C = (uxQueueMessagesWaiting(m_Right_Channel_Pow_Min_Input_Buffer_Queue) > 0);
-  bool D = (uxQueueMessagesWaiting(m_Right_Channel_Pow_Max_Input_Buffer_Queue) > 0);
-  bool E = (uxQueueMessagesWaiting(m_Left_Channel_Normalized_Power_Input_Buffer_Queue) > 0);
-  bool F = (uxQueueMessagesWaiting(m_Left_Channel_DB_Input_Buffer_Queue) > 0);
-  bool G = (uxQueueMessagesWaiting(m_Left_Channel_Pow_Min_Input_Buffer_Queue) > 0);
-  bool H = (uxQueueMessagesWaiting(m_Left_Channel_Pow_Max_Input_Buffer_Queue) > 0);
-  //Serial << A << "|" << B << "|" << C << "|" << D << "|" << E << "|" << F << "|" << G << "|" << H << "\n";
-  if( A & B & C & D & E & F & G & H )
+  bool A = (uxQueueMessagesWaiting(m_Right_Channel_Processed_Sound_Buffer_Queue) > 0);
+  bool B = (uxQueueMessagesWaiting(m_Left_Channel_Processed_Sound_Buffer_Queue) > 0);
+  //Serial << A << "|" << B << "\n";
+  if( A & B )
   {
     m_NewSoundDataReady = true;
     return true;
@@ -85,25 +79,16 @@ void StatisticalEngine::RunMyScheduledTask()
 {
   if(true == m_NewSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_Channel_Pow_Normalized, m_Right_Channel_Normalized_Power_Input_Buffer_Queue, GetRightChannelNormalizedPowerSize(), true, false);
-    GetValueFromQueue(&m_Right_Channel_Db, m_Right_Channel_DB_Input_Buffer_Queue, GetRightChannelDBSize(), true, false);
-    GetValueFromQueue(&m_Right_Channel_Min, m_Right_Channel_Pow_Min_Input_Buffer_Queue, GetRightChannelPowerMinSize(), true, false);
-    GetValueFromQueue(&m_Right_Channel_Max, m_Right_Channel_Pow_Max_Input_Buffer_Queue, GetRightChannelPowerMaxSize(), true, false);
+    GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, m_Right_Channel_Processed_Sound_Buffer_Queue, GetRightChannelProcessedSoundBufferSize(), true, false);
+    GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, m_Left_Channel_Processed_Sound_Buffer_Queue, GetLeftChannelProcessedSoundBufferSize(), true, false);
     
-    GetValueFromQueue(&m_Left_Channel_Pow_Normalized, m_Left_Channel_Normalized_Power_Input_Buffer_Queue, GetLeftChannelNormalizedPowerSize(), true, false);
-    GetValueFromQueue(&m_Left_Channel_Db, m_Left_Channel_DB_Input_Buffer_Queue, GetLeftChannelDBSize(), true, false);
-    GetValueFromQueue(&m_Left_Channel_Min, m_Left_Channel_Pow_Min_Input_Buffer_Queue, GetLeftChannelPowerMinSize(), true, false);
-    GetValueFromQueue(&m_Left_Channel_Max, m_Left_Channel_Pow_Max_Input_Buffer_Queue, GetLeftChannelPowerMaxSize(), true, false);
-  
     //To allow the original code to work, we combine the left and right channels into an average
-    m_Power = (m_Right_Channel_Pow_Normalized + m_Left_Channel_Pow_Normalized) / 2;
-    m_PowerDb = (m_Right_Channel_Db + m_Left_Channel_Db ) / 2;
-    m_signalMin = (m_Right_Channel_Min + m_Left_Channel_Min) / 2;
-    m_signalMax = (m_Right_Channel_Max + m_Left_Channel_Max) / 2;;
+    m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2;
+    m_PowerDb = (m_Right_Channel_Processed_Sound_Data.PowerDB + m_Left_Channel_Processed_Sound_Data.PowerDB) / 2;
+    m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2;
+    m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2;
     
-    Serial << "Left Channel Data: " << m_Left_Channel_Pow_Normalized << "|" << m_Left_Channel_Db << "|" << m_Left_Channel_Min << "|" << m_Left_Channel_Max << "\n";
-    Serial << "Right Channel Data: " << m_Right_Channel_Pow_Normalized << "|" << m_Right_Channel_Db << "|" << m_Right_Channel_Min << "|" << m_Right_Channel_Max << "\n";
-    Serial << "Combined Channel Data: " << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
+    Serial << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
     UpdateSoundState();
   }
 
@@ -124,15 +109,8 @@ void StatisticalEngine::AllocateMemory()
   CreateQueue(m_FFT_Right_BandData_Input_Buffer_Queue, m_BandInputByteCount, 10, true);
   CreateQueue(m_FFT_Left_BandData_Input_Buffer_Queue, m_BandInputByteCount, 10, true);
   
-  CreateQueue(m_Right_Channel_Normalized_Power_Input_Buffer_Queue, sizeof(m_Right_Channel_Pow_Normalized), 10, true);
-  CreateQueue(m_Right_Channel_DB_Input_Buffer_Queue, sizeof(m_Right_Channel_Db), 10, true);
-  CreateQueue(m_Right_Channel_Pow_Min_Input_Buffer_Queue, sizeof(m_Right_Channel_Min), 10, true);
-  CreateQueue(m_Right_Channel_Pow_Max_Input_Buffer_Queue, sizeof(m_Right_Channel_Max), 10, true);
-  
-  CreateQueue(m_Left_Channel_Normalized_Power_Input_Buffer_Queue, sizeof(m_Left_Channel_Pow_Normalized), 10, true);
-  CreateQueue(m_Left_Channel_DB_Input_Buffer_Queue, sizeof(m_Left_Channel_Db), 10, true);
-  CreateQueue(m_Left_Channel_Pow_Min_Input_Buffer_Queue, sizeof(m_Left_Channel_Min), 10, true);
-  CreateQueue(m_Left_Channel_Pow_Max_Input_Buffer_Queue, sizeof(m_Left_Channel_Max), 10, true);
+  CreateQueue(m_Right_Channel_Processed_Sound_Buffer_Queue, sizeof(m_Right_Channel_Processed_Sound_Data), 10, true);
+  CreateQueue(m_Left_Channel_Processed_Sound_Buffer_Queue, sizeof(m_Left_Channel_Processed_Sound_Data), 10, true);
   m_MemoryIsAllocated = true;
 }
 
@@ -146,15 +124,8 @@ void StatisticalEngine::FreeMemory()
   vQueueDelete(m_FFT_Right_BandData_Input_Buffer_Queue);
   vQueueDelete(m_FFT_Left_BandData_Input_Buffer_Queue);
   
-  vQueueDelete(m_Right_Channel_Normalized_Power_Input_Buffer_Queue);
-  vQueueDelete(m_Right_Channel_DB_Input_Buffer_Queue);
-  vQueueDelete(m_Right_Channel_Pow_Min_Input_Buffer_Queue);
-  vQueueDelete(m_Right_Channel_Pow_Max_Input_Buffer_Queue);
-  
-  vQueueDelete(m_Left_Channel_Normalized_Power_Input_Buffer_Queue);
-  vQueueDelete(m_Left_Channel_DB_Input_Buffer_Queue);
-  vQueueDelete(m_Left_Channel_Pow_Min_Input_Buffer_Queue);
-  vQueueDelete(m_Left_Channel_Pow_Max_Input_Buffer_Queue);
+  vQueueDelete(m_Right_Channel_Processed_Sound_Buffer_Queue);
+  vQueueDelete(m_Left_Channel_Processed_Sound_Buffer_Queue);
   m_MemoryIsAllocated = false;
 }
 

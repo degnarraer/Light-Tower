@@ -107,26 +107,16 @@ class StatisticalEngine : public NamedItem
     //Right Channel Input Data Queues
     QueueHandle_t GetFFTRightBandDataInputQueue() { return m_FFT_Right_BandData_Input_Buffer_Queue; }
     size_t GetFFTRightBandDataBufferSize() { return m_BandInputByteCount; }
-    QueueHandle_t GetRightChannelNormalizedPowerInputQueue() { return m_Right_Channel_Normalized_Power_Input_Buffer_Queue; }
-    size_t GetRightChannelNormalizedPowerSize() { return sizeof(m_Right_Channel_Pow_Normalized); }
-    QueueHandle_t GetRightChannelDBInputQueue() { return m_Right_Channel_DB_Input_Buffer_Queue; }
-    size_t GetRightChannelDBSize() { return sizeof(m_Right_Channel_Db); }
-    QueueHandle_t GetRightChannelPowerMinInputQueue() { return m_Right_Channel_Pow_Min_Input_Buffer_Queue; }
-    size_t GetRightChannelPowerMinSize() { return sizeof(m_Right_Channel_Min); }
-    QueueHandle_t GetRightChannelPowerMaxInputQueue() { return m_Right_Channel_Pow_Max_Input_Buffer_Queue; }
-    size_t GetRightChannelPowerMaxSize() { return sizeof(m_Right_Channel_Max); }
+    QueueHandle_t GetRightChannelProcessedSoundBufferQueue() { return m_Right_Channel_Processed_Sound_Buffer_Queue; }
+    size_t GetRightChannelProcessedSoundBufferSize() { return sizeof(m_Right_Channel_Processed_Sound_Data); }
+
   
     //Left Channel Input Data Queues
     QueueHandle_t GetFFTLeftBandDataInputQueue() { return m_FFT_Left_BandData_Input_Buffer_Queue; }
     size_t GetFFTLeftBandDataBufferSize() { return m_BandInputByteCount; }
-    QueueHandle_t GetLeftChannelNormalizedPowerInputQueue() { return m_Left_Channel_Normalized_Power_Input_Buffer_Queue; }
-    size_t GetLeftChannelNormalizedPowerSize() { return sizeof(m_Left_Channel_Pow_Normalized); }
-    QueueHandle_t GetLeftChannelDBInputQueue() { return m_Left_Channel_DB_Input_Buffer_Queue; }
-    size_t GetLeftChannelDBSize() { return sizeof(m_Left_Channel_Db); }
-    QueueHandle_t GetLeftChannelPowerMinInputQueue() { return m_Left_Channel_Pow_Min_Input_Buffer_Queue; }
-    size_t GetLeftChannelPowerMinSize() { return sizeof(m_Left_Channel_Min); }
-    QueueHandle_t GetLeftChannelPowerMaxInputQueue() { return m_Left_Channel_Pow_Max_Input_Buffer_Queue; }
-    size_t GetLeftChannelPowerMaxSize() { return sizeof(m_Left_Channel_Max); }
+    QueueHandle_t GetLeftChannelProcessedSoundBufferQueue() { return m_Left_Channel_Processed_Sound_Buffer_Queue; }
+    size_t GetLeftChannelProcessedSoundBufferSize() { return sizeof(m_Left_Channel_Processed_Sound_Data); }
+
   
     //Power Getters
     float GetNormalizedSoundPower();
@@ -176,26 +166,14 @@ class StatisticalEngine : public NamedItem
     //Right Channel Input Sound Data
     int16_t* m_Right_Band_Values;
     QueueHandle_t m_FFT_Right_BandData_Input_Buffer_Queue = NULL;
-    float m_Right_Channel_Pow_Normalized;
-    QueueHandle_t m_Right_Channel_Normalized_Power_Input_Buffer_Queue = NULL;
-    float m_Right_Channel_Db;
-    QueueHandle_t m_Right_Channel_DB_Input_Buffer_Queue = NULL;
-    int16_t m_Right_Channel_Min;
-    QueueHandle_t m_Right_Channel_Pow_Min_Input_Buffer_Queue = NULL;
-    int16_t m_Right_Channel_Max;
-    QueueHandle_t m_Right_Channel_Pow_Max_Input_Buffer_Queue = NULL;
+    QueueHandle_t m_Right_Channel_Processed_Sound_Buffer_Queue = NULL;
+    ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Input Sound Data
     int16_t* m_Left_Band_Values;
     QueueHandle_t m_FFT_Left_BandData_Input_Buffer_Queue = NULL;
-    float m_Left_Channel_Pow_Normalized;
-    QueueHandle_t m_Left_Channel_Normalized_Power_Input_Buffer_Queue = NULL;
-    float m_Left_Channel_Db;
-    QueueHandle_t m_Left_Channel_DB_Input_Buffer_Queue = NULL;
-    int16_t m_Left_Channel_Min;
-    QueueHandle_t m_Left_Channel_Pow_Min_Input_Buffer_Queue = NULL;
-    int16_t m_Left_Channel_Max;
-    QueueHandle_t m_Left_Channel_Pow_Max_Input_Buffer_Queue = NULL;
+    QueueHandle_t m_Left_Channel_Processed_Sound_Buffer_Queue = NULL;
+    ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
     //Sound Detection
     const int     m_silenceDetectedThreshold = silenceDetectedThreshold;

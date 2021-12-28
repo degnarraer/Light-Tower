@@ -3,6 +3,222 @@
 #include <DataTypes.h>
 #include "Streaming.h"
 
+
+class QueueManager
+{
+	public:
+		QueueManager(String Title, size_t DataItemCount): m_Title(Title)
+													    , m_DataItemCount(DataItemCount)
+		{
+		}
+		virtual ~QueueManager()
+		{
+			if(true == m_MemoryAllocated)FreeMemory();
+		}
+		virtual DataItemConfig_t* GetConfig() = 0;
+		void Setup(size_t DataItemCount)
+		{
+			m_DataItemCount = DataItemCount;
+			if(true == m_MemoryAllocated)FreeMemory();
+			AllocateMemory();
+		}
+		QueueHandle_t GetQueueHandleRXForDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(Name == m_DataItem[i].Name)
+					{
+						return m_DataItem[i].QueueHandle_RX;
+					}
+				}
+			}
+			return NULL;
+		}
+
+		QueueHandle_t GetQueueHandleTXForDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(Name == m_DataItem[i].Name)
+					{
+						return m_DataItem[i].QueueHandle_TX;
+					}
+				}
+			}
+			return NULL;
+		}
+		
+		size_t GetByteCountForDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(Name == m_DataItem[i].Name)
+					{
+						switch(m_DataItem[i].DataType)
+						{
+							case DataType_Int16_t:
+								return sizeof(int16_t) * m_DataItem[i].Count;
+							break;
+							case DataType_Int32_t:
+								return sizeof(int32_t) * m_DataItem[i].Count;
+							break;
+							case DataType_Uint16_t:
+								return sizeof(uint16_t) * m_DataItem[i].Count;
+							break;
+							case DataType_Uint32_t:
+								return sizeof(uint32_t) * m_DataItem[i].Count;
+							break;
+							case DataType_String:
+								return sizeof(String) * m_DataItem[i].Count;
+							break;
+							case DataType_Float:
+								return sizeof(float) * m_DataItem[i].Count;
+							break;
+							case DataType_ProcessedSoundData_t:
+								return sizeof(ProcessedSoundData_t) * m_DataItem[i].Count;
+							break;
+							default:
+								return 0;
+							break;
+						}
+					}
+				}
+			}
+			return NULL;
+		}
+		
+		void PushValueToTXQueue(void* Value, String Name, bool WaitForOpenSlot)
+		{
+			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
+			if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+			{
+				if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+			}
+		}
+		
+		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
+		{
+			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
+			if(NULL != Queue)
+			{
+				size_t QueueCount = uxQueueMessagesWaiting(Queue);
+				if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+				if(QueueCount > 0)
+				{
+					if(false == ReadUntilEmpty) QueueCount = 1;
+					for(int i = 0; i < QueueCount; ++i)
+					{
+						void* DataBuffer = (void*)malloc(ByteCount);
+						if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
+						{
+							memcpy(Value, DataBuffer, ByteCount);
+							return true;
+						}
+						delete DataBuffer;
+					}
+				}
+			}
+			return false;
+		}
+	private:
+		DataItem_t* m_DataItem;
+		size_t &m_DataItemCount;
+		String m_Title = "";
+		bool m_MemoryAllocated = false;
+		void AllocateMemory()
+		{
+			size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
+			Serial << m_Title << ": Allocating " << m_DataItemCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
+			DataItemConfig_t* ConfigFile = GetConfig();
+			m_DataItem = new DataItem_t[m_DataItemCount];
+			for(int i = 0; i < m_DataItemCount; ++i)
+			{
+				void* Object;
+				size_t bytes = 0;
+
+				switch(ConfigFile[i].DataType)
+				{
+					case DataType_Int16_t:
+					{
+						bytes = sizeof(int16_t) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					case DataType_Int32_t:
+					{
+						bytes = sizeof(int32_t) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					case DataType_Uint16_t:
+					{
+						bytes = sizeof(uint16_t) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					case DataType_Uint32_t:
+					{
+						bytes = sizeof(uint32_t) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					case DataType_String:
+					{
+						bytes = sizeof(String) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					case DataType_Float:
+					{
+						bytes = sizeof(float) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					case DataType_ProcessedSoundData_t:
+					{
+						bytes = sizeof(DataType_ProcessedSoundData_t) * ConfigFile[i].Count;
+						Object = malloc(bytes);
+					}
+					break;
+					default:
+						Serial << m_Title << ": Error, unsupported data type\n";
+					break;
+				}
+				CreateManagedQueue(m_DataItem[i].QueueHandle_RX, bytes, 10, true);
+				CreateManagedQueue(m_DataItem[i].QueueHandle_TX, bytes, 10, true);
+				Serial << m_Title << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
+				m_DataItem[i].Name = ConfigFile[i].Name;
+				m_DataItem[i].DataType = ConfigFile[i].DataType;
+				m_DataItem[i].Count = ConfigFile[i].Count;
+				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
+				m_DataItem[i].Object = Object;
+				m_MemoryAllocated = true;
+			}
+		}
+		void FreeMemory()
+		{
+			for(int i = 0; i < m_DataItemCount; ++i)
+			{
+				delete m_DataItem[i].Object;
+			}
+			delete m_DataItem;
+			m_MemoryAllocated = false;
+		}
+		
+		void CreateManagedQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
+		{
+			if(true == DebugMessage) Serial << "Creating Queue.\n";
+			Queue = xQueueCreate(QueueCount, ByteCount );
+			if(Queue == NULL){Serial.println("Error creating the Queue");}
+		}
+};
+
 class CommonUtils
 {
 	public:

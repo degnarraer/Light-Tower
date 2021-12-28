@@ -79,8 +79,14 @@ void SerialDataLinkCore::Setup()
 		Object = malloc(bytes);
       }
       break;
+		case DataType_ProcessedSoundData_t:
+		{
+			bytes = sizeof(DataType_ProcessedSoundData_t) * ConfigFile[i].Count;
+			Object = malloc(bytes);
+		}
+		break;
       default:
-        Serial << GetTitle() << ": Error, unsupported data type";
+        Serial << GetTitle() << ": Error, unsupported data type\n";
       break;
     }
 	CreateQueue(m_DataItem[i].QueueHandle_RX, bytes, QUEUE_SIZE, true);

@@ -30,6 +30,7 @@ enum DataType_t
   DataType_Uint32_t,
   DataType_String,
   DataType_Float,
+  DataType_ProcessedSoundData_t,
   DataType_Undef,
 };
 
@@ -41,6 +42,7 @@ static const char* DataTypeStrings[] =
   "Uint32_t",
   "String",
   "Float",
+  "ProcessedSoundData_t",
   "Undefined"
 };
 
@@ -50,7 +52,6 @@ struct DataItemConfig_t
   DataType_t DataType;
   size_t Count;
   Transciever_T TransceiverConfig;
-  
 };
 
 struct DataItem_t
@@ -58,10 +59,18 @@ struct DataItem_t
   String Name;
   DataType_t DataType;
   size_t Count;
-  QueueHandle_t QueueHandle_RX;
-  QueueHandle_t QueueHandle_TX;
+  QueueHandle_t QueueHandle_RX = NULL;
+  QueueHandle_t QueueHandle_TX = NULL;
   Transciever_T TransceiverConfig;
   void* Object;
+};
+
+struct ProcessedSoundData_t
+{
+	float NormalizedPower;
+	float PowerDB;
+	int32_t Minimum;
+	int32_t Maximum;
 };
 
 #endif
