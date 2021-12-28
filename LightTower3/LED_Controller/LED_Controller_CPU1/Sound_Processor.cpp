@@ -62,19 +62,19 @@ void Sound_Processor::FreeMemory()
 void Sound_Processor::ProcessEventQueue()
 {
   ProcessRightChannelSoundData();
-  ProcessLeftChannelSoundData();
+  //ProcessLeftChannelSoundData();
 }
 
 void Sound_Processor::ProcessFFTEventQueue()
 {
   ProcessRightChannelFFT();
-  ProcessLeftChannelFFT();
+  //ProcessLeftChannelFFT();
 }
 
 void Sound_Processor::ProcessSoundPowerEventQueue()
 {
   ProcessRightChannelPower();
-  ProcessLeftChannelPower();
+  //ProcessLeftChannelPower();
 }
 
 void Sound_Processor::ProcessRightChannelSoundData()
@@ -166,7 +166,7 @@ void Sound_Processor::ProcessRightChannelFFT()
         }
       }
     }
-    PushValueToQueue(&m_Right_Band_Values, GetQueueHandleRXForDataItem("R_FFT"), false);
+    PushValueToQueue(&m_Right_Band_Values, GetQueueHandleTXForDataItem("R_FFT_OUT"), false);
     delete DataBuffer;
   }
 }
@@ -206,7 +206,7 @@ void Sound_Processor::ProcessRightChannelPower()
       }
       m_Right_Channel_Processed_Sound_Data.Minimum = minValue;
       m_Right_Channel_Processed_Sound_Data.Maximum = maxValue;
-      PushValueToQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), false);
+      PushValueToQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleTXForDataItem("R_PSD"), false);
     }
     delete DataBuffer;
   }
@@ -301,7 +301,7 @@ void Sound_Processor::ProcessLeftChannelFFT()
         }
       } 
     }
-    PushValueToQueue(&m_Left_Band_Values, GetQueueHandleRXForDataItem("L_FFT"), false);
+    PushValueToQueue(&m_Left_Band_Values, GetQueueHandleTXForDataItem("L_FFT_OUT"), false);
     delete DataBuffer;
   }
 }
@@ -341,7 +341,7 @@ void Sound_Processor::ProcessLeftChannelPower()
       }
       m_Left_Channel_Processed_Sound_Data.Minimum = minValue;
       m_Left_Channel_Processed_Sound_Data.Maximum = maxValue;
-      PushValueToQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), false);
+      PushValueToQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleTXForDataItem("L_PSD"), false);
     }
     delete DataBuffer;
   }

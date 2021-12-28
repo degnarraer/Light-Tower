@@ -190,12 +190,13 @@ class QueueManager
 						Serial << m_Title << ": Error, unsupported data type\n";
 					break;
 				}
-				CreateManagedQueue(m_DataItem[i].QueueHandle_RX, bytes, 10, true);
-				CreateManagedQueue(m_DataItem[i].QueueHandle_TX, bytes, 10, true);
+				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, 10, true);
+				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, 10, true);
 				Serial << m_Title << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;
 				m_DataItem[i].Count = ConfigFile[i].Count;
+				m_DataItem[i].QueueByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
 				m_DataItem[i].Object = Object;
 				m_MemoryAllocated = true;
@@ -211,9 +212,9 @@ class QueueManager
 			m_MemoryAllocated = false;
 		}
 		
-		void CreateManagedQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
+		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			if(true == DebugMessage) Serial << "Creating Queue.\n";
+			if(true == DebugMessage) Serial << "Creating Queue: " << Name << " of size: " << ByteCount << "\n";
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}
@@ -227,7 +228,7 @@ class CommonUtils
 		  if(NULL != TakeFromQueue && NULL != GiveToQueue)
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-			if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+			if(true == DebugMessage) Serial << "Queue Messages Waiting: " << QueueCount << " Byte Count: " << ByteCount << "\n";
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 			  uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
@@ -253,7 +254,7 @@ class CommonUtils
 		  if(NULL != TakeFromQueue)
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-			if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+			if(true == DebugMessage) Serial << "Queue Messages Waiting: " << QueueCount << " Receiver Queue Count: " << GiveToQueueCount << " Byte Count: " << ByteCount << "\n";
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 				uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
@@ -283,7 +284,7 @@ class CommonUtils
 
 		void CreateQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			if(true == DebugMessage) Serial << "Creating Queue.\n";
+			if(true == DebugMessage) Serial << "Creating Queue with Queue Count: " << QueueCount << " Byte Count: " << ByteCount << "\n";
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}

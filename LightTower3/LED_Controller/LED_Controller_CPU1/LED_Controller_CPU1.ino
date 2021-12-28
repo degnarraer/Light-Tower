@@ -124,7 +124,7 @@ m_Manager = new Manager("Manager"
   (
     ManagerTaskLoop,            // Function to implement the task
     "ManagerTask",              // Name of the task
-    10000,                      // Stack size in words
+    20000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &ManagerTask,               // Task handle.
@@ -135,7 +135,7 @@ m_Manager = new Manager("Manager"
   (
     SoundProcessorTaskLoop,     // Function to implement the task
     "SoundProcessorTask",       // Name of the task
-    10000,                      // Stack size in words
+    20000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,  // Priority of the task
     &SoundProcessorTask,        // Task handle.
@@ -146,7 +146,7 @@ m_Manager = new Manager("Manager"
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    10000,                      // Stack size in words
+    20000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 5,   // Priority of the task
     &FFTTask,                   // Task handle.
@@ -157,7 +157,7 @@ m_Manager = new Manager("Manager"
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    10000,                      // Stack size in words
+    20000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &SoundPowerTask,            // Task handle.
@@ -168,7 +168,7 @@ m_Manager = new Manager("Manager"
   (
     SerialDataLinkTXTaskLoop,     // Function to implement the task
     "SerialDataLinkSendTask",       // Name of the task
-    10000,                          // Stack size in words
+    20000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
     &SerialDataLinkSendTask,        // Task handle.
@@ -179,7 +179,7 @@ m_Manager = new Manager("Manager"
   (
     SerialDataLinkReceiveTaskLoop,    // Function to implement the task
     "SerialDataLinkReceiveTask",      // Name of the task
-    10000,                            // Stack size in words
+    20000,                            // Stack size in words
     NULL,                             // Task input parameter
     configMAX_PRIORITIES - 10,        // Priority of the task
     &SerialDataLinkReceiveTask,       // Task handle.

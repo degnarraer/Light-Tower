@@ -43,51 +43,51 @@ void SerialDataLinkCore::Setup()
 	
     switch(ConfigFile[i].DataType)
     {
-      case DataType_Int16_t:
-      {
-        bytes = sizeof(int16_t) * ConfigFile[i].Count;
+		case DataType_Int16_t:
+		{
+		bytes = sizeof(int16_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-      }
-      break;
-      case DataType_Int32_t:
-      {
-        bytes = sizeof(int32_t) * ConfigFile[i].Count;
+		}
+		break;
+		case DataType_Int32_t:
+		{
+		bytes = sizeof(int32_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-      }
-      break;
-      case DataType_Uint16_t:
-      {
-        bytes = sizeof(uint16_t) * ConfigFile[i].Count;
+		}
+		break;
+		case DataType_Uint16_t:
+		{
+		bytes = sizeof(uint16_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-      }
-      break;
-      case DataType_Uint32_t:
-      {
-        bytes = sizeof(uint32_t) * ConfigFile[i].Count;
+		}
+		break;
+		case DataType_Uint32_t:
+		{
+		bytes = sizeof(uint32_t) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-      }
-      break;
-      case DataType_String:
-      {
-        bytes = sizeof(String) * ConfigFile[i].Count;
+		}
+		break;
+		case DataType_String:
+		{
+		bytes = sizeof(String) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-      }
-      break;
-      case DataType_Float:
-      {
-        bytes = sizeof(float) * ConfigFile[i].Count;
+		}
+		break;
+		case DataType_Float:
+		{
+		bytes = sizeof(float) * ConfigFile[i].Count;
 		Object = malloc(bytes);
-      }
-      break;
+		}
+		break;
 		case DataType_ProcessedSoundData_t:
 		{
 			bytes = sizeof(DataType_ProcessedSoundData_t) * ConfigFile[i].Count;
 			Object = malloc(bytes);
 		}
 		break;
-      default:
-        Serial << GetTitle() << ": Error, unsupported data type\n";
-      break;
+		default:
+			Serial << GetTitle() << ": Error, unsupported data type\n";
+		break;
     }
 	CreateQueue(m_DataItem[i].QueueHandle_RX, bytes, QUEUE_SIZE, true);
 	CreateQueue(m_DataItem[i].QueueHandle_TX, bytes, QUEUE_SIZE, true);

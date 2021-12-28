@@ -97,16 +97,16 @@ class Sound_Processor: public NamedItem
     static const size_t m_ConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_RX },
-      { "L_RAW_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_RX },
-      { "R_BAND_IN",  DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
-      { "L_BAND_IN",  DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
-      { "R_PSD_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
-      { "L_PSD_IN",   DataType_Int32_t,               m_InputSampleCount,   Transciever_TX },
-      { "R_FFT_OUT",  DataType_Int16_t,               32,                   Transciever_TX },
-      { "L_FFT_OUT",  DataType_Int16_t,               32,                   Transciever_TX },
-      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX },
-      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX }
+      { "R_RAW_IN",   DataType_Int32_t,               100,      Transciever_RX },
+      { "L_RAW_IN",   DataType_Int32_t,               100,      Transciever_RX },
+      { "R_BAND_IN",  DataType_Int32_t,               100,      Transciever_RX },
+      { "L_BAND_IN",  DataType_Int32_t,               100,      Transciever_RX },
+      { "R_PSD_IN",   DataType_Int32_t,               100,      Transciever_RX },
+      { "L_PSD_IN",   DataType_Int32_t,               100,      Transciever_RX },
+      { "R_FFT_OUT",  DataType_Int16_t,               32,       Transciever_TX },
+      { "L_FFT_OUT",  DataType_Int16_t,               32,       Transciever_TX },
+      { "R_PSD",      DataType_ProcessedSoundData_t,  1,        Transciever_TX },
+      { "L_PSD",      DataType_ProcessedSoundData_t,  1,        Transciever_TX }
     };
 };
 

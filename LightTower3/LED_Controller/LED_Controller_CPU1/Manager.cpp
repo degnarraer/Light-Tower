@@ -284,5 +284,5 @@ void Manager::ProcessLeftFFTDataBufferQueue()
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("L_PSD")
                           , m_Sound_Processor.GetByteCountForDataItem("L_PSD")
                           , false
-                          , false );                              
+                          , false );                      
 }
