@@ -205,6 +205,11 @@ void SerialDataLinkCore::ProcessDataTXEventQueue()
 					ProcessTXData<float>(m_DataItem[i]);
 				}
 				break;
+				case DataType_ProcessedSoundData_t:
+				{
+					ProcessTXData<ProcessedSoundData_t>(m_DataItem[i]);
+				}
+				break;
 				default:
 				  Serial << "Error, unsupported data type";
 				break;

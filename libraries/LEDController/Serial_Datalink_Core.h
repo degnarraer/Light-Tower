@@ -19,9 +19,9 @@
 #ifndef SerialDataLink_H
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
-#define QUEUE_DEBUG true
-#define SERIAL_TX_DEBUG true
-#define SERIAL_RX_DEBUG true
+#define QUEUE_DEBUG false
+#define SERIAL_TX_DEBUG false
+#define SERIAL_RX_DEBUG false
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -95,7 +95,7 @@ class DataSerializer: public CommonUtils
 								{
 									Buffer[j] = (uint8_t)(docIn["Data"][j]);
 								}
-								PushValueToQueue(Buffer, m_DataItem[i].QueueHandle_RX, false);
+								PushValueToQueue(Buffer, m_DataItem[i].QueueHandle_RX, false, false);
 								delete Buffer;								
 							}
 							else

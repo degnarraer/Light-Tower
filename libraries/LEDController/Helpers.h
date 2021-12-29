@@ -234,11 +234,15 @@ class CommonUtils
 			  uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			  if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 			  {
-				if(true == DebugMessage)Serial << "Adding Data to Queue\n";
 				if(true == WaitForOpenSlot || uxQueueSpacesAvailable(GiveToQueue) > 0)
 				{
 					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-				}			
+					if(true == DebugMessage)Serial << "Added Data to Queue\n";
+				}
+				else
+				{
+					if(true == DebugMessage)Serial << "Queue Full\n";
+				}	
 			  }
 			  else
 			  {
@@ -289,11 +293,16 @@ class CommonUtils
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}
 		
-		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot)
+		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot, bool DebugMessage)
 		{
-			if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+			if(true == WaitForOpenSlot || uxQueueSpacesAvailable(Queue) > 0)
 			{
-				if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+				if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+				else{ if(true == DebugMessage)Serial << "Value Pushed to Queue\n"; }
+			}
+			else
+			{
+				if(true == DebugMessage)Serial << "Queue Full\n";
 			}
 		}
 		
