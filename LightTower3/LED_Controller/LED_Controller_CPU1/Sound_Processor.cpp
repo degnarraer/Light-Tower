@@ -62,19 +62,19 @@ void Sound_Processor::FreeMemory()
 void Sound_Processor::ProcessEventQueue()
 {
   ProcessRightChannelSoundData();
-  //ProcessLeftChannelSoundData();
+  ProcessLeftChannelSoundData();
 }
 
 void Sound_Processor::ProcessFFTEventQueue()
 {
   ProcessRightChannelFFT();
-  //ProcessLeftChannelFFT();
+  ProcessLeftChannelFFT();
 }
 
 void Sound_Processor::ProcessSoundPowerEventQueue()
 {
   ProcessRightChannelPower();
-  //ProcessLeftChannelPower();
+  ProcessLeftChannelPower();
 }
 
 void Sound_Processor::ProcessRightChannelSoundData()

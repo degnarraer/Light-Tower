@@ -19,9 +19,9 @@
 #ifndef SerialDataLink_H
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
-#define QUEUE_DEBUG false
+#define QUEUE_DEBUG true
 #define SERIAL_TX_DEBUG true
-#define SERIAL_RX_DEBUG false
+#define SERIAL_RX_DEBUG true
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
