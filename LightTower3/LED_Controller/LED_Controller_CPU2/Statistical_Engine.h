@@ -81,11 +81,13 @@ class StatisticalEngine : public NamedItem
                         , public Task
                         , public MicrophoneMeasureCallerInterface
                         , public CommonUtils
+                        , public QueueManager
 {
   public:
     StatisticalEngine()
       : NamedItem("StatisticalEngine")
       , Task(GetTitle())
+      , QueueManager(GetTitle() + "_QueueManager", m_ConfigCount)
       , m_Power(0)
       , m_PowerDb(0){}
     virtual ~StatisticalEngine()
@@ -103,6 +105,12 @@ class StatisticalEngine : public NamedItem
     int GetFFTBinIndexForFrequency(float freq);
     float GetFreqForBin(unsigned int bin);
     int GetFFTData(int position);  
+
+    
+    //QueueManager
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
+
   
     //Right Channel Input Data Queues
     QueueHandle_t GetFFTRightBandDataInputQueue() { return m_FFT_Right_BandData_Input_Buffer_Queue; }
@@ -117,6 +125,9 @@ class StatisticalEngine : public NamedItem
     QueueHandle_t GetLeftChannelProcessedSoundBufferQueue() { return m_Left_Channel_Processed_Sound_Buffer_Queue; }
     size_t GetLeftChannelProcessedSoundBufferSize() { return sizeof(m_Left_Channel_Processed_Sound_Data); }
 
+
+
+
   
     //Power Getters
     float GetNormalizedSoundPower();
@@ -128,6 +139,22 @@ class StatisticalEngine : public NamedItem
     int GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
+
+    
+    static const size_t m_ConfigCount = 10;
+    DataItemConfig_t m_ItemConfig[m_ConfigCount]
+    {
+      { "FFT_L",     DataType_Int16_t,                32,   Transciever_RX },
+      { "FFT_R",     DataType_Int16_t,                32,   Transciever_RX },
+      { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX },
+      { "R_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX }
+    };
+
+
+
+
+
+  
     bool m_ProcessFFT = true;
     //BAND Circular Buffer
     bool m_NewBandDataReady = false;

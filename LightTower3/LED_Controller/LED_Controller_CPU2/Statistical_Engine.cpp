@@ -25,6 +25,7 @@
 void StatisticalEngine::Setup()
 {
   if(false == m_MemoryIsAllocated) AllocateMemory();
+  SetupQueueManager();
   //calculateFPS2.Setup();
 }
 

@@ -26,17 +26,27 @@
 class Manager;
 class SerialDataLink: public NamedItem
                     , public SerialDataLinkCore
+                    , public QueueManager
 {
   public:
     SerialDataLink(String Title, HardwareSerial &hSerial): NamedItem(Title)
-                                                         , SerialDataLinkCore(Title, hSerial) {}
+                                                         , SerialDataLinkCore(Title, hSerial)
+                                                         , QueueManager(Title, m_ConfigCount) {}
     virtual ~SerialDataLink(){}
-    DataItemConfig_t* GetConfig() { return ItemConfig; }
-    size_t GetConfigCount() { return m_ConfigCount; }
+    void SetupSerialDataLink()
+    {
+      Serial << GetTitle() << ": Setup\n";
+      SetupQueueManager();
+      SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
+    }
+    
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
     
     static const size_t m_ConfigCount = 10;
-    DataItemConfig_t ItemConfig[m_ConfigCount]
+    DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
       { "FFT_L",     DataType_Int16_t,                32,   Transciever_RX },
       { "FFT_R",     DataType_Int16_t,                32,   Transciever_RX },

@@ -132,13 +132,15 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 }
 void Manager::ProcessRightChannelSoundDataQueue()
 {
-  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_R")
+  MoveDataFromQueueToQueue( "Manager 1"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_R")
                           , m_StatisticalEngine.GetFFTRightBandDataInputQueue()
                           , m_StatisticalEngine.GetFFTRightBandDataBufferSize()
                           , false
                           , false );
 
-  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
+  MoveDataFromQueueToQueue( "Manager 2"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
                           , m_StatisticalEngine.GetRightChannelProcessedSoundBufferQueue()
                           , m_StatisticalEngine.GetRightChannelProcessedSoundBufferSize()
                           , false
@@ -146,13 +148,15 @@ void Manager::ProcessRightChannelSoundDataQueue()
 }
 void Manager::ProcessLeftChannelSoundDataQueue()
 {
-  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_L")
+  MoveDataFromQueueToQueue( "Manager 3"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_L")
                           , m_StatisticalEngine.GetFFTLeftBandDataInputQueue()
                           , m_StatisticalEngine.GetFFTLeftBandDataBufferSize()
                           , false
                           , false );
 
-  MoveDataFromQueueToQueue( m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
+  MoveDataFromQueueToQueue( "Manager 4"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
                           , m_StatisticalEngine.GetLeftChannelProcessedSoundBufferQueue()
                           , m_StatisticalEngine.GetLeftChannelProcessedSoundBufferSize()
                           , false

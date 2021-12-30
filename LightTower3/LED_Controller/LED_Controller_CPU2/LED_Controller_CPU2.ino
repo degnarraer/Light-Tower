@@ -57,7 +57,7 @@ void setup() {
 
   m_I2S_In.Setup();
   m_Manager.Setup();
-  m_SerialDatalink.Setup();
+  m_SerialDatalink.SetupSerialDataLink();
   
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
