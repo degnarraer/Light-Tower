@@ -113,7 +113,7 @@ void setup() {
   m_Mic_Out.Setup();
   m_BT.Setup();
   m_Manager.Setup();
-  m_SerialDatalink.Setup();
+  m_SerialDatalink.SetupSerialDataLink();
   
   m_BTSink.set_stream_reader(read_data_stream);
   m_BTSink.set_on_data_received(data_received_callback);
@@ -122,7 +122,7 @@ void setup() {
   (
     ManagerTaskLoop,            // Function to implement the task
     "ManagerTask",              // Name of the task
-    2000,                       // Stack size in words
+    4000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &ManagerTask,               // Task handle.
@@ -133,7 +133,7 @@ void setup() {
   (
     SoundProcessorTaskLoop,     // Function to implement the task
     "SoundProcessorTask",       // Name of the task
-    2000,                       // Stack size in words
+    4000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &SoundProcessorTask,        // Task handle.
@@ -144,7 +144,7 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    2000,                      // Stack size in words
+    4000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 5,   // Priority of the task
     &FFTTask,                   // Task handle.
@@ -155,7 +155,7 @@ void setup() {
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    2000,                      // Stack size in words
+    4000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &SoundPowerTask,            // Task handle.
@@ -166,7 +166,7 @@ void setup() {
   (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
     "SerialDataLinkSendTask",       // Name of the task
-    2000,                         // Stack size in words
+    4000,                           // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
@@ -177,7 +177,7 @@ void setup() {
   (
     SerialDataLinkRXTaskLoop,         // Function to implement the task
     "SerialDataLinkRXTask",           // Name of the task
-    2000,                            // Stack size in words
+    4000,                             // Stack size in words
     NULL,                             // Task input parameter
     configMAX_PRIORITIES - 1,         // Priority of the task
     &SerialDataLinkRXTask,            // Task handle.
@@ -197,6 +197,7 @@ void ManagerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    //Serial << "1\n";
     m_Manager.RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -208,6 +209,7 @@ void SoundProcessorTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    //Serial << "2\n";
     m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -219,6 +221,7 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    //Serial << "3\n";
     m_Sound_Processor.ProcessFFTEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -230,6 +233,7 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    //Serial << "4\n";
     m_Sound_Processor.ProcessSoundPowerEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -241,6 +245,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    //Serial << "5\n";
     m_SerialDatalink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -252,6 +257,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    //Serial << "6\n";
     m_SerialDatalink.CheckForNewSerialData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }

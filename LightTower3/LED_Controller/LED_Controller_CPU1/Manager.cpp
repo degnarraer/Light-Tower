@@ -134,7 +134,7 @@ void Manager::SetInputType(InputType_t Type)
   {
     case InputType_Microphone:
       m_BT.StopDevice();
-      m_Sound_Processor.Setup(m_Mic_In.GetChannelBytesToRead(), m_Mic_In.GetSampleRate(), 2048);
+      m_Sound_Processor.SetupSoundProcessor(m_Mic_In.GetChannelBytesToRead(), m_Mic_In.GetSampleRate(), 2048);
       m_Mic_In.StartDevice();
       m_Mic_Out.StartDevice();
       SetDACDataFormat(DAC_Data_Format_LSB24);
@@ -143,7 +143,7 @@ void Manager::SetInputType(InputType_t Type)
     case InputType_Bluetooth:
       m_Mic_Out.StopDevice();
       m_Mic_In.StopDevice();
-      m_Sound_Processor.Setup(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 2048);
+      m_Sound_Processor.SetupSoundProcessor(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 2048);
       m_BT.StartDevice();
       SetDACDataFormat(DAC_Data_Format_Default);
       SetDACMuteState(Mute_State_Un_Muted);
@@ -216,14 +216,16 @@ void Manager::ProcessRightChannelDataBufferQueue()
   switch(m_InputType)
   {
     case InputType_Microphone:
-      MoveDataFromQueueToQueue( m_Mic_In.GetRightDataBufferQueue()
+      MoveDataFromQueueToQueue( "MANAGER1"
+                              ,  m_Mic_In.GetRightDataBufferQueue()
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("R_RAW_IN")
                               , m_Mic_In.GetChannelBytesToRead()
                               , false
                               , false );
     break;
     case InputType_Bluetooth:
-      MoveDataFromQueueToQueue( m_BT.GetRightDataBufferQueue()
+      MoveDataFromQueueToQueue( "MANAGER2"
+                              , m_BT.GetRightDataBufferQueue()
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("R_RAW_IN")
                               , m_BT.GetChannelBytesToRead()
                               , false
@@ -239,14 +241,16 @@ void Manager::ProcessLeftChannelDataBufferQueue()
   switch(m_InputType)
   {
     case InputType_Microphone:
-      MoveDataFromQueueToQueue( m_Mic_In.GetLeftDataBufferQueue()
+      MoveDataFromQueueToQueue( "MANAGER3"
+                              , m_Mic_In.GetLeftDataBufferQueue()
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("L_RAW_IN")
                               , m_Mic_In.GetChannelBytesToRead()
                               , false
                               , false );
     break;
     case InputType_Bluetooth:
-      MoveDataFromQueueToQueue( m_BT.GetLeftDataBufferQueue()
+      MoveDataFromQueueToQueue( "MANAGER4"
+                              , m_BT.GetLeftDataBufferQueue()
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("L_RAW_IN")
                               , m_BT.GetChannelBytesToRead()
                               , false
@@ -259,30 +263,34 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 
 void Manager::ProcessRightFFTDataBufferQueue()
 {
-  MoveDataFromQueueToQueue( m_Sound_Processor.GetQueueHandleTXForDataItem("R_FFT_OUT")
+  MoveDataFromQueueToQueue( "MANAGER5"
+                          , m_Sound_Processor.GetQueueHandleTXForDataItem("R_FFT_OUT")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("R_FFT")
                           , m_Sound_Processor.GetByteCountForDataItem("R_FFT_OUT")
                           , false
-                          , false );
+                          , true );
 
-  MoveDataFromQueueToQueue( m_Sound_Processor.GetQueueHandleTXForDataItem("R_PSD")
+  MoveDataFromQueueToQueue( "MANAGER6"
+                          , m_Sound_Processor.GetQueueHandleTXForDataItem("R_PSD")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("R_PSD")
                           , m_Sound_Processor.GetByteCountForDataItem("R_PSD")
                           , false
-                          , false );
+                          , true );
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()
 {
-  MoveDataFromQueueToQueue( m_Sound_Processor.GetQueueHandleTXForDataItem("L_FFT_OUT")
+  MoveDataFromQueueToQueue( "MANAGER7"
+                          , m_Sound_Processor.GetQueueHandleTXForDataItem("L_FFT_OUT")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("L_FFT")
                           , m_Sound_Processor.GetByteCountForDataItem("L_FFT_OUT")
                           , false
-                          , false );
+                          , true );
 
-  MoveDataFromQueueToQueue( m_Sound_Processor.GetQueueHandleTXForDataItem("L_PSD")
+  MoveDataFromQueueToQueue( "MANAGER8"
+                          , m_Sound_Processor.GetQueueHandleTXForDataItem("L_PSD")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("L_PSD")
                           , m_Sound_Processor.GetByteCountForDataItem("L_PSD")
                           , false
-                          , false );                      
+                          , true );
 }

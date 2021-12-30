@@ -26,22 +26,32 @@
 class Manager;
 class SerialDataLink: public NamedItem
                     , public SerialDataLinkCore
+                    , public QueueManager
 {
   public:
     SerialDataLink(String Title, HardwareSerial &hSerial): NamedItem(Title)
-                                                         , SerialDataLinkCore(Title, hSerial) {}
+                                                         , SerialDataLinkCore(Title, hSerial)
+                                                         , QueueManager(Title, m_ConfigCount) {}
     virtual ~SerialDataLink(){}
-    DataItemConfig_t* GetConfig() { return ItemConfig; }
-    size_t GetConfigCount() { return m_ConfigCount; }
-  private:
+    void SetupSerialDataLink()
+    {
+      Serial << GetTitle() << ": Setup\n";
+      SetupQueueManager();
+      SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
+    }
     
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
+    
+  private:
     static const size_t m_ConfigCount = 4;
-    DataItemConfig_t ItemConfig[m_ConfigCount]
+    DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
       { "R_FFT",     DataType_Int16_t,              32,   Transciever_TX },
       { "L_FFT",     DataType_Int16_t,              32,   Transciever_TX },
-      { "L_PSD",     DataType_ProcessedSoundData_t,  1,   Transciever_TX },
-      { "R_PSD",     DataType_ProcessedSoundData_t,  1,   Transciever_TX }
+      { "R_PSD",     DataType_ProcessedSoundData_t,  1,   Transciever_TX },
+      { "L_PSD",     DataType_ProcessedSoundData_t,  1,   Transciever_TX }
     };
 
 };

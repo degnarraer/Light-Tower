@@ -41,13 +41,14 @@ class Sound_Processor: public NamedItem
   public:
     Sound_Processor(String Title);
     virtual ~Sound_Processor();
-    void Setup(size_t InputByteCount, int SampleRate, int FFT_Length);
+    void SetupSoundProcessor(size_t InputByteCount, int SampleRate, int FFT_Length);
     void ProcessEventQueue();
     void ProcessFFTEventQueue();
     void ProcessSoundPowerEventQueue();
 
     //QueueManager
-    DataItemConfig_t* GetConfig() { return m_ItemConfig; }
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
     QueueManager* m_QueueManager;
   
@@ -103,8 +104,8 @@ class Sound_Processor: public NamedItem
       { "L_BAND_IN",  DataType_Int32_t,               100,      Transciever_RX },
       { "R_PSD_IN",   DataType_Int32_t,               100,      Transciever_RX },
       { "L_PSD_IN",   DataType_Int32_t,               100,      Transciever_RX },
-      { "R_FFT_OUT",  DataType_Int16_t,               32,       Transciever_TX },
-      { "L_FFT_OUT",  DataType_Int16_t,               32,       Transciever_TX },
+      { "R_FFT",      DataType_Int16_t,               32,       Transciever_TX },
+      { "L_FFT",      DataType_Int16_t,               32,       Transciever_TX },
       { "R_PSD",      DataType_ProcessedSoundData_t,  1,        Transciever_TX },
       { "L_PSD",      DataType_ProcessedSoundData_t,  1,        Transciever_TX }
     };

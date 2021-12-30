@@ -15,10 +15,15 @@ class QueueManager
 		{
 			if(true == m_MemoryAllocated)FreeMemory();
 		}
-		virtual DataItemConfig_t* GetConfig() = 0;
-		void Setup(size_t DataItemCount)
+		virtual DataItemConfig_t* GetDataItemConfig() = 0;
+		virtual size_t GetDataItemConfigCount() = 0;
+		
+		DataItem_t& GetQueueManagerDataItems() { return *m_DataItem; }
+		size_t GetQueueManagerDataItemCount() { return m_DataItemCount; }
+		
+		void SetupQueueManager()
 		{
-			m_DataItemCount = DataItemCount;
+			Serial << m_Title << "Setup\n";
 			if(true == m_MemoryAllocated)FreeMemory();
 			AllocateMemory();
 		}
@@ -33,6 +38,11 @@ class QueueManager
 						return m_DataItem[i].QueueHandle_RX;
 					}
 				}
+				Serial << "GetQueueHandleRXForDataItem: Data Item Not Found\n";
+			}
+			else
+			{
+				Serial << "GetQueueHandleRXForDataItem: NULL Data Item\n";
 			}
 			return NULL;
 		}
@@ -48,6 +58,10 @@ class QueueManager
 						return m_DataItem[i].QueueHandle_TX;
 					}
 				}
+			}
+			else
+			{
+				Serial << "GetQueueHandleTXForDataItem: NULL Data Item\n";
 			}
 			return NULL;
 		}
@@ -90,15 +104,26 @@ class QueueManager
 					}
 				}
 			}
+			else
+			{
+				Serial << "GetByteCountForDataItem: NULL Data Item\n";
+			}
 			return NULL;
 		}
 		
 		void PushValueToTXQueue(void* Value, String Name, bool WaitForOpenSlot)
 		{
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
-			if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+			if(NULL != Queue)
 			{
-				if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+				{
+					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+				}
+			}
+			else
+			{
+				Serial << "PushValueToTXQueue: NULL Queue\n";
 			}
 		}
 		
@@ -124,18 +149,23 @@ class QueueManager
 					}
 				}
 			}
+			else
+			{
+				Serial << "GetValueFromRXQueue: NULL Queue\n";
+			}
 			return false;
 		}
 	private:
 		DataItem_t* m_DataItem;
-		size_t &m_DataItemCount;
+		size_t m_DataItemCount;
 		String m_Title = "";
 		bool m_MemoryAllocated = false;
 		void AllocateMemory()
 		{
 			size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
 			Serial << m_Title << ": Allocating " << m_DataItemCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
-			DataItemConfig_t* ConfigFile = GetConfig();
+			m_DataItemCount = GetDataItemConfigCount();
+			DataItemConfig_t* ConfigFile = GetDataItemConfig();
 			m_DataItem = new DataItem_t[m_DataItemCount];
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
@@ -223,7 +253,7 @@ class QueueManager
 class CommonUtils
 {
 	public:
-		void MoveDataFromQueueToQueue(QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
+		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
 		  if(NULL != TakeFromQueue && NULL != GiveToQueue)
 		  {
@@ -251,9 +281,13 @@ class CommonUtils
 			  delete DataBuffer;
 			}
 		  }
+		  else
+		  {
+		     Serial << "MoveDataFromQueueToQueue: " << DebugTitle << " NULL Queue\n";
+		  }
 		}
 		
-		void MoveDataFromQueueToQueues(QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
+		void MoveDataFromQueueToQueues(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
 		  if(NULL != TakeFromQueue)
 		  {
@@ -275,6 +309,10 @@ class CommonUtils
 								if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
 							}
 						}
+						else
+						{
+							Serial << "MoveDataFromQueueToQueues: " << DebugTitle << " NULL Queue\n";
+						}
 					}						
 				}
 				else
@@ -283,6 +321,10 @@ class CommonUtils
 				}
 				delete DataBuffer;
 			}
+		  }
+		  else
+		  {
+		     Serial << "MoveDataFromQueueToQueues: " << DebugTitle << " NULL Queue\n";
 		  }
 		}
 
@@ -295,14 +337,21 @@ class CommonUtils
 		
 		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot, bool DebugMessage)
 		{
-			if(true == WaitForOpenSlot || uxQueueSpacesAvailable(Queue) > 0)
+			if(NULL != Queue)
 			{
-				if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-				else{ if(true == DebugMessage)Serial << "Value Pushed to Queue\n"; }
+				if(true == WaitForOpenSlot || uxQueueSpacesAvailable(Queue) > 0)
+				{
+					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+					else{ if(true == DebugMessage)Serial << "Value Pushed to Queue\n"; }
+				}
+				else
+				{
+					if(true == DebugMessage)Serial << "Queue Full\n";
+				}
 			}
 			else
 			{
-				if(true == DebugMessage)Serial << "Queue Full\n";
+				Serial << "PushValueToQueue: NULL Queue\n";
 			}
 		}
 		
@@ -326,6 +375,10 @@ class CommonUtils
 						delete DataBuffer;
 					}
 				}
+			}
+			else
+			{
+				Serial << "GetValueFromQueue: NULL Queue\n";
 			}
 			return false;
 		}

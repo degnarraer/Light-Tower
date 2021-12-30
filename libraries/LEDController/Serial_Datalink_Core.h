@@ -20,7 +20,7 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG false
+#define SERIAL_TX_DEBUG true
 #define SERIAL_RX_DEBUG false
 
 #include <HardwareSerial.h>
@@ -30,14 +30,14 @@
 #include <ArduinoJson.h>
 
 class DataSerializer: public CommonUtils
+
 {
 	public:
-		DataSerializer(DataItem_t* DataItem, size_t& DataItemCount): m_DataItem(DataItem)
-																   , m_DataItemCount(DataItemCount){}
+		DataSerializer(){}
 		virtual ~DataSerializer(){}
-		void SetDataItems(DataItem_t* DataItem, size_t& DataItemCount)
+		void SetDataSerializerDataItems(DataItem_t& DataItem, size_t DataItemCount)
 		{
-			m_DataItem = DataItem;
+			m_DataItem = &DataItem;
 			m_DataItemCount = DataItemCount;
 		}
 		
@@ -110,27 +110,28 @@ class DataSerializer: public CommonUtils
 	private:
 		StaticJsonDocument<3000> docIn;
 		StaticJsonDocument<3000> docOut;
-		DataItem_t* m_DataItem = NULL;
-		size_t& m_DataItemCount;
+		DataItem_t* m_DataItem;
+		size_t m_DataItemCount = 0;
 };
 
-class SerialDataLinkCore: public NamedItem
-						, public DataSerializer
+class SerialDataLinkCore: public DataSerializer
 {
   public:
     SerialDataLinkCore(String Title, HardwareSerial &hSerial);
     virtual ~SerialDataLinkCore();
-	virtual DataItemConfig_t* GetConfig() = 0;
-	virtual size_t GetConfigCount() = 0;
 	
-    void Setup();
     void CheckForNewSerialData();
     void ProcessDataTXEventQueue();
-	QueueHandle_t GetQueueHandleRXForDataItem(String Name);
-	QueueHandle_t GetQueueHandleTXForDataItem(String Name);
-	size_t GetByteCountForDataItem(String Name);
+	void SetSerialDataLinkDataItems(DataItem_t& DataItem, size_t Count) 
+	{ 
+		m_DataItem = &DataItem;
+		m_DataItemCount = Count;
+		SetDataSerializerDataItems(DataItem, Count);
+	}
+
   private:
-  DataItem_t* m_DataItem = NULL;
+  String m_Title;
+  DataItem_t* m_DataItem;
   size_t m_DataItemCount = 0;
   HardwareSerial &m_hSerial;
   String m_InboundStringData = "";
@@ -150,7 +151,7 @@ class SerialDataLinkCore: public NamedItem
   template <class T>
   void ProcessTXData(DataItem_t DataItem)
   {
-	  size_t ByteCount = sizeof(T) * DataItem.Count;
+	size_t ByteCount = sizeof(T) * DataItem.Count;
 	T* DataBuffer = (T*)malloc(ByteCount);
 	if ( xQueueReceive(DataItem.QueueHandle_TX, DataBuffer, portMAX_DELAY) != pdTRUE ){Serial.println("Error Reading Queue");}
 	memcpy(DataItem.Object, DataBuffer, ByteCount);
