@@ -264,33 +264,33 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 void Manager::ProcessRightFFTDataBufferQueue()
 {
   MoveDataFromQueueToQueue( "MANAGER5"
-                          , m_Sound_Processor.GetQueueHandleTXForDataItem("R_FFT_OUT")
+                          , m_Sound_Processor.GetQueueHandleTXForDataItem("R_FFT")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("R_FFT")
-                          , m_Sound_Processor.GetByteCountForDataItem("R_FFT_OUT")
+                          , m_Sound_Processor.GetByteCountForDataItem("R_FFT")
                           , false
-                          , true );
+                          , false );
 
   MoveDataFromQueueToQueue( "MANAGER6"
                           , m_Sound_Processor.GetQueueHandleTXForDataItem("R_PSD")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("R_PSD")
                           , m_Sound_Processor.GetByteCountForDataItem("R_PSD")
                           , false
-                          , true );
+                          , false );
 }
 
 void Manager::ProcessLeftFFTDataBufferQueue()
 {
   MoveDataFromQueueToQueue( "MANAGER7"
-                          , m_Sound_Processor.GetQueueHandleTXForDataItem("L_FFT_OUT")
+                          , m_Sound_Processor.GetQueueHandleTXForDataItem("L_FFT")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("L_FFT")
-                          , m_Sound_Processor.GetByteCountForDataItem("L_FFT_OUT")
+                          , m_Sound_Processor.GetByteCountForDataItem("L_FFT")
                           , false
-                          , true );
+                          , false );
 
   MoveDataFromQueueToQueue( "MANAGER8"
                           , m_Sound_Processor.GetQueueHandleTXForDataItem("L_PSD")
                           , m_SerialDataLink.GetQueueHandleTXForDataItem("L_PSD")
                           , m_Sound_Processor.GetByteCountForDataItem("L_PSD")
                           , false
-                          , true );
+                          , false );
 }
