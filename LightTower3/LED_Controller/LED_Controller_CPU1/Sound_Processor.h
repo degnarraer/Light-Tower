@@ -57,8 +57,8 @@ class Sound_Processor: public NamedItem
     size_t m_InputSampleCount = 0;
     size_t m_BytesToRead = 0;
     size_t m_BandOutputByteCount = 0;
-    int m_SampleRate = 0;
-    int m_FFT_Length = 0;
+    int32_t m_SampleRate = 0;
+    int32_t m_FFT_Length = 0;
 
     //Memory Management
     bool m_MemoryIsAllocated = false;
@@ -66,8 +66,8 @@ class Sound_Processor: public NamedItem
     void FreeMemory();
 
     //CHANNEL DATA INPUT
-    int m_FFT_Right_Buffer_Index = 0;
-    int m_FFT_Left_Buffer_Index = 0;
+    int32_t m_FFT_Right_Buffer_Index = 0;
+    int32_t m_FFT_Left_Buffer_Index = 0;
     
     //CALCULATED OUTPUTS
     int16_t* m_FFT_Right_Data;

@@ -20,8 +20,8 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG false
-#define SERIAL_RX_DEBUG false
+#define SERIAL_TX_DEBUG true
+#define SERIAL_RX_DEBUG true
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -51,7 +51,6 @@ class DataSerializer: public CommonUtils
 			JsonArray data = docOut.createNestedArray("Data");
 			for(int i = 0; i < ByteCount; ++i)
 			{
-				char Out[2];
 				uint8_t Value = ((uint8_t*)Object)[i];
 				CheckSum += Value;
 				data.add(Value);

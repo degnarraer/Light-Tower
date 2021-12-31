@@ -45,9 +45,9 @@ class Manager: public NamedItem
     void ProcessEventQueue();
 
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
-    void RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count){}
+    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count){}
+    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count){}
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count){}
     
   private:
     SerialDataLink &m_SerialDataLink;

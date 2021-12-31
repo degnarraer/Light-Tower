@@ -59,7 +59,7 @@ void Manager::ProcessDataBufferQueue()
     if(uxQueueMessagesWaiting(m_I2S_In.GetDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetDataBufferQueue()) << "\n";
-      char* DataBuffer = (char*)malloc(m_I2S_In.GetBytesToRead());
+      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetBytesToRead());
       if ( xQueueReceive(m_I2S_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_DATA_DEBUG)
@@ -85,7 +85,7 @@ void Manager::ProcessRightChannelDataBufferQueue()
     if(uxQueueMessagesWaiting(m_I2S_In.GetRightDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Right Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetRightDataBufferQueue()) << "\n";
-      char* DataBuffer = (char*)malloc(m_I2S_In.GetChannelBytesToRead());
+      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetChannelBytesToRead());
       if ( xQueueReceive(m_I2S_In.GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
@@ -111,7 +111,7 @@ void Manager::ProcessLeftChannelDataBufferQueue()
     if(uxQueueMessagesWaiting(m_I2S_In.GetLeftDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Left Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetLeftDataBufferQueue()) << "\n";
-      char* DataBuffer = (char*)malloc(m_I2S_In.GetChannelBytesToRead());
+      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetChannelBytesToRead());
       if ( xQueueReceive(m_I2S_In.GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
@@ -133,32 +133,32 @@ void Manager::ProcessLeftChannelDataBufferQueue()
 void Manager::ProcessRightChannelSoundDataQueue()
 {
   MoveDataFromQueueToQueue( "Manager 1"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_R")
-                          , m_StatisticalEngine.GetFFTRightBandDataInputQueue()
-                          , m_StatisticalEngine.GetFFTRightBandDataBufferSize()
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_FFT")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_FFT")
+                          , m_StatisticalEngine.GetByteCountForDataItem("R_FFT")
                           , false
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 2"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_StatisticalEngine.GetRightChannelProcessedSoundBufferQueue()
-                          , m_StatisticalEngine.GetRightChannelProcessedSoundBufferSize()
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_PSD")
+                          , m_StatisticalEngine.GetByteCountForDataItem("R_PSD")
                           , false
                           , false );
 }
 void Manager::ProcessLeftChannelSoundDataQueue()
 {
   MoveDataFromQueueToQueue( "Manager 3"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("FFT_L")
-                          , m_StatisticalEngine.GetFFTLeftBandDataInputQueue()
-                          , m_StatisticalEngine.GetFFTLeftBandDataBufferSize()
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_FFT")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_FFT")
+                          , m_StatisticalEngine.GetByteCountForDataItem("L_FFT")
                           , false
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 4"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_StatisticalEngine.GetLeftChannelProcessedSoundBufferQueue()
-                          , m_StatisticalEngine.GetLeftChannelProcessedSoundBufferSize()
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_PSD")
+                          , m_StatisticalEngine.GetByteCountForDataItem("L_PSD")
                           , false
                           , false );
 }

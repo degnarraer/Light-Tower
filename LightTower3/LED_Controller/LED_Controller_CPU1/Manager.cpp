@@ -157,7 +157,7 @@ void Manager::SetInputType(InputType_t Type)
 
 //I2S_Device_Callback
 //Bluetooth_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count)
+void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
@@ -167,7 +167,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Co
     } 
   }
 }
-void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count)
+void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
@@ -178,7 +178,7 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffe
   }
   
 }
-void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, char* DataBuffer, size_t Count)
+void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
@@ -197,7 +197,7 @@ void Manager::ProcessDataBufferQueue()
     if(uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) > 0)
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) << "\n";
-      char* DataBuffer = (char*)malloc(m_Mic_In.GetBytesToRead());
+      uint8_t* DataBuffer = (uint8_t*)malloc(m_Mic_In.GetBytesToRead());
       if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
         m_Mic_Out.SetSoundBufferData(DataBuffer, m_Mic_Out.GetBytesToRead());

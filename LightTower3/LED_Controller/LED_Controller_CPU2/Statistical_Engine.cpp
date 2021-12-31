@@ -26,13 +26,12 @@ void StatisticalEngine::Setup()
 {
   if(false == m_MemoryIsAllocated) AllocateMemory();
   SetupQueueManager();
-  //calculateFPS2.Setup();
 }
 
 bool StatisticalEngine::NewBandDataReady()
 {
-  bool A = (uxQueueMessagesWaiting(m_FFT_Right_BandData_Input_Buffer_Queue) > 0);
-  bool B = (uxQueueMessagesWaiting(m_FFT_Left_BandData_Input_Buffer_Queue) > 0);
+  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_FFT")) > 0);
+  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_FFT")) > 0);
   //Serial << A << "|" << B << "\n";
   if( A & B )
   {
@@ -48,8 +47,8 @@ bool StatisticalEngine::NewBandDataReady()
 
 bool StatisticalEngine::NewSoundDataReady()
 {
-  bool A = (uxQueueMessagesWaiting(m_Right_Channel_Processed_Sound_Buffer_Queue) > 0);
-  bool B = (uxQueueMessagesWaiting(m_Left_Channel_Processed_Sound_Buffer_Queue) > 0);
+  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD")) > 0);
+  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD")) > 0);
   //Serial << A << "|" << B << "\n";
   if( A & B )
   {
@@ -80,8 +79,8 @@ void StatisticalEngine::RunMyScheduledTask()
 {
   if(true == m_NewSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, m_Right_Channel_Processed_Sound_Buffer_Queue, GetRightChannelProcessedSoundBufferSize(), true, false);
-    GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, m_Left_Channel_Processed_Sound_Buffer_Queue, GetLeftChannelProcessedSoundBufferSize(), true, false);
+    GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetByteCountForDataItem("R_PSD"), true, false);
+    GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetByteCountForDataItem("L_PSD"), true, false);
     
     //To allow the original code to work, we combine the left and right channels into an average
     m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2;
@@ -89,14 +88,16 @@ void StatisticalEngine::RunMyScheduledTask()
     m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2;
     m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2;
     
+    Serial << m_Right_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Right_Channel_Processed_Sound_Data.PowerDB << "|" << m_Right_Channel_Processed_Sound_Data.Minimum << "|" << m_Right_Channel_Processed_Sound_Data.Maximum << "\n";
+    Serial << m_Left_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Left_Channel_Processed_Sound_Data.PowerDB << "|" << m_Left_Channel_Processed_Sound_Data.Minimum << "|" << m_Left_Channel_Processed_Sound_Data.Maximum << "\n";
     Serial << m_Power << "|" << m_PowerDb << "|" << m_signalMin << "|" << m_signalMax << "\n";
     UpdateSoundState();
   }
 
   if(true == m_NewBandDataReady)
   {
-    GetValueFromQueue(m_Right_Band_Values, m_FFT_Right_BandData_Input_Buffer_Queue, GetFFTRightBandDataBufferSize(), true, false);
-    GetValueFromQueue(m_Left_Band_Values, m_FFT_Left_BandData_Input_Buffer_Queue, GetFFTLeftBandDataBufferSize(), true, false);
+    GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_FFT"), GetByteCountForDataItem("R_FFT"), true, false);
+    GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_FFT"), GetByteCountForDataItem("L_FFT"), true, false);
     UpdateBandArray(); 
   }
 }
@@ -106,12 +107,6 @@ void StatisticalEngine::AllocateMemory()
   Serial << GetTitle() << ": Allocating Memory.\n";
   m_Right_Band_Values = (int16_t*)malloc(m_BandInputByteCount);
   m_Left_Band_Values = (int16_t*)malloc(m_BandInputByteCount);
-  
-  CreateQueue(m_FFT_Right_BandData_Input_Buffer_Queue, m_BandInputByteCount, 10, true);
-  CreateQueue(m_FFT_Left_BandData_Input_Buffer_Queue, m_BandInputByteCount, 10, true);
-  
-  CreateQueue(m_Right_Channel_Processed_Sound_Buffer_Queue, sizeof(m_Right_Channel_Processed_Sound_Data), 10, true);
-  CreateQueue(m_Left_Channel_Processed_Sound_Buffer_Queue, sizeof(m_Left_Channel_Processed_Sound_Data), 10, true);
   m_MemoryIsAllocated = true;
 }
 
@@ -121,12 +116,6 @@ void StatisticalEngine::FreeMemory()
   
   delete m_Right_Band_Values;
   delete m_Left_Band_Values;
-  
-  vQueueDelete(m_FFT_Right_BandData_Input_Buffer_Queue);
-  vQueueDelete(m_FFT_Left_BandData_Input_Buffer_Queue);
-  
-  vQueueDelete(m_Right_Channel_Processed_Sound_Buffer_Queue);
-  vQueueDelete(m_Left_Channel_Processed_Sound_Buffer_Queue);
   m_MemoryIsAllocated = false;
 }
 

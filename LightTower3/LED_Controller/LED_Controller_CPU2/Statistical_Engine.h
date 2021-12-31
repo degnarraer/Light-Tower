@@ -105,30 +105,11 @@ class StatisticalEngine : public NamedItem
     int GetFFTBinIndexForFrequency(float freq);
     float GetFreqForBin(unsigned int bin);
     int GetFFTData(int position);  
-
-    
+  
     //QueueManager
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_ConfigCount; }
 
-  
-    //Right Channel Input Data Queues
-    QueueHandle_t GetFFTRightBandDataInputQueue() { return m_FFT_Right_BandData_Input_Buffer_Queue; }
-    size_t GetFFTRightBandDataBufferSize() { return m_BandInputByteCount; }
-    QueueHandle_t GetRightChannelProcessedSoundBufferQueue() { return m_Right_Channel_Processed_Sound_Buffer_Queue; }
-    size_t GetRightChannelProcessedSoundBufferSize() { return sizeof(m_Right_Channel_Processed_Sound_Data); }
-
-  
-    //Left Channel Input Data Queues
-    QueueHandle_t GetFFTLeftBandDataInputQueue() { return m_FFT_Left_BandData_Input_Buffer_Queue; }
-    size_t GetFFTLeftBandDataBufferSize() { return m_BandInputByteCount; }
-    QueueHandle_t GetLeftChannelProcessedSoundBufferQueue() { return m_Left_Channel_Processed_Sound_Buffer_Queue; }
-    size_t GetLeftChannelProcessedSoundBufferSize() { return sizeof(m_Left_Channel_Processed_Sound_Data); }
-
-
-
-
-  
     //Power Getters
     float GetNormalizedSoundPower();
     
@@ -141,20 +122,15 @@ class StatisticalEngine : public NamedItem
   private:
 
     
-    static const size_t m_ConfigCount = 10;
+    static const size_t m_ConfigCount = 4;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "FFT_L",     DataType_Int16_t,                32,   Transciever_RX },
-      { "FFT_R",     DataType_Int16_t,                32,   Transciever_RX },
-      { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX },
-      { "R_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX }
+      { "R_FFT",     DataType_Int16_t,                32,   Transciever_RX },
+      { "L_FFT",     DataType_Int16_t,                32,   Transciever_RX },
+      { "R_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX },
+      { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX }
     };
 
-
-
-
-
-  
     bool m_ProcessFFT = true;
     //BAND Circular Buffer
     bool m_NewBandDataReady = false;
@@ -192,14 +168,10 @@ class StatisticalEngine : public NamedItem
     
     //Right Channel Input Sound Data
     int16_t* m_Right_Band_Values;
-    QueueHandle_t m_FFT_Right_BandData_Input_Buffer_Queue = NULL;
-    QueueHandle_t m_Right_Channel_Processed_Sound_Buffer_Queue = NULL;
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Input Sound Data
     int16_t* m_Left_Band_Values;
-    QueueHandle_t m_FFT_Left_BandData_Input_Buffer_Queue = NULL;
-    QueueHandle_t m_Left_Channel_Processed_Sound_Buffer_Queue = NULL;
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
     //Sound Detection

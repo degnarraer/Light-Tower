@@ -144,9 +144,9 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 }
 void Bluetooth_Sink::AllocateMemory()
 {
-	m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
-	m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
-	m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
+	m_SoundBufferData = (uint8_t*)malloc(m_TotalBytesToRead);
+	m_RightChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
+	m_LeftChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 
 	CreateQueue(m_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
 	CreateQueue(m_Right_Data_Buffer_Queue, m_ChannelBytesToRead, 10, true);

@@ -82,7 +82,7 @@ void I2S_Device::StopDevice()
 	}
 }
 		
-int32_t I2S_Device::GetDataBufferValue(char* DataBuffer, size_t index)
+int32_t I2S_Device::GetDataBufferValue(uint8_t* DataBuffer, size_t index)
 {
 	switch(m_BytesPerSample)
 	{
@@ -100,7 +100,7 @@ int32_t I2S_Device::GetDataBufferValue(char* DataBuffer, size_t index)
 	}
 }
 
-void I2S_Device::SetDataBufferValue(char* DataBuffer, size_t index, int32_t value)
+void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value)
 {
 	switch(m_BytesPerSample)
 	{
@@ -118,7 +118,7 @@ void I2S_Device::SetDataBufferValue(char* DataBuffer, size_t index, int32_t valu
 	}
 }
 
-void I2S_Device::SetSoundBufferData(char *SoundBufferData, size_t ByteCount)
+void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
   for(int i = 0; i < m_TotalBytesToRead; ++i)
   {
@@ -196,7 +196,7 @@ int I2S_Device::ReadSamples()
   return bytes_read;
 }
 
-int I2S_Device::WriteSamples(char *samples, size_t ByteCount)
+int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 {
   // write to i2s
   size_t bytes_written = 0;
@@ -297,9 +297,9 @@ void I2S_Device::ProcessEventQueue()
 void I2S_Device::AllocateMemory()
 {
 	Serial << GetTitle() << ": Allocating Memory.\n";    
-    m_SoundBufferData = (char*)malloc(m_TotalBytesToRead);
-    m_RightChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
-    m_LeftChannel_SoundBufferData = (char*)malloc(m_ChannelBytesToRead);
+    m_SoundBufferData = (uint8_t*)malloc(m_TotalBytesToRead);
+    m_RightChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
+    m_LeftChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 
 	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
 	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);

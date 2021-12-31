@@ -78,7 +78,7 @@ void setup() {
   (
     SerialDataRXTaskLoop,           // Function to implement the task
     "SerialDataRXTask",             // Name of the task
-    10000,                          // Stack size in words
+    2000,                           // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &SerialDataRXTask,              // Task handle.
