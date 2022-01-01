@@ -20,8 +20,8 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG true
-#define SERIAL_RX_DEBUG true
+#define SERIAL_TX_DEBUG false
+#define SERIAL_RX_DEBUG false
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -37,19 +37,20 @@ class DataSerializer: public CommonUtils
 		virtual ~DataSerializer(){}
 		void SetDataSerializerDataItems(DataItem_t& DataItem, size_t DataItemCount)
 		{
-			m_DataItem = &DataItem;
-			m_DataItemCount = DataItemCount;
+			m_DataItems = &DataItem;
+			m_DataItemsCount = DataItemCount;
 		}
 		
-		String Serialize(String Name, String DataType, void* Object, size_t ByteCount)
+		String Serialize(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
 			docOut.clear();
 			docOut["Name"] = Name;
-			docOut["Count"] = ByteCount;
-			docOut["DataType"] = DataType;
+			docOut["Count"] = Count;
+			docOut["DataType"] = DataTypeStrings[DataType];
 			JsonArray data = docOut.createNestedArray("Data");
-			for(int i = 0; i < ByteCount; ++i)
+			docOut["TotalByteCount"] = GetSizeOfDataType(DataType) * Count;
+			for(int i = 0; i < docOut["TotalByteCount"]; ++i)
 			{
 				uint8_t Value = ((uint8_t*)Object)[i];
 				CheckSum += Value;
@@ -71,36 +72,42 @@ class DataSerializer: public CommonUtils
 			}
 			else
 			{
-				if(NULL != m_DataItem)
+				if(NULL != m_DataItems)
 				{
-					for(int i = 0; i < m_DataItemCount; ++i)
+					for(int i = 0; i < m_DataItemsCount; ++i)
 					{
-						String ItemName = (m_DataItem[i]).Name;
+						String ItemName = (m_DataItems[i]).Name;
 						String DocName = docIn["Name"];
 						if(true == ItemName.equals(DocName))
 						{
 							int CheckSumCalc = 0;
 							int CheckSumIn = docIn["CheckSum"];
-							int ByteCountIn = docIn["Count"];
-							int ByteCountCalc = docIn["Data"].size();
-							for(int j = 0; j < ByteCountCalc; ++j)
+							int CountIn = docIn["Count"];
+							int ByteCountIn = docIn["TotalByteCount"];
+							int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn["DataType"]));
+							int DataByteCount = docIn["Data"].size();
+							uint8_t* Buffer = (uint8_t*)malloc(DataByteCount);
+							if(ByteCountInCalc == DataByteCount)
 							{
-								CheckSumCalc += (uint8_t)(docIn["Data"][j]);
-							}
-							if(CheckSumCalc == CheckSumIn && ByteCountCalc == ByteCountIn)
-							{
-								uint8_t* Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);
-								for(int j = 0; j < ByteCountIn; ++j)
+								for(int j = 0; j < DataByteCount; ++j)
 								{
+									CheckSumCalc += (uint8_t)(docIn["Data"][j]);
 									Buffer[j] = (uint8_t)(docIn["Data"][j]);
 								}
-								PushValueToQueue(Buffer, m_DataItem[i].QueueHandle_RX, false, false);
-								delete Buffer;								
+								if(CheckSumCalc == CheckSumIn)
+								{
+									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, false);
+								}
+								else
+								{
+									Serial << "Deserialize failed: Checksum Error\n";
+								}
 							}
 							else
 							{
-								Serial << "Deserialize failed: Checksum Error\n";
+								Serial << "Deserialize failed: Byte Count Error\n";
 							}
+							return;
 						}
 					}
 				}
@@ -109,8 +116,8 @@ class DataSerializer: public CommonUtils
 	private:
 		StaticJsonDocument<3000> docIn;
 		StaticJsonDocument<3000> docOut;
-		DataItem_t* m_DataItem;
-		size_t m_DataItemCount = 0;
+		DataItem_t* m_DataItems;
+		size_t m_DataItemsCount = 0;
 };
 
 class SerialDataLinkCore: public DataSerializer
@@ -119,43 +126,50 @@ class SerialDataLinkCore: public DataSerializer
     SerialDataLinkCore(String Title, HardwareSerial &hSerial);
     virtual ~SerialDataLinkCore();
 	
-    void CheckForNewSerialData();
+    void GetRXData();
     void ProcessDataTXEventQueue();
 	void SetSerialDataLinkDataItems(DataItem_t& DataItem, size_t Count) 
 	{ 
-		m_DataItem = &DataItem;
-		m_DataItemCount = Count;
+		m_DataItems = &DataItem;
+		m_DataItemsCount = Count;
 		SetDataSerializerDataItems(DataItem, Count);
 	}
 
   private:
   String m_Title;
-  DataItem_t* m_DataItem;
-  size_t m_DataItemCount = 0;
+  DataItem_t* m_DataItems;
+  size_t m_DataItemsCount = 0;
   HardwareSerial &m_hSerial;
   String m_InboundStringData = "";
   
-  void EncodeAndTransmitData(String Name, String DataType, void* Object, size_t ByteCount)
+  void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
   {
-	  String DataToSend = Serialize(Name, DataType, Object, ByteCount);
+	  String DataToSend = Serialize(Name, DataType, Object, Count);
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
 	  m_hSerial.println(DataToSend);
   }
   
-  void DecodeAndStoreData(String Data)
-  {
-	  DeSerialize(Data);
-  }
-  
-  template <class T>
   void ProcessTXData(DataItem_t DataItem)
   {
-	size_t ByteCount = sizeof(T) * DataItem.Count;
-	T* DataBuffer = (T*)malloc(ByteCount);
-	if ( xQueueReceive(DataItem.QueueHandle_TX, DataBuffer, portMAX_DELAY) != pdTRUE ){Serial.println("Error Reading Queue");}
-	memcpy(DataItem.Object, DataBuffer, ByteCount);
-	EncodeAndTransmitData(DataItem.Name, DataTypeStrings[DataItem.DataType], DataItem.Object, ByteCount);
-	delete DataBuffer;
+	if(NULL != DataItem.QueueHandle_TX)
+	{
+		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
+		if(MessageCount > 0)
+		{
+			size_t ByteCount = GetSizeOfDataType(DataItem.DataType) * DataItem.Count;
+			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
+			if ( xQueueReceive(DataItem.QueueHandle_TX, DataBuffer, portMAX_DELAY) != pdTRUE )
+			{
+				Serial.println("Error Reading Queue");
+			}
+			else
+			{
+				memcpy(DataItem.Object, DataBuffer, ByteCount);
+				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.Object, DataItem.Count);
+			}
+			delete DataBuffer;
+		}
+	}
   }
 };
 

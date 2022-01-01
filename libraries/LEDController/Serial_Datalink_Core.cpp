@@ -27,7 +27,7 @@ SerialDataLinkCore::~SerialDataLinkCore()
 {
 }
 
-void SerialDataLinkCore::CheckForNewSerialData()
+void SerialDataLinkCore::GetRXData()
 {
   for(int i = 0; i < m_hSerial.available(); ++i)
   {
@@ -38,7 +38,7 @@ void SerialDataLinkCore::CheckForNewSerialData()
 	{
 	  m_InboundStringData.trim();
 	  if(true == SERIAL_RX_DEBUG) Serial << m_InboundStringData << "\n";
-	  DecodeAndStoreData(m_InboundStringData);
+	  DeSerialize(m_InboundStringData);
 	  m_InboundStringData.clear();
 	}
   }
@@ -46,54 +46,16 @@ void SerialDataLinkCore::CheckForNewSerialData()
 
 void SerialDataLinkCore::ProcessDataTXEventQueue()
 {
-  if(NULL != m_DataItem)
+  if(NULL != m_DataItems)
   {
-    for(int i = 0; i < m_DataItemCount; ++i)
+    for(int i = 0; i < m_DataItemsCount; ++i)
     {
-      if(NULL != m_DataItem[i].QueueHandle_TX)
+      if(NULL != m_DataItems[i].QueueHandle_TX)
       {
-        if(uxQueueMessagesWaiting(m_DataItem[i].QueueHandle_TX) > 0)
+        if(uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) > 0)
 		{
-			if(true == QUEUE_DEBUG) Serial << m_Title << " Queue Count : " << uxQueueMessagesWaiting(m_DataItem[i].QueueHandle_TX) << "\n";
-			switch(m_DataItem[i].DataType)
-			{
-				case DataType_Int16_t:
-				{
-					ProcessTXData<int16_t>(m_DataItem[i]);
-				}
-				break;
-				case DataType_Int32_t:
-				{	
-					ProcessTXData<int32_t>(m_DataItem[i]);
-				}
-				break;
-				case DataType_Uint16_t:
-				{
-					ProcessTXData<uint16_t>(m_DataItem[i]);
-				}
-				break;
-				case DataType_Uint32_t:
-				{
-					ProcessTXData<uint32_t>(m_DataItem[i]);
-				}
-				break;
-				case DataType_String:
-					//EncodeAndTransmitData<String>(m_DataItem[i].Name, m_DataItem[i].Object, m_DataItem[i].Count);
-				break;
-				case DataType_Float:
-				{
-					ProcessTXData<float>(m_DataItem[i]);
-				}
-				break;
-				case DataType_ProcessedSoundData_t:
-				{
-					ProcessTXData<ProcessedSoundData_t>(m_DataItem[i]);
-				}
-				break;
-				default:
-				  Serial << "Error, unsupported data type";
-				break;
-			}
+			if(true == QUEUE_DEBUG) Serial << m_Title << " Queue Count : " << uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) << "\n";
+			ProcessTXData(m_DataItems[i]);
         }
       }
     } 

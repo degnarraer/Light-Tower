@@ -145,7 +145,12 @@ class QueueManager
 							memcpy(Value, DataBuffer, ByteCount);
 							return true;
 						}
-						delete DataBuffer;
+						else
+						{
+							Serial << "Error Receiving Queue!\n";
+							delete DataBuffer;
+							return false;
+						}
 					}
 				}
 			}
@@ -155,6 +160,7 @@ class QueueManager
 			}
 			return false;
 		}
+		
 	private:
 		DataItem_t* m_DataItem;
 		size_t m_DataItemCount;
@@ -171,55 +177,9 @@ class QueueManager
 			{
 				void* Object;
 				size_t bytes = 0;
-
-				switch(ConfigFile[i].DataType)
-				{
-					case DataType_Int16_t:
-					{
-						bytes = sizeof(int16_t) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					case DataType_Int32_t:
-					{
-						bytes = sizeof(int32_t) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					case DataType_Uint16_t:
-					{
-						bytes = sizeof(uint16_t) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					case DataType_Uint32_t:
-					{
-						bytes = sizeof(uint32_t) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					case DataType_String:
-					{
-						bytes = sizeof(String) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					case DataType_Float:
-					{
-						bytes = sizeof(float) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					case DataType_ProcessedSoundData_t:
-					{
-						bytes = sizeof(DataType_ProcessedSoundData_t) * ConfigFile[i].Count;
-						Object = malloc(bytes);
-					}
-					break;
-					default:
-						Serial << m_Title << ": Error, unsupported data type\n";
-					break;
-				}
+				
+				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
+				Object = malloc(bytes);
 				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, 10, true);
 				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, 10, true);
 				Serial << m_Title << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
@@ -247,6 +207,36 @@ class QueueManager
 			if(true == DebugMessage) Serial << "Creating Queue: " << Name << " of size: " << ByteCount << "\n";
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
+		}
+		size_t GetSizeOfDataType(DataType_t DataType)
+		{
+			switch(DataType)
+			{
+				case DataType_Int16_t:
+					return sizeof(int16_t);
+				break;
+				case DataType_Int32_t:
+					return sizeof(int32_t);
+				break;
+				case DataType_Uint16_t:
+					return sizeof(uint16_t);
+				break;
+				case DataType_Uint32_t:
+					return sizeof(uint32_t);
+				break;
+				case DataType_String:
+					return sizeof(String);
+				break;
+				case DataType_Float:
+					return sizeof(float);
+				break;
+				case DataType_ProcessedSoundData_t:
+					return sizeof(ProcessedSoundData_t);
+				break;
+				default:
+					return 0;
+				break;
+			}
 		}
 };
 
@@ -370,9 +360,15 @@ class CommonUtils
 						if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
 						{
 							memcpy(Value, DataBuffer, ByteCount);
+							delete DataBuffer;
 							return true;
 						}
-						delete DataBuffer;
+						else
+						{
+							Serial << "Error Receiving Queue!\n";
+							delete DataBuffer;
+							return false;
+						}
 					}
 				}
 			}
@@ -390,6 +386,36 @@ class CommonUtils
 				if(DataType.equals(DataTypeStrings[i]))return (DataType_t)i;
 			}
 			return DataType_Undef;
+		}
+		size_t GetSizeOfDataType(DataType_t DataType)
+		{
+			switch(DataType)
+			{
+				case DataType_Int16_t:
+					return sizeof(int16_t);
+				break;
+				case DataType_Int32_t:
+					return sizeof(int32_t);
+				break;
+				case DataType_Uint16_t:
+					return sizeof(uint16_t);
+				break;
+				case DataType_Uint32_t:
+					return sizeof(uint32_t);
+				break;
+				case DataType_String:
+					return sizeof(String);
+				break;
+				case DataType_Float:
+					return sizeof(float);
+				break;
+				case DataType_ProcessedSoundData_t:
+					return sizeof(ProcessedSoundData_t);
+				break;
+				default:
+					return 0;
+				break;
+			}
 		}
 };
 

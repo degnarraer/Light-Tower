@@ -42,7 +42,7 @@ void setup() {
   m_hSerial.end();
   m_hSerial.setRxBufferSize(1024);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(400000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
+  m_hSerial.updateBaudRate(250000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
   //PC Serial Communication
@@ -117,7 +117,7 @@ void SerialDataRXTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    m_SerialDatalink.CheckForNewSerialData();
+    m_SerialDatalink.GetRXData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
