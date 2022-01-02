@@ -143,6 +143,7 @@ class QueueManager
 						if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
 						{
 							memcpy(Value, DataBuffer, ByteCount);
+							delete DataBuffer;
 							return true;
 						}
 						else

@@ -107,6 +107,7 @@ class DataSerializer: public CommonUtils
 							{
 								Serial << "Deserialize failed: Byte Count Error\n";
 							}
+							delete Buffer;
 							return;
 						}
 					}
