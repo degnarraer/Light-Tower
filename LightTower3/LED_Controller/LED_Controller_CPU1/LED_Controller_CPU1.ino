@@ -124,7 +124,7 @@ void setup() {
     "ManagerTask",              // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
+    configMAX_PRIORITIES - 1,  // Priority of the task
     &ManagerTask,               // Task handle.
     0                           // Core where the task should run
   );
