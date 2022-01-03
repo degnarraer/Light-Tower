@@ -88,7 +88,7 @@ void StatisticalEngine::RunMyScheduledTask()
     m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2;
     m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2;
     
-    Serial << "L: " << m_Left_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Left_Channel_Processed_Sound_Data.PowerDB << "|" << m_Left_Channel_Processed_Sound_Data.Minimum << "|" << m_Left_Channel_Processed_Sound_Data.Maximum << "\t" << "R: " << m_Right_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Right_Channel_Processed_Sound_Data.PowerDB << "|" << m_Right_Channel_Processed_Sound_Data.Minimum << "|" << m_Right_Channel_Processed_Sound_Data.Maximum << "\n";
+    if(true == STATISTICAL_ENGINE_DATA_DEBUG) Serial << "L: " << m_Left_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Left_Channel_Processed_Sound_Data.PowerDB << "|" << m_Left_Channel_Processed_Sound_Data.Minimum << "|" << m_Left_Channel_Processed_Sound_Data.Maximum << "\t" << "R: " << m_Right_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Right_Channel_Processed_Sound_Data.PowerDB << "|" << m_Right_Channel_Processed_Sound_Data.Minimum << "|" << m_Right_Channel_Processed_Sound_Data.Maximum << "\n";
     UpdateSoundState();
   }
 

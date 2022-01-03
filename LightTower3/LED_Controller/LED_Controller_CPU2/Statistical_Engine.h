@@ -19,7 +19,8 @@
 #ifndef StatisticalEngine_H
 #define StatisticalEngine_H
 
-#define STATISTICAL_ENGINE_MEMORY_DEBUG true
+#define STATISTICAL_ENGINE_MEMORY_DEBUG false
+#define STATISTICAL_ENGINE_DATA_DEBUG false
 
 #include <limits.h>
 #include "TaskInterface.h"

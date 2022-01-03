@@ -13,10 +13,6 @@ TaskHandle_t SoundPowerTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 
-HardwareSerial m_hSerial = Serial2;
-Sound_Processor m_Sound_Processor = Sound_Processor("Sound Processor");
-SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink", m_hSerial);
-
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , m_BTSink
@@ -28,7 +24,7 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                     , I2S_CHANNEL_STEREO                                    
                                     , 10                        // Buffer Count
-                                    , 60                        // Buffer Size
+                                    , 40                        // Buffer Size
                                     , 25                        // Serial Clock Pin
                                     , 26                        // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE         // Serial Data In Pin
@@ -64,7 +60,7 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , 44100
                                 , I2S_BITS_PER_SAMPLE_32BIT
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                , i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S)
+                                , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
                                 , I2S_BUFFER_COUNT          // Buffer Count
                                 , I2S_BUFFER_SIZE           // Buffer Size
@@ -88,6 +84,9 @@ I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
                                   , I2S_PIN_NO_CHANGE         // Serial Data In Pin
                                   , 33 );                     // Serial Data Out Pin
 
+HardwareSerial m_hSerial = Serial2;
+Sound_Processor m_Sound_Processor = Sound_Processor("Sound Processor");
+SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink", m_hSerial);
 Manager m_Manager = Manager("Manager"
                            , m_Sound_Processor
                            , m_SerialDatalink
@@ -109,22 +108,23 @@ void setup() {
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
 
+
+  m_BTSink.set_stream_reader(read_data_stream);
+  m_BTSink.set_on_data_received(data_received_callback);
+  
   m_Mic_In.Setup();
   m_Mic_Out.Setup();
   m_BT.Setup();
   m_Manager.Setup();
   m_SerialDatalink.SetupSerialDataLink();
   
-  m_BTSink.set_stream_reader(read_data_stream);
-  m_BTSink.set_on_data_received(data_received_callback);
-
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,            // Function to implement the task
     "ManagerTask",              // Name of the task
-    4000,                       // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 10,  // Priority of the task
     &ManagerTask,               // Task handle.
     0                           // Core where the task should run
   );
@@ -133,9 +133,9 @@ void setup() {
   (
     SoundProcessorTaskLoop,     // Function to implement the task
     "SoundProcessorTask",       // Name of the task
-    4000,                       // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 10,  // Priority of the task
     &SoundProcessorTask,        // Task handle.
     0                           // Core where the task should run
   );
@@ -144,9 +144,9 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    4000,                       // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 5,   // Priority of the task
+    configMAX_PRIORITIES - 10,  // Priority of the task
     &FFTTask,                   // Task handle.
     0                           // Core where the task should run
   );
@@ -155,7 +155,7 @@ void setup() {
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    4000,                       // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &SoundPowerTask,            // Task handle.
@@ -166,9 +166,9 @@ void setup() {
   (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
     "SerialDataLinkSendTask",       // Name of the task
-    4000,                           // Stack size in words
+    2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 10,      // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );     
@@ -177,9 +177,9 @@ void setup() {
   (
     SerialDataLinkRXTaskLoop,         // Function to implement the task
     "SerialDataLinkRXTask",           // Name of the task
-    4000,                             // Stack size in words
+    2000,                             // Stack size in words
     NULL,                             // Task input parameter
-    configMAX_PRIORITIES - 1,         // Priority of the task
+    configMAX_PRIORITIES - 10,        // Priority of the task
     &SerialDataLinkRXTask,            // Task handle.
     1                                 // Core where the task should run
   ); 
@@ -197,7 +197,6 @@ void ManagerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //Serial << "1\n";
     m_Manager.RunTask();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -209,7 +208,6 @@ void SoundProcessorTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //Serial << "2\n";
     m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -221,7 +219,6 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //Serial << "3\n";
     m_Sound_Processor.ProcessFFTEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -233,7 +230,6 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //Serial << "4\n";
     m_Sound_Processor.ProcessSoundPowerEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -245,7 +241,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //Serial << "5\n";
     m_SerialDatalink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -257,7 +252,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //Serial << "6\n";
     m_SerialDatalink.GetRXData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }

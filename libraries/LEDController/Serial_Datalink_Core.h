@@ -22,6 +22,7 @@
 #define QUEUE_DEBUG false
 #define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
+#define SERIAL_FAIL_DEBUG false
 
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -67,7 +68,7 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				Serial << "Deserialize failed: " << error.f_str() << "\n";
+				if(true == SERIAL_FAIL_DEBUG)Serial << "Deserialize failed: " << error.f_str() << "\n";
 				return;
 			}
 			else
@@ -100,12 +101,12 @@ class DataSerializer: public CommonUtils
 								}
 								else
 								{
-									Serial << "Deserialize failed: Checksum Error\n";
+									if(true == SERIAL_FAIL_DEBUG)Serial << "Deserialize failed: Checksum Error\n";
 								}
 							}
 							else
 							{
-								Serial << "Deserialize failed: Byte Count Error\n";
+								if(true == SERIAL_FAIL_DEBUG)Serial << "Deserialize failed: Byte Count Error\n";
 							}
 							delete Buffer;
 							return;

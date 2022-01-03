@@ -62,11 +62,18 @@ void Manager::ProcessDataBufferQueue()
       uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetBytesToRead());
       if ( xQueueReceive(m_I2S_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        if(true == PRINT_DATA_DEBUG)
+        if(true == PRINT_DATA_DEBUG_DEC)
         {
           for(int i = 0; i < m_I2S_In.GetSampleCount(); ++i)
           {
             Serial << m_I2S_In.GetDataBufferValue(DataBuffer, i) << "\n";
+          }
+        }
+        if(true == PRINT_DATA_DEBUG_HEX)
+        {
+          for(int i = 0; i < m_I2S_In.GetSampleCount(); ++i)
+          {
+            Serial.println(m_I2S_In.GetDataBufferValue(DataBuffer, i), HEX);
           }
         }
       }

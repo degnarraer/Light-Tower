@@ -49,8 +49,8 @@ void Manager::Setup()
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
   
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -138,7 +138,7 @@ void Manager::SetInputType(InputType_t Type)
       m_Mic_In.StartDevice();
       m_Mic_Out.StartDevice();
       SetDACDataFormat(DAC_Data_Format_LSB24);
-      SetDACMuteState(Mute_State_Un_Muted);
+      SetDACMuteState(Mute_State_Muted);
     break;
     case InputType_Bluetooth:
       m_Mic_Out.StopDevice();
@@ -163,17 +163,28 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
   {
     for(int i = 0; i < m_Mic_In.GetSampleCount(); ++i)
     {
+      int32_t raw = ((int32_t*)DataBuffer)[i];
+      ((int32_t*)DataBuffer)[i] = raw * 100; // SET VOLUME HERE
+      if(true == PRINT_BYTE_MANIPULATION_DEBUG)
+      {
+        int32_t raw = ((int32_t*)DataBuffer)[i];
+        Serial.print("Result: ");
+        Serial.println(raw, HEX);
+      }
       if(true == PRINT_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
-    } 
+    }
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
-    for(int i = 0; i < m_Mic_In.GetChannelSampleCount(); ++i)
+    if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
     {
-      if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+      for(int i = 0; i < m_Mic_In.GetChannelSampleCount(); ++i)
+      {
+        Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+      }
     } 
   }
   
@@ -182,9 +193,12 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
-    for(int i = 0; i < m_Mic_In.GetChannelSampleCount(); ++i)
+    if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
     {
-      if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+      for(int i = 0; i < m_Mic_In.GetChannelSampleCount(); ++i)
+      {
+        Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+      }
     } 
   }
   

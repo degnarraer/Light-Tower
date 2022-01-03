@@ -56,8 +56,8 @@ I2S_Device::~I2S_Device()
 void I2S_Device::Setup()
 {
     m_BytesPerSample = m_BitsPerSample/8;
-    m_ChannelBytesToRead = m_BytesPerSample * m_BufferSize;
-    m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
+    m_TotalBytesToRead = m_BytesPerSample * m_BufferSize * 2;
+    m_ChannelBytesToRead  = m_TotalBytesToRead / 2;
     m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
 }
@@ -93,7 +93,6 @@ int32_t I2S_Device::GetDataBufferValue(uint8_t* DataBuffer, size_t index)
 		return ((int16_t*)DataBuffer)[index];
 	  break;
 	  case 3:
-	  break;
 	  case 4:
 		return ((int32_t*)DataBuffer)[index];
 	  break;
@@ -111,7 +110,6 @@ void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t v
 		((int16_t*)DataBuffer)[index] = (int16_t)value;
 	  break;
 	  case 3:
-	  break;
 	  case 4:
 		((int32_t*)DataBuffer)[index] = (int32_t)value;
 	  break;
@@ -122,7 +120,7 @@ void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
   for(int i = 0; i < m_TotalBytesToRead; ++i)
   {
-    m_SoundBufferData[i] = SoundBufferData[i]; //ADD VOLUME HERE
+    m_SoundBufferData[i] = SoundBufferData[i];
   }
   WriteSamples(m_SoundBufferData, ByteCount);
   if(true == DATA_TX_DEBUG) Serial <<  GetTitle() << "Sound Buffer Data Ready\n";

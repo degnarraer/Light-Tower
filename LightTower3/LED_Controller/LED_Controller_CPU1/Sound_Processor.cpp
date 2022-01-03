@@ -186,7 +186,7 @@ void Sound_Processor::ProcessRightChannelPower()
       if ( xQueueReceive(GetQueueHandleRXForDataItem("R_PSD_IN"), DataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
       else
       {
-        float peakToPeak = 0;
+        int32_t peakToPeak = 0;
         int32_t minValue = INT32_MAX;
         int32_t maxValue = -INT32_MAX;
         for(int i = 0; i < m_InputSampleCount; ++i)
@@ -201,7 +201,7 @@ void Sound_Processor::ProcessRightChannelPower()
           }
         }
         peakToPeak = maxValue - minValue;
-        m_Right_Channel_Processed_Sound_Data.NormalizedPower = peakToPeak / (float)pow(2,24); //This needs to know bit size
+        m_Right_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / (float)16777216.0 ); //This needs to know bit size
         if(peakToPeak > 0)
         {
           m_Right_Channel_Processed_Sound_Data.PowerDB = 20*log10(peakToPeak/100.0);
@@ -212,10 +212,6 @@ void Sound_Processor::ProcessRightChannelPower()
         }
         m_Right_Channel_Processed_Sound_Data.Minimum = minValue;
         m_Right_Channel_Processed_Sound_Data.Maximum = maxValue;
-        m_Right_Channel_Processed_Sound_Data.NormalizedPower = 100.100;
-        m_Right_Channel_Processed_Sound_Data.PowerDB = -200.200;
-        m_Right_Channel_Processed_Sound_Data.Minimum = 300300;
-        m_Right_Channel_Processed_Sound_Data.Maximum = -400400;
         PushValueToQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleTXForDataItem("R_PSD"), false, false);
       }
       delete DataBuffer;
@@ -331,7 +327,7 @@ void Sound_Processor::ProcessLeftChannelPower()
       if ( xQueueReceive(GetQueueHandleRXForDataItem("L_PSD_IN"), DataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
       else
       {
-        float peakToPeak = 0;
+        int32_t peakToPeak = 0;
         int32_t minValue = INT32_MAX;
         int32_t maxValue = -INT32_MAX;
         for(int i = 0; i < m_InputSampleCount; ++i)
@@ -346,7 +342,7 @@ void Sound_Processor::ProcessLeftChannelPower()
           }
         }
         peakToPeak = maxValue - minValue;
-        m_Left_Channel_Processed_Sound_Data.NormalizedPower = peakToPeak / (float)pow(2,24); //This needs to know bit size
+        m_Left_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / ((float)16777216.0) ); //This needs to know bit size
         if(peakToPeak > 0)
         {
           m_Left_Channel_Processed_Sound_Data.PowerDB = 20*log10(peakToPeak/100.0);
@@ -357,10 +353,6 @@ void Sound_Processor::ProcessLeftChannelPower()
         }
         m_Left_Channel_Processed_Sound_Data.Minimum = minValue;
         m_Left_Channel_Processed_Sound_Data.Maximum = maxValue;
-        m_Left_Channel_Processed_Sound_Data.NormalizedPower = 500.500;
-        m_Left_Channel_Processed_Sound_Data.PowerDB = -600.600;
-        m_Left_Channel_Processed_Sound_Data.Minimum = 700700;
-        m_Left_Channel_Processed_Sound_Data.Maximum = -800800;
         PushValueToQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleTXForDataItem("L_PSD"), false, false);
       }
       delete DataBuffer;

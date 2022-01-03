@@ -6,27 +6,27 @@
 #include "Tunes.h"
 
 #define I2S_BUFFER_COUNT 10
-#define I2S_BUFFER_SIZE 100
+#define I2S_BUFFER_SIZE 200
 
 TaskHandle_t ManagerTask;
 TaskHandle_t SerialDataRXTask;
 TaskHandle_t VisualizationTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
-                                , I2S_NUM_0
-                                , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
-                                , 44100
-                                , I2S_BITS_PER_SAMPLE_32BIT
-                                , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                , I2S_CHANNEL_STEREO
-                                , I2S_BUFFER_COUNT
-                                , I2S_BUFFER_SIZE
-                                , 12
-                                , 13
-                                , 14
-                                , I2S_PIN_NO_CHANGE );
-                                
+                                  , I2S_NUM_0
+                                  , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
+                                  , 44100
+                                  , I2S_BITS_PER_SAMPLE_32BIT
+                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                  , I2S_CHANNEL_STEREO
+                                  , I2S_BUFFER_COUNT
+                                  , I2S_BUFFER_SIZE
+                                  , 12
+                                  , 13
+                                  , 14
+                                  , I2S_PIN_NO_CHANGE );
+
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
@@ -37,19 +37,19 @@ CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
 void setup() {
-  
+
   //ESP32 Serial Communication
   m_hSerial.end();
   m_hSerial.setRxBufferSize(1024);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
   m_hSerial.updateBaudRate(500000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
-  
+
   //PC Serial Communication
   Serial.end();
   Serial.begin(500000);
   Serial.flush();
-  
+
   Serial << "Serial Datalink Configured\n";
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
@@ -58,11 +58,11 @@ void setup() {
   m_I2S_In.Setup();
   m_Manager.Setup();
   m_SerialDatalink.SetupSerialDataLink();
-  
+
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
-  
+
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,                // Function to implement the task
@@ -73,7 +73,7 @@ void setup() {
     &ManagerTask,                   // Task handle.
     0                               // Core where the task should run
   );
-  
+
   xTaskCreatePinnedToCore
   (
     SerialDataRXTaskLoop,           // Function to implement the task
@@ -84,7 +84,7 @@ void setup() {
     &SerialDataRXTask,              // Task handle.
     0                               // Core where the task should run
   );
-  
+
   xTaskCreatePinnedToCore
   (
     VisualizationTaskLoop,          // Function to implement the task
@@ -104,7 +104,7 @@ void loop()
 
 void ManagerTaskLoop(void * parameter)
 {
-  while(true)
+  while (true)
   {
     yield();
     m_Manager.RunTask();
@@ -114,7 +114,7 @@ void ManagerTaskLoop(void * parameter)
 
 void SerialDataRXTaskLoop(void * parameter)
 {
-  while(true)
+  while (true)
   {
     yield();
     m_SerialDatalink.GetRXData();
@@ -124,7 +124,7 @@ void SerialDataRXTaskLoop(void * parameter)
 
 void VisualizationTaskLoop(void * parameter)
 {
-  while(true)
+  while (true)
   {
     yield();
     m_Scheduler.RunScheduler();

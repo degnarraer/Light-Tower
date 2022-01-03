@@ -274,7 +274,7 @@ class CommonUtils
 		  }
 		  else
 		  {
-		     Serial << "MoveDataFromQueueToQueue: " << DebugTitle << " NULL Queue\n";
+		     if(true == DebugMessage)Serial << "MoveDataFromQueueToQueue: " << DebugTitle << " NULL Queue\n";
 		  }
 		}
 		
@@ -315,7 +315,7 @@ class CommonUtils
 		  }
 		  else
 		  {
-		     Serial << "MoveDataFromQueueToQueues: " << DebugTitle << " NULL Queue\n";
+		     if(true == DebugMessage)Serial << "MoveDataFromQueueToQueues: " << DebugTitle << " NULL Queue\n";
 		  }
 		}
 
