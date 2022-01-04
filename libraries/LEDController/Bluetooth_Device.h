@@ -32,7 +32,6 @@ class Bluetooth_Sink_Callback
 		virtual ~Bluetooth_Sink_Callback(){}
 	
 		//Callbacks called by this class
-		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
 		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
 		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
 };
@@ -66,9 +65,6 @@ class Bluetooth_Sink: public NamedItem
 	//Callback Registrtion to this class
 	void ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee);
 
-	void InstallDevice();
-	void AllocateMemory();
-	void FreeMemory();
 	void StartDevice();
 	void StopDevice();
 	void ProcessEventQueue();
@@ -77,7 +73,6 @@ class Bluetooth_Sink: public NamedItem
     size_t GetBytesToRead() {return m_TotalBytesToRead; }
     size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
     int GetSampleRate() { return m_SampleRate; }
-    QueueHandle_t GetDataBufferQueue() { return m_Data_Buffer_Queue; }
     QueueHandle_t GetRightDataBufferQueue() { return m_Right_Data_Buffer_Queue; }
     QueueHandle_t GetLeftDataBufferQueue() { return m_Left_Data_Buffer_Queue; }
 
@@ -87,13 +82,14 @@ class Bluetooth_Sink: public NamedItem
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     size_t m_SampleCount;
-    size_t m_BTCallbackSampleCount = 256;
+    size_t m_BTCallbackSampleCount = 200;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
-	int m_ChannelBufferIndex = 0;
-    uint8_t *m_SoundBufferData = NULL;
+	int32_t m_OurByteCount = 0;
+	int32_t m_TheirByteCount = 0;
+	int32_t m_DataBufferIndex = 0;
     uint8_t *m_LeftChannel_SoundBufferData = NULL;
     uint8_t *m_RightChannel_SoundBufferData = NULL;
     const int m_SampleRate;
@@ -109,9 +105,14 @@ class Bluetooth_Sink: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
 	bool m_Is_Running = false;
-    QueueHandle_t m_Data_Buffer_Queue = NULL;
     QueueHandle_t m_Right_Data_Buffer_Queue = NULL;
     QueueHandle_t m_Left_Data_Buffer_Queue = NULL;
+	
+	bool m_MemoryIsAllocated = false;
+	void InstallDevice();
+	void AllocateMemory();
+	void FreeMemory();
+	void SendData();
 
 };
 

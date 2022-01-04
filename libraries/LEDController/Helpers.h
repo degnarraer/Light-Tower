@@ -181,8 +181,8 @@ class QueueManager
 				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
 				Object = malloc(bytes);
-				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, 10, true);
-				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, 10, true);
+				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, 5, true);
+				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, 5, true);
 				Serial << m_Title << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;

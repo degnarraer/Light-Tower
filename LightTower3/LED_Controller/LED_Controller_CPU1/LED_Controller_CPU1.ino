@@ -103,15 +103,13 @@ void setup() {
   m_hSerial.flush();
   
   Serial.begin(500000);
-  delay(500);
+  Serial.flush();
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
-
-
+  
   m_BTSink.set_stream_reader(read_data_stream);
   m_BTSink.set_on_data_received(data_received_callback);
-  
   m_Mic_In.Setup();
   m_Mic_Out.Setup();
   m_BT.Setup();
@@ -122,9 +120,9 @@ void setup() {
   (
     ManagerTaskLoop,            // Function to implement the task
     "ManagerTask",              // Name of the task
-    2000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,  // Priority of the task
+    configMAX_PRIORITIES - 1,   // Priority of the task
     &ManagerTask,               // Task handle.
     0                           // Core where the task should run
   );
@@ -133,9 +131,9 @@ void setup() {
   (
     SoundProcessorTaskLoop,     // Function to implement the task
     "SoundProcessorTask",       // Name of the task
-    2000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
+    configMAX_PRIORITIES - 3,  // Priority of the task
     &SoundProcessorTask,        // Task handle.
     0                           // Core where the task should run
   );
@@ -144,46 +142,46 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    2000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &FFTTask,                   // Task handle.
-    0                           // Core where the task should run
+    1                           // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    2000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SoundPowerTask,            // Task handle.
-    0                           // Core where the task should run
+    1                           // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkTXTaskLoop,       // Function to implement the task
-    "SerialDataLinkSendTask",       // Name of the task
-    2000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
-    &SerialDataLinkTXTask,          // Task handle.
-    1                               // Core where the task should run
+    SerialDataLinkTXTaskLoop,   // Function to implement the task
+    "SerialDataLinkSendTask",   // Name of the task
+    2000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &SerialDataLinkTXTask,      // Task handle.
+    1                           // Core where the task should run
   );     
   
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkRXTaskLoop,         // Function to implement the task
-    "SerialDataLinkRXTask",           // Name of the task
-    2000,                             // Stack size in words
-    NULL,                             // Task input parameter
-    configMAX_PRIORITIES - 10,        // Priority of the task
-    &SerialDataLinkRXTask,            // Task handle.
-    1                                 // Core where the task should run
-  ); 
-  
+    SerialDataLinkRXTaskLoop,   // Function to implement the task
+    "SerialDataLinkRXTask",     // Name of the task
+    2000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &SerialDataLinkRXTask,      // Task handle.
+    1                           // Core where the task should run
+  );
+  Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
 }
 
 void loop() {
@@ -192,8 +190,8 @@ void loop() {
 }
 
 void ManagerTaskLoop(void * parameter)
-{
-  Serial << "ManagerTaskLoop\n";
+{  
+  Serial << "Started Thread: ManagerTaskLoop\n";\
   for(;;)
   {
     yield();
@@ -204,7 +202,7 @@ void ManagerTaskLoop(void * parameter)
 
 void SoundProcessorTaskLoop(void * parameter)
 {
-  Serial << "SoundProcessorTaskLoop\n";
+  Serial << "Started Thread: SoundProcessorTaskLoop\n";
   for(;;)
   {
     yield();
@@ -215,7 +213,7 @@ void SoundProcessorTaskLoop(void * parameter)
 
 void FFTTaskLoop(void * parameter)
 {
-  Serial << "FFTTaskLoop\n";
+  Serial << "Started Thread: FFTTaskLoop\n";
   for(;;)
   {
     yield();
@@ -226,7 +224,7 @@ void FFTTaskLoop(void * parameter)
 
 void SoundPowerTaskLoop(void * parameter)
 {
-  Serial << "SoundPowerTaskLoop\n";
+  Serial << "Started Thread: SoundPowerTaskLoop\n";
   for(;;)
   {
     yield();
@@ -237,7 +235,7 @@ void SoundPowerTaskLoop(void * parameter)
 
 void SerialDataLinkTXTaskLoop(void * parameter)
 {
-  Serial << "SerialDataLinkTXTaskLoop\n";
+  Serial << "Started Thread: SerialDataLinkTXTaskLoop\n";
   for(;;)
   {
     yield();
@@ -248,7 +246,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 
 void SerialDataLinkRXTaskLoop(void * parameter)
 {
-  Serial << "SerialDataLinkReceiveTaskLoop\n";
+  Serial << "Started Thread: SerialDataLinkReceiveTaskLoop\n";
   for(;;)
   {
     yield();

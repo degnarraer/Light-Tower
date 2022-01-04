@@ -79,6 +79,9 @@ class Sound_Processor: public NamedItem
     //Left Channel Processed FFT Band Data
     int16_t* m_Left_Band_Values;
 
+    //Adjustments
+    float m_Gain = 6.0;
+
     //Right Channel Calculated Outputs
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 

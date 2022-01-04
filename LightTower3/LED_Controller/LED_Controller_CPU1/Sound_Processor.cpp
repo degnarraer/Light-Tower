@@ -201,7 +201,7 @@ void Sound_Processor::ProcessRightChannelPower()
           }
         }
         peakToPeak = maxValue - minValue;
-        m_Right_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / (float)16777216.0 ); //This needs to know bit size
+        m_Right_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / (float)pow(2,32) ) * m_Gain; //This needs to know bit size
         if(peakToPeak > 0)
         {
           m_Right_Channel_Processed_Sound_Data.PowerDB = 20*log10(peakToPeak/100.0);
@@ -342,7 +342,9 @@ void Sound_Processor::ProcessLeftChannelPower()
           }
         }
         peakToPeak = maxValue - minValue;
-        m_Left_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / ((float)16777216.0) ); //This needs to know bit size
+        m_Left_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / ((float)pow(2,32)) ) * m_Gain; //This needs to know bit size
+        if(m_Left_Channel_Processed_Sound_Data.NormalizedPower > 1.0) m_Left_Channel_Processed_Sound_Data.NormalizedPower = 1.0;
+        if(m_Left_Channel_Processed_Sound_Data.NormalizedPower < 0.0) m_Left_Channel_Processed_Sound_Data.NormalizedPower = 0.0;
         if(peakToPeak > 0)
         {
           m_Left_Channel_Processed_Sound_Data.PowerDB = 20*log10(peakToPeak/100.0);

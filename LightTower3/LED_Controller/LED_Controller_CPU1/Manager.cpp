@@ -49,8 +49,8 @@ void Manager::Setup()
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
   
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -206,22 +206,29 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 
 void Manager::ProcessDataBufferQueue()
 {
-  if(NULL != m_Mic_In.GetDataBufferQueue())
+  switch(m_InputType)
   {
-    if(uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) > 0)
-    {
-      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) << "\n";
-      uint8_t* DataBuffer = (uint8_t*)malloc(m_Mic_In.GetBytesToRead());
-      if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+    case InputType_Microphone:
+      if(NULL != m_Mic_In.GetDataBufferQueue())
       {
-        m_Mic_Out.SetSoundBufferData(DataBuffer, m_Mic_Out.GetBytesToRead());
+        if(uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) > 0)
+        {
+          if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) << "\n";
+          uint8_t* DataBuffer = (uint8_t*)malloc(m_Mic_In.GetBytesToRead());
+          if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+          {
+            m_Mic_Out.SetSoundBufferData(DataBuffer, m_Mic_Out.GetBytesToRead());
+          }
+          else
+          {
+            Serial << "Error Receiving Queue!";
+          }
+          delete DataBuffer;
+        }
       }
-      else
-      {
-        Serial << "Error Receiving Queue!";
-      }
-      delete DataBuffer;
-    }
+    break;
+    case InputType_Bluetooth:
+    break;
   }
 }
 
@@ -231,7 +238,7 @@ void Manager::ProcessRightChannelDataBufferQueue()
   {
     case InputType_Microphone:
       MoveDataFromQueueToQueue( "MANAGER1"
-                              ,  m_Mic_In.GetRightDataBufferQueue()
+                              , m_Mic_In.GetRightDataBufferQueue()
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("R_RAW_IN")
                               , m_Mic_In.GetChannelBytesToRead()
                               , false

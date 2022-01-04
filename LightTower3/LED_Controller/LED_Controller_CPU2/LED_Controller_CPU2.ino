@@ -59,7 +59,7 @@ void setup() {
   m_Manager.Setup();
   m_SerialDatalink.SetupSerialDataLink();
 
-  m_Scheduler.AddTask(m_CalculateFPS);
+  //m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
 
@@ -82,7 +82,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &SerialDataRXTask,              // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   );
 
   xTaskCreatePinnedToCore
@@ -93,7 +93,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 4,       // Priority of the task
     &VisualizationTask,             // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
 }
 
