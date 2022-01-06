@@ -31,7 +31,7 @@ void Sound_Processor::SetupSoundProcessor(size_t InputByteCount, int SampleRate,
   m_InputByteCount = InputByteCount;
   m_SampleRate = SampleRate;
   m_FFT_Length = FFT_Length;
-  m_InputSampleCount = InputByteCount / sizeof(int32_t);
+  m_InputSampleCount = m_InputByteCount / sizeof(int32_t);
   m_BandOutputByteCount = sizeof(int16_t) * NUMBER_OF_BANDS;
   m_BytesToRead = sizeof(int32_t) * m_FFT_Length;
   Serial << "FFT Config: " << m_InputByteCount << " | " << m_SampleRate << " | " << m_FFT_Length << "\n";
@@ -52,7 +52,6 @@ void Sound_Processor::AllocateMemory()
 void Sound_Processor::FreeMemory()
 {
   Serial << GetTitle() << ": Freeing Memory.\n";
-  
   delete m_FFT_Right_Data;
   delete m_FFT_Left_Data;
   delete m_Right_Band_Values;
@@ -107,10 +106,12 @@ void Sound_Processor::ProcessRightChannelFFT()
         if ( xQueueReceive(GetQueueHandleRXForDataItem("R_BAND_IN"), DataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
         else
         {
-          for(int i = 0; i < m_InputByteCount; ++i)
+          for(int i = 0; i < m_InputSampleCount; ++i)
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Right Loop Count: "<< i << " of " << m_InputByteCount << "\n";
-            m_FFT_Right_Data[m_FFT_Right_Buffer_Index] = DataBuffer[i]; //(DataBuffer[i] >> 8) & 0x0000FFFF;
+            int32_t ValueLarge = DataBuffer[i];
+            int16_t ValueSmall = (ValueLarge >> 16)&0x0000FFFF;
+            m_FFT_Right_Data[m_FFT_Right_Buffer_Index] = ValueSmall;
             if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << DataBuffer[i] << "|" << m_FFT_Right_Data[m_FFT_Right_Buffer_Index] << "\n";
             ++m_FFT_Right_Buffer_Index;
             
@@ -120,12 +121,10 @@ void Sound_Processor::ProcessRightChannelFFT()
               ZeroFFT(m_FFT_Right_Data, m_FFT_Length);
               if(true == SOUND_PROCESSOR_OUTPUTDATA_DEBUG)
               {
-                Serial << "FFT R: ";
                 for(int j = 0; j < m_FFT_Length / 2; ++j)
                 {
-                  Serial << m_FFT_Right_Data[j] << " ";
+                  Serial << m_FFT_Left_Data[j] << "\n";
                 }
-                Serial << "\n";
               }
               memset(m_Right_Band_Values, 0, sizeof(int16_t)*NUMBER_OF_BANDS);
               for(int i = 0; i < m_FFT_Length/2; ++i)
@@ -169,12 +168,10 @@ void Sound_Processor::ProcessRightChannelFFT()
               }
               if(true == SOUND_PROCESSOR_OUTPUT_R_BANDDATA_DEBUG)
               {
-                Serial << "Bands R: ";
                 for(int j = 0; j < NUMBER_OF_BANDS; ++j)
                 {
-                  Serial << m_Right_Band_Values[j] << "\t";
+                  Serial << m_Right_Band_Values[j] << "\n";
                 }
-                Serial << "\n";
               }
               PushValueToQueue(&m_Right_Band_Values, GetQueueHandleTXForDataItem("R_FFT"), false, false);
               xQueueReset(GetQueueHandleRXForDataItem("R_BAND_IN"));
@@ -260,10 +257,12 @@ void Sound_Processor::ProcessLeftChannelFFT()
         if ( xQueueReceive(GetQueueHandleRXForDataItem("L_BAND_IN"), DataBuffer, portMAX_DELAY) != pdTRUE ){ Serial.println("Error Getting Queue Data");}
         else
         {
-          for(int i = 0; i < m_InputByteCount; ++i)
+          for(int i = 0; i < m_InputSampleCount; ++i)
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Left Loop Count: "<< i << " of " << m_InputByteCount << "\n";
-            m_FFT_Left_Data[m_FFT_Left_Buffer_Index] = (int16_t)((DataBuffer[i] >> 8) & 0x0000FFFF);
+            int32_t ValueLarge = DataBuffer[i];
+            int16_t ValueSmall = (ValueLarge >> 16)&0x0000FFFF;
+            m_FFT_Left_Data[m_FFT_Left_Buffer_Index] = ValueSmall;
             if(true == SOUND_PROCESSOR_INPUTDATA_DEBUG) Serial << DataBuffer[i] << "|" << m_FFT_Left_Data[m_FFT_Left_Buffer_Index] << "\n";
             ++m_FFT_Left_Buffer_Index;
             
@@ -273,19 +272,16 @@ void Sound_Processor::ProcessLeftChannelFFT()
               ZeroFFT(m_FFT_Left_Data, m_FFT_Length);
               if(true == SOUND_PROCESSOR_OUTPUTDATA_DEBUG)
               {
-                Serial << "FFT R: ";
                 for(int j = 0; j < m_FFT_Length / 2; ++j)
                 {
-                  Serial << m_FFT_Left_Data[j] << " ";
+                  Serial << m_FFT_Left_Data[j] << "\n";
                 }
-                Serial << "\n";
               }
               memset(m_Left_Band_Values, 0, sizeof(int16_t)*NUMBER_OF_BANDS);
               for(int i = 0; i < m_FFT_Length/2; ++i)
               {
                 float freq = GetFreqForBin(i);
                 int bandIndex = 0;
-                
                 if(freq > 0 && freq <= 20) bandIndex = 0;
                 else if(freq > 20 && freq <= 25) bandIndex = 1;
                 else if(freq > 25 && freq <= 31.5) bandIndex = 2;
@@ -322,12 +318,10 @@ void Sound_Processor::ProcessLeftChannelFFT()
               }
               if(true == SOUND_PROCESSOR_OUTPUT_L_BANDDATA_DEBUG)
               {
-                Serial << "Bands L: ";
                 for(int j = 0; j < NUMBER_OF_BANDS; ++j)
                 {
-                  Serial << m_Left_Band_Values[j] << "\t";
+                  Serial << m_Left_Band_Values[j] << "\n";
                 }
-                Serial << "\n";
               }
               PushValueToQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleTXForDataItem("L_FFT"), false, false);
               xQueueReset(GetQueueHandleRXForDataItem("L_BAND_IN"));

@@ -62,9 +62,9 @@ void Bluetooth_Sink::Setup()
 {
 	Serial << GetTitle() << ": Setup\n";
 	m_BytesPerSample = m_BitsPerSample/8;
-	m_TotalBytesToRead = m_BytesPerSample * m_BTCallbackSampleCount;
+	m_ChannelBytesToRead = m_BytesPerSample * m_BTCallbackSampleCount;
 	m_SampleCount = m_TotalBytesToRead * m_BytesPerSample;
-	m_ChannelBytesToRead  = m_TotalBytesToRead / 2;
+	m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
 	m_ChannelSampleCount = m_ChannelBytesToRead * m_BytesPerSample;
 	AllocateMemory();
 }
@@ -158,6 +158,7 @@ void Bluetooth_Sink::FreeMemory()
 {
 	if(true == m_MemoryIsAllocated)
 	{
+		Serial << GetTitle() << ": Freeing Memory\n";
 		delete m_RightChannel_SoundBufferData;
 		delete m_LeftChannel_SoundBufferData;
 		if(NULL != m_Right_Data_Buffer_Queue)
@@ -171,6 +172,7 @@ void Bluetooth_Sink::FreeMemory()
 			m_Left_Data_Buffer_Queue = NULL;
 		}
 		m_MemoryIsAllocated = false;
+		Serial << GetTitle() << ": Memory Freed\n";
 	}
 }
 void Bluetooth_Sink::InstallDevice()
@@ -212,7 +214,7 @@ void Bluetooth_Sink::StartDevice()
 		Serial << GetTitle() << ": Starting\n";
 		AllocateMemory();
 		InstallDevice();
-		m_BTSink.start("Sound");
+		m_BTSink.start("LED Tower Of Power");
 		m_Is_Running = true;
 		Serial << GetTitle() << ": Started\n";
 	}

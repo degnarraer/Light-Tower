@@ -56,10 +56,10 @@ I2S_Device::~I2S_Device()
 void I2S_Device::Setup()
 {
     m_BytesPerSample = m_BitsPerSample/8;
-    m_TotalBytesToRead = m_BytesPerSample * m_BufferSize * 2;
-    m_ChannelBytesToRead  = m_TotalBytesToRead / 2;
-    m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
-	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
+    m_ChannelSampleCount = m_BufferSize;
+	m_SampleCount = m_ChannelSampleCount * 2;
+    m_TotalBytesToRead = m_BytesPerSample * m_SampleCount;
+    m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
 }
 
 void I2S_Device::StartDevice()
@@ -141,7 +141,7 @@ int I2S_Device::ReadSamples()
   if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read);
   
   static bool MicDataBufferFull = false;
-  if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
+  if(uxQueueSpacesAvailable(m_i2s_Data_Buffer_Queue) > 0)
   {
 	if(true == MicDataBufferFull){ MicDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
     if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Buffer Queue\n"; }

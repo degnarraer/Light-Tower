@@ -350,7 +350,7 @@ class CommonUtils
 
 		void CreateQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			if(true == DebugMessage) Serial << "Creating Queue with Queue Count: " << QueueCount << " Byte Count: " << ByteCount << "\n";
+			if(true == DebugMessage) Serial << "Creating Queue of size: " << ByteCount << "\n";
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}

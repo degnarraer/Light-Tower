@@ -93,16 +93,16 @@ class Sound_Processor: public NamedItem
     static const size_t m_ConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
-      { "L_RAW_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
-      { "R_BAND_IN",  DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   FFT_SIZE / I2S_BUFFER_SIZE },
-      { "L_BAND_IN",  DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   FFT_SIZE / I2S_BUFFER_SIZE },
-      { "R_PSD_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
-      { "L_PSD_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
-      { "R_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,      Transciever_TX,   3 },
-      { "L_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,      Transciever_TX,   3 },
-      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX,   20 },
-      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX,   20 }
+      { "R_RAW_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "L_RAW_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "R_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "L_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "L_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "R_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,                Transciever_TX,   3 },
+      { "L_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,                Transciever_TX,   3 },
+      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   20 },
+      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   20 }
     };
 };
 
