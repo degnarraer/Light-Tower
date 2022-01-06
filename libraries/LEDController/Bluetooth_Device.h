@@ -49,8 +49,10 @@ class Bluetooth_Sink: public NamedItem
 				  , i2s_channel_fmt_t i2s_Channel_Fmt
 				  , i2s_comm_format_t CommFormat
 				  , i2s_channel_t i2s_channel
-				  , int BufferCount
-				  , int BufferSize
+				  , size_t BufferCount
+				  , size_t BufferSize
+				  , size_t BTCallbackSampleCount
+				  , size_t QueueCount
 				  , int SerialClockPin
 				  , int WordSelectPin
 				  , int SerialDataInPin
@@ -82,7 +84,8 @@ class Bluetooth_Sink: public NamedItem
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     size_t m_SampleCount;
-    size_t m_BTCallbackSampleCount = 200;
+    size_t m_BTCallbackSampleCount;
+	size_t m_QueueCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;

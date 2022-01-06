@@ -18,10 +18,6 @@
 
 #include "Manager.h"
 
-#define DAC_MUTE_PIN 22
-#define DAC_SF0_PIN 32
-#define DAC_SF1_PIN 33
-
 Manager::Manager( String Title
                 , Sound_Processor &FFTCalculator
                 , SerialDataLink &SerialDataLink
@@ -49,8 +45,8 @@ void Manager::Setup()
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
   
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
+  //SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -134,7 +130,7 @@ void Manager::SetInputType(InputType_t Type)
   {
     case InputType_Microphone:
       m_BT.StopDevice();
-      m_Sound_Processor.SetupSoundProcessor(m_Mic_In.GetChannelBytesToRead(), m_Mic_In.GetSampleRate(), 2048);
+      m_Sound_Processor.SetupSoundProcessor(m_Mic_In.GetChannelBytesToRead(), m_Mic_In.GetSampleRate(), FFT_SIZE);
       m_Mic_In.StartDevice();
       m_Mic_Out.StartDevice();
       SetDACDataFormat(DAC_Data_Format_LSB24);
@@ -143,7 +139,7 @@ void Manager::SetInputType(InputType_t Type)
     case InputType_Bluetooth:
       m_Mic_Out.StopDevice();
       m_Mic_In.StopDevice();
-      m_Sound_Processor.SetupSoundProcessor(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), 2048);
+      m_Sound_Processor.SetupSoundProcessor(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), FFT_SIZE);
       m_BT.StartDevice();
       SetDACDataFormat(DAC_Data_Format_Default);
       SetDACMuteState(Mute_State_Un_Muted);

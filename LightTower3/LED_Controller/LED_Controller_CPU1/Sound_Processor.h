@@ -19,20 +19,12 @@
 #ifndef I2S_SOUND_PROCESSOR_H
 #define I2S_SOUND_PROCESSOR_H
 
-#define NUMBER_OF_BANDS 32
-
-#define SOUND_PROCESSOR_DEBUG false
-#define SOUND_PROCESSOR_QUEUE_DEBUG false
-#define SOUND_PROCESSOR_LOOPS_DEBUG false
-#define SOUND_PROCESSOR_INPUTDATA_DEBUG false
-#define SOUND_PROCESSOR_OUTPUTDATA_DEBUG false
-
-
 #include <Arduino.h>
 #include <Adafruit_ZeroFFT.h>
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "Streaming.h"
+#include "Tunes.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
@@ -101,16 +93,16 @@ class Sound_Processor: public NamedItem
     static const size_t m_ConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW_IN",   DataType_Int32_t,               100,      Transciever_RX },
-      { "L_RAW_IN",   DataType_Int32_t,               100,      Transciever_RX },
-      { "R_BAND_IN",  DataType_Int32_t,               100,      Transciever_RX },
-      { "L_BAND_IN",  DataType_Int32_t,               100,      Transciever_RX },
-      { "R_PSD_IN",   DataType_Int32_t,               100,      Transciever_RX },
-      { "L_PSD_IN",   DataType_Int32_t,               100,      Transciever_RX },
-      { "R_FFT",      DataType_Int16_t,               32,       Transciever_TX },
-      { "L_FFT",      DataType_Int16_t,               32,       Transciever_TX },
-      { "R_PSD",      DataType_ProcessedSoundData_t,  1,        Transciever_TX },
-      { "L_PSD",      DataType_ProcessedSoundData_t,  1,        Transciever_TX }
+      { "R_RAW_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
+      { "L_RAW_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
+      { "R_BAND_IN",  DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   FFT_SIZE / I2S_BUFFER_SIZE },
+      { "L_BAND_IN",  DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   FFT_SIZE / I2S_BUFFER_SIZE },
+      { "R_PSD_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
+      { "L_PSD_IN",   DataType_Int32_t,               I2S_BUFFER_SIZE,      Transciever_RX,   3 },
+      { "R_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,      Transciever_TX,   3 },
+      { "L_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,      Transciever_TX,   3 },
+      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX,   20 },
+      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                    Transciever_TX,   20 }
     };
 };
 

@@ -2,9 +2,7 @@
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSink.h>
-
-#define I2S_BUFFER_COUNT 10
-#define I2S_BUFFER_SIZE 100
+#include "Tunes.h"
 
 TaskHandle_t ManagerTask;
 TaskHandle_t SoundProcessorTask;
@@ -25,6 +23,8 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , I2S_CHANNEL_STEREO                                    
                                     , 10                        // Buffer Count
                                     , 40                        // Buffer Size
+                                    , I2S_BUFFER_SIZE           // Callback Sample Count
+                                    , 5                         // Queue Count
                                     , 25                        // Serial Clock Pin
                                     , 26                        // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE         // Serial Data In Pin
@@ -99,7 +99,7 @@ void setup() {
   m_hSerial.end();
   m_hSerial.setRxBufferSize(1024);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(500000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
+  m_hSerial.updateBaudRate(400000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
   Serial.begin(500000);
@@ -120,7 +120,7 @@ void setup() {
   (
     ManagerTaskLoop,            // Function to implement the task
     "ManagerTask",              // Name of the task
-    1000,                       // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &ManagerTask,               // Task handle.
@@ -146,7 +146,7 @@ void setup() {
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &FFTTask,                   // Task handle.
-    1                           // Core where the task should run
+    0                           // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -206,7 +206,7 @@ void SoundProcessorTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessEventQueue();
+    //m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -217,8 +217,8 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessFFTEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_Sound_Processor.ProcessFFTEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -228,7 +228,7 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessSoundPowerEventQueue();
+    //m_Sound_Processor.ProcessSoundPowerEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -239,7 +239,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.ProcessDataTXEventQueue();
+    //m_SerialDatalink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -250,7 +250,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.GetRXData();
+    //m_SerialDatalink.GetRXData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

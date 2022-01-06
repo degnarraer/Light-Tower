@@ -60,7 +60,7 @@ const bool   debugRequired = ( debugMode ||
                                debugAssertions);
 
 // LED SETUP
-static const unsigned int NUMLEDS = 64;
+static const unsigned int NUMLEDS = 50;
 static const unsigned int NUMSTRIPS = 4;
 static const unsigned int SCREEN_WIDTH = NUMSTRIPS;
 static const unsigned int SCREEN_HEIGHT = NUMLEDS;

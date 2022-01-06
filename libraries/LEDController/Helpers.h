@@ -181,8 +181,21 @@ class QueueManager
 				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
 				Object = malloc(bytes);
-				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, 5, true);
-				CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, 5, true);
+				switch(ConfigFile[i].TransceiverConfig)
+				{
+					case Transciever_None:
+					break;
+					case Transciever_TX:
+						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
+					break;
+					case Transciever_RX:
+						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, ConfigFile[i].QueueCount, true);
+					break;
+					case Transciever_TXRX:
+						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, ConfigFile[i].QueueCount, true);
+						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
+					break;
+				}
 				Serial << m_Title << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;
@@ -198,6 +211,22 @@ class QueueManager
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
 				delete m_DataItem[i].Object;
+				
+				switch(m_DataItem[i].TransceiverConfig)
+				{
+					case Transciever_None:
+					break;
+					case Transciever_TX:
+						vQueueDelete(m_DataItem[i].QueueHandle_TX);
+					break;
+					case Transciever_RX:
+						vQueueDelete(m_DataItem[i].QueueHandle_RX);
+					break;
+					case Transciever_TXRX:
+						vQueueDelete(m_DataItem[i].QueueHandle_RX);
+						vQueueDelete(m_DataItem[i].QueueHandle_TX);
+					break;
+				}
 			}
 			delete m_DataItem;
 			m_MemoryAllocated = false;

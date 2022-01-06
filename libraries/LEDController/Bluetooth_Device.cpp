@@ -27,8 +27,10 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 							   , i2s_channel_fmt_t i2s_Channel_Fmt
 							   , i2s_comm_format_t i2s_CommFormat
 							   , i2s_channel_t i2s_channel
-							   , int BufferCount
-							   , int BufferSize
+							   , size_t BufferCount
+							   , size_t BufferSize
+							   , size_t BTCallbackSampleCount 
+							   , size_t QueueCount
 							   , int SerialClockPin
 							   , int WordSelectPin
 							   , int SerialDataInPin
@@ -43,6 +45,8 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 													   , m_i2s_channel(i2s_channel)
 													   , m_BufferCount(BufferCount)
 													   , m_BufferSize(BufferSize)
+													   , m_BTCallbackSampleCount(BTCallbackSampleCount)
+													   , m_QueueCount(QueueCount)
 													   , m_SerialClockPin(SerialClockPin)
 													   , m_WordSelectPin(WordSelectPin)
 													   , m_SerialDataInPin(SerialDataInPin)
@@ -144,8 +148,8 @@ void Bluetooth_Sink::AllocateMemory()
 		m_RightChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		m_LeftChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 
-		CreateQueue(m_Right_Data_Buffer_Queue, m_ChannelBytesToRead, 5, true);
-		CreateQueue(m_Left_Data_Buffer_Queue, m_ChannelBytesToRead, 5, true);
+		CreateQueue(m_Right_Data_Buffer_Queue, m_ChannelBytesToRead, m_QueueCount, true);
+		CreateQueue(m_Left_Data_Buffer_Queue, m_ChannelBytesToRead, m_QueueCount, true);
 		m_MemoryIsAllocated = true;
 		Serial << GetTitle() << ": Memory Allocated\n";
 	}
@@ -208,7 +212,7 @@ void Bluetooth_Sink::StartDevice()
 		Serial << GetTitle() << ": Starting\n";
 		AllocateMemory();
 		InstallDevice();
-		m_BTSink.start("Massive Cock");
+		m_BTSink.start("Sound");
 		m_Is_Running = true;
 		Serial << GetTitle() << ": Started\n";
 	}

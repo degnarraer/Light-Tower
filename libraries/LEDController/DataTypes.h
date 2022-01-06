@@ -52,6 +52,7 @@ struct DataItemConfig_t
   DataType_t DataType;
   size_t Count;
   Transciever_T TransceiverConfig;
+  size_t QueueCount;
 };
 
 struct DataItem_t
