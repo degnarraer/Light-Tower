@@ -62,7 +62,7 @@ struct DataItem_t
   size_t Count = 0;
   QueueHandle_t QueueHandle_RX = NULL;
   QueueHandle_t QueueHandle_TX = NULL;
-  size_t QueueByteCount = 0;
+  size_t TotalByteCount = 0;
   Transciever_T TransceiverConfig;
   void* Object;
 };

@@ -66,7 +66,6 @@ bool StatisticalEngine::CanRunMyScheduledTask()
 {
   if( true == NewSoundDataReady() || true == NewBandDataReady() )
   {
-    //if(true == calculateFPS2.CanRunMyScheduledTask()) { calculateFPS2.RunMyScheduledTask(); }
     return true;
   }
   else
@@ -103,17 +102,12 @@ void StatisticalEngine::RunMyScheduledTask()
 void StatisticalEngine::AllocateMemory()
 {
   Serial << GetTitle() << ": Allocating Memory.\n";
-  m_Right_Band_Values = (int16_t*)malloc(m_BandInputByteCount);
-  m_Left_Band_Values = (int16_t*)malloc(m_BandInputByteCount);
   m_MemoryIsAllocated = true;
 }
 
 void StatisticalEngine::FreeMemory()
 {
   Serial << GetTitle() << ": Freeing Memory.\n";
-  
-  delete m_Right_Band_Values;
-  delete m_Left_Band_Values;
   m_MemoryIsAllocated = false;
 }
 
@@ -182,9 +176,9 @@ void StatisticalEngine::UpdateBandArray()
   {
     UpdateRunningAverageBandArray();
   }
-  if(true == debugMode && debugLevel >= 2) 
+  if(true == debugSetBandValueStatisticalEngine) 
   {
-    Serial << "BAND VALUES: ";
+    Serial << "SET BAND VALUES: ";
     for(int i = 0; i < m_NumBands; i++)
     {
       Serial << BandValues[i][currentBandIndex] << "\t";
@@ -243,7 +237,7 @@ int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
       position = BAND_SAVE_LENGTH - (depth - currentBandIndex);
     }
     result = BandValues[band][position];
-    if(true == debugMode && debugLevel >= 5) Serial << "Band: " << band << " " << "Depth: " << depth << " " << "Result: " << result << "\n";
+    if(true == debugGetBandValueStatisticalEngine) Serial << "Band: " << band << " " << "Depth: " << depth << " " << "Result: " << result << "\n";
     return result;
   }
   else

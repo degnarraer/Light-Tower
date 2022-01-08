@@ -31,12 +31,14 @@ const bool   debugPlotFFT = false;
 const bool   debugFPS = true;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
-const bool   debugModelNewValueProcessor = false;
+const bool   debugModelNewValueProcessor = true;
 const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugModels = false;
+const bool   debugSetBandValueStatisticalEngine = true;
+const bool   debugGetBandValueStatisticalEngine = false;
 const bool   debugGravitationalModel = false;
 const bool   debugMemory = false;
 const bool   debugFreeMemory = false;
@@ -54,6 +56,8 @@ const bool   debugRequired = ( debugMode ||
                                debugView ||
                                debugLEDs ||
                                debugModels ||
+                               debugSetBandValueStatisticalEngine ||
+                               debugGetBandValueStatisticalEngine ||
                                debugGravitationalModel ||
                                debugMemory ||
                                debugFreeMemory ||
@@ -76,7 +80,7 @@ const unsigned int DATA_PIN_STRIP4 = 33;  //MATRIX4 PIN ASSIGNMENT
 const float MAX_DISPLAYED_FREQ = 22050.0;
 
 //FFT Tunes
-const int FFT_MAX = 4096;
+const int FFT_MAX = 512;
 const unsigned int SAMPLE_RATE = 44100;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 

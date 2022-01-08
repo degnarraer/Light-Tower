@@ -581,7 +581,7 @@ class ScrollingMaxBand: public Visualization
     void RunVisualization();
   private:
     ScrollingView m_ScrollingView = ScrollingView("Scrolling View", ScrollDirection_Up, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, 0, 4, 1);
+    ColorSpriteView m_Sprite0 = ColorSpriteView("Sprite", 0, 0, SCREEN_WIDTH, 1);
     BandDataColorModel m_BandDataColorModel = BandDataColorModel( "Band Data Color Model" );
     MaximumBandModel m_MaxBandModel = MaximumBandModel( "Max Band Model", 0, m_StatisticalEngineModelInterface );
 };

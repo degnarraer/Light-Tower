@@ -74,33 +74,7 @@ class QueueManager
 				{
 					if(Name == m_DataItem[i].Name)
 					{
-						switch(m_DataItem[i].DataType)
-						{
-							case DataType_Int16_t:
-								return sizeof(int16_t) * m_DataItem[i].Count;
-							break;
-							case DataType_Int32_t:
-								return sizeof(int32_t) * m_DataItem[i].Count;
-							break;
-							case DataType_Uint16_t:
-								return sizeof(uint16_t) * m_DataItem[i].Count;
-							break;
-							case DataType_Uint32_t:
-								return sizeof(uint32_t) * m_DataItem[i].Count;
-							break;
-							case DataType_String:
-								return sizeof(String) * m_DataItem[i].Count;
-							break;
-							case DataType_Float:
-								return sizeof(float) * m_DataItem[i].Count;
-							break;
-							case DataType_ProcessedSoundData_t:
-								return sizeof(ProcessedSoundData_t) * m_DataItem[i].Count;
-							break;
-							default:
-								return 0;
-							break;
-						}
+						return GetSizeOfDataType(m_DataItem[i].DataType) * m_DataItem[i].Count;
 					}
 				}
 			}
@@ -200,7 +174,7 @@ class QueueManager
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;
 				m_DataItem[i].Count = ConfigFile[i].Count;
-				m_DataItem[i].QueueByteCount = bytes;
+				m_DataItem[i].TotalByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
 				m_DataItem[i].Object = Object;
 				m_MemoryAllocated = true;
@@ -375,7 +349,7 @@ class CommonUtils
 			}
 		}
 		
-		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
+		void GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
 			if(NULL != Queue)
 			{
@@ -390,15 +364,12 @@ class CommonUtils
 						if ( xQueueReceive(Queue, DataBuffer, portMAX_DELAY) == pdTRUE )
 						{
 							memcpy(Value, DataBuffer, ByteCount);
-							delete DataBuffer;
-							return true;
 						}
 						else
 						{
 							Serial << "Error Receiving Queue!\n";
-							delete DataBuffer;
-							return false;
 						}
+						delete DataBuffer;
 					}
 				}
 			}
@@ -406,7 +377,6 @@ class CommonUtils
 			{
 				Serial << "GetValueFromQueue: NULL Queue\n";
 			}
-			return false;
 		}
 		
 		DataType_t GetDataTypeFromString(String DataType)

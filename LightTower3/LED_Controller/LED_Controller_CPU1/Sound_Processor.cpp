@@ -170,10 +170,13 @@ void Sound_Processor::ProcessRightChannelFFT()
               {
                 for(int j = 0; j < NUMBER_OF_BANDS; ++j)
                 {
-                  Serial << m_Right_Band_Values[j] << "\n";
+                  for(int k = 0; k < SOUND_PROCESSOR_OUTPUT_WIDTH; ++k)
+                  {
+                    Serial << m_Right_Band_Values[j] << "\n";
+                  }
                 }
               }
-              PushValueToQueue(&m_Right_Band_Values, GetQueueHandleTXForDataItem("R_FFT"), false, false);
+              PushValueToQueue(m_Right_Band_Values, GetQueueHandleTXForDataItem("R_FFT"), false, false);
               xQueueReset(GetQueueHandleRXForDataItem("R_BAND_IN"));
             }
           }
@@ -320,10 +323,13 @@ void Sound_Processor::ProcessLeftChannelFFT()
               {
                 for(int j = 0; j < NUMBER_OF_BANDS; ++j)
                 {
-                  Serial << m_Left_Band_Values[j] << "\n";
+                  for(int k = 0; k < SOUND_PROCESSOR_OUTPUT_WIDTH; ++k)
+                  {
+                    Serial << m_Left_Band_Values[j] << "\n";
+                  }
                 }
               }
-              PushValueToQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleTXForDataItem("L_FFT"), false, false);
+              PushValueToQueue(m_Left_Band_Values, GetQueueHandleTXForDataItem("L_FFT"), false, false);
               xQueueReset(GetQueueHandleRXForDataItem("L_BAND_IN"));
             }
           }

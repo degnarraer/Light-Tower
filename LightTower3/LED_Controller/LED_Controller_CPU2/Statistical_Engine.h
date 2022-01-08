@@ -136,9 +136,9 @@ class StatisticalEngine : public NamedItem
     //BAND Circular Buffer
     bool m_NewBandDataReady = false;
     static const unsigned int m_NumBands = 32; //Need way to set this
-    int BandValues[m_NumBands][BAND_SAVE_LENGTH];
+    int32_t BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
-    int BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
+    int32_t BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentAverageBandIndex = -1;
     bool NewBandDataReady();
     void UpdateBandArray();
@@ -155,8 +155,8 @@ class StatisticalEngine : public NamedItem
     bool m_NewSoundDataReady = false;
     float m_Power;
     float m_PowerDb;
-    int m_signalMin;
-    int m_signalMax;
+    int32_t m_signalMin;
+    int32_t m_signalMax;
     float m_AmpGain = 1.0;
     float m_FFTGain = 1.0;
     bool NewSoundDataReady();
@@ -168,11 +168,11 @@ class StatisticalEngine : public NamedItem
     size_t m_BandInputByteCount = sizeof(int16_t) * m_NumBands;
     
     //Right Channel Input Sound Data
-    int16_t* m_Right_Band_Values;
+    int16_t m_Right_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Input Sound Data
-    int16_t* m_Left_Band_Values;
+    int16_t m_Left_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
     //Sound Detection

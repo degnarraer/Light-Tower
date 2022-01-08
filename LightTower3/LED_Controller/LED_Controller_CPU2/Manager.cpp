@@ -142,14 +142,14 @@ void Manager::ProcessRightChannelSoundDataQueue()
   MoveDataFromQueueToQueue( "Manager 1"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("R_FFT")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_FFT")
-                          , m_StatisticalEngine.GetByteCountForDataItem("R_FFT")
+                          , m_SerialDataLink.GetByteCountForDataItem("R_FFT")
                           , false
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 2"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_StatisticalEngine.GetByteCountForDataItem("R_PSD")
+                          , m_SerialDataLink.GetByteCountForDataItem("R_PSD")
                           , false
                           , false );
 }
@@ -158,14 +158,14 @@ void Manager::ProcessLeftChannelSoundDataQueue()
   MoveDataFromQueueToQueue( "Manager 3"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("L_FFT")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_FFT")
-                          , m_StatisticalEngine.GetByteCountForDataItem("L_FFT")
+                          , m_SerialDataLink.GetByteCountForDataItem("L_FFT")
                           , false
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 4"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_StatisticalEngine.GetByteCountForDataItem("L_PSD")
+                          , m_SerialDataLink.GetByteCountForDataItem("L_PSD")
                           , false
                           , false );
 }

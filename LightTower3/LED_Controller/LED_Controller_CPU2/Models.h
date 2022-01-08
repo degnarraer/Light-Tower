@@ -108,7 +108,7 @@ class ModelEventNotificationCaller
     {
       for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if (true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification " << i << "\t" << "Value: " << value << "\n";
+        if (true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification Context: " << m_MyCalleesWithContext.get(i).Context << "\t" << "Value: " << value << "\n";
         m_MyCalleesWithContext.get(i).Callee->NewValueNotification(value, m_MyCalleesWithContext.get(i).Context);
       }
     }
