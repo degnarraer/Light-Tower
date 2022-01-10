@@ -409,7 +409,7 @@ class BandPowerModel: public DataModelWithNewValueNotification<float>
     //Model
     void UpdateValue()
     {
-      float value = (m_StatisticalEngineModelInterface.GetBandAverage(m_Band, 1) / (float)ADDBITS);
+      float value = (m_StatisticalEngineModelInterface.GetBandAverage(m_Band, 1));
       if (true == debugModels) Serial << "BandPowerModel value: " << value << " for band: " << m_Band << "\n";
       SetCurrentValue( value );
     }
@@ -451,7 +451,7 @@ class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float
     //Model
     void UpdateValue()
     {
-      float value = (m_StatisticalEngineModelInterface.GetBandAverageForABandOutOfNBands(m_Band, m_Depth, m_TotalBands) / (float)ADDBITS);
+      float value = (m_StatisticalEngineModelInterface.GetBandAverageForABandOutOfNBands(m_Band, m_Depth, m_TotalBands));
       if (true == debugModels) Serial << "ReducedBandsBandPowerModel value: " << value << " for band: " << m_Band << " of " << m_TotalBands << " bands\n";
       SetCurrentValue( value );
     }
@@ -583,8 +583,6 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
     void RunModelTask() {
       m_Color = GetColor(m_Numerator, m_Denominator);
     }
-
-    //This
 };
 
 class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
@@ -724,7 +722,7 @@ private:
       unsigned int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
       for (int b = 0; b < m_StatisticalEngineModelInterface.GetNumberOfBands(); ++b)
       {
-        float power = m_StatisticalEngineModelInterface.GetBandAverage(b, m_Depth) / (float)ADDBITS;
+        float power = m_StatisticalEngineModelInterface.GetBandAverage(b, m_Depth);
         if (power > maxBandPowerValue)
         {
           maxBandPowerValue = power;

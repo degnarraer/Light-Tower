@@ -66,10 +66,10 @@ class Sound_Processor: public NamedItem
     int16_t* m_FFT_Left_Data;
     
     //Right Channel Processed FFT Band Data
-    int16_t* m_Right_Band_Values;
+    float* m_Right_Band_Values;
     
     //Left Channel Processed FFT Band Data
-    int16_t* m_Left_Band_Values;
+    float* m_Left_Band_Values;
 
     //Adjustments
     float m_Gain = 6.0;
@@ -99,8 +99,8 @@ class Sound_Processor: public NamedItem
       { "L_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
       { "R_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,                Transciever_TX,   3 },
-      { "L_FFT",      DataType_Int16_t,               NUMBER_OF_BANDS,                Transciever_TX,   3 },
+      { "R_FFT",      DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
+      { "L_FFT",      DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
       { "R_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   20 },
       { "L_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   20 }
     };

@@ -160,7 +160,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
     for(int i = 0; i < m_Mic_In.GetSampleCount(); ++i)
     {
       int32_t raw = ((int32_t*)DataBuffer)[i];
-      ((int32_t*)DataBuffer)[i] = raw * 20; // SET VOLUME HERE
+      ((int32_t*)DataBuffer)[i] = raw * ANALOG_GAIN; // SET VOLUME HERE
       if(true == PRINT_BYTE_MANIPULATION_DEBUG)
       {
         int32_t raw = ((int32_t*)DataBuffer)[i];

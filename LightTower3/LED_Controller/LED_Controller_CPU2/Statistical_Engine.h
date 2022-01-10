@@ -116,9 +116,9 @@ class StatisticalEngine : public NamedItem
     
     //Band Data Getters
     unsigned int GetNumberOfBands() { return m_NumBands; }
-    int GetBandValue(unsigned int band, unsigned int depth);
+    float GetBandValue(unsigned int band, unsigned int depth);
     float GetBandAverage(unsigned band, unsigned int depth);
-    int GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
+    float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
 
@@ -126,8 +126,8 @@ class StatisticalEngine : public NamedItem
     static const size_t m_ConfigCount = 4;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_FFT",     DataType_Int16_t,                32,   Transciever_RX,   10 },
-      { "L_FFT",     DataType_Int16_t,                32,   Transciever_RX,   10 },
+      { "R_FFT",     DataType_Float,                  32,   Transciever_RX,   10 },
+      { "L_FFT",     DataType_Float,                  32,   Transciever_RX,   10 },
       { "R_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 },
       { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 }
     };
@@ -136,9 +136,9 @@ class StatisticalEngine : public NamedItem
     //BAND Circular Buffer
     bool m_NewBandDataReady = false;
     static const unsigned int m_NumBands = 32; //Need way to set this
-    int32_t BandValues[m_NumBands][BAND_SAVE_LENGTH];
+    float BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
-    int32_t BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
+    float BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentAverageBandIndex = -1;
     bool NewBandDataReady();
     void UpdateBandArray();
@@ -158,21 +158,21 @@ class StatisticalEngine : public NamedItem
     int32_t m_signalMin;
     int32_t m_signalMax;
     float m_AmpGain = 1.0;
-    float m_FFTGain = 1.0;
+    float m_FFTGain = 10.0;
     bool NewSoundDataReady();
     void UpdateSoundState();
 
  //Sound Detection
   private:
     bool m_MemoryIsAllocated = false;
-    size_t m_BandInputByteCount = sizeof(int16_t) * m_NumBands;
+    size_t m_BandInputByteCount = sizeof(float) * m_NumBands;
     
     //Right Channel Input Sound Data
-    int16_t m_Right_Band_Values[m_NumBands];
+    float m_Right_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Input Sound Data
-    int16_t m_Left_Band_Values[m_NumBands];
+    float m_Left_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
     //Sound Detection

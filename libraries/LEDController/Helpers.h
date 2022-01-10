@@ -33,16 +33,16 @@ class QueueManager
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(Name == m_DataItem[i].Name)
+					if(true == Name.equals(m_DataItem[i].Name))
 					{
 						return m_DataItem[i].QueueHandle_RX;
 					}
 				}
-				Serial << "GetQueueHandleRXForDataItem: Data Item Not Found\n";
+				Serial << "GetQueueHandleRXForDataItem: " << Name << ": Data Item Not Found\n";
 			}
 			else
 			{
-				Serial << "GetQueueHandleRXForDataItem: NULL Data Item\n";
+				Serial << "GetQueueHandleRXForDataItem: " << Name << ": NULL Data Item\n";
 			}
 			return NULL;
 		}
@@ -53,15 +53,16 @@ class QueueManager
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(Name == m_DataItem[i].Name)
+					if(true == Name.equals(m_DataItem[i].Name))
 					{
 						return m_DataItem[i].QueueHandle_TX;
 					}
 				}
+				Serial << "GetQueueHandleTXForDataItem: " << Name << ": Data Item Not Found\n";
 			}
 			else
 			{
-				Serial << "GetQueueHandleTXForDataItem: NULL Data Item\n";
+				Serial << "GetQueueHandleTXForDataItem: " << Name << ": NULL Data Item\n";
 			}
 			return NULL;
 		}
@@ -72,7 +73,7 @@ class QueueManager
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(Name == m_DataItem[i].Name)
+					if(true == Name.equals(m_DataItem[i].Name))
 					{
 						return GetSizeOfDataType(m_DataItem[i].DataType) * m_DataItem[i].Count;
 					}

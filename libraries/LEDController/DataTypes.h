@@ -58,12 +58,12 @@ struct DataItemConfig_t
 struct DataItem_t
 {
   String Name;
-  DataType_t DataType;
-  size_t Count = 0;
   QueueHandle_t QueueHandle_RX = NULL;
   QueueHandle_t QueueHandle_TX = NULL;
-  size_t TotalByteCount = 0;
   Transciever_T TransceiverConfig;
+  DataType_t DataType;
+  size_t Count = 0;
+  size_t TotalByteCount = 0;
   void* Object;
 };
 

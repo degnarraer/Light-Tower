@@ -95,6 +95,10 @@ void StatisticalEngine::RunMyScheduledTask()
   {
     GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_FFT"), GetByteCountForDataItem("R_FFT"), true, false);
     GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_FFT"), GetByteCountForDataItem("L_FFT"), true, false);
+    for(int k = 0; k < 32; ++k)
+    {
+      Serial << "Band: " << k << " Value: " << m_Left_Band_Values[k] << "\n";
+    }
     UpdateBandArray(); 
   }
 }
@@ -222,9 +226,9 @@ float StatisticalEngine::GetFreqForBin(unsigned int bin)
   return FFT_BIN(bin, SAMPLE_RATE, FFT_MAX);
 }
 
-int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
+float StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
 {
-  int result;
+  float result;
   if(band < m_NumBands && depth < BAND_SAVE_LENGTH)
   {
     int position = 0;
@@ -249,7 +253,7 @@ int StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
 
 float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
 {
-  int total = 0;
+  float total = 0;
   unsigned int count = 0;
   for(int i = 0; i < BAND_SAVE_LENGTH && i <= depth; ++i)
   {
@@ -260,7 +264,7 @@ float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
   if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   return result;
 }
-int StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands)
+float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands)
 {
   assert(band < TotalBands);
   assert(TotalBands <= m_NumBands);
@@ -274,7 +278,7 @@ int StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned
     result += GetBandAverage(b, depth);
   }
   if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
-  return (int)round(result);
+  return result;
 }
 
 float StatisticalEngine::GetNormalizedSoundPower()

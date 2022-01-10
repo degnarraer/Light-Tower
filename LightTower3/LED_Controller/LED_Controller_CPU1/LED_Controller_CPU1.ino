@@ -107,6 +107,14 @@ void setup() {
   Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
   Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
   Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
+
+  Serial << "Data Type Sizes:\n";
+  Serial << "QueueHandle_t: " << sizeof(QueueHandle_t) << "\n";
+  Serial << "Transciever_T: " << sizeof(Transciever_T) << "\n";
+  Serial << "DataType_t: " << sizeof(DataType_t) << "\n";
+  Serial << "size_t: " << sizeof(size_t) << "\n";
+  Serial << "void: " << sizeof(void) << "\n";
+  Serial << "String: " << sizeof(String) << "\n";
   
   m_BTSink.set_stream_reader(read_data_stream);
   m_BTSink.set_on_data_received(data_received_callback);
@@ -133,7 +141,7 @@ void setup() {
     "SoundProcessorTask",       // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,  // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SoundProcessorTask,        // Task handle.
     0                           // Core where the task should run
   );

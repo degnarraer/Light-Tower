@@ -28,7 +28,7 @@ const int    debugLevel = 1;
 const bool   debugNanInf = false;
 const bool   debugPlotMic = false;
 const bool   debugPlotFFT = false;
-const bool   debugFPS = true;
+const bool   debugFPS = false;
 const bool   debugTasks = false;
 const bool   debugModelNotifications = false;
 const bool   debugModelNewValueProcessor = true;
@@ -37,7 +37,7 @@ const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
 const bool   debugModels = false;
-const bool   debugSetBandValueStatisticalEngine = true;
+const bool   debugSetBandValueStatisticalEngine = false;
 const bool   debugGetBandValueStatisticalEngine = false;
 const bool   debugGravitationalModel = false;
 const bool   debugMemory = false;
@@ -80,13 +80,13 @@ const unsigned int DATA_PIN_STRIP4 = 33;  //MATRIX4 PIN ASSIGNMENT
 const float MAX_DISPLAYED_FREQ = 22050.0;
 
 //FFT Tunes
-const int FFT_MAX = 512;
+const int FFT_MAX = 2048;
 const unsigned int SAMPLE_RATE = 44100;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 //VU
-const unsigned int BAND_SAVE_LENGTH = 10;
-const unsigned int POWER_SAVE_LENGTH = 10;
+const unsigned int BAND_SAVE_LENGTH = 20;
+const unsigned int POWER_SAVE_LENGTH = 20;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.05;
@@ -104,11 +104,8 @@ const int     silenceSubtractor = -10;
 const int FFT_M = (int)log2(FFT_MAX);
 const int BINS = FFT_MAX / 2;
 const float BINS_DOUBLE = FFT_MAX / 2.0;
-const int ADC_RESOLUTION = 16;
-const int ADDBITS = pow(2,ADC_RESOLUTION);
+const int FFT_RESOLUTION = 16;
 const int FFT_GAIN = 1000;
 const int POWER_GAIN = 20;
-const int MAX_POWER = ADDBITS * POWER_GAIN;
-const float MAX_DB = 20*log10(ADDBITS);
 
 #endif
