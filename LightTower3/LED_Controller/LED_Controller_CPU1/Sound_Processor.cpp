@@ -123,12 +123,19 @@ void Sound_Processor::ProcessRightChannelFFT()
             if(m_FFT_Large_Right_Buffer_Index >= m_Large_FFT_Length)
             {
               m_FFT_Large_Right_Buffer_Index = 0;
+              if(true == SOUND_PROCESSOR_INPUT_COMPLETE_DATA_R_DEBUG)
+              {
+                for(int k = 0; k < m_Large_FFT_Length / 2; ++k)
+                {
+                  Serial << m_Large_FFT_Right_Data[k] << "\n";
+                }
+              }
               ZeroFFT(m_Large_FFT_Right_Data, m_Large_FFT_Length);
               if(true == SOUND_PROCESSOR_OUTPUTDATA_R_DEBUG)
               {
                 for(int k = 0; k < m_Large_FFT_Length / 2; ++k)
                 {
-                  Serial << m_Large_FFT_Right_Data[k] << "\n";
+                  Serial << "Frequency: " << GetFreqForBin(k, m_Large_FFT_Length) << " Magnitude: " << m_Large_FFT_Right_Data[k] << "\n";
                 }
               }
               memset(m_Right_Band_Values, 0, sizeof(float)*NUMBER_OF_BANDS);
@@ -269,12 +276,19 @@ void Sound_Processor::ProcessLeftChannelFFT()
             if(m_FFT_Large_Left_Buffer_Index >= m_Large_FFT_Length)
             {
               m_FFT_Large_Left_Buffer_Index = 0;
+              if(true == SOUND_PROCESSOR_INPUT_COMPLETE_DATA_L_DEBUG)
+              {
+                for(int k = 0; k < m_Large_FFT_Length / 2; ++k)
+                {
+                  Serial << m_Large_FFT_Left_Data[k] << "\n";
+                }
+              }
               ZeroFFT(m_Large_FFT_Left_Data, m_Large_FFT_Length);
               if(true == SOUND_PROCESSOR_OUTPUTDATA_L_DEBUG)
               {
                 for(int k = 0; k < m_Large_FFT_Length / 2; ++k)
                 {
-                  Serial << m_Large_FFT_Left_Data[k] << "\n";
+                  Serial << "Frequency: " << GetFreqForBin(k, m_Large_FFT_Length) << " Magnitude: " << m_Large_FFT_Left_Data[k] << "\n";
                 }
               }
               memset(m_Left_Band_Values, 0, sizeof(float)*NUMBER_OF_BANDS);
