@@ -423,7 +423,7 @@ void Sound_Processor::AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t 
 
 float Sound_Processor::GetFreqForBin(unsigned int bin, int16_t FFT_Length)
 {
-  if(bin > m_Large_FFT_Length/2) bin = m_Large_FFT_Length/2;
+  if(bin > FFT_Length/2) bin = FFT_Length/2;
   if(bin < 0) bin = 0;
-  return FFT_BIN(bin, m_SampleRate, m_Large_FFT_Length);
+  return FFT_BIN(bin, m_SampleRate, FFT_Length);
 }
