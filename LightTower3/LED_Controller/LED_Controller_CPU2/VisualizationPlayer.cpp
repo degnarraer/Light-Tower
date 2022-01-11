@@ -20,7 +20,7 @@
 
 void VisualizationPlayer::Setup()
 {
-  m_MyVisiualizationInstantiations.add(VUMeter::GetInstance);
+  //_MyVisiualizationInstantiations.add(VUMeter::GetInstance);
   //m_MyVisiualizationInstantiations.add(VUMeter3Band::GetInstance);
   //m_MyVisiualizationInstantiations.add(VUMeter8Band::GetInstance);
   //m_MyVisiualizationInstantiations.add(Waterfall::GetInstance);
@@ -29,7 +29,7 @@ void VisualizationPlayer::Setup()
   //m_MyVisiualizationInstantiations.add(WaterFireFromEdge::GetInstance);
   //m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
   //m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
-  //m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
+  m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
   //m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
   //m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   //m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);

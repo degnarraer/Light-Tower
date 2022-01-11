@@ -83,7 +83,7 @@ const unsigned int SAMPLE_RATE = 44100;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 // VISUALIZATION TUNES
-const float MAX_DISPLAYED_FREQ = SAMPLE_RATE/2;
+const float MAX_DISPLAYED_FREQ = 10000;
 
 //VU
 const unsigned int BAND_SAVE_LENGTH = 20;

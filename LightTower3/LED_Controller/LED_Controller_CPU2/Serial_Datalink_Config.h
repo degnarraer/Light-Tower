@@ -52,8 +52,8 @@ class SerialDataLink: public NamedItem
       { "L_FFT",     DataType_Float,                  32,   Transciever_RX,   10 },
       { "R_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 },
       { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 },
-      { "R_MaxBin",  DataType_MaxBinSoundData_t,      1,    Transciever_RX,   10 },
-      { "L_MaxBin",  DataType_MaxBinSoundData_t,      1,    Transciever_RX,   10 },
+      { "R_MAXBIN",  DataType_MaxBinSoundData_t,      1,    Transciever_RX,   10 },
+      { "L_MAXBIN",  DataType_MaxBinSoundData_t,      1,    Transciever_RX,   10 },
     };
 };
 

@@ -8,6 +8,7 @@ TaskHandle_t ManagerTask;
 TaskHandle_t SoundProcessorTask;
 TaskHandle_t FFTTask;
 TaskHandle_t SoundPowerTask;
+TaskHandle_t SoundMaxBandTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 
@@ -170,6 +171,17 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
+    SoundMaxBandTaskLoop,       // Function to implement the task
+    "SoundMaxBandTask",         // Name of the task
+    3000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 3,   // Priority of the task
+    &SoundMaxBandTask,          // Task handle.
+    1                           // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     SerialDataLinkTXTaskLoop,   // Function to implement the task
     "SerialDataLinkSendTask",   // Name of the task
     3000,                       // Stack size in words
@@ -236,7 +248,18 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessSoundPowerEventQueue();
+    //m_Sound_Processor.ProcessSoundPowerEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SoundMaxBandTaskLoop(void * parameter)
+{
+  Serial << "Started Thread: SoundMaxBandTaskLoop\n";
+  for(;;)
+  {
+    yield();
+    m_Sound_Processor.ProcessMaxBandEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

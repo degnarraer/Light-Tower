@@ -47,8 +47,8 @@ bool StatisticalEngine::NewBandDataReady()
 
 bool StatisticalEngine::NewMaxBinSoundDataReady()
 {
-  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MaxBin")) > 0);
-  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MaxBin")) > 0);
+  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN")) > 0);
+  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBIN")) > 0);
   //Serial << A << "|" << B << "\n";
   if( A & B )
   {
@@ -119,8 +119,8 @@ void StatisticalEngine::RunMyScheduledTask()
   
   if(true == m_NewMaxBinSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_MaxBinSoundData, GetQueueHandleRXForDataItem("R_MaxBin"), GetByteCountForDataItem("R_MaxBin"), true, false);
-    GetValueFromQueue(&m_Left_MaxBinSoundData, GetQueueHandleRXForDataItem("L_MaxBin"), GetByteCountForDataItem("L_MaxBin"), true, false);
+    GetValueFromQueue(&m_Right_MaxBinSoundData, GetQueueHandleRXForDataItem("R_MAXBIN"), GetByteCountForDataItem("R_MAXBIN"), true, false);
+    GetValueFromQueue(&m_Left_MaxBinSoundData, GetQueueHandleRXForDataItem("L_MAXBIN"), GetByteCountForDataItem("L_MAXBIN"), true, false);
   }
 }
 

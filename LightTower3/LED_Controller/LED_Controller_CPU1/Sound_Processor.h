@@ -38,6 +38,7 @@ class Sound_Processor: public NamedItem
     void ProcessEventQueue();
     void ProcessFFTEventQueue();
     void ProcessSoundPowerEventQueue();
+    void ProcessMaxBandEventQueue();
 
     //QueueManager
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
@@ -91,29 +92,36 @@ class Sound_Processor: public NamedItem
     void ProcessRightChannelSoundData();
     void ProcessRightChannelFFT();
     void ProcessRightChannelPower();
+    void ProcessRightChannelMaxBand();
     
     void ProcessLeftChannelSoundData();
     void ProcessLeftChannelFFT();
     void ProcessLeftChannelPower();
+    void ProcessLeftChannelMaxBand();
+    
     void AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t FFT_Length);
     float GetFreqForBin(unsigned int bin, int16_t FFT_Length);
+    int16_t GetBinForFrequency(float Frequency, int16_t FFT_Length);
+    int16_t m_10kHz_Bin;
 
     //QueueManager Configuration
-    static const size_t m_ConfigCount = 12;
+    static const size_t m_ConfigCount = 14;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "L_RAW_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "L_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "R_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "L_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_FFT",      DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
-      { "L_FFT",      DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
-      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
-      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
-      { "R_MaxBin",   DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
-      { "L_MaxBin",   DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
+      { "R_RAW_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "L_RAW_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "R_BAND_IN",    DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "L_BAND_IN",    DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "L_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "R_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "L_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
+      { "L_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
+      { "R_PSD",        DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
+      { "L_PSD",        DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
+      { "R_MAXBIN",     DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
+      { "L_MAXBIN",     DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
     };
 };
 

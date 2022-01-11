@@ -154,9 +154,9 @@ void Manager::ProcessRightChannelSoundDataQueue()
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 3"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_MaxBin")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MaxBin")
-                          , m_SerialDataLink.GetByteCountForDataItem("R_MaxBin")
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_MAXBIN")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBIN")
+                          , m_SerialDataLink.GetByteCountForDataItem("R_MAXBIN")
                           , false
                           , false );
 }
@@ -177,9 +177,9 @@ void Manager::ProcessLeftChannelSoundDataQueue()
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 6"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_MaxBin")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MaxBin")
-                          , m_SerialDataLink.GetByteCountForDataItem("L_MaxBin")
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_MAXBIN")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBIN")
+                          , m_SerialDataLink.GetByteCountForDataItem("L_MAXBIN")
                           , false
                           , false );
 }
