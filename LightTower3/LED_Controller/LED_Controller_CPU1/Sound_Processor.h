@@ -25,6 +25,7 @@
 #include <Helpers.h>
 #include "Streaming.h"
 #include "Tunes.h"
+#include "float.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
@@ -33,7 +34,7 @@ class Sound_Processor: public NamedItem
   public:
     Sound_Processor(String Title);
     virtual ~Sound_Processor();
-    void SetupSoundProcessor(size_t InputByteCount, int SampleRate, int FFT_Length);
+    void SetupSoundProcessor(size_t InputByteCount, int SampleRate, int Large_FFT_Length, int Small_FFT_Length);
     void ProcessEventQueue();
     void ProcessFFTEventQueue();
     void ProcessSoundPowerEventQueue();
@@ -50,7 +51,8 @@ class Sound_Processor: public NamedItem
     size_t m_BytesToRead = 0;
     size_t m_BandOutputByteCount = 0;
     int32_t m_SampleRate = 0;
-    int32_t m_FFT_Length = 0;
+    int16_t m_Large_FFT_Length = 0;
+    int16_t m_Small_FFT_Length = 0;
 
     //Memory Management
     bool m_MemoryIsAllocated = false;
@@ -58,18 +60,24 @@ class Sound_Processor: public NamedItem
     void FreeMemory();
 
     //CHANNEL DATA INPUT
-    int32_t m_FFT_Right_Buffer_Index = 0;
-    int32_t m_FFT_Left_Buffer_Index = 0;
+    int32_t m_FFT_Large_Right_Buffer_Index = 0;
+    int32_t m_FFT_Large_Left_Buffer_Index = 0;
+    int32_t m_FFT_Small_Right_Buffer_Index = 0;
+    int32_t m_FFT_Small_Left_Buffer_Index = 0;
     
     //CALCULATED OUTPUTS
-    int16_t* m_FFT_Right_Data;
-    int16_t* m_FFT_Left_Data;
+    int16_t* m_Large_FFT_Right_Data;
+    int16_t* m_Large_FFT_Left_Data;
+    int16_t* m_Small_FFT_Right_Data;
+    int16_t* m_Small_FFT_Left_Data;
     
     //Right Channel Processed FFT Band Data
     float* m_Right_Band_Values;
+    MaxBinSoundData_t m_Right_MaxBinSoundData;
     
     //Left Channel Processed FFT Band Data
     float* m_Left_Band_Values;
+    MaxBinSoundData_t m_Left_MaxBinSoundData;
 
     //Adjustments
     float m_Gain = 6.0;
@@ -87,22 +95,25 @@ class Sound_Processor: public NamedItem
     void ProcessLeftChannelSoundData();
     void ProcessLeftChannelFFT();
     void ProcessLeftChannelPower();
-    float GetFreqForBin(unsigned int bin);
+    void AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t FFT_Length);
+    float GetFreqForBin(unsigned int bin, int16_t FFT_Length);
 
     //QueueManager Configuration
-    static const size_t m_ConfigCount = 10;
+    static const size_t m_ConfigCount = 12;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
       { "R_RAW_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_RAW_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "L_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "L_BAND_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
       { "R_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_PSD_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "R_FFT",      DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
       { "L_FFT",      DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
-      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   20 },
-      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   20 }
+      { "R_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
+      { "L_PSD",      DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
+      { "R_MaxBin",   DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
+      { "L_MaxBin",   DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
     };
 };
 

@@ -116,8 +116,8 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<3000> docIn;
-		StaticJsonDocument<3000> docOut;
+		StaticJsonDocument<4000> docIn;
+		StaticJsonDocument<4000> docOut;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 };

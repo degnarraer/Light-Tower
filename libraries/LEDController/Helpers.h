@@ -238,6 +238,9 @@ class QueueManager
 				case DataType_ProcessedSoundData_t:
 					return sizeof(ProcessedSoundData_t);
 				break;
+				case DataType_MaxBinSoundData_t:
+					return sizeof(MaxBinSoundData_t);
+				break;
 				default:
 					return 0;
 				break;
@@ -412,6 +415,9 @@ class CommonUtils
 				break;
 				case DataType_ProcessedSoundData_t:
 					return sizeof(ProcessedSoundData_t);
+				break;
+				case DataType_MaxBinSoundData_t:
+					return sizeof(MaxBinSoundData_t);
 				break;
 				default:
 					return 0;

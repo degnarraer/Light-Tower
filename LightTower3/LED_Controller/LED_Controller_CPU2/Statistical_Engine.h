@@ -113,6 +113,21 @@ class StatisticalEngine : public NamedItem
 
     //Power Getters
     float GetNormalizedSoundPower();
+
+    //SoundDataGetters
+    MaxBinSoundData_t GetMaxBinSoundData() 
+    {
+      if(m_Right_MaxBinSoundData.MaxBinNormalizedPower > m_Left_MaxBinSoundData.MaxBinNormalizedPower)
+      {
+        return m_Right_MaxBinSoundData;
+      }
+      else
+      {
+        return m_Left_MaxBinSoundData;
+      }
+    }
+    MaxBinSoundData_t GetMaxBinRightSoundData() { return m_Right_MaxBinSoundData; }
+    MaxBinSoundData_t GetMaxBinLeftSoundData() { return m_Left_MaxBinSoundData; }
     
     //Band Data Getters
     unsigned int GetNumberOfBands() { return m_NumBands; }
@@ -121,25 +136,28 @@ class StatisticalEngine : public NamedItem
     float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
-
-    
-    static const size_t m_ConfigCount = 4;
+  
+    bool m_MemoryIsAllocated = false;
+    static const size_t m_ConfigCount = 6;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
       { "R_FFT",     DataType_Float,                  32,   Transciever_RX,   10 },
       { "L_FFT",     DataType_Float,                  32,   Transciever_RX,   10 },
       { "R_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 },
-      { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 }
+      { "L_PSD",     DataType_ProcessedSoundData_t,   1,    Transciever_RX,   10 },
+      { "R_MaxBin",  DataType_MaxBinSoundData_t,      1,    Transciever_RX,   10 },
+      { "L_MaxBin",  DataType_MaxBinSoundData_t,      1,    Transciever_RX,   10 },
     };
 
     bool m_ProcessFFT = true;
+    
     //BAND Circular Buffer
-    bool m_NewBandDataReady = false;
     static const unsigned int m_NumBands = 32; //Need way to set this
     float BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
     float BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentAverageBandIndex = -1;
+    bool m_NewBandDataReady = false;
     bool NewBandDataReady();
     void UpdateBandArray();
     void UpdateRunningAverageBandArray();
@@ -163,8 +181,6 @@ class StatisticalEngine : public NamedItem
     void UpdateSoundState();
 
  //Sound Detection
-  private:
-    bool m_MemoryIsAllocated = false;
     size_t m_BandInputByteCount = sizeof(float) * m_NumBands;
     
     //Right Channel Input Sound Data
@@ -174,6 +190,12 @@ class StatisticalEngine : public NamedItem
     //Left Channel Input Sound Data
     float m_Left_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
+
+    //Max Bin Sound Data
+    bool m_NewMaxBinSoundDataReady = false;
+    bool NewMaxBinSoundDataReady();
+    MaxBinSoundData_t m_Right_MaxBinSoundData;
+    MaxBinSoundData_t m_Left_MaxBinSoundData;
 
     //Sound Detection
     const int     m_silenceDetectedThreshold = silenceDetectedThreshold;

@@ -128,7 +128,7 @@ void setup() {
   (
     ManagerTaskLoop,            // Function to implement the task
     "ManagerTask",              // Name of the task
-    2000,                       // Stack size in words
+    3000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &ManagerTask,               // Task handle.
@@ -139,7 +139,7 @@ void setup() {
   (
     SoundProcessorTaskLoop,     // Function to implement the task
     "SoundProcessorTask",       // Name of the task
-    2000,                       // Stack size in words
+    3000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 3,   // Priority of the task
     &SoundProcessorTask,        // Task handle.
@@ -150,7 +150,7 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    2000,                       // Stack size in words
+    3000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 10,  // Priority of the task
     &FFTTask,                   // Task handle.
@@ -161,7 +161,7 @@ void setup() {
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    2000,                       // Stack size in words
+    3000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 3,   // Priority of the task
     &SoundPowerTask,            // Task handle.
@@ -172,7 +172,7 @@ void setup() {
   (
     SerialDataLinkTXTaskLoop,   // Function to implement the task
     "SerialDataLinkSendTask",   // Name of the task
-    2000,                       // Stack size in words
+    3000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
@@ -183,7 +183,7 @@ void setup() {
   (
     SerialDataLinkRXTaskLoop,   // Function to implement the task
     "SerialDataLinkRXTask",     // Name of the task
-    2000,                       // Stack size in words
+    3000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.

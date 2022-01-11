@@ -76,13 +76,14 @@ const unsigned int DATA_PIN_STRIP2 = 26;  //MATRIX2 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP3 = 27;  //MATRIX3 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP4 = 33;  //MATRIX4 PIN ASSIGNMENT
 
-// VISUALIZATION TUNES
-const float MAX_DISPLAYED_FREQ = 22050.0;
 
 //FFT Tunes
 const int FFT_MAX = 2048;
 const unsigned int SAMPLE_RATE = 44100;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
+
+// VISUALIZATION TUNES
+const float MAX_DISPLAYED_FREQ = SAMPLE_RATE/2;
 
 //VU
 const unsigned int BAND_SAVE_LENGTH = 20;

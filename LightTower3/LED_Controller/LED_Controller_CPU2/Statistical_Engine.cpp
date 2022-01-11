@@ -45,6 +45,23 @@ bool StatisticalEngine::NewBandDataReady()
   }
 }
 
+bool StatisticalEngine::NewMaxBinSoundDataReady()
+{
+  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MaxBin")) > 0);
+  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MaxBin")) > 0);
+  //Serial << A << "|" << B << "\n";
+  if( A & B )
+  {
+    m_NewMaxBinSoundDataReady = true;
+    return true;
+  }
+  else
+  {
+    m_NewMaxBinSoundDataReady = false;
+    return false;
+  }
+}
+
 bool StatisticalEngine::NewSoundDataReady()
 {
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD")) > 0);
@@ -64,7 +81,9 @@ bool StatisticalEngine::NewSoundDataReady()
 
 bool StatisticalEngine::CanRunMyScheduledTask()
 {
-  if( true == NewSoundDataReady() || true == NewBandDataReady() )
+  if( true == NewSoundDataReady() || 
+      true == NewBandDataReady() ||
+      true == NewMaxBinSoundDataReady() )
   {
     return true;
   }
@@ -95,11 +114,13 @@ void StatisticalEngine::RunMyScheduledTask()
   {
     GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_FFT"), GetByteCountForDataItem("R_FFT"), true, false);
     GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_FFT"), GetByteCountForDataItem("L_FFT"), true, false);
-    for(int k = 0; k < 32; ++k)
-    {
-      Serial << "Band: " << k << " Value: " << m_Left_Band_Values[k] << "\n";
-    }
     UpdateBandArray(); 
+  }
+  
+  if(true == m_NewMaxBinSoundDataReady)
+  {
+    GetValueFromQueue(&m_Right_MaxBinSoundData, GetQueueHandleRXForDataItem("R_MaxBin"), GetByteCountForDataItem("R_MaxBin"), true, false);
+    GetValueFromQueue(&m_Left_MaxBinSoundData, GetQueueHandleRXForDataItem("L_MaxBin"), GetByteCountForDataItem("L_MaxBin"), true, false);
   }
 }
 

@@ -126,10 +126,10 @@ class LEDController
   public:
     LEDController()
     {
-      FastLED.addLeds<WS2812B, DATA_PIN_STRIP1, GRB>(m_LEDStrip[0], NUMLEDS);
-      FastLED.addLeds<WS2812B, DATA_PIN_STRIP2, GRB>(m_LEDStrip[1], NUMLEDS);
-      FastLED.addLeds<WS2812B, DATA_PIN_STRIP3, GRB>(m_LEDStrip[2], NUMLEDS);
-      FastLED.addLeds<WS2812B, DATA_PIN_STRIP4, GRB>(m_LEDStrip[3], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP1, RGB>(m_LEDStrip[0], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP2, RGB>(m_LEDStrip[1], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP3, RGB>(m_LEDStrip[2], NUMLEDS);
+      FastLED.addLeds<WS2812B, DATA_PIN_STRIP4, RGB>(m_LEDStrip[3], NUMLEDS);
       FastLED.setBrightness(255);
     }
     void Setup()

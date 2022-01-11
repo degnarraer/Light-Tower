@@ -474,10 +474,10 @@ Visualization* ScrollingMaxBand::GetInstance(StatisticalEngineModelInterface &St
 void ScrollingMaxBand::SetupVisualization()
 {
   AddSubView(m_ScrollingView);
-  AddModel(m_MaxBandModel);
+  AddModel(m_MaxBinModel);
   AddModel(m_BandDataColorModel);
   m_ScrollingView.AddSubView(m_Sprite0);
-  m_BandDataColorModel.ConnectBandDataModel(m_MaxBandModel);
+  m_BandDataColorModel.ConnectBandDataModel(m_MaxBinModel);
   m_Sprite0.ConnectColorModel(m_BandDataColorModel);
 }
 bool ScrollingMaxBand::CanRunVisualization()

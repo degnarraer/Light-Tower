@@ -44,7 +44,7 @@ bool BandData::operator != (const BandData& a)
 }
 Print& operator << (Print& os, const BandData& bd)
 {
-  os << bd.Power << "|" << bd.Power << "|" << bd.Color.red << "|" << bd.Color.green << "|" << bd.Color.blue;
+  os << bd.Band << "|" << bd.Power << "|" << bd.Color.red << "|" << bd.Color.green << "|" << bd.Color.blue;
   return os;
 }
 
@@ -81,22 +81,29 @@ bool Coordinates::operator!=(const Coordinates& a)
 }
 
 //StatisticalEngine Getters
-unsigned int StatisticalEngineModelInterface::GetNumberOfBands() {
+unsigned int StatisticalEngineModelInterface::GetNumberOfBands()
+{
   return m_StatisticalEngine.GetNumberOfBands();
 }
-float StatisticalEngineModelInterface::GetNormalizedSoundPower() {
+float StatisticalEngineModelInterface::GetNormalizedSoundPower()
+{
   return m_StatisticalEngine.GetNormalizedSoundPower();
 }
-float StatisticalEngineModelInterface::GetBandAverage(unsigned int band, unsigned int depth) {
+float StatisticalEngineModelInterface::GetBandAverage(unsigned int band, unsigned int depth)
+{
   return m_StatisticalEngine.GetBandAverage(band, depth);
 }
-float StatisticalEngineModelInterface::GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands) {
+float StatisticalEngineModelInterface::GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands)
+{
   return m_StatisticalEngine.GetBandAverageForABandOutOfNBands(band, depth, totalBands);
 }
-float StatisticalEngineModelInterface::GetBandValue(unsigned int band, unsigned int depth) {
+float StatisticalEngineModelInterface::GetBandValue(unsigned int band, unsigned int depth)
+{
   return m_StatisticalEngine.GetBandValue(band, depth);
 }
-
+MaxBinSoundData_t StatisticalEngineModelInterface::GetMaxBinSoundData(){ return m_StatisticalEngine.GetMaxBinSoundData(); }
+MaxBinSoundData_t StatisticalEngineModelInterface::GetMaxBinRightSoundData(){ return m_StatisticalEngine.GetMaxBinRightSoundData(); }
+MaxBinSoundData_t StatisticalEngineModelInterface::GetMaxBinLeftSoundData(){ return m_StatisticalEngine.GetMaxBinLeftSoundData(); }
 void Model::Setup()
 {
   SetupModel();

@@ -201,6 +201,9 @@ class StatisticalEngineModelInterface : public NamedItem
     float GetBandAverage(unsigned int band, unsigned int depth);
     float GetBandAverageForABandOutOfNBands(unsigned int band, unsigned int depth, unsigned int totalBands);
     float GetBandValue(unsigned int band, unsigned int depth);
+    MaxBinSoundData_t GetMaxBinSoundData();
+    MaxBinSoundData_t GetMaxBinRightSoundData();
+    MaxBinSoundData_t GetMaxBinLeftSoundData();
     
     //MicrophoneMeasureCalleeInterface
     void MicrophoneStateChange(SoundState) {}
@@ -687,7 +690,7 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
 };
 
 class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData>
-  {
+{
 public:
     MaximumBandModel( String Title, unsigned int Depth, StatisticalEngineModelInterface &StatisticalEngineModelInterface )
       : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
@@ -733,8 +736,45 @@ private:
       m_MaxBandData.Band = maxBandIndex;
       m_MaxBandData.Color = GetColor(maxBandIndex, numBands - 1);
     }
-  };
+};
 
+class MaximumBinModel: public DataModelWithNewValueNotification<struct BandData>
+{
+public:
+    MaximumBinModel( String Title, unsigned int Depth, StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+      : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
+      , m_Depth(Depth)
+    {
+      if (true == debugMemory) Serial << "New: MaximumBandPowerModel\n";
+    }
+    virtual ~MaximumBinModel()
+    {
+      if (true == debugMemory) Serial << "Delete: MaximumBandPowerModel\n";
+    }
+protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() {
+      return true;
+    }
+private:
+    BandData m_MaxBandData;
+    unsigned int m_Depth = 0;
+    //Model
+    void UpdateValue() {
+      SetCurrentValue( m_MaxBandData );
+    }
+    void SetupModel() { }
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask()
+    {
+      MaxBinSoundData_t MaxBinSoundData = m_StatisticalEngineModelInterface.GetMaxBinSoundData();
+      m_MaxBandData.Power = MaxBinSoundData.MaxBinNormalizedPower;
+      m_MaxBandData.Band = MaxBinSoundData.MaxBinIndex;
+      m_MaxBandData.Color = GetColor(MaxBinSoundData.MaxBinIndex, MaxBinSoundData.TotalBins);
+    }
+};
 class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
   , public ModelEventNotificationCallee<BandData>
 {
@@ -749,7 +789,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
       if (true == debugMemory) Serial << "Delete: BandDataColorModel\n";
     }
     void ConnectBandDataModel(ModelEventNotificationCaller<BandData> &Caller) {
-      Caller.RegisterForNotification(*this, "");
+      Caller.RegisterForNotification(*this, "BandData");
     }
   private:
     CRGB m_InputColor = CRGB::Black;
@@ -776,9 +816,12 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     //ModelEventNotificationCallee
     void NewValueNotification(BandData Value, String context)
     {
-      m_InputColor = Value.Color;
-      m_HSV = rgb2hsv_approximate(m_InputColor);
-      m_NormalizedPower = Value.Power;
+      if(context.equals("BandData"))
+      {
+        m_InputColor = Value.Color;
+        m_HSV = rgb2hsv_approximate(m_InputColor);
+        m_NormalizedPower = Value.Power;
+      }
     }
 };
 
