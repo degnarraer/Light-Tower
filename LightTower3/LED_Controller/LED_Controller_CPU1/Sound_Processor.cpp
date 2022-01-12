@@ -112,9 +112,9 @@ void Sound_Processor::ProcessRightChannelSoundData()
 void Sound_Processor::ProcessRightChannelFFT()
 {
   if(NULL != GetQueueHandleRXForDataItem("R_BAND_IN") &&
-     NULL != GetQueueHandleRXForDataItem("R_FFT") )
+     NULL != GetQueueHandleTXForDataItem("R_FFT") )
   {
-    if( uxQueueSpacesAvailable(GetQueueHandleRXForDataItem("R_FFT")) > 0 )
+    if( uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("R_FFT")) > 0 )
     {
       for(int i = 0; i < uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BAND_IN")); ++i)
       {
@@ -247,7 +247,6 @@ void Sound_Processor::ProcessRightChannelMaxBand()
           ++m_FFT_Small_Right_Buffer_Index;
           if(m_FFT_Small_Right_Buffer_Index >= m_Small_FFT_Length)
           {
-            Serial << "E\n";
             m_FFT_Small_Right_Buffer_Index = 0;
             ZeroFFT(m_Small_FFT_Right_Data, m_Small_FFT_Length);
             float maxFFTMagnitude = -FLT_MAX;
@@ -342,9 +341,9 @@ void Sound_Processor::ProcessLeftChannelSoundData()
 void Sound_Processor::ProcessLeftChannelFFT()
 {
   if( NULL != GetQueueHandleRXForDataItem("L_BAND_IN") &&
-      NULL != GetQueueHandleRXForDataItem("L_FFT") )
+      NULL != GetQueueHandleTXForDataItem("L_FFT") )
   {
-    if( uxQueueSpacesAvailable(GetQueueHandleRXForDataItem("L_FFT")) > 0)
+    if( uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("L_FFT")) > 0)
     {
       for(int i = 0; i < uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BAND_IN")); ++i)
       {

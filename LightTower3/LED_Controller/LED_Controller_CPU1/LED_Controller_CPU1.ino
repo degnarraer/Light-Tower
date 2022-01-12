@@ -142,7 +142,7 @@ void setup() {
     "SoundProcessorTask",       // Name of the task
     3000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 5,   // Priority of the task
     &SoundProcessorTask,        // Task handle.
     0                           // Core where the task should run
   );
@@ -164,7 +164,7 @@ void setup() {
     "SoundPowerTask",           // Name of the task
     3000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 5,   // Priority of the task
     &SoundPowerTask,            // Task handle.
     1                           // Core where the task should run
   );
@@ -175,7 +175,7 @@ void setup() {
     "SoundMaxBandTask",         // Name of the task
     3000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 5,   // Priority of the task
     &SoundMaxBandTask,          // Task handle.
     1                           // Core where the task should run
   );
@@ -186,7 +186,7 @@ void setup() {
     "SerialDataLinkSendTask",   // Name of the task
     3000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 2,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
   );     
@@ -197,7 +197,7 @@ void setup() {
     "SerialDataLinkRXTask",     // Name of the task
     3000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 2,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
