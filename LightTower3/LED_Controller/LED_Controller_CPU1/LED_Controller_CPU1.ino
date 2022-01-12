@@ -149,6 +149,17 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
+    SoundPowerTaskLoop,         // Function to implement the task
+    "SoundPowerTask",           // Name of the task
+    3000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 7,   // Priority of the task
+    &SoundPowerTask,            // Task handle.
+    0                           // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
     3000,                       // Stack size in words
@@ -158,14 +169,26 @@ void setup() {
     0                           // Core where the task should run
   );
   
+  
   xTaskCreatePinnedToCore
   (
-    SoundPowerTaskLoop,         // Function to implement the task
-    "SoundPowerTask",           // Name of the task
+    SerialDataLinkTXTaskLoop,   // Function to implement the task
+    "SerialDataLinkSendTask",   // Name of the task
     3000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 5,   // Priority of the task
-    &SoundPowerTask,            // Task handle.
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &SerialDataLinkTXTask,      // Task handle.
+    1                           // Core where the task should run
+  );     
+  
+  xTaskCreatePinnedToCore
+  (
+    SerialDataLinkRXTaskLoop,   // Function to implement the task
+    "SerialDataLinkRXTask",     // Name of the task
+    3000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
   
@@ -177,28 +200,6 @@ void setup() {
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 5,   // Priority of the task
     &SoundMaxBandTask,          // Task handle.
-    1                           // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkTXTaskLoop,   // Function to implement the task
-    "SerialDataLinkSendTask",   // Name of the task
-    3000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
-    &SerialDataLinkTXTask,      // Task handle.
-    1                           // Core where the task should run
-  );     
-  
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkRXTaskLoop,   // Function to implement the task
-    "SerialDataLinkRXTask",     // Name of the task
-    3000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
-    &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
   Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
