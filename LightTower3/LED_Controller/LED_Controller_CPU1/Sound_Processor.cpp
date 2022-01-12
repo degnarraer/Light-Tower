@@ -180,11 +180,12 @@ void Sound_Processor::ProcessRightChannelFFT()
 
 void Sound_Processor::ProcessRightChannelPower()
 {
-  if(NULL != GetQueueHandleRXForDataItem("R_PSD_IN") )
+  if( NULL != GetQueueHandleRXForDataItem("R_PSD_IN") &&
+      NULL != GetQueueHandleTXForDataItem("R_PSD"))
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD_IN")) > 0 )
     {
-      if( uxQueueSpacesAvailable(GetQueueHandleRXForDataItem("R_PSD")) > 0)
+      if( uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("R_PSD")) > 0)
       {
         int32_t* DataBuffer = (int32_t*)malloc(m_InputByteCount);
         if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Right Channel Power Input Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD_IN")) << "\n";
@@ -414,7 +415,7 @@ void Sound_Processor::ProcessLeftChannelPower()
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD_IN")) > 0 )
     {
-      if( uxQueueSpacesAvailable(GetQueueHandleRXForDataItem("L_PSD")) > 0)
+      if( uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("L_PSD")) > 0)
       {
         int32_t* DataBuffer = (int32_t*)malloc(m_InputByteCount);
         if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Left Channel Power Input Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD_IN")) << "\n";

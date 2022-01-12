@@ -248,7 +248,7 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //m_Sound_Processor.ProcessSoundPowerEventQueue();
+    m_Sound_Processor.ProcessSoundPowerEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
