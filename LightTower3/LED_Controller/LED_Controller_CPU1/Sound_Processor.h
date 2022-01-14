@@ -82,6 +82,7 @@ class Sound_Processor: public NamedItem
 
     //Adjustments
     float m_Gain = 6.0;
+    float m_FFT_Gain = 1.0;
 
     //Right Channel Calculated Outputs
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
@@ -114,8 +115,8 @@ class Sound_Processor: public NamedItem
       { "L_BAND_IN",    DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
       { "R_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "L_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT * 4 },
+      { "L_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT * 4 },
       { "R_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
       { "L_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
       { "R_PSD",        DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },

@@ -134,7 +134,7 @@ int I2S_Device::ReadSamples()
   // read from i2s
   size_t bytes_read = 0;
   size_t channel_bytes_read = 0;
-  i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
+  i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, 0);
   channel_bytes_read = bytes_read / 2;
   
   if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes\n";
@@ -144,7 +144,7 @@ int I2S_Device::ReadSamples()
   if(uxQueueSpacesAvailable(m_i2s_Data_Buffer_Queue) > 0)
   {
 	if(true == MicDataBufferFull){ MicDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
-    if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Buffer Queue\n"; }
+    if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Buffer Queue\n"; }
   }
   else
   { 
@@ -172,7 +172,7 @@ int I2S_Device::ReadSamples()
 	if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
 	{
 		if(true == MicRightDataBufferFull){ MicRightDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
-		if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Right Data Buffer Queue\n"; }
+		if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Right Data Buffer Queue\n"; }
     }
 	else
 	{ 
@@ -184,7 +184,7 @@ int I2S_Device::ReadSamples()
 	if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
 	{
 		if(true == MicLeftDataBufferFull){ MicLeftDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Send Resumed\n"; }
-		if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Left Data Buffer Queue\n"; }
+		if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Left Data Buffer Queue\n"; }
     }
 	else
 	{ 
@@ -198,7 +198,7 @@ int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 {
   // write to i2s
   size_t bytes_written = 0;
-  i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
+  i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, 0);
   if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
   return bytes_written;
 }
@@ -264,11 +264,11 @@ void I2S_Device::ProcessEventQueue()
     uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);    
     // Iterate over all events in the i2s event queue
     //for (uint8_t i = 0; i < i2sMsgCount; ++i)
-    if(i2sMsgCount > 0)
+    for( int i = 0; i < i2sMsgCount; ++i )
 	{
 	  if(true == QUEUE_DEBUG)Serial << GetTitle() << " Queue Count: " << i2sMsgCount << "\n";
       // Take next event from queue
-      if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, 0) == pdTRUE )
       {
         switch (i2sEvent.type)
         {

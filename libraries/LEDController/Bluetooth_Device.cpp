@@ -123,7 +123,7 @@ void Bluetooth_Sink::SendData()
 	if(NULL != m_Right_Data_Buffer_Queue && uxQueueSpacesAvailable(m_Right_Data_Buffer_Queue) > 0)
 	{
 		if(true == BTSinkRightQueueFull){ BTSinkRightQueueFull = false; Serial << "WARNING! " << GetTitle() << ": Right Data Buffer Queue Sent\n"; }
-		if(xQueueSend(m_Right_Data_Buffer_Queue, m_RightChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
+		if(xQueueSend(m_Right_Data_Buffer_Queue, m_RightChannel_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
 	}
 	else 
 	{ 
@@ -133,7 +133,7 @@ void Bluetooth_Sink::SendData()
 	if(NULL != m_Left_Data_Buffer_Queue && uxQueueSpacesAvailable(m_Left_Data_Buffer_Queue) > 0)
 	{
 		if(true == BTSinkLeftQueueFull){ BTSinkLeftQueueFull = false; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Sent\n"; }
-		if(xQueueSend(m_Left_Data_Buffer_Queue, m_LeftChannel_SoundBufferData, portMAX_DELAY) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
+		if(xQueueSend(m_Left_Data_Buffer_Queue, m_LeftChannel_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Queue\n"; }
 	}
 	else
 	{ 

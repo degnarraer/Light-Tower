@@ -127,34 +127,23 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    ManagerTaskLoop,            // Function to implement the task
-    "ManagerTask",              // Name of the task
-    3000,                       // Stack size in words
+    SoundPowerTaskLoop,         // Function to implement the task
+    "SoundPowerTask",           // Name of the task
+    1000,                        // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
-    &ManagerTask,               // Task handle.
-    0                           // Core where the task should run
-  );
-   
-  xTaskCreatePinnedToCore
-  (
-    SoundProcessorTaskLoop,     // Function to implement the task
-    "SoundProcessorTask",       // Name of the task
-    3000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 5,   // Priority of the task
-    &SoundProcessorTask,        // Task handle.
+    configMAX_PRIORITIES - 2,   // Priority of the task
+    &SoundPowerTask,            // Task handle.
     0                           // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    SoundPowerTaskLoop,         // Function to implement the task
-    "SoundPowerTask",           // Name of the task
-    3000,                       // Stack size in words
+    SoundMaxBandTaskLoop,       // Function to implement the task
+    "SoundMaxBandTask",         // Name of the task
+    1500,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 7,   // Priority of the task
-    &SoundPowerTask,            // Task handle.
+    configMAX_PRIORITIES - 3,   // Priority of the task
+    &SoundMaxBandTask,          // Task handle.
     0                           // Core where the task should run
   );
   
@@ -162,19 +151,20 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    3000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 10,  // Priority of the task
+    configMAX_PRIORITIES - 4,   // Priority of the task
     &FFTTask,                   // Task handle.
     0                           // Core where the task should run
   );
+   
   
   
   xTaskCreatePinnedToCore
   (
     SerialDataLinkTXTaskLoop,   // Function to implement the task
     "SerialDataLinkSendTask",   // Name of the task
-    3000,                       // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
@@ -185,7 +175,7 @@ void setup() {
   (
     SerialDataLinkRXTaskLoop,   // Function to implement the task
     "SerialDataLinkRXTask",     // Name of the task
-    3000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
@@ -194,20 +184,56 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    SoundMaxBandTaskLoop,       // Function to implement the task
-    "SoundMaxBandTask",         // Name of the task
-    3000,                       // Stack size in words
+    ManagerTaskLoop,            // Function to implement the task
+    "ManagerTask",              // Name of the task
+    1500,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 5,   // Priority of the task
-    &SoundMaxBandTask,          // Task handle.
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &ManagerTask,               // Task handle.
     1                           // Core where the task should run
   );
+  
+  xTaskCreatePinnedToCore
+  (
+    SoundProcessorTaskLoop,     // Function to implement the task
+    "SoundProcessorTask",       // Name of the task
+    1500,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &SoundProcessorTask,        // Task handle.
+    1                           // Core where the task should run
+  );
+  
   Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
 }
 
+unsigned long myTime = millis();
 void loop() {
   // put your main code here, to run repeatedly:
-
+  if(millis() - myTime > 10000)
+  {
+    myTime = millis();
+    size_t StackSizeThreshold = 100;
+    if( uxTaskGetStackHighWaterMark(ManagerTask) < StackSizeThreshold )Serial << "WARNING! ManagerTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(SoundProcessorTask) < StackSizeThreshold )Serial << "WARNING! SoundProcessorTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(FFTTask) < StackSizeThreshold )Serial << "WARNING! FFTTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(SoundPowerTask) < StackSizeThreshold )Serial << "WARNING! SoundPowerTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(SoundMaxBandTask) < StackSizeThreshold )Serial << "WARNING! SoundMaxBandTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) < StackSizeThreshold )Serial << "WARNING! SerialDataLinkTXTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) < StackSizeThreshold )Serial << "WARNING! SerialDataLinkRXTask: Stack Size Low\n";
+    if(true == HEAP_SIZE_DEBUG)Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
+    if(true == TASK_STACK_SIZE_DEBUG)
+    {
+      Serial << "ManagerTask: " << uxTaskGetStackHighWaterMark(ManagerTask) << "\n";
+      Serial << "SoundProcessorTask: " << uxTaskGetStackHighWaterMark(SoundProcessorTask) << "\n";
+      Serial << "FFTTask: " << uxTaskGetStackHighWaterMark(FFTTask) << "\n";
+      Serial << "SoundPowerTask: " << uxTaskGetStackHighWaterMark(SoundPowerTask) << "\n";
+      Serial << "SoundMaxBandTask: " << uxTaskGetStackHighWaterMark(SoundMaxBandTask) << "\n";
+      Serial << "SerialDataLinkTXTask: " << uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) << "\n";
+      Serial << "SerialDataLinkRXTask: " << uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) << "\n";
+      Serial << "\n";
+    }
+  }
 }
 
 void ManagerTaskLoop(void * parameter)

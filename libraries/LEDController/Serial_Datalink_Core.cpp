@@ -34,12 +34,18 @@ void SerialDataLinkCore::GetRXData()
 	byte ch;
 	ch = m_hSerial.read();
 	m_InboundStringData += (char)ch;
-	if (ch=='\n') 
+	if ( m_InboundStringData.substring(m_InboundStringData.length() - 2) == "\r\n" ) 
 	{
 	  m_InboundStringData.trim();
 	  if(true == SERIAL_RX_DEBUG) Serial << m_InboundStringData << "\n";
 	  DeSerialize(m_InboundStringData);
 	  m_InboundStringData.clear();
+	  break; //Only process 1 message at a time
+	}
+	if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
+	{
+		Serial << "Warning! Serial Port RX Overflow\n";
+		m_InboundStringData.clear();
 	}
   }
 }

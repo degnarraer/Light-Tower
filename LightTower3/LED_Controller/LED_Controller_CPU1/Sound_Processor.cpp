@@ -34,7 +34,7 @@ void Sound_Processor::SetupSoundProcessor(size_t InputByteCount, int SampleRate,
   m_SampleRate = SampleRate;
   m_Large_FFT_Length = Large_FFT_Length;
   m_Small_FFT_Length = Small_FFT_Length;
-  m_10kHz_Bin = GetBinForFrequency(3000, m_Small_FFT_Length);
+  m_10kHz_Bin = GetBinForFrequency(2000, m_Small_FFT_Length);
   Serial << "FFT Config: " << m_InputByteCount << " | " << m_SampleRate << " | " << m_Large_FFT_Length << "\n";
   if(true == m_MemoryIsAllocated)FreeMemory();
   AllocateMemory();
@@ -142,6 +142,10 @@ void Sound_Processor::ProcessRightChannelFFT()
                   Serial << m_Large_FFT_Right_Data[k] << "\n";
                 }
               }
+              for(int k = 0; k < m_Large_FFT_Length / 2; ++k)
+              {
+                m_Large_FFT_Right_Data[k] *= m_FFT_Gain;
+              }
               ZeroFFT(m_Large_FFT_Right_Data, m_Large_FFT_Length);
               if(true == SOUND_PROCESSOR_OUTPUTDATA_R_DEBUG)
               {
@@ -150,21 +154,18 @@ void Sound_Processor::ProcessRightChannelFFT()
                   Serial << "Frequency: " << GetFreqForBin(k, m_Large_FFT_Length) << " Magnitude: " << m_Large_FFT_Right_Data[k] << "\n";
                 }
               }
-              memset(m_Right_Band_Values, 0, sizeof(float)*NUMBER_OF_BANDS);
+              memset(m_Right_Band_Values, 0, sizeof(*m_Right_Band_Values)*NUMBER_OF_BANDS);
               AssignToBins(*m_Right_Band_Values, m_Large_FFT_Right_Data, m_Large_FFT_Length);
               for(int k = 0; k < NUMBER_OF_BANDS; ++k)
               {
-                m_Right_Band_Values[k] = ( m_Right_Band_Values[k] * FFT_GAIN ) / pow(2,16);
+                m_Right_Band_Values[k] = ( m_Right_Band_Values[k] ) / pow(2,16);
                 if(m_Right_Band_Values[k] > 1.0) m_Right_Band_Values[k] = 1.0;
               }
               if(true == SOUND_PROCESSOR_OUTPUT_R_BANDDATA_DEBUG)
               {
                 for(int k = 0; k < NUMBER_OF_BANDS; ++k)
                 {
-                  for(int l = 0; l < SOUND_PROCESSOR_OUTPUT_WIDTH; ++l)
-                  {
-                    Serial << m_Right_Band_Values[k] << "\n";
-                  }
+                    Serial << "Band: " << k << " Value: " << m_Right_Band_Values[k] << "\n";
                 }
               }
               PushValueToQueue(m_Right_Band_Values, GetQueueHandleTXForDataItem("R_FFT"), false, false);
@@ -242,16 +243,26 @@ void Sound_Processor::ProcessRightChannelMaxBand()
         for(int i = 0; i < m_InputSampleCount; ++i)
         {
           int32_t ValueLarge = DataBuffer[i];
-          int16_t ValueSmall = (ValueLarge >> 16) & 0x0000FFFF;
+          int16_t ValueSmall = ((ValueLarge >> 16) & 0x0000FFFF);
+          ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
+          if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
+          if(ValueLarge < -INT16_MAX) ValueSmall = -INT16_MAX;
           m_Small_FFT_Right_Data[m_FFT_Small_Right_Buffer_Index] = ValueSmall;
           ++m_FFT_Small_Right_Buffer_Index;
           if(m_FFT_Small_Right_Buffer_Index >= m_Small_FFT_Length)
           {
             m_FFT_Small_Right_Buffer_Index = 0;
+            if(true == SOUND_PROCESSOR_MAX_BAND_INPUT_COMPLETE_DATA_R_DEBUG)
+            {
+              for(int k = 0; k < m_Small_FFT_Length / 2; ++k)
+              {
+                Serial << m_Small_FFT_Right_Data[k] << "\n";
+              }
+            }
             ZeroFFT(m_Small_FFT_Right_Data, m_Small_FFT_Length);
             float maxFFTMagnitude = -FLT_MAX;
             int16_t maxFFTValueIndex = 0;
-            for(int j = 1; j < m_Small_FFT_Length / 2; ++j)
+            for(int j = 1; j < m_10kHz_Bin; ++j)
             {
               float magnitude = sqrt( sq(m_Small_FFT_Right_Data[j]) + sq(m_Small_FFT_Right_Data[j+(m_Small_FFT_Length / 2)]) );
               if(magnitude > maxFFTMagnitude)
@@ -260,10 +271,12 @@ void Sound_Processor::ProcessRightChannelMaxBand()
                 maxFFTValueIndex = j;
               }
             }
-            m_Right_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude * FFT_GAIN ) / pow(2,16);
+            m_Right_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16);
             m_Right_MaxBinSoundData.MaxBinIndex = maxFFTValueIndex;
             m_Right_MaxBinSoundData.TotalBins = m_10kHz_Bin;
+            if(true == SOUND_PROCESSOR_OUTPUT_R_MAXBAND_DEBUG)Serial << "Right Max Frequency: " << GetFreqForBin(m_Right_MaxBinSoundData.MaxBinIndex, m_Small_FFT_Length) << " Power: " << m_Right_MaxBinSoundData.MaxBinNormalizedPower << "\n";
             PushValueToQueue(&m_Right_MaxBinSoundData, GetQueueHandleTXForDataItem("R_MAXBIN"), false, false);
+            xQueueReset(GetQueueHandleRXForDataItem("R_MAXBIN_IN"));
           }
         }
       }
@@ -288,12 +301,22 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
         for(int i = 0; i < m_InputSampleCount; ++i)
         {
           int32_t ValueLarge = DataBuffer[i];
-          int16_t ValueSmall = (ValueLarge >> 16) & 0x0000FFFF;
+          int16_t ValueSmall = ((ValueLarge >> 16) & 0x0000FFFF);
+          ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
+          if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
+          if(ValueLarge < -INT16_MAX) ValueSmall = -INT16_MAX;
           m_Small_FFT_Left_Data[m_FFT_Small_Left_Buffer_Index] = ValueSmall;
           ++m_FFT_Small_Left_Buffer_Index;
           if(m_FFT_Small_Left_Buffer_Index >= m_Small_FFT_Length)
           {
             m_FFT_Small_Left_Buffer_Index = 0;
+            if(true == SOUND_PROCESSOR_MAX_BAND_INPUT_COMPLETE_DATA_L_DEBUG)
+            {
+              for(int k = 0; k < m_Small_FFT_Length / 2; ++k)
+              {
+                Serial << m_Small_FFT_Left_Data[k] << "\n";
+              }
+            }
             ZeroFFT(m_Small_FFT_Left_Data, m_Small_FFT_Length);
             float maxFFTMagnitude = -FLT_MAX;
             int16_t maxFFTValueIndex = 0;
@@ -306,10 +329,12 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
                 maxFFTValueIndex = j;
               }
             }
-            m_Left_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude * FFT_GAIN ) / pow(2,16);
+            m_Left_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16);
             m_Left_MaxBinSoundData.MaxBinIndex = maxFFTValueIndex;
             m_Left_MaxBinSoundData.TotalBins = m_10kHz_Bin;
+            if(true == SOUND_PROCESSOR_OUTPUT_L_MAXBAND_DEBUG)Serial << "Left Max Frequency: " << GetFreqForBin(m_Left_MaxBinSoundData.MaxBinIndex, m_Small_FFT_Length) << " Power: " << m_Left_MaxBinSoundData.MaxBinNormalizedPower << "\n";
             PushValueToQueue(&m_Left_MaxBinSoundData, GetQueueHandleTXForDataItem("L_MAXBIN"), false, false);
+            xQueueReset(GetQueueHandleRXForDataItem("L_MAXBIN_IN"));
           }
         }
       }
@@ -371,6 +396,10 @@ void Sound_Processor::ProcessLeftChannelFFT()
                   Serial << m_Large_FFT_Left_Data[k] << "\n";
                 }
               }
+              for(int k = 0; k < m_Large_FFT_Length / 2; ++k)
+              {
+                m_Large_FFT_Left_Data[k] *= m_FFT_Gain;
+              }
               ZeroFFT(m_Large_FFT_Left_Data, m_Large_FFT_Length);
               if(true == SOUND_PROCESSOR_OUTPUTDATA_L_DEBUG)
               {
@@ -383,17 +412,14 @@ void Sound_Processor::ProcessLeftChannelFFT()
               AssignToBins(*m_Left_Band_Values, m_Large_FFT_Left_Data, m_Large_FFT_Length);
               for(int k = 0; k < NUMBER_OF_BANDS; ++k)
               {
-                m_Left_Band_Values[k] = m_Left_Band_Values[k] * FFT_GAIN; 
+                m_Left_Band_Values[k] = ( m_Left_Band_Values[k] ) / pow(2,16); 
                 if(m_Left_Band_Values[k] > 1.0) m_Left_Band_Values[k] = 1.0;
               }
               if(true == SOUND_PROCESSOR_OUTPUT_L_BANDDATA_DEBUG)
               {
                 for(int k = 0; k < NUMBER_OF_BANDS; ++k)
                 {
-                  for(int l = 0; l < SOUND_PROCESSOR_OUTPUT_WIDTH; ++l)
-                  {
-                    Serial << m_Left_Band_Values[k] << "\n";
-                  }
+                    Serial << "Band: " << k << " Value: " << m_Left_Band_Values[k] << "\n";
                 }
               }
               PushValueToQueue(m_Left_Band_Values, GetQueueHandleTXForDataItem("L_FFT"), false, false);
@@ -495,8 +521,8 @@ void Sound_Processor::AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t 
     else if(freq > 10000 && freq <= 12500) bandIndex = 28;
     else if(freq > 12500 && freq <= 16000) bandIndex = 29;
     else if(freq > 16000 && freq <= 20000) bandIndex = 30;
-    else if(freq > 20000 && freq <= 40000) bandIndex = 31;
-    if(bandIndex >= 0) (&Band_Data)[bandIndex] += magnitude;
+    else if(freq > 20000 ) bandIndex = 31;
+    if(bandIndex >= 0 && freq < m_SampleRate / 2) (&Band_Data)[bandIndex] += magnitude;
   }
 }
 

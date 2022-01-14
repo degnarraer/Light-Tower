@@ -207,11 +207,12 @@ void Manager::ProcessDataBufferQueue()
     case InputType_Microphone:
       if(NULL != m_Mic_In.GetDataBufferQueue())
       {
-        if(uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) > 0)
+        size_t MessageCount = uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue());
+        for(int i = 0; i < MessageCount; ++i)
         {
           if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) << "\n";
           uint8_t* DataBuffer = (uint8_t*)malloc(m_Mic_In.GetBytesToRead());
-          if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+          if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, 0) == pdTRUE )
           {
             m_Mic_Out.SetSoundBufferData(DataBuffer, m_Mic_Out.GetBytesToRead());
           }

@@ -23,7 +23,7 @@
 #define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
 #define SERIAL_FAIL_DEBUG false
-
+#define SERIAL_RX_LENGTH_LIMIT 500
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <Helpers.h>
@@ -148,7 +148,8 @@ class SerialDataLinkCore: public DataSerializer
   {
 	  String DataToSend = Serialize(Name, DataType, Object, Count);
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
-	  m_hSerial.println(DataToSend);
+	  m_hSerial.print(DataToSend);
+	  m_hSerial.print("\r\n");
   }
   
   void ProcessTXData(DataItem_t DataItem)
