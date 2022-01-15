@@ -94,30 +94,26 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 	QueueHandle_t LeftQueue = GetQueueHandleRXForDataItem("L_BT");
 	if( NULL != RightQueue && NULL != LeftQueue )
 	{
-		uint8_t* RightData = (uint8_t*)malloc(length/2);
-		uint8_t* LeftData = (uint8_t*)malloc(length/2);
 		int channel_samples_read = length / m_BytesPerSample / 2;
 		m_TheirByteCount = 0;
 		for(int i = 0; i < channel_samples_read; ++i)
 		{
 			for(int j = 0; j < m_BytesPerSample; ++j)
 			{
-				RightData[m_OurByteCount] = data[m_TheirByteCount];
-				LeftData[m_OurByteCount] = data[m_TheirByteCount + m_BytesPerSample];
+				m_RightData[m_OurByteCount] = data[m_TheirByteCount];
+				m_LeftData[m_OurByteCount] = data[m_TheirByteCount + m_BytesPerSample];
 				++m_OurByteCount;
 				++m_TheirByteCount;
 				if(m_OurByteCount >= m_ChannelBytesToRead)
 				{
 					m_OurByteCount = 0;
-					if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), *RightData, m_ChannelBytesToRead);
-					if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), *LeftData, m_ChannelBytesToRead);
-					PushValueToQueue(RightData, RightQueue, false, false);
-					PushValueToQueue(LeftData, LeftQueue, false, false);     
+					if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightData, m_ChannelBytesToRead);
+					if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftData, m_ChannelBytesToRead);
+					PushValueToQueue(m_RightData, RightQueue, false, false);
+					PushValueToQueue(m_LeftData, LeftQueue, false, false);     
 				}
 			}
 		}
-		delete RightData;
-		delete LeftData;
 	}
 }
 
@@ -126,6 +122,8 @@ void Bluetooth_Sink::AllocateMemory()
 	if(false == m_MemoryIsAllocated)
 	{
 		Serial << GetTitle() << ": Allocating Memory\n";
+		m_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
+		m_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		m_MemoryIsAllocated = true;
 		Serial << GetTitle() << ": Memory Allocated\n";
 	}
@@ -135,6 +133,8 @@ void Bluetooth_Sink::FreeMemory()
 	if(true == m_MemoryIsAllocated)
 	{
 		Serial << GetTitle() << ": Freeing Memory\n";
+		delete m_RightData;
+		delete m_LeftData;
 		m_MemoryIsAllocated = false;
 		Serial << GetTitle() << ": Memory Freed\n";
 	}

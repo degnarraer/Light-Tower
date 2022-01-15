@@ -70,9 +70,9 @@ class Manager: public NamedItem
     
     //Bluetooth_Callback
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count);
+    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
+    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
 
   private:
     Sound_Processor &m_Sound_Processor;

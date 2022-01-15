@@ -32,8 +32,8 @@ class Bluetooth_Sink_Callback
 		virtual ~Bluetooth_Sink_Callback(){}
 	
 		//Callbacks called by this class
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
 };
 
 class Bluetooth_Sink: public NamedItem
@@ -80,6 +80,8 @@ class Bluetooth_Sink: public NamedItem
     size_t GetDataItemConfigCount() { return m_ConfigCount; }
     
   private:
+	uint8_t* m_RightData;
+	uint8_t* m_LeftData;
     size_t m_ConfigCount = 0;
     DataItemConfig_t* m_ItemConfig = NULL;
 

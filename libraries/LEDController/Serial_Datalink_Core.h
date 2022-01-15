@@ -23,7 +23,7 @@
 #define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
 #define SERIAL_FAIL_DEBUG false
-#define SERIAL_RX_LENGTH_LIMIT 500
+#define SERIAL_RX_LENGTH_LIMIT 1000
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <Helpers.h>

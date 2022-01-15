@@ -36,9 +36,9 @@ class I2S_Device_Callback
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count) = 0;
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count) = 0;
+		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
 };
 
 class I2S_Device: public NamedItem

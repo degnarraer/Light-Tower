@@ -406,7 +406,8 @@ void Sound_Processor::ProcessRightChannelMaxBand()
                 maxFFTValueIndex = j;
               }
             }
-            m_Right_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16);
+            m_Right_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16) * 70;
+            if(m_Right_MaxBinSoundData.MaxBinNormalizedPower > 1.0) m_Right_MaxBinSoundData.MaxBinNormalizedPower = 1.0;
             m_Right_MaxBinSoundData.MaxBinIndex = maxFFTValueIndex;
             m_Right_MaxBinSoundData.TotalBins = m_AudioBinLimit;
             if(true == SOUND_PROCESSOR_OUTPUT_R_MAXBAND_DEBUG)Serial << "Right Max Frequency: " << GetFreqForBin(m_Right_MaxBinSoundData.MaxBinIndex, m_Small_FFT_Length) << " Power: " << m_Right_MaxBinSoundData.MaxBinNormalizedPower << "\n";
@@ -462,7 +463,8 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
                 maxFFTValueIndex = j;
               }
             }
-            m_Left_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16);
+            m_Left_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16) * 70;
+            if(m_Left_MaxBinSoundData.MaxBinNormalizedPower > 1.0) m_Left_MaxBinSoundData.MaxBinNormalizedPower = 1.0;
             m_Left_MaxBinSoundData.MaxBinIndex = maxFFTValueIndex;
             m_Left_MaxBinSoundData.TotalBins = m_AudioBinLimit;
             if(true == SOUND_PROCESSOR_OUTPUT_L_MAXBAND_DEBUG)Serial << "Left Max Frequency: " << GetFreqForBin(m_Left_MaxBinSoundData.MaxBinIndex, m_Small_FFT_Length) << " Power: " << m_Left_MaxBinSoundData.MaxBinNormalizedPower << "\n";
