@@ -242,7 +242,7 @@ void ManagerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Manager.RunTask();
+    //m_Manager.RunTask();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -253,7 +253,7 @@ void SoundProcessorTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessEventQueue();
+    //m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -264,7 +264,7 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessFFTEventQueue();
+    //m_Sound_Processor.ProcessFFTEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -275,7 +275,7 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessSoundPowerEventQueue();
+    //m_Sound_Processor.ProcessSoundPowerEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -286,7 +286,7 @@ void SoundMaxBandTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessMaxBandEventQueue();
+    //m_Sound_Processor.ProcessMaxBandEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -297,7 +297,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.ProcessDataTXEventQueue();
+    //m_SerialDatalink.ProcessDataTXEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -308,7 +308,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.GetRXData();
+    //m_SerialDatalink.GetRXData();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

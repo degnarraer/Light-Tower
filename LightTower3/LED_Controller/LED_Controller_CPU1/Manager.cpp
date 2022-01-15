@@ -143,7 +143,7 @@ void Manager::SetInputType(InputType_t Type)
 
 //I2S_Device_Callback
 //Bluetooth_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
+void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
@@ -157,11 +157,11 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
         Serial.print("Result: ");
         Serial.println(raw, HEX);
       }
-      if(true == PRINT_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+      if(true == PRINT_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(&DataBuffer, i));
     }
   }
 }
-void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
+void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
@@ -169,13 +169,13 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
     {
       for(int i = 0; i < m_Mic_In.GetChannelSampleCount(); ++i)
       {
-        Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+        Serial.println(m_Mic_In.GetDataBufferValue(&DataBuffer, i));
       }
     } 
   }
   
 }
-void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count)
+void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count)
 {
   if(DeviceTitle == m_Mic_In.GetTitle())
   {
@@ -183,7 +183,7 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
     {
       for(int i = 0; i < m_Mic_In.GetChannelSampleCount(); ++i)
       {
-        Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
+        Serial.println(m_Mic_In.GetDataBufferValue(&DataBuffer, i));
       }
     } 
   }

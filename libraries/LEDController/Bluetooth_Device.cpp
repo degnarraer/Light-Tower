@@ -109,8 +109,8 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 				if(m_OurByteCount >= m_ChannelBytesToRead)
 				{
 					m_OurByteCount = 0;
-					if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), RightData, m_ChannelBytesToRead);
-					if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), LeftData, m_ChannelBytesToRead);
+					if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), *RightData, m_ChannelBytesToRead);
+					if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), *LeftData, m_ChannelBytesToRead);
 					PushValueToQueue(RightData, RightQueue, false, false);
 					PushValueToQueue(LeftData, LeftQueue, false, false);     
 				}

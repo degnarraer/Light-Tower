@@ -134,7 +134,7 @@ int I2S_Device::ReadSamples()
   channel_bytes_read = bytes_read / 2;
   
   if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes. Read: " << bytes_read << " out of " << m_TotalBytesToRead << "\n";
-  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), SoundBufferData, bytes_read);
+  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), *SoundBufferData, bytes_read);
   
   static bool MicDataBufferFull = false;
   if(uxQueueSpacesAvailable(m_i2s_Data_Buffer_Queue) > 0)
@@ -160,8 +160,8 @@ int I2S_Device::ReadSamples()
 		LeftChannel_SoundBufferData[DataBufferIndex + j] = SoundBufferData[DataBufferIndex + m_BytesPerSample + j];
 	  }
     }
-	if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), RightChannel_SoundBufferData, channel_bytes_read);
-	if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), LeftChannel_SoundBufferData, channel_bytes_read);
+	if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), *RightChannel_SoundBufferData, channel_bytes_read);
+	if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), *LeftChannel_SoundBufferData, channel_bytes_read);
     
 	
 	static bool MicRightDataBufferFull = false;

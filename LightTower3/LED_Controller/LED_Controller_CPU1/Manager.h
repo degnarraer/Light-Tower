@@ -68,15 +68,11 @@ class Manager: public NamedItem
     void SetDACMuteState(Mute_State_t MuteState);
     void SetDACDataFormat(DAC_Data_Format_t DAC_Data_Format);
     
-    //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
-
     //Bluetooth_Callback
-    void DataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
-    void RightChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, int32_t* DataBuffer, size_t Count){}
+    //I2S_Device_Callback
+    void DataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count);
+    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count);
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t& DataBuffer, size_t Count);
 
   private:
     Sound_Processor &m_Sound_Processor;
