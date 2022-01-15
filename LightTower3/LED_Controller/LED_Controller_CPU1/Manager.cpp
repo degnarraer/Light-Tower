@@ -45,8 +45,8 @@ void Manager::Setup()
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
   
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -106,21 +106,11 @@ void Manager::RunTask()
       m_Mic_Out.ProcessEventQueue();
     break;
     case InputType_Bluetooth:
-      m_BT.ProcessEventQueue();
     break;
     default:
     break;
   }
   ProcessEventQueue();
-}
-
-void Manager::ProcessEventQueue()
-{
-  ProcessDataBufferQueue();
-  ProcessRightChannelDataBufferQueue();
-  ProcessLeftChannelDataBufferQueue();
-  ProcessRightFFTDataBufferQueue();
-  ProcessLeftFFTDataBufferQueue();
 }
 
 void Manager::SetInputType(InputType_t Type)
@@ -200,6 +190,15 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
   
 }
 
+void Manager::ProcessEventQueue()
+{
+  ProcessDataBufferQueue();
+  ProcessRightChannelDataBufferQueue();
+  ProcessLeftChannelDataBufferQueue();
+  ProcessRightFFTDataBufferQueue();
+  ProcessLeftFFTDataBufferQueue();
+}
+
 void Manager::ProcessDataBufferQueue()
 {
   switch(m_InputType)
@@ -243,9 +242,9 @@ void Manager::ProcessRightChannelDataBufferQueue()
     break;
     case InputType_Bluetooth:
       MoveDataFromQueueToQueue( "MANAGER2"
-                              , m_BT.GetRightDataBufferQueue()
+                              , m_BT.GetQueueHandleRXForDataItem("R_BT")
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("R_RAW_IN")
-                              , m_BT.GetChannelBytesToRead()
+                              , m_BT.GetByteCountForDataItem("R_BT")
                               , false
                               , false );
     break;
@@ -268,9 +267,9 @@ void Manager::ProcessLeftChannelDataBufferQueue()
     break;
     case InputType_Bluetooth:
       MoveDataFromQueueToQueue( "MANAGER4"
-                              , m_BT.GetLeftDataBufferQueue()
+                              , m_BT.GetQueueHandleRXForDataItem("L_BT")
                               , m_Sound_Processor.GetQueueHandleRXForDataItem("L_RAW_IN")
-                              , m_BT.GetChannelBytesToRead()
+                              , m_BT.GetByteCountForDataItem("L_BT")
                               , false
                               , false );
     break;

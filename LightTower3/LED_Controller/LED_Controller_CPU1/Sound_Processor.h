@@ -34,7 +34,7 @@ class Sound_Processor: public NamedItem
   public:
     Sound_Processor(String Title);
     virtual ~Sound_Processor();
-    void SetupSoundProcessor(size_t InputByteCount, int SampleRate, int Large_FFT_Length, int Small_FFT_Length);
+    void SetupSoundProcessor(size_t ChannelInputByteCount, int SampleRate, int Large_FFT_Length, int Small_FFT_Length);
     void ProcessEventQueue();
     void ProcessFFTEventQueue();
     void ProcessSoundPowerEventQueue();
@@ -47,8 +47,8 @@ class Sound_Processor: public NamedItem
     QueueManager* m_QueueManager;
   
     //CONFIGURATION
-    size_t m_InputByteCount = 0;
-    size_t m_InputSampleCount = 0;
+    size_t m_ChannelInputByteCount = 0;
+    size_t m_ChannelInputSampleCount = 0;
     size_t m_BytesToRead = 0;
     size_t m_BandOutputByteCount = 0;
     int32_t m_SampleRate = 0;
@@ -111,8 +111,8 @@ class Sound_Processor: public NamedItem
     {
       { "R_RAW_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_RAW_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_BAND_IN",    DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "L_BAND_IN",    DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_FFT_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "L_FFT_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
       { "R_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "R_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },

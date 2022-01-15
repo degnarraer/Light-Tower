@@ -24,7 +24,7 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , I2S_CHANNEL_STEREO                                    
                                     , 10                                 // Buffer Count
                                     , 40                                 // Buffer Size
-                                    , I2S_CHANNEL_SAMPLE_COUNT           // Callback Sample Count
+                                    , I2S_CHANNEL_SAMPLE_COUNT           // Output Queue Sample Count
                                     , 5                                  // Queue Count
                                     , 25                                 // Serial Clock Pin
                                     , 26                                 // Word Selection Pin

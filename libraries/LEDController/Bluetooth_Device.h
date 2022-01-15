@@ -38,6 +38,7 @@ class Bluetooth_Sink_Callback
 
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
+                    , public QueueManager
 {
   public:
     Bluetooth_Sink( String Title
@@ -51,7 +52,7 @@ class Bluetooth_Sink: public NamedItem
 				  , i2s_channel_t i2s_channel
 				  , size_t BufferCount
 				  , size_t BufferSize
-				  , size_t BTCallbackSampleCount
+				  , size_t OutputQueueSampleCount
 				  , size_t QueueCount
 				  , int SerialClockPin
 				  , int WordSelectPin
@@ -66,25 +67,28 @@ class Bluetooth_Sink: public NamedItem
 	
 	//Callback Registrtion to this class
 	void ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee);
-
 	void StartDevice();
 	void StopDevice();
-	void ProcessEventQueue();
 	
-	size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
     size_t GetBytesToRead() {return m_TotalBytesToRead; }
     size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
-    int GetSampleRate() { return m_SampleRate; }
-    QueueHandle_t GetRightDataBufferQueue() { return m_Right_Data_Buffer_Queue; }
-    QueueHandle_t GetLeftDataBufferQueue() { return m_Left_Data_Buffer_Queue; }
-
+	size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
+	int GetSampleRate() { return m_SampleRate; }
+    
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
+    
   private:
+    size_t m_ConfigCount = 0;
+    DataItemConfig_t* m_ItemConfig = NULL;
+
 	Bluetooth_Sink_Callback* m_Callee = NULL;
 	SimpleExponentialVolumeControl m_VolumeControl;
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     size_t m_SampleCount;
-    size_t m_BTCallbackSampleCount;
+    size_t m_OutputQueueSampleCount;
 	size_t m_QueueCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
@@ -93,8 +97,6 @@ class Bluetooth_Sink: public NamedItem
 	int32_t m_OurByteCount = 0;
 	int32_t m_TheirByteCount = 0;
 	int32_t m_DataBufferIndex = 0;
-    uint8_t *m_LeftChannel_SoundBufferData = NULL;
-    uint8_t *m_RightChannel_SoundBufferData = NULL;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
     const i2s_bits_per_sample_t m_BitsPerSample;
@@ -108,14 +110,11 @@ class Bluetooth_Sink: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
 	bool m_Is_Running = false;
-    QueueHandle_t m_Right_Data_Buffer_Queue = NULL;
-    QueueHandle_t m_Left_Data_Buffer_Queue = NULL;
 	
 	bool m_MemoryIsAllocated = false;
 	void InstallDevice();
 	void AllocateMemory();
 	void FreeMemory();
-	void SendData();
 
 };
 

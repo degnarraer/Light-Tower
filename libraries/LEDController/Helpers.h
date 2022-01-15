@@ -7,6 +7,9 @@
 class QueueManager
 {
 	public:
+		QueueManager(String Title): m_Title(Title)
+		{
+		}
 		QueueManager(String Title, size_t DataItemCount): m_Title(Title)
 													    , m_DataItemCount(DataItemCount)
 		{
@@ -21,6 +24,11 @@ class QueueManager
 		DataItem_t& GetQueueManagerDataItems() { return *m_DataItem; }
 		size_t GetQueueManagerDataItemCount() { return m_DataItemCount; }
 		
+		void SetupQueueManager(size_t DataItemCount)
+		{
+			m_DataItemCount = DataItemCount;
+			SetupQueueManager();
+		}
 		void SetupQueueManager()
 		{
 			Serial << m_Title << "Setup\n";

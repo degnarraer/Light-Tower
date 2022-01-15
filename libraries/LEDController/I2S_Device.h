@@ -85,9 +85,6 @@ class I2S_Device: public NamedItem
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
-    //uint8_t *m_SoundBufferData;
-    //uint8_t *m_LeftChannel_SoundBufferData;
-    //uint8_t *m_RightChannel_SoundBufferData;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
     const i2s_bits_per_sample_t m_BitsPerSample;
