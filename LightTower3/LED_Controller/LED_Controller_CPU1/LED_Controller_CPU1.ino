@@ -25,7 +25,7 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , 10                                 // Buffer Count
                                     , 40                                 // Buffer Size
                                     , I2S_CHANNEL_SAMPLE_COUNT           // Output Queue Sample Count
-                                    , 5                                  // Queue Count
+                                    , 10                                 // Output Data Queue Count
                                     , 25                                 // Serial Clock Pin
                                     , 26                                 // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE                  // Serial Data In Pin
@@ -129,7 +129,7 @@ void setup() {
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    2000,                        // Stack size in words
+    2000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 2,   // Priority of the task
     &SoundPowerTask,            // Task handle.
@@ -177,7 +177,7 @@ void setup() {
     "SerialDataLinkRXTask",     // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
@@ -188,7 +188,7 @@ void setup() {
     "ManagerTask",              // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &ManagerTask,               // Task handle.
     1                           // Core where the task should run
   );
@@ -199,7 +199,7 @@ void setup() {
     "SoundProcessorTask",       // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SoundProcessorTask,        // Task handle.
     1                           // Core where the task should run
   );
@@ -243,7 +243,7 @@ void ManagerTaskLoop(void * parameter)
   {
     yield();
     m_Manager.RunTask();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -254,7 +254,7 @@ void SoundProcessorTaskLoop(void * parameter)
   {
     yield();
     m_Sound_Processor.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -265,7 +265,7 @@ void FFTTaskLoop(void * parameter)
   {
     yield();
     m_Sound_Processor.ProcessFFTEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -276,7 +276,7 @@ void SoundPowerTaskLoop(void * parameter)
   {
     yield();
     m_Sound_Processor.ProcessSoundPowerEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -287,7 +287,7 @@ void SoundMaxBandTaskLoop(void * parameter)
   {
     yield();
     m_Sound_Processor.ProcessMaxBandEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -298,7 +298,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   {
     yield();
     m_SerialDatalink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -309,6 +309,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     yield();
     m_SerialDatalink.GetRXData();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

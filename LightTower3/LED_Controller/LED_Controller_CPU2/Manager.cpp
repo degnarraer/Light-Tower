@@ -60,7 +60,7 @@ void Manager::ProcessDataBufferQueue()
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetDataBufferQueue()) << "\n";
       uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetBytesToRead());
-      if ( xQueueReceive(m_I2S_In.GetDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(m_I2S_In.GetDataBufferQueue(), DataBuffer, 0) == pdTRUE )
       {
         if(true == PRINT_DATA_DEBUG_DEC)
         {
@@ -93,7 +93,7 @@ void Manager::ProcessRightChannelDataBufferQueue()
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Right Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetRightDataBufferQueue()) << "\n";
       uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetChannelBytesToRead());
-      if ( xQueueReceive(m_I2S_In.GetRightDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(m_I2S_In.GetRightDataBufferQueue(), DataBuffer, 0) == pdTRUE )
       {
         if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
         {
@@ -119,7 +119,7 @@ void Manager::ProcessLeftChannelDataBufferQueue()
     {
       if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Left Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetLeftDataBufferQueue()) << "\n";
       uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetChannelBytesToRead());
-      if ( xQueueReceive(m_I2S_In.GetLeftDataBufferQueue(), DataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(m_I2S_In.GetLeftDataBufferQueue(), DataBuffer, 0) == pdTRUE )
       {
         if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
         {
