@@ -137,7 +137,7 @@ void Sound_Processor::ProcessRightChannelFFT()
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Right Loop Count: "<< j << " of " << m_ChannelInputByteCount << "\n";
             int32_t ValueLarge = DataBuffer[j];
-            int16_t ValueSmall = (ValueLarge >> 16) & 0x0000FFFF;
+            int16_t ValueSmall = (ValueLarge >> 8) & 0x0000FFFF;
             m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] = ValueSmall;
             if(true == SOUND_PROCESSOR_INPUTDATA_R_DEBUG) Serial << m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] << "\n";
             ++m_FFT_Large_Right_Buffer_Index;
@@ -168,7 +168,7 @@ void Sound_Processor::ProcessRightChannelFFT()
               AssignToBins(*m_Right_Band_Values, m_Large_FFT_Right_Data, m_Large_FFT_Length);
               for(int k = 0; k < NUMBER_OF_BANDS; ++k)
               {
-                m_Right_Band_Values[k] = ( m_Right_Band_Values[k] ) / pow(2,16);
+                m_Right_Band_Values[k] = m_Right_Band_Values[k] / m_16BitMax;
                 if(m_Right_Band_Values[k] > 1.0) m_Right_Band_Values[k] = 1.0;
               }
               if(true == SOUND_PROCESSOR_OUTPUT_R_BANDDATA_DEBUG)
@@ -208,7 +208,7 @@ void Sound_Processor::ProcessLeftChannelFFT()
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Left Loop Count: "<< j << " of " << m_ChannelInputByteCount << "\n";
             int32_t ValueLarge = DataBuffer[j];
-            int16_t ValueSmall = (ValueLarge >> 16) & 0x0000FFFF;
+            int16_t ValueSmall = (ValueLarge >> 8) & 0x0000FFFF;
             m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] = ValueSmall;
             if(true == SOUND_PROCESSOR_INPUTDATA_L_DEBUG) Serial << m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] << "\n";
             ++m_FFT_Large_Left_Buffer_Index;
@@ -239,7 +239,7 @@ void Sound_Processor::ProcessLeftChannelFFT()
               AssignToBins(*m_Left_Band_Values, m_Large_FFT_Left_Data, m_Large_FFT_Length);
               for(int k = 0; k < NUMBER_OF_BANDS; ++k)
               {
-                m_Left_Band_Values[k] = ( m_Left_Band_Values[k] ) / pow(2,16); 
+                m_Left_Band_Values[k] = m_Left_Band_Values[k] / m_16BitMax; 
                 if(m_Left_Band_Values[k] > 1.0) m_Left_Band_Values[k] = 1.0;
               }
               if(true == SOUND_PROCESSOR_OUTPUT_L_BANDDATA_DEBUG)
@@ -292,16 +292,17 @@ void Sound_Processor::ProcessRightChannelPower()
             maxValue = DataBuffer[i];
           }
         }
-        peakToPeak = maxValue - minValue;
-        m_Right_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / (float)pow(2,32) ) * m_Gain; //This needs to know bit size
+        peakToPeak = (maxValue - minValue) * m_Gain;
+        m_Right_Channel_Processed_Sound_Data.NormalizedPower = (float)peakToPeak / (float)m_24BitMax;
         if(peakToPeak > 0)
         {
-          m_Right_Channel_Processed_Sound_Data.PowerDB = 20*log10(peakToPeak/100.0);
+          m_Right_Channel_Processed_Sound_Data.PowerDB = m_IMNP441_1PA_Offset + 20*log10((float)peakToPeak / m_IMNP441_1PA_Value);
         }
         else
         {
           m_Right_Channel_Processed_Sound_Data.PowerDB = 0;
         }
+        Serial << m_Right_Channel_Processed_Sound_Data.PowerDB << "\n";
         m_Right_Channel_Processed_Sound_Data.Minimum = minValue;
         m_Right_Channel_Processed_Sound_Data.Maximum = maxValue;
         PushValueToQueue(&m_Right_Channel_Processed_Sound_Data, QueueOut, false, false);
@@ -337,13 +338,13 @@ void Sound_Processor::ProcessLeftChannelPower()
             maxValue = DataBuffer[i];
           }
         }
-        peakToPeak = maxValue - minValue;
-        m_Left_Channel_Processed_Sound_Data.NormalizedPower = (float) ( ((float)peakToPeak) / ((float)pow(2,32)) ) * m_Gain; //This needs to know bit size
+        peakToPeak = (maxValue - minValue) * m_Gain;
+        m_Left_Channel_Processed_Sound_Data.NormalizedPower = (float)peakToPeak / (float)m_24BitMax;
         if(m_Left_Channel_Processed_Sound_Data.NormalizedPower > 1.0) m_Left_Channel_Processed_Sound_Data.NormalizedPower = 1.0;
         if(m_Left_Channel_Processed_Sound_Data.NormalizedPower < 0.0) m_Left_Channel_Processed_Sound_Data.NormalizedPower = 0.0;
         if(peakToPeak > 0)
         {
-          m_Left_Channel_Processed_Sound_Data.PowerDB = 20*log10(peakToPeak/100.0);
+          m_Left_Channel_Processed_Sound_Data.PowerDB = 20*log10((float)peakToPeak / (float)m_24BitMax);
         }
         else
         {
@@ -378,7 +379,7 @@ void Sound_Processor::ProcessRightChannelMaxBand()
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
           int32_t ValueLarge = DataBuffer[i];
-          int16_t ValueSmall = ((ValueLarge >> 16) & 0x0000FFFF);
+          int16_t ValueSmall = ((ValueLarge >> 8) & 0x0000FFFF);
           ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
           if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
           if(ValueLarge < -INT16_MAX) ValueSmall = -INT16_MAX;
@@ -406,7 +407,7 @@ void Sound_Processor::ProcessRightChannelMaxBand()
                 maxFFTValueIndex = j;
               }
             }
-            m_Right_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16) * 70;
+            m_Right_MaxBinSoundData.MaxBinNormalizedPower = ((float)maxFFTMagnitude * m_FFT_Out_Gain) / (float)m_16BitMax;
             if(m_Right_MaxBinSoundData.MaxBinNormalizedPower > 1.0) m_Right_MaxBinSoundData.MaxBinNormalizedPower = 1.0;
             m_Right_MaxBinSoundData.MaxBinIndex = maxFFTValueIndex;
             m_Right_MaxBinSoundData.TotalBins = m_AudioBinLimit;
@@ -435,7 +436,7 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
           int32_t ValueLarge = DataBuffer[i];
-          int16_t ValueSmall = ((ValueLarge >> 16) & 0x0000FFFF);
+          int16_t ValueSmall = ((ValueLarge >> 8) & 0x0000FFFF);
           ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
           if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
           if(ValueLarge < -INT16_MAX) ValueSmall = -INT16_MAX;
@@ -463,7 +464,7 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
                 maxFFTValueIndex = j;
               }
             }
-            m_Left_MaxBinSoundData.MaxBinNormalizedPower = ( maxFFTMagnitude ) / pow(2,16) * 70;
+            m_Left_MaxBinSoundData.MaxBinNormalizedPower = ((float) maxFFTMagnitude * m_FFT_Out_Gain) / (float) m_16BitMax;
             if(m_Left_MaxBinSoundData.MaxBinNormalizedPower > 1.0) m_Left_MaxBinSoundData.MaxBinNormalizedPower = 1.0;
             m_Left_MaxBinSoundData.MaxBinIndex = maxFFTValueIndex;
             m_Left_MaxBinSoundData.TotalBins = m_AudioBinLimit;
