@@ -50,6 +50,14 @@ void Sound_Processor::AllocateMemory()
   m_Small_FFT_Left_Data = (int16_t*)malloc(sizeof(int16_t) * m_Small_FFT_Length);
   m_Right_Band_Values = (float*)malloc(m_BandOutputByteCount);
   m_Left_Band_Values = (float*)malloc(m_BandOutputByteCount);
+  
+  m_DataBuffer1 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer2 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer3 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer4 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer5 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer6 = (int32_t*)malloc(m_ChannelInputByteCount);
+  
   m_MemoryIsAllocated = true;
 }
 
@@ -62,6 +70,12 @@ void Sound_Processor::FreeMemory()
   delete m_Small_FFT_Left_Data;
   delete m_Right_Band_Values;
   delete m_Left_Band_Values;
+  delete m_DataBuffer1;
+  delete m_DataBuffer2;
+  delete m_DataBuffer3;
+  delete m_DataBuffer4;
+  delete m_DataBuffer5;
+  delete m_DataBuffer6;
   m_MemoryIsAllocated = false;
 }
 void Sound_Processor::ProcessEventQueue()
@@ -127,16 +141,17 @@ void Sound_Processor::ProcessRightChannelFFT()
     if( uxQueueSpacesAvailable(QueueOut) > 0 )
     {
       size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
+
       for(int i = 0; i < MessagesWaiting; ++i)
       {
-        int32_t* DataBuffer = (int32_t*)malloc(m_ChannelInputByteCount);
+        memset(m_DataBuffer1, 0, m_ChannelInputByteCount);
         if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "FFT Right Data Buffer Queue Count: " << MessagesWaiting << "\n";
-        if ( xQueueReceive(QueueIn, DataBuffer, 0) == pdTRUE )
+        if ( xQueueReceive(QueueIn, m_DataBuffer1, 0) == pdTRUE )
         {
           for(int j = 0; j < m_ChannelInputSampleCount; ++j)
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Right Loop Count: "<< j << " of " << m_ChannelInputByteCount << "\n";
-            int32_t ValueLarge = DataBuffer[j];
+            int32_t ValueLarge = m_DataBuffer1[j];
             int16_t ValueSmall = (ValueLarge >> 8) & 0x0000FFFF;
             m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] = ValueSmall;
             if(true == SOUND_PROCESSOR_INPUTDATA_R_DEBUG) Serial << m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] << "\n";
@@ -183,7 +198,6 @@ void Sound_Processor::ProcessRightChannelFFT()
             }
           }
         }
-        delete DataBuffer;
       }
     }
   }
@@ -200,14 +214,14 @@ void Sound_Processor::ProcessLeftChannelFFT()
       size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
       for(int i = 0; i < MessagesWaiting; ++i)
       {
-        int32_t* DataBuffer = (int32_t*)malloc(m_ChannelInputByteCount);
+        memset(m_DataBuffer2, 0, m_ChannelInputByteCount);
         if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "FFT Left Data Buffer Queue Count: " << MessagesWaiting << "\n";
-        if ( xQueueReceive(QueueIn, DataBuffer, 0) == pdTRUE )
+        if ( xQueueReceive(QueueIn, m_DataBuffer2, 0) == pdTRUE )
         {
           for(int j = 0; j < m_ChannelInputSampleCount; ++j)
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Left Loop Count: "<< j << " of " << m_ChannelInputByteCount << "\n";
-            int32_t ValueLarge = DataBuffer[j];
+            int32_t ValueLarge = m_DataBuffer2[j];
             int16_t ValueSmall = (ValueLarge >> 8) & 0x0000FFFF;
             m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] = ValueSmall;
             if(true == SOUND_PROCESSOR_INPUTDATA_L_DEBUG) Serial << m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] << "\n";
@@ -254,7 +268,6 @@ void Sound_Processor::ProcessLeftChannelFFT()
             }
           }
         }
-        delete DataBuffer;
       }
     }
   }
@@ -274,22 +287,21 @@ void Sound_Processor::ProcessRightChannelPower()
     size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
     if( MessagesWaiting > 0 && uxQueueSpacesAvailable(QueueOut) > 0 )
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Right Channel Power Input Buffer Queue Count: " << MessagesWaiting << "\n";
-      if ( xQueueReceive(QueueIn, DataBuffer, 0) == pdTRUE )
+      if ( xQueueReceive(QueueIn, m_DataBuffer3, 0) == pdTRUE )
       {
         int32_t peakToPeak = 0;
         int32_t minValue = INT32_MAX;
         int32_t maxValue = -INT32_MAX;
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
-          if(DataBuffer[i] < minValue)
+          if(m_DataBuffer3[i] < minValue)
           {
-            minValue = DataBuffer[i];
+            minValue = m_DataBuffer3[i];
           }
-          if(DataBuffer[i] > maxValue)
+          if(m_DataBuffer3[i] > maxValue)
           {
-            maxValue = DataBuffer[i];
+            maxValue = m_DataBuffer3[i];
           }
         }
         peakToPeak = (maxValue - minValue) * m_Gain;
@@ -302,12 +314,10 @@ void Sound_Processor::ProcessRightChannelPower()
         {
           m_Right_Channel_Processed_Sound_Data.PowerDB = 0;
         }
-        Serial << m_Right_Channel_Processed_Sound_Data.PowerDB << "\n";
         m_Right_Channel_Processed_Sound_Data.Minimum = minValue;
         m_Right_Channel_Processed_Sound_Data.Maximum = maxValue;
         PushValueToQueue(&m_Right_Channel_Processed_Sound_Data, QueueOut, false, false);
       }
-      delete DataBuffer;
     }
   }
 }
@@ -316,26 +326,25 @@ void Sound_Processor::ProcessLeftChannelPower()
 {
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("L_PSD_IN");
   QueueHandle_t QueueOut = GetQueueHandleTXForDataItem("L_PSD");
-  if(NULL != QueueIn && QueueOut )
+  if(NULL != QueueIn && NULL != QueueOut )
   {
     if( uxQueueMessagesWaiting(QueueIn) > 0 && uxQueueSpacesAvailable(QueueOut) > 0 )
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Left Channel Power Input Buffer Queue Count: " << uxQueueMessagesWaiting(QueueIn) << "\n";
-      if ( xQueueReceive(QueueIn, DataBuffer, 0) == pdTRUE )
+      if ( xQueueReceive(QueueIn, m_DataBuffer4, 0) == pdTRUE )
       {
         int32_t peakToPeak = 0;
         int32_t minValue = INT32_MAX;
         int32_t maxValue = -INT32_MAX;
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
-          if(DataBuffer[i] < minValue)
+          if(m_DataBuffer4[i] < minValue)
           {
-            minValue = DataBuffer[i];
+            minValue = m_DataBuffer4[i];
           }
-          if(DataBuffer[i] > maxValue)
+          if(m_DataBuffer4[i] > maxValue)
           {
-            maxValue = DataBuffer[i];
+            maxValue = m_DataBuffer4[i];
           }
         }
         peakToPeak = (maxValue - minValue) * m_Gain;
@@ -354,7 +363,6 @@ void Sound_Processor::ProcessLeftChannelPower()
         m_Left_Channel_Processed_Sound_Data.Maximum = maxValue;
         PushValueToQueue(&m_Left_Channel_Processed_Sound_Data, QueueOut, false, false);   
       }
-      delete DataBuffer;
     }
   }
 }
@@ -372,13 +380,12 @@ void Sound_Processor::ProcessRightChannelMaxBand()
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN_IN")) > 0 && uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("R_MAXBIN")) > 0 )
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Right Max Bin Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN_IN")) << "\n";
-      if ( xQueueReceive(GetQueueHandleRXForDataItem("R_MAXBIN_IN"), DataBuffer, 0) == pdTRUE )
+      if ( xQueueReceive(GetQueueHandleRXForDataItem("R_MAXBIN_IN"), m_DataBuffer5, 0) == pdTRUE )
       {
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
-          int32_t ValueLarge = DataBuffer[i];
+          int32_t ValueLarge = m_DataBuffer5[i];
           int16_t ValueSmall = ((ValueLarge >> 8) & 0x0000FFFF);
           ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
           if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
@@ -417,7 +424,6 @@ void Sound_Processor::ProcessRightChannelMaxBand()
           }
         }
       }
-      delete DataBuffer;
     }
   }
 }
@@ -429,13 +435,12 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBIN_IN")) > 0 && uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("L_MAXBIN")) > 0 )
     {
-      int32_t* DataBuffer = (int32_t*)malloc(m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Left Max Bin Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBIN_IN")) << "\n";
-      if ( xQueueReceive(GetQueueHandleRXForDataItem("L_MAXBIN_IN"), DataBuffer, 0) == pdTRUE )
+      if ( xQueueReceive(GetQueueHandleRXForDataItem("L_MAXBIN_IN"), m_DataBuffer6, 0) == pdTRUE )
       {
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
-          int32_t ValueLarge = DataBuffer[i];
+          int32_t ValueLarge = m_DataBuffer6[i];
           int16_t ValueSmall = ((ValueLarge >> 8) & 0x0000FFFF);
           ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
           if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
@@ -474,7 +479,6 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
           }
         }
       }
-      delete DataBuffer;
     }
   }
 }

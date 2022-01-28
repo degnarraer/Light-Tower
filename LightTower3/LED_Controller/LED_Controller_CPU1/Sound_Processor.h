@@ -61,6 +61,13 @@ class Sound_Processor: public NamedItem
     void FreeMemory();
 
     //CHANNEL DATA INPUT
+    int32_t* m_DataBuffer1;
+    int32_t* m_DataBuffer2;
+    int32_t* m_DataBuffer3;
+    int32_t* m_DataBuffer4;
+    int32_t* m_DataBuffer5;
+    int32_t* m_DataBuffer6;
+    
     int32_t m_FFT_Large_Right_Buffer_Index = 0;
     int32_t m_FFT_Large_Left_Buffer_Index = 0;
     int32_t m_FFT_Small_Right_Buffer_Index = 0;
