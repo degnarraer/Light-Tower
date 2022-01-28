@@ -287,6 +287,7 @@ void Sound_Processor::ProcessRightChannelPower()
     size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
     if( MessagesWaiting > 0 && uxQueueSpacesAvailable(QueueOut) > 0 )
     {
+      memset(m_DataBuffer3, 0, m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Right Channel Power Input Buffer Queue Count: " << MessagesWaiting << "\n";
       if ( xQueueReceive(QueueIn, m_DataBuffer3, 0) == pdTRUE )
       {
@@ -330,6 +331,7 @@ void Sound_Processor::ProcessLeftChannelPower()
   {
     if( uxQueueMessagesWaiting(QueueIn) > 0 && uxQueueSpacesAvailable(QueueOut) > 0 )
     {
+      memset(m_DataBuffer4, 0, m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Left Channel Power Input Buffer Queue Count: " << uxQueueMessagesWaiting(QueueIn) << "\n";
       if ( xQueueReceive(QueueIn, m_DataBuffer4, 0) == pdTRUE )
       {
@@ -380,6 +382,7 @@ void Sound_Processor::ProcessRightChannelMaxBand()
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN_IN")) > 0 && uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("R_MAXBIN")) > 0 )
     {
+      memset(m_DataBuffer5, 0, m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Right Max Bin Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN_IN")) << "\n";
       if ( xQueueReceive(GetQueueHandleRXForDataItem("R_MAXBIN_IN"), m_DataBuffer5, 0) == pdTRUE )
       {
@@ -435,6 +438,7 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBIN_IN")) > 0 && uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("L_MAXBIN")) > 0 )
     {
+      memset(m_DataBuffer6, 0, m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Left Max Bin Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBIN_IN")) << "\n";
       if ( xQueueReceive(GetQueueHandleRXForDataItem("L_MAXBIN_IN"), m_DataBuffer6, 0) == pdTRUE )
       {

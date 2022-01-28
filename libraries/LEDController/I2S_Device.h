@@ -80,6 +80,9 @@ class I2S_Device: public NamedItem
     void ProcessEventQueue();
   private:
 	I2S_Device_Callback* m_Callee = NULL;
+	uint8_t* m_SoundBufferData;
+	uint8_t* m_RightChannel_SoundBufferData;
+	uint8_t* m_LeftChannel_SoundBufferData;
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
