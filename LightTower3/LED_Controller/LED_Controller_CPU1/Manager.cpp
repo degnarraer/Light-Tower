@@ -33,6 +33,7 @@ Manager::Manager( String Title
 }
 Manager::~Manager()
 {
+  delete m_DataBuffer1;
 }
 
 void Manager::Setup()
@@ -40,13 +41,13 @@ void Manager::Setup()
   if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
   m_BT.ResgisterForDataBufferRXCallback(this);
+  m_DataBuffer1 = (uint8_t*)malloc(m_Mic_In.GetBytesToRead());
   
   pinMode(DAC_SF0_PIN, OUTPUT);
   pinMode(DAC_SF1_PIN, OUTPUT);
   pinMode(DAC_MUTE_PIN, OUTPUT);
-  
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
+  //SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -210,22 +211,14 @@ void Manager::ProcessDataBufferQueue()
         for(int i = 0; i < MessageCount; ++i)
         {
           if(true == EVENT_HANDLER_DEBUG) Serial << "Manager Mic Data Buffer Queue: " << uxQueueMessagesWaiting(m_Mic_In.GetDataBufferQueue()) << "\n";
-          uint8_t* DataBuffer = (uint8_t*)malloc(m_Mic_In.GetBytesToRead());
-          if(NULL != DataBuffer)
+          memset(m_DataBuffer1, 0, m_Mic_In.GetBytesToRead());
+          if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), m_DataBuffer1, 0) == pdTRUE )
           {
-            if ( xQueueReceive(m_Mic_In.GetDataBufferQueue(), DataBuffer, 0) == pdTRUE )
-            {
-              m_Mic_Out.SetSoundBufferData(DataBuffer, m_Mic_Out.GetBytesToRead());
-            }
-            else
-            {
-              Serial << "Error Receiving Queue!";
-            }
-            delete DataBuffer;
+            m_Mic_Out.SetSoundBufferData(m_DataBuffer1, m_Mic_Out.GetBytesToRead());
           }
           else
           {
-            Serial << "ProcessDataBufferQueue Malloc Error! Free Heap: " << ESP.getFreeHeap() << "\n";
+            Serial << "Error Receiving Queue!";
           }
         }
       }

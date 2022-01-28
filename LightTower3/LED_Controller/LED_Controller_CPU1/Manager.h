@@ -75,6 +75,7 @@ class Manager: public NamedItem
     void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
 
   private:
+    uint8_t* m_DataBuffer1;
     Sound_Processor &m_Sound_Processor;
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT;
