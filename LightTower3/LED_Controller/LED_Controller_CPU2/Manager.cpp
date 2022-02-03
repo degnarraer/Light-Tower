@@ -54,13 +54,14 @@ void Manager::ProcessEventQueue()
 
 void Manager::ProcessDataBufferQueue()
 {
-  if(NULL != m_I2S_In.GetDataBufferQueue())
+  QueueHandle_t Queue = m_I2S_In.GetQueueHandleRXForDataItem("I2S");
+  if(NULL != Queue)
   {
-    if(uxQueueMessagesWaiting(m_I2S_In.GetDataBufferQueue()) > 0)
+    if(uxQueueMessagesWaiting(Queue) > 0)
     {
-      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetDataBufferQueue()) << "\n";
-      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetBytesToRead());
-      if ( xQueueReceive(m_I2S_In.GetDataBufferQueue(), DataBuffer, 0) == pdTRUE )
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Data Buffer Queue: " << uxQueueMessagesWaiting(Queue) << "\n";
+      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetByteCountForDataItem("I2S"));
+      if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
       {
         if(true == PRINT_DATA_DEBUG_DEC)
         {
@@ -87,17 +88,18 @@ void Manager::ProcessDataBufferQueue()
 }
 void Manager::ProcessRightChannelDataBufferQueue()
 {
-  if(NULL != m_I2S_In.GetRightDataBufferQueue())
+  QueueHandle_t Queue = m_I2S_In.GetQueueHandleRXForDataItem("R_I2S");
+  if(NULL != Queue)
   {
-    if(uxQueueMessagesWaiting(m_I2S_In.GetRightDataBufferQueue()) > 0)
+    if(uxQueueMessagesWaiting(Queue) > 0)
     {
-      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Right Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetRightDataBufferQueue()) << "\n";
-      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetChannelBytesToRead());
-      if ( xQueueReceive(m_I2S_In.GetRightDataBufferQueue(), DataBuffer, 0) == pdTRUE )
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Right Data Buffer Queue: " << uxQueueMessagesWaiting(Queue) << "\n";
+      uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetByteCountForDataItem("R_I2S"));
+      if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
       {
         if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
         {
-          for(int i = 0; i < m_I2S_In.GetSampleCount(); ++i)
+          for(int i = 0; i < m_I2S_In.GetChannelSampleCount(); ++i)
           {
             Serial << m_I2S_In.GetDataBufferValue(DataBuffer, i) << "\n";
           }
@@ -113,17 +115,18 @@ void Manager::ProcessRightChannelDataBufferQueue()
 }
 void Manager::ProcessLeftChannelDataBufferQueue()
 {
-  if(NULL != m_I2S_In.GetLeftDataBufferQueue())
+  QueueHandle_t Queue = m_I2S_In.GetQueueHandleRXForDataItem("L_I2S");
+  if(NULL != Queue)
   {
-    if(uxQueueMessagesWaiting(m_I2S_In.GetLeftDataBufferQueue()) > 0)
+    if(uxQueueMessagesWaiting(Queue) > 0)
     {
-      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Left Data Buffer Queue: " << uxQueueMessagesWaiting(m_I2S_In.GetLeftDataBufferQueue()) << "\n";
+      if(true == EVENT_HANDLER_DEBUG) Serial << "Manager ESP32 Left Data Buffer Queue: " << uxQueueMessagesWaiting(Queue) << "\n";
       uint8_t* DataBuffer = (uint8_t*)malloc(m_I2S_In.GetChannelBytesToRead());
-      if ( xQueueReceive(m_I2S_In.GetLeftDataBufferQueue(), DataBuffer, 0) == pdTRUE )
+      if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
       {
         if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
         {
-          for(int i = 0; i < m_I2S_In.GetSampleCount(); ++i)
+          for(int i = 0; i < m_I2S_In.GetChannelSampleCount(); ++i)
           {
             Serial << m_I2S_In.GetDataBufferValue(DataBuffer, i) << "\n";
           }

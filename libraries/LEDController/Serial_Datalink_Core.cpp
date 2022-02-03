@@ -44,7 +44,7 @@ void SerialDataLinkCore::GetRXData()
 	}
 	if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
 	{
-		Serial << "Warning! Serial Port RX Overflow\n";
+		//Serial << "Warning! Serial Port RX Overflow\n";
 		m_InboundStringData.clear();
 	}
   }

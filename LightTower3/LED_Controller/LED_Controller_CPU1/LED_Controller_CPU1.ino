@@ -17,15 +17,15 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , m_BTSink
                                     , I2S_NUM_1                          // I2S Interface
                                     , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                    , 44100
+                                    , I2S_SAMPLE_RATE
                                     , I2S_BITS_PER_SAMPLE_32BIT
                                     , I2S_CHANNEL_FMT_RIGHT_LEFT
                                     , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                     , I2S_CHANNEL_STEREO                                    
-                                    , 10                                 // Buffer Count
-                                    , 40                                 // Buffer Size
-                                    , I2S_CHANNEL_SAMPLE_COUNT           // Output Queue Sample Count
-                                    , 10                                 // Output Data Queue Count
+                                    , I2S_BUFFER_COUNT                   // Buffer Count
+                                    , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
+                                    , I2S_BUFFER_COUNT                   // Output Data Queue Count
+                                    , I2S_CHANNEL_SAMPLE_COUNT           // Output Data Queue Buffer Size
                                     , 25                                 // Serial Clock Pin
                                     , 26                                 // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE                  // Serial Data In Pin
@@ -58,32 +58,34 @@ void audio_state_changed(esp_a2d_audio_state_t state, void *ptr){
 I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , I2S_NUM_0                          // I2S Interface
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
-                                , 44100
+                                , I2S_SAMPLE_RATE
                                 , I2S_BITS_PER_SAMPLE_32BIT
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
                                 , I2S_BUFFER_COUNT                   // Buffer Count
                                 , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
+                                , I2S_BUFFER_COUNT                   // Output Queue Count
                                 , 12                                 // Serial Clock Pin
                                 , 13                                 // Word Selection Pin
                                 , 14                                 // Serial Data In Pin
-                                , I2S_PIN_NO_CHANGE );               // Serial Data Out Pin );
+                                , I2S_PIN_NO_CHANGE );               // Serial Data Out Pin
                       
 I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
-                                  , I2S_NUM_1                          // I2S Interface
+                                  , I2S_NUM_1                        // I2S Interface
                                   , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                  , 44100
+                                  , I2S_SAMPLE_RATE
                                   , I2S_BITS_PER_SAMPLE_32BIT
                                   , I2S_CHANNEL_FMT_RIGHT_LEFT
                                   , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                   , I2S_CHANNEL_STEREO
-                                  , I2S_BUFFER_COUNT                   // Buffer Count
-                                  , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                  , 25                                 // Serial Clock Pin
-                                  , 26                                 // Word Selection Pin
-                                  , I2S_PIN_NO_CHANGE                  // Serial Data In Pin
-                                  , 33 );                              // Serial Data Out Pin
+                                  , I2S_BUFFER_COUNT                 // Buffer Count
+                                  , I2S_CHANNEL_SAMPLE_COUNT         // Buffer Size
+                                  , I2S_BUFFER_COUNT                 // Output Queue Count
+                                  , 25                               // Serial Clock Pin
+                                  , 26                               // Word Selection Pin
+                                  , I2S_PIN_NO_CHANGE                // Serial Data In Pin
+                                  , 33 );                            // Serial Data Out Pin
 
 HardwareSerial m_hSerial = Serial2;
 Sound_Processor m_Sound_Processor = Sound_Processor("Sound Processor");
@@ -105,18 +107,20 @@ void setup() {
   
   Serial.begin(500000);
   Serial.flush();
-  Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
-  Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
-  Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
-
-  Serial << "Data Type Sizes:\n";
-  Serial << "QueueHandle_t: " << sizeof(QueueHandle_t) << "\n";
-  Serial << "Transciever_T: " << sizeof(Transciever_T) << "\n";
-  Serial << "DataType_t: " << sizeof(DataType_t) << "\n";
-  Serial << "size_t: " << sizeof(size_t) << "\n";
-  Serial << "void: " << sizeof(void) << "\n";
-  Serial << "String: " << sizeof(String) << "\n";
+  if(true == STARTUP_DEBUG)
+  {
+    Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
+    Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
+    Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
   
+    Serial << "Data Type Sizes:\n";
+    Serial << "QueueHandle_t: " << sizeof(QueueHandle_t) << "\n";
+    Serial << "Transciever_T: " << sizeof(Transciever_T) << "\n";
+    Serial << "DataType_t: " << sizeof(DataType_t) << "\n";
+    Serial << "size_t: " << sizeof(size_t) << "\n";
+    Serial << "void: " << sizeof(void) << "\n";
+    Serial << "String: " << sizeof(String) << "\n";
+  }
   m_BTSink.set_stream_reader(read_data_stream);
   m_BTSink.set_on_data_received(data_received_callback);
   m_Mic_In.Setup();
@@ -129,7 +133,7 @@ void setup() {
   (
     SoundPowerTaskLoop,         // Function to implement the task
     "SoundPowerTask",           // Name of the task
-    2000,                       // Stack size in words
+    1000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 2,   // Priority of the task
     &SoundPowerTask,            // Task handle.
@@ -140,7 +144,7 @@ void setup() {
   (
     SoundMaxBandTaskLoop,       // Function to implement the task
     "SoundMaxBandTask",         // Name of the task
-    2000,                       // Stack size in words
+    1000,                      // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 3,   // Priority of the task
     &SoundMaxBandTask,          // Task handle.
@@ -151,14 +155,23 @@ void setup() {
   (
     FFTTaskLoop,                // Function to implement the task
     "FFTTask",                  // Name of the task
-    2000,                       // Stack size in words
+    1000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 4,   // Priority of the task
     &FFTTask,                   // Task handle.
     0                           // Core where the task should run
   );
    
-  
+  xTaskCreatePinnedToCore
+  (
+    ManagerTaskLoop,            // Function to implement the task
+    "ManagerTask",              // Name of the task
+    2000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &ManagerTask,               // Task handle.
+    1                           // Core where the task should run
+  );
   
   xTaskCreatePinnedToCore
   (
@@ -179,17 +192,6 @@ void setup() {
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 2,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
-    1                           // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    ManagerTaskLoop,            // Function to implement the task
-    "ManagerTask",              // Name of the task
-    2000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
-    &ManagerTask,               // Task handle.
     1                           // Core where the task should run
   );
   
@@ -253,7 +255,7 @@ void SoundProcessorTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessEventQueue();
+    //m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -264,7 +266,7 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessFFTEventQueue();
+    //m_Sound_Processor.ProcessFFTEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -275,7 +277,7 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessSoundPowerEventQueue();
+    //m_Sound_Processor.ProcessSoundPowerEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -286,7 +288,7 @@ void SoundMaxBandTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessMaxBandEventQueue();
+    //m_Sound_Processor.ProcessMaxBandEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -297,7 +299,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.ProcessDataTXEventQueue();
+    //m_SerialDatalink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -308,7 +310,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.GetRXData();
+    //m_SerialDatalink.GetRXData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

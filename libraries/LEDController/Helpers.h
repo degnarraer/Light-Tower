@@ -112,6 +112,7 @@ class QueueManager
 		
 		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
+			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
 			{
@@ -119,30 +120,28 @@ class QueueManager
 				if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
 				if(QueueCount > 0)
 				{
+					void* DataBuffer = (void*)malloc(ByteCount);
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						void* DataBuffer = (void*)malloc(ByteCount);
 						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
 						{
 							memcpy(Value, DataBuffer, ByteCount);
-							delete DataBuffer;
-							return true;
+							result = true;
 						}
 						else
 						{
 							Serial << "Error Receiving Queue!\n";
-							delete DataBuffer;
-							return false;
 						}
 					}
+					delete DataBuffer;
 				}
 			}
 			else
 			{
 				Serial << "GetValueFromRXQueue: NULL Queue\n";
 			}
-			return false;
+			return result;
 		}
 		
 	private:
@@ -225,11 +224,17 @@ class QueueManager
 		{
 			switch(DataType)
 			{
+				case DataType_Int8_t:
+					return sizeof(int8_t);
+				break;
 				case DataType_Int16_t:
 					return sizeof(int16_t);
 				break;
 				case DataType_Int32_t:
 					return sizeof(int32_t);
+				break;
+				case DataType_Uint8_t:
+					return sizeof(uint8_t);
 				break;
 				case DataType_Uint16_t:
 					return sizeof(uint16_t);
@@ -265,9 +270,10 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			if(true == DebugMessage) Serial << "Queue Messages Waiting: " << QueueCount << " Byte Count: " << ByteCount << "\n";
+			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
-			  uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
+			  memset(DataBuffer, 0, ByteCount);
 			  if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
 			  {
 				if(true == WaitForOpenSlot || uxQueueSpacesAvailable(GiveToQueue) > 0)
@@ -284,8 +290,8 @@ class CommonUtils
 			  {
 				Serial << "Error Receiving Queue!";
 			  }
-			  delete DataBuffer;
 			}
+			delete DataBuffer;
 		  }
 		  else
 		  {
@@ -299,9 +305,9 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			if(true == DebugMessage) Serial << "Queue Messages Waiting: " << QueueCount << " Receiver Queue Count: " << GiveToQueueCount << " Byte Count: " << ByteCount << "\n";
+			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
-				uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 				if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
 				{
 					for(int j = 0; j < GiveToQueueCount; ++j)
@@ -329,8 +335,8 @@ class CommonUtils
 				{
 					Serial << "Error Receiving Queue!";
 				}
-				delete DataBuffer;
 			}
+			delete DataBuffer;
 		  }
 		  else
 		  {
@@ -374,9 +380,9 @@ class CommonUtils
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
+					void* DataBuffer = (void*)malloc(ByteCount);
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						void* DataBuffer = (void*)malloc(ByteCount);
 						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
 						{
 							memcpy(Value, DataBuffer, ByteCount);
@@ -385,8 +391,8 @@ class CommonUtils
 						{
 							Serial << "Error Receiving Queue!\n";
 						}
-						delete DataBuffer;
 					}
+					delete DataBuffer;
 				}
 			}
 			else

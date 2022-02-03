@@ -23,6 +23,7 @@
 #include <Adafruit_ZeroFFT.h>
 #include <DataTypes.h>
 #include <Helpers.h>
+#include <FIR.h>
 #include "Streaming.h"
 #include "Tunes.h"
 #include "float.h"
@@ -61,12 +62,12 @@ class Sound_Processor: public NamedItem
     void FreeMemory();
 
     //CHANNEL DATA INPUT
-    int32_t* m_DataBuffer1;
-    int32_t* m_DataBuffer2;
+    int16_t* m_DataBuffer1;
+    int16_t* m_DataBuffer2;
     int32_t* m_DataBuffer3;
     int32_t* m_DataBuffer4;
-    int32_t* m_DataBuffer5;
-    int32_t* m_DataBuffer6;
+    int16_t* m_DataBuffer5;
+    int16_t* m_DataBuffer6;
     
     int32_t m_FFT_Large_Right_Buffer_Index = 0;
     int32_t m_FFT_Large_Left_Buffer_Index = 0;
@@ -74,6 +75,8 @@ class Sound_Processor: public NamedItem
     int32_t m_FFT_Small_Left_Buffer_Index = 0;
     
     //CALCULATED OUTPUTS
+    int32_t* m_RightChannel_Filtered_0k_to_3k;
+    int32_t* m_LeftChannel_Filtered_0k_to_3k;
     int16_t* m_Large_FFT_Right_Data;
     int16_t* m_Large_FFT_Left_Data;
     int16_t* m_Small_FFT_Right_Data;
@@ -90,7 +93,7 @@ class Sound_Processor: public NamedItem
     //Adjustments
     float m_Gain = 1.0;
     float m_FFT_Gain = 1.0;
-    float m_FFT_Out_Gain = 70.0;
+    float m_FFT_Out_Gain = 1.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
@@ -120,17 +123,19 @@ class Sound_Processor: public NamedItem
     int16_t m_AudioBinLimit;
 
     //QueueManager Configuration
-    static const size_t m_ConfigCount = 14;
+    static const size_t m_ConfigCount = 16;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "L_RAW_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_FFT_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "L_FFT_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_RAW32_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "L_RAW32_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "R_RAW16_IN",   DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "L_RAW16_IN",   DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
+      { "R_FFT_IN",     DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT) },
+      { "L_FFT_IN",     DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT) },
       { "R_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
       { "L_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
-      { "L_MAXBIN_IN",  DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT },
+      { "R_MAXBIN_IN",  DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT) },
+      { "L_MAXBIN_IN",  DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT) },
       { "R_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
       { "L_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
       { "R_PSD",        DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   10 },
@@ -138,8 +143,85 @@ class Sound_Processor: public NamedItem
       { "R_MAXBIN",     DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
       { "L_MAXBIN",     DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   10 },
     };
+
+    /*
+    FIR filter designed with
+    http://t-filter.appspot.com
+    sampling frequency: 48000 Hz
+    
+    * 0 Hz - 3000 Hz
+      gain = 1
+      desired ripple = 5 dB
+      actual ripple = 3.988772934245028 dB
+    
+    * 4000 Hz - 24000 Hz
+      gain = 0
+      desired attenuation = -40 dB
+      actual attenuation = -40.38404164331486 dB
+      
+    */
+    static const int32_t FILTER_TAP_NUM_0_to_3k = 55;
+    int16_t filter_taps_0_to_3k[FILTER_TAP_NUM_0_to_3k] = 
+    {
+      -172,
+      -12,
+      43,
+      138,
+      269,
+      424,
+      583,
+      720,
+      806,
+      815,
+      731,
+      547,
+      275,
+      -56,
+      -403,
+      -708,
+      -914,
+      -964,
+      -819,
+      -460,
+      106,
+      841,
+      1683,
+      2550,
+      3352,
+      4001,
+      4423,
+      4569,
+      4423,
+      4001,
+      3352,
+      2550,
+      1683,
+      841,
+      106,
+      -460,
+      -819,
+      -964,
+      -914,
+      -708,
+      -403,
+      -56,
+      275,
+      547,
+      731,
+      815,
+      806,
+      720,
+      583,
+      424,
+      269,
+      138,
+      43,
+      -12,
+      -172
+    };
+    FIR<int16_t, FILTER_TAP_NUM_0_to_3k> Right_Channel_fir_lp_0_to_3k;
+    FIR<int16_t, FILTER_TAP_NUM_0_to_3k> Left_Channel_fir_lp_0_to_3k;
+
 };
-
-
 
 #endif

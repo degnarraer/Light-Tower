@@ -43,6 +43,7 @@ class I2S_Device_Callback
 
 class I2S_Device: public NamedItem
 				, public CommonUtils
+                , public QueueManager
 {
   public:
     I2S_Device( String Title
@@ -55,6 +56,7 @@ class I2S_Device: public NamedItem
               , i2s_channel_t i2s_channel
               , int BufferCount
               , int BufferSize
+			  , size_t OutputQueueCount
               , int SerialClockPin
               , int WordSelectPin
               , int SerialDataInPin
@@ -64,9 +66,7 @@ class I2S_Device: public NamedItem
     void StartDevice();
     void StopDevice();
 	size_t GetBytesPerSample() { return m_BytesPerSample; }
-    QueueHandle_t GetDataBufferQueue() { return m_i2s_Data_Buffer_Queue; }
-    QueueHandle_t GetRightDataBufferQueue() { return m_i2s_Right_Data_Buffer_queue; }
-    QueueHandle_t GetLeftDataBufferQueue() { return m_i2s_Left_Data_Buffer_queue; }	
+
 	int32_t GetDataBufferValue(uint8_t* DataBuffer, size_t index);
 	void SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value);
 
@@ -78,8 +78,14 @@ class I2S_Device: public NamedItem
     int GetSampleRate() { return m_SampleRate; }
     void Setup();
     void ProcessEventQueue();
+	
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
 	I2S_Device_Callback* m_Callee = NULL;
+    size_t m_ConfigCount = 0;
+    DataItemConfig_t* m_ItemConfig = NULL;
 	uint8_t* m_SoundBufferData;
 	uint8_t* m_RightChannel_SoundBufferData;
 	uint8_t* m_LeftChannel_SoundBufferData;
@@ -96,6 +102,7 @@ class I2S_Device: public NamedItem
     const i2s_channel_t m_i2s_channel;
     const int m_BufferCount;
     const int m_BufferSize;
+    size_t m_OutputQueueCount;
     const int m_SerialClockPin;
     const int m_WordSelectPin;
     const int m_SerialDataInPin;
@@ -103,9 +110,7 @@ class I2S_Device: public NamedItem
 	bool m_Is_Running = false;
     const i2s_port_t m_I2S_PORT;
     QueueHandle_t m_i2s_event_queue = NULL;
-    QueueHandle_t m_i2s_Data_Buffer_Queue = NULL;
-    QueueHandle_t m_i2s_Right_Data_Buffer_queue = NULL;
-    QueueHandle_t m_i2s_Left_Data_Buffer_queue = NULL;
+
     int ReadSamples();
     int WriteSamples(uint8_t *samples, size_t ByteCount);
     void InstallDevice();

@@ -5,27 +5,28 @@
 #include "Models.h"
 #include "Tunes.h"
 
-#define I2S_BUFFER_COUNT 10
-#define I2S_BUFFER_SIZE 200
+#define I2S_BUFFER_COUNT 5
+#define I2S_BUFFER_SIZE 128
 
 TaskHandle_t ManagerTask;
 TaskHandle_t SerialDataRXTask;
 TaskHandle_t VisualizationTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
-                                  , I2S_NUM_0
-                                  , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
-                                  , 44100
-                                  , I2S_BITS_PER_SAMPLE_32BIT
-                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                  , I2S_CHANNEL_STEREO
-                                  , I2S_BUFFER_COUNT
-                                  , I2S_BUFFER_SIZE
-                                  , 12
-                                  , 13
-                                  , 14
-                                  , I2S_PIN_NO_CHANGE );
+                                 , I2S_NUM_0
+                                 , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
+                                 , 48000
+                                 , I2S_BITS_PER_SAMPLE_32BIT
+                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                 , I2S_CHANNEL_STEREO
+                                 , I2S_BUFFER_COUNT                   // Buffer Count
+                                 , I2S_BUFFER_SIZE                    // Buffer Size
+                                 , I2S_BUFFER_COUNT                   // Output Queue Count
+                                 , 12                                 // Serial Clock Pin
+                                 , 13                                 // Word Selection Pin
+                                 , 14                                 // Serial Data In Pin
+                                 , I2S_PIN_NO_CHANGE );               // Serial Data Out Pin 
 
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
@@ -71,7 +72,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &ManagerTask,                   // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   );
 
   xTaskCreatePinnedToCore
@@ -80,7 +81,7 @@ void setup() {
     "SerialDataRXTask",             // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &SerialDataRXTask,              // Task handle.
     1                               // Core where the task should run
   );

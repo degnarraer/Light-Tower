@@ -24,8 +24,10 @@ enum Transciever_T
 
 enum DataType_t
 {
+  DataType_Int8_t,
   DataType_Int16_t,
   DataType_Int32_t,
+  DataType_Uint8_t,
   DataType_Uint16_t,
   DataType_Uint32_t,
   DataType_String,
@@ -37,8 +39,10 @@ enum DataType_t
 
 static const char* DataTypeStrings[] =
 {
+  "Int8_t",
   "Int16_t",
   "Int32_t",
+  "Uint8_t",
   "Uint16_t",
   "Uint32_t",
   "String",

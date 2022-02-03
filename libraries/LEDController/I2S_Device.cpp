@@ -28,11 +28,13 @@ I2S_Device::I2S_Device ( String Title
                        , i2s_channel_t i2s_channel
                        , int BufferCount
                        , int BufferSize
+					   , size_t OutputQueueCount
                        , int SerialClockPin
                        , int WordSelectPin
                        , int SerialDataInPin
                        , int SerialDataOutPin )
                        : NamedItem(Title)
+					   , QueueManager(Title + "_QueueManager")
 					   , m_I2S_PORT(i2S_PORT)
                        , m_i2s_Mode(Mode)
                        , m_SampleRate(SampleRate)
@@ -42,6 +44,7 @@ I2S_Device::I2S_Device ( String Title
                        , m_i2s_channel(i2s_channel)
                        , m_BufferCount(BufferCount)
                        , m_BufferSize(BufferSize)
+					   , m_OutputQueueCount(OutputQueueCount)
                        , m_SerialClockPin(SerialClockPin)
                        , m_WordSelectPin(WordSelectPin)
                        , m_SerialDataInPin(SerialDataInPin)
@@ -60,6 +63,32 @@ void I2S_Device::Setup()
 	m_SampleCount = m_ChannelSampleCount * 2;
     m_TotalBytesToRead = m_BytesPerSample * m_SampleCount;
     m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
+	m_ConfigCount = 3;
+	DataType_t DataType;
+	switch(m_BitsPerSample)
+	{	
+		case I2S_BITS_PER_SAMPLE_32BIT:
+			DataType = DataType_Int32_t;
+		break;
+		case I2S_BITS_PER_SAMPLE_24BIT:
+			DataType = DataType_Int32_t;
+		break;
+		case I2S_BITS_PER_SAMPLE_16BIT:
+			DataType = DataType_Int16_t;
+		break;
+		case I2S_BITS_PER_SAMPLE_8BIT:
+			DataType = DataType_Int8_t;
+		break;
+		default:
+		break;
+	}
+	m_ItemConfig = new DataItemConfig_t[m_ConfigCount]
+	{
+		{ "I2S",	DataType,	m_SampleCount,    		Transciever_RX,   m_OutputQueueCount },
+		{ "R_I2S",	DataType,	m_ChannelSampleCount,  	Transciever_RX,   m_OutputQueueCount },
+		{ "L_I2S",	DataType,	m_ChannelSampleCount,  	Transciever_RX,   m_OutputQueueCount }
+	};
+	SetupQueueManager(m_ConfigCount);
 }
 
 void I2S_Device::StartDevice()
@@ -124,66 +153,43 @@ void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 
 int I2S_Device::ReadSamples()
 {
-  // read from i2s
-  size_t bytes_read = 0;
-  size_t channel_bytes_read = 0;
-  i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
-  channel_bytes_read = bytes_read / 2;
-  
-  if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes. Read: " << bytes_read << " out of " << m_TotalBytesToRead << "\n";
-  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read);
-  
-  static bool MicDataBufferFull = false;
-  if(uxQueueSpacesAvailable(m_i2s_Data_Buffer_Queue) > 0)
-  {
-	if(true == MicDataBufferFull){ MicDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
-	if(xQueueSend(m_i2s_Data_Buffer_Queue, m_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Data Buffer Queue\n"; }
-  }
-  else
-  { 
-	if(false == MicDataBufferFull){ MicDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Full\n"; }
-  }
-  
-  if(I2S_CHANNEL_STEREO == m_i2s_channel)
-  {
-	  
-	int channel_samples_read = channel_bytes_read / m_BytesPerSample;
-	for(int i = 0; i < channel_samples_read; ++i)
+	size_t bytes_read = 0;
+	size_t channel_bytes_read = 0;
+	QueueHandle_t Queue = GetQueueHandleRXForDataItem("I2S");
+	QueueHandle_t RightQueue = GetQueueHandleRXForDataItem("R_I2S");
+	QueueHandle_t LeftQueue = GetQueueHandleRXForDataItem("L_I2S");
+	if( NULL != Queue && NULL != RightQueue && NULL != LeftQueue )
 	{
-	  int DataBufferIndex = m_BytesPerSample * i;
-	  for(int j = 0; j < m_BytesPerSample; ++j)
+	  // read from i2s
+	  i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
+	  channel_bytes_read = bytes_read / 2;
+	  
+	  if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes. Read: " << bytes_read << " out of " << m_TotalBytesToRead << "\n";
+	  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read);
+	  PushValueToQueue(m_SoundBufferData, Queue, false, false);
+	  
+	  if(I2S_CHANNEL_STEREO == m_i2s_channel)
 	  {
-		m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + j];
-		m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + m_BytesPerSample + j];
+		  
+		int channel_samples_read = channel_bytes_read / m_BytesPerSample;
+		for(int i = 0; i < channel_samples_read; ++i)
+		{
+		  int DataBufferIndex = m_BytesPerSample * i;
+		  for(int j = 0; j < m_BytesPerSample; ++j)
+		  {
+			m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + j];
+			m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + m_BytesPerSample + j];
+		  }
+		}
+		if(NULL != m_Callee) 
+		{
+			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read);
+			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read);
+		}
+		PushValueToQueue(m_RightChannel_SoundBufferData, RightQueue, false, false);
+		PushValueToQueue(m_LeftChannel_SoundBufferData, LeftQueue, false, false); 
 	  }
 	}
-	if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read);
-	if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read);
-	
-	
-	static bool MicRightDataBufferFull = false;
-	if(uxQueueSpacesAvailable(m_i2s_Right_Data_Buffer_queue) > 0)
-	{
-		if(true == MicRightDataBufferFull){ MicRightDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Data Buffer Queue Send Resumed\n"; }
-		if(xQueueSend(m_i2s_Right_Data_Buffer_queue, m_RightChannel_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Right Data Buffer Queue\n"; }
-	}
-	else
-	{ 
-		if(false == MicRightDataBufferFull){ MicRightDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Right Data Buffer Queue Full\n"; }
-	}
-	
-	
-	static bool MicLeftDataBufferFull = false;
-	if(uxQueueSpacesAvailable(m_i2s_Left_Data_Buffer_queue) > 0)
-	{
-		if(true == MicLeftDataBufferFull){ MicLeftDataBufferFull = false; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Send Resumed\n"; }
-		if(xQueueSend(m_i2s_Left_Data_Buffer_queue, m_LeftChannel_SoundBufferData, 0) != pdTRUE){ Serial << GetTitle() << ": Error Setting Left Data Buffer Queue\n"; }
-	}
-	else
-	{ 
-		if(false == MicLeftDataBufferFull){ MicLeftDataBufferFull = true; Serial << "WARNING! " << GetTitle() << ": Left Data Buffer Queue Full\n"; }
-	}
-  }
   return bytes_read;
 }
 
@@ -192,7 +198,7 @@ int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
   // write to i2s
   size_t bytes_written = 0;
   i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
-  if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Samples\n"; }
+  if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Bytes\n"; }
   return bytes_written;
 }
 
@@ -291,28 +297,10 @@ void I2S_Device::AllocateMemory()
 	m_SoundBufferData = (uint8_t*)malloc(m_TotalBytesToRead);
 	m_RightChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 	m_LeftChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
-	CreateQueue(m_i2s_Data_Buffer_Queue, m_TotalBytesToRead, 10, true);
-	CreateQueue(m_i2s_Right_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
-	CreateQueue(m_i2s_Left_Data_Buffer_queue, m_ChannelBytesToRead, 10, true);
 }
 void I2S_Device::FreeMemory()
 {
 	delete m_SoundBufferData;
 	delete m_RightChannel_SoundBufferData;
 	delete m_LeftChannel_SoundBufferData;
-	if(m_i2s_Data_Buffer_Queue)
-	{
-		vQueueDelete(m_i2s_Data_Buffer_Queue);
-		m_i2s_Data_Buffer_Queue = NULL;
-	}
-	if(m_i2s_Right_Data_Buffer_queue)
-	{
-		vQueueDelete(m_i2s_Right_Data_Buffer_queue);
-		m_i2s_Right_Data_Buffer_queue = NULL;
-	}
-	if(m_i2s_Left_Data_Buffer_queue)
-	{
-		vQueueDelete(m_i2s_Left_Data_Buffer_queue);
-		m_i2s_Left_Data_Buffer_queue = NULL;
-	}
 }

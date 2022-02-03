@@ -35,6 +35,8 @@ void Sound_Processor::SetupSoundProcessor(size_t ChannelInputByteCount, int Samp
   m_Large_FFT_Length = Large_FFT_Length;
   m_Small_FFT_Length = Small_FFT_Length;
   m_AudioBinLimit = GetBinForFrequency(2000, m_Small_FFT_Length);
+  Right_Channel_fir_lp_0_to_3k.setFilterCoeffs(filter_taps_0_to_3k);
+  Left_Channel_fir_lp_0_to_3k.setFilterCoeffs(filter_taps_0_to_3k);
   Serial << "FFT Config: " << m_ChannelInputByteCount << " | " << m_SampleRate << " | " << m_Large_FFT_Length << "\n";
   if(true == m_MemoryIsAllocated)FreeMemory();
   AllocateMemory();
@@ -51,12 +53,14 @@ void Sound_Processor::AllocateMemory()
   m_Right_Band_Values = (float*)malloc(m_BandOutputByteCount);
   m_Left_Band_Values = (float*)malloc(m_BandOutputByteCount);
   
-  m_DataBuffer1 = (int32_t*)malloc(m_ChannelInputByteCount);
-  m_DataBuffer2 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_RightChannel_Filtered_0k_to_3k = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_LeftChannel_Filtered_0k_to_3k = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer1 = (int16_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer2 = (int16_t*)malloc(m_ChannelInputByteCount);
   m_DataBuffer3 = (int32_t*)malloc(m_ChannelInputByteCount);
   m_DataBuffer4 = (int32_t*)malloc(m_ChannelInputByteCount);
-  m_DataBuffer5 = (int32_t*)malloc(m_ChannelInputByteCount);
-  m_DataBuffer6 = (int32_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer5 = (int16_t*)malloc(m_ChannelInputByteCount);
+  m_DataBuffer6 = (int16_t*)malloc(m_ChannelInputByteCount);
   
   m_MemoryIsAllocated = true;
 }
@@ -64,6 +68,8 @@ void Sound_Processor::AllocateMemory()
 void Sound_Processor::FreeMemory()
 {
   Serial << GetTitle() << ": Freeing Memory.\n";
+  delete m_RightChannel_Filtered_0k_to_3k;
+  delete m_LeftChannel_Filtered_0k_to_3k;
   delete m_Large_FFT_Right_Data;
   delete m_Large_FFT_Left_Data;
   delete m_Small_FFT_Right_Data;
@@ -86,19 +92,30 @@ void Sound_Processor::ProcessEventQueue()
 
 void Sound_Processor::ProcessRightChannelSoundData()
 {
-  if( NULL != GetQueueHandleRXForDataItem("R_RAW_IN") &&
+  if( NULL != GetQueueHandleRXForDataItem("R_RAW32_IN") &&
+      NULL != GetQueueHandleRXForDataItem("R_PSD_IN") )
+  {
+    QueueHandle_t Queues1[1] = { GetQueueHandleRXForDataItem("R_PSD_IN") };                       
+    MoveDataFromQueueToQueues( "SP2a"
+                             , GetQueueHandleRXForDataItem("R_RAW32_IN")
+                             , Queues1
+                             , sizeof(Queues1)/sizeof(Queues1[0])
+                             , m_ChannelInputByteCount
+                             , false
+                             , false );
+  }
+  
+  if( NULL != GetQueueHandleRXForDataItem("R_RAW16_IN") &&
       NULL != GetQueueHandleRXForDataItem("R_FFT_IN") &&
-      NULL != GetQueueHandleRXForDataItem("R_PSD_IN") &&
       NULL != GetQueueHandleRXForDataItem("R_MAXBIN_IN") )
   {
-    QueueHandle_t Queues[3] = { GetQueueHandleRXForDataItem("R_FFT_IN")
-                              , GetQueueHandleRXForDataItem("R_PSD_IN")
+    QueueHandle_t Queues2[2] = { GetQueueHandleRXForDataItem("R_FFT_IN")
                               , GetQueueHandleRXForDataItem("R_MAXBIN_IN") };
                               
-    MoveDataFromQueueToQueues( "SP1"
-                             , GetQueueHandleRXForDataItem("R_RAW_IN")
-                             , Queues
-                             , 3
+    MoveDataFromQueueToQueues( "SP2b"
+                             , GetQueueHandleRXForDataItem("R_RAW16_IN")
+                             , Queues2
+                             , sizeof(Queues2)/sizeof(Queues2[0])
                              , m_ChannelInputByteCount
                              , false
                              , false );
@@ -107,19 +124,30 @@ void Sound_Processor::ProcessRightChannelSoundData()
 
 void Sound_Processor::ProcessLeftChannelSoundData()
 {
-  if( NULL != GetQueueHandleRXForDataItem("L_RAW_IN") &&
+  if( NULL != GetQueueHandleRXForDataItem("L_RAW32_IN") &&
+      NULL != GetQueueHandleRXForDataItem("L_PSD_IN") )
+  {
+    QueueHandle_t Queues1[1] = { GetQueueHandleRXForDataItem("L_PSD_IN") };                       
+    MoveDataFromQueueToQueues( "SP2a"
+                             , GetQueueHandleRXForDataItem("L_RAW32_IN")
+                             , Queues1
+                             , sizeof(Queues1)/sizeof(Queues1[0])
+                             , m_ChannelInputByteCount
+                             , false
+                             , false );
+  }
+  
+  if( NULL != GetQueueHandleRXForDataItem("L_RAW16_IN") &&
       NULL != GetQueueHandleRXForDataItem("L_FFT_IN") &&
-      NULL != GetQueueHandleRXForDataItem("L_PSD_IN") &&
       NULL != GetQueueHandleRXForDataItem("L_MAXBIN_IN") )
   {
-    QueueHandle_t Queues[3] = { GetQueueHandleRXForDataItem("L_FFT_IN")
-                              , GetQueueHandleRXForDataItem("L_PSD_IN")
+    QueueHandle_t Queues2[2] = { GetQueueHandleRXForDataItem("L_FFT_IN")
                               , GetQueueHandleRXForDataItem("L_MAXBIN_IN") };
                               
-    MoveDataFromQueueToQueues( "SP2"
-                             , GetQueueHandleRXForDataItem("L_RAW_IN")
-                             , Queues
-                             , 3
+    MoveDataFromQueueToQueues( "SP2b"
+                             , GetQueueHandleRXForDataItem("L_RAW16_IN")
+                             , Queues2
+                             , sizeof(Queues2)/sizeof(Queues2[0])
                              , m_ChannelInputByteCount
                              , false
                              , false );
@@ -151,9 +179,7 @@ void Sound_Processor::ProcessRightChannelFFT()
           for(int j = 0; j < m_ChannelInputSampleCount; ++j)
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Right Loop Count: "<< j << " of " << m_ChannelInputByteCount << "\n";
-            int32_t ValueLarge = m_DataBuffer1[j];
-            int16_t ValueSmall = (ValueLarge >> 8) & 0x0000FFFF;
-            m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] = ValueSmall;
+            m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] = m_DataBuffer1[j];
             if(true == SOUND_PROCESSOR_INPUTDATA_R_DEBUG) Serial << m_Large_FFT_Right_Data[m_FFT_Large_Right_Buffer_Index] << "\n";
             ++m_FFT_Large_Right_Buffer_Index;
             
@@ -221,9 +247,7 @@ void Sound_Processor::ProcessLeftChannelFFT()
           for(int j = 0; j < m_ChannelInputSampleCount; ++j)
           {
             if(true == SOUND_PROCESSOR_LOOPS_DEBUG)Serial << "Left Loop Count: "<< j << " of " << m_ChannelInputByteCount << "\n";
-            int32_t ValueLarge = m_DataBuffer2[j];
-            int16_t ValueSmall = (ValueLarge >> 8) & 0x0000FFFF;
-            m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] = ValueSmall;
+            m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] = m_DataBuffer2[j];
             if(true == SOUND_PROCESSOR_INPUTDATA_L_DEBUG) Serial << m_Large_FFT_Left_Data[m_FFT_Large_Left_Buffer_Index] << "\n";
             ++m_FFT_Large_Left_Buffer_Index;
             
@@ -382,18 +406,33 @@ void Sound_Processor::ProcessRightChannelMaxBand()
   {
     if( uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN_IN")) > 0 && uxQueueSpacesAvailable(GetQueueHandleTXForDataItem("R_MAXBIN")) > 0 )
     {
+      static int REMOVE_THIS_COUNTER = 0;
+      ++REMOVE_THIS_COUNTER;
       memset(m_DataBuffer5, 0, m_ChannelInputByteCount);
       if(true == SOUND_PROCESSOR_QUEUE_DEBUG) Serial << "Right Max Bin Buffer Queue Count: " << uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBIN_IN")) << "\n";
       if ( xQueueReceive(GetQueueHandleRXForDataItem("R_MAXBIN_IN"), m_DataBuffer5, 0) == pdTRUE )
       {
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
-          int32_t ValueLarge = m_DataBuffer5[i];
-          int16_t ValueSmall = ((ValueLarge >> 8) & 0x0000FFFF);
-          ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
-          if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
-          if(ValueLarge < -INT16_MAX) ValueSmall = -INT16_MAX;
-          m_Small_FFT_Right_Data[m_FFT_Small_Right_Buffer_Index] = ValueSmall;
+          int32_t Value32t = 0;
+          int16_t Value16t = m_DataBuffer5[i];
+          //if(0 == REMOVE_THIS_COUNTER%100)Serial << Value16t << "\t";
+          Value16t = Right_Channel_fir_lp_0_to_3k.processReading( Value16t );
+          Value32t = (int32_t)Value16t * m_FFT_Gain;
+          if(Value32t > INT16_MAX)
+          {
+            Value16t = INT16_MAX;
+          }
+          else if(Value32t < -INT16_MAX)
+          {
+            Value16t = -INT16_MAX;
+          }
+          else 
+          {
+            Value16t = Value32t;
+          }
+          //if(0 == REMOVE_THIS_COUNTER%100)Serial << Value16t << "\n";
+          m_Small_FFT_Right_Data[m_FFT_Small_Right_Buffer_Index] = Value16t;
           ++m_FFT_Small_Right_Buffer_Index;
           if(m_FFT_Small_Right_Buffer_Index >= m_Small_FFT_Length)
           {
@@ -444,12 +483,23 @@ void Sound_Processor::ProcessLeftChannelMaxBand()
       {
         for(int i = 0; i < m_ChannelInputSampleCount; ++i)
         {
-          int32_t ValueLarge = m_DataBuffer6[i];
-          int16_t ValueSmall = ((ValueLarge >> 8) & 0x0000FFFF);
-          ValueLarge = ValueSmall = ValueSmall * m_FFT_Gain;
-          if(ValueLarge > INT16_MAX) ValueSmall = INT16_MAX;
-          if(ValueLarge < -INT16_MAX) ValueSmall = -INT16_MAX;
-          m_Small_FFT_Left_Data[m_FFT_Small_Left_Buffer_Index] = ValueSmall;
+          int32_t Value32t = 0;
+          int16_t Value16t = m_DataBuffer6[i];
+          Value16t = Left_Channel_fir_lp_0_to_3k.processReading( Value16t );
+          Value32t = (int32_t)Value16t * m_FFT_Gain;
+          if(Value32t > INT16_MAX)
+          {
+            Value16t = INT16_MAX;
+          }
+          else if(Value32t < -INT16_MAX)
+          {
+            Value16t = -INT16_MAX;
+          }
+          else 
+          {
+            Value16t = Value32t;
+          }
+          m_Small_FFT_Left_Data[m_FFT_Small_Left_Buffer_Index] = Value16t;
           ++m_FFT_Small_Left_Buffer_Index;
           if(m_FFT_Small_Left_Buffer_Index >= m_Small_FFT_Length)
           {

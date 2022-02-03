@@ -86,10 +86,10 @@ class Manager: public NamedItem
     DAC_Data_Format_t m_DAC_Data_Format;
 
     void ProcessDataBufferQueue();
-    void ProcessRightChannelDataBufferQueue();
-    void ProcessLeftChannelDataBufferQueue();
-    void ProcessRightFFTDataBufferQueue();
-    void ProcessLeftFFTDataBufferQueue();
+    void ProcessRightChannelInputDataBufferQueue();
+    void ProcessLeftChannelInputDataBufferQueue();
+    void ProcessRightSoundProcessorDataBufferQueue();
+    void ProcessLeftSoundProcessorDataBufferQueue();
 };
 
 #endif

@@ -29,8 +29,8 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 							   , i2s_channel_t i2s_channel
 							   , size_t BufferCount
 							   , size_t BufferSize
-							   , size_t OutputQueueSampleCount 
 							   , size_t QueueCount
+							   , size_t OutputQueueSize
 							   , int SerialClockPin
 							   , int WordSelectPin
 							   , int SerialDataInPin
@@ -46,8 +46,8 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 													   , m_i2s_channel(i2s_channel)
 													   , m_BufferCount(BufferCount)
 													   , m_BufferSize(BufferSize)
-													   , m_OutputQueueSampleCount(OutputQueueSampleCount)
 													   , m_QueueCount(QueueCount)
+													   , m_OutputQueueSize(OutputQueueSize)
 													   , m_SerialClockPin(SerialClockPin)
 													   , m_WordSelectPin(WordSelectPin)
 													   , m_SerialDataInPin(SerialDataInPin)
@@ -65,15 +65,15 @@ void Bluetooth_Sink::Setup()
 {
 	Serial << GetTitle() << ": Setup\n";
 	m_BytesPerSample = m_BitsPerSample/8;
-	m_ChannelBytesToRead = m_BytesPerSample * m_OutputQueueSampleCount;
+	m_ChannelBytesToRead = m_BytesPerSample * m_OutputQueueSize;
 	m_SampleCount = m_TotalBytesToRead * m_BytesPerSample;
 	m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
 	m_ChannelSampleCount = m_ChannelBytesToRead * m_BytesPerSample;
 	m_ConfigCount = 2;
 	m_ItemConfig = new DataItemConfig_t[m_ConfigCount]
 	{
-		{ "R_BT",	DataType_Int32_t,	m_OutputQueueSampleCount,    Transciever_RX,   m_QueueCount },
-		{ "L_BT", 	DataType_Int32_t,	m_OutputQueueSampleCount,    Transciever_RX,   m_QueueCount }
+		{ "R_BT",	DataType_Int32_t,	m_OutputQueueSize,    Transciever_RX,   m_QueueCount },
+		{ "L_BT", 	DataType_Int32_t,	m_OutputQueueSize,    Transciever_RX,   m_QueueCount }
 	};
 	AllocateMemory();
 	SetupQueueManager(m_ConfigCount);
@@ -87,9 +87,7 @@ void Bluetooth_Sink::data_received_callback()
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
-	static bool BTSinkDataError = false;
 	int SampleCount = length/m_BytesPerSample;
-	
 	QueueHandle_t RightQueue = GetQueueHandleRXForDataItem("R_BT");
 	QueueHandle_t LeftQueue = GetQueueHandleRXForDataItem("L_BT");
 	if( NULL != RightQueue && NULL != LeftQueue )
@@ -107,8 +105,11 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 				if(m_OurByteCount >= m_ChannelBytesToRead)
 				{
 					m_OurByteCount = 0;
-					if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightData, m_ChannelBytesToRead);
-					if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftData, m_ChannelBytesToRead);
+					if(NULL != m_Callee) 
+					{
+						m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightData, m_ChannelBytesToRead);
+						m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftData, m_ChannelBytesToRead);
+					}
 					PushValueToQueue(m_RightData, RightQueue, false, false);
 					PushValueToQueue(m_LeftData, LeftQueue, false, false);     
 				}
