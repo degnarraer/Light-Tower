@@ -27,6 +27,7 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 							   , i2s_channel_fmt_t i2s_Channel_Fmt
 							   , i2s_comm_format_t i2s_CommFormat
 							   , i2s_channel_t i2s_channel
+							   , bool Use_APLL
 							   , size_t BufferCount
 							   , size_t BufferSize
 							   , size_t QueueCount
@@ -44,6 +45,7 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 													   , m_Channel_Fmt(i2s_Channel_Fmt)
 													   , m_CommFormat(i2s_CommFormat)
 													   , m_i2s_channel(i2s_channel)
+													   , m_Use_APLL(Use_APLL)
 													   , m_BufferCount(BufferCount)
 													   , m_BufferSize(BufferSize)
 													   , m_QueueCount(QueueCount)
@@ -152,7 +154,7 @@ void Bluetooth_Sink::InstallDevice()
 	  .intr_alloc_flags = 1, // default interrupt priority
 	  .dma_buf_count = m_BufferCount,
 	  .dma_buf_len = m_BufferSize,
-	  .use_apll = false,
+	  .use_apll = m_Use_APLL,
 	  .tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
 	  .fixed_mclk = 0
 	};

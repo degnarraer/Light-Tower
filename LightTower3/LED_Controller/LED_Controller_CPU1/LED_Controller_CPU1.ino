@@ -21,7 +21,8 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , I2S_BITS_PER_SAMPLE_32BIT
                                     , I2S_CHANNEL_FMT_RIGHT_LEFT
                                     , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                    , I2S_CHANNEL_STEREO                                    
+                                    , I2S_CHANNEL_STEREO
+                                    , false                              // Use APLL                                    
                                     , I2S_BUFFER_COUNT                   // Buffer Count
                                     , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
                                     , I2S_BUFFER_COUNT                   // Output Data Queue Count
@@ -63,6 +64,7 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
+                                , false                              // Use APLL
                                 , I2S_BUFFER_COUNT                   // Buffer Count
                                 , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
                                 , I2S_BUFFER_COUNT                   // Output Queue Count
@@ -79,6 +81,7 @@ I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
                                   , I2S_CHANNEL_FMT_RIGHT_LEFT
                                   , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                   , I2S_CHANNEL_STEREO
+                                  , false                            // Use APLL
                                   , I2S_BUFFER_COUNT                 // Buffer Count
                                   , I2S_CHANNEL_SAMPLE_COUNT         // Buffer Size
                                   , I2S_BUFFER_COUNT                 // Output Queue Count
