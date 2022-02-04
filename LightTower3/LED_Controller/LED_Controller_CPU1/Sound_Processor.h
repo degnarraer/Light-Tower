@@ -73,6 +73,10 @@ class Sound_Processor: public NamedItem
     int32_t m_FFT_Large_Left_Buffer_Index = 0;
     int32_t m_FFT_Small_Right_Buffer_Index = 0;
     int32_t m_FFT_Small_Left_Buffer_Index = 0;
+
+    const int16_t m_DownSampleRatio = I2S_SAMPLE_RATE / DOWN_SAMPLED_RATE; 
+    int32_t m_FFT_Small_Right_DownSampleCount = 0;
+    int32_t m_FFT_Small_Left_DownSampleCount = 0;
     
     //CALCULATED OUTPUTS
     int32_t* m_RightChannel_Filtered_0k_to_3k;
@@ -117,9 +121,9 @@ class Sound_Processor: public NamedItem
     void ProcessLeftChannelPower();
     void ProcessLeftChannelMaxBand();
     
-    void AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t FFT_Length);
-    float GetFreqForBin(unsigned int bin, int16_t FFT_Length);
-    int16_t GetBinForFrequency(float Frequency, int16_t FFT_Length);
+    void AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t FFT_Length, int16_t SampleRate);
+    float GetFreqForBin(unsigned int bin, int16_t FFT_Length, int16_t SampleRate);
+    int16_t GetBinForFrequency(float Frequency, int16_t FFT_Length, int16_t SampleRate);
     int16_t m_AudioBinLimit;
 
     //QueueManager Configuration
@@ -161,7 +165,7 @@ class Sound_Processor: public NamedItem
       
     */
     static const int32_t FILTER_TAP_NUM_0_to_3k = 55;
-    int16_t filter_taps_0_to_3k[FILTER_TAP_NUM_0_to_3k] = 
+    float filter_taps_0_to_3k[FILTER_TAP_NUM_0_to_3k] = 
     {
       -172,
       -12,
@@ -219,8 +223,8 @@ class Sound_Processor: public NamedItem
       -12,
       -172
     };
-    FIR<int16_t, FILTER_TAP_NUM_0_to_3k> Right_Channel_fir_lp_0_to_3k;
-    FIR<int16_t, FILTER_TAP_NUM_0_to_3k> Left_Channel_fir_lp_0_to_3k;
+    FIR<float, FILTER_TAP_NUM_0_to_3k> Right_Channel_fir_lp_0_to_3k;
+    FIR<float, FILTER_TAP_NUM_0_to_3k> Left_Channel_fir_lp_0_to_3k;
 
 };
 

@@ -20,7 +20,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                  , I2S_CHANNEL_STEREO
-                                 , false                              // Use APLL
+                                 , true                               // Use APLL
                                  , I2S_BUFFER_COUNT                   // Buffer Count
                                  , I2S_BUFFER_SIZE                    // Buffer Size
                                  , I2S_BUFFER_COUNT                   // Output Queue Count
