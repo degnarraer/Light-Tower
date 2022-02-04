@@ -216,7 +216,7 @@ class QueueManager
 		
 		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			if(true == DebugMessage) Serial << "Creating Queue: " << Name << " of size: " << ByteCount << "\n";
+			if(true == DebugMessage) Serial << "Creating " << QueueCount << " Queue(s): " << Name << " of size: " << ByteCount << " for a total of " << ByteCount*QueueCount <<"\n";
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL){Serial.println("Error creating the Queue");}
 		}
