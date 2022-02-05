@@ -32,13 +32,13 @@ class Bluetooth_Sink_Callback
 		virtual ~Bluetooth_Sink_Callback(){}
 	
 		//Callbacks called by this class
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
+		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
 };
 
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
-                    , public QueueManager
 {
   public:
     Bluetooth_Sink( String Title
@@ -53,8 +53,6 @@ class Bluetooth_Sink: public NamedItem
 				  , bool Use_APLL
 				  , size_t BufferCount
 				  , size_t BufferSize
-				  , size_t QueueCount
-				  , size_t OutputQueueSize
 				  , int SerialClockPin
 				  , int WordSelectPin
 				  , int SerialDataInPin
@@ -76,23 +74,17 @@ class Bluetooth_Sink: public NamedItem
 	size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
 	int GetSampleRate() { return m_SampleRate; }
     
-    //QueueManager Interface
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
-    
   private:
+	uint8_t* m_Data;
 	uint8_t* m_RightData;
 	uint8_t* m_LeftData;
     size_t m_ConfigCount = 0;
-    DataItemConfig_t* m_ItemConfig = NULL;
 
 	Bluetooth_Sink_Callback* m_Callee = NULL;
 	SimpleExponentialVolumeControl m_VolumeControl;
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     size_t m_SampleCount;
-    size_t m_OutputQueueSize;
-	size_t m_QueueCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;
@@ -107,8 +99,8 @@ class Bluetooth_Sink: public NamedItem
     const i2s_channel_fmt_t m_Channel_Fmt;
     const i2s_channel_t m_i2s_channel;
 	const bool m_Use_APLL;
-    const int m_BufferCount;
-    const int m_BufferSize;
+    const size_t m_BufferCount;
+    const size_t m_BufferSize;
     const int m_SerialClockPin;
     const int m_WordSelectPin;
     const int m_SerialDataInPin;

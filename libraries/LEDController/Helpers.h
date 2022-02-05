@@ -35,6 +35,25 @@ class QueueManager
 			if(true == m_MemoryAllocated)FreeMemory();
 			AllocateMemory();
 		}
+		size_t GetQueueByteCountForDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(true == Name.equals(m_DataItem[i].Name))
+					{
+						return m_DataItem[i].TotalByteCount;
+					}
+				}
+				Serial << "GetQueueByteCountForDataItem: " << Name << ": Data Item Not Found\n";
+			}
+			else
+			{
+				Serial << "GetQueueByteCountForDataItem: " << Name << ": NULL Data Item\n";
+			}
+			return NULL;
+		}
 		QueueHandle_t GetQueueHandleRXForDataItem(String Name)
 		{
 			if(NULL != m_DataItem)
@@ -264,6 +283,21 @@ class QueueManager
 class CommonUtils
 {
 	public:
+		template <class T>
+		T ScaleWithLimits(T& Input, T Scalar, T LowerLimit, T UpperLimit)
+		{
+			double Result = (double)Input * (double) Scalar;
+			if(Result > UpperLimit)
+			{
+				Result = UpperLimit;
+			}
+			else if(Result < LowerLimit)
+			{
+				Result = LowerLimit;
+			}
+			return (T)Result;
+		}
+			
 		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
 		  if(NULL != TakeFromQueue && NULL != GiveToQueue)

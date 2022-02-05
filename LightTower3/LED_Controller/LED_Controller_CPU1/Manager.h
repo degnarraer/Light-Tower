@@ -62,7 +62,6 @@ class Manager: public NamedItem
            , I2S_Device &Mic_Out );
     virtual ~Manager();
     void Setup();
-    void RunTask();
     void ProcessEventQueue();
     void SetInputType(InputType_t Type);
     void SetDACMuteState(Mute_State_t MuteState);
@@ -70,12 +69,11 @@ class Manager: public NamedItem
     
     //Bluetooth_Callback
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count);
+    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
+    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
+    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
 
   private:
-    uint8_t* m_DataBuffer1;
     Sound_Processor &m_Sound_Processor;
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT;
@@ -84,12 +82,6 @@ class Manager: public NamedItem
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
     DAC_Data_Format_t m_DAC_Data_Format;
-
-    void ProcessDataBufferQueue();
-    void ProcessRightChannelInputDataBufferQueue();
-    void ProcessLeftChannelInputDataBufferQueue();
-    void ProcessRightSoundProcessorDataBufferQueue();
-    void ProcessLeftSoundProcessorDataBufferQueue();
 };
 
 #endif

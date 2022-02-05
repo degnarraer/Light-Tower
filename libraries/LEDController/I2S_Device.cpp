@@ -27,15 +27,13 @@ I2S_Device::I2S_Device ( String Title
                        , i2s_comm_format_t i2s_CommFormat
                        , i2s_channel_t i2s_channel
 					   , bool Use_APLL
-                       , int BufferCount
-                       , int BufferSize
-					   , size_t OutputQueueCount
+                       , size_t BufferCount
+                       , size_t BufferSize
                        , int SerialClockPin
                        , int WordSelectPin
                        , int SerialDataInPin
                        , int SerialDataOutPin )
                        : NamedItem(Title)
-					   , QueueManager(Title + "_QueueManager")
 					   , m_I2S_PORT(i2S_PORT)
                        , m_i2s_Mode(Mode)
                        , m_SampleRate(SampleRate)
@@ -46,7 +44,6 @@ I2S_Device::I2S_Device ( String Title
 					   , m_Use_APLL(Use_APLL)
                        , m_BufferCount(BufferCount)
                        , m_BufferSize(BufferSize)
-					   , m_OutputQueueCount(OutputQueueCount)
                        , m_SerialClockPin(SerialClockPin)
                        , m_WordSelectPin(WordSelectPin)
                        , m_SerialDataInPin(SerialDataInPin)
@@ -63,8 +60,8 @@ void I2S_Device::Setup()
     m_BytesPerSample = m_BitsPerSample/8;
     m_ChannelSampleCount = m_BufferSize;
 	m_SampleCount = m_ChannelSampleCount * 2;
-    m_TotalBytesToRead = m_BytesPerSample * m_SampleCount;
     m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
+    m_TotalBytesToRead = m_ChannelBytesToRead * 2;
 	m_ConfigCount = 3;
 	DataType_t DataType;
 	switch(m_BitsPerSample)
@@ -84,13 +81,6 @@ void I2S_Device::Setup()
 		default:
 		break;
 	}
-	m_ItemConfig = new DataItemConfig_t[m_ConfigCount]
-	{
-		{ "I2S",	DataType,	m_SampleCount,    		Transciever_RX,   m_OutputQueueCount },
-		{ "R_I2S",	DataType,	m_ChannelSampleCount,  	Transciever_RX,   m_OutputQueueCount },
-		{ "L_I2S",	DataType,	m_ChannelSampleCount,  	Transciever_RX,   m_OutputQueueCount }
-	};
-	SetupQueueManager(m_ConfigCount);
 }
 
 void I2S_Device::StartDevice()
@@ -149,7 +139,8 @@ void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t v
 
 void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
-  WriteSamples(SoundBufferData, ByteCount);
+  memcpy(m_SoundBufferData, SoundBufferData, ByteCount);
+  WriteSamples(m_SoundBufferData, ByteCount);
   if(true == DATA_TX_DEBUG) Serial <<  GetTitle() << "Sound Buffer Data Ready\n";
 }
 
@@ -157,22 +148,14 @@ int I2S_Device::ReadSamples()
 {
 	size_t bytes_read = 0;
 	size_t channel_bytes_read = 0;
-	QueueHandle_t Queue = GetQueueHandleRXForDataItem("I2S");
-	QueueHandle_t RightQueue = GetQueueHandleRXForDataItem("R_I2S");
-	QueueHandle_t LeftQueue = GetQueueHandleRXForDataItem("L_I2S");
-	if( NULL != Queue && NULL != RightQueue && NULL != LeftQueue )
+	// read from i2s
+	i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
+	channel_bytes_read = bytes_read / 2;
+	if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes. Read: " << bytes_read << " out of " << m_TotalBytesToRead << "\n";
+	if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, m_SampleCount);
+
+	if(I2S_CHANNEL_STEREO == m_i2s_channel)
 	{
-	  // read from i2s
-	  i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
-	  channel_bytes_read = bytes_read / 2;
-	  
-	  if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes. Read: " << bytes_read << " out of " << m_TotalBytesToRead << "\n";
-	  if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read);
-	  PushValueToQueue(m_SoundBufferData, Queue, false, false);
-	  
-	  if(I2S_CHANNEL_STEREO == m_i2s_channel)
-	  {
-		  
 		int channel_samples_read = channel_bytes_read / m_BytesPerSample;
 		for(int i = 0; i < channel_samples_read; ++i)
 		{
@@ -185,14 +168,11 @@ int I2S_Device::ReadSamples()
 		}
 		if(NULL != m_Callee) 
 		{
-			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read);
-			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read);
+			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read, m_ChannelSampleCount);
+			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read, m_ChannelSampleCount);
 		}
-		PushValueToQueue(m_RightChannel_SoundBufferData, RightQueue, false, false);
-		PushValueToQueue(m_LeftChannel_SoundBufferData, LeftQueue, false, false); 
-	  }
 	}
-  return bytes_read;
+	return bytes_read;
 }
 
 int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)

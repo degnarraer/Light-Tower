@@ -4,8 +4,7 @@
 #include <BluetoothA2DPSink.h>
 #include "Tunes.h"
 
-TaskHandle_t ManagerTask;
-TaskHandle_t SoundProcessorTask;
+TaskHandle_t DataMoverTask;
 TaskHandle_t FFTTask;
 TaskHandle_t SoundPowerTask;
 TaskHandle_t SoundMaxBandTask;
@@ -25,8 +24,6 @@ Bluetooth_Sink m_BT = Bluetooth_Sink( "Bluetooth"
                                     , false                              // Use APLL                                    
                                     , I2S_BUFFER_COUNT                   // Buffer Count
                                     , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                    , I2S_BUFFER_COUNT                   // Output Data Queue Count
-                                    , I2S_CHANNEL_SAMPLE_COUNT           // Output Data Queue Buffer Size
                                     , 25                                 // Serial Clock Pin
                                     , 26                                 // Word Selection Pin
                                     , I2S_PIN_NO_CHANGE                  // Serial Data In Pin
@@ -67,7 +64,6 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , false                              // Use APLL
                                 , I2S_BUFFER_COUNT                   // Buffer Count
                                 , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                , I2S_BUFFER_COUNT                   // Output Queue Count
                                 , 12                                 // Serial Clock Pin
                                 , 13                                 // Word Selection Pin
                                 , 14                                 // Serial Data In Pin
@@ -84,18 +80,17 @@ I2S_Device m_Mic_Out = I2S_Device( "Microphone Out"
                                   , false                            // Use APLL
                                   , I2S_BUFFER_COUNT                 // Buffer Count
                                   , I2S_CHANNEL_SAMPLE_COUNT         // Buffer Size
-                                  , I2S_BUFFER_COUNT                 // Output Queue Count
                                   , 25                               // Serial Clock Pin
                                   , 26                               // Word Selection Pin
                                   , I2S_PIN_NO_CHANGE                // Serial Data In Pin
                                   , 33 );                            // Serial Data Out Pin
 
 HardwareSerial m_hSerial = Serial2;
-Sound_Processor m_Sound_Processor = Sound_Processor("Sound Processor");
-SerialDataLink m_SerialDatalink = SerialDataLink("Serial Datalink", m_hSerial);
+SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
+Sound_Processor m_Sound_Processor = Sound_Processor("Sound Processor", m_SerialDataLink);
 Manager m_Manager = Manager("Manager"
                            , m_Sound_Processor
-                           , m_SerialDatalink
+                           , m_SerialDataLink
                            , m_BT
                            , m_Mic_In
                            , m_Mic_Out);
@@ -130,7 +125,7 @@ void setup() {
   m_Mic_Out.Setup();
   m_BT.Setup();
   m_Manager.Setup();
-  m_SerialDatalink.SetupSerialDataLink();
+  m_SerialDataLink.SetupSerialDataLink();
   
   xTaskCreatePinnedToCore
   (
@@ -167,12 +162,12 @@ void setup() {
    
   xTaskCreatePinnedToCore
   (
-    ManagerTaskLoop,            // Function to implement the task
-    "ManagerTask",              // Name of the task
+    DataMoverTaskLoop,            // Function to implement the task
+    "DataMoverTask",              // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
-    &ManagerTask,               // Task handle.
+    &DataMoverTask,               // Task handle.
     1                           // Core where the task should run
   );
   
@@ -193,21 +188,11 @@ void setup() {
     "SerialDataLinkRXTask",     // Name of the task
     2000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
-  
-  xTaskCreatePinnedToCore
-  (
-    SoundProcessorTaskLoop,     // Function to implement the task
-    "SoundProcessorTask",       // Name of the task
-    2000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 4,   // Priority of the task
-    &SoundProcessorTask,        // Task handle.
-    1                           // Core where the task should run
-  );
+ 
   
   Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
 }
@@ -219,8 +204,7 @@ void loop() {
   {
     myTime = millis();
     size_t StackSizeThreshold = 100;
-    if( uxTaskGetStackHighWaterMark(ManagerTask) < StackSizeThreshold )Serial << "WARNING! ManagerTask: Stack Size Low\n";
-    if( uxTaskGetStackHighWaterMark(SoundProcessorTask) < StackSizeThreshold )Serial << "WARNING! SoundProcessorTask: Stack Size Low\n";
+    if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )Serial << "WARNING! DataMoverTask: Stack Size Low\n";
     if( uxTaskGetStackHighWaterMark(FFTTask) < StackSizeThreshold )Serial << "WARNING! FFTTask: Stack Size Low\n";
     if( uxTaskGetStackHighWaterMark(SoundPowerTask) < StackSizeThreshold )Serial << "WARNING! SoundPowerTask: Stack Size Low\n";
     if( uxTaskGetStackHighWaterMark(SoundMaxBandTask) < StackSizeThreshold )Serial << "WARNING! SoundMaxBandTask: Stack Size Low\n";
@@ -229,8 +213,7 @@ void loop() {
     if(true == HEAP_SIZE_DEBUG)Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
     if(true == TASK_STACK_SIZE_DEBUG)
     {
-      Serial << "ManagerTask: " << uxTaskGetStackHighWaterMark(ManagerTask) << "\n";
-      Serial << "SoundProcessorTask: " << uxTaskGetStackHighWaterMark(SoundProcessorTask) << "\n";
+      Serial << "DataMoverTaskTask: " << uxTaskGetStackHighWaterMark(DataMoverTask) << "\n";
       Serial << "FFTTask: " << uxTaskGetStackHighWaterMark(FFTTask) << "\n";
       Serial << "SoundPowerTask: " << uxTaskGetStackHighWaterMark(SoundPowerTask) << "\n";
       Serial << "SoundMaxBandTask: " << uxTaskGetStackHighWaterMark(SoundMaxBandTask) << "\n";
@@ -241,23 +224,13 @@ void loop() {
   }
 }
 
-void ManagerTaskLoop(void * parameter)
+void DataMoverTaskLoop(void * parameter)
 {  
-  Serial << "Started Thread: ManagerTaskLoop\n";\
+  Serial << "Started Thread: DataMoverTaskLoop\n";
   for(;;)
   {
     yield();
-    m_Manager.RunTask();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-
-void SoundProcessorTaskLoop(void * parameter)
-{
-  Serial << "Started Thread: SoundProcessorTaskLoop\n";
-  for(;;)
-  {
-    yield();
+    m_Manager.ProcessEventQueue();
     m_Sound_Processor.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -269,7 +242,7 @@ void FFTTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessFFTEventQueue();
+    m_Sound_Processor.ProcessFFT();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -280,7 +253,7 @@ void SoundPowerTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessSoundPowerEventQueue();
+    m_Sound_Processor.ProcessSoundPower();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -291,7 +264,7 @@ void SoundMaxBandTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_Sound_Processor.ProcessMaxBandEventQueue();
+    m_Sound_Processor.ProcessMaxBand();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -302,7 +275,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.ProcessDataTXEventQueue();
+    m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -313,7 +286,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    m_SerialDatalink.GetRXData();
+    m_SerialDataLink.GetRXData();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

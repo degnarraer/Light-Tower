@@ -27,25 +27,27 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include "float.h"
+#include "Serial_Datalink_Config.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
                      , public QueueManager
 {
   public:
-    Sound_Processor(String Title);
+    Sound_Processor(String Title, SerialDataLink &SerialDataLink);
     virtual ~Sound_Processor();
     void SetupSoundProcessor(size_t ChannelInputByteCount, int SampleRate, int Large_FFT_Length, int Small_FFT_Length);
     void ProcessEventQueue();
-    void ProcessFFTEventQueue();
-    void ProcessSoundPowerEventQueue();
-    void ProcessMaxBandEventQueue();
+    void ProcessFFT();
+    void ProcessSoundPower();
+    void ProcessMaxBand();
 
     //QueueManager
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
     QueueManager* m_QueueManager;
+    SerialDataLink& m_SerialDataLink;
   
     //CONFIGURATION
     size_t m_ChannelInputByteCount = 0;
@@ -127,25 +129,19 @@ class Sound_Processor: public NamedItem
     int16_t m_AudioBinLimit;
 
     //QueueManager Configuration
-    static const size_t m_ConfigCount = 16;
+    static const size_t m_ConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW32_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "L_RAW32_IN",   DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_RAW16_IN",   DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "L_RAW16_IN",   DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_FFT_IN",     DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT) },
-      { "L_FFT_IN",     DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_LARGE_SIZE / I2S_CHANNEL_SAMPLE_COUNT) },
-      { "R_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "L_PSD_IN",     DataType_Int32_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   3 },
-      { "R_MAXBIN_IN",  DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT) * m_DownSampleRatio },
-      { "L_MAXBIN_IN",  DataType_Int16_t,               I2S_CHANNEL_SAMPLE_COUNT,       Transciever_RX,   ceil(FFT_SMALL_SIZE / I2S_CHANNEL_SAMPLE_COUNT) * m_DownSampleRatio },
-      { "R_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
-      { "L_FFT",        DataType_Float,                 NUMBER_OF_BANDS,                Transciever_TX,   3 },
-      { "R_PSD",        DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   3 },
-      { "L_PSD",        DataType_ProcessedSoundData_t,  1,                              Transciever_TX,   3 },
-      { "R_MAXBIN",     DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   3 },
-      { "L_MAXBIN",     DataType_MaxBinSoundData_t,     1,                              Transciever_TX,   3 },
+      { "R_RAW32_IN",   DataType_Int32_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_RAW32_IN",   DataType_Int32_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_RAW16_IN",   DataType_Int16_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_RAW16_IN",   DataType_Int16_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_FFT_IN",     DataType_Int16_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_FFT_IN",     DataType_Int16_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_PSD_IN",     DataType_Int32_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_PSD_IN",     DataType_Int32_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_MAXBIN_IN",  DataType_Int16_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_MAXBIN_IN",  DataType_Int16_t,   I2S_CHANNEL_SAMPLE_COUNT,   Transciever_RX,   10 },
     };
 
     /*

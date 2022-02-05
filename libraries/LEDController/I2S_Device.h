@@ -36,14 +36,13 @@ class I2S_Device_Callback
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t Count) = 0;
+		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
+		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
+		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
 };
 
 class I2S_Device: public NamedItem
 				, public CommonUtils
-                , public QueueManager
 {
   public:
     I2S_Device( String Title
@@ -55,9 +54,8 @@ class I2S_Device: public NamedItem
               , i2s_comm_format_t CommFormat
               , i2s_channel_t i2s_channel
 			  , bool Use_APLL
-              , int BufferCount
-              , int BufferSize
-			  , size_t OutputQueueCount
+              , size_t BufferCount
+              , size_t BufferSize
               , int SerialClockPin
               , int WordSelectPin
               , int SerialDataInPin
@@ -80,9 +78,6 @@ class I2S_Device: public NamedItem
     void Setup();
     void ProcessEventQueue();
 	
-    //QueueManager Interface
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
 	I2S_Device_Callback* m_Callee = NULL;
     size_t m_ConfigCount = 0;
@@ -102,9 +97,8 @@ class I2S_Device: public NamedItem
     const i2s_channel_fmt_t m_Channel_Fmt;
     const i2s_channel_t m_i2s_channel;
 	const bool m_Use_APLL;
-    const int m_BufferCount;
-    const int m_BufferSize;
-    size_t m_OutputQueueCount;
+    const size_t m_BufferCount;
+    const size_t m_BufferSize;
     const int m_SerialClockPin;
     const int m_WordSelectPin;
     const int m_SerialDataInPin;
