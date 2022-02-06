@@ -124,8 +124,8 @@ void Manager::SetInputType(InputType_t Type)
       SetDACMuteState(Mute_State_Muted);
     break;
     case InputType_Bluetooth:
-      m_Mic_Out.StopDevice();
       m_Mic_In.StopDevice();
+      m_Mic_Out.StopDevice();
       m_BT.StartDevice();
       m_Sound_Processor.SetupSoundProcessor(m_BT.GetChannelBytesToRead(), m_BT.GetSampleRate(), FFT_LARGE_SIZE, FFT_SMALL_SIZE);
       SetDACDataFormat(DAC_Data_Format_Default);
