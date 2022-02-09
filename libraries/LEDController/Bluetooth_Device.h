@@ -75,9 +75,9 @@ class Bluetooth_Sink: public NamedItem
 	int GetSampleRate() { return m_SampleRate; }
     
   private:
-	uint8_t* m_Data;
-	uint8_t* m_RightData;
-	uint8_t* m_LeftData;
+	uint8_t* mp_Data;
+	uint8_t* mp_RightData;
+	uint8_t* mp_LeftData;
     size_t m_ConfigCount = 0;
 
 	Bluetooth_Sink_Callback* m_Callee = NULL;
@@ -90,7 +90,6 @@ class Bluetooth_Sink: public NamedItem
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
 	int32_t m_OurByteCount = 0;
-	int32_t m_TheirByteCount = 0;
 	int32_t m_DataBufferIndex = 0;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;

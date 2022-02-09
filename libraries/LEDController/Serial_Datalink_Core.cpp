@@ -27,7 +27,7 @@ SerialDataLinkCore::~SerialDataLinkCore()
 {
 }
 
-void SerialDataLinkCore::GetRXData()
+void SerialDataLinkCore::ProcessDataRXEventQueue()
 {
   for(int i = 0; i < m_hSerial.available(); ++i)
   {

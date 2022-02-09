@@ -128,7 +128,7 @@ class SerialDataLinkCore: public DataSerializer
     SerialDataLinkCore(String Title, HardwareSerial &hSerial);
     virtual ~SerialDataLinkCore();
 	
-    void GetRXData();
+    void ProcessDataRXEventQueue();
     void ProcessDataTXEventQueue();
 	void SetSerialDataLinkDataItems(DataItem_t& DataItem, size_t Count) 
 	{ 

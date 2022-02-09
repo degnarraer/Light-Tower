@@ -62,7 +62,7 @@ void Bluetooth_Sink::Setup()
 	Serial << GetTitle() << ": Setup\n";
 	m_BytesPerSample = m_BitsPerSample/8;
 	m_ChannelBytesToRead = m_BytesPerSample * m_BufferSize;
-	m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
+	m_TotalBytesToRead = m_ChannelBytesToRead * 2;
 	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
 	m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 	AllocateMemory();
@@ -76,18 +76,16 @@ void Bluetooth_Sink::data_received_callback()
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
-	m_TheirByteCount = 0;
 	for(int i = 0; i < length; ++i)
 	{
-		m_Data[m_OurByteCount] = data[m_TheirByteCount];
+		mp_Data[m_OurByteCount] = data[i];
 		++m_OurByteCount;
-		++m_TheirByteCount;
 		if(m_OurByteCount >= m_TotalBytesToRead)
 		{
 			m_OurByteCount = 0;
 			if(NULL != m_Callee) 
 			{
-				m_Callee->DataBufferModifyRX(GetTitle(), m_Data, m_TotalBytesToRead, m_SampleCount);
+				m_Callee->DataBufferModifyRX(GetTitle(), mp_Data, m_TotalBytesToRead, m_SampleCount);
 			}
 			if(I2S_CHANNEL_STEREO == m_i2s_channel)
 			{
@@ -97,14 +95,14 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 					{
 						int index1 = j * m_BytesPerSample + k;
 						int index2 = 2*j * m_BytesPerSample + k;
-						m_RightData[index1] = m_Data[index2];
-						m_LeftData[index1] = m_Data[index2 + m_BytesPerSample];
+						mp_RightData[index1] = mp_Data[index2];
+						mp_LeftData[index1] = mp_Data[index2 + m_BytesPerSample];
 					}
 				}
 				if(NULL != m_Callee) 
 				{
-					m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightData, m_ChannelBytesToRead, m_ChannelSampleCount);
-					m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftData, m_ChannelBytesToRead, m_ChannelSampleCount);
+					m_Callee->RightChannelDataBufferModifyRX(GetTitle(), mp_RightData, m_ChannelBytesToRead, m_ChannelSampleCount);
+					m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), mp_LeftData, m_ChannelBytesToRead, m_ChannelSampleCount);
 				}
 			}				
 		}
@@ -116,9 +114,9 @@ void Bluetooth_Sink::AllocateMemory()
 	if(false == m_MemoryIsAllocated)
 	{
 		Serial << GetTitle() << ": Allocating Memory\n";
-		m_Data = (uint8_t*)malloc(m_TotalBytesToRead);
-		m_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
-		m_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
+		mp_Data = (uint8_t*)malloc(m_TotalBytesToRead);
+		mp_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
+		mp_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		m_MemoryIsAllocated = true;
 		Serial << GetTitle() << ": Memory Allocated\n";
 	}
@@ -128,9 +126,9 @@ void Bluetooth_Sink::FreeMemory()
 	if(true == m_MemoryIsAllocated)
 	{
 		Serial << GetTitle() << ": Freeing Memory\n";
-		delete m_Data;
-		delete m_RightData;
-		delete m_LeftData;
+		delete mp_Data;
+		delete mp_RightData;
+		delete mp_LeftData;
 		m_MemoryIsAllocated = false;
 		Serial << GetTitle() << ": Memory Freed\n";
 	}
