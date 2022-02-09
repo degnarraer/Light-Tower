@@ -28,6 +28,7 @@
 #include "Tunes.h"
 #include "float.h"
 #include "Serial_Datalink_Config.h"
+#include "SimpleDownSampler.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
