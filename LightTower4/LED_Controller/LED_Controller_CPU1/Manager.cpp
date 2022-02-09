@@ -92,7 +92,7 @@ void Manager::SetInputType(InputType_t Type)
     case InputType_Bluetooth:
       m_Mic_In.StopDevice();
       m_BT_In.StartDevice();
-      m_I2S_Out.StopDevice();
+      m_I2S_Out.StartDevice();
       SetDACMuteState(Mute_State_Un_Muted);
     break;
     default:

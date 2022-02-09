@@ -132,16 +132,16 @@ class Sound_Processor: public NamedItem
     static const size_t m_ConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "L_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "R_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "L_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "R_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "L_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "R_PSD_IN",     DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "L_PSD_IN",     DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "R_MAXBIN_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
-      { "L_MAXBIN_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   5 },
+      { "R_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "L_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "R_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "L_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "R_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "L_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "R_PSD_IN",     DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "L_PSD_IN",     DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "R_MAXBIN_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "L_MAXBIN_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
     };
 
     /*

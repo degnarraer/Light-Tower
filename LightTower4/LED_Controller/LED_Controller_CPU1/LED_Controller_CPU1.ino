@@ -9,21 +9,21 @@ TaskHandle_t SerialDataLinkRXTask;
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
-                                    , m_BTSink
-                                    , I2S_NUM_1                          // I2S Interface
-                                    , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                    , I2S_SAMPLE_RATE
-                                    , I2S_BITS_PER_SAMPLE_32BIT
-                                    , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                    , I2S_CHANNEL_STEREO
-                                    , false                              // Use APLL                                    
-                                    , I2S_BUFFER_COUNT                   // Buffer Count
-                                    , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                    , 25                                 // Serial Clock Pin
-                                    , 26                                 // Word Selection Pin
-                                    , I2S_PIN_NO_CHANGE                  // Serial Data In Pin
-                                    , 33 );                              // Serial Data Out Pin
+                                       , m_BTSink
+                                       , I2S_NUM_1                          // I2S Interface
+                                       , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                       , I2S_SAMPLE_RATE
+                                       , I2S_BITS_PER_SAMPLE_32BIT
+                                       , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                       , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                       , I2S_CHANNEL_STEREO
+                                       , true                               // Use APLL                                    
+                                       , I2S_BUFFER_COUNT                   // Buffer Count
+                                       , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
+                                       , I2S_PIN_NO_CHANGE                  // Serial Clock Pin
+                                       , I2S_PIN_NO_CHANGE                  // Word Selection Pin
+                                       , I2S_PIN_NO_CHANGE                  // Serial Data In Pin
+                                       , I2S_PIN_NO_CHANGE );               // Serial Data Out Pin
                                     
 //Callbacks for Bluetooth Sink
 void data_received_callback() 
@@ -122,11 +122,11 @@ void setup() {
   (
     DataMoverTaskLoop,            // Function to implement the task
     "DataMoverTask",              // Name of the task
-    2000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    2000,                         // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 1,     // Priority of the task
     &DataMoverTask,               // Task handle.
-    0                           // Core where the task should run
+    1                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
