@@ -102,7 +102,45 @@ class QueueManager
 				{
 					if(true == Name.equals(m_DataItem[i].Name))
 					{
-						return GetSizeOfDataType(m_DataItem[i].DataType) * m_DataItem[i].Count;
+						return m_DataItem[i].TotalByteCount;
+					}
+				}
+			}
+			else
+			{
+				Serial << "GetByteCountForDataItem: NULL Data Item\n";
+			}
+			return NULL;
+		}
+		
+		size_t GetCountForDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(true == Name.equals(m_DataItem[i].Name))
+					{
+						return m_DataItem[i].Count;
+					}
+				}
+			}
+			else
+			{
+				Serial << "GetByteCountForDataItem: NULL Data Item\n";
+			}
+			return NULL;
+		}
+		
+		void* GetDataBufferForDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(true == Name.equals(m_DataItem[i].Name))
+					{
+						return m_DataItem[i].DataBuffer;
 					}
 				}
 			}
@@ -177,11 +215,11 @@ class QueueManager
 			m_DataItem = new DataItem_t[m_DataItemCount];
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
-				void* Object;
+				void* DataBuffer;
 				size_t bytes = 0;
 				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
-				Object = malloc(bytes);
+				DataBuffer = malloc(bytes);
 				switch(ConfigFile[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -203,7 +241,7 @@ class QueueManager
 				m_DataItem[i].Count = ConfigFile[i].Count;
 				m_DataItem[i].TotalByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
-				m_DataItem[i].Object = Object;
+				m_DataItem[i].DataBuffer = DataBuffer;
 				m_MemoryAllocated = true;
 			}
 		}
@@ -211,7 +249,7 @@ class QueueManager
 		{
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
-				delete m_DataItem[i].Object;
+				delete m_DataItem[i].DataBuffer;
 				
 				switch(m_DataItem[i].TransceiverConfig)
 				{

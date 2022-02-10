@@ -81,17 +81,19 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
         Serial.println(((int32_t*)DataBuffer)[i]);
       }
     }
-    QueueHandle_t Queue32 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_RAW32_IN");
-    size_t Queue32ByteCount = m_SoundProcessor.GetQueueByteCountForDataItem("R_RAW32_IN");
-    if(NULL != Queue32)
+    QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_RAW32_IN");
+    size_t Queue1ByteCount = m_SoundProcessor.GetQueueByteCountForDataItem("R_RAW32_IN");
+    if(NULL != Queue1)
     {
-      assert(Queue32ByteCount == ByteCount);
-      PushValueToQueue(DataBuffer, Queue32, false, false);
+      assert(Queue1ByteCount == ByteCount);
+      PushValueToQueue(DataBuffer, Queue1, false, false);
     } 
   }
 }
 void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
+  if( DeviceTitle == m_I2S_In.GetTitle() )
+  {
     for(int i = 0; i < SampleCount; ++i)
     {
       if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
@@ -100,14 +102,12 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
         Serial.println(((int32_t*)DataBuffer)[i]);
       }
     }
-  if( DeviceTitle == m_I2S_In.GetTitle() )
-  {
-    QueueHandle_t Queue32 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_RAW32_IN");
-    size_t Queue32ByteCount = m_SoundProcessor.GetQueueByteCountForDataItem("L_RAW32_IN");
-    if(NULL != Queue32)
+    QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_RAW32_IN");
+    size_t Queue1ByteCount = m_SoundProcessor.GetQueueByteCountForDataItem("L_RAW32_IN");
+    if(NULL != Queue1)
     {
-      assert(Queue32ByteCount == ByteCount);
-      PushValueToQueue(DataBuffer, Queue32, false, false);
+      assert(Queue1ByteCount == ByteCount);
+      PushValueToQueue(DataBuffer, Queue1, false, false);
     } 
   }
 }

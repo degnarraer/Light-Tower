@@ -163,8 +163,8 @@ class SerialDataLinkCore: public DataSerializer
 			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			if ( xQueueReceive(DataItem.QueueHandle_TX, DataBuffer, 0) == pdTRUE )
 			{
-				memcpy(DataItem.Object, DataBuffer, ByteCount);
-				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.Object, DataItem.Count);
+				memcpy(DataItem.DataBuffer, DataBuffer, ByteCount);
+				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
 			}
 			delete DataBuffer;
 		}

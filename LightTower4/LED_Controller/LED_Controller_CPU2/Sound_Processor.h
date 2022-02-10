@@ -38,10 +38,6 @@ class Sound_Processor: public NamedItem
     Sound_Processor(String Title, SerialDataLink &SerialDataLink);
     virtual ~Sound_Processor();
     void SetupSoundProcessor(size_t ChannelInputByteCount, int SampleRate, int Large_FFT_Length, int Small_FFT_Length);
-    void ProcessEventQueue();
-    void ProcessFFT();
-    void ProcessSoundPower();
-    void ProcessMaxBand();
 
     //QueueManager
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
@@ -63,14 +59,6 @@ class Sound_Processor: public NamedItem
     bool m_MemoryIsAllocated = false;
     void AllocateMemory();
     void FreeMemory();
-
-    //CHANNEL DATA INPUT
-    int16_t* m_DataBuffer1;
-    int16_t* m_DataBuffer2;
-    int32_t* m_DataBuffer3;
-    int32_t* m_DataBuffer4;
-    int16_t* m_DataBuffer5;
-    int16_t* m_DataBuffer6;
     
     int32_t m_FFT_Large_Right_Buffer_Index = 0;
     int32_t m_FFT_Large_Left_Buffer_Index = 0;
@@ -114,27 +102,73 @@ class Sound_Processor: public NamedItem
     //Left Channel Calculated Outputs
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
-    void ProcessRightChannelSoundData();
-    void ProcessRightChannelFFT();
-    void ProcessRightChannelPower();
-    void ProcessRightChannelMaxBand();
+    //44100 Hz 32 Bit Sound
+    public:
+      void ProcessEventQueue()
+      {
+        Sound_32Bit_44100Hz_MoveRightChannelData();
+        Sound_32Bit_44100Hz_MoveLeftChannelData();
+      }
+    private:
+      void Sound_32Bit_44100Hz_MoveRightChannelData();
+      void Sound_32Bit_44100Hz_MoveLeftChannelData();
     
-    void ProcessLeftChannelSoundData();
-    void ProcessLeftChannelFFT();
-    void ProcessLeftChannelPower();
-    void ProcessLeftChannelMaxBand();
+    public:
+      void ProcessSoundPower()
+      {
+        Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
+        Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
+      }
+    private:
+      void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
+      void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
+
+    public:
+      void FilterAndDownSample()
+      {
+        Sound_16Bit_44100Hz_Right_Channel_Filter_DownSample();
+        Sound_16Bit_44100Hz_Left_Channel_Filter_DownSample();
+      }
+    private:
+      void Sound_16Bit_44100Hz_Right_Channel_Filter_DownSample();
+      void Sound_16Bit_44100Hz_Left_Channel_Filter_DownSample();
+
+    //44100 Hz 16 Bit Sound
     
+    public:
+      void ProcessFFT()
+      {
+        Sound_16Bit_44100Hz_Right_Channel_FFT();
+        Sound_16Bit_44100Hz_Left_Channel_FFT();
+      }
+    private:
+      void Sound_16Bit_44100Hz_Right_Channel_FFT();
+      void Sound_16Bit_44100Hz_Left_Channel_FFT();
+
+    //6300 Hz 16 Bit Sound
+    public:
+      void ProcessMaxBand()
+      {
+        ProcessRightChannelMaxBand();
+        ProcessLeftChannelMaxBand();
+      }
+    private:
+      void ProcessRightChannelMaxBand();
+      void ProcessLeftChannelMaxBand();
+ 
     void AssignToBins(float& Band_Data, int16_t* FFT_Data, int16_t FFT_Length, int16_t SampleRate);
     float GetFreqForBin(unsigned int bin, int16_t FFT_Length, int16_t SampleRate);
     int16_t GetBinForFrequency(float Frequency, int16_t FFT_Length, int16_t SampleRate);
     int16_t m_AudioBinLimit;
 
     //QueueManager Configuration
-    static const size_t m_ConfigCount = 10;
+    static const size_t m_ConfigCount = 12;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
       { "R_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
       { "L_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "R_DS_FIL_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "L_DS_FIL_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
       { "R_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
       { "L_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
       { "R_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
