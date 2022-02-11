@@ -5,6 +5,9 @@
 
 TaskHandle_t ManagerTask;
 TaskHandle_t SoundProcessorTask;
+TaskHandle_t ProcessSoundPowerTask;
+TaskHandle_t FilterAndDownSampleTask;
+TaskHandle_t ProcessMaxBandTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 
@@ -18,7 +21,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_CHANNEL_STEREO
                                  , true                               // Use APLL
                                  , I2S_BUFFER_COUNT                   // Buffer Count
-                                 , I2S_BUFFER_SIZE                    // Buffer Size
+                                 , I2S_SAMPLE_COUNT                    // Buffer Size
                                  , 12                                 // Serial Clock Pin
                                  , 13                                 // Word Selection Pin
                                  , 14                                 // Serial Data In Pin
@@ -34,7 +37,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S_CHANNEL_STEREO
                                   , true                             // Use APLL
                                   , I2S_BUFFER_COUNT                 // Buffer Count
-                                  , I2S_BUFFER_SIZE                  // Buffer Size
+                                  , I2S_SAMPLE_COUNT                  // Buffer Size
                                   , 25                               // Serial Clock Pin
                                   , 26                               // Word Selection Pin
                                   , I2S_PIN_NO_CHANGE                // Serial Data In Pin
@@ -94,6 +97,39 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
+    ProcessSoundPowerTaskLoop,      // Function to implement the task
+    "ProcessSoundPowerTask",        // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &ProcessSoundPowerTask,         // Task handle.
+    0                               // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
+    FilterAndDownSampleTaskLoop,    // Function to implement the task
+    "FilterAndDownSampleTask",      // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &FilterAndDownSampleTask,       // Task handle.
+    0                               // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
+    ProcessMaxBandTaskLoop,         // Function to implement the task
+    "ProcessMaxBandTask",           // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &ProcessMaxBandTask,            // Task handle.
+    0                               // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
@@ -139,6 +175,37 @@ void SoundProcessorTaskLoop(void * parameter)
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
+
+void ProcessSoundPowerTaskLoop(void * parameter)
+{
+  while(true)
+  {
+    yield();
+    m_SoundProcessor.ProcessSoundPower();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void FilterAndDownSampleTaskLoop(void * parameter)
+{
+  while(true)
+  {
+    yield();
+    m_SoundProcessor.FilterAndDownSample();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void ProcessMaxBandTaskLoop(void * parameter)
+{
+  while(true)
+  {
+    yield();
+    m_SoundProcessor.ProcessMaxBand();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
 void SerialDataLinkRXTaskLoop(void * parameter)
 {
   while(true)

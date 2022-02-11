@@ -24,6 +24,7 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 #include <FIR.h>
+#include "ArduinoLinq.hpp"
 #include "Streaming.h"
 #include "Tunes.h"
 #include "float.h"
@@ -64,10 +65,6 @@ class Sound_Processor: public NamedItem
     int32_t m_FFT_Large_Left_Buffer_Index = 0;
     int32_t m_FFT_Small_Right_Buffer_Index = 0;
     int32_t m_FFT_Small_Left_Buffer_Index = 0;
-
-    const int16_t m_DownSampleRatio = I2S_SAMPLE_RATE / DOWN_SAMPLED_RATE; 
-    int32_t m_FFT_Small_Right_DownSampleCount = 0;
-    int32_t m_FFT_Small_Left_DownSampleCount = 0;
     
     //CALCULATED OUTPUTS
     int32_t* m_RightChannel_Filtered_0k_to_3k;
@@ -120,6 +117,13 @@ class Sound_Processor: public NamedItem
         Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
       }
     private:
+      int32_t m_RightMinimumValue = INT32_MAX;
+      int32_t m_RightMaximumValue = INT32_MIN;
+      int32_t m_LeftMinimumValue = INT32_MAX;
+      int32_t m_LeftMaximumValue = INT32_MIN;
+      int32_t m_RightPowerLoopCount = 0;
+      int32_t m_LeftPowerLoopCount = 0;
+      int16_t m_PowerLoopCountTarget = I2S_SAMPLE_RATE / 100;
       void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
       void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
 
@@ -130,6 +134,9 @@ class Sound_Processor: public NamedItem
         Sound_16Bit_44100Hz_Left_Channel_Filter_DownSample();
       }
     private:
+      SimpleDownSampler m_LeftDownSampler;
+      SimpleDownSampler m_RightDownSampler;
+      const int16_t m_DownSampleCount = I2S_SAMPLE_COUNT / (I2S_SAMPLE_RATE/DOWN_SAMPLED_RATE);
       void Sound_16Bit_44100Hz_Right_Channel_Filter_DownSample();
       void Sound_16Bit_44100Hz_Left_Channel_Filter_DownSample();
 
@@ -165,18 +172,18 @@ class Sound_Processor: public NamedItem
     static const size_t m_ConfigCount = 12;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "L_RAW32_IN",   DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "R_DS_FIL_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "L_DS_FIL_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "R_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "L_RAW16_IN",   DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "R_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "L_FFT_IN",     DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "R_PSD_IN",     DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "L_PSD_IN",     DataType_Int32_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "R_MAXBIN_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
-      { "L_MAXBIN_IN",  DataType_Int16_t,   I2S_BUFFER_SIZE,   Transciever_RX,   20 },
+      { "R_RAW32_IN",       DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_RAW32_IN",       DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_PSD_IN",         DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_PSD_IN",         DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_DOWNSAMPLE_IN",  DataType_Int16_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_DOWNSAMPLE_IN",  DataType_Int16_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_RAW16_IN",       DataType_Int16_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_RAW16_IN",       DataType_Int16_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_FFT_IN",         DataType_Int16_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "L_FFT_IN",         DataType_Int16_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   10 },
+      { "R_MAXBIN_IN",      DataType_Int16_t,   m_DownSampleCount,  Transciever_RX,   10 },
+      { "L_MAXBIN_IN",      DataType_Int16_t,   m_DownSampleCount,  Transciever_RX,   10 },
     };
 
     /*

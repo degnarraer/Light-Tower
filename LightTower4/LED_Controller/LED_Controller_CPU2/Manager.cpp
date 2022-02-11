@@ -54,6 +54,8 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 {
   if( DeviceTitle == m_I2S_In.GetTitle() )
   {
+    assert(m_I2S_Out.GetBytesToRead() == ByteCount);
+    assert(m_I2S_Out.GetSampleCount() == SampleCount);
     for(int i = 0; i < SampleCount; ++i)
     {
       if(true == PRINT_DATA_DEBUG)
@@ -64,8 +66,6 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
     }
     if(DeviceTitle == m_I2S_In.GetTitle())
     {
-      assert(m_I2S_Out.GetBytesToRead() == ByteCount);
-      assert(m_I2S_Out.GetSampleCount() == SampleCount);
       m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
     }
   }
@@ -74,6 +74,8 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
 {
   if( DeviceTitle == m_I2S_In.GetTitle() )
   {
+    assert(m_I2S_Out.GetChannelBytesToRead() == ByteCount);
+    assert(m_I2S_Out.GetChannelSampleCount() == SampleCount);
     for(int i = 0; i < SampleCount; ++i)
     {
       if(true == PRINT_RIGHT_CHANNEL_DATA_DEBUG)
@@ -86,6 +88,7 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
     if(NULL != Queue1)
     {
       assert(Queue1ByteCount == ByteCount);
+      //assert(uxQueueSpacesAvailable(Queue1) > 0); //This Queue Should Never Fill Up if it does, something is wrong
       PushValueToQueue(DataBuffer, Queue1, false, false);
     } 
   }
@@ -94,6 +97,8 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 {
   if( DeviceTitle == m_I2S_In.GetTitle() )
   {
+    assert(m_I2S_Out.GetChannelBytesToRead() == ByteCount);
+    assert(m_I2S_Out.GetChannelSampleCount() == SampleCount);
     for(int i = 0; i < SampleCount; ++i)
     {
       if(true == PRINT_LEFT_CHANNEL_DATA_DEBUG)
@@ -107,6 +112,7 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
     if(NULL != Queue1)
     {
       assert(Queue1ByteCount == ByteCount);
+      //assert(uxQueueSpacesAvailable(Queue1) > 0); //This Queue Should Never Fill Up if it does, something is wrong
       PushValueToQueue(DataBuffer, Queue1, false, false);
     } 
   }

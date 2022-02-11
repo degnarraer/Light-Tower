@@ -160,13 +160,10 @@ class SerialDataLinkCore: public DataSerializer
 		if(MessageCount > 0)
 		{
 			size_t ByteCount = GetSizeOfDataType(DataItem.DataType) * DataItem.Count;
-			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
-			if ( xQueueReceive(DataItem.QueueHandle_TX, DataBuffer, 0) == pdTRUE )
+			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
 			{
-				memcpy(DataItem.DataBuffer, DataBuffer, ByteCount);
 				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
 			}
-			delete DataBuffer;
 		}
 	}
   }

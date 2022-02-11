@@ -23,18 +23,21 @@
 #include <Helpers.h>
 #include "float.h"
 
-
 class SimpleDownSampler
 {
   public:
     SimpleDownSampler()
     {
       m_Fir_lp_0_to_3k.setFilterCoeffs(filter_taps_0_to_3k);
+      m_UpsampleBuffer = (int16_t*)malloc(m_LCM);
     }
-    virtual ~SimpleDownSampler(){}
-    void FilterAndDownSample(int16_t *InputDataBuffer, size_t SampleCount, int16_t *OutputDataBuffer, size_t &OutputSampleCount)
+    virtual ~SimpleDownSampler()
     {
-      OutputSampleCount = 0;
+      delete m_UpsampleBuffer;  
+    }
+    void FilterAndDownSample(int16_t *InputDataBuffer, size_t SampleCount, int16_t *OutputDataBuffer, size_t OutputSampleCount, size_t &ResultingSampleCount)
+    {
+      ResultingSampleCount = 0;
       int16_t Result;
       for(int i = 0; i < SampleCount; ++i)
       {
@@ -43,14 +46,27 @@ class SimpleDownSampler
         if(0 == m_Count % m_DownSampleCount)
         {
           OutputDataBuffer[OutputSampleCount] = Result;
-          ++OutputSampleCount;
+          ++ResultingSampleCount;
         }
       }
     }
   private:
     size_t m_DownSampleCount = I2S_SAMPLE_RATE / DOWN_SAMPLED_RATE;
+    size_t m_LCM = LCM(I2S_SAMPLE_RATE, DOWN_SAMPLED_RATE);
+    int16_t *m_UpsampleBuffer;
     int32_t m_Count = 0;
-
+    int32_t LCM(int32_t A, int32_t B)
+    {
+      int32_t max_num = 0;
+      while(true)    
+      {    
+        if(max_num % A == 0 && max_num % B == 0)  
+        {   
+            return max_num;  
+        }  
+        ++max_num;
+      }  
+    }
     /*
     FIR filter designed with
     http://t-filter.engineerjs.com/
