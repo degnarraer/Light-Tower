@@ -91,12 +91,11 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 			{
 				for(int j = 0; j < m_ChannelSampleCount; ++j)
 				{
+					int DataBufferIndex = m_BytesPerSample * j;
 					for(int k = 0; k < m_BytesPerSample; ++k)
 					{
-						int index1 = j * m_BytesPerSample + k;
-						int index2 = 2*j * m_BytesPerSample + k;
-						mp_RightData[index1] = mp_Data[index2];
-						mp_LeftData[index1] = mp_Data[index2 + m_BytesPerSample];
+						mp_RightData[DataBufferIndex + j] = mp_Data[2*DataBufferIndex + j];
+						mp_LeftData[DataBufferIndex + j] = mp_Data[2*DataBufferIndex + m_BytesPerSample + j];
 					}
 				}
 				if(NULL != m_Callee) 

@@ -32,8 +32,9 @@ enum DataType_t
   DataType_Uint32_t,
   DataType_String,
   DataType_Float,
+  DataType_Double,
   DataType_ProcessedSoundData_t,
-  DataType_MaxBinSoundData_t,
+  DataType_MaxBandSoundData_t,
   DataType_Undef,
 };
 
@@ -47,8 +48,9 @@ static const char* DataTypeStrings[] =
   "Uint32_t",
   "String",
   "Float",
+  "Double",
   "ProcessedSoundData_t",
-  "MaxBinSoundData_t",
+  "MaxBandSoundData_t",
   "Undefined"
 };
 
@@ -81,11 +83,11 @@ struct ProcessedSoundData_t
 	int32_t Maximum;
 };
 
-struct MaxBinSoundData_t
+struct MaxBandSoundData_t
 {
-	float MaxBinNormalizedPower;
-	int16_t MaxBinIndex;
-	int16_t TotalBins;
+	double MaxBandNormalizedPower;
+	int16_t MaxBandIndex;
+	int16_t TotalBands;
 };
 
 #endif

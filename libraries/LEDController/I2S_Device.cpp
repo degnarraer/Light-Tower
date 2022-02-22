@@ -162,8 +162,8 @@ int I2S_Device::ReadSamples()
 		  int DataBufferIndex = m_BytesPerSample * i;
 		  for(int j = 0; j < m_BytesPerSample; ++j)
 		  {
-			m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + j];
-			m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[DataBufferIndex + m_BytesPerSample + j];
+			m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + j];
+			m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + m_BytesPerSample + j];
 		  }
 		}
 		if(NULL != m_Callee) 
@@ -242,7 +242,7 @@ void I2S_Device::ProcessEventQueue()
   if(NULL != m_i2s_event_queue)
   {
     i2s_event_t i2sEvent = {};
-    uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);    
+    uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);   
     // Iterate over all events in the i2s event queue
     //for (uint8_t i = 0; i < i2sMsgCount; ++i)
     for( int i = 0; i < i2sMsgCount; ++i )

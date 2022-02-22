@@ -27,15 +27,13 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 							   , i2s_channel_fmt_t i2s_Channel_Fmt
 							   , i2s_comm_format_t i2s_CommFormat
 							   , i2s_channel_t i2s_channel
+							   , bool Use_APLL
 							   , size_t BufferCount
 							   , size_t BufferSize
-							   , size_t OutputQueueSampleCount 
-							   , size_t QueueCount
 							   , int SerialClockPin
 							   , int WordSelectPin
 							   , int SerialDataInPin
 							   , int SerialDataOutPin ): NamedItem(Title)
-													   , QueueManager(Title + "_QueueManager")
 													   , m_BTSink(BTSink)
 													   , m_I2S_PORT(i2S_PORT)
 													   , m_i2s_Mode(Mode)
@@ -44,10 +42,9 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 													   , m_Channel_Fmt(i2s_Channel_Fmt)
 													   , m_CommFormat(i2s_CommFormat)
 													   , m_i2s_channel(i2s_channel)
+													   , m_Use_APLL(Use_APLL)
 													   , m_BufferCount(BufferCount)
 													   , m_BufferSize(BufferSize)
-													   , m_OutputQueueSampleCount(OutputQueueSampleCount)
-													   , m_QueueCount(QueueCount)
 													   , m_SerialClockPin(SerialClockPin)
 													   , m_WordSelectPin(WordSelectPin)
 													   , m_SerialDataInPin(SerialDataInPin)
@@ -57,7 +54,6 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 }
 Bluetooth_Sink::~Bluetooth_Sink()
 {
-	if(NULL != m_ItemConfig) delete m_ItemConfig;
 	FreeMemory();
 }
 
@@ -65,18 +61,11 @@ void Bluetooth_Sink::Setup()
 {
 	Serial << GetTitle() << ": Setup\n";
 	m_BytesPerSample = m_BitsPerSample/8;
-	m_ChannelBytesToRead = m_BytesPerSample * m_OutputQueueSampleCount;
-	m_SampleCount = m_TotalBytesToRead * m_BytesPerSample;
-	m_TotalBytesToRead  = m_ChannelBytesToRead * 2;
-	m_ChannelSampleCount = m_ChannelBytesToRead * m_BytesPerSample;
-	m_ConfigCount = 2;
-	m_ItemConfig = new DataItemConfig_t[m_ConfigCount]
-	{
-		{ "R_BT",	DataType_Int32_t,	m_OutputQueueSampleCount,    Transciever_RX,   m_QueueCount },
-		{ "L_BT", 	DataType_Int32_t,	m_OutputQueueSampleCount,    Transciever_RX,   m_QueueCount }
-	};
+	m_ChannelBytesToRead = m_BytesPerSample * m_BufferSize;
+	m_TotalBytesToRead = m_ChannelBytesToRead * 2;
+	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
+	m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 	AllocateMemory();
-	SetupQueueManager(m_ConfigCount);
 }
 void Bluetooth_Sink::ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
 
@@ -87,35 +76,36 @@ void Bluetooth_Sink::data_received_callback()
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
-	static bool BTSinkDataError = false;
-	int SampleCount = length/m_BytesPerSample;
-	
-	QueueHandle_t RightQueue = GetQueueHandleRXForDataItem("R_BT");
-	QueueHandle_t LeftQueue = GetQueueHandleRXForDataItem("L_BT");
-	if( NULL != RightQueue && NULL != LeftQueue )
+	for(int i = 0; i < length; ++i)
 	{
-		int channel_samples_read = length / m_BytesPerSample / 2;
-		m_TheirByteCount = 0;
-		for(int i = 0; i < channel_samples_read; ++i)
+		mp_Data[m_OurByteCount] = data[i];
+		++m_OurByteCount;
+		if(m_OurByteCount >= m_TotalBytesToRead)
 		{
-			for(int j = 0; j < m_BytesPerSample; ++j)
+			m_OurByteCount = 0;
+			if(NULL != m_Callee) 
 			{
-				m_RightData[m_OurByteCount] = data[m_TheirByteCount];
-				m_LeftData[m_OurByteCount] = data[m_TheirByteCount + m_BytesPerSample];
-				++m_OurByteCount;
-				++m_TheirByteCount;
-				if(m_OurByteCount >= m_ChannelBytesToRead)
-				{
-					m_OurByteCount = 0;
-					if(NULL != m_Callee) m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightData, m_ChannelBytesToRead);
-					if(NULL != m_Callee) m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftData, m_ChannelBytesToRead);
-					PushValueToQueue(m_RightData, RightQueue, false, false);
-					PushValueToQueue(m_LeftData, LeftQueue, false, false);     
-				}
+				m_Callee->DataBufferModifyRX(GetTitle(), mp_Data, m_TotalBytesToRead, m_SampleCount);
 			}
+			if(I2S_CHANNEL_STEREO == m_i2s_channel)
+			{
+				for(int j = 0; j < m_ChannelSampleCount; ++j)
+				{
+					for(int k = 0; k < m_BytesPerSample; ++k)
+					{
+						int index1 = j * m_BytesPerSample + k;
+						int index2 = 2*j * m_BytesPerSample + k;
+						mp_RightData[index1] = mp_Data[index2];
+						mp_LeftData[index1] = mp_Data[index2 + m_BytesPerSample];
+					}
+				}
+				if(NULL != m_Callee) 
+				{
+					m_Callee->RightChannelDataBufferModifyRX(GetTitle(), mp_RightData, m_ChannelBytesToRead, m_ChannelSampleCount);
+					m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), mp_LeftData, m_ChannelBytesToRead, m_ChannelSampleCount);
+				}
+			}				
 		}
-		delete RightData;
-		delete LeftData;
 	}
 }
 
@@ -124,8 +114,9 @@ void Bluetooth_Sink::AllocateMemory()
 	if(false == m_MemoryIsAllocated)
 	{
 		Serial << GetTitle() << ": Allocating Memory\n";
-		m_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
-		m_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
+		mp_Data = (uint8_t*)malloc(m_TotalBytesToRead);
+		mp_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
+		mp_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		m_MemoryIsAllocated = true;
 		Serial << GetTitle() << ": Memory Allocated\n";
 	}
@@ -135,8 +126,9 @@ void Bluetooth_Sink::FreeMemory()
 	if(true == m_MemoryIsAllocated)
 	{
 		Serial << GetTitle() << ": Freeing Memory\n";
-		delete m_RightData;
-		delete m_LeftData;
+		delete mp_Data;
+		delete mp_RightData;
+		delete mp_LeftData;
 		m_MemoryIsAllocated = false;
 		Serial << GetTitle() << ": Memory Freed\n";
 	}
@@ -153,7 +145,7 @@ void Bluetooth_Sink::InstallDevice()
 	  .intr_alloc_flags = 1, // default interrupt priority
 	  .dma_buf_count = m_BufferCount,
 	  .dma_buf_len = m_BufferSize,
-	  .use_apll = false,
+	  .use_apll = m_Use_APLL,
 	  .tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
 	  .fixed_mclk = 0
 	};

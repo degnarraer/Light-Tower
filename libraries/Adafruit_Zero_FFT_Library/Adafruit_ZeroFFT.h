@@ -55,7 +55,7 @@ extern "C" {
 
 /**************************************************************************/
 /*!
-    @brief  run an FFT on an int16_t array. Note that this is run in place.
+    @brief run an FFT on an int16_t array. Note that this is run in place.
     @param source the data to FFT
     @param length the length of the data. This must be a power of 2 and less
    than or equal to ZERO_FFT_MAX

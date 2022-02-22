@@ -4,9 +4,8 @@
 #include "Tunes.h"
 
 TaskHandle_t ManagerTask;
-TaskHandle_t SoundProcessorTask;
 TaskHandle_t ProcessSoundPowerTask;
-TaskHandle_t FilterAndDownSampleTask;
+TaskHandle_t ProcessFFTTask;
 TaskHandle_t ProcessMaxBandTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
@@ -21,7 +20,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_CHANNEL_STEREO
                                  , true                               // Use APLL
                                  , I2S_BUFFER_COUNT                   // Buffer Count
-                                 , I2S_SAMPLE_COUNT                    // Buffer Size
+                                 , I2S_SAMPLE_COUNT                   // Buffer Size
                                  , 12                                 // Serial Clock Pin
                                  , 13                                 // Word Selection Pin
                                  , 14                                 // Serial Data In Pin
@@ -37,7 +36,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S_CHANNEL_STEREO
                                   , true                             // Use APLL
                                   , I2S_BUFFER_COUNT                 // Buffer Count
-                                  , I2S_SAMPLE_COUNT                  // Buffer Size
+                                  , I2S_SAMPLE_COUNT                 // Buffer Size
                                   , 25                               // Serial Clock Pin
                                   , 26                               // Word Selection Pin
                                   , I2S_PIN_NO_CHANGE                // Serial Data In Pin
@@ -86,17 +85,6 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    SoundProcessorTaskLoop,         // Function to implement the task
-    "SoundProcessorTask",           // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &SoundProcessorTask,            // Task handle.
-    0                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
     ProcessSoundPowerTaskLoop,      // Function to implement the task
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
@@ -108,12 +96,12 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    FilterAndDownSampleTaskLoop,    // Function to implement the task
-    "FilterAndDownSampleTask",      // Name of the task
+    ProcessFFTTaskLoop,             // Function to implement the task
+    "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
-    &FilterAndDownSampleTask,       // Task handle.
+    &ProcessFFTTask,                // Task handle.
     0                               // Core where the task should run
   );
   
@@ -166,16 +154,6 @@ void ManagerTaskLoop(void * parameter)
   }
 }
 
-void SoundProcessorTaskLoop(void * parameter)
-{
-  while(true)
-  {
-    yield();
-    m_SoundProcessor.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-
 void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
@@ -186,12 +164,12 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   }
 }
 
-void FilterAndDownSampleTaskLoop(void * parameter)
+void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
     yield();
-    m_SoundProcessor.FilterAndDownSample();
+    m_SoundProcessor.ProcessFFT();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -201,7 +179,6 @@ void ProcessMaxBandTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    m_SoundProcessor.ProcessMaxBand();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

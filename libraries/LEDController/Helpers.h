@@ -113,7 +113,7 @@ class QueueManager
 			return NULL;
 		}
 		
-		size_t GetCountForDataItem(String Name)
+		size_t GetSampleCountForDataItem(String Name)
 		{
 			if(NULL != m_DataItem)
 			{
@@ -127,7 +127,7 @@ class QueueManager
 			}
 			else
 			{
-				Serial << "GetByteCountForDataItem: NULL Data Item\n";
+				Serial << "GetSampleCountForDataItem: NULL Data Item\n";
 			}
 			return NULL;
 		}
@@ -305,11 +305,14 @@ class QueueManager
 				case DataType_Float:
 					return sizeof(float);
 				break;
+				case DataType_Double:
+					return sizeof(double);
+				break;
 				case DataType_ProcessedSoundData_t:
 					return sizeof(ProcessedSoundData_t);
 				break;
-				case DataType_MaxBinSoundData_t:
-					return sizeof(MaxBinSoundData_t);
+				case DataType_MaxBandSoundData_t:
+					return sizeof(MaxBandSoundData_t);
 				break;
 				default:
 					return 0;
@@ -502,11 +505,14 @@ class CommonUtils
 				case DataType_Float:
 					return sizeof(float);
 				break;
+				case DataType_Double:
+					return sizeof(double);
+				break;
 				case DataType_ProcessedSoundData_t:
 					return sizeof(ProcessedSoundData_t);
 				break;
-				case DataType_MaxBinSoundData_t:
-					return sizeof(MaxBinSoundData_t);
+				case DataType_MaxBandSoundData_t:
+					return sizeof(MaxBandSoundData_t);
 				break;
 				default:
 					return 0;

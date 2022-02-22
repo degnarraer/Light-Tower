@@ -23,7 +23,7 @@
 #define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
 #define SERIAL_FAIL_DEBUG false
-#define SERIAL_RX_LENGTH_LIMIT 500
+#define SERIAL_RX_LENGTH_LIMIT 1000
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <Helpers.h>
@@ -128,7 +128,7 @@ class SerialDataLinkCore: public DataSerializer
     SerialDataLinkCore(String Title, HardwareSerial &hSerial);
     virtual ~SerialDataLinkCore();
 	
-    void GetRXData();
+    void ProcessDataRXEventQueue();
     void ProcessDataTXEventQueue();
 	void SetSerialDataLinkDataItems(DataItem_t& DataItem, size_t Count) 
 	{ 
@@ -157,16 +157,14 @@ class SerialDataLinkCore: public DataSerializer
 	if(NULL != DataItem.QueueHandle_TX)
 	{
 		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
+		Serial.println(MessageCount);
 		if(MessageCount > 0)
 		{
 			size_t ByteCount = GetSizeOfDataType(DataItem.DataType) * DataItem.Count;
-			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
-			if ( xQueueReceive(DataItem.QueueHandle_TX, DataBuffer, 0) == pdTRUE )
+			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
 			{
-				memcpy(DataItem.Object, DataBuffer, ByteCount);
-				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.Object, DataItem.Count);
+				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
 			}
-			delete DataBuffer;
 		}
 	}
   }

@@ -35,7 +35,6 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  if(true == EVENT_HANDLER_DEBUG) Serial << "Setup i2s Event Handler\n";
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
   m_BT_In.Setup();
@@ -110,14 +109,6 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 {
   if(DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle())
   {
-    for(int i = 0; i < SampleCount; ++i)
-    {
-      if(true == PRINT_DATA_DEBUG)
-      {
-        Serial.println(((int32_t*)DataBuffer)[i]);
-      }
-      if(true == PRINT_DATA_DEBUG) Serial.println(m_Mic_In.GetDataBufferValue(DataBuffer, i));
-    }
     if(DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle())
     {
       assert(m_I2S_Out.GetBytesToRead() == ByteCount);
