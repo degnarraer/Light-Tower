@@ -54,7 +54,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
   if(NULL != QueueIn && NULL != Bands_QueueOut && NULL != MaxBin_QueueOut)
   {
     int32_t *InputDataBuffer = (int32_t*)GetDataBufferForDataItem("R_FFT_IN");
-    double *Bands_DataBuffer = (double*)m_SerialDataLink.GetDataBufferForDataItem("R_BANDS");
+    float *Bands_DataBuffer = (float*)m_SerialDataLink.GetDataBufferForDataItem("R_BANDS");
     MaxBandSoundData_t *MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("R_MAXBIN");
     size_t InputSampleCount = GetSampleCountForDataItem("R_FFT_IN");
     size_t InputDataBufferByteCount = GetByteCountForDataItem("R_FFT_IN");
@@ -131,7 +131,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
   if(NULL != QueueIn && NULL != Bands_QueueOut && NULL != MaxBin_QueueOut)
   {
     int32_t *InputDataBuffer = (int32_t*)GetDataBufferForDataItem("R_FFT_IN");
-    double *Bands_DataBuffer = (double*)m_SerialDataLink.GetDataBufferForDataItem("R_BANDS");
+    float *Bands_DataBuffer = (float*)m_SerialDataLink.GetDataBufferForDataItem("R_BANDS");
     MaxBandSoundData_t *MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("R_MAXBIN");
     size_t InputSampleCount = GetSampleCountForDataItem("L_FFT_IN");
     size_t InputDataBufferByteCount = GetByteCountForDataItem("L_FFT_IN");
@@ -303,11 +303,11 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
   }
 }
 
-void Sound_Processor::AssignToBins(double* Band_Data, double* FFT_Data, int16_t FFT_Size)
+void Sound_Processor::AssignToBins(float* Band_Data, double* FFT_Data, int16_t FFT_Size)
 {
   for(int i = 0; i < FFT_Size; ++i)
   {
-    double magnitude = FFT_Data[i];
+    float magnitude = FFT_Data[i];
     float freq = GetFreqForBin(i);
     int bandIndex = 0;
     if(freq > 0 && freq <= 22) bandIndex = 0;
