@@ -9,13 +9,4 @@
 #define NUMBER_OF_BANDS 32
 #define FFT_SIZE 1024
 
-//App Debugging
-#define STARTUP_DEBUG false
-#define TASK_STACK_SIZE_DEBUG false
-#define PRINT_DATA_DEBUG false
-#define HEAP_SIZE_DEBUG false
-#define EVENT_HANDLER_DEBUG false
-
-
-
 #endif TUNES_H

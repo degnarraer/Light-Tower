@@ -50,20 +50,21 @@ class Sound_Processor: public NamedItem
     void AllocateMemory();
     void FreeMemory();
     
+    //Adjustments
+    float m_Gain = 1.0;
+    float m_FFT_Gain = 1.0;
+    float m_FFT_Out_Gain = 1.0;
+    float m_Band_Gain = 1.0;
+    
     //CALCULATED OUTPUTS
-    arduinoFFT m_FFT = arduinoFFT(m_FFT_Right_Data_Real, m_FFT_Right_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
+    arduinoFFT m_R_FFT = arduinoFFT(m_FFT_Right_Data_Real, m_FFT_Right_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
+    arduinoFFT m_L_FFT = arduinoFFT(m_FFT_Left_Data_Real, m_FFT_Left_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
     double m_FFT_Right_Data_Real[FFT_SIZE];
     double m_FFT_Right_Data_Imaginary[FFT_SIZE];
     int32_t m_FFT_Right_Buffer_Index = 0;
     double m_FFT_Left_Data_Real[FFT_SIZE];
     double m_FFT_Left_Data_Imaginary[FFT_SIZE];
     int32_t m_FFT_Left_Buffer_Index = 0;
-
-    //Adjustments
-    float m_Gain = 1.0;
-    float m_FFT_Gain = 1.0;
-    float m_FFT_Out_Gain = 1.0;
-    float m_Band_Gain = 1.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
@@ -79,9 +80,9 @@ class Sound_Processor: public NamedItem
         Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
       }
     private:
-      int32_t m_RightPowerLoopCount = 0;
-      int32_t m_LeftPowerLoopCount = 0;
-      int16_t m_PowerLoopCountTarget = I2S_SAMPLE_RATE / 100;
+      int32_t m_RightPowerCalculationCount = 0;
+      int32_t m_LeftPowerCalculationCount = 0;
+      int16_t m_PowerCalculationsPerSecond = 100;
       void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
       void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
 

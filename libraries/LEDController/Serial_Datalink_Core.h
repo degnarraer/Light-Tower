@@ -20,7 +20,7 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG true
+#define SERIAL_TX_DEBUG false
 #define SERIAL_RX_DEBUG false
 #define SERIAL_FAIL_DEBUG false
 #define SERIAL_RX_LENGTH_LIMIT 1000

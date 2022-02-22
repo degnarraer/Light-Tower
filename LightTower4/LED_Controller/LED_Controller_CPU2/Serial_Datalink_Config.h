@@ -41,15 +41,17 @@ class SerialDataLink: public NamedItem
     size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
     
-    static const size_t m_ConfigCount = 6;
+    static const size_t m_ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_BANDS",   DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   10 },
-      { "L_BANDS",   DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   10 },
-      { "R_PSD",     DataType_ProcessedSoundData_t,   1,                  Transciever_TX,   10 },
-      { "L_PSD",     DataType_ProcessedSoundData_t,   1,                  Transciever_TX,   10 },
-      { "R_MAXBIN",  DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   10 },
-      { "L_MAXBIN",  DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   10 },
+      { "R_BANDS",      DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   10 },
+      { "L_BANDS",      DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   10 },
+      { "R_PSD",        DataType_ProcessedSoundData_t,   1,                  Transciever_TX,   10 },
+      { "L_PSD",        DataType_ProcessedSoundData_t,   1,                  Transciever_TX,   10 },
+      { "R_MAXBIN",     DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   10 },
+      { "L_MAXBIN",     DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   10 },
+      { "R_MAJOR_FREQ", DataType_Float,                  1,                  Transciever_TX,   10 },
+      { "L_MAJOR_FREQ", DataType_Float,                  1,                  Transciever_TX,   10 },
     };
 };
 

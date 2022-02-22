@@ -6,7 +6,6 @@
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
-TaskHandle_t ProcessMaxBandTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 
@@ -107,17 +106,6 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    ProcessMaxBandTaskLoop,         // Function to implement the task
-    "ProcessMaxBandTask",           // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &ProcessMaxBandTask,            // Task handle.
-    0                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
@@ -170,15 +158,6 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-
-void ProcessMaxBandTaskLoop(void * parameter)
-{
-  while(true)
-  {
-    yield();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
