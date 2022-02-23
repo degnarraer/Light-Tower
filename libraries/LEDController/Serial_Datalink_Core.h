@@ -20,9 +20,9 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG false
-#define SERIAL_RX_DEBUG false
-#define SERIAL_FAIL_DEBUG false
+#define SERIAL_TX_DEBUG true
+#define SERIAL_RX_DEBUG true
+#define SERIAL_FAIL_DEBUG true
 #define SERIAL_RX_LENGTH_LIMIT 1000
 #include <HardwareSerial.h>
 #include <Arduino.h>
@@ -116,8 +116,8 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<4000> docIn;
-		StaticJsonDocument<4000> docOut;
+		StaticJsonDocument<5000> docIn;
+		StaticJsonDocument<5000> docOut;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 };
@@ -143,13 +143,21 @@ class SerialDataLinkCore: public DataSerializer
   size_t m_DataItemsCount = 0;
   HardwareSerial &m_hSerial;
   String m_InboundStringData = "";
+  String m_Terminator = "\r\n";
   
   void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
   {
 	  String DataToSend = Serialize(Name, DataType, Object, Count);
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
-	  m_hSerial.print(DataToSend);
-	  m_hSerial.print("\r\n");
+	  if(m_hSerial.availableForWrite() >= (DataToSend.length() + m_Terminator.length()))
+	  {
+		m_hSerial.print(DataToSend);
+		m_hSerial.print(m_Terminator);
+	  }
+	  else
+	  {
+		  Serial << "Warning! Serial Port TX Overflow\n";
+	  }
   }
   
   void ProcessTXData(DataItem_t DataItem)

@@ -22,7 +22,7 @@
 #include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-
+#include "Statistical_Engine.h"
 #include "Serial_Datalink_Config.h"
 #include "Bluetooth_Device.h"
 
@@ -54,6 +54,7 @@ class Manager: public NamedItem
 {
   public:
     Manager( String Title
+           , StatisticalEngine &StatisticalEngine
            , SerialDataLink &SerialDataLink
            , Bluetooth_Sink &BT_In
            , I2S_Device &Mic_In
@@ -71,6 +72,7 @@ class Manager: public NamedItem
     void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
 
   private:
+    StatisticalEngine &m_StatisticalEngine;
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT_In;
     I2S_Device &m_Mic_In;

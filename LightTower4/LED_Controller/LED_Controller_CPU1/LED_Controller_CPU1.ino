@@ -1,11 +1,14 @@
 #include "Manager.h"
-#include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSink.h>
+#include "Tunes.h"
+#include "VisualizationPlayer.h"
+#include "Models.h"
 #include "Tunes.h"
 
 TaskHandle_t DataMoverTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
+TaskHandle_t VisualizationTask;
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
@@ -80,10 +83,16 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
                                   , 26                               // Word Selection Pin
                                   , I2S_PIN_NO_CHANGE                // Serial Data In Pin
                                   , 33 );                            // Serial Data Out Pin
-
+StatisticalEngine m_StatisticalEngine = StatisticalEngine();
+StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
+//
+VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 HardwareSerial m_hSerial = Serial2;
 SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
+CalculateFPS m_CalculateFPS("Main Loop", 1000);
+TaskScheduler m_Scheduler;
 Manager m_Manager = Manager("Manager"
+                           , m_StatisticalEngine
                            , m_SerialDataLink
                            , m_BT_In
                            , m_Mic_In
@@ -97,7 +106,10 @@ void setup() {
   m_hSerial.updateBaudRate(400000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
-  Serial.begin(500000);
+  //PC Serial Communication
+  Serial.end();
+  Serial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  Serial.updateBaudRate(500000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
   Serial.flush();
   if(true == STARTUP_DEBUG)
   {
@@ -117,12 +129,15 @@ void setup() {
   m_BTSink.set_on_data_received(data_received_callback);
   m_Manager.Setup();
   m_SerialDataLink.SetupSerialDataLink();
-   
+  m_Scheduler.AddTask(m_CalculateFPS);
+  m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
+  //m_Scheduler.AddTask(m_VisualizationPlayer);
+  
   xTaskCreatePinnedToCore
   (
     DataMoverTaskLoop,            // Function to implement the task
     "DataMoverTask",              // Name of the task
-    2000,                         // Stack size in words
+    4000,                         // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
     &DataMoverTask,               // Task handle.
@@ -131,9 +146,20 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
+    VisualizationTaskLoop,        // Function to implement the task
+    "VisualizationTask",          // Name of the task
+    10000,                        // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 1,     // Priority of the task
+    &VisualizationTask,           // Task handle.
+    0                             // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     SerialDataLinkTXTaskLoop,   // Function to implement the task
     "SerialDataLinkSendTask",   // Name of the task
-    2000,                       // Stack size in words
+    4000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 2,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
@@ -144,7 +170,7 @@ void setup() {
   (
     SerialDataLinkRXTaskLoop,   // Function to implement the task
     "SerialDataLinkRXTask",     // Name of the task
-    2000,                       // Stack size in words
+    4000,                       // Stack size in words
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 3,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
@@ -175,8 +201,7 @@ void loop() {
 }
 
 void DataMoverTaskLoop(void * parameter)
-{  
-  Serial << "Started Thread: DataMoverTaskLoop\n";
+{
   for(;;)
   {
     yield();
@@ -185,9 +210,18 @@ void DataMoverTaskLoop(void * parameter)
   }
 }
 
+void VisualizationTaskLoop(void * parameter)
+{
+  for(;;)
+  {
+    yield();
+    //m_Scheduler.RunScheduler();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
 void SerialDataLinkTXTaskLoop(void * parameter)
 {
-  Serial << "Started Thread: SerialDataLinkTXTaskLoop\n";
   for(;;)
   {
     yield();
@@ -198,7 +232,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 
 void SerialDataLinkRXTaskLoop(void * parameter)
 {
-  Serial << "Started Thread: SerialDataLinkReceiveTaskLoop\n";
   for(;;)
   {
     yield();

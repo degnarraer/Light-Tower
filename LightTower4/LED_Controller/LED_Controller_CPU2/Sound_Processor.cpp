@@ -48,19 +48,19 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
 {
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("R_FFT_IN");
   QueueHandle_t Bands_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_BANDS");
-  QueueHandle_t MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_MAXBIN");
+  QueueHandle_t MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_MAXBAND");
   QueueHandle_t MajorFreq_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
   if(NULL != QueueIn && NULL != Bands_QueueOut && NULL != MaxBin_QueueOut && NULL != MajorFreq_QueueOut)
   {
     int32_t *InputDataBuffer = (int32_t*)GetDataBufferForDataItem("R_FFT_IN");
     float *Bands_DataBuffer = (float*)m_SerialDataLink.GetDataBufferForDataItem("R_BANDS");
-    MaxBandSoundData_t *MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("R_MAXBIN");
+    MaxBandSoundData_t *MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("R_MAXBAND");
     size_t InputSampleCount = GetSampleCountForDataItem("R_FFT_IN");
     size_t InputDataBufferByteCount = GetByteCountForDataItem("R_FFT_IN");
     size_t Bands_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_BANDS");
     size_t Bands_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_BANDS");
-    size_t MaxBin_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAXBIN");
-    size_t MaxBin_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_MAXBIN");
+    size_t MaxBin_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAXBAND");
+    size_t MaxBin_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_MAXBAND");
     size_t MajorFreq_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAJOR_FREQ");
     size_t MajorFreq_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_MAJOR_FREQ");
     assert(NUMBER_OF_BANDS == Bands_SampleCount);
@@ -108,7 +108,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
               Bands_DataBuffer[k] = Bands_DataBuffer[k] / m_32BitMax * m_Band_Gain;
-              if(Bands_DataBuffer[k] > 1.0) Bands_DataBuffer[k] = 1.0;
+              //if(Bands_DataBuffer[k] > 1.0) Bands_DataBuffer[k] = 1.0;
               if(Bands_DataBuffer[k] > MaxBandMagnitude)
               {
                 MaxBandMagnitude = Bands_DataBuffer[k];
@@ -132,20 +132,20 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
 {
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("L_FFT_IN");
   QueueHandle_t Bands_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_BANDS");
-  QueueHandle_t MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_MAXBIN");
+  QueueHandle_t MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_MAXBAND");
   QueueHandle_t MajorFreq_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
 
   if(NULL != QueueIn && NULL != Bands_QueueOut && NULL != MaxBin_QueueOut && NULL != MajorFreq_QueueOut)
   {
     int32_t *InputDataBuffer = (int32_t*)GetDataBufferForDataItem("R_FFT_IN");
     float *Bands_DataBuffer = (float*)m_SerialDataLink.GetDataBufferForDataItem("L_BANDS");
-    MaxBandSoundData_t *MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("L_MAXBIN");
+    MaxBandSoundData_t *MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("L_MAXBAND");
     size_t InputSampleCount = GetSampleCountForDataItem("L_FFT_IN");
     size_t InputDataBufferByteCount = GetByteCountForDataItem("L_FFT_IN");
     size_t Bands_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_BANDS");
     size_t Bands_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_BANDS");
-    size_t MaxBin_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAXBIN");
-    size_t MaxBin_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_MAXBIN");
+    size_t MaxBin_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAXBAND");
+    size_t MaxBin_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_MAXBAND");
     size_t MajorFreq_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAJOR_FREQ");
     size_t MajorFreq_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_MAJOR_FREQ");
     assert(NUMBER_OF_BANDS == Bands_SampleCount);

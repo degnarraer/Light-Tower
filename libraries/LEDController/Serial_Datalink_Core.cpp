@@ -34,7 +34,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 	byte ch;
 	ch = m_hSerial.read();
 	m_InboundStringData += (char)ch;
-	if ( m_InboundStringData.substring(m_InboundStringData.length() - 2) == "\r\n" ) 
+	if ( m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 
 	{
 	  m_InboundStringData.trim();
 	  if(true == SERIAL_RX_DEBUG) Serial << m_InboundStringData << "\n";
@@ -44,7 +44,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 	}
 	if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
 	{
-		//Serial << "Warning! Serial Port RX Overflow\n";
+		Serial << "Warning! Serial Port RX Overflow\n";
 		m_InboundStringData.clear();
 	}
   }

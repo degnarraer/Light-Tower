@@ -19,10 +19,12 @@
 #include "Manager.h"
 
 Manager::Manager( String Title
+                , StatisticalEngine &StatisticalEngine
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Sink &BT_In
                 , I2S_Device &Mic_In
                 , I2S_Device &I2S_Out ): NamedItem(Title)
+                                       , m_StatisticalEngine(StatisticalEngine)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT_In(BT_In)
                                        , m_Mic_In(Mic_In)
@@ -41,8 +43,8 @@ void Manager::Setup()
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
   //m_BT_In.ResgisterForDataBufferRXCallback(this);
   pinMode(DAC_MUTE_PIN, OUTPUT);
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
+  //SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)
@@ -75,6 +77,48 @@ void Manager::ProcessEventQueue()
     default:
     break;
   }
+  
+  MoveDataFromQueueToQueue( "Manager 1"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_BANDS")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
+                          , m_SerialDataLink.GetByteCountForDataItem("R_BANDS")
+                          , false
+                          , false );
+
+  MoveDataFromQueueToQueue( "Manager 2"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_PSD")
+                          , m_SerialDataLink.GetByteCountForDataItem("R_PSD")
+                          , false
+                          , false );
+                          
+  MoveDataFromQueueToQueue( "Manager 3"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_MAXBAND")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBAND")
+                          , m_SerialDataLink.GetByteCountForDataItem("R_MAXBAND")
+                          , false
+                          , false );
+                          
+  MoveDataFromQueueToQueue( "Manager 4"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_SerialDataLink.GetByteCountForDataItem("L_BANDS")
+                          , false
+                          , false );
+
+  MoveDataFromQueueToQueue( "Manager 5"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_PSD")
+                          , m_SerialDataLink.GetByteCountForDataItem("L_PSD")
+                          , false
+                          , false );
+                          
+  MoveDataFromQueueToQueue( "Manager 6"
+                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_SerialDataLink.GetByteCountForDataItem("L_MAXBAND")
+                          , false
+                          , false );
 }
 
 void Manager::SetInputType(InputType_t Type)
