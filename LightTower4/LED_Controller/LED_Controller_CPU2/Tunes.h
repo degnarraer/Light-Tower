@@ -7,6 +7,6 @@
 #define I2S_BUFFER_COUNT 30
 #define I2S_SAMPLE_COUNT 128
 #define NUMBER_OF_BANDS 32
-#define FFT_SIZE 1024
+#define FFT_SIZE 512
 
 #endif TUNES_H
