@@ -83,9 +83,9 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
                                   , 26                               // Word Selection Pin
                                   , I2S_PIN_NO_CHANGE                // Serial Data In Pin
                                   , 33 );                            // Serial Data Out Pin
+
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
-//
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 HardwareSerial m_hSerial = Serial2;
 SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
@@ -98,18 +98,18 @@ Manager m_Manager = Manager("Manager"
                            , m_Mic_In
                            , m_I2S_Out);
 
-void setup() {  
+void setup() {
   //ESP32 Serial Communication
   m_hSerial.end();
-  m_hSerial.setRxBufferSize(1024);
-  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 19200 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(400000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
+  //m_hSerial.setRxBufferSize(1024);
+  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.updateBaudRate(115200); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
   //PC Serial Communication
   Serial.end();
-  Serial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
-  Serial.updateBaudRate(500000); //For whatever reason, if I set it to 500000 in setup, it crashes a lot of the time.
+  Serial.begin(9600); // 9600 bps, 8 bits no parity 1 stop bit
+  Serial.updateBaudRate(500000); // 500000 bps, 8 bits no parity 1 stop bit
   Serial.flush();
   if(true == STARTUP_DEBUG)
   {
@@ -131,7 +131,7 @@ void setup() {
   m_SerialDataLink.SetupSerialDataLink();
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
-  //m_Scheduler.AddTask(m_VisualizationPlayer);
+  m_Scheduler.AddTask(m_VisualizationPlayer);
   
   xTaskCreatePinnedToCore
   (
@@ -215,7 +215,7 @@ void VisualizationTaskLoop(void * parameter)
   for(;;)
   {
     yield();
-    //m_Scheduler.RunScheduler();
+    m_Scheduler.RunScheduler();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

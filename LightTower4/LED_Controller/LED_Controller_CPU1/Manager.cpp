@@ -43,8 +43,8 @@ void Manager::Setup()
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
   //m_BT_In.ResgisterForDataBufferRXCallback(this);
   pinMode(DAC_MUTE_PIN, OUTPUT);
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 void Manager::SetDACMuteState(Mute_State_t MuteState)

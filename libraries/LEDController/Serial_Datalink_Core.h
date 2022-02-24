@@ -20,8 +20,8 @@
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
 #define QUEUE_DEBUG false
-#define SERIAL_TX_DEBUG true
-#define SERIAL_RX_DEBUG true
+#define SERIAL_TX_DEBUG false
+#define SERIAL_RX_DEBUG false
 #define SERIAL_FAIL_DEBUG true
 #define SERIAL_RX_LENGTH_LIMIT 1000
 #include <HardwareSerial.h>
@@ -46,18 +46,18 @@ class DataSerializer: public CommonUtils
 		{
 			int32_t CheckSum = 0;
 			docOut.clear();
-			docOut["Name"] = Name;
-			docOut["Count"] = Count;
-			docOut["DataType"] = DataTypeStrings[DataType];
-			JsonArray data = docOut.createNestedArray("Data");
-			docOut["TotalByteCount"] = GetSizeOfDataType(DataType) * Count;
-			for(int i = 0; i < docOut["TotalByteCount"]; ++i)
+			docOut[m_NameTag] = Name;
+			docOut[m_CountTag] = Count;
+			docOut[m_DataTypeTag] = DataTypeStrings[DataType];
+			JsonArray data = docOut.createNestedArray(m_DataTag);
+			docOut[m_TotalByteCountTag] = GetSizeOfDataType(DataType) * Count;
+			for(int i = 0; i < docOut[m_TotalByteCountTag]; ++i)
 			{
 				uint8_t Value = ((uint8_t*)Object)[i];
 				CheckSum += Value;
 				data.add(Value);
 			}
-			docOut["CheckSum"] = CheckSum;
+			docOut[m_CheckSumTag] = CheckSum;
 			String Result;
 			serializeJson(docOut, Result);
 			return Result;
@@ -78,22 +78,22 @@ class DataSerializer: public CommonUtils
 					for(int i = 0; i < m_DataItemsCount; ++i)
 					{
 						String ItemName = (m_DataItems[i]).Name;
-						String DocName = docIn["Name"];
+						String DocName = docIn[m_NameTag];
 						if(true == ItemName.equals(DocName))
 						{
 							int CheckSumCalc = 0;
-							int CheckSumIn = docIn["CheckSum"];
-							int CountIn = docIn["Count"];
-							int ByteCountIn = docIn["TotalByteCount"];
-							int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn["DataType"]));
-							int DataByteCount = docIn["Data"].size();
+							int CheckSumIn = docIn[m_CheckSumTag];
+							int CountIn = docIn[m_CountTag];
+							int ByteCountIn = docIn[m_TotalByteCountTag];
+							int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn[m_DataTypeTag]));
+							int DataByteCount = docIn[m_DataTag].size();
 							uint8_t* Buffer = (uint8_t*)malloc(DataByteCount);
 							if(ByteCountInCalc == DataByteCount)
 							{
 								for(int j = 0; j < DataByteCount; ++j)
 								{
-									CheckSumCalc += (uint8_t)(docIn["Data"][j]);
-									Buffer[j] = (uint8_t)(docIn["Data"][j]);
+									CheckSumCalc += (uint8_t)(docIn[m_DataTag][j]);
+									Buffer[j] = (uint8_t)(docIn[m_DataTag][j]);
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
@@ -120,6 +120,14 @@ class DataSerializer: public CommonUtils
 		StaticJsonDocument<5000> docOut;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
+		
+		//Tags
+		String m_NameTag = "N";
+		String m_CheckSumTag = "S";
+		String m_CountTag = "C";
+		String m_DataTag = "D";
+		String m_DataTypeTag = "T";
+		String m_TotalByteCountTag = "B";
 };
 
 class SerialDataLinkCore: public DataSerializer
@@ -149,15 +157,8 @@ class SerialDataLinkCore: public DataSerializer
   {
 	  String DataToSend = Serialize(Name, DataType, Object, Count);
 	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
-	  if(m_hSerial.availableForWrite() >= (DataToSend.length() + m_Terminator.length()))
-	  {
-		m_hSerial.print(DataToSend);
-		m_hSerial.print(m_Terminator);
-	  }
-	  else
-	  {
-		  Serial << "Warning! Serial Port TX Overflow\n";
-	  }
+	  m_hSerial.print(DataToSend);
+	  m_hSerial.print(m_Terminator);
   }
   
   void ProcessTXData(DataItem_t DataItem)
