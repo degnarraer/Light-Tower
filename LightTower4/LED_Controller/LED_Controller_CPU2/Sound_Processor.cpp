@@ -186,7 +186,6 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
                 MaxFFTBinIndex = k;
               }
             }
-            
             double MaxBandMagnitude = 0.0;
             int16_t MaxBandIndex = 0;
             AssignToBins(Bands_DataBuffer, m_FFT_Left_Data_Real, FFT_SIZE);
