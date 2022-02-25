@@ -96,7 +96,7 @@ class Sound_Processor: public NamedItem
       void Sound_32Bit_44100Hz_Right_Channel_FFT();
       void Sound_32Bit_44100Hz_Left_Channel_FFT();
  
-    void AssignToBins(float* Band_Data, double* FFT_Data, int16_t FFT_Size);
+    void AssignToBands(double* Band_Data, double* FFT_Data, int16_t FFT_Size);
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;

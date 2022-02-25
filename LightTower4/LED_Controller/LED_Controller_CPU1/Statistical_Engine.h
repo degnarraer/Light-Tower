@@ -141,8 +141,8 @@ class StatisticalEngine : public NamedItem
     static const size_t m_ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_BANDS",      DataType_Float,                  32,  Transciever_RX,   1 },
-      { "L_BANDS",      DataType_Float,                  32,  Transciever_RX,   1 },
+      { "R_BANDS",      DataType_Double,                 32,  Transciever_RX,   1 },
+      { "L_BANDS",      DataType_Double,                 32,  Transciever_RX,   1 },
       { "R_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   1 },
       { "L_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   1 },
       { "R_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   1 },
@@ -186,11 +186,11 @@ class StatisticalEngine : public NamedItem
     size_t m_BandInputByteCount = sizeof(float) * m_NumBands;
     
     //Right Channel Input Sound Data
-    float m_Right_Band_Values[m_NumBands];
+    double m_Right_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Input Sound Data
-    float m_Left_Band_Values[m_NumBands];
+    double m_Left_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
     //Max Bin Sound Data
