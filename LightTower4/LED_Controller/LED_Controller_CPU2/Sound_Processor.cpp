@@ -122,11 +122,6 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             }
             MaxBandDataBuffer->MaxBandNormalizedPower = MaxBandMagnitude;
             MaxBandDataBuffer->MaxBandIndex = MaxBandIndex;
-            /*
-            Serial.print(GetFreqForBin(MaxFFTBinIndex));
-            Serial.print(" : ");
-            Serial.println(MaxFFTBinValue);
-            */
             MaxBandDataBuffer->TotalBands = Bands_SampleCount;
             PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, false);
             PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, false);
