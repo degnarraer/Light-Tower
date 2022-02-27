@@ -85,7 +85,7 @@ struct ProcessedSoundData_t
 
 struct MaxBandSoundData_t
 {
-	double MaxBandNormalizedPower;
+	float MaxBandNormalizedPower;
 	int16_t MaxBandIndex;
 	int16_t TotalBands;
 };

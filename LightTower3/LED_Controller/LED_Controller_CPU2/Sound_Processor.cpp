@@ -180,9 +180,9 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             float MaxFFTBinValue = 0;
             for(int16_t k=0; k < (FFT_SIZE >> 1); ++k)
             {
+              m_FFT_Left_Data_Real[k] = ( 2 * m_FFT_Left_Data_Real[k] / FFT_SIZE ) / m_32BitMax;
               if(m_FFT_Left_Data_Real[k] > MaxFFTBinValue)
               {
-                m_FFT_Left_Data_Real[k] = ( 2 * m_FFT_Left_Data_Real[k] / FFT_SIZE ) / m_32BitMax;
                 MaxFFTBinValue = m_FFT_Left_Data_Real[k];
                 MaxFFTBinIndex = k;
               }
@@ -244,7 +244,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
           { 
             int32_t peakToPeak = 0;
             peakToPeak = (ProcessedSoundData->Maximum - ProcessedSoundData->Minimum) * m_Gain;
-            ProcessedSoundData->NormalizedPower = (float)peakToPeak / (float)m_24BitMax;
+            ProcessedSoundData->NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
             if(peakToPeak > 0)
             {
               ProcessedSoundData->PowerDB = m_IMNP441_1PA_Offset + 20*log10((float)peakToPeak / m_IMNP441_1PA_Value);
@@ -295,7 +295,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
           { 
             int32_t peakToPeak = 0;
             peakToPeak = (ProcessedSoundData->Maximum - ProcessedSoundData->Minimum) * m_Gain;
-            ProcessedSoundData->NormalizedPower = (float)peakToPeak / (float)m_24BitMax;
+            ProcessedSoundData->NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
             if(peakToPeak > 0)
             {
               ProcessedSoundData->PowerDB = m_IMNP441_1PA_Offset + 20*log10((float)peakToPeak / m_IMNP441_1PA_Value);
