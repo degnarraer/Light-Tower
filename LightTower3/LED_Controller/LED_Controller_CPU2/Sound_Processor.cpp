@@ -101,7 +101,8 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             float MaxFFTBinValue = 0;
             for(int16_t k=0; k < (FFT_SIZE >> 1); ++k)
             {
-              m_FFT_Right_Data_Real[k] = ( 2 * m_FFT_Right_Data_Real[k] / FFT_SIZE ) / m_32BitMax;
+              m_FFT_Right_Data_Real[k] = ( ( 2 * m_FFT_Right_Data_Real[k] / FFT_SIZE ) / m_32BitMax ) * m_FFT_Out_Gain;
+              if(m_FFT_Right_Data_Real[k] > 1.0) m_FFT_Right_Data_Real[k] = 1.0;
               if(m_FFT_Right_Data_Real[k] > MaxFFTBinValue)
               {
                 MaxFFTBinValue = m_FFT_Right_Data_Real[k];
@@ -186,7 +187,8 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             float MaxFFTBinValue = 0;
             for(int16_t k=0; k < (FFT_SIZE >> 1); ++k)
             {
-              m_FFT_Left_Data_Real[k] = ( 2 * m_FFT_Left_Data_Real[k] / FFT_SIZE ) / m_32BitMax;
+              m_FFT_Left_Data_Real[k] = ( ( 2 * m_FFT_Left_Data_Real[k] / FFT_SIZE ) / m_32BitMax ) * m_FFT_Out_Gain;
+              if(m_FFT_Left_Data_Real[k] > 1.0) m_FFT_Left_Data_Real[k] = 1.0;
               if(m_FFT_Left_Data_Real[k] > MaxFFTBinValue)
               {
                 MaxFFTBinValue = m_FFT_Left_Data_Real[k];
