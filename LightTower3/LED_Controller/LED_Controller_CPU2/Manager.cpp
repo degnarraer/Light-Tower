@@ -55,7 +55,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
   {
     assert(m_I2S_Out.GetBytesToRead() == ByteCount);
     assert(m_I2S_Out.GetSampleCount() == SampleCount);
-    if(DeviceTitle == m_I2S_In.GetTitle())
+    if(DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
     {
       m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
     }
@@ -63,7 +63,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
-  if( DeviceTitle == m_I2S_In.GetTitle() )
+  if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
   {
     QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_PSD_IN");
     QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_FFT_IN");

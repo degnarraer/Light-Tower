@@ -151,14 +151,11 @@ void Manager::SetInputType(InputType_t Type)
 //Bluetooth_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
-  if(DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle())
+  if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
-    if(DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle())
-    {
-      assert(m_I2S_Out.GetBytesToRead() == ByteCount);
-      assert(m_I2S_Out.GetSampleCount() == SampleCount);
-      m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
-    }
+    assert(m_I2S_Out.GetBytesToRead() == ByteCount);
+    assert(m_I2S_Out.GetSampleCount() == SampleCount);
+    m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
