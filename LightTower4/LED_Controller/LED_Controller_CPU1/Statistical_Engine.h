@@ -186,11 +186,11 @@ class StatisticalEngine : public NamedItem
     size_t m_BandInputByteCount = sizeof(float) * m_NumBands;
     
     //Right Channel Input Sound Data
-    double m_Right_Band_Values[m_NumBands];
+    float m_Right_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
     //Left Channel Input Sound Data
-    double m_Left_Band_Values[m_NumBands];
+    float m_Left_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
     //Max Bin Sound Data

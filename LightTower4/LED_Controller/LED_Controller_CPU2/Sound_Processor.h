@@ -57,13 +57,13 @@ class Sound_Processor: public NamedItem
     float m_Band_Gain = 1.0;
     
     //CALCULATED OUTPUTS
-    arduinoFFT m_R_FFT = arduinoFFT(m_FFT_Right_Data_Real, m_FFT_Right_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
-    arduinoFFT m_L_FFT = arduinoFFT(m_FFT_Left_Data_Real, m_FFT_Left_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
-    double m_FFT_Right_Data_Real[FFT_SIZE];
-    double m_FFT_Right_Data_Imaginary[FFT_SIZE];
+    ArduinoFFT<float> m_R_FFT = ArduinoFFT<float>(m_FFT_Right_Data_Real, m_FFT_Right_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
+    ArduinoFFT<float> m_L_FFT = ArduinoFFT<float>(m_FFT_Left_Data_Real, m_FFT_Left_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
+    float m_FFT_Right_Data_Real[FFT_SIZE];
+    float m_FFT_Right_Data_Imaginary[FFT_SIZE];
     int32_t m_FFT_Right_Buffer_Index = 0;
-    double m_FFT_Left_Data_Real[FFT_SIZE];
-    double m_FFT_Left_Data_Imaginary[FFT_SIZE];
+    float m_FFT_Left_Data_Real[FFT_SIZE];
+    float m_FFT_Left_Data_Imaginary[FFT_SIZE];
     int32_t m_FFT_Left_Buffer_Index = 0;
 
     //DB Conversion taken from INMP441 Datasheet
@@ -96,7 +96,7 @@ class Sound_Processor: public NamedItem
       void Sound_32Bit_44100Hz_Right_Channel_FFT();
       void Sound_32Bit_44100Hz_Left_Channel_FFT();
  
-    void AssignToBands(double* Band_Data, double* FFT_Data, int16_t FFT_Size);
+    void AssignToBands(float* Band_Data, float* FFT_Data, int16_t FFT_Size);
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;
