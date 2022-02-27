@@ -109,7 +109,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
               }
             }
             
-            float MaxBandMagnitude = -1.0;
+            float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
             AssignToBands(Bands_DataBuffer, m_FFT_Right_Data_Real, FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
@@ -126,6 +126,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, false);
             PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, false);
             PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, false);
+            /*
+            Serial.print("1: ");
+            Serial.print(GetFreqForBin(MaxFFTBinIndex));
+            Serial.print(" : ");
+            Serial.println(MaxFFTBinValue);
+            */
           }
         }
       }
@@ -188,7 +194,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
               }
             }
             
-            float MaxBandMagnitude = -1.0;
+            float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
             AssignToBands(Bands_DataBuffer, m_FFT_Left_Data_Real, FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
@@ -205,6 +211,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, false);
             PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, false);
             PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, false);
+            /*
+            Serial.print("1: ");
+            Serial.print(GetFreqForBin(MaxFFTBinIndex));
+            Serial.print(" : ");
+            Serial.println(MaxFFTBinValue);
+            */
           }
         }
       }
