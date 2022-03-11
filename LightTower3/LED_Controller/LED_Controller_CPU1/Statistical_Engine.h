@@ -95,48 +95,51 @@ class StatisticalEngine : public NamedItem
     {
       FreeMemory();
     }
-    SoundState GetSoundState();
+    
+    //QueueManager
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
 
+    //SoundState
+    SoundState GetSoundState();
+    
+    //FFT Processing Status
     void SetProcessFFTStatus(bool value) {m_ProcessFFT = value; }
     bool GetProcessFFTStatus() {return m_ProcessFFT; }
-    void AllocateMemory();
-    void FreeMemory();
   
     //Main Data Interface
     int GetFFTBinIndexForFrequency(float freq);
     float GetFreqForBin(unsigned int bin);
     int GetFFTData(int position);  
-  
-    //QueueManager
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
 
     //Power Getters
     float GetNormalizedSoundPower();
 
     //SoundDataGetters
-    MaxBandSoundData_t GetMaxBandSoundData() 
-    {
-      if(m_Right_MaxBandSoundData.MaxBandNormalizedPower > m_Left_MaxBandSoundData.MaxBandNormalizedPower)
+    public:
+      MaxBandSoundData_t GetMaxBandSoundData() 
       {
-        return m_Right_MaxBandSoundData;
+        if(m_Right_MaxBandSoundData.MaxBandNormalizedPower > m_Left_MaxBandSoundData.MaxBandNormalizedPower)
+        {
+          return m_Right_MaxBandSoundData;
+        }
+        else
+        {
+          return m_Left_MaxBandSoundData;
+        }
       }
-      else
-      {
-        return m_Left_MaxBandSoundData;
-      }
-    }
-    MaxBandSoundData_t GetMaxBinRightSoundData() { return m_Right_MaxBandSoundData; }
-    MaxBandSoundData_t GetMaxBinLeftSoundData() { return m_Left_MaxBandSoundData; }
+      MaxBandSoundData_t GetMaxBinRightSoundData() { return m_Right_MaxBandSoundData; }
+      MaxBandSoundData_t GetMaxBinLeftSoundData() { return m_Left_MaxBandSoundData; }
     
-    //Band Data Getters
-    unsigned int GetNumberOfBands() { return m_NumBands; }
-    float GetBandValue(unsigned int band, unsigned int depth);
-    float GetBandAverage(unsigned band, unsigned int depth);
-    float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
+      //Band Data Getters
+      unsigned int GetNumberOfBands() { return m_NumBands; }
+      float GetBandValue(unsigned int band, unsigned int depth);
+      float GetBandAverage(unsigned band, unsigned int depth);
+      float GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands);
   
   private:
-  
+    void AllocateMemory();
+    void FreeMemory();
     bool m_MemoryIsAllocated = false;
     static const size_t m_ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
