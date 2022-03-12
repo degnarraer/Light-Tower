@@ -103,7 +103,7 @@ void setup() {
   m_hSerial.end();
   m_hSerial.setRxBufferSize(10000);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(200000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
+  m_hSerial.updateBaudRate(250000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
   //PC Serial Communication
@@ -137,7 +137,7 @@ void setup() {
   (
     VisualizationTaskLoop,        // Function to implement the task
     "VisualizationTask",          // Name of the task
-    20000,                        // Stack size in words
+    10000,                        // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
     &VisualizationTask,           // Task handle.
@@ -206,7 +206,7 @@ void DataMoverTaskLoop(void * parameter)
   {
     yield();
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -216,7 +216,7 @@ void VisualizationTaskLoop(void * parameter)
   {
     yield();
     m_Scheduler.RunScheduler();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
