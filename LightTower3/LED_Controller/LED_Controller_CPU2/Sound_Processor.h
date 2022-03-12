@@ -51,9 +51,9 @@ class Sound_Processor: public NamedItem
     void FreeMemory();
     
     //Adjustments
-    float m_Gain = 10.0;
+    float m_Gain = 1.0;
     float m_FFT_Gain = 1.0;
-    float m_FFT_Out_Gain = 5.0;
+    float m_FFT_Out_Gain = 1.0;
     float m_Band_Gain = 1.0;
     
     //CALCULATED OUTPUTS

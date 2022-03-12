@@ -50,7 +50,7 @@ void setup() {
   //ESP32 Serial Communication
   m_hSerial.end();
   m_hSerial.setRxBufferSize(10000);
-  m_hSerial.begin(9600, SERIAL_8E2, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.updateBaudRate(200000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
 
