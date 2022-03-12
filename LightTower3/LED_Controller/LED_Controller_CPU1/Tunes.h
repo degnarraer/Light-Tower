@@ -5,7 +5,7 @@
 #define I2S_SAMPLE_RATE 44100
 #define DAC_MUTE_PIN 22
 
-#define I2S_BUFFER_COUNT 10
+#define I2S_BUFFER_COUNT 30
 #define I2S_CHANNEL_SAMPLE_COUNT 128
 #define ANALOG_GAIN 1
 
@@ -15,7 +15,7 @@
 #define TASK_STACK_SIZE_DEBUG false
 #define HEAP_SIZE_DEBUG false
 
-//Output Debug Messages
+//Visualization Debug Messages
 const bool   debugMode = true;
 const int    debugLevel = 1;
 
@@ -70,14 +70,13 @@ const unsigned int DATA_PIN_STRIP2 = 19;  //MATRIX2 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP3 = 22;  //MATRIX3 PIN ASSIGNMENT
 const unsigned int DATA_PIN_STRIP4 = 23;  //MATRIX4 PIN ASSIGNMENT
 
-
 //FFT Tunes
 const int FFT_MAX = 2048;
 const unsigned int SAMPLE_RATE = 44100;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
 // VISUALIZATION TUNES
-const float MAX_DISPLAYED_FREQ = 10000;
+const float MAX_DISPLAYED_FREQ = 4000;
 
 //VU
 const unsigned int BAND_SAVE_LENGTH = 20;

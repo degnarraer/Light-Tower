@@ -51,7 +51,7 @@ class Sound_Processor: public NamedItem
     void FreeMemory();
     
     //Adjustments
-    float m_Gain = 1.0;
+    float m_Gain = 10.0;
     float m_FFT_Gain = 1.0;
     float m_FFT_Out_Gain = 5.0;
     float m_Band_Gain = 1.0;
@@ -82,7 +82,7 @@ class Sound_Processor: public NamedItem
     private:
       int32_t m_RightPowerCalculationCount = 0;
       int32_t m_LeftPowerCalculationCount = 0;
-      int16_t m_PowerCalculationsPerSecond = 100;
+      const int16_t m_PowerCalculationsPerSecond = 100;
       void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
       void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
 
@@ -102,13 +102,16 @@ class Sound_Processor: public NamedItem
     int16_t m_AudioBinLimit;
 
     //QueueManager Configuration
-    static const size_t m_ConfigCount = 4;
+    static const size_t m_ConfigCount = 6;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_PSD_IN",         DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "L_PSD_IN",         DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "R_FFT_IN",         DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "L_FFT_IN",         DataType_Int32_t,   I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "R_PSD_IN", DataType_Int32_t,               I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "L_PSD_IN", DataType_Int32_t,               I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "R_FFT_IN", DataType_Int32_t,               I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "L_FFT_IN", DataType_Int32_t,               I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "R_PSD",    DataType_ProcessedSoundData_t,  1,                  Transciever_TX,   1 },
+      { "L_PSD",    DataType_ProcessedSoundData_t,  1,                  Transciever_TX,   1 },
+      
     };
 };
 

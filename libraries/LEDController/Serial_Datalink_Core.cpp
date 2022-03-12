@@ -29,7 +29,8 @@ SerialDataLinkCore::~SerialDataLinkCore()
 
 void SerialDataLinkCore::ProcessDataRXEventQueue()
 {
-  for(int i = 0; i < m_hSerial.available(); ++i)
+  int32_t ByteCount = m_hSerial.available();
+  for(int i = 0; i < ByteCount; ++i)
   {
 	m_InboundStringData += (char)m_hSerial.read();
 	if ( m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 

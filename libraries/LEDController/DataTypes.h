@@ -78,7 +78,6 @@ struct DataItem_t
 struct ProcessedSoundData_t
 {
 	float NormalizedPower;
-	float PowerDB;
 	int32_t Minimum;
 	int32_t Maximum;
 };

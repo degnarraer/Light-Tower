@@ -102,7 +102,7 @@ void setup() {
   //ESP32 Serial Communication
   m_hSerial.end();
   m_hSerial.setRxBufferSize(10000);
-  m_hSerial.begin(9600, SERIAL_8N2, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(9600, SERIAL_8E2, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.updateBaudRate(200000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
   m_hSerial.flush();
   
@@ -135,23 +135,23 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    DataMoverTaskLoop,            // Function to implement the task
-    "DataMoverTask",              // Name of the task
-    4000,                         // Stack size in words
+    VisualizationTaskLoop,        // Function to implement the task
+    "VisualizationTask",          // Name of the task
+    20000,                        // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
-    &DataMoverTask,               // Task handle.
+    &VisualizationTask,           // Task handle.
     1                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    VisualizationTaskLoop,        // Function to implement the task
-    "VisualizationTask",          // Name of the task
-    10000,                        // Stack size in words
+    DataMoverTaskLoop,            // Function to implement the task
+    "DataMoverTask",              // Name of the task
+    4000,                         // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,     // Priority of the task
-    &VisualizationTask,           // Task handle.
+    configMAX_PRIORITIES - 2,     // Priority of the task
+    &DataMoverTask,               // Task handle.
     0                             // Core where the task should run
   );
   
@@ -161,9 +161,9 @@ void setup() {
     "SerialDataLinkSendTask",   // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
-    1                           // Core where the task should run
+    0                           // Core where the task should run
   );     
   
   xTaskCreatePinnedToCore
@@ -172,9 +172,9 @@ void setup() {
     "SerialDataLinkRXTask",     // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 4,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
-    1                           // Core where the task should run
+    0                           // Core where the task should run
   );
   Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
 }
