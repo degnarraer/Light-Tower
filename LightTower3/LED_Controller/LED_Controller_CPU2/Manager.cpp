@@ -21,20 +21,25 @@
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
                 , SerialDataLink &SerialDataLink
+                , BluetoothA2DPSource &BT_Source
                 , I2S_Device &I2S_In
                 , I2S_Device &I2S_OUT ): NamedItem(Title)
                                       , m_SoundProcessor(SoundProcessor)
                                       , m_SerialDataLink(SerialDataLink)
+                                      , m_BT_Source(BT_Source)
                                       , m_I2S_In(I2S_In)
                                       , m_I2S_Out(I2S_OUT)
 { 
+  ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 Manager::~Manager()
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 
 void Manager::Setup()
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   m_SoundProcessor.SetupSoundProcessor();
   m_I2S_In.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
@@ -44,6 +49,7 @@ void Manager::Setup()
 
 void Manager::ProcessEventQueue()
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   m_I2S_In.ProcessEventQueue();
   m_I2S_Out.ProcessEventQueue();
 }
@@ -51,6 +57,7 @@ void Manager::ProcessEventQueue()
 //I2S_Device_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   if( DeviceTitle == m_I2S_In.GetTitle() )
   {
     assert(m_I2S_Out.GetBytesToRead() == ByteCount);
@@ -58,11 +65,23 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
     if(DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
     {
       m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
+      if(true == m_BT_Source.is_connected())
+      {
+        int16_t *DatBuffer16 = (int16_t*)malloc(ByteCount/2);
+        for(int i = 0; i < SampleCount; ++i)
+        {
+          DatBuffer16[i] = ((int32_t)DataBuffer[i]) >> 16;
+        }
+        SoundData *BT_Sound_Data = new TwoChannelSoundData((Frame*)DatBuffer16, ByteCount/2);
+        m_BT_Source.write_data(BT_Sound_Data);
+        delete BT_Sound_Data;
+      }
     }
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
   {
     QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_PSD_IN");
@@ -80,6 +99,7 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
 }
 void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   if( DeviceTitle == m_I2S_In.GetTitle() )
   {
     QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_PSD_IN");

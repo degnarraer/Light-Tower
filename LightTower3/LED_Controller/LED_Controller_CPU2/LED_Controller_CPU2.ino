@@ -1,7 +1,10 @@
-
-#include <BluetoothA2DPSource.h>
 #include "Manager.h"
 #include "Tunes.h"
+
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "esp_log.h"
+
+#define c3_frequency  130.81
 
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
@@ -44,32 +47,34 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
 HardwareSerial m_hSerial = Serial2;
 SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 Sound_Processor m_SoundProcessor = Sound_Processor("Sound Processor", m_SerialDataLink);
-Manager m_Manager = Manager("Manager", m_SoundProcessor, m_SerialDataLink, m_I2S_In, m_I2S_Out);
+BluetoothA2DPSource a2dp_source;
+Manager m_Manager = Manager("Manager", m_SoundProcessor, m_SerialDataLink, a2dp_source, m_I2S_In, m_I2S_Out);
 
 void setup() {
   //ESP32 Serial Communication
   m_hSerial.end();
+  m_hSerial.flush();
   m_hSerial.setRxBufferSize(10000);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.updateBaudRate(250000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
-  m_hSerial.flush();
 
   //PC Serial Communication
-  Serial.end();
-  Serial.begin(9600); // 9600 bps, 8 bits no parity 1 stop bit
-  Serial.updateBaudRate(500000); // 500000 bps, 8 bits no parity 1 stop bit
-  Serial.flush();
+  Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
 
-  Serial << "Serial Datalink Configured\n";
-  Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
-  Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
-  Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
+  ESP_LOGD("Debug", "%s, ", __func__);
+  ESP_LOGI("Startup", "Serial Datalink Configured");
+  ESP_LOGI("Startup", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGI("Startup", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGI("Startup", "Apb Clock Frequency: %i Hz", getApbFrequency());
  
   m_I2S_Out.Setup();
   m_I2S_In.Setup();
   m_Manager.Setup();
   m_SerialDataLink.SetupSerialDataLink();
-
+  a2dp_source.set_auto_reconnect(true);
+  a2dp_source.start("Shock's iPhone");
+  ESP_LOGI("Startup", "Bluetooth Source Started");
+  
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,                // Function to implement the task
@@ -136,8 +141,9 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -146,6 +152,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
@@ -156,6 +163,7 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SoundProcessor.ProcessFFT();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
@@ -166,8 +174,9 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -176,7 +185,8 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

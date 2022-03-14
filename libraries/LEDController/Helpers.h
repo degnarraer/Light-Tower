@@ -9,13 +9,16 @@ class QueueManager
 	public:
 		QueueManager(String Title): m_Title(Title)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 		}
 		QueueManager(String Title, size_t DataItemCount): m_Title(Title)
 													    , m_DataItemCount(DataItemCount)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 		}
 		virtual ~QueueManager()
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(true == m_MemoryAllocated)FreeMemory();
 		}
 		virtual DataItemConfig_t* GetDataItemConfig() = 0;
@@ -26,17 +29,20 @@ class QueueManager
 		
 		void SetupQueueManager(size_t DataItemCount)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			m_DataItemCount = DataItemCount;
 			SetupQueueManager();
 		}
 		void SetupQueueManager()
 		{
-			Serial << m_Title << "Setup\n";
+			ESP_LOGV("Function Debug", "%s, ", __func__);
+			ESP_LOGD("CommonUtils", "%s: Setup", m_Title);
 			if(true == m_MemoryAllocated)FreeMemory();
 			AllocateMemory();
 		}
 		size_t GetQueueByteCountForDataItem(String Name)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -46,16 +52,17 @@ class QueueManager
 						return m_DataItem[i].TotalByteCount;
 					}
 				}
-				Serial << "GetQueueByteCountForDataItem: " << Name << ": Data Item Not Found\n";
+				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name);
 			}
 			else
 			{
-				Serial << "GetQueueByteCountForDataItem: " << Name << ": NULL Data Item\n";
+				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name);
 			}
 			return NULL;
 		}
 		QueueHandle_t GetQueueHandleRXForDataItem(String Name)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -65,17 +72,18 @@ class QueueManager
 						return m_DataItem[i].QueueHandle_RX;
 					}
 				}
-				Serial << "GetQueueHandleRXForDataItem: " << Name << ": Data Item Not Found\n";
+				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name);
 			}
 			else
 			{
-				Serial << "GetQueueHandleRXForDataItem: " << Name << ": NULL Data Item\n";
+				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name);
 			}
 			return NULL;
 		}
 
 		QueueHandle_t GetQueueHandleTXForDataItem(String Name)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -85,17 +93,18 @@ class QueueManager
 						return m_DataItem[i].QueueHandle_TX;
 					}
 				}
-				Serial << "GetQueueHandleTXForDataItem: " << Name << ": Data Item Not Found\n";
+				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name);
 			}
 			else
 			{
-				Serial << "GetQueueHandleTXForDataItem: " << Name << ": NULL Data Item\n";
+				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name);
 			}
 			return NULL;
 		}
 		
 		size_t GetByteCountForDataItem(String Name)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -108,13 +117,14 @@ class QueueManager
 			}
 			else
 			{
-				Serial << "GetByteCountForDataItem: NULL Data Item\n";
+				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
 			}
 			return NULL;
 		}
 		
 		size_t GetSampleCountForDataItem(String Name)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -127,13 +137,14 @@ class QueueManager
 			}
 			else
 			{
-				Serial << "GetSampleCountForDataItem: NULL Data Item\n";
+				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
 			}
 			return NULL;
 		}
 		
 		void* GetDataBufferForDataItem(String Name)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -146,35 +157,40 @@ class QueueManager
 			}
 			else
 			{
-				Serial << "GetByteCountForDataItem: NULL Data Item\n";
+				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
 			}
 			return NULL;
 		}
 		
 		void PushValueToTXQueue(void* Value, String Name, bool WaitForOpenSlot)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
 				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
 				{
-					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");} 
+					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE)
+					{
+						ESP_LOGE("CommonUtils", "Error! Error Setting Queue.");
+					} 
 				}
 			}
 			else
 			{
-				Serial << "PushValueToTXQueue: NULL Queue\n";
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 		}
 		
 		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(Queue);
-				if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
 					void* DataBuffer = (void*)malloc(ByteCount);
@@ -188,7 +204,7 @@ class QueueManager
 						}
 						else
 						{
-							Serial << "Error Receiving Queue!\n";
+							ESP_LOGV("CommonUtils", "Error Receiving Queue!");
 						}
 					}
 					delete DataBuffer;
@@ -196,7 +212,7 @@ class QueueManager
 			}
 			else
 			{
-				Serial << "GetValueFromRXQueue: NULL Queue\n";
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 			return result;
 		}
@@ -208,8 +224,9 @@ class QueueManager
 		bool m_MemoryAllocated = false;
 		void AllocateMemory()
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
-			Serial << m_Title << ": Allocating " << m_DataItemCount << " DataItem's for a total of " << ConfigBytes << " bytes of Memory\n";
+			ESP_LOGI("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title, m_DataItemCount, ConfigBytes);
 			m_DataItemCount = GetDataItemConfigCount();
 			DataItemConfig_t* ConfigFile = GetDataItemConfig();
 			m_DataItem = new DataItem_t[m_DataItemCount];
@@ -235,7 +252,7 @@ class QueueManager
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
 					break;
 				}
-				Serial << m_Title << ": Try Configuring DataItem " << i+1 << " of " << m_DataItemCount << "\n"; 
+				ESP_LOGI("CommonUtils", "%s: Try Configuring DataItem %i of %i", m_Title, i+1, m_DataItemCount);
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;
 				m_DataItem[i].Count = ConfigFile[i].Count;
@@ -247,6 +264,7 @@ class QueueManager
 		}
 		void FreeMemory()
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
 				delete m_DataItem[i].DataBuffer;
@@ -273,12 +291,17 @@ class QueueManager
 		
 		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			if(true == DebugMessage) Serial << "Creating " << QueueCount << " Queue(s): " << Name << " of size: " << ByteCount << " for a total of " << ByteCount*QueueCount <<"\n";
+			ESP_LOGV("Function Debug", "%s, ", __func__);
+			ESP_LOGV("Helpers", "Creating %i Queue(s), Named: %s of size: %i for a total of %i", QueueCount, Name, ByteCount, ByteCount*QueueCount);
 			Queue = xQueueCreate(QueueCount, ByteCount );
-			if(Queue == NULL){Serial.println("Error creating the Queue");}
+			if(Queue == NULL)
+			{
+				ESP_LOGE("Helpers", "ERROR! Error creating the Queue.");
+			}
 		}
 		size_t GetSizeOfDataType(DataType_t DataType)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			switch(DataType)
 			{
 				case DataType_Int8_t:
@@ -327,6 +350,7 @@ class CommonUtils
 		template <class T>
 		T ScaleWithLimits(T& Input, T Scalar, T LowerLimit, T UpperLimit)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			double Result = (double)Input * (double) Scalar;
 			if(Result > UpperLimit)
 			{
@@ -341,10 +365,11 @@ class CommonUtils
 			
 		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
+		  ESP_LOGV("Function Debug", "%s, ", __func__);
 		  if(NULL != TakeFromQueue && NULL != GiveToQueue)
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-			if(true == DebugMessage) Serial << "Queue Messages Waiting: " << QueueCount << " Byte Count: " << ByteCount << "\n";
+			ESP_LOGV("Helpers", "MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", QueueCount, ByteCount);
 			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
@@ -353,33 +378,37 @@ class CommonUtils
 			  {
 				if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
 				{
-					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
-					if(true == DebugMessage)Serial << "Added Data to Queue\n";
+					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
+					{
+						ESP_LOGV("Helpers", "Error Setting Queue");
+					}
+					ESP_LOGV("Helpers", "Added Data to Queue");
 				}
 				else
 				{
-					if(true == DebugMessage)Serial << DebugTitle << ": Queue Full\n";
+					ESP_LOGW("Helpers", "WARNING! Queue Full.");
 				}	
 			  }
 			  else
 			  {
-				Serial << "Error Receiving Queue!";
+			    ESP_LOGE("Helpers", "ERROR! Error Receiving Queue.");
 			  }
 			}
 			delete DataBuffer;
 		  }
 		  else
 		  {
-		     if(true == DebugMessage)Serial << "MoveDataFromQueueToQueue: " << DebugTitle << " NULL Queue\n";
+			ESP_LOGW("CommonUtils", "NULL Queue");
 		  }
 		}
 		
 		void MoveDataFromQueueToQueues(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
+		  ESP_LOGV("Function Debug", "%s, ", __func__);
 		  if(NULL != TakeFromQueue)
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-			if(true == DebugMessage) Serial << "Queue Messages Waiting: " << QueueCount << " Receiver Queue Count: " << GiveToQueueCount << " Byte Count: " << ByteCount << "\n";
+			ESP_LOGV("Helpers", "Queue Messages Waiting: %i Receiver Queue Count: %i Byte Count: %i", QueueCount, GiveToQueueCount, ByteCount);
 			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
@@ -390,58 +419,69 @@ class CommonUtils
 						QueueHandle_t GiveToQueue = GiveToQueues[j];
 						if(NULL != GiveToQueue)
 						{
-							if(true == DebugMessage)Serial << "Adding Data to Queue\n";
+							ESP_LOGV("Helpers", "Adding Data to Queue");
 							if(true == WaitForOpenSlot || uxQueueSpacesAvailable(GiveToQueue) > 0)
 							{
-								if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+								if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
+								{
+									ESP_LOGV("Helpers", "Error Setting Queue");
+								}
 							}
 							else
 							{
-								if(true == DebugMessage)Serial << "MoveDataFromQueueToQueues: " << DebugTitle << ": Queue Full\n";
+								ESP_LOGW("CommonUtils", "%s: Queue Full!", DebugTitle);
 							}
 						}
 						else
 						{
-							Serial << "MoveDataFromQueueToQueues: " << DebugTitle << ": NULL Queue\n";
+							ESP_LOGW("CommonUtils", "%s: NULL Queue!", DebugTitle);
 						}
 					}						
 				}
 				else
 				{
-					Serial << "Error Receiving Queue!";
+					ESP_LOGW("CommonUtils", "%s: Error Receiving Queue!", DebugTitle);
 				}
 			}
 			delete DataBuffer;
 		  }
 		  else
 		  {
-		     if(true == DebugMessage)Serial << "MoveDataFromQueueToQueues: " << DebugTitle << " NULL Queue\n";
+			ESP_LOGW("CommonUtils", "%s: NULL Queue!", DebugTitle);
 		  }
 		}
 
 		void CreateQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			if(true == DebugMessage) Serial << "Creating Queue of size: " << ByteCount << "\n";
+			ESP_LOGV("Function Debug", "%s, ", __func__);
+			ESP_LOGV("Helpers", "Creating Queue of size: %i", ByteCount);
 			Queue = xQueueCreate(QueueCount, ByteCount );
-			if(Queue == NULL){Serial.println("Error creating the Queue");}
+			if(Queue == NULL)
+			{
+				ESP_LOGE("CommonUtils", "ERROR! Error creating Queue.");
+			}
 		}
 		
 		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot, bool DebugMessage)
 		{
+			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != Queue)
 			{
 				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
 				{
-					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE){Serial.println("Error Setting Queue");}
+					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE)
+					{
+						ESP_LOGE("CommonUtils", "ERROR! Error Pushing Value to Queue.");
+					}
 				}
 				else
 				{
-					if(true == DebugMessage)Serial << "Queue Full\n";
+					ESP_LOGW("CommonUtils", "WARNING! Queue Full.");
 				}
 			}
 			else
 			{
-				Serial << "PushValueToQueue: NULL Queue\n";
+				ESP_LOGW("CommonUtils", "WARNING! NULL Queue!");
 			}
 		}
 		
@@ -450,7 +490,7 @@ class CommonUtils
 			if(NULL != Queue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(Queue);
-				if(true == DebugMessage) Serial << "Queue Count: " << QueueCount << "\n";
+				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
@@ -463,7 +503,7 @@ class CommonUtils
 						}
 						else
 						{
-							Serial << "Error Receiving Queue!\n";
+							ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
 						}
 					}
 					delete DataBuffer;
@@ -471,7 +511,7 @@ class CommonUtils
 			}
 			else
 			{
-				Serial << "GetValueFromQueue: NULL Queue\n";
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 		}
 		

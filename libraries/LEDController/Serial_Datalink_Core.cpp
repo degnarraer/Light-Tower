@@ -22,13 +22,16 @@ SerialDataLinkCore::SerialDataLinkCore(String Title, HardwareSerial &hSerial): m
 																			 , m_hSerial(hSerial)
 																			 , DataSerializer()
 {
+	ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 SerialDataLinkCore::~SerialDataLinkCore()
 {
+	ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 
 void SerialDataLinkCore::ProcessDataRXEventQueue()
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   int32_t ByteCount = m_hSerial.available();
   for(int i = 0; i < ByteCount; ++i)
   {
@@ -36,14 +39,14 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 	if ( m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 
 	{
 	  m_InboundStringData.trim();
-	  if(true == SERIAL_RX_DEBUG) Serial << m_InboundStringData << "\n";
+	  ESP_LOGV("Serial_Datalink", "Received Data: %d", m_InboundStringData);
 	  DeSerialize(m_InboundStringData);
 	  m_InboundStringData.clear();
 	  break; //Only process 1 message at a time
 	}
 	if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
 	{
-		if(true == SERIAL_FAIL_DEBUG)Serial << "Warning! Serial Port RX Overflow\n";
+		ESP_LOGW("Serial_Datalink", "WARNING! Serial Port RX Overflow.");
 		m_InboundStringData.clear();
 	}
   }
@@ -51,6 +54,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 
 void SerialDataLinkCore::ProcessDataTXEventQueue()
 {
+  ESP_LOGV("Function Debug", "%s, ", __func__);
   if(NULL != m_DataItems)
   {
     for(int i = 0; i < m_DataItemsCount; ++i)

@@ -5,6 +5,9 @@
 #include "Models.h"
 #include "Tunes.h"
 
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "esp_log.h"
+
 TaskHandle_t DataMoverTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
@@ -42,14 +45,18 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 
 //Callbacks for Bluetooth Sink
 // for esp_a2d_connection_state_t see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp_a2dp.html#_CPPv426esp_a2d_connection_state_t
-void connection_state_changed(esp_a2d_connection_state_t state, void *ptr){
-  Serial.println(m_BTSink.to_str(state));
+void connection_state_changed(esp_a2d_connection_state_t state, void *ptr)
+{
+  ESP_LOGV("Debug", "%s, ", __func__);
+  ESP_LOGD("Startup", "State: %s", m_BTSink.to_str(state));
 }
 
 //Callbacks for Bluetooth Sink
 // for esp_a2d_audio_state_t see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp_a2dp.html#_CPPv421esp_a2d_audio_state_t
-void audio_state_changed(esp_a2d_audio_state_t state, void *ptr){
-  Serial.println(m_BTSink.to_str(state));
+void audio_state_changed(esp_a2d_audio_state_t state, void *ptr)
+{
+  ESP_LOGV("Debug", "%s, ", __func__);
+  ESP_LOGD("Startup", "State: %s", m_BTSink.to_str(state));
 }
 
 I2S_Device m_Mic_In = I2S_Device( "Microphone In"
@@ -101,30 +108,19 @@ Manager m_Manager = Manager("Manager"
 void setup() {
   //ESP32 Serial Communication
   m_hSerial.end();
+  m_hSerial.flush();
   m_hSerial.setRxBufferSize(10000);
   m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.updateBaudRate(250000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
-  m_hSerial.flush();
   
   //PC Serial Communication
-  Serial.end();
-  Serial.begin(9600); // 9600 bps, 8 bits no parity 1 stop bit
-  Serial.updateBaudRate(500000); // 500000 bps, 8 bits no parity 1 stop bit
-  Serial.flush();
-  if(true == STARTUP_DEBUG)
-  {
-    Serial << "Xtal Clock Frequency: " << getXtalFrequencyMhz() << " MHz\n";
-    Serial << "CPU Clock Frequency: " << getCpuFrequencyMhz() << " MHz\n";
-    Serial << "Apb Clock Frequency: " << getApbFrequency() << " Hz\n";
+  Serial.begin(500000);
+  ESP_LOGD("Debug", "%s, ", __func__);
+  ESP_LOGI("Startup", "Serial Datalink Configured");
+  ESP_LOGI("Startup", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGI("Startup", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGI("Startup", "Apb Clock Frequency: %i Hz", getApbFrequency());
   
-    Serial << "Data Type Sizes:\n";
-    Serial << "QueueHandle_t: " << sizeof(QueueHandle_t) << "\n";
-    Serial << "Transciever_T: " << sizeof(Transciever_T) << "\n";
-    Serial << "DataType_t: " << sizeof(DataType_t) << "\n";
-    Serial << "size_t: " << sizeof(size_t) << "\n";
-    Serial << "void: " << sizeof(void) << "\n";
-    Serial << "String: " << sizeof(String) << "\n";
-  }
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);
   m_Manager.Setup();
@@ -176,7 +172,7 @@ void setup() {
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
-  Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
+  ESP_LOGI("Debug", "Free Heap: %s", ESP.getFreeHeap());
 }
 
 unsigned long myTime = millis();
@@ -186,15 +182,18 @@ void loop() {
   {
     myTime = millis();
     size_t StackSizeThreshold = 100;
-    if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )Serial << "WARNING! DataMoverTask: Stack Size Low\n";
-    if( uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) < StackSizeThreshold )Serial << "WARNING! SerialDataLinkTXTask: Stack Size Low\n";
-    if( uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) < StackSizeThreshold )Serial << "WARNING! SerialDataLinkRXTask: Stack Size Low\n";
-    if(true == HEAP_SIZE_DEBUG)Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
+    if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! DataMoverTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkTXTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkRXTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
+    
+    ESP_LOGI("LED_Controller1", "DataMoverTaskTask: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
     if(true == TASK_STACK_SIZE_DEBUG)
     {
-      Serial << "DataMoverTaskTask: " << uxTaskGetStackHighWaterMark(DataMoverTask) << "\n";
-      Serial << "SerialDataLinkTXTask: " << uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) << "\n";
-      Serial << "SerialDataLinkRXTask: " << uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) << "\n";
+      ESP_LOGI("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
+      ESP_LOGI("LED_Controller1", "SerialDataLinkTXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkTXTask));
+      ESP_LOGI("LED_Controller1", "SerialDataLinkRXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkRXTask));
+      ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
       Serial << "\n";
     }
   }
@@ -205,6 +204,7 @@ void DataMoverTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
@@ -215,8 +215,9 @@ void VisualizationTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Scheduler.RunScheduler();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -225,8 +226,9 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -235,7 +237,8 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     yield();
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

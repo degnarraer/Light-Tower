@@ -23,6 +23,7 @@
 #include <Helpers.h>
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
+#include <BluetoothA2DPSource.h>
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -32,6 +33,7 @@ class Manager: public NamedItem
     Manager( String Title
            , Sound_Processor &SoundProcessor
            , SerialDataLink &SerialDataLink
+           , BluetoothA2DPSource &BT_Source
            , I2S_Device &I2S_In
            , I2S_Device &I2S_Out );
     virtual ~Manager();
@@ -46,6 +48,7 @@ class Manager: public NamedItem
   private:
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;
+    BluetoothA2DPSource &m_BT_Source;
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
 };

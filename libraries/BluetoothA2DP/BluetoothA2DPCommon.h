@@ -40,6 +40,7 @@
 #include "nvs_flash.h"
 #include "SoundData.h"
 #include "VolumeControl.h"
+#include "Streaming.h";
 
 #ifdef ARDUINO_ARCH_ESP32
 #include "esp32-hal-log.h"

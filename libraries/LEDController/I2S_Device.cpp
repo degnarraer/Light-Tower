@@ -57,6 +57,7 @@ I2S_Device::~I2S_Device()
 
 void I2S_Device::Setup()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_BytesPerSample = m_BitsPerSample/8;
     m_ChannelSampleCount = m_BufferSize;
 	m_SampleCount = m_ChannelSampleCount * 2;
@@ -85,6 +86,7 @@ void I2S_Device::Setup()
 
 void I2S_Device::StartDevice()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(false == m_Is_Running)
 	{
 	  InstallDevice();
@@ -95,6 +97,7 @@ void I2S_Device::StartDevice()
 
 void I2S_Device::StopDevice()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(true == m_Is_Running)
 	{
 		i2s_stop(m_I2S_PORT);
@@ -105,6 +108,7 @@ void I2S_Device::StopDevice()
 		
 int32_t I2S_Device::GetDataBufferValue(uint8_t* DataBuffer, size_t index)
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	switch(m_BytesPerSample)
 	{
 	  case 1:
@@ -122,6 +126,7 @@ int32_t I2S_Device::GetDataBufferValue(uint8_t* DataBuffer, size_t index)
 
 void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value)
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	switch(m_BytesPerSample)
 	{
 	  case 1:
@@ -139,19 +144,24 @@ void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t v
 
 void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
-  memcpy(m_SoundBufferData, SoundBufferData, ByteCount);
-  WriteSamples(m_SoundBufferData, ByteCount);
-  if(true == DATA_TX_DEBUG) Serial <<  GetTitle() << "Sound Buffer Data Ready\n";
+    ESP_LOGV("Function Debug", "%s, ", __func__);
+	memcpy(m_SoundBufferData, SoundBufferData, ByteCount);
+	WriteSamples(m_SoundBufferData, ByteCount);
+	ESP_LOGV("i2S Device", "%s: Sound Buffer Data Ready.", GetTitle());
 }
 
 int I2S_Device::ReadSamples()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	size_t bytes_read = 0;
 	size_t channel_bytes_read = 0;
 	// read from i2s
 	i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
 	channel_bytes_read = bytes_read / 2;
-	if(bytes_read != m_TotalBytesToRead)Serial << GetTitle() << ": Error Reading All Bytes. Read: " << bytes_read << " out of " << m_TotalBytesToRead << "\n";
+	if(bytes_read != m_TotalBytesToRead)
+	{
+		ESP_LOGE("i2S Device", "%s: Error Reading All Bytes. Read: %i out of %i.", GetTitle(), bytes_read, m_TotalBytesToRead);
+	}
 	if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, m_SampleCount);
 
 	if(I2S_CHANNEL_STEREO == m_i2s_channel)
@@ -177,16 +187,18 @@ int I2S_Device::ReadSamples()
 
 int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 {
-  // write to i2s
-  size_t bytes_written = 0;
-  i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
-  if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Bytes\n"; }
-  return bytes_written;
+    ESP_LOGV("Function Debug", "%s, ", __func__);
+	// write to i2s
+	size_t bytes_written = 0;
+	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
+	if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Bytes\n"; }
+	return bytes_written;
 }
 
 void I2S_Device::InstallDevice()
 {
-	Serial << "Configuring I2S Device\n";
+    ESP_LOGV("Function Debug", "%s, ", __func__);
+	ESP_LOGI("i2S Device", "%s: Configuring I2S Device.", GetTitle());
 	AllocateMemory();
     
   esp_err_t err;
@@ -216,72 +228,80 @@ void I2S_Device::InstallDevice()
   // Configuring the I2S driver and pins.
   // This function must be called before any I2S driver read/write operations.
   err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queue);
-  if (err != ESP_OK) {
-    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed installing driver: " << err << "\n";
+  if (err != ESP_OK)
+  {
+	ESP_LOGE("i2S Device", "%s: Failed installing driver: %s", GetTitle(), err);
     ESP.restart();
   }
-  if (m_i2s_event_queue == NULL)
+  if (NULL == m_i2s_event_queue)
   {
-    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed to setup event queue.\n";
+	ESP_LOGE("i2S Device", "%s: Failed to setup event queue!", GetTitle());
+	ESP.restart();
   }
   err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
-  if (err != ESP_OK) {
-    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed setting clock: " << err << "\n";
-    ESP.restart();
+  if (err != ESP_OK)
+  {
+	ESP_LOGE("i2S Device", "%s: Failed setting clock: %s", GetTitle(), err);
+	ESP.restart();
   }
   err = i2s_set_pin(m_I2S_PORT, &pin_config);
-  if (err != ESP_OK) {
-    if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Failed setting pin: " << err << "\n";
+  if (err != ESP_OK)
+  {
+	ESP_LOGE("i2S Device", "%s: Failed setting pin: %s", GetTitle(), err);
     ESP.restart();
   }
-  if(false == DATA_RX_DEBUG)Serial << GetTitle() << ": Driver Installed.\n";
+  ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle());
 }
 
 void I2S_Device::ProcessEventQueue()
 {
-  if(NULL != m_i2s_event_queue)
-  {
-    i2s_event_t i2sEvent = {};
-    uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);   
-    // Iterate over all events in the i2s event queue
-    //for (uint8_t i = 0; i < i2sMsgCount; ++i)
-    for( int i = 0; i < i2sMsgCount; ++i )
+    ESP_LOGV("Function Debug", "%s, ", __func__);
+	if(NULL != m_i2s_event_queue)
 	{
-	  if(true == QUEUE_DEBUG)Serial << GetTitle() << " Queue Count: " << i2sMsgCount << "\n";
-      // Take next event from queue
-      if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, 0) == pdTRUE )
-      {
-        switch (i2sEvent.type)
-        {
-            case I2S_EVENT_DMA_ERROR:
-                Serial.println("I2S_EVENT_DMA_ERROR");
-                break;
-            case I2S_EVENT_TX_DONE:
-                if(true == QUEUE_INDEPTH_DEBUG)Serial << GetTitle() << " TX\n";
-                break;
-            case I2S_EVENT_RX_DONE:
-                {
-                  if(true == QUEUE_INDEPTH_DEBUG)Serial << GetTitle() << " RX\n";
-                  ReadSamples();
-                }
-                break;
-            case I2S_EVENT_MAX:
-                Serial.println("I2S_EVENT_MAX");
-                break;
-        }
-      }
-    } 
-  }
+		i2s_event_t i2sEvent = {};
+		uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);   
+		// Iterate over all events in the i2s event queue
+		//for (uint8_t i = 0; i < i2sMsgCount; ++i)
+		for( int i = 0; i < i2sMsgCount; ++i )
+		{
+		  ESP_LOGV("i2S Device", "%s: Queue Count: %i", GetTitle(), i2sMsgCount);
+		  // Take next event from queue
+		  if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, 0) == pdTRUE )
+		  {
+			switch (i2sEvent.type)
+			{
+				case I2S_EVENT_DMA_ERROR:
+				    ESP_LOGE("i2S Device", "%s: I2S_EVENT_DMA_ERROR", GetTitle());
+					break;
+				case I2S_EVENT_TX_DONE:
+					ESP_LOGV("i2S Device", "%s: TX Done", GetTitle());
+					break;
+				case I2S_EVENT_RX_DONE:
+					{
+					  ESP_LOGV("i2S Device", "%s: RX", GetTitle());
+					  ReadSamples();
+					}
+					break;
+				case I2S_EVENT_MAX:
+					ESP_LOGW("i2S Device", "I2S_EVENT_MAX");
+					break;
+			}
+		  }
+		}
+	}
 }
 void I2S_Device::AllocateMemory()
 {
-	Serial << GetTitle() << ": Allocating Memory.\n";    
+    ESP_LOGV("Function Debug", "%s, ", __func__);
+	ESP_LOGD("i2S Device", "%s: Allocating Memory.", GetTitle());  
 	m_SoundBufferData = (uint8_t*)malloc(m_TotalBytesToRead);
 	m_RightChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 	m_LeftChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
 }
 void I2S_Device::FreeMemory()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
+	ESP_LOGD("i2S Device", "%s: Freeing Memory.", GetTitle());  
 	delete m_SoundBufferData;
 	delete m_RightChannel_SoundBufferData;
 	delete m_LeftChannel_SoundBufferData;

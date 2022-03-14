@@ -68,7 +68,7 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				if(true == SERIAL_FAIL_DEBUG)Serial << "Deserialize failed: " << error.f_str() << "\n";
+				ESP_LOGW("Serial_Datalink", "Deserialize failed: %s", error.f_str());
 				return;
 			}
 			else
@@ -101,12 +101,12 @@ class DataSerializer: public CommonUtils
 								}
 								else
 								{
-									if(true == SERIAL_FAIL_DEBUG)Serial << "Deserialize failed: Checksum Error\n";
+									ESP_LOGW("Serial_Datalink", "Deserialize failed: Checksum Error!");
 								}
 							}
 							else
 							{
-								if(true == SERIAL_FAIL_DEBUG)Serial << "Deserialize failed: Byte Count Error\n";
+								ESP_LOGW("Serial_Datalink", "Deserialize failed: Byte Count Error!");
 							}
 							delete Buffer;
 							return;
@@ -156,7 +156,7 @@ class SerialDataLinkCore: public DataSerializer
   void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
   {
 	  String DataToSend = Serialize(Name, DataType, Object, Count);
-	  if(true == SERIAL_TX_DEBUG) Serial.println(DataToSend);
+	  ESP_LOGV("Serial_Datalink", "Encoded Data: %d", DataToSend);
 	  m_hSerial.print(DataToSend);
 	  m_hSerial.print(m_Terminator);
   }

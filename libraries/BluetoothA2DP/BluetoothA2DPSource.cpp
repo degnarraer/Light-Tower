@@ -322,7 +322,7 @@ void BluetoothA2DPSource::bt_app_task_handler(void *arg)
 void BluetoothA2DPSource::bt_app_task_start_up(void)
 {
     s_bt_app_task_queue = xQueueCreate(10, sizeof(app_msg_t));
-    xTaskCreatePinnedToCore(ccall_bt_app_task_handler, "BtAppT", 2048, NULL, task_priority, &s_bt_app_task_handle, 0);
+    xTaskCreate(ccall_bt_app_task_handler, "BtAppT", 2048, NULL, task_priority, &s_bt_app_task_handle);
     return;
 }
 
@@ -635,7 +635,7 @@ void BluetoothA2DPSource::bt_app_av_sm_hdlr(uint16_t event, void *param)
 
 void BluetoothA2DPSource::bt_app_av_state_unconnected(uint16_t event, void *param)
 {
-    switch (event) {
+	switch (event) {
         case ESP_A2D_CONNECTION_STATE_EVT: {
                 esp_a2d_cb_param_t *a2d = (esp_a2d_cb_param_t *)(param);
                 if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED) {
@@ -663,7 +663,7 @@ void BluetoothA2DPSource::bt_app_av_state_unconnected(uint16_t event, void *para
 
 void BluetoothA2DPSource::bt_app_av_state_connecting(uint16_t event, void *param)
 {
-    esp_a2d_cb_param_t *a2d = NULL;
+	esp_a2d_cb_param_t *a2d = NULL;
     switch (event) {
         case ESP_A2D_CONNECTION_STATE_EVT: {
             a2d = (esp_a2d_cb_param_t *)(param);
@@ -758,7 +758,7 @@ void BluetoothA2DPSource::bt_app_av_media_proc(uint16_t event, void *param)
 
 void BluetoothA2DPSource::bt_app_av_state_connected(uint16_t event, void *param)
 {
-    esp_a2d_cb_param_t *a2d = NULL;
+	esp_a2d_cb_param_t *a2d = NULL;
     switch (event) {
         case ESP_A2D_CONNECTION_STATE_EVT: {
             a2d = (esp_a2d_cb_param_t *)(param);
@@ -792,7 +792,7 @@ void BluetoothA2DPSource::bt_app_av_state_connected(uint16_t event, void *param)
 
 void BluetoothA2DPSource::bt_app_av_state_disconnecting(uint16_t event, void *param)
 {
-    esp_a2d_cb_param_t *a2d = NULL;
+	esp_a2d_cb_param_t *a2d = NULL;
     switch (event) {
         case ESP_A2D_CONNECTION_STATE_EVT: {
             a2d = (esp_a2d_cb_param_t *)(param);
@@ -835,7 +835,7 @@ void BluetoothA2DPSource::bt_app_rc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc
 
 void BluetoothA2DPSource::bt_av_volume_changed(void)
 {
-    if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST, &s_avrc_peer_rn_cap,
+	if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST, &s_avrc_peer_rn_cap,
                                            ESP_AVRC_RN_VOLUME_CHANGE)) {
         esp_avrc_ct_send_register_notification_cmd(APP_RC_CT_TL_RN_VOLUME_CHANGE, ESP_AVRC_RN_VOLUME_CHANGE, 0);
     }

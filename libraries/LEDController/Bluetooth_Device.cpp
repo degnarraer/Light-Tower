@@ -50,16 +50,18 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 													   , m_SerialDataInPin(SerialDataInPin)
 													   , m_SerialDataOutPin(SerialDataOutPin)
 {
-
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
 }
 Bluetooth_Sink::~Bluetooth_Sink()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
 	FreeMemory();
 }
 
 void Bluetooth_Sink::Setup()
 {
-	Serial << GetTitle() << ": Setup\n";
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
+	ESP_LOGD("Bluetooth_Device", "%s: Setup", GetTitle());
 	m_BytesPerSample = m_BitsPerSample/8;
 	m_ChannelBytesToRead = m_BytesPerSample * m_BufferSize;
 	m_TotalBytesToRead = m_ChannelBytesToRead * 2;
@@ -72,10 +74,12 @@ void Bluetooth_Sink::ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* c
 //Callbacks for Bluetooth 
 void Bluetooth_Sink::data_received_callback() 
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
 }
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
 	for(int i = 0; i < length; ++i)
 	{
 		mp_Data[m_OurByteCount] = data[i];
@@ -110,31 +114,33 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 
 void Bluetooth_Sink::AllocateMemory()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
 	if(false == m_MemoryIsAllocated)
 	{
-		Serial << GetTitle() << ": Allocating Memory\n";
+		ESP_LOGD("Bluetooth_Device", "%s: Allocating Memory", GetTitle());
 		mp_Data = (uint8_t*)malloc(m_TotalBytesToRead);
 		mp_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		mp_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		m_MemoryIsAllocated = true;
-		Serial << GetTitle() << ": Memory Allocated\n";
+		ESP_LOGD("Bluetooth_Device", "%s: Memory Allocated", GetTitle());
 	}
 }
 void Bluetooth_Sink::FreeMemory()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__); 
 	if(true == m_MemoryIsAllocated)
 	{
-		Serial << GetTitle() << ": Freeing Memory\n";
+		ESP_LOGD("Bluetooth_Device", "%s: Freeing Memory", GetTitle());
 		delete mp_Data;
 		delete mp_RightData;
 		delete mp_LeftData;
 		m_MemoryIsAllocated = false;
-		Serial << GetTitle() << ": Memory Freed\n";
+		ESP_LOGD("Bluetooth_Device", "%s: Memory Freed", GetTitle());
 	}
 }
 void Bluetooth_Sink::InstallDevice()
 {
-	Serial << GetTitle() << ": Installing Device\n";    
+    ESP_LOGV("Function Debug", "%s, ", __func__);   
 	static i2s_config_t i2s_config = {
 	  .mode = m_i2s_Mode,
 	  .sample_rate = m_SampleRate, // updated automatically by A2DP
@@ -162,28 +168,30 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(200);
-	Serial << GetTitle() << ": Device Installed\n";
+	ESP_LOGD("Bluetooth_Device", "%s: Device Installed", GetTitle());
 }
 void Bluetooth_Sink::StartDevice()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(false == m_Is_Running)
 	{
-		Serial << GetTitle() << ": Starting\n";
+		ESP_LOGD("Bluetooth_Device", "Starting Bluetooth");
 		AllocateMemory();
 		InstallDevice();
 		m_BTSink.start("LED Tower Of Power");
 		m_Is_Running = true;
-		Serial << GetTitle() << ": Started\n";
+		ESP_LOGD("Bluetooth_Device", "Bluetooth Started");
 	}
 }
 void Bluetooth_Sink::StopDevice()
 {
+    ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(true == m_Is_Running)
 	{
-		Serial << GetTitle() << ": Stopping\n";
+		ESP_LOGD("Bluetooth_Device", "Stopping Bluetooth");
 		m_BTSink.stop();
 		FreeMemory();
 		m_Is_Running = false;
-		Serial << GetTitle() << ": Stopped\n";
+		ESP_LOGD("Bluetooth_Device", "Bluetooth Stopped");
 	}
 }
