@@ -108,7 +108,8 @@ Manager m_Manager = Manager("Manager"
 void setup()
 {
   //ESP32 Serial Communication
-  m_hSerial.begin(200000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.setRxBufferSize(1024);
+  m_hSerial.begin(500000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
   
   //PC Serial Communication
