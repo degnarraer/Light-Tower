@@ -92,8 +92,10 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
       assert(m_I2S_Out.GetChannelSampleCount() == SampleCount);
       assert(m_SoundProcessor.GetQueueByteCountForDataItem("R_PSD_IN") == ByteCount);
       assert(m_SoundProcessor.GetQueueByteCountForDataItem("R_FFT_IN") == ByteCount);
-      PushValueToQueue(DataBuffer, Queue1, false, false);
-      PushValueToQueue(DataBuffer, Queue2, false, false);
+      static bool R_PSD_IN_Push_Successful = true;
+      PushValueToQueue(DataBuffer, Queue1, false, "Right Channel Data: R_PSD_IN", R_PSD_IN_Push_Successful);
+      static bool R_FFT_IN_Push_Successful = true;
+      PushValueToQueue(DataBuffer, Queue2, false, "Right Channel Data: R_FFT_IN", R_FFT_IN_Push_Successful);
     }
   }
 }
@@ -110,8 +112,10 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
       assert(m_I2S_Out.GetChannelSampleCount() == SampleCount);
       assert(m_SoundProcessor.GetQueueByteCountForDataItem("L_PSD_IN") == ByteCount);
       assert(m_SoundProcessor.GetQueueByteCountForDataItem("L_FFT_IN") == ByteCount);
-      PushValueToQueue(DataBuffer, Queue1, false, false);
-      PushValueToQueue(DataBuffer, Queue2, false, false);
+      static bool L_PSD_IN_Push_Successful = true;
+      PushValueToQueue(DataBuffer, Queue1, false, "Left Channel Data: L_PSD_IN", L_PSD_IN_Push_Successful);
+      static bool L_FFT_IN_Push_Successful = true;
+      PushValueToQueue(DataBuffer, Queue2, false, "Left Channel Data: L_FFT_IN", L_FFT_IN_Push_Successful);
     } 
   }
 }

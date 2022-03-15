@@ -117,12 +117,12 @@ void Bluetooth_Sink::AllocateMemory()
     ESP_LOGV("Function Debug", "%s, ", __func__); 
 	if(false == m_MemoryIsAllocated)
 	{
-		ESP_LOGD("Bluetooth_Device", "%s: Allocating Memory", GetTitle());
+		ESP_LOGD("Bluetooth_Device", "%s: Allocating Memory", GetTitle().c_str());
 		mp_Data = (uint8_t*)malloc(m_TotalBytesToRead);
 		mp_RightData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		mp_LeftData = (uint8_t*)malloc(m_ChannelBytesToRead);
 		m_MemoryIsAllocated = true;
-		ESP_LOGD("Bluetooth_Device", "%s: Memory Allocated", GetTitle());
+		ESP_LOGD("Bluetooth_Device", "%s: Memory Allocated", GetTitle().c_str());
 	}
 }
 void Bluetooth_Sink::FreeMemory()
@@ -130,12 +130,12 @@ void Bluetooth_Sink::FreeMemory()
     ESP_LOGV("Function Debug", "%s, ", __func__); 
 	if(true == m_MemoryIsAllocated)
 	{
-		ESP_LOGD("Bluetooth_Device", "%s: Freeing Memory", GetTitle());
+		ESP_LOGD("Bluetooth_Device", "%s: Freeing Memory", GetTitle().c_str());
 		delete mp_Data;
 		delete mp_RightData;
 		delete mp_LeftData;
 		m_MemoryIsAllocated = false;
-		ESP_LOGD("Bluetooth_Device", "%s: Memory Freed", GetTitle());
+		ESP_LOGD("Bluetooth_Device", "%s: Memory Freed", GetTitle().c_str());
 	}
 }
 void Bluetooth_Sink::InstallDevice()
@@ -168,7 +168,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(200);
-	ESP_LOGD("Bluetooth_Device", "%s: Device Installed", GetTitle());
+	ESP_LOGD("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice()
 {

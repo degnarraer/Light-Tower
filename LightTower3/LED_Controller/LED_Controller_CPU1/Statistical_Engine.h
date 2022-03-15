@@ -144,14 +144,14 @@ class StatisticalEngine : public NamedItem
     static const size_t m_ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "R_BANDS",      DataType_Float,                  32,  Transciever_RX,   1 },
-      { "L_BANDS",      DataType_Float,                  32,  Transciever_RX,   1 },
-      { "R_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   1 },
-      { "L_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   1 },
-      { "R_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   1 },
-      { "L_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   1 },
-      { "R_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   1 },
-      { "L_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   1 },
+      { "R_BANDS",      DataType_Float,                  32,  Transciever_RX,   5 },
+      { "L_BANDS",      DataType_Float,                  32,  Transciever_RX,   5 },
+      { "R_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   5 },
+      { "L_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   5 },
+      { "R_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   5 },
+      { "L_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   5 },
+      { "R_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   5 },
+      { "L_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   5 },
     };
 
     bool m_ProcessFFT = true;

@@ -52,20 +52,17 @@ Manager m_Manager = Manager("Manager", m_SoundProcessor, m_SerialDataLink, a2dp_
 
 void setup() {
   //ESP32 Serial Communication
-  m_hSerial.end();
+  m_hSerial.begin(200000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
-  m_hSerial.setRxBufferSize(10000);
-  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(250000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
-
+    
   //PC Serial Communication
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
 
-  ESP_LOGD("Debug", "%s, ", __func__);
-  ESP_LOGI("Startup", "Serial Datalink Configured");
-  ESP_LOGI("Startup", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGI("Startup", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGI("Startup", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGD("LED_Controller2", "%s, ", __func__);
+  ESP_LOGI("LED_Controller2", "Serial Datalink Configured");
+  ESP_LOGI("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGI("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGI("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
  
   m_I2S_Out.Setup();
   m_I2S_In.Setup();
@@ -73,7 +70,7 @@ void setup() {
   m_SerialDataLink.SetupSerialDataLink();
   a2dp_source.set_auto_reconnect(true);
   a2dp_source.start("Shock's iPhone");
-  ESP_LOGI("Startup", "Bluetooth Source Started");
+  ESP_LOGI("LED_Controller2", "Bluetooth Source Started");
   
   xTaskCreatePinnedToCore
   (
@@ -129,7 +126,7 @@ void setup() {
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
-  Serial << "Free Heap: " << ESP.getFreeHeap() << "\n";
+  ESP_LOGI("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
 }
 void loop()
 {
@@ -141,7 +138,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
@@ -152,9 +149,9 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -163,9 +160,9 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -174,9 +171,9 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -185,8 +182,8 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   while(true)
   {
     yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

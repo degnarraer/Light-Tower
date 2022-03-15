@@ -226,7 +226,7 @@ class QueueManager
 		{
 			ESP_LOGV("Function Debug", "%s, ", __func__);
 			size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
-			ESP_LOGI("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title, m_DataItemCount, ConfigBytes);
+			ESP_LOGI("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title.c_str(), m_DataItemCount, ConfigBytes);
 			m_DataItemCount = GetDataItemConfigCount();
 			DataItemConfig_t* ConfigFile = GetDataItemConfig();
 			m_DataItem = new DataItem_t[m_DataItemCount];
@@ -252,7 +252,7 @@ class QueueManager
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
 					break;
 				}
-				ESP_LOGI("CommonUtils", "%s: Try Configuring DataItem %i of %i", m_Title, i+1, m_DataItemCount);
+				ESP_LOGI("CommonUtils", "%s: Try Configuring DataItem %i of %i", m_Title.c_str(), i+1, m_DataItemCount);
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;
 				m_DataItem[i].Count = ConfigFile[i].Count;
@@ -398,7 +398,7 @@ class CommonUtils
 		  }
 		  else
 		  {
-			ESP_LOGW("CommonUtils", "NULL Queue");
+			ESP_LOGW("CommonUtils", "WARNING! NULL Queue.");
 		  }
 		}
 		
@@ -429,25 +429,25 @@ class CommonUtils
 							}
 							else
 							{
-								ESP_LOGW("CommonUtils", "%s: Queue Full!", DebugTitle);
+								ESP_LOGW("CommonUtils", "WARNING! %s: Queue Full.", DebugTitle.c_str());
 							}
 						}
 						else
 						{
-							ESP_LOGW("CommonUtils", "%s: NULL Queue!", DebugTitle);
+							ESP_LOGW("CommonUtils", "WARNING! %s: NULL Queue.", DebugTitle.c_str());
 						}
 					}						
 				}
 				else
 				{
-					ESP_LOGW("CommonUtils", "%s: Error Receiving Queue!", DebugTitle);
+					ESP_LOGW("CommonUtils", "WARNING! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
 			delete DataBuffer;
 		  }
 		  else
 		  {
-			ESP_LOGW("CommonUtils", "%s: NULL Queue!", DebugTitle);
+			ESP_LOGW("CommonUtils", "WARNING! %s: NULL Queue.", DebugTitle);
 		  }
 		}
 
@@ -462,7 +462,7 @@ class CommonUtils
 			}
 		}
 		
-		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot, bool DebugMessage)
+		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot, const String &DebugTitle, bool &DataPushHasErrored)
 		{
 			ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != Queue)
@@ -471,17 +471,29 @@ class CommonUtils
 				{
 					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE)
 					{
-						ESP_LOGE("CommonUtils", "ERROR! Error Pushing Value to Queue.");
+						if(false == DataPushHasErrored)
+						{
+							DataPushHasErrored = true;
+							ESP_LOGE("CommonUtils", "ERROR! %s: Error Pushing Value to Queue.", DebugTitle.c_str());
+						}
 					}
 				}
 				else
 				{
-					ESP_LOGW("CommonUtils", "WARNING! Queue Full.");
+					if(false == DataPushHasErrored)
+					{
+						DataPushHasErrored = true;
+						ESP_LOGW("CommonUtils", "WARNING! %s: Queue Full.", DebugTitle.c_str());
+					}
 				}
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! NULL Queue!");
+				if(false == DataPushHasErrored)
+				{
+					DataPushHasErrored = true;
+					ESP_LOGW("CommonUtils", "WARNING! %s: NULL Queue!", DebugTitle.c_str());
+				}
 			}
 		}
 		

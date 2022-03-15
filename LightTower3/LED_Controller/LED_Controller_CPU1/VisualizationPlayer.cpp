@@ -37,11 +37,11 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
   m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
 
-  bool testVisualization = false;
+  bool testVisualization = true;
   if(true == testVisualization)
   {
     m_Duration = 10000000;
-    m_CurrentVisualization = VUMeter3Band::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = ScrollingMaxBand::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }

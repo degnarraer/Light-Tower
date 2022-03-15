@@ -367,7 +367,7 @@ void BluetoothA2DPSink::app_task_handler(void *arg)
                 app_work_dispatched(&msg);
                 break;
             default:
-                ESP_LOGW(BT_APP_TAG, "%s, unhandled sig: %d", __func__, msg.sig);
+                ESP_LOGW(BT_APP_TAG, "WARNING! %s, unhandled sig: %d", __func__, msg.sig);
                 break;
             } // switch (msg.sig)
 

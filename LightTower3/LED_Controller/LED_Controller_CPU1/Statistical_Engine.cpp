@@ -125,13 +125,13 @@ void StatisticalEngine::RunMyScheduledTask()
 
 void StatisticalEngine::AllocateMemory()
 {
-  Serial << GetTitle() << ": Allocating Memory.\n";
+  ESP_LOGI("Statistical_Engine", "%s: Allocating Memory.", GetTitle().c_str());
   m_MemoryIsAllocated = true;
 }
 
 void StatisticalEngine::FreeMemory()
 {
-  Serial << GetTitle() << ": Freeing Memory.\n";
+  ESP_LOGI("Statistical_Engine", "%s: Freeing Memory.", GetTitle().c_str());
   m_MemoryIsAllocated = false;
 }
 
@@ -161,20 +161,20 @@ void StatisticalEngine::UpdateSoundState()
   if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << m_PowerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
   if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Sound Detected\n";
+    ESP_LOGD("Statistical_Engine", "Sound Detected.");
     soundState = SoundState::SoundDetected;
     m_cb->MicrophoneStateChange(soundState);
   }
   else if(soundState == SoundState::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Silence Detected\n";
+    ESP_LOGD("Statistical_Engine", "Silence Detected.");
     soundState = SoundState::SilenceDetected;
     m_silenceStartTime = millis();
     m_cb->MicrophoneStateChange(soundState);
   }
   else if(soundState == SoundState::SilenceDetected && millis() - m_silenceStartTime >= 120000)
   {
-    if(true == debugMode && debugLevel >= 1) Serial << "Lasting Silence Detected\n";
+    ESP_LOGD("Statistical_Engine", "Lasting Silence Detected.");
     soundState = SoundState::LastingSilenceDetected;
     m_cb->MicrophoneStateChange(soundState);
   }

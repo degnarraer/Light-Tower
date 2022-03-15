@@ -105,21 +105,19 @@ Manager m_Manager = Manager("Manager"
                            , m_Mic_In
                            , m_I2S_Out);
 
-void setup() {
+void setup()
+{
   //ESP32 Serial Communication
-  m_hSerial.end();
+  m_hSerial.begin(200000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
-  m_hSerial.setRxBufferSize(10000);
-  m_hSerial.begin(9600, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
-  m_hSerial.updateBaudRate(250000); //For whatever reason, if I set it to 400000 in setup, it crashes a lot of the time.
   
   //PC Serial Communication
   Serial.begin(500000);
-  ESP_LOGD("Debug", "%s, ", __func__);
-  ESP_LOGI("Startup", "Serial Datalink Configured");
-  ESP_LOGI("Startup", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGI("Startup", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGI("Startup", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGD("LED_Controller1", "%s, ", __func__);
+  ESP_LOGI("LED_Controller1", "Serial Datalink Configured");
+  ESP_LOGI("LED_Controller1", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGI("LED_Controller1", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequency());
   
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);
@@ -133,7 +131,7 @@ void setup() {
   (
     VisualizationTaskLoop,        // Function to implement the task
     "VisualizationTask",          // Name of the task
-    10000,                        // Stack size in words
+    20000,                        // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
     &VisualizationTask,           // Task handle.
@@ -168,11 +166,11 @@ void setup() {
     "SerialDataLinkRXTask",     // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 4,   // Priority of the task
+    configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
-  ESP_LOGI("Debug", "Free Heap: %s", ESP.getFreeHeap());
+  ESP_LOGI("LED_Controller_CPU1", "Free Heap: %i", ESP.getFreeHeap());
 }
 
 unsigned long myTime = millis();
@@ -187,7 +185,6 @@ void loop() {
     if( uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkRXTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
     
-    ESP_LOGI("LED_Controller1", "DataMoverTaskTask: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
     if(true == TASK_STACK_SIZE_DEBUG)
     {
       ESP_LOGI("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
@@ -228,7 +225,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -239,6 +236,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

@@ -68,7 +68,7 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				ESP_LOGW("Serial_Datalink", "Deserialize failed: %s", error.f_str());
+				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s", error.f_str());
 				return;
 			}
 			else
@@ -77,8 +77,8 @@ class DataSerializer: public CommonUtils
 				{
 					for(int i = 0; i < m_DataItemsCount; ++i)
 					{
-						String ItemName = (m_DataItems[i]).Name;
-						String DocName = docIn[m_NameTag];
+						const String ItemName = (m_DataItems[i]).Name;
+						const String DocName = docIn[m_NameTag];
 						if(true == ItemName.equals(DocName))
 						{
 							int CheckSumCalc = 0;
@@ -97,16 +97,16 @@ class DataSerializer: public CommonUtils
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
-									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, false);
+									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
 								}
 								else
 								{
-									ESP_LOGW("Serial_Datalink", "Deserialize failed: Checksum Error!");
+									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error.");
 								}
 							}
 							else
 							{
-								ESP_LOGW("Serial_Datalink", "Deserialize failed: Byte Count Error!");
+								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
 							}
 							delete Buffer;
 							return;

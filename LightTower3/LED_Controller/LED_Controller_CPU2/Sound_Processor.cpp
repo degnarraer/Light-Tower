@@ -65,13 +65,13 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
     size_t InputDataBufferByteCount = GetByteCountForDataItem("R_FFT_IN");
     size_t Bands_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_BANDS");
     size_t Bands_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_BANDS");
-    size_t MaxBin_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAXBAND");
-    size_t MaxBin_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_MAXBAND");
+    size_t MaxBand_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAXBAND");
+    size_t MaxBand_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_MAXBAND");
     size_t MajorFreq_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAJOR_FREQ");
     size_t MajorFreq_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("R_MAJOR_FREQ");
     assert(NUMBER_OF_BANDS == Bands_SampleCount);
-    assert(1 == MaxBin_SampleCount);
-    assert(sizeof(MaxBandSoundData_t) == MaxBin_DataBufferByteCount);
+    assert(1 == MaxBand_SampleCount);
+    assert(sizeof(MaxBandSoundData_t) == MaxBand_DataBufferByteCount);
     assert(1 == MajorFreq_SampleCount);
     assert(sizeof(float) == MajorFreq_DataBufferByteCount);
     
@@ -120,9 +120,14 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             MaxBandDataBuffer->MaxBandNormalizedPower = MaxBandMagnitude;
             MaxBandDataBuffer->MaxBandIndex = MaxBandIndex;
             MaxBandDataBuffer->TotalBands = Bands_SampleCount;
-            PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, false);
-            PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, false);
-            PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, false);
+            static bool R_MaxBand_Push_Successful = true;
+            PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, "Right Max Band: R_MAXBAND", R_MaxBand_Push_Successful);
+            
+            static bool R_Bands_Push_Successful = true;
+            PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, "Right Bands: R_BANDS", R_Bands_Push_Successful);
+            
+            static bool R_MajorFreq_Push_Successful = true;
+            PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
           }
         }
       }
@@ -146,13 +151,13 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
     size_t InputDataBufferByteCount = GetByteCountForDataItem("L_FFT_IN");
     size_t Bands_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_BANDS");
     size_t Bands_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_BANDS");
-    size_t MaxBin_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAXBAND");
-    size_t MaxBin_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_MAXBAND");
+    size_t MaxBand_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAXBAND");
+    size_t MaxBand_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_MAXBAND");
     size_t MajorFreq_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAJOR_FREQ");
     size_t MajorFreq_DataBufferByteCount = m_SerialDataLink.GetByteCountForDataItem("L_MAJOR_FREQ");
     assert(NUMBER_OF_BANDS == Bands_SampleCount);
-    assert(1 == MaxBin_SampleCount);
-    assert(sizeof(MaxBandSoundData_t) == MaxBin_DataBufferByteCount);
+    assert(1 == MaxBand_SampleCount);
+    assert(sizeof(MaxBandSoundData_t) == MaxBand_DataBufferByteCount);
     assert(1 == MajorFreq_SampleCount);
     assert(sizeof(float) == MajorFreq_DataBufferByteCount);
 
@@ -201,9 +206,14 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             MaxBandDataBuffer->MaxBandNormalizedPower = MaxBandMagnitude;
             MaxBandDataBuffer->MaxBandIndex = MaxBandIndex;
             MaxBandDataBuffer->TotalBands = Bands_SampleCount;
-            PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, false);
-            PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, false);
-            PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, false);
+            static bool L_MaxBand_Push_Successful = true;
+            PushValueToQueue(MaxBandDataBuffer, MaxBin_QueueOut, false, "Left Max Band: L_MAXBAND", L_MaxBand_Push_Successful);
+            
+            static bool L_Bands_Push_Successful = true;
+            PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, "Left Bands: L_BANDS", L_Bands_Push_Successful);
+            
+            static bool L_MajorFreq_Push_Successful = true;
+            PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
           }
         }
       }
@@ -219,11 +229,9 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
   if( NULL != QueueIn && NULL != QueueOut )
   {
     assert(1 == m_SerialDataLink.GetSampleCountForDataItem("R_PSD"));
-    assert(1 == GetSampleCountForDataItem("R_PSD"));
     int32_t *InputDataBuffer = (int32_t*)GetDataBufferForDataItem("R_PSD_IN");
     size_t InputSampleCount = GetSampleCountForDataItem("R_PSD_IN");
     size_t InputByteCount = GetSampleCountForDataItem("R_PSD_IN");
-    ProcessedSoundData_t *ProcessedSoundData = (ProcessedSoundData_t*)GetDataBufferForDataItem("R_PSD");
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
     for(int i = 0; i < MessageCount; ++i)
     {
@@ -232,23 +240,24 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
         memset(InputDataBuffer, 0, InputByteCount);
         for(int j = 0; j < InputSampleCount; ++j)
         {
-          if(InputDataBuffer[j] < ProcessedSoundData->Minimum)
+          if(InputDataBuffer[j] < m_R_ProcessedSoundData.Minimum)
           {
-            ProcessedSoundData->Minimum = InputDataBuffer[j];
+            m_R_ProcessedSoundData.Minimum = InputDataBuffer[j];
           }
-          if(InputDataBuffer[j] > ProcessedSoundData->Maximum)
+          if(InputDataBuffer[j] > m_R_ProcessedSoundData.Maximum)
           {
-            ProcessedSoundData->Maximum = InputDataBuffer[j];
+            m_R_ProcessedSoundData.Maximum = InputDataBuffer[j];
           }
           ++m_RightPowerCalculationCount;
           if(0 == m_RightPowerCalculationCount % (I2S_SAMPLE_RATE/m_PowerCalculationsPerSecond))
           {
             m_RightPowerCalculationCount = 0;
-            int32_t peakToPeak = (ProcessedSoundData->Maximum - ProcessedSoundData->Minimum) * m_Gain;
-            ProcessedSoundData->NormalizedPower = (float)peakToPeak / (float)m_32BitMax;             
-            PushValueToQueue(ProcessedSoundData, QueueOut, false, false);
-            ProcessedSoundData->Minimum = INT32_MAX;
-            ProcessedSoundData->Maximum = INT32_MIN;
+            int32_t peakToPeak = (m_R_ProcessedSoundData.Maximum - m_R_ProcessedSoundData.Minimum) * m_Gain;
+            m_R_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
+            static bool R_PSD_Push_Successful = true;
+            PushValueToQueue(&m_R_ProcessedSoundData, QueueOut, false, "Right Processed SOund Data: R_PSD", R_PSD_Push_Successful);
+            m_R_ProcessedSoundData.Minimum = INT32_MAX;
+            m_R_ProcessedSoundData.Maximum = INT32_MIN;
           }
         }
       }
@@ -264,11 +273,9 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
   if( NULL != QueueIn && NULL != QueueOut )
   {
     assert(1 == m_SerialDataLink.GetSampleCountForDataItem("L_PSD"));
-    assert(1 == GetSampleCountForDataItem("L_PSD"));
     int32_t *InputDataBuffer = (int32_t*)GetDataBufferForDataItem("L_PSD_IN");
     size_t InputSampleCount = GetSampleCountForDataItem("L_PSD_IN");
     size_t InputByteCount = GetSampleCountForDataItem("L_PSD_IN");
-    ProcessedSoundData_t* ProcessedSoundData = (ProcessedSoundData_t*)GetDataBufferForDataItem("L_PSD");
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
     for(int i = 0; i < MessageCount; ++i)
     {
@@ -277,23 +284,24 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
         memset(InputDataBuffer, 0, InputByteCount);
         for(int j = 0; j < InputSampleCount; ++j)
         {
-          if(InputDataBuffer[j] < ProcessedSoundData->Minimum)
+          if(InputDataBuffer[j] < m_L_ProcessedSoundData.Minimum)
           {
-            ProcessedSoundData->Minimum = InputDataBuffer[j];
+            m_L_ProcessedSoundData.Minimum = InputDataBuffer[j];
           }
-          if(InputDataBuffer[j] > ProcessedSoundData->Maximum)
+          if(InputDataBuffer[j] > m_L_ProcessedSoundData.Maximum)
           {
-            ProcessedSoundData->Maximum = InputDataBuffer[j];
+            m_L_ProcessedSoundData.Maximum = InputDataBuffer[j];
           }
           ++m_LeftPowerCalculationCount;
           if(0 == m_LeftPowerCalculationCount % (I2S_SAMPLE_RATE/m_PowerCalculationsPerSecond))
           {
             m_LeftPowerCalculationCount = 0;
-            int32_t peakToPeak = (ProcessedSoundData->Maximum - ProcessedSoundData->Minimum) * m_Gain;
-            ProcessedSoundData->NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
-            PushValueToQueue(ProcessedSoundData, QueueOut, false, false);
-            ProcessedSoundData->Minimum = INT32_MAX;
-            ProcessedSoundData->Maximum = INT32_MIN;
+            int32_t peakToPeak = (m_L_ProcessedSoundData.Maximum - m_L_ProcessedSoundData.Minimum) * m_Gain;
+            m_L_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
+            static bool L_PSD_Push_Successful = true;
+            PushValueToQueue(&m_L_ProcessedSoundData, QueueOut, false, "Left Processed SOund Data: L_PSD", L_PSD_Push_Successful);
+            m_L_ProcessedSoundData.Minimum = INT32_MAX;
+            m_L_ProcessedSoundData.Maximum = INT32_MIN;
           }
         }
       }

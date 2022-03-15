@@ -160,7 +160,7 @@ int I2S_Device::ReadSamples()
 	channel_bytes_read = bytes_read / 2;
 	if(bytes_read != m_TotalBytesToRead)
 	{
-		ESP_LOGE("i2S Device", "%s: Error Reading All Bytes. Read: %i out of %i.", GetTitle(), bytes_read, m_TotalBytesToRead);
+		ESP_LOGE("i2S Device", "%s: Error Reading All Bytes. Read: %i out of %i.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
 	}
 	if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, m_SampleCount);
 
@@ -191,7 +191,10 @@ int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 	// write to i2s
 	size_t bytes_written = 0;
 	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
-	if(bytes_written != ByteCount){ if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Bytes\n"; }
+	if(bytes_written != ByteCount)
+	{
+		if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Bytes\n"; 
+	}
 	return bytes_written;
 }
 
@@ -230,27 +233,27 @@ void I2S_Device::InstallDevice()
   err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queue);
   if (err != ESP_OK)
   {
-	ESP_LOGE("i2S Device", "%s: Failed installing driver: %s", GetTitle(), err);
+	ESP_LOGE("i2S Device", "%s: Failed installing driver: %s", GetTitle().c_str(), err);
     ESP.restart();
   }
   if (NULL == m_i2s_event_queue)
   {
-	ESP_LOGE("i2S Device", "%s: Failed to setup event queue!", GetTitle());
-	ESP.restart();
+	ESP_LOGE("i2S Device", "%s: Failed to setup event queue!", GetTitle().c_str());
+	//ESP.restart();
   }
   err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
   if (err != ESP_OK)
   {
-	ESP_LOGE("i2S Device", "%s: Failed setting clock: %s", GetTitle(), err);
+	ESP_LOGE("i2S Device", "%s: Failed setting clock: %s", GetTitle().c_str(), err);
 	ESP.restart();
   }
   err = i2s_set_pin(m_I2S_PORT, &pin_config);
   if (err != ESP_OK)
   {
-	ESP_LOGE("i2S Device", "%s: Failed setting pin: %s", GetTitle(), err);
+	ESP_LOGE("i2S Device", "%s: Failed setting pin: %s", GetTitle().c_str(), err);
     ESP.restart();
   }
-  ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle());
+  ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
 }
 
 void I2S_Device::ProcessEventQueue()
@@ -271,19 +274,19 @@ void I2S_Device::ProcessEventQueue()
 			switch (i2sEvent.type)
 			{
 				case I2S_EVENT_DMA_ERROR:
-				    ESP_LOGE("i2S Device", "%s: I2S_EVENT_DMA_ERROR", GetTitle());
+				    ESP_LOGE("i2S Device", "%s: I2S_EVENT_DMA_ERROR", GetTitle().c_str());
 					break;
 				case I2S_EVENT_TX_DONE:
-					ESP_LOGV("i2S Device", "%s: TX Done", GetTitle());
+					ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());
 					break;
 				case I2S_EVENT_RX_DONE:
 					{
-					  ESP_LOGV("i2S Device", "%s: RX", GetTitle());
+					  ESP_LOGV("i2S Device", "%s: RX", GetTitle().c_str());
 					  ReadSamples();
 					}
 					break;
 				case I2S_EVENT_MAX:
-					ESP_LOGW("i2S Device", "I2S_EVENT_MAX");
+					ESP_LOGW("i2S Device", "WARNING! I2S_EVENT_MAX");
 					break;
 			}
 		  }

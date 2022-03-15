@@ -72,6 +72,7 @@ struct DataItem_t
   DataType_t DataType;
   size_t Count = 0;
   size_t TotalByteCount = 0;
+  bool DataPushHasErrored = false;
   void* DataBuffer;
 };
 
