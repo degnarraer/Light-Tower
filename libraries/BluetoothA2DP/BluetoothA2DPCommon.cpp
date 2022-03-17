@@ -38,7 +38,7 @@ void BluetoothA2DPCommon::disconnect()
 
 
 void BluetoothA2DPCommon::end(bool release_memory) {
-	// reconnect should not work after end
+    // reconnect should not work after end
     is_start_disabled = false;
     clean_last_connection();
     log_free_heap();
@@ -278,7 +278,7 @@ void BluetoothA2DPCommon::set_scan_mode_connectable(bool connectable) {
  * @return false 
  */
 bool btStart(){
-	esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+    esp_bt_controller_config_t cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     if(esp_bt_controller_get_status() == ESP_BT_CONTROLLER_STATUS_ENABLED){
         return true;
     }

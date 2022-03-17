@@ -22,16 +22,16 @@ SerialDataLinkCore::SerialDataLinkCore(String Title, HardwareSerial &hSerial): m
 																			 , m_hSerial(hSerial)
 																			 , DataSerializer()
 {
-	ESP_LOGV("Function Debug", "%s, ", __func__);
+	//ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 SerialDataLinkCore::~SerialDataLinkCore()
 {
-	ESP_LOGV("Function Debug", "%s, ", __func__);
+	//ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 
 void SerialDataLinkCore::ProcessDataRXEventQueue()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   int32_t ByteCount = m_hSerial.available();
   for(int i = 0; i < ByteCount; ++i)
   {
@@ -54,7 +54,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 
 void SerialDataLinkCore::ProcessDataTXEventQueue()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   if(NULL != m_DataItems)
   {
     for(int i = 0; i < m_DataItemsCount; ++i)

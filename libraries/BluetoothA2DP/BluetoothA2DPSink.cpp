@@ -61,6 +61,7 @@ BluetoothA2DPSink::~BluetoothA2DPSink() {
 
 void BluetoothA2DPSink::end(bool release_memory) {
     // reconnect should not work after end
+    end_in_progress = true;
     BluetoothA2DPCommon::end(release_memory);
 
     // stop I2S
@@ -120,6 +121,7 @@ void BluetoothA2DPSink::start(const char* name, bool auto_reconnect){
 void BluetoothA2DPSink::start(const char* name)
 {
     ESP_LOGD(BT_AV_TAG, "%s", __func__);
+    end_in_progress = false;
     log_free_heap();
 
     if (is_start_disabled){
@@ -367,7 +369,7 @@ void BluetoothA2DPSink::app_task_handler(void *arg)
                 app_work_dispatched(&msg);
                 break;
             default:
-                ESP_LOGW(BT_APP_TAG, "WARNING! %s, unhandled sig: %d", __func__, msg.sig);
+                ESP_LOGW(BT_APP_TAG, "%s, unhandled sig: %d", __func__, msg.sig);
                 break;
             } // switch (msg.sig)
 
@@ -429,6 +431,10 @@ void BluetoothA2DPSink::app_gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap
 
             } else {
                 ESP_LOGE(BT_AV_TAG, "authentication failed, status:%d", param->auth_cmpl.stat);
+                // reset pin_code data to "undefined" after authentication failure
+                // just like when in disconnected state
+                pin_code_int = 0;
+                pin_code_request = Undefined;
             }
             break;
         }
@@ -611,7 +617,7 @@ void BluetoothA2DPSink::handle_audio_state(uint16_t event, void *p_param){
     
     // callback on state change
     audio_state = a2d->audio_stat.state;
-    if (audio_state_callback!=nullptr && audio_state){
+    if (audio_state_callback!=nullptr){
         audio_state_callback(a2d->audio_stat.state, audio_state_obj);
     }
 
@@ -664,21 +670,23 @@ void BluetoothA2DPSink::handle_connection_state(uint16_t event, void *p_param){
             i2s_zero_dma_buffer(i2s_port);
         }
         
-        if (is_reconnect(a2d->conn_stat.disc_rsn) && is_auto_reconnect && has_last_connection()) {
-            if ( has_last_connection()  && connection_rety_count < try_reconnect_max_count ){
-                ESP_LOGI(BT_AV_TAG,"Connection try number: %d", connection_rety_count);
-                connect_to_last_device();
-                // when we lost the connection we do allow any others to connect after 2 trials
-                if (connection_rety_count==2) set_scan_mode_connectable(true);
+        if (!end_in_progress) {
+            if (is_reconnect(a2d->conn_stat.disc_rsn) && is_auto_reconnect && has_last_connection()) {
+                if ( has_last_connection()  && connection_rety_count < try_reconnect_max_count ){
+                    ESP_LOGI(BT_AV_TAG,"Connection try number: %d", connection_rety_count);
+                    connect_to_last_device();
+                    // when we lost the connection we do allow any others to connect after 2 trials
+                    if (connection_rety_count==2) set_scan_mode_connectable(true);
 
-            } else {
-                if ( has_last_connection() && a2d->conn_stat.disc_rsn == ESP_A2D_DISC_RSN_NORMAL ){
-                    clean_last_connection();
+                } else {
+                    if ( has_last_connection() && a2d->conn_stat.disc_rsn == ESP_A2D_DISC_RSN_NORMAL ){
+                        clean_last_connection();
+                    }
+                    set_scan_mode_connectable(true);
                 }
-                set_scan_mode_connectable(true);
+            } else {
+                set_scan_mode_connectable(true);   
             }
-        } else {
-            set_scan_mode_connectable(true);   
         }
     } else if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
         ESP_LOGI(BT_AV_TAG, "ESP_A2D_CONNECTION_STATE_CONNECTED");
@@ -852,7 +860,7 @@ void BluetoothA2DPSink::av_hdl_stack_evt(uint16_t event, void *p_param)
                 esp_avrc_tg_register_callback(ccall_app_rc_tg_callback);
                 esp_avrc_rn_evt_cap_mask_t evt_set = {0};
                 esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_SET, &evt_set, ESP_AVRC_RN_VOLUME_CHANGE);
-                if(esp_avrc_tg_set_rn_evt_cap(&evt_set) == ESP_OK){
+                if(esp_avrc_tg_set_rn_evt_cap(&evt_set) != ESP_OK){
                     ESP_LOGE(BT_AV_TAG,"esp_avrc_tg_set_rn_evt_cap failed");
                 }
             } else {
@@ -1039,6 +1047,12 @@ void BluetoothA2DPSink::next(){
 }
 void BluetoothA2DPSink::previous(){
     execute_avrc_command(ESP_AVRC_PT_CMD_BACKWARD);
+}
+void BluetoothA2DPSink::fast_forward(){
+    execute_avrc_command(ESP_AVRC_PT_CMD_FAST_FORWARD);
+}
+void BluetoothA2DPSink::rewind(){
+    execute_avrc_command(ESP_AVRC_PT_CMD_REWIND);
 }
 
 void BluetoothA2DPSink::set_volume(uint8_t volume)

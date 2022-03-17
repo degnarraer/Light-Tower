@@ -22,6 +22,11 @@ enum Transciever_T
 	Transciever_TXRX
 };
 
+struct __attribute__((packed)) Frame_t {
+  int16_t channel1;
+  int16_t channel2;
+};
+
 enum DataType_t
 {
   DataType_Int8_t,
@@ -35,6 +40,7 @@ enum DataType_t
   DataType_Double,
   DataType_ProcessedSoundData_t,
   DataType_MaxBandSoundData_t,
+  DataType_Frame_t,
   DataType_Undef,
 };
 
@@ -51,6 +57,7 @@ static const char* DataTypeStrings[] =
   "Double",
   "ProcessedSoundData_t",
   "MaxBandSoundData_t",
+  "Frame_t",
   "Undefined"
 };
 

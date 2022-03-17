@@ -159,8 +159,12 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     virtual void stop();
     /// AVRC next
     virtual void next();
-    /// AVRC previouse
+    /// AVRC previous
     virtual void previous();
+    /// AVRC fast_forward
+    virtual void fast_forward();
+    /// AVRC rewind
+    virtual void rewind();
     
     /// set output to I2S_CHANNEL_STEREO (default) or I2S_CHANNEL_MONO
     virtual void set_channels(i2s_channel_t channels) {
@@ -216,20 +220,20 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
 
   protected:
     // protected data
-    xQueueHandle app_task_queue;
-    xTaskHandle app_task_handle;
+    xQueueHandle app_task_queue = nullptr;
+    xTaskHandle app_task_handle = nullptr;
     i2s_config_t i2s_config;
     i2s_pin_config_t pin_config;    
-    const char * bt_name;
+    const char * bt_name = nullptr;
     uint32_t m_pkt_cnt = 0;
     //esp_a2d_audio_state_t m_audio_state = ESP_A2D_AUDIO_STATE_STOPPED;
     esp_a2d_mct_t audio_type;
-    char pin_code_str[20];
+    char pin_code_str[20] = {0};
     bool is_i2s_output = true;
     bool player_init = false;
     bool mono_downmix = false;
     i2s_channel_t i2s_channels = I2S_CHANNEL_STEREO;
-    i2s_port_t i2s_port; 
+    i2s_port_t i2s_port = I2S_NUM_0; 
     int connection_rety_count = 0;
     esp_bd_addr_t peer_bd_addr = {0};
     static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
@@ -252,6 +256,7 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     bool swap_left_right = false;
     int try_reconnect_max_count = AUTOCONNECT_TRY_NUM;
     bool reconnect_on_normal_disconnect = false;
+    bool end_in_progress = false;
 
 #ifdef CURRENT_ESP_IDF
     esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap;

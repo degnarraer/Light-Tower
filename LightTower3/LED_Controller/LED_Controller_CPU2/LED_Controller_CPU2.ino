@@ -50,6 +50,12 @@ Sound_Processor m_SoundProcessor = Sound_Processor("Sound Processor", m_SerialDa
 BluetoothA2DPSource a2dp_source;
 Manager m_Manager = Manager("Manager", m_SoundProcessor, m_SerialDataLink, a2dp_source, m_I2S_In, m_I2S_Out);
 
+//Bluetooth Source Callback
+int32_t get_data_channels(Frame *frame, int32_t channel_len)
+{
+  return m_Manager.get_data_channels(frame, channel_len);
+}
+
 void setup() {
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(4096);
@@ -59,7 +65,7 @@ void setup() {
   //PC Serial Communication
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
 
-  ESP_LOGD("LED_Controller2", "%s, ", __func__);
+  //ESP_LOGD("LED_Controller2", "%s, ", __func__);
   ESP_LOGI("LED_Controller2", "Serial Datalink Configured");
   ESP_LOGI("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGI("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
@@ -70,7 +76,10 @@ void setup() {
   m_Manager.Setup();
   m_SerialDataLink.SetupSerialDataLink();
   a2dp_source.set_auto_reconnect(true);
-  a2dp_source.start("Shock's iPhone");
+  //a2dp_source.set_ssp_enabled(true);
+  a2dp_source.set_local_name("LED Tower of Power");
+  //a2dp_source.set_pin_code("0000");
+  a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series");
   ESP_LOGI("LED_Controller2", "Bluetooth Source Started");
   
   xTaskCreatePinnedToCore
@@ -129,6 +138,7 @@ void setup() {
   );
   ESP_LOGI("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
 }
+
 void loop()
 {
   // put your main code here, to run repeatedly:
@@ -141,7 +151,7 @@ void ManagerTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

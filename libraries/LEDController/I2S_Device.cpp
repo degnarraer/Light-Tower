@@ -57,7 +57,7 @@ I2S_Device::~I2S_Device()
 
 void I2S_Device::Setup()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
     m_BytesPerSample = m_BitsPerSample/8;
     m_ChannelSampleCount = m_BufferSize;
 	m_SampleCount = m_ChannelSampleCount * 2;
@@ -86,7 +86,7 @@ void I2S_Device::Setup()
 
 void I2S_Device::StartDevice()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(false == m_Is_Running)
 	{
 	  InstallDevice();
@@ -97,7 +97,7 @@ void I2S_Device::StartDevice()
 
 void I2S_Device::StopDevice()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(true == m_Is_Running)
 	{
 		i2s_stop(m_I2S_PORT);
@@ -108,7 +108,7 @@ void I2S_Device::StopDevice()
 		
 int32_t I2S_Device::GetDataBufferValue(uint8_t* DataBuffer, size_t index)
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	switch(m_BytesPerSample)
 	{
 	  case 1:
@@ -126,7 +126,7 @@ int32_t I2S_Device::GetDataBufferValue(uint8_t* DataBuffer, size_t index)
 
 void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value)
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	switch(m_BytesPerSample)
 	{
 	  case 1:
@@ -144,7 +144,7 @@ void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t v
 
 void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	memcpy(m_SoundBufferData, SoundBufferData, ByteCount);
 	WriteSamples(m_SoundBufferData, ByteCount);
 	ESP_LOGV("i2S Device", "%s: Sound Buffer Data Ready.", GetTitle());
@@ -152,7 +152,7 @@ void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 
 int I2S_Device::ReadSamples()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	size_t bytes_read = 0;
 	size_t channel_bytes_read = 0;
 	// read from i2s
@@ -187,7 +187,7 @@ int I2S_Device::ReadSamples()
 
 int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	// write to i2s
 	size_t bytes_written = 0;
 	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
@@ -258,7 +258,7 @@ void I2S_Device::InstallDevice()
 
 void I2S_Device::ProcessEventQueue()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(NULL != m_i2s_event_queue)
 	{
 		i2s_event_t i2sEvent = {};
@@ -295,7 +295,7 @@ void I2S_Device::ProcessEventQueue()
 }
 void I2S_Device::AllocateMemory()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Allocating Memory.", GetTitle());  
 	m_SoundBufferData = (uint8_t*)malloc(m_TotalBytesToRead);
 	m_RightChannel_SoundBufferData = (uint8_t*)malloc(m_ChannelBytesToRead);
@@ -303,7 +303,7 @@ void I2S_Device::AllocateMemory()
 }
 void I2S_Device::FreeMemory()
 {
-    ESP_LOGV("Function Debug", "%s, ", __func__);
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Freeing Memory.", GetTitle());  
 	delete m_SoundBufferData;
 	delete m_RightChannel_SoundBufferData;
