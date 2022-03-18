@@ -31,7 +31,7 @@ class SerialDataLink: public NamedItem
     virtual ~SerialDataLink(){}
     void SetupSerialDataLink()
     {
-      ESP_LOGD("Serial_Datalink_Config", "%s: Setup", GetTitle());
+      ESP_LOGD("Serial_Datalink_Config", "%s: Setup", GetTitle().c_str());
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
     }

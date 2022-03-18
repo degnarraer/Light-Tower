@@ -97,8 +97,8 @@ void StatisticalEngine::RunMyScheduledTask()
 {
   if(true == m_NewSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetByteCountForDataItem("R_PSD"), true, false);
-    GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetByteCountForDataItem("L_PSD"), true, false);
+    GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetTotalByteCountForDataItem("R_PSD"), true, false);
+    GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetTotalByteCountForDataItem("L_PSD"), true, false);
     
     //To allow the original code to work, we combine the left and right channels into an average
     m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
@@ -111,15 +111,15 @@ void StatisticalEngine::RunMyScheduledTask()
 
   if(true == m_NewBandDataReady)
   {
-    GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetByteCountForDataItem("R_BANDS"), true, false);
-    GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetByteCountForDataItem("L_BANDS"), true, false);
+    GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), true, false);
+    GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), true, false);
     UpdateBandArray(); 
   }
   
   if(true == m_NewMaxBandSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetByteCountForDataItem("R_MAXBAND"), true, false);
-    GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetByteCountForDataItem("L_MAXBAND"), true, false);
+    GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
+    GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
   }
 }
 

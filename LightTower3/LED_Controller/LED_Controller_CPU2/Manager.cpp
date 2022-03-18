@@ -54,7 +54,7 @@ void Manager::ProcessEventQueue()
   ESP_LOGV("Function Debug", "%s, ", __func__);
   m_I2S_In.ProcessEventQueue();
   m_I2S_Out.ProcessEventQueue();
-  WriteDataToBluetooth();
+  //WriteDataToBluetooth();
 }
 
 void Manager::WriteDataToBluetooth()
@@ -64,16 +64,20 @@ void Manager::WriteDataToBluetooth()
   {
     size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
-    if(MessageCount > 0 && false == m_BT_Source.has_sound_data())
+    for( int i = 0; i < MessageCount; ++i )
     {
-      if ( xQueueReceive(QueueIn, m_DataFrame2, portMAX_DELAY) == pdTRUE )
+      if(true == m_BT_Source.is_connected() && false == m_BT_Source.has_sound_data())
       {
-        if(true == m_BT_Source.is_connected())
+        if ( xQueueReceive(QueueIn, m_DataFrame2, portMAX_DELAY) == pdTRUE )
         {
           SoundData *SoundData = new TwoChannelSoundData((Frame*)m_DataFrame2, ChannelSampleCount);
           m_BT_Source.write_data(SoundData);
           delete SoundData;
         }
+      }
+      else
+      {
+        break;
       }
     }
   }
@@ -153,30 +157,20 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
   QueueHandle_t QueueIn = GetQueueHandleTXForDataItem("BT_IN");
+  size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
+  size_t ByteCount = GetTotalByteCountForDataItem("BT_IN");
+  assert(channel_len == ChannelSampleCount);
   if( NULL != QueueIn )
   {
-    size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
-    size_t ByteCount = GetByteCountForDataItem("BT_IN");
-    assert(channel_len == ChannelSampleCount);
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
     if(MessageCount > 0)
     {
       if ( xQueueReceive(QueueIn, frame, portMAX_DELAY) == pdTRUE )
       {
+        ESP_LOGD("Manager", "%s, ", __func__);
         return ChannelSampleCount;
       }
-      else
-      {
-        return 0;
-      }
-    }
-    else
-    {
-      return 0;
     }
   }
-  else
-  {
-    return 0;
-  }
+  return 0;
 }

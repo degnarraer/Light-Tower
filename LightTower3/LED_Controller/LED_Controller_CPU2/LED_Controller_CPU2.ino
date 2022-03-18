@@ -75,11 +75,12 @@ void setup() {
   m_I2S_In.Setup();
   m_Manager.Setup();
   m_SerialDataLink.SetupSerialDataLink();
-  a2dp_source.set_auto_reconnect(true);
-  //a2dp_source.set_ssp_enabled(true);
+  a2dp_source.set_auto_reconnect(false);
+  a2dp_source.set_ssp_enabled(false);
   a2dp_source.set_local_name("LED Tower of Power");
-  //a2dp_source.set_pin_code("0000");
-  a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series");
+  a2dp_source.set_pin_code("0000");
+  a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series", get_data_channels);
+  //a2dp_source.start("Shock's iPhone", get_data_channels);
   ESP_LOGI("LED_Controller2", "Bluetooth Source Started");
   
   xTaskCreatePinnedToCore
@@ -151,7 +152,7 @@ void ManagerTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
 

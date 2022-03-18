@@ -36,7 +36,7 @@ class QueueManager
 		void SetupQueueManager()
 		{
 			//ESP_LOGV("Function Debug", "%s, ", __func__);
-			ESP_LOGD("CommonUtils", "%s: Setup", m_Title);
+			ESP_LOGD("CommonUtils", "%s: Setup", m_Title.c_str());
 			if(true == m_MemoryAllocated)FreeMemory();
 			AllocateMemory();
 		}
@@ -102,7 +102,7 @@ class QueueManager
 			return NULL;
 		}
 		
-		size_t GetByteCountForDataItem(String Name)
+		size_t GetTotalByteCountForDataItem(String Name)
 		{
 			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)

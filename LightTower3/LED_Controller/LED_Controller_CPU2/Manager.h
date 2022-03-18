@@ -23,7 +23,7 @@
 #include <Helpers.h>
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
-#include "BluetoothA2DPSource_Override.h"
+#include <BluetoothA2DPSource.h>
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -66,8 +66,8 @@ class Manager: public NamedItem
     {
       { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   10 },
     };
-    Frame_t m_DataFrame1[I2S_SAMPLE_COUNT/2];
-    Frame_t m_DataFrame2[I2S_SAMPLE_COUNT/2];
+    Frame_t m_DataFrame1[I2S_SAMPLE_COUNT];
+    Frame_t m_DataFrame2[I2S_SAMPLE_COUNT];
 };
 
 #endif
