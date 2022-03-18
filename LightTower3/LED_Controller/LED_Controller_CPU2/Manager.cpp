@@ -64,7 +64,7 @@ void Manager::WriteDataToBluetooth()
   {
     size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
-    if( MessageCount > 0 && false == m_BT_Source.has_sound_data() )
+    if(MessageCount > 0 && false == m_BT_Source.has_sound_data())
     {
       if ( xQueueReceive(QueueIn, m_DataFrame2, portMAX_DELAY) == pdTRUE )
       {
@@ -77,7 +77,6 @@ void Manager::WriteDataToBluetooth()
       }
     }
   }
-  
 }
 //I2S_Device_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
