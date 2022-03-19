@@ -54,34 +54,9 @@ void Manager::ProcessEventQueue()
   ESP_LOGV("Function Debug", "%s, ", __func__);
   m_I2S_In.ProcessEventQueue();
   m_I2S_Out.ProcessEventQueue();
-  //WriteDataToBluetooth();
 }
 
-void Manager::WriteDataToBluetooth()
-{
-  QueueHandle_t QueueIn = GetQueueHandleTXForDataItem("BT_IN");
-  if( NULL != QueueIn )
-  {
-    size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
-    size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
-    for( int i = 0; i < MessageCount; ++i )
-    {
-      if(true == m_BT_Source.is_connected() && false == m_BT_Source.has_sound_data())
-      {
-        if ( xQueueReceive(QueueIn, m_DataFrame2, portMAX_DELAY) == pdTRUE )
-        {
-          SoundData *SoundData = new TwoChannelSoundData((Frame*)m_DataFrame2, ChannelSampleCount);
-          m_BT_Source.write_data(SoundData);
-          delete SoundData;
-        }
-      }
-      else
-      {
-        break;
-      }
-    }
-  }
-}
+
 //I2S_Device_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
@@ -157,19 +132,21 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
   QueueHandle_t QueueIn = GetQueueHandleTXForDataItem("BT_IN");
-  size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
-  size_t ByteCount = GetTotalByteCountForDataItem("BT_IN");
-  assert(channel_len == ChannelSampleCount);
   if( NULL != QueueIn )
   {
+    size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
+    size_t ByteCount = GetTotalByteCountForDataItem("BT_IN");
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
-    if(MessageCount > 0)
+    size_t TotalByteCount = MessageCount * ByteCount;
+    size_t TotalChannelSampleCount = MessageCount * ChannelSampleCount;
+    assert(ChannelSampleCount == channel_len);
+    //Serial << "Channel Length Needed: " << channel_len << "\tTotal Messages: " << MessageCount << "\tTotal Samples Available: " << TotalChannelSampleCount << "\n";
+    for( int i = 0; i < MessageCount; ++i )
     {
-      if ( xQueueReceive(QueueIn, frame, portMAX_DELAY) == pdTRUE )
+      if( xQueueReceive(QueueIn, frame, portMAX_DELAY) == pdTRUE )
       {
-        ESP_LOGD("Manager", "%s, ", __func__);
         return ChannelSampleCount;
-      }
+      } 
     }
   }
   return 0;

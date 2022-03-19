@@ -40,7 +40,6 @@ class Manager: public NamedItem
     virtual ~Manager();
     void Setup();
     void ProcessEventQueue();
-    void WriteDataToBluetooth();
     int32_t get_data_channels(Frame *frame, int32_t channel_len);
 
     //QueueManager Interface
@@ -64,10 +63,9 @@ class Manager: public NamedItem
     static const size_t m_ConfigCount = 1;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   10 },
+      { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   50 },
     };
     Frame_t m_DataFrame1[I2S_SAMPLE_COUNT];
-    Frame_t m_DataFrame2[I2S_SAMPLE_COUNT];
 };
 
 #endif
