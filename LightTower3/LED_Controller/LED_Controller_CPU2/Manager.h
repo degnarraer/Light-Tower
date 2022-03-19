@@ -63,7 +63,7 @@ class Manager: public NamedItem
     static const size_t m_ConfigCount = 1;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   50 },
+      { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   20 },
     };
     Frame_t m_DataFrame1[I2S_SAMPLE_COUNT];
 };
