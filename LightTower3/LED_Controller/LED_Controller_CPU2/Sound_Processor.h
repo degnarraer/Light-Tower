@@ -109,8 +109,8 @@ class Sound_Processor: public NamedItem
     {
       { "R_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
       { "L_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
+      { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
     };
 };
 
