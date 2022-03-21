@@ -24,7 +24,6 @@ Manager::Manager( String Title
                 , BluetoothA2DPSource &BT_Source
                 , I2S_Device &I2S_In
                 , I2S_Device &I2S_OUT ): NamedItem(Title)
-                                       , QueueManager(Title + "_QueueManager", m_ConfigCount)
                                        , m_SoundProcessor(SoundProcessor)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT_Source(BT_Source)
@@ -42,7 +41,6 @@ void Manager::Setup()
 {
   ESP_LOGV("Manager", "%s, ", __func__);
   m_SoundProcessor.SetupSoundProcessor();
-  SetupQueueManager();
   m_I2S_In.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_In.StartDevice();  
@@ -61,26 +59,26 @@ void Manager::ProcessEventQueue()
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  QueueHandle_t Queue1 = GetQueueHandleTXForDataItem("BT_IN");
-  if(NULL != Queue1)
+  if( DeviceTitle == m_I2S_In.GetTitle() )
   {
-    if( DeviceTitle == m_I2S_In.GetTitle() )
+    size_t ChannelSampleCount = SampleCount/2;
+    assert(m_I2S_Out.GetBytesToRead() == ByteCount);
+    assert(m_I2S_Out.GetSampleCount() == SampleCount);
+    if(DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
     {
-      size_t ChannelSampleCount = SampleCount/2;
-      assert(m_I2S_Out.GetBytesToRead() == ByteCount);
-      assert(m_I2S_Out.GetSampleCount() == SampleCount);
-      if(DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
+      m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
+      if(true == m_BT_Source.is_connected())
       {
-        m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
-        if(true == m_BT_Source.is_connected())
+        for(int i = 0; i < ChannelSampleCount; ++i)
         {
-          for(int i = 0; i < ChannelSampleCount; ++i)
+          m_DataFrameRX[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
+          m_DataFrameRX[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
+          size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
+          if(0 == space)
           {
-            m_DataFrameRX[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
-            m_DataFrameRX[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
+            m_FrameBuffer.Clear();
           }
-          static bool BT_IN_Push_Successful = true;
-          PushValueToQueue(m_DataFrameRX, Queue1, false, "Frame Data: BT_IN", BT_IN_Push_Successful);
+          m_FrameBuffer.Write(m_DataFrameRX[i]);
         }
       }
     }
@@ -130,36 +128,9 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 //Bluetooth Source Callback
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
-  QueueHandle_t QueueIn = GetQueueHandleTXForDataItem("BT_IN");
-  if( NULL != QueueIn )
-  {
-    size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
-    size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
-    size_t TotalChannelSampleCount = MessageCount * ChannelSampleCount;
-    bool DataSent = false;
-    assert(m_MaxChannelCount >= channel_len);
-    size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
-    
-    
-    //ESP_LOGD("Manager",  "Channel Length Needed: %i\tTotal Messages: %i\tChanelSampleCount: %i\tTotal Samples Available: %i\tBuffer Space: %i",channel_len, MessageCount, ChannelSampleCount, TotalChannelSampleCount, space);
-    int32_t SamplesToRead = min((int32_t)m_FrameBuffer.size(), channel_len);
-    m_FrameBuffer.Read( (Frame_t*)frame, SamplesToRead );
-    //ESP_LOGD("Manager",  "SamplesRead: %i", SamplesToRead);
-
-    if(MessageCount > 0)
-    {
-      for( int i = 0; i < space / (MessageCount * ChannelSampleCount); ++i )
-      {
-        if( xQueueReceive(QueueIn, m_DataFrameBTSend, portMAX_DELAY) == pdTRUE )
-        {
-          for(int j = 0; j < ChannelSampleCount; ++j)
-          {
-            m_FrameBuffer.Write(m_DataFrameBTSend[j]);
-          }
-        } 
-      }
-    }
-    
-    return SamplesToRead;
-  }
+  //ESP_LOGD("Manager",  "Channel Length Needed: %i\tTotal Samples Available: %i",channel_len, m_FrameBuffer.size());
+  int32_t SamplesToRead = min((int32_t)m_FrameBuffer.size(), channel_len);
+  m_FrameBuffer.Read( (Frame_t*)frame, SamplesToRead );
+  //ESP_LOGD("Manager",  "SamplesRead: %i", SamplesToRead);
+  return SamplesToRead;
 }
