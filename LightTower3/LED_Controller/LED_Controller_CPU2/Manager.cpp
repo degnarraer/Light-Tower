@@ -69,7 +69,6 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
       size_t ChannelSampleCount = SampleCount/2;
       assert(m_I2S_Out.GetBytesToRead() == ByteCount);
       assert(m_I2S_Out.GetSampleCount() == SampleCount);
-      assert(GetSampleCountForDataItem("BT_IN") == ChannelSampleCount);
       if(DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
       {
         m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
@@ -77,11 +76,11 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
         {
           for(int i = 0; i < ChannelSampleCount; ++i)
           {
-            m_DataFrame1[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
-            m_DataFrame1[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
+            m_DataFrameRX[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
+            m_DataFrameRX[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
           }
           static bool BT_IN_Push_Successful = true;
-          PushValueToQueue(m_DataFrame1, Queue1, false, "Frame Data: BT_IN", BT_IN_Push_Successful);
+          PushValueToQueue(m_DataFrameRX, Queue1, false, "Frame Data: BT_IN", BT_IN_Push_Successful);
         }
       }
     }
@@ -135,19 +134,32 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   if( NULL != QueueIn )
   {
     size_t ChannelSampleCount = GetSampleCountForDataItem("BT_IN");
-    size_t ByteCount = GetTotalByteCountForDataItem("BT_IN");
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
-    size_t TotalByteCount = MessageCount * ByteCount;
     size_t TotalChannelSampleCount = MessageCount * ChannelSampleCount;
-    assert(ChannelSampleCount == channel_len);
-    //Serial << "Channel Length Needed: " << channel_len << "\tTotal Messages: " << MessageCount << "\tTotal Samples Available: " << TotalChannelSampleCount << "\n";
-    for( int i = 0; i < MessageCount; ++i )
+    bool DataSent = false;
+    assert(m_MaxChannelCount >= channel_len);
+    size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
+    
+    
+    //ESP_LOGD("Manager",  "Channel Length Needed: %i\tTotal Messages: %i\tChanelSampleCount: %i\tTotal Samples Available: %i\tBuffer Space: %i",channel_len, MessageCount, ChannelSampleCount, TotalChannelSampleCount, space);
+    int32_t SamplesToRead = min((int32_t)m_FrameBuffer.size(), channel_len);
+    m_FrameBuffer.Read( (Frame_t*)frame, SamplesToRead );
+    //ESP_LOGD("Manager",  "SamplesRead: %i", SamplesToRead);
+
+    if(MessageCount > 0)
     {
-      if( xQueueReceive(QueueIn, frame, portMAX_DELAY) == pdTRUE )
+      for( int i = 0; i < space / (MessageCount * ChannelSampleCount); ++i )
       {
-        return ChannelSampleCount;
-      } 
+        if( xQueueReceive(QueueIn, m_DataFrameBTSend, portMAX_DELAY) == pdTRUE )
+        {
+          for(int j = 0; j < ChannelSampleCount; ++j)
+          {
+            m_FrameBuffer.Write(m_DataFrameBTSend[j]);
+          }
+        } 
+      }
     }
+    
+    return SamplesToRead;
   }
-  return 0;
 }

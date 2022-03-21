@@ -24,6 +24,7 @@
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSource.h>
+#include "circle_buf.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -58,14 +59,16 @@ class Manager: public NamedItem
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
 
-    
     //QueueManager Configuration
     static const size_t m_ConfigCount = 1;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   20 },
+      { "BT_IN", DataType_Frame_t, I2S_SAMPLE_COUNT,   Transciever_TX,   10 },
     };
-    Frame_t m_DataFrame1[I2S_SAMPLE_COUNT];
+    static const int32_t m_MaxChannelCount = 128;
+    Frame_t m_DataFrameRX[I2S_SAMPLE_COUNT];
+    Frame_t m_DataFrameBTSend[I2S_SAMPLE_COUNT];
+    bfs::CircleBuf<Frame_t, m_MaxChannelCount*20> m_FrameBuffer;
 };
 
 #endif

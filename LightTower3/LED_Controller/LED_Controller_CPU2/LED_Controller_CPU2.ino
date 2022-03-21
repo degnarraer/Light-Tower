@@ -4,8 +4,6 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 
-#define c3_frequency  130.81
-
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
@@ -85,17 +83,6 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    ManagerTaskLoop,                // Function to implement the task
-    "ManagerTask",                  // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
     ProcessSoundPowerTaskLoop,      // Function to implement the task
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
@@ -118,11 +105,22 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
+    ManagerTaskLoop,                // Function to implement the task
+    "ManagerTask",                  // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 2,       // Priority of the task
+    &ManagerTask,                   // Task handle.
+    1                               // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES - 3,       // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -133,7 +131,7 @@ void setup() {
     "SerialDataLinkRXTask",         // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES - 3,       // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -152,7 +150,7 @@ void ManagerTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
