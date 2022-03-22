@@ -79,7 +79,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
             HasSound = true;
           }
           size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
-          if(true == HasSound && 0 < space)
+          if(0 < space)
           {
             m_FrameBuffer.Write(m_DataFrameRX[i]);
           }

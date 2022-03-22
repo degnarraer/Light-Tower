@@ -62,12 +62,13 @@ void setup() {
     
   //PC Serial Communication
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
+  Serial.flush();
 
   //ESP_LOGD("LED_Controller2", "%s, ", __func__);
-  ESP_LOGI("LED_Controller2", "Serial Datalink Configured");
-  ESP_LOGI("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGI("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGI("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGW("LED_Controller2", "Serial Datalink Configured");
+  ESP_LOGW("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGW("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGW("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
  
   m_I2S_Out.Setup();
   m_I2S_In.Setup();
@@ -81,7 +82,7 @@ void setup() {
   a2dp_source.start("AL HydraMini", get_data_channels);
   //a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series", get_data_channels);
   //a2dp_source.start("Shock's iPhone", get_data_channels);
-  ESP_LOGI("LED_Controller2", "Bluetooth Source Started");
+  ESP_LOGW("LED_Controller2", "Bluetooth Source Started");
  
   xTaskCreatePinnedToCore
   (
@@ -137,7 +138,7 @@ void setup() {
     1                               // Core where the task should run
   );
   
-  ESP_LOGI("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
+  ESP_LOGW("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
 }
 
 void loop()
@@ -152,7 +153,7 @@ void ManagerTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -185,7 +186,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -196,6 +197,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
