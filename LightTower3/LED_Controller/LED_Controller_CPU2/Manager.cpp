@@ -71,16 +71,22 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
       {
         for(int i = 0; i < ChannelSampleCount; ++i)
         {
+          bool HasSound = false;
           m_DataFrameRX[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
           m_DataFrameRX[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
+          if(m_DataFrameRX[i].channel1 > 0 || m_DataFrameRX[i].channel2 > 0)
+          {
+            HasSound = true;
+          }
           size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
-          if(0 <= space)
+          if(true == HasSound && 0 < space)
           {
             m_FrameBuffer.Write(m_DataFrameRX[i]);
           }
           else
           {
             ESP_LOGW("Manager", "WARNING! Bluetooth Frame Buffer Overflowed");
+            m_FrameBuffer.Clear();
           }
         }
       }
