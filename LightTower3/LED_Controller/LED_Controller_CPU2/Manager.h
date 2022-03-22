@@ -57,7 +57,7 @@ class Manager: public NamedItem
     static const int32_t m_MaxChannelCount = 128;
     Frame_t m_DataFrameRX[I2S_SAMPLE_COUNT];
     Frame_t m_DataFrameBTSend[I2S_SAMPLE_COUNT];
-    bfs::CircleBuf<Frame_t, m_MaxChannelCount*25> m_FrameBuffer;
+    bfs::CircleBuf<Frame_t, m_MaxChannelCount*50> m_FrameBuffer;
 };
 
 #endif
