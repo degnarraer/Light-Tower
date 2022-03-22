@@ -128,6 +128,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             
             static bool R_MajorFreq_Push_Successful = true;
             PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
+            xQueueReset(QueueIn);
           }
         }
       }
@@ -214,6 +215,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             
             static bool L_MajorFreq_Push_Successful = true;
             PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
+            xQueueReset(QueueIn);
           }
         }
       }
@@ -258,6 +260,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
             PushValueToQueue(&m_R_ProcessedSoundData, QueueOut, false, "Right Processed SOund Data: R_PSD", R_PSD_Push_Successful);
             m_R_ProcessedSoundData.Minimum = INT32_MAX;
             m_R_ProcessedSoundData.Maximum = INT32_MIN;
+            xQueueReset(QueueIn);
           }
         }
       }
@@ -302,6 +305,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
             PushValueToQueue(&m_L_ProcessedSoundData, QueueOut, false, "Left Processed SOund Data: L_PSD", L_PSD_Push_Successful);
             m_L_ProcessedSoundData.Minimum = INT32_MAX;
             m_L_ProcessedSoundData.Maximum = INT32_MIN;
+            xQueueReset(QueueIn);
           }
         }
       }

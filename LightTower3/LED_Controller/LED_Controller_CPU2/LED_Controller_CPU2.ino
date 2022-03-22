@@ -76,18 +76,20 @@ void setup() {
   a2dp_source.set_auto_reconnect(true);
   a2dp_source.set_ssp_enabled(false);
   a2dp_source.set_local_name("LED Tower of Power");
+  a2dp_source.set_task_priority(configMAX_PRIORITIES - 0);
   //a2dp_source.set_pin_code("0000");
-  a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series", get_data_channels);
+  a2dp_source.start("AL HydraMini", get_data_channels);
+  //a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series", get_data_channels);
   //a2dp_source.start("Shock's iPhone", get_data_channels);
   ESP_LOGI("LED_Controller2", "Bluetooth Source Started");
-  
+ 
   xTaskCreatePinnedToCore
   (
     ProcessSoundPowerTaskLoop,      // Function to implement the task
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
     0                               // Core where the task should run
   );
@@ -98,7 +100,7 @@ void setup() {
     "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 3,       // Priority of the task
     &ProcessFFTTask,                // Task handle.
     0                               // Core where the task should run
   );
@@ -112,8 +114,7 @@ void setup() {
     configMAX_PRIORITIES - 2,       // Priority of the task
     &ManagerTask,                   // Task handle.
     1                               // Core where the task should run
-  );
-  
+  ); 
   xTaskCreatePinnedToCore
   (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
@@ -135,6 +136,7 @@ void setup() {
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
+  
   ESP_LOGI("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
 }
 
@@ -183,7 +185,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -194,6 +196,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

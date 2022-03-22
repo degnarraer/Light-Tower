@@ -74,11 +74,14 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
           m_DataFrameRX[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
           m_DataFrameRX[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
           size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
-          if(0 == space)
+          if(0 <= space)
           {
-            m_FrameBuffer.Clear();
+            m_FrameBuffer.Write(m_DataFrameRX[i]);
           }
-          m_FrameBuffer.Write(m_DataFrameRX[i]);
+          else
+          {
+            ESP_LOGW("Manager", "WARNING! Bluetooth Frame Buffer Overflowed");
+          }
         }
       }
     }
@@ -128,9 +131,8 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 //Bluetooth Source Callback
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
-  //ESP_LOGD("Manager",  "Channel Length Needed: %i\tTotal Samples Available: %i",channel_len, m_FrameBuffer.size());
   int32_t SamplesToRead = min((int32_t)m_FrameBuffer.size(), channel_len);
   m_FrameBuffer.Read( (Frame_t*)frame, SamplesToRead );
-  //ESP_LOGD("Manager",  "SamplesRead: %i", SamplesToRead);
+  //ESP_LOGD("Manager", "%i|%i|%i",channel_len, m_FrameBuffer.size(), SamplesToRead);
   return SamplesToRead;
 }

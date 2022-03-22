@@ -120,6 +120,9 @@ void StatisticalEngine::RunMyScheduledTask()
   {
     GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
     GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
+    Serial.print(m_Right_MaxBandSoundData.MaxBandNormalizedPower);
+    Serial.print("|");
+    Serial.println(m_Right_MaxBandSoundData.MaxBandIndex);
   }
 }
 
