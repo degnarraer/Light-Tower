@@ -150,34 +150,41 @@ void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 	ESP_LOGV("i2S Device", "%s: Sound Buffer Data Ready.", GetTitle());
 }
 
-int I2S_Device::ReadSamples()
+int32_t I2S_Device::GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCount)
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	size_t bytes_read = 0;
-	size_t channel_bytes_read = 0;
-	// read from i2s
-	i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
-	channel_bytes_read = bytes_read / 2;
-	if(bytes_read != m_TotalBytesToRead)
-	{
-		ESP_LOGE("i2S Device", "%s: Error Reading All Bytes. Read: %i out of %i.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
-	}
-	if(NULL != m_Callee) m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, m_SampleCount);
+	i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, 0 );
+	return bytes_read;
+}
 
-	if(I2S_CHANNEL_STEREO == m_i2s_channel)
+int I2S_Device::ReadSamples()
+{
+	size_t bytes_read = 0;
+	if(NULL != m_Callee)
 	{
-		int channel_samples_read = channel_bytes_read / m_BytesPerSample;
-		for(int i = 0; i < channel_samples_read; ++i)
+		//ESP_LOGV("Function Debug", "%s, ", __func__);
+		size_t channel_bytes_read = 0;
+		i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
+		channel_bytes_read = bytes_read / 2;
+		if(bytes_read != m_TotalBytesToRead)
 		{
-		  int DataBufferIndex = m_BytesPerSample * i;
-		  for(int j = 0; j < m_BytesPerSample; ++j)
-		  {
-			m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + j];
-			m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + m_BytesPerSample + j];
-		  }
+			ESP_LOGE("i2S Device", "%s: Error Reading All Bytes. Read: %i out of %i.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
 		}
-		if(NULL != m_Callee) 
+		m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, m_SampleCount);
+
+		if(I2S_CHANNEL_STEREO == m_i2s_channel)
 		{
+			int channel_samples_read = channel_bytes_read / m_BytesPerSample;
+			for(int i = 0; i < channel_samples_read; ++i)
+			{
+			  int DataBufferIndex = m_BytesPerSample * i;
+			  for(int j = 0; j < m_BytesPerSample; ++j)
+			  {
+				m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + j];
+				m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + m_BytesPerSample + j];
+			  }
+			}
 			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read, m_ChannelSampleCount);
 			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read, m_ChannelSampleCount);
 		}

@@ -41,7 +41,7 @@ void Manager::Setup()
 {
   ESP_LOGV("Manager", "%s, ", __func__);
   m_SoundProcessor.SetupSoundProcessor();
-  m_I2S_In.ResgisterForDataBufferRXCallback(this);
+  //m_I2S_In.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_In.StartDevice();  
   m_I2S_Out.StartDevice();
@@ -50,10 +50,10 @@ void Manager::Setup()
 void Manager::ProcessEventQueue()
 {
   ESP_LOGV("Function Debug", "%s, ", __func__);
+  //WriteDataToBluetooth();
   m_I2S_In.ProcessEventQueue();
   m_I2S_Out.ProcessEventQueue();
 }
-
 
 //I2S_Device_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
@@ -69,25 +69,18 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
       m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
       if(true == m_BT_Source.is_connected())
       {
+        Frame_t DataFrameRX;
         for(int i = 0; i < ChannelSampleCount; ++i)
         {
-          bool HasSound = false;
-          m_DataFrameRX[i].channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
-          m_DataFrameRX[i].channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
-          if(m_DataFrameRX[i].channel1 > 0 || m_DataFrameRX[i].channel2 > 0)
-          {
-            HasSound = true;
-          }
+          DataFrameRX.channel1 = ((int32_t*)DataBuffer)[2*i] >> 16;
+          DataFrameRX.channel2 = ((int32_t*)DataBuffer)[2*i+1] >> 16;
           size_t space = m_FrameBuffer.capacity() - m_FrameBuffer.size();
-          if(0 < space)
-          {
-            m_FrameBuffer.Write(m_DataFrameRX[i]);
-          }
-          else
+          if(0 >= space)
           {
             ESP_LOGW("Manager", "WARNING! Bluetooth Frame Buffer Overflowed");
             m_FrameBuffer.Clear();
           }
+          m_FrameBuffer.Write(DataFrameRX);
         }
       }
     }
@@ -137,8 +130,16 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 //Bluetooth Source Callback
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
-  int32_t SamplesToRead = min((int32_t)m_FrameBuffer.size(), channel_len);
-  m_FrameBuffer.Read( (Frame_t*)frame, SamplesToRead );
-  //ESP_LOGD("Manager", "%i|%i|%i",channel_len, m_FrameBuffer.size(), SamplesToRead);
-  return SamplesToRead;
+  int32_t BytesRead = 0;
+  int32_t BytesRequested = channel_len * 8;
+  BytesRead = m_I2S_In.GetSoundBufferData(m_RXBuffer, BytesRequested);
+  int32_t SamplesRead = BytesRead/8;
+  for(int i = 0; i < SamplesRead; ++i)
+  {
+    frame[i].channel1 = ((int32_t*)m_RXBuffer)[2*i] >> 16;
+    frame[i].channel2 = ((int32_t*)m_RXBuffer)[2*i + 1] >> 16;
+  }
+  ESP_LOGD("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
+  return SamplesRead;
+;
 }

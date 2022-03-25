@@ -57,18 +57,19 @@ int32_t get_data_channels(Frame *frame, int32_t channel_len)
 void setup() {
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(4096);
-  m_hSerial.begin(300000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
+  m_hSerial.begin(300000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  
     
   //PC Serial Communication
-  Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
   Serial.flush();
+  Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
 
   //ESP_LOGD("LED_Controller2", "%s, ", __func__);
-  ESP_LOGW("LED_Controller2", "Serial Datalink Configured");
-  ESP_LOGW("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGW("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGW("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGE("LED_Controller2", "Serial Datalink Configured");
+  ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
  
   m_I2S_Out.Setup();
   m_I2S_In.Setup();
@@ -78,11 +79,8 @@ void setup() {
   a2dp_source.set_ssp_enabled(false);
   a2dp_source.set_local_name("LED Tower of Power");
   a2dp_source.set_task_priority(configMAX_PRIORITIES - 0);
-  //a2dp_source.set_pin_code("0000");
   a2dp_source.start("AL HydraMini", get_data_channels);
-  //a2dp_source.start("[AV] Samsung Soundbar MM55 M-Series", get_data_channels);
-  //a2dp_source.start("Shock's iPhone", get_data_channels);
-  ESP_LOGW("LED_Controller2", "Bluetooth Source Started");
+  ESP_LOGI("LED_Controller2", "Bluetooth Source Started");
  
   xTaskCreatePinnedToCore
   (
@@ -90,29 +88,27 @@ void setup() {
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES - 3,       // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
     0                               // Core where the task should run
   );
-  
   xTaskCreatePinnedToCore
   (
     ProcessFFTTaskLoop,             // Function to implement the task
     "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 3,       // Priority of the task
+    configMAX_PRIORITIES - 4,       // Priority of the task
     &ProcessFFTTask,                // Task handle.
     0                               // Core where the task should run
   );
-  
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &ManagerTask,                   // Task handle.
     1                               // Core where the task should run
   ); 
@@ -122,23 +118,21 @@ void setup() {
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 3,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
-
   xTaskCreatePinnedToCore
   (
     SerialDataLinkRXTaskLoop,       // Function to implement the task
     "SerialDataLinkRXTask",         // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 3,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
-  
-  ESP_LOGW("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
+  ESP_LOGE("LED_Controller_CPU2", "Free Heap: %i", ESP.getFreeHeap());
 }
 
 void loop()
@@ -163,7 +157,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    m_SoundProcessor.ProcessSoundPower();
+    //m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -174,8 +168,8 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("Function Debug", "%s, ", __func__);
-    m_SoundProcessor.ProcessFFT();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    //m_SoundProcessor.ProcessFFT();
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -185,7 +179,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    m_SerialDataLink.ProcessDataRXEventQueue();
+    //m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -196,7 +190,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    m_SerialDataLink.ProcessDataTXEventQueue();
+    //m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
