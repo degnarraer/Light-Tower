@@ -62,6 +62,13 @@ class I2S_Device: public NamedItem
               , int SerialDataOutPin );
     virtual ~I2S_Device();
     void ResgisterForDataBufferRXCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
+    void DeResgisterForDataBufferRXCallback(I2S_Device_Callback* callee)
+	{ 
+		if(m_Callee == callee)
+		{
+			m_Callee = NULL;
+		}
+	}
     void StartDevice();
     void StopDevice();
 	size_t GetBytesPerSample() { return m_BytesPerSample; }

@@ -157,7 +157,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    //m_SoundProcessor.ProcessSoundPower();
+    m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -168,7 +168,7 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("Function Debug", "%s, ", __func__);
-    //m_SoundProcessor.ProcessFFT();
+    m_SoundProcessor.ProcessFFT();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -179,7 +179,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    //m_SerialDataLink.ProcessDataRXEventQueue();
+    m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -190,7 +190,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    //m_SerialDataLink.ProcessDataTXEventQueue();
+    m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
