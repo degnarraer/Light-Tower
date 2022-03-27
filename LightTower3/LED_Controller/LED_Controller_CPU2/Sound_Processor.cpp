@@ -83,32 +83,11 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
-          m_FFT_Right_Data_Real[m_FFT_Right_Buffer_Index] = InputDataBuffer[j];
-          m_FFT_Right_Data_Imaginary[m_FFT_Right_Buffer_Index] = 0.0;
-          ++m_FFT_Right_Buffer_Index;
-          if(m_FFT_Right_Buffer_Index >= FFT_SIZE)
+          if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
-            m_FFT_Right_Buffer_Index = 0;
-            m_R_FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward, true);
-            m_R_FFT.compute(FFTDirection::Forward);
-            m_R_FFT.complexToMagnitude();
-            float MajorFreq = m_R_FFT.majorPeak();
-            int16_t MaxFFTBinIndex = 0;
-            float MaxFFTBinValue = 0;
-            for(int16_t k=0; k < (FFT_SIZE >> 1); ++k)
-            {
-              m_FFT_Right_Data_Real[k] = ( ( 2 * m_FFT_Right_Data_Real[k] / FFT_SIZE ) / m_32BitMax ) * m_FFT_Out_Gain;
-              if(m_FFT_Right_Data_Real[k] > 1.0) m_FFT_Right_Data_Real[k] = 1.0;
-              if(m_FFT_Right_Data_Real[k] > MaxFFTBinValue)
-              {
-                MaxFFTBinValue = m_FFT_Right_Data_Real[k];
-                MaxFFTBinIndex = k;
-              }
-            }
-            
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
-            AssignToBands(Bands_DataBuffer, m_FFT_Right_Data_Real, FFT_SIZE);
+            AssignToBands(Bands_DataBuffer, m_R_FFT.GetFFTRealBuffer(), FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
               if(Bands_DataBuffer[k] > MaxBandMagnitude)
@@ -127,7 +106,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, "Right Bands: R_BANDS", R_Bands_Push_Successful);
             
             static bool R_MajorFreq_Push_Successful = true;
-            PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
+            PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
             xQueueReset(QueueIn);
           }
         }
@@ -170,32 +149,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
-          m_FFT_Left_Data_Real[m_FFT_Left_Buffer_Index] = InputDataBuffer[j];
-          m_FFT_Left_Data_Imaginary[m_FFT_Left_Buffer_Index] = 0.0;
-          ++m_FFT_Left_Buffer_Index;
-          if(m_FFT_Left_Buffer_Index >= FFT_SIZE)
+          if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
-            m_FFT_Left_Buffer_Index = 0;
-            m_L_FFT.windowing(FFTWindow::Hamming, FFTDirection::Forward, true);
-            m_L_FFT.compute(FFTDirection::Forward);
-            m_L_FFT.complexToMagnitude();
-            float MajorFreq = m_L_FFT.majorPeak();
-            int16_t MaxFFTBinIndex = 0;
-            float MaxFFTBinValue = 0;
-            for(int16_t k=0; k < (FFT_SIZE >> 1); ++k)
-            {
-              m_FFT_Left_Data_Real[k] = ( ( 2 * m_FFT_Left_Data_Real[k] / FFT_SIZE ) / m_32BitMax ) * m_FFT_Out_Gain;
-              if(m_FFT_Left_Data_Real[k] > 1.0) m_FFT_Left_Data_Real[k] = 1.0;
-              if(m_FFT_Left_Data_Real[k] > MaxFFTBinValue)
-              {
-                MaxFFTBinValue = m_FFT_Left_Data_Real[k];
-                MaxFFTBinIndex = k;
-              }
-            }
-            
+          
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
-            AssignToBands(Bands_DataBuffer, m_FFT_Left_Data_Real, FFT_SIZE);
+            AssignToBands(Bands_DataBuffer, m_L_FFT.GetFFTRealBuffer(), FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
               if(Bands_DataBuffer[k] > MaxBandMagnitude)
@@ -214,7 +173,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             PushValueToQueue(Bands_DataBuffer, Bands_QueueOut, false, "Left Bands: L_BANDS", L_Bands_Push_Successful);
             
             static bool L_MajorFreq_Push_Successful = true;
-            PushValueToQueue(&MajorFreq, MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
+            PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
             xQueueReset(QueueIn);
           }
         }

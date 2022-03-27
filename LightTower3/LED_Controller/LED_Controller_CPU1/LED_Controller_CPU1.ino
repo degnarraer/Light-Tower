@@ -156,7 +156,7 @@ void setup()
     "SerialDataLinkSendTask",   // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 4,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
   );     
@@ -167,7 +167,7 @@ void setup()
     "SerialDataLinkRXTask",     // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
@@ -226,7 +226,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -237,6 +237,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

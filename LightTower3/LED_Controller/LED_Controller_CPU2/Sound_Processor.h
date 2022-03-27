@@ -21,9 +21,9 @@
 
 #include <Arduino.h>
 #include "arduinoFFT.h"
+#include "FFT_Calculator.h"
 #include <DataTypes.h>
 #include <Helpers.h>
-#include <FIR.h>
 #include "Tunes.h"
 #include "Streaming.h"
 #include "float.h"
@@ -57,14 +57,9 @@ class Sound_Processor: public NamedItem
     float m_Band_Gain = 1.0;
     
     //CALCULATED OUTPUTS
-    ArduinoFFT<float> m_R_FFT = ArduinoFFT<float>(m_FFT_Right_Data_Real, m_FFT_Right_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
-    ArduinoFFT<float> m_L_FFT = ArduinoFFT<float>(m_FFT_Left_Data_Real, m_FFT_Left_Data_Imaginary, FFT_SIZE, I2S_SAMPLE_RATE);
-    float m_FFT_Right_Data_Real[FFT_SIZE];
-    float m_FFT_Right_Data_Imaginary[FFT_SIZE];
-    int32_t m_FFT_Right_Buffer_Index = 0;
-    float m_FFT_Left_Data_Real[FFT_SIZE];
-    float m_FFT_Left_Data_Imaginary[FFT_SIZE];
-    int32_t m_FFT_Left_Buffer_Index = 0;
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, m_32BitMax);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, m_32BitMax);
+
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
