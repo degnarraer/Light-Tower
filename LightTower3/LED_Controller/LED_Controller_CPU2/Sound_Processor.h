@@ -55,12 +55,6 @@ class Sound_Processor: public NamedItem
     float m_FFT_Gain = 1.0;
     float m_FFT_Out_Gain = 1.0;
     float m_Band_Gain = 1.0;
-    
-    //CALCULATED OUTPUTS
-    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, m_32BitMax);
-    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, m_32BitMax);
-    float m_MajorPeak_R = 0.0;
-    float m_MajorPeak_L = 0.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
@@ -68,7 +62,11 @@ class Sound_Processor: public NamedItem
     uint32_t m_24BitMax = pow(2,24);      //Used for Amplitude of 24 bit MIC values
     uint32_t m_16BitMax = pow(2,16);      //Used for Amplitude of 16 bit FFT values
     uint32_t m_32BitMax = pow(2,32);      //Used for Amplitude of 16 bit FFT values
-
+    
+    //CALCULATED OUTPUTS
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
+    
     public:
       void ProcessSoundPower()
       {
@@ -94,7 +92,7 @@ class Sound_Processor: public NamedItem
       void Sound_32Bit_44100Hz_Right_Channel_FFT();
       void Sound_32Bit_44100Hz_Left_Channel_FFT();
  
-    void AssignToBands(float* Band_Data, float* FFT_Data, int16_t FFT_Size);
+    void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;

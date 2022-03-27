@@ -87,7 +87,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
           {
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
-            AssignToBands(Bands_DataBuffer, m_R_FFT.GetFFTRealBuffer(), FFT_SIZE);
+            AssignToBands(Bands_DataBuffer, &m_R_FFT, FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
               if(Bands_DataBuffer[k] > MaxBandMagnitude)
@@ -153,7 +153,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
           {
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
-            AssignToBands(Bands_DataBuffer, m_L_FFT.GetFFTRealBuffer(), FFT_SIZE);
+            AssignToBands(Bands_DataBuffer, &m_L_FFT, FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
               if(Bands_DataBuffer[k] > MaxBandMagnitude)
@@ -271,12 +271,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
   }
 }
 
-void Sound_Processor::AssignToBands(float* Band_Data, float* FFT_Data, int16_t FFT_Size)
+void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size)
 {
   //ESP_LOGV("Function Debug", "%s, ", __func__);
   for(int i = 0; i < FFT_Size/2; ++i)
   {
-    float magnitude = FFT_Data[i];
+    float magnitude = FFT_Calculator->GetFFTBufferValue(i);
     float freq = GetFreqForBin(i);
     int bandIndex = 0;
     if(freq > 0 && freq <= 43) bandIndex = 0;
