@@ -22,16 +22,16 @@ Sound_Processor::Sound_Processor(String Title, SerialDataLink &SerialDataLink): 
                                                                               , QueueManager(Title + "_QueueManager", m_ConfigCount)
                                                                               , m_SerialDataLink(SerialDataLink)
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 Sound_Processor::~Sound_Processor()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   FreeMemory();
 }
 void Sound_Processor::SetupSoundProcessor()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   if(true == m_MemoryIsAllocated)FreeMemory();
   AllocateMemory();
@@ -39,19 +39,19 @@ void Sound_Processor::SetupSoundProcessor()
 }
 void Sound_Processor::AllocateMemory()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   m_MemoryIsAllocated = true;
 }
 
 void Sound_Processor::FreeMemory()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   m_MemoryIsAllocated = false;
 }
 
 void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("R_FFT_IN");
   QueueHandle_t Bands_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_BANDS");
   QueueHandle_t MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_MAXBAND");
@@ -117,7 +117,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
 
 void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("L_FFT_IN");
   QueueHandle_t Bands_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_BANDS");
   QueueHandle_t MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_MAXBAND");
@@ -151,7 +151,6 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
         {
           if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
-          
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
             AssignToBands(Bands_DataBuffer, m_L_FFT.GetFFTRealBuffer(), FFT_SIZE);
@@ -184,7 +183,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
 
 void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("R_PSD_IN");
   QueueHandle_t QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_PSD");
   if( NULL != QueueIn && NULL != QueueOut )
@@ -229,7 +228,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
 
 void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("L_PSD_IN");
   QueueHandle_t QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_PSD");
   if( NULL != QueueIn && NULL != QueueOut )
@@ -274,7 +273,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
 
 void Sound_Processor::AssignToBands(float* Band_Data, float* FFT_Data, int16_t FFT_Size)
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   for(int i = 0; i < FFT_Size/2; ++i)
   {
     float magnitude = FFT_Data[i];
@@ -318,11 +317,11 @@ void Sound_Processor::AssignToBands(float* Band_Data, float* FFT_Data, int16_t F
 
 float Sound_Processor::GetFreqForBin(int Bin)
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   return (float)(Bin * ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE)));
 }
 int Sound_Processor::GetBinForFrequency(float Frequency)
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
+  //ESP_LOGV("Function Debug", "%s, ", __func__);
   return ((int)((float)Frequency / ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE))));
 }

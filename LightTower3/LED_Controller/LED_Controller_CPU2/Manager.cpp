@@ -71,15 +71,12 @@ void Manager::UpdateNotificationRegistrationStatus()
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() )
+  if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
   {
     size_t ChannelSampleCount = SampleCount/2;
     assert(m_I2S_Out.GetBytesToRead() == ByteCount);
     assert(m_I2S_Out.GetSampleCount() == SampleCount);
-    if(DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
-    {
-        m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
-    }
+    m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
@@ -151,6 +148,6 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
     LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualReadCount * 4, ActualReadCount);
   }
   
-  ESP_LOGD("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
+  ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
   return SamplesRead;
 }

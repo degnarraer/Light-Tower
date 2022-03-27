@@ -59,12 +59,13 @@ void setup() {
   m_hSerial.setRxBufferSize(4096);
   m_hSerial.flush();
   m_hSerial.begin(300000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
-  
+  m_hSerial.flush();
     
   //PC Serial Communication
   Serial.flush();
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
-
+  Serial.flush();
+  
   //ESP_LOGD("LED_Controller2", "%s, ", __func__);
   ESP_LOGE("LED_Controller2", "Serial Datalink Configured");
   ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
@@ -169,7 +170,7 @@ void ProcessFFTTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 

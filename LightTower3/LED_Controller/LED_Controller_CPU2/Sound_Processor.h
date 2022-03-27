@@ -59,7 +59,8 @@ class Sound_Processor: public NamedItem
     //CALCULATED OUTPUTS
     FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, m_32BitMax);
     FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, m_32BitMax);
-
+    float m_MajorPeak_R = 0.0;
+    float m_MajorPeak_L = 0.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
