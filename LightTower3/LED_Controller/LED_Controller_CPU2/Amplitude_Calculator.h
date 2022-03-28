@@ -60,6 +60,7 @@ class Amplitude_Calculator
         m_ProcessedSoundData.Minimum = INT32_MAX;
         m_ProcessedSoundData.Maximum = INT32_MIN;
       }
+      return m_SolutionReady;
     }
   private:
     ProcessedSoundData_t m_ProcessedSoundData;

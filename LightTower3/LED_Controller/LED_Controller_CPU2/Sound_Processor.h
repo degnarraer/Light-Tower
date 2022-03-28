@@ -38,8 +38,8 @@ class Sound_Processor: public NamedItem
     Sound_Processor(String Title, SerialDataLink &SerialDataLink);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
-
-    //QueueManager
+    
+    //QueueManager Interface
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
@@ -53,7 +53,7 @@ class Sound_Processor: public NamedItem
     
     //Adjustments
     float m_Gain = 1.0;
-    float m_FFT_Gain = 1.0;
+    float m_FFT_Gain = 2.0;
     float m_Band_Gain = 1.0;
 
     //DB Conversion taken from INMP441 Datasheet
