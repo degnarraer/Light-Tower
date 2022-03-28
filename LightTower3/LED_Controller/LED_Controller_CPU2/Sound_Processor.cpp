@@ -83,6 +83,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
+          m_R_FFT.SetGainValue(m_FFT_Gain);
           if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
             float MaxBandMagnitude = 0;
@@ -149,6 +150,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
+          m_L_FFT.SetGainValue(m_FFT_Gain);
           if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
             float MaxBandMagnitude = 0;
@@ -197,27 +199,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
     {
       if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        memset(InputDataBuffer, 0, InputByteCount);
         for(int j = 0; j < InputSampleCount; ++j)
         {
-          if(InputDataBuffer[j] < m_R_ProcessedSoundData.Minimum)
+          if(true == m_RightSoundData.PushValueAndCalculateSoundData(InputDataBuffer[j]))
           {
-            m_R_ProcessedSoundData.Minimum = InputDataBuffer[j];
-          }
-          if(InputDataBuffer[j] > m_R_ProcessedSoundData.Maximum)
-          {
-            m_R_ProcessedSoundData.Maximum = InputDataBuffer[j];
-          }
-          ++m_RightPowerCalculationCount;
-          if(0 == m_RightPowerCalculationCount % (I2S_SAMPLE_RATE/m_PowerCalculationsPerSecond))
-          {
-            m_RightPowerCalculationCount = 0;
-            int32_t peakToPeak = (m_R_ProcessedSoundData.Maximum - m_R_ProcessedSoundData.Minimum) * m_Gain;
-            m_R_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
             static bool R_PSD_Push_Successful = true;
-            PushValueToQueue(&m_R_ProcessedSoundData, QueueOut, false, "Right Processed SOund Data: R_PSD", R_PSD_Push_Successful);
-            m_R_ProcessedSoundData.Minimum = INT32_MAX;
-            m_R_ProcessedSoundData.Maximum = INT32_MIN;
+            PushValueToQueue(m_RightSoundData.GetProcessedSoundDataPointer(), QueueOut, false, "Right Processed Sound Data: R_PSD", R_PSD_Push_Successful);
             xQueueReset(QueueIn);
           }
         }
@@ -242,27 +229,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
     {
       if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
       {
-        memset(InputDataBuffer, 0, InputByteCount);
         for(int j = 0; j < InputSampleCount; ++j)
         {
-          if(InputDataBuffer[j] < m_L_ProcessedSoundData.Minimum)
+          if(true == m_LeftSoundData.PushValueAndCalculateSoundData(InputDataBuffer[j]))
           {
-            m_L_ProcessedSoundData.Minimum = InputDataBuffer[j];
-          }
-          if(InputDataBuffer[j] > m_L_ProcessedSoundData.Maximum)
-          {
-            m_L_ProcessedSoundData.Maximum = InputDataBuffer[j];
-          }
-          ++m_LeftPowerCalculationCount;
-          if(0 == m_LeftPowerCalculationCount % (I2S_SAMPLE_RATE/m_PowerCalculationsPerSecond))
-          {
-            m_LeftPowerCalculationCount = 0;
-            int32_t peakToPeak = (m_L_ProcessedSoundData.Maximum - m_L_ProcessedSoundData.Minimum) * m_Gain;
-            m_L_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
             static bool L_PSD_Push_Successful = true;
-            PushValueToQueue(&m_L_ProcessedSoundData, QueueOut, false, "Left Processed SOund Data: L_PSD", L_PSD_Push_Successful);
-            m_L_ProcessedSoundData.Minimum = INT32_MAX;
-            m_L_ProcessedSoundData.Maximum = INT32_MIN;
+            PushValueToQueue(m_LeftSoundData.GetProcessedSoundDataPointer(), QueueOut, false, "Left Processed Sound Data: L_PSD", L_PSD_Push_Successful);
             xQueueReset(QueueIn);
           }
         }

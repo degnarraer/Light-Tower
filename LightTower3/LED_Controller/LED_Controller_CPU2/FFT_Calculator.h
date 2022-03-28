@@ -99,7 +99,7 @@ class FFT_Calculator
     int32_t m_MaxFFTBinIndex = 0;
     float m_MajorPeak = 0;
     bool m_SolutionReady = false;
-    uint32_t m_32BitMax = pow(2,32);      //Used for Amplitude of 16 bit FFT values
+    uint32_t m_32BitMax = pow(2,32);
 };
 
 

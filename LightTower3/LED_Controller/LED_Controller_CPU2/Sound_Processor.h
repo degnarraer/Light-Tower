@@ -22,6 +22,7 @@
 #include <Arduino.h>
 #include "arduinoFFT.h"
 #include "FFT_Calculator.h"
+#include "Amplitude_Calculator.h"
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "Tunes.h"
@@ -53,7 +54,6 @@ class Sound_Processor: public NamedItem
     //Adjustments
     float m_Gain = 1.0;
     float m_FFT_Gain = 1.0;
-    float m_FFT_Out_Gain = 1.0;
     float m_Band_Gain = 1.0;
 
     //DB Conversion taken from INMP441 Datasheet
@@ -63,10 +63,6 @@ class Sound_Processor: public NamedItem
     uint32_t m_16BitMax = pow(2,16);      //Used for Amplitude of 16 bit FFT values
     uint32_t m_32BitMax = pow(2,32);      //Used for Amplitude of 16 bit FFT values
     
-    //CALCULATED OUTPUTS
-    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
-    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
-    
     public:
       void ProcessSoundPower()
       {
@@ -74,13 +70,10 @@ class Sound_Processor: public NamedItem
         Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
       }
     private:
-      int32_t m_RightPowerCalculationCount = 0;
-      int32_t m_LeftPowerCalculationCount = 0;
-      const int16_t m_PowerCalculationsPerSecond = 100;
       void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
       void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
-      ProcessedSoundData_t m_R_ProcessedSoundData;
-      ProcessedSoundData_t m_L_ProcessedSoundData;
+      Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441);
+      Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441);
 
     public:
       void ProcessFFT()
@@ -91,21 +84,23 @@ class Sound_Processor: public NamedItem
     private:
       void Sound_32Bit_44100Hz_Right_Channel_FFT();
       void Sound_32Bit_44100Hz_Left_Channel_FFT();
+      FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
+      FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
  
-    void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
-    float GetFreqForBin(int bin);
-    int GetBinForFrequency(float Frequency);
-    int16_t m_AudioBinLimit;
+      void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
+      float GetFreqForBin(int bin);
+      int GetBinForFrequency(float Frequency);
+      int16_t m_AudioBinLimit;
 
-    //QueueManager Configuration
-    static const size_t m_ConfigCount = 4;
-    DataItemConfig_t m_ItemConfig[m_ConfigCount]
-    {
-      { "R_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "L_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
-      { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
-    };
+      //QueueManager Configuration
+      static const size_t m_ConfigCount = 4;
+      DataItemConfig_t m_ItemConfig[m_ConfigCount]
+      {
+        { "R_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+        { "L_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+        { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
+        { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
+      };
 };
 
 #endif
