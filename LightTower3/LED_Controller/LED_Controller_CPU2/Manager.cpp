@@ -124,10 +124,10 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
   int32_t BytesRead = 0;
-  int32_t BytesRequested = channel_len * 8;
+  int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
   BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, BytesRequested);
   m_I2S_Out.SetSoundBufferData(m_I2S_RXBuffer, BytesRead);
-  int32_t SamplesRead = BytesRead/8;
+  int32_t SamplesRead = BytesRead / m_32BitFrameByteCount;
   for(int i = 0; i < SamplesRead; ++i)
   {
     Frame aFrame;
@@ -144,8 +144,8 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
       m_RightDataBuffer[i] = m_LinearFrameBuffer[i].channel1 << 16;
       m_LeftDataBuffer[i] = m_LinearFrameBuffer[i].channel2 << 16;
     }
-    RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualReadCount * 4, ActualReadCount);
-    LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualReadCount * 4, ActualReadCount);
+    RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualReadCount * sizeof(m_RightDataBuffer[0]), ActualReadCount);
+    LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualReadCount * sizeof(m_RightDataBuffer[0]), ActualReadCount);
   }
   
   ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);

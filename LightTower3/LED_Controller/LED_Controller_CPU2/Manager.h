@@ -57,7 +57,8 @@ class Manager: public NamedItem
     //I2S Sound Data RX
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
-    uint8_t m_I2S_RXBuffer[I2S_SAMPLE_COUNT * 4 * 2];
+    static const size_t m_32BitFrameByteCount = 4 * 2;
+    uint8_t m_I2S_RXBuffer[I2S_SAMPLE_COUNT * m_32BitFrameByteCount];
     
     //Bluetooth Data
     BluetoothA2DPSource &m_BT_Source;
