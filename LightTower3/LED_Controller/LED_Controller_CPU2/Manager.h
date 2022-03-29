@@ -41,6 +41,8 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue();
     void WriteDataToBluetooth();
+
+    //Bluetooth Get Data Callback
     int32_t get_data_channels(Frame *frame, int32_t channel_len);
     
     //I2S_Device_Callback
@@ -51,24 +53,21 @@ class Manager: public NamedItem
   private:
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;
-    BluetoothA2DPSource &m_BT_Source;
+
+    //I2S Sound Data RX
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
-
+    uint8_t m_I2S_RXBuffer[I2S_SAMPLE_COUNT * 4 * 2];
+    
+    //Bluetooth Data
+    BluetoothA2DPSource &m_BT_Source;
     static const int32_t m_CircularBufferSize = 4000;
     bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
     Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
     int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
     int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
-    uint8_t m_RXBuffer[I2S_SAMPLE_COUNT * 4 * 2];
-    SoundData *m_SoundData;
-    int32_t m_MinSamplesWritten = 0;
-    int32_t m_MaxSamplesWritten = 0;
-    int32_t m_MinChannelsToWrite = 0;
-    int32_t m_MaxChannelsToWrite = 0;
-    int32_t m_MinBufferSize = 0;
-    int32_t m_MaxBufferSize = 0;
-    unsigned long m_UpdateTime = 0;
+
+    
     void UpdateNotificationRegistrationStatus();
 };
 

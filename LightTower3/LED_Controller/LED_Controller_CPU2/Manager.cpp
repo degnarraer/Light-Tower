@@ -125,14 +125,14 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * 8;
-  BytesRead = m_I2S_In.GetSoundBufferData(m_RXBuffer, BytesRequested);
-  m_I2S_Out.SetSoundBufferData(m_RXBuffer, BytesRead);
+  BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, BytesRequested);
+  m_I2S_Out.SetSoundBufferData(m_I2S_RXBuffer, BytesRead);
   int32_t SamplesRead = BytesRead/8;
   for(int i = 0; i < SamplesRead; ++i)
   {
     Frame aFrame;
-    aFrame.channel1 = ((int32_t*)m_RXBuffer)[2*i] >> 16;
-    aFrame.channel2 = ((int32_t*)m_RXBuffer)[2*i + 1] >> 16;
+    aFrame.channel1 = ((int32_t*)m_I2S_RXBuffer)[2*i] >> 16;
+    aFrame.channel2 = ((int32_t*)m_I2S_RXBuffer)[2*i + 1] >> 16;
     m_FrameBuffer.Write( (Frame_t&)(aFrame) );
     frame[i] = aFrame;
   }

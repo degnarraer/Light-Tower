@@ -38,6 +38,8 @@ class Sound_Processor: public NamedItem
     Sound_Processor(String Title, SerialDataLink &SerialDataLink);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
+    void SetGain(float Gain){m_Gain = Gain;}
+    void SetFFTGain(float Gain){m_FFT_Gain = Gain;}
     
     //QueueManager Interface
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
@@ -54,7 +56,6 @@ class Sound_Processor: public NamedItem
     //Adjustments
     float m_Gain = 1.0;
     float m_FFT_Gain = 2.0;
-    float m_Band_Gain = 1.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
@@ -63,44 +64,44 @@ class Sound_Processor: public NamedItem
     uint32_t m_16BitMax = pow(2,16);      //Used for Amplitude of 16 bit FFT values
     uint32_t m_32BitMax = pow(2,32);      //Used for Amplitude of 16 bit FFT values
     
-    public:
-      void ProcessSoundPower()
-      {
-        Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
-        Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
-      }
-    private:
-      void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
-      void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
-      Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441);
-      Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441);
+  public:
+    void ProcessSoundPower()
+    {
+      Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
+      Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
+    }
+  private:
+    void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
+    void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
+    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441);
+    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441);
 
-    public:
-      void ProcessFFT()
-      {
-        Sound_32Bit_44100Hz_Right_Channel_FFT();
-        Sound_32Bit_44100Hz_Left_Channel_FFT();
-      }
-    private:
-      void Sound_32Bit_44100Hz_Right_Channel_FFT();
-      void Sound_32Bit_44100Hz_Left_Channel_FFT();
-      FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
-      FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
- 
-      void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
-      float GetFreqForBin(int bin);
-      int GetBinForFrequency(float Frequency);
-      int16_t m_AudioBinLimit;
+  public:
+    void ProcessFFT()
+    {
+      Sound_32Bit_44100Hz_Right_Channel_FFT();
+      Sound_32Bit_44100Hz_Left_Channel_FFT();
+    }
+  private:
+    void Sound_32Bit_44100Hz_Right_Channel_FFT();
+    void Sound_32Bit_44100Hz_Left_Channel_FFT();
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
 
-      //QueueManager Configuration
-      static const size_t m_ConfigCount = 4;
-      DataItemConfig_t m_ItemConfig[m_ConfigCount]
-      {
-        { "R_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-        { "L_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-        { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
-        { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
-      };
+    void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
+    float GetFreqForBin(int bin);
+    int GetBinForFrequency(float Frequency);
+    int16_t m_AudioBinLimit;
+
+    //QueueManager Configuration
+    static const size_t m_ConfigCount = 4;
+    DataItemConfig_t m_ItemConfig[m_ConfigCount]
+    {
+      { "R_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "L_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
+      { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
+      { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
+    };
 };
 
 #endif
