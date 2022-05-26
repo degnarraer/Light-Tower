@@ -85,8 +85,8 @@ class Sound_Processor: public NamedItem
   private:
     void Sound_32Bit_44100Hz_Right_Channel_FFT();
     void Sound_32Bit_44100Hz_Left_Channel_FFT();
-    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
-    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_IN_SAMPLE_RATE);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_IN_SAMPLE_RATE);
 
     void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
     float GetFreqForBin(int bin);

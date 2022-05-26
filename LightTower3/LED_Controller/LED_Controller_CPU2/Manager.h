@@ -24,6 +24,7 @@
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSource.h>
+#include "Bluetooth_Device.h"
 #include "circle_buf.h"
 
 class Manager: public NamedItem
@@ -34,10 +35,12 @@ class Manager: public NamedItem
     Manager( String Title
            , Sound_Processor &SoundProcessor
            , SerialDataLink &SerialDataLink
-           , BluetoothA2DPSource &BT_Source
+           , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_In
            , I2S_Device &I2S_Out );
     virtual ~Manager();
+    void AllocateMemory();
+    void FreeMemory();
     void Setup();
     void ProcessEventQueue();
     void WriteDataToBluetooth();
@@ -58,17 +61,22 @@ class Manager: public NamedItem
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
     static const size_t m_32BitFrameByteCount = 4 * 2;
-    uint8_t m_I2S_RXBuffer[I2S_SAMPLE_COUNT * m_32BitFrameByteCount];
+    static const size_t m_I2S_RXBuffer_Count = I2S_SAMPLE_COUNT * m_32BitFrameByteCount;
+    uint8_t m_I2S_RXBuffer[m_I2S_RXBuffer_Count];
     
     //Bluetooth Data
-    BluetoothA2DPSource &m_BT_Source;
-    static const int32_t m_CircularBufferSize = 4000;
-    bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
-    Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
-    int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
-    int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
-
+    Bluetooth_Source &m_BT_Out;
     
+    static const int32_t m_CircularBufferSize = 2 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
+    bfs::CircleBuf<Frame_t, m_CircularBufferSize> *m_FrameBuffer;
+
+    static const size_t m_LinearFrameBuffer_Count = I2S_SAMPLE_COUNT;
+    static const size_t m_RightDataBuffer_Count = I2S_SAMPLE_COUNT;
+    static const size_t m_LeftDataBuffer_Count = I2S_SAMPLE_COUNT;
+    
+    Frame_t m_LinearFrameBuffer[m_LinearFrameBuffer_Count];
+    int32_t m_RightDataBuffer[m_RightDataBuffer_Count];
+    int32_t m_LeftDataBuffer[m_LeftDataBuffer_Count];
     void UpdateNotificationRegistrationStatus();
 };
 

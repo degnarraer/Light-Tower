@@ -108,7 +108,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             
             static bool R_MajorFreq_Push_Successful = true;
             PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
-            xQueueReset(QueueIn);
+            //xQueueReset(QueueIn);
           }
         }
       }
@@ -175,7 +175,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             
             static bool L_MajorFreq_Push_Successful = true;
             PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
-            xQueueReset(QueueIn);
+            //xQueueReset(QueueIn);
           }
         }
       }
@@ -205,7 +205,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
           {
             static bool R_PSD_Push_Successful = true;
             PushValueToQueue(m_RightSoundData.GetProcessedSoundDataPointer(), QueueOut, false, "Right Processed Sound Data: R_PSD", R_PSD_Push_Successful);
-            xQueueReset(QueueIn);
+            //xQueueReset(QueueIn);
           }
         }
       }
@@ -235,7 +235,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
           {
             static bool L_PSD_Push_Successful = true;
             PushValueToQueue(m_LeftSoundData.GetProcessedSoundDataPointer(), QueueOut, false, "Left Processed Sound Data: L_PSD", L_PSD_Push_Successful);
-            xQueueReset(QueueIn);
+            //xQueueReset(QueueIn);
           }
         }
       }
@@ -283,17 +283,17 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
     else if(freq > 12500 && freq <= 16000) bandIndex = 29;
     else if(freq > 16000 && freq <= 20000) bandIndex = 30;
     else if(freq > 20000 ) bandIndex = 31;
-    if(bandIndex >= 0 && freq < I2S_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
+    if(bandIndex >= 0 && freq < I2S_IN_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
   }
 }
 
 float Sound_Processor::GetFreqForBin(int Bin)
 {
   //ESP_LOGV("Function Debug", "%s, ", __func__);
-  return (float)(Bin * ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE)));
+  return (float)(Bin * ((float)I2S_IN_SAMPLE_RATE / (float)(FFT_SIZE)));
 }
 int Sound_Processor::GetBinForFrequency(float Frequency)
 {
   //ESP_LOGV("Function Debug", "%s, ", __func__);
-  return ((int)((float)Frequency / ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE))));
+  return ((int)((float)Frequency / ((float)I2S_IN_SAMPLE_RATE / (float)(FFT_SIZE))));
 }

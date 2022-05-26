@@ -1,12 +1,28 @@
 #ifndef TUNES_H
 #define TUNES_H
 
+//PIN Assignments
+#define I2S1_SCLCK_PIN          12
+#define I2S1_WD_PIN             13
+#define I2S1_SDIN_PIN           14
+#define I2S1_SDOUT_PIN          I2S_PIN_NO_CHANGE
+
+#define DATA_PIN_STRIP1_PIN     0
+#define DATA_PIN_STRIP2_PIN     2
+#define DATA_PIN_STRIP3_PIN     4
+#define DATA_PIN_STRIP4_PIN     5
+#define HARDWARE_SERIAL_RX_PIN  22
+#define HARDWARE_SERIAL_TX_PIN  23
+#define I2S2_SCLCK_PIN          25
+#define I2S2_WD_PIN             26
+#define I2S2_SDIN_PIN           I2S_PIN_NO_CHANGE
+#define I2S2_SDOUT_PIN          33
+
 //App Tunes
 #define I2S_SAMPLE_RATE 44100
-#define DAC_MUTE_PIN 22
 
-#define I2S_BUFFER_COUNT 10
-#define I2S_CHANNEL_SAMPLE_COUNT 128
+#define I2S_BUFFER_COUNT 40
+#define I2S_CHANNEL_SAMPLE_COUNT 64
 #define ANALOG_GAIN 1
 
 
@@ -65,10 +81,6 @@ static const unsigned int SCREEN_HEIGHT = NUMLEDS;
 
 //TBD Update This:
 static const float LEDS_PER_METER = 60.0;
-const unsigned int DATA_PIN_STRIP1 = 18;  //MATRIX1 PIN ASSIGNMENT
-const unsigned int DATA_PIN_STRIP2 = 19;  //MATRIX2 PIN ASSIGNMENT
-const unsigned int DATA_PIN_STRIP3 = 22;  //MATRIX3 PIN ASSIGNMENT
-const unsigned int DATA_PIN_STRIP4 = 23;  //MATRIX4 PIN ASSIGNMENT
 
 //FFT Tunes
 const int FFT_MAX = 2048;

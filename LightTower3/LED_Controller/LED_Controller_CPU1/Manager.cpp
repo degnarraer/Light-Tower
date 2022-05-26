@@ -41,27 +41,8 @@ void Manager::Setup()
   m_I2S_Out.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
-  //m_BT_In.ResgisterForDataBufferRXCallback(this);
-  pinMode(DAC_MUTE_PIN, OUTPUT);
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
-}
-
-void Manager::SetDACMuteState(Mute_State_t MuteState)
-{
-  switch(MuteState)
-  {
-    case Mute_State_Un_Muted:
-      digitalWrite(DAC_MUTE_PIN, LOW);
-      m_MuteState = Mute_State_Un_Muted;
-      break;
-    case Mute_State_Muted:
-      digitalWrite(DAC_MUTE_PIN, HIGH);
-      m_MuteState = Mute_State_Muted;
-      break;
-    default:
-      break;
-  }
+  //SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::ProcessEventQueue()
@@ -130,19 +111,16 @@ void Manager::SetInputType(InputType_t Type)
       m_BT_In.StopDevice();
       m_Mic_In.StartDevice();
       m_I2S_Out.StartDevice();
-      SetDACMuteState(Mute_State_Muted);
     break;
     case InputType_Bluetooth:
       m_Mic_In.StopDevice();
       m_BT_In.StartDevice();
       m_I2S_Out.StartDevice();
-      SetDACMuteState(Mute_State_Un_Muted);
     break;
     default:
       m_Mic_In.StopDevice();
       m_BT_In.StopDevice();
       m_I2S_Out.StopDevice();
-      SetDACMuteState(Mute_State_Muted);
     break;
   }
 }

@@ -24,6 +24,7 @@
 #include <Helpers.h>
 #include "Statistical_Engine.h"
 #include "Serial_Datalink_Config.h"
+#include <BluetoothA2DPSink.h>
 #include "Bluetooth_Device.h"
 
 enum InputType_t
@@ -63,7 +64,6 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue();
     void SetInputType(InputType_t Type);
-    void SetDACMuteState(Mute_State_t MuteState);
     
     //Bluetooth_Callback
     //I2S_Device_Callback

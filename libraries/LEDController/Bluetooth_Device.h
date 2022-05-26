@@ -24,6 +24,46 @@
 #include <Helpers.h>
 #include "Streaming.h"
 #include <BluetoothA2DPSink.h>
+#include <BluetoothA2DPSource.h>
+
+class Bluetooth_Source: public NamedItem
+					  , public CommonUtils
+{
+	public:
+		Bluetooth_Source( String Title
+						, BluetoothA2DPSource& BTSource
+						, const char *SourceName )
+						: NamedItem(Title)
+						, m_BTSource(BTSource)
+						, mp_SourceName(SourceName)
+		{
+		}
+		virtual ~Bluetooth_Source(){}
+		void Setup()
+		{
+			m_BTSource.set_nvs_init(true);
+			m_BTSource.set_auto_reconnect(false);
+			m_BTSource.set_ssp_enabled(false);
+			m_BTSource.set_local_name("LED Tower of Power");
+			m_BTSource.set_task_priority(configMAX_PRIORITIES - 0);
+		}
+		void SetCallback(music_data_channels_cb_t callback)
+		{
+			m_callback = callback;
+		}			
+		void StartDevice()
+		{
+			m_BTSource.start(mp_SourceName, m_callback);
+		}
+		void StopDevice()
+		{
+		}
+		bool IsConnected() {return m_BTSource.is_connected();}
+	private:
+		BluetoothA2DPSource& m_BTSource;
+		music_data_channels_cb_t m_callback = NULL;
+		const char *mp_SourceName;
+};
 
 class Bluetooth_Sink_Callback
 {
@@ -36,13 +76,13 @@ class Bluetooth_Sink_Callback
 		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
 		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
 };
-
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
 {
   public:
     Bluetooth_Sink( String Title
 				  , BluetoothA2DPSink& BTSink
+				  , const char *SinkName
 				  , i2s_port_t i2S_PORT
 				  , i2s_mode_t Mode
 				  , int SampleRate
@@ -105,7 +145,7 @@ class Bluetooth_Sink: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
 	bool m_Is_Running = false;
-	
+	const char *mp_SinkName;
 	bool m_MemoryIsAllocated = false;
 	void InstallDevice();
 	void AllocateMemory();

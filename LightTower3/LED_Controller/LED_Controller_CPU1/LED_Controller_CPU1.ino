@@ -1,5 +1,4 @@
 #include "Manager.h"
-#include <BluetoothA2DPSink.h>
 #include "Tunes.h"
 #include "VisualizationPlayer.h"
 #include "Models.h"
@@ -16,6 +15,7 @@ TaskHandle_t VisualizationTask;
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , m_BTSink
+                                       , "LED Tower of Power"
                                        , I2S_NUM_1                          // I2S Interface
                                        , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                                        , I2S_SAMPLE_RATE
@@ -59,6 +59,7 @@ void audio_state_changed(esp_a2d_audio_state_t state, void *ptr)
   ESP_LOGD("Startup", "State: %s", m_BTSink.to_str(state));
 }
 
+
 I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , I2S_NUM_0                          // I2S Interface
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
@@ -70,10 +71,10 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , true                               // Use APLL
                                 , I2S_BUFFER_COUNT                   // Buffer Count
                                 , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                , 12                                 // Serial Clock Pin
-                                , 13                                 // Word Selection Pin
-                                , 14                                 // Serial Data In Pin
-                                , I2S_PIN_NO_CHANGE );               // Serial Data Out Pin
+                                , I2S1_SCLCK_PIN                     // Serial Clock Pin
+                                , I2S1_WD_PIN                        // Word Selection Pin
+                                , I2S1_SDIN_PIN                      // Serial Data In Pin
+                                , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
                       
 I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
                                   , I2S_NUM_1                        // I2S Interface
@@ -84,12 +85,12 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
                                   , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                   , I2S_CHANNEL_STEREO
                                   , true                            // Use APLL
-                                  , I2S_BUFFER_COUNT                 // Buffer Count
-                                  , I2S_CHANNEL_SAMPLE_COUNT         // Buffer Size
-                                  , 25                               // Serial Clock Pin
-                                  , 26                               // Word Selection Pin
-                                  , I2S_PIN_NO_CHANGE                // Serial Data In Pin
-                                  , 33 );                            // Serial Data Out Pin
+                                  , I2S_BUFFER_COUNT                // Buffer Count
+                                  , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
+                                  , I2S2_SCLCK_PIN                  // Serial Clock Pin
+                                  , I2S2_WD_PIN                     // Word Selection Pin
+                                  , I2S2_SDIN_PIN                   // Serial Data In Pin
+                                  , I2S2_SDOUT_PIN );               // Serial Data Out Pin
 
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
@@ -104,24 +105,25 @@ Manager m_Manager = Manager("Manager"
                            , m_BT_In
                            , m_Mic_In
                            , m_I2S_Out);
-
+                           
 void setup()
 {
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(4096);
-  m_hSerial.begin(300000, SERIAL_8N1, 16, 17); // pins 16 rx2, 17 tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(500000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
   
   //PC Serial Communication
+  Serial.flush();
   Serial.begin(500000);
-  ESP_LOGD("LED_Controller1", "%s, ", __func__);
+  Serial.flush();
+  //ESP_LOGD("LED_Controller1", "%s, ", __func__);
   ESP_LOGI("LED_Controller1", "Serial Datalink Configured");
   ESP_LOGI("LED_Controller1", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGI("LED_Controller1", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
   ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequency());
-  
   m_BTSink.set_stream_reader(read_data_stream, true);
-  m_BTSink.set_on_data_received(data_received_callback);
+  m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
   m_SerialDataLink.SetupSerialDataLink();
   m_Scheduler.AddTask(m_CalculateFPS);
@@ -171,7 +173,11 @@ void setup()
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
-  ESP_LOGI("LED_Controller_CPU1", "Free Heap: %i", ESP.getFreeHeap());
+  
+  ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGE("LED_Controller_CPU1", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGE("LED_Controller_CPU1", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 unsigned long myTime = millis();
@@ -226,7 +232,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -237,6 +243,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

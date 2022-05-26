@@ -20,6 +20,7 @@
 
 Bluetooth_Sink::Bluetooth_Sink ( String Title
 							   , BluetoothA2DPSink& BTSink
+							   , const char *SinkName
 							   , i2s_port_t i2S_PORT
 							   , i2s_mode_t Mode
 							   , int SampleRate
@@ -35,6 +36,7 @@ Bluetooth_Sink::Bluetooth_Sink ( String Title
 							   , int SerialDataInPin
 							   , int SerialDataOutPin ): NamedItem(Title)
 													   , m_BTSink(BTSink)
+													   , mp_SinkName(SinkName)
 													   , m_I2S_PORT(i2S_PORT)
 													   , m_i2s_Mode(Mode)
 													   , m_SampleRate(SampleRate)
@@ -178,7 +180,7 @@ void Bluetooth_Sink::StartDevice()
 		ESP_LOGD("Bluetooth_Device", "Starting Bluetooth");
 		AllocateMemory();
 		InstallDevice();
-		m_BTSink.start("LED Tower of Power");
+		m_BTSink.start(mp_SinkName);
 		m_Is_Running = true;
 		ESP_LOGD("Bluetooth_Device", "Bluetooth Started");
 	}
