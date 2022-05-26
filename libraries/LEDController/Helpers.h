@@ -445,7 +445,7 @@ class CommonUtils
 					ESP_LOGW("CommonUtils", "WARNING! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
-			DataBuffer;
+			free(DataBuffer);
 		  }
 		  else
 		  {
