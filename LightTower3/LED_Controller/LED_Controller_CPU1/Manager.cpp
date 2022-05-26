@@ -41,8 +41,8 @@ void Manager::Setup()
   m_I2S_Out.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 void Manager::ProcessEventQueue()

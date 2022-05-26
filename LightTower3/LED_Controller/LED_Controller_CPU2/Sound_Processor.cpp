@@ -283,17 +283,17 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
     else if(freq > 12500 && freq <= 16000) bandIndex = 29;
     else if(freq > 16000 && freq <= 20000) bandIndex = 30;
     else if(freq > 20000 ) bandIndex = 31;
-    if(bandIndex >= 0 && freq < I2S_IN_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
+    if(bandIndex >= 0 && freq < I2S_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
   }
 }
 
 float Sound_Processor::GetFreqForBin(int Bin)
 {
   //ESP_LOGV("Function Debug", "%s, ", __func__);
-  return (float)(Bin * ((float)I2S_IN_SAMPLE_RATE / (float)(FFT_SIZE)));
+  return (float)(Bin * ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE)));
 }
 int Sound_Processor::GetBinForFrequency(float Frequency)
 {
   //ESP_LOGV("Function Debug", "%s, ", __func__);
-  return ((int)((float)Frequency / ((float)I2S_IN_SAMPLE_RATE / (float)(FFT_SIZE))));
+  return ((int)((float)Frequency / ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE))));
 }
