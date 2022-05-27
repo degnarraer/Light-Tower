@@ -61,22 +61,17 @@ class Manager: public NamedItem
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
     static const size_t m_32BitFrameByteCount = 4 * 2;
-    static const size_t m_I2S_RXBuffer_Count = I2S_SAMPLE_COUNT * m_32BitFrameByteCount;
-    uint8_t m_I2S_RXBuffer[m_I2S_RXBuffer_Count];
+    uint8_t m_I2S_RXBuffer[I2S_SAMPLE_COUNT * m_32BitFrameByteCount];
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
     
-    static const int32_t m_CircularBufferSize = 2 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
-    bfs::CircleBuf<Frame_t, m_CircularBufferSize> *m_FrameBuffer;
+    static const int32_t m_CircularBufferSize = 4000; //2 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
+    bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
 
-    static const size_t m_LinearFrameBuffer_Count = I2S_SAMPLE_COUNT;
-    static const size_t m_RightDataBuffer_Count = I2S_SAMPLE_COUNT;
-    static const size_t m_LeftDataBuffer_Count = I2S_SAMPLE_COUNT;
-    
-    Frame_t m_LinearFrameBuffer[m_LinearFrameBuffer_Count];
-    int32_t m_RightDataBuffer[m_RightDataBuffer_Count];
-    int32_t m_LeftDataBuffer[m_LeftDataBuffer_Count];
+    Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
+    int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
+    int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
     void UpdateNotificationRegistrationStatus();
 };
 

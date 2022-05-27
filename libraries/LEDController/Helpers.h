@@ -193,7 +193,7 @@ class QueueManager
 				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
-					void* DataBuffer = (void*)ps_malloc(ByteCount);
+					void* DataBuffer = (void*)malloc(ByteCount);
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
@@ -236,7 +236,7 @@ class QueueManager
 				size_t bytes = 0;
 				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
-				DataBuffer = ps_malloc(bytes);
+				DataBuffer = malloc(bytes);
 				switch(ConfigFile[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -411,7 +411,7 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			ESP_LOGV("Helpers", "Queue Messages Waiting: %i Receiver Queue Count: %i Byte Count: %i", QueueCount, GiveToQueueCount, ByteCount);
-			uint8_t* DataBuffer = (uint8_t*)ps_malloc(ByteCount);
+			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 				if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
@@ -508,7 +508,7 @@ class CommonUtils
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
-					void* DataBuffer = (void*)ps_malloc(ByteCount);
+					void* DataBuffer = (void*)malloc(ByteCount);
 					for(int i = 0; i < QueueCount; ++i)
 					{
 						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )

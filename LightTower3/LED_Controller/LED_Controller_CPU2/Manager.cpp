@@ -40,13 +40,9 @@ Manager::~Manager()
 
 void Manager::AllocateMemory()
 {
-  int FrameBufferByteCount = sizeof(bfs::CircleBuf<Frame_t, m_CircularBufferSize>);
-  ESP_LOGE("Manager", "Frame Buffer Byte Count: %d", FrameBufferByteCount);
-  m_FrameBuffer = (bfs::CircleBuf<Frame_t, m_CircularBufferSize>*)ps_malloc(FrameBufferByteCount);
 }
 void Manager::FreeMemory()
 {
-  free(m_FrameBuffer);
 }
 
 void Manager::Setup()
@@ -87,7 +83,6 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
   //ESP_LOGV("Manager", "%s, ", __func__);
   if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
   {
-    size_t ChannelSampleCount = SampleCount/2;
     m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
   }
 }
@@ -130,35 +125,47 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 
 //Bluetooth Source Callback
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
-{
+{  
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
-  assert(BytesRequested <= m_I2S_RXBuffer_Count*sizeof(m_I2S_RXBuffer));
-  BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, BytesRequested);
-  assert(BytesRead <= m_I2S_RXBuffer_Count*sizeof(m_I2S_RXBuffer));
+  int32_t LimitedBytesRequested = 0;
+  if(BytesRequested > sizeof(m_I2S_RXBuffer))
+  {
+    LimitedBytesRequested = sizeof(m_I2S_RXBuffer);
+  }
+  else
+  {
+    LimitedBytesRequested = BytesRequested;
+  }
+  assert(LimitedBytesRequested <= sizeof(m_I2S_RXBuffer));
+  BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, LimitedBytesRequested);
+  assert(BytesRead <= LimitedBytesRequested);
   m_I2S_Out.SetSoundBufferData(m_I2S_RXBuffer, BytesRead);
-  int32_t SamplesRead = BytesRead / m_32BitFrameByteCount;
-  for(int i = 0; i < SamplesRead; ++i)
+  assert(BytesRead % m_32BitFrameByteCount == 0);
+  int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
+  for(int i = 0; i < FramesRead; ++i)
   {
     Frame aFrame;
     aFrame.channel1 = ((int32_t*)m_I2S_RXBuffer)[2*i] >> 16;
     aFrame.channel2 = ((int32_t*)m_I2S_RXBuffer)[2*i + 1] >> 16;
-    //m_FrameBuffer->Write( (Frame_t&)(aFrame) );
+    m_FrameBuffer.Write( (Frame_t&)(aFrame) );
     frame[i] = aFrame;
   }
-  for(int i = 0; i < floor(m_FrameBuffer->size() / I2S_SAMPLE_COUNT); ++i)
+  int loopcount = floor(m_FrameBuffer.size() / I2S_SAMPLE_COUNT);
+  for(int i = 0; i < loopcount; ++i)
   {
-    int32_t ActualSampleReadCount = m_FrameBuffer->Read(m_LinearFrameBuffer, I2S_SAMPLE_COUNT);
-    assert(ActualSampleReadCount <= m_RightDataBuffer_Count);
-    assert(ActualSampleReadCount <= m_LeftDataBuffer_Count);
+    int32_t ActualSampleReadCount = m_FrameBuffer.Read(m_LinearFrameBuffer, sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
+    assert(ActualSampleReadCount <= sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
+    assert(ActualSampleReadCount <= sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
+    assert(ActualSampleReadCount <= sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
     for(int i = 0; i < ActualSampleReadCount; ++i)
     {
       m_RightDataBuffer[i] = m_LinearFrameBuffer[i].channel1 << 16;
       m_LeftDataBuffer[i] = m_LinearFrameBuffer[i].channel2 << 16;
     }
     RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
-    LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
+    LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
   }
   ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
-  return SamplesRead;
+  return FramesRead;
 }

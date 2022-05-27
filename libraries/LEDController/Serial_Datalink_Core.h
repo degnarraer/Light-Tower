@@ -87,7 +87,7 @@ class DataSerializer: public CommonUtils
 							int ByteCountIn = docIn[m_TotalByteCountTag];
 							int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn[m_DataTypeTag]));
 							int DataByteCount = docIn[m_DataTag].size();
-							uint8_t* Buffer = (uint8_t*)ps_malloc(DataByteCount);
+							uint8_t* Buffer = (uint8_t*)malloc(DataByteCount);
 							if(ByteCountInCalc == DataByteCount)
 							{
 								for(int j = 0; j < DataByteCount; ++j)

@@ -121,7 +121,7 @@ void setup()
   ESP_LOGI("LED_Controller1", "Serial Datalink Configured");
   ESP_LOGI("LED_Controller1", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGI("LED_Controller1", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequecy());
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
@@ -137,7 +137,8 @@ void setup()
     20000,                        // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
-    &VisualizationTask,           // Task handle.
+    
+    +&VisualizationTask,           // Task handle.
     0                             // Core where the task should run
   );
   
@@ -210,7 +211,7 @@ void DataMoverTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

@@ -154,7 +154,7 @@ void ManagerTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
