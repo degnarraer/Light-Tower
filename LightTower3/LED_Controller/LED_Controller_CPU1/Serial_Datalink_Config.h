@@ -18,11 +18,7 @@
 
 #ifndef SerialDataLinkConfig_H
 #define SerialDataLinkConfig_H
-
 #include <Serial_Datalink_Core.h>
-#include <DataTypes.h>
-#include "Tunes.h"
-
 
 class Manager;
 class SerialDataLink: public NamedItem

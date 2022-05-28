@@ -200,7 +200,7 @@ int I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
 	if(bytes_written != ByteCount)
 	{
-		if(false == QUEUE_DEBUG) Serial << GetTitle() << ": Error Writting All Bytes\n"; 
+		ESP_LOGE("i2S Device", "%s: Error Writting All Bytes\n", GetTitle()); 
 	}
 	return bytes_written;
 }
@@ -312,7 +312,7 @@ void I2S_Device::FreeMemory()
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Freeing Memory.", GetTitle());  
-	free(m_SoundBufferData);
-	free(m_RightChannel_SoundBufferData);
-	free(m_LeftChannel_SoundBufferData);
+	delete m_SoundBufferData;
+	delete m_RightChannel_SoundBufferData;
+	delete m_LeftChannel_SoundBufferData;
 }

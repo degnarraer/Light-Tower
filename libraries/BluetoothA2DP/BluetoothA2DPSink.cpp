@@ -374,7 +374,7 @@ void BluetoothA2DPSink::app_task_handler(void *arg)
             } // switch (msg.sig)
 
             if (msg.param) {
-                free(msg.param);
+                delete msg.param;
             }
         } else {
             delay(10);

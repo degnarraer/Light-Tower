@@ -207,7 +207,7 @@ class QueueManager
 							ESP_LOGV("CommonUtils", "Error Receiving Queue!");
 						}
 					}
-					free(DataBuffer);
+					delete DataBuffer;
 				}
 			}
 			else
@@ -267,7 +267,7 @@ class QueueManager
 			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
-				free(m_DataItem[i].DataBuffer);			
+				delete m_DataItem[i].DataBuffer;			
 				switch(m_DataItem[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -284,7 +284,7 @@ class QueueManager
 					break;
 				}
 			}
-			free(m_DataItem);
+			delete m_DataItem;
 			m_MemoryAllocated = false;
 		}
 		
@@ -445,7 +445,7 @@ class CommonUtils
 					ESP_LOGW("CommonUtils", "WARNING! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
-			free(DataBuffer);
+			delete DataBuffer;
 		  }
 		  else
 		  {

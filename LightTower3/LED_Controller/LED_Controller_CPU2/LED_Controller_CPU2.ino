@@ -62,9 +62,9 @@ int32_t get_data_channels(Frame *frame, int32_t channel_len)
 
 void setup() {
   //ESP32 Serial Communication
-  m_hSerial.setRxBufferSize(4096);
+  m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(500000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(56000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
     
   //PC Serial Communication
@@ -72,7 +72,7 @@ void setup() {
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
   Serial.flush();
   
-  //ESP_LOGD("LED_Controller2", "%s, ", __func__);
+  ESP_LOGV("LED_Controller2", "%s, ", __func__);
   ESP_LOGE("LED_Controller2", "Serial Datalink Configured");
   ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
@@ -187,7 +187,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -198,6 +198,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

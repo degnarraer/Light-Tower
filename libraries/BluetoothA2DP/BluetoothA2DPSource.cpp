@@ -894,7 +894,7 @@ void BluetoothA2DPSource::bt_av_hdl_avrc_ct_evt(uint16_t event, void *p_param)
         }
         case ESP_AVRC_CT_METADATA_RSP_EVT: {
             ESP_LOGI(BT_RC_CT_TAG, "AVRC metadata rsp: attribute id 0x%x, %s", rc->meta_rsp.attr_id, rc->meta_rsp.attr_text);
-            free(rc->meta_rsp.attr_text);
+            delete rc->meta_rsp.attr_text;
             break;
         }
         case ESP_AVRC_CT_CHANGE_NOTIFY_EVT: {

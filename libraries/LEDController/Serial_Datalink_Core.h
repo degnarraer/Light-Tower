@@ -64,11 +64,11 @@ class DataSerializer: public CommonUtils
 		}
 		void DeSerialize(String json)
 		{
-			DeserializationError error = deserializeJson(docIn, json);
+			DeserializationError error = deserializeJson(docIn, json.c_str());
 			// Test if parsing succeeds.
 			if (error)
 			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s", error.f_str());
+				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s", error.c_str());
 				return;
 			}
 			else
@@ -108,7 +108,7 @@ class DataSerializer: public CommonUtils
 							{
 								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
 							}
-							free(Buffer);
+							delete Buffer;
 							return;
 						}
 					}
@@ -120,7 +120,6 @@ class DataSerializer: public CommonUtils
 		StaticJsonDocument<5000> docOut;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
-		
 		//Tags
 		String m_NameTag = "N";
 		String m_CheckSumTag = "S";
@@ -151,14 +150,15 @@ class SerialDataLinkCore: public DataSerializer
   size_t m_DataItemsCount = 0;
   HardwareSerial &m_hSerial;
   String m_InboundStringData = "";
-  String m_Terminator = "\r\n";
+  String m_Startinator = "<SOM>";
+  String m_Terminator = "<EOM>";
   
   void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
   {
-	  String DataToSend = Serialize(Name, DataType, Object, Count);
-	  ESP_LOGV("Serial_Datalink", "Encoded Data: %d", DataToSend);
-	  m_hSerial.print(DataToSend);
-	  m_hSerial.print(m_Terminator);
+	  String DataToSend = m_Startinator + Serialize(Name, DataType, Object, Count) + m_Terminator;
+	  ESP_LOGD("Serial_Datalink", "TX: %s", DataToSend.c_str());
+	  //DataToSend = m_Startinator + "1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20";
+	  m_hSerial.print(DataToSend.c_str());
   }
   
   void ProcessTXData(DataItem_t DataItem)
