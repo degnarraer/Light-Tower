@@ -39,8 +39,12 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 	if( m_InboundStringData.length() >= m_Startinator.length() &&
 		m_Startinator.equals(m_InboundStringData.substring(0, m_Startinator.length())) )
 	{
-		if ( m_Startinator.equals(m_InboundStringData.substring(0, m_Startinator.length())) &&
-			 m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 
+		if ( m_Startinator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Startinator.length())) ) 
+		{
+		  m_InboundStringData.clear();
+		  m_InboundStringData += m_Startinator;
+		}
+		if ( m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 
 		{
 		  m_InboundStringData.trim();
 		  m_InboundStringData = m_InboundStringData.substring(m_Startinator.length(), m_InboundStringData.length() - m_Terminator.length());

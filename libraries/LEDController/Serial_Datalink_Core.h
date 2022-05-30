@@ -68,7 +68,7 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s For String: %s", error.c_str(), json.c_str());
+				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
 				return;
 			}
 			else
@@ -101,12 +101,12 @@ class DataSerializer: public CommonUtils
 								}
 								else
 								{
-									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error.");
+									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error for String: %s", json.c_str());
 								}
 							}
 							else
 							{
-								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
+								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
 							}
 							delete Buffer;
 							return;

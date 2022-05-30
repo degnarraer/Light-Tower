@@ -62,9 +62,9 @@ int32_t get_data_channels(Frame *frame, int32_t channel_len)
 
 void setup() {
   //ESP32 Serial Communication
-  m_hSerial.setRxBufferSize(1000);
+  //m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(300000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(300000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
     
   //PC Serial Communication
