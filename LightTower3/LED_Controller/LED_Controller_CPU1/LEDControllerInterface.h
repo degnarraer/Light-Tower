@@ -143,12 +143,9 @@ class LEDController
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelArray->GetPixel(x, y);
-          if(bufColor.red <= 1) bufColor.red = 0;
-          if(bufColor.green <= 1) bufColor.green = 0;
-          if(bufColor.blue <= 1) bufColor.blue = 0;
-          m_LEDStrip[x][y].red = bufColor.red; //(byte)dim8_raw(bufColor.red);
-          m_LEDStrip[x][y].green = bufColor.green; //(byte)dim8_raw(bufColor.green);
-          m_LEDStrip[x][y].blue = bufColor.blue; //(byte)dim8_raw(bufColor.blue);
+          m_LEDStrip[x][y].red = bufColor.red;
+          m_LEDStrip[x][y].green = bufColor.green;
+          m_LEDStrip[x][y].blue = bufColor.blue;
           if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";

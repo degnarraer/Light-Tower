@@ -82,8 +82,8 @@ class SolidColorTower: public Visualization
     }
     void RunVisualization() {}
   private:
-    MaximumBandModel m_MaximumBandPowerModel = MaximumBandModel("Maximum Band Model 0", 10, m_StatisticalEngineModelInterface);
-    ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 1000, 500);
+    MaximumBandModel m_MaximumBandPowerModel = MaximumBandModel("Maximum Band Model 0", 1, m_StatisticalEngineModelInterface);
+    ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 200, 100);
     ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Red, MergeType_Layer);
 };
 
