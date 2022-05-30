@@ -43,7 +43,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S2_SDIN_PIN                    // Serial Data In Pin
                                   , I2S2_SDOUT_PIN );                // Serial Data Out Pin
 
-HardwareSerial m_hSerial = Serial2;
+HardwareSerial m_hSerial = Serial1;
 SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 Sound_Processor m_SoundProcessor = Sound_Processor("Sound Processor", m_SerialDataLink);
 
@@ -64,7 +64,7 @@ void setup() {
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(56000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(300000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
     
   //PC Serial Communication
@@ -87,31 +87,11 @@ void setup() {
 
   xTaskCreatePinnedToCore
   (
-    ProcessSoundPowerTaskLoop,      // Function to implement the task
-    "ProcessSoundPowerTask",        // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 3,       // Priority of the task
-    &ProcessSoundPowerTask,         // Task handle.
-    0                               // Core where the task should run
-  );
-  xTaskCreatePinnedToCore
-  (
-    ProcessFFTTaskLoop,             // Function to implement the task
-    "ProcessFFTTask",               // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 4,       // Priority of the task
-    &ProcessFFTTask,                // Task handle.
-    0                               // Core where the task should run
-  );
-  xTaskCreatePinnedToCore
-  (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &ManagerTask,                   // Task handle.
     1                               // Core where the task should run
   ); 
@@ -121,7 +101,7 @@ void setup() {
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES - 3,       // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -131,8 +111,28 @@ void setup() {
     "SerialDataLinkRXTask",         // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES - 3,       // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
+    0                               // Core where the task should run
+  );
+  xTaskCreatePinnedToCore
+  (
+    ProcessSoundPowerTaskLoop,      // Function to implement the task
+    "ProcessSoundPowerTask",        // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &ProcessSoundPowerTask,         // Task handle.
+    1                               // Core where the task should run
+  );
+  xTaskCreatePinnedToCore
+  (
+    ProcessFFTTaskLoop,             // Function to implement the task
+    "ProcessFFTTask",               // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 2,       // Priority of the task
+    &ProcessFFTTask,                // Task handle.
     1                               // Core where the task should run
   );
   
@@ -165,7 +165,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -175,8 +175,8 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("Function Debug", "%s, ", __func__);
-    //m_SoundProcessor.ProcessFFT();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SoundProcessor.ProcessFFT();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

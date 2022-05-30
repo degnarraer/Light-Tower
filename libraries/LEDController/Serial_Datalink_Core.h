@@ -157,7 +157,6 @@ class SerialDataLinkCore: public DataSerializer
   {
 	  String DataToSend = m_Startinator + Serialize(Name, DataType, Object, Count) + m_Terminator;
 	  ESP_LOGD("Serial_Datalink", "TX: %s", DataToSend.c_str());
-	  //DataToSend = m_Startinator + "1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20";
 	  m_hSerial.print(DataToSend.c_str());
   }
   
@@ -168,7 +167,6 @@ class SerialDataLinkCore: public DataSerializer
 		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
 		if(MessageCount > 0)
 		{
-			size_t ByteCount = GetSizeOfDataType(DataItem.DataType) * DataItem.Count;
 			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
 			{
 				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);

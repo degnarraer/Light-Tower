@@ -35,6 +35,7 @@ class FFT_Calculator
       delete mp_RealBuffer;
       delete mp_ImaginaryBuffer;
     }
+    int32_t GetFreeSpace() { return m_FFT_Size - m_CurrentIndex; }
     float GetFFTBufferValue(int32_t index)
     {
       assert(true == m_SolutionReady);

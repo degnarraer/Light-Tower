@@ -77,6 +77,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
     
     memset(Bands_DataBuffer, 0, Bands_DataBufferByteCount);
     size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
+    bool FFT_Calculated = false;
     for(int16_t i = 0; i < MessagesWaiting; ++i)
     {
       if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
@@ -86,6 +87,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
           m_R_FFT.SetGainValue(m_FFT_Gain);
           if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
+            FFT_Calculated = true;
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
             AssignToBands(Bands_DataBuffer, &m_R_FFT, FFT_SIZE);
@@ -111,6 +113,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
             //xQueueReset(QueueIn);
           }
         }
+        if(true == FFT_Calculated) break;
       }
     }
   }
@@ -144,6 +147,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
 
     memset(Bands_DataBuffer, 0, Bands_DataBufferByteCount);
     size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
+    bool FFT_Calculated = false;
     for(int16_t i = 0; i < MessagesWaiting; ++i)
     {
       if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
@@ -153,6 +157,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
           m_L_FFT.SetGainValue(m_FFT_Gain);
           if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
           {
+            FFT_Calculated = true;
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
             AssignToBands(Bands_DataBuffer, &m_L_FFT, FFT_SIZE);
@@ -178,6 +183,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
             //xQueueReset(QueueIn);
           }
         }
+        if(true == FFT_Calculated) break;
       }
     }
   }

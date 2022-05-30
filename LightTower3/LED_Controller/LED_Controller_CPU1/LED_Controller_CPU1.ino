@@ -95,7 +95,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
-HardwareSerial m_hSerial = Serial2;
+HardwareSerial m_hSerial = Serial1;
 SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
@@ -111,7 +111,7 @@ void setup()
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(56000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(300000, SERIAL_8N1, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
   
   //PC Serial Communication
@@ -133,6 +133,7 @@ void setup()
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
   
+  
   xTaskCreatePinnedToCore
   (
     VisualizationTaskLoop,        // Function to implement the task
@@ -141,7 +142,7 @@ void setup()
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
     &VisualizationTask,           // Task handle.
-    0                             // Core where the task should run
+    1                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -152,7 +153,7 @@ void setup()
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 2,     // Priority of the task
     &DataMoverTask,               // Task handle.
-    1                             // Core where the task should run
+    0                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -161,7 +162,7 @@ void setup()
     "SerialDataLinkSendTask",   // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 4,   // Priority of the task
+    configMAX_PRIORITIES - 3,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
   );     

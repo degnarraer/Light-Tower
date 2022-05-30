@@ -36,41 +36,29 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
   for(int i = 0; i < ByteCount; ++i)
   {
 	m_InboundStringData += (char)m_hSerial.read();
-	if ( m_InboundStringData.length() >= m_Startinator.length() )
-	{	
-		if( m_Terminator.equals(m_InboundStringData.substring(0, m_Terminator.length())))
+	if( m_InboundStringData.length() >= m_Startinator.length() &&
+		m_Startinator.equals(m_InboundStringData.substring(0, m_Startinator.length())) )
+	{
+		if ( m_Startinator.equals(m_InboundStringData.substring(0, m_Startinator.length())) &&
+			 m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 
 		{
-			ESP_LOGW("Serial_Datalink", "WARNING! Serial Port EOM without SOM: %s", m_InboundStringData.c_str());
-			m_InboundStringData.clear();
+		  m_InboundStringData.trim();
+		  m_InboundStringData = m_InboundStringData.substring(m_Startinator.length(), m_InboundStringData.length() - m_Terminator.length());
+		  ESP_LOGD("Serial_Datalink", "RX: %s", m_InboundStringData.c_str());
+		  DeSerialize(m_InboundStringData);
+		  m_InboundStringData.clear();
 		}
-		else if( m_Startinator.equals(m_InboundStringData.substring(0, m_Startinator.length())))
+		if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
 		{
-			if ( m_InboundStringData.length() > m_Startinator.length() && m_Startinator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Startinator.length())) ) 
-			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Serial Port SOM without EOM: %s", m_InboundStringData.c_str());
-				m_InboundStringData.clear();
-				m_InboundStringData += m_Startinator;
-			}
-			else if ( m_Terminator.equals(m_InboundStringData.substring(m_InboundStringData.length() - m_Terminator.length())) ) 
-			{
-			  m_InboundStringData.trim();
-			  m_InboundStringData = m_InboundStringData.substring(m_Startinator.length(), m_InboundStringData.length() - m_Terminator.length());
-			  ESP_LOGD("Serial_Datalink", "RX: %s", m_InboundStringData.c_str());
-			  DeSerialize(m_InboundStringData);
-			  m_InboundStringData.clear();
-			  break; //Only process 1 message at a time
-			}
-			if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
-			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Serial Port RX Overflow: %s", m_InboundStringData.c_str());
-				m_InboundStringData.clear();
-			}
-		}
-		else
-		{
+			ESP_LOGW("Serial_Datalink", "WARNING! Serial Port RX Overflow: %s", m_InboundStringData.c_str());
 			m_InboundStringData.clear();
 		}
 	}
+	else if( m_InboundStringData.length() >= m_Startinator.length() &&
+			 !m_Startinator.equals(m_InboundStringData.substring(0, m_Startinator.length())) )
+	{
+		m_InboundStringData.clear();
+	}	
   }
 }
 
