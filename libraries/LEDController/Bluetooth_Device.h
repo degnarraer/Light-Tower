@@ -42,6 +42,7 @@ class Bluetooth_Source: public NamedItem
 		void Setup()
 		{
 			m_BTSource.set_nvs_init(true);
+			m_BTSource.set_reset_ble(true);
 			m_BTSource.set_auto_reconnect(false);
 			m_BTSource.set_ssp_enabled(false);
 			m_BTSource.set_local_name("LED Tower of Power");

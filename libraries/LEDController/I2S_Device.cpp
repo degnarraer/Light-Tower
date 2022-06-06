@@ -164,14 +164,11 @@ int I2S_Device::ReadSamples()
 	if(NULL != m_Callee)
 	{
 		//ESP_LOGV("Function Debug", "%s, ", __func__);
-		size_t channel_bytes_read = 0;
 		i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
-		channel_bytes_read = bytes_read / 2;
-		if(bytes_read != m_TotalBytesToRead)
-		{
-			ESP_LOGE("i2S Device", "%s: Error Reading All Bytes. Read: %i out of %i.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
-		}
-		m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, m_SampleCount);
+		size_t channel_bytes_read = bytes_read / 2;
+		size_t samplesRead = bytes_read / m_BytesPerSample;
+		size_t channelSamplesRead = channel_bytes_read / m_BytesPerSample;
+		m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, samplesRead);
 
 		if(I2S_CHANNEL_STEREO == m_i2s_channel)
 		{
@@ -185,8 +182,8 @@ int I2S_Device::ReadSamples()
 				m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + m_BytesPerSample + j];
 			  }
 			}
-			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read, m_ChannelSampleCount);
-			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read, m_ChannelSampleCount);
+			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read, channelSamplesRead);
+			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read, channelSamplesRead);
 		}
 	}
 	return bytes_read;

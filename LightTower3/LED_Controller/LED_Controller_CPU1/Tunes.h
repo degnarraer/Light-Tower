@@ -21,7 +21,7 @@
 #define I2S_SAMPLE_RATE 44100
 
 #define I2S_BUFFER_COUNT 10
-#define I2S_CHANNEL_SAMPLE_COUNT 128
+#define I2S_CHANNEL_SAMPLE_COUNT 512
 #define ANALOG_GAIN 1
 
 
@@ -82,7 +82,7 @@ static const unsigned int SCREEN_HEIGHT = NUMLEDS;
 static const float LEDS_PER_METER = 60.0;
 
 //FFT Tunes
-const int FFT_MAX = 2048;
+const int FFT_MAX = 512;
 const unsigned int SAMPLE_RATE = 44100;
 const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 
@@ -90,8 +90,8 @@ const int SAMPLE_TIME_US = 1000000.0/SAMPLE_RATE;
 const float MAX_DISPLAYED_FREQ = 4000;
 
 //VU
-const unsigned int BAND_SAVE_LENGTH = 20;
-const unsigned int POWER_SAVE_LENGTH = 20;
+const unsigned int BAND_SAVE_LENGTH = 10;
+const unsigned int POWER_SAVE_LENGTH = 10;
 
 //Trigger Level
 const float SILENCE_THRESHOLD = 0.05;

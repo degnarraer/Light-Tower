@@ -37,7 +37,7 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
   m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
 
-  bool testVisualization = true;
+  bool testVisualization = false;
   if(true == testVisualization)
   {
     m_Duration = 10000000;

@@ -62,7 +62,7 @@ int32_t get_data_channels(Frame *frame, int32_t channel_len)
 
 void setup() {
   //ESP32 Serial Communication
-  //m_hSerial.setRxBufferSize(1000);
+  m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
   m_hSerial.begin(300000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
@@ -93,7 +93,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 2,       // Priority of the task
     &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   ); 
   xTaskCreatePinnedToCore
   (
@@ -113,7 +113,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 3,       // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   );
   xTaskCreatePinnedToCore
   (
@@ -123,7 +123,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
   xTaskCreatePinnedToCore
   (
@@ -133,7 +133,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 2,       // Priority of the task
     &ProcessFFTTask,                // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
@@ -164,8 +164,8 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_SoundProcessor.ProcessSoundPower();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -175,8 +175,8 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("Function Debug", "%s, ", __func__);
-    m_SoundProcessor.ProcessFFT();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_SoundProcessor.ProcessFFT();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -186,8 +186,8 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_SerialDataLink.ProcessDataRXEventQueue();
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -197,7 +197,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   {
     yield();
     //ESP_LOGV("LED_Controller2", "%s, ", __func__);
-    m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_SerialDataLink.ProcessDataTXEventQueue();
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
