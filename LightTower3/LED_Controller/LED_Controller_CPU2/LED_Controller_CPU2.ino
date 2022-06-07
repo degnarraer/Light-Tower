@@ -91,7 +91,7 @@ void setup() {
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 3,       // Priority of the task
+    configMAX_PRIORITIES - 20,      // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
     0                               // Core where the task should run
   );
@@ -101,7 +101,7 @@ void setup() {
     "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 4,       // Priority of the task
+    configMAX_PRIORITIES - 20,      // Priority of the task
     &ProcessFFTTask,                // Task handle.
     0                               // Core where the task should run
   );
@@ -112,9 +112,9 @@ void setup() {
     "ManagerTask",                  // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES,           // Priority of the task
+    configMAX_PRIORITIES - 10,      // Priority of the task
     &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   ); 
   xTaskCreatePinnedToCore
   (
@@ -122,7 +122,7 @@ void setup() {
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 20,      // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -132,7 +132,7 @@ void setup() {
     "SerialDataLinkRXTask",         // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 20,      // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -153,7 +153,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   {
     yield();
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -163,7 +163,7 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -173,7 +173,7 @@ void ManagerTaskLoop(void * parameter)
   {
     yield();
     m_Manager.ProcessEventQueue();
-    vTaskDelay(0 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -183,7 +183,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     yield();
     m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(0 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -193,6 +193,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   {
     yield();
     m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(0 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
