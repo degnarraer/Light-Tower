@@ -111,7 +111,7 @@ void setup()
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(300000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(250000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
   
   //PC Serial Communication
@@ -133,16 +133,15 @@ void setup()
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
   
-  
   xTaskCreatePinnedToCore
   (
     VisualizationTaskLoop,        // Function to implement the task
     "VisualizationTask",          // Name of the task
     20000,                        // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,     // Priority of the task
+    configMAX_PRIORITIES - 2,     // Priority of the task
     &VisualizationTask,           // Task handle.
-    1                             // Core where the task should run
+    0                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -151,7 +150,7 @@ void setup()
     "DataMoverTask",              // Name of the task
     4000,                         // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 2,     // Priority of the task
+    configMAX_PRIORITIES,         // Priority of the task
     &DataMoverTask,               // Task handle.
     1                             // Core where the task should run
   );
@@ -162,7 +161,7 @@ void setup()
     "SerialDataLinkSendTask",   // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
   );     
@@ -173,7 +172,7 @@ void setup()
     "SerialDataLinkRXTask",     // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 3,   // Priority of the task
+    configMAX_PRIORITIES - 1,   // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
@@ -202,7 +201,6 @@ void loop() {
       ESP_LOGI("LED_Controller1", "SerialDataLinkTXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkTXTask));
       ESP_LOGI("LED_Controller1", "SerialDataLinkRXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkRXTask));
       ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
-      Serial << "\n";
     }
   }
 }
@@ -224,7 +222,7 @@ void VisualizationTaskLoop(void * parameter)
   {
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
-    //m_Scheduler.RunScheduler();
+    m_Scheduler.RunScheduler();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
@@ -235,8 +233,8 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   {
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
-    //m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    m_SerialDataLink.ProcessDataTXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -246,7 +244,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
-    //m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    m_SerialDataLink.ProcessDataRXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

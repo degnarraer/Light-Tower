@@ -80,7 +80,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
     bool FFT_Calculated = false;
     for(int16_t i = 0; i < MessagesWaiting; ++i)
     {
-      if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(QueueIn, InputDataBuffer, 0) == pdTRUE )
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
@@ -150,7 +150,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
     bool FFT_Calculated = false;
     for(int16_t i = 0; i < MessagesWaiting; ++i)
     {
-      if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(QueueIn, InputDataBuffer, 0) == pdTRUE )
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
@@ -203,7 +203,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Right_Channel_Power()
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
     for(int i = 0; i < MessageCount; ++i)
     {
-      if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(QueueIn, InputDataBuffer, 0) == pdTRUE )
       {
         for(int j = 0; j < InputSampleCount; ++j)
         {
@@ -233,7 +233,7 @@ void Sound_Processor::Sound_32Bit_44100Hz_Calculate_Left_Channel_Power()
     size_t MessageCount = uxQueueMessagesWaiting(QueueIn);
     for(int i = 0; i < MessageCount; ++i)
     {
-      if ( xQueueReceive(QueueIn, InputDataBuffer, portMAX_DELAY) == pdTRUE )
+      if ( xQueueReceive(QueueIn, InputDataBuffer, 0) == pdTRUE )
       {
         for(int j = 0; j < InputSampleCount; ++j)
         {

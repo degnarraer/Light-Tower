@@ -29,11 +29,13 @@ class FFT_Calculator
     {
       mp_RealBuffer = (float*)malloc(sizeof(float)*m_FFT_Size);
       mp_ImaginaryBuffer = (float*)malloc(sizeof(float)*m_FFT_Size);
+      m_MyFFT = new ArduinoFFT<float>(mp_RealBuffer, mp_ImaginaryBuffer, m_FFT_Size, m_FFT_SampleRate);
     }
     virtual ~FFT_Calculator()
     {
       free(mp_RealBuffer);
       free(mp_ImaginaryBuffer);
+      free(m_MyFFT);
     }
     int32_t GetFreeSpace() { return m_FFT_Size - m_CurrentIndex; }
     float GetFFTBufferValue(int32_t index)
@@ -67,15 +69,14 @@ class FFT_Calculator
       ++m_CurrentIndex;
       if(m_CurrentIndex >= m_FFT_Size)
       {
-        ArduinoFFT<float>myFFT = ArduinoFFT<float>(mp_RealBuffer, mp_ImaginaryBuffer, m_FFT_Size, m_FFT_SampleRate);
         m_CurrentIndex = 0;
         m_MaxFFTBinValue = 0;
         m_MaxFFTBinIndex = 0;
-        myFFT.windowing(FFTWindow::Hamming, FFTDirection::Forward, true);
-        myFFT.compute(FFTDirection::Forward);
-        myFFT.complexToMagnitude();
-        m_MajorPeak = myFFT.majorPeak();
-        for(int16_t i = 0; i < (m_FFT_Size >> 1); ++i)
+        m_MyFFT->windowing(FFTWindow::Hamming, FFTDirection::Forward, true);
+        m_MyFFT->compute(FFTDirection::Forward);
+        m_MyFFT->complexToMagnitude();
+        m_MajorPeak = m_MyFFT->majorPeak();
+        for(int i = 0; i < (m_FFT_Size >> 1); ++i)
         {
           mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * m_Gain ) / m_32BitMax;
           if(mp_RealBuffer[i] > 1.0) mp_RealBuffer[i] = 1.0;
@@ -101,6 +102,7 @@ class FFT_Calculator
     float m_MajorPeak = 0;
     bool m_SolutionReady = false;
     uint32_t m_32BitMax = pow(2,32);
+    ArduinoFFT<float>*m_MyFFT;
 };
 
 

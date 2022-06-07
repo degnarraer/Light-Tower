@@ -32,7 +32,6 @@ class SerialDataLink: public NamedItem
     virtual ~SerialDataLink(){}
     void SetupSerialDataLink()
     {
-      Serial << GetTitle() << ": Setup\n";
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
     }

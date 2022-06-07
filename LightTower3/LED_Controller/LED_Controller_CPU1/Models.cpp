@@ -21,7 +21,6 @@
 //Task Interface
 void StatisticalEngineModelInterface::Setup()
 { 
-  Serial << GetTitle() << " Setup\n";
   m_StatisticalEngine.ConnectMicrophoneMeasureCallerInterfaceCallback(this);
   AddTask(m_StatisticalEngine);
 }
