@@ -111,7 +111,7 @@ void setup()
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(300000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(250000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
   
   //PC Serial Communication
@@ -209,8 +209,6 @@ void DataMoverTaskLoop(void * parameter)
 {
   for(;;)
   {
-    yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
@@ -220,8 +218,6 @@ void VisualizationTaskLoop(void * parameter)
 {
   for(;;)
   {
-    yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Scheduler.RunScheduler();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -231,8 +227,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 {
   for(;;)
   {
-    yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -242,8 +236,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
 {
   for(;;)
   {
-    yield();
-    ESP_LOGV("Function Debug", "%s, ", __func__);
     m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }

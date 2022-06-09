@@ -64,7 +64,7 @@ void setup() {
   //ESP32 Serial Communication
   m_hSerial.setRxBufferSize(1000);
   m_hSerial.flush();
-  m_hSerial.begin(300000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
+  m_hSerial.begin(250000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
   m_hSerial.flush();
     
   //PC Serial Communication
@@ -151,7 +151,6 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -161,9 +160,8 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
-    m_SoundProcessor.ProcessFFT();
     vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SoundProcessor.ProcessFFT();
   }
 }
 
@@ -171,7 +169,6 @@ void ManagerTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_Manager.ProcessEventQueue();
     vTaskDelay(5 / portTICK_PERIOD_MS);
   }
@@ -181,7 +178,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -191,7 +187,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
