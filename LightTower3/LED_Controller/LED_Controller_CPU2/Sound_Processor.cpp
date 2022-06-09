@@ -74,8 +74,6 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
     assert(sizeof(MaxBandSoundData_t) == MaxBand_DataBufferByteCount);
     assert(1 == MajorFreq_SampleCount);
     assert(sizeof(float) == MajorFreq_DataBufferByteCount);
-    
-    memset(Bands_DataBuffer, 0, Bands_DataBufferByteCount);
     size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
     bool FFT_Calculated = false;
     for(int16_t i = 0; i < MessagesWaiting; ++i)
@@ -84,12 +82,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Right_Channel_FFT()
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
-          m_R_FFT.SetGainValue(m_FFT_Gain);
-          if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
+          if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j], m_FFT_Gain))
           {
             FFT_Calculated = true;
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
+            memset(Bands_DataBuffer, 0, Bands_DataBufferByteCount);
             AssignToBands(Bands_DataBuffer, &m_R_FFT, FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
@@ -144,8 +142,6 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
     assert(sizeof(MaxBandSoundData_t) == MaxBand_DataBufferByteCount);
     assert(1 == MajorFreq_SampleCount);
     assert(sizeof(float) == MajorFreq_DataBufferByteCount);
-
-    memset(Bands_DataBuffer, 0, Bands_DataBufferByteCount);
     size_t MessagesWaiting = uxQueueMessagesWaiting(QueueIn);
     bool FFT_Calculated = false;
     for(int16_t i = 0; i < MessagesWaiting; ++i)
@@ -154,12 +150,12 @@ void Sound_Processor::Sound_32Bit_44100Hz_Left_Channel_FFT()
       {
         for(int16_t j = 0; j < InputSampleCount; ++j)
         {
-          m_L_FFT.SetGainValue(m_FFT_Gain);
-          if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j]))
+          if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(InputDataBuffer[j], m_FFT_Gain))
           {
             FFT_Calculated = true;
             float MaxBandMagnitude = 0;
             int16_t MaxBandIndex = 0;
+            memset(Bands_DataBuffer, 0, Bands_DataBufferByteCount);
             AssignToBands(Bands_DataBuffer, &m_L_FFT, FFT_SIZE);
             for(int16_t k = 0; k < Bands_SampleCount; ++k)
             {
@@ -256,7 +252,7 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
   {
     float magnitude = FFT_Calculator->GetFFTBufferValue(i);
     float freq = GetFreqForBin(i);
-    int bandIndex = 0;
+    int bandIndex = -1;
     if(freq > 0 && freq <= 43) bandIndex = 0;
     else if(freq > 43 && freq <= 86) bandIndex = 1;
     else if(freq > 86 && freq <= 129) bandIndex = 2;

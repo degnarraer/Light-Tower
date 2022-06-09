@@ -212,7 +212,7 @@ void DataMoverTaskLoop(void * parameter)
     yield();
     ESP_LOGV("Function Debug", "%s, ", __func__);
     m_Manager.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 

@@ -41,7 +41,7 @@ class FFT_Calculator
     float GetFFTBufferValue(int32_t index)
     {
       assert(true == m_SolutionReady);
-      assert(index < m_FFT_Size);
+      assert(index < m_FFT_Size/2);
       return mp_RealBuffer[index];
     }
     float GetFFTMaxValue(){return m_MaxFFTBinValue;}
@@ -60,10 +60,11 @@ class FFT_Calculator
       assert(true == m_SolutionReady);
       return &m_MajorPeak;
     }
-    void SetGainValue(float Gain){m_Gain = Gain;}
-    bool PushValueAndCalculateNormalizedFFT(int32_t value)
+    bool PushValueAndCalculateNormalizedFFT(int32_t value, float Gain)
     {
       m_SolutionReady = false;
+      m_MaxFFTBinValue = 0;
+      m_MaxFFTBinIndex = 0;
       mp_RealBuffer[m_CurrentIndex] = value;
       mp_ImaginaryBuffer[m_CurrentIndex] = 0.0;
       ++m_CurrentIndex;
@@ -76,11 +77,14 @@ class FFT_Calculator
         m_MyFFT->compute(FFTDirection::Forward);
         m_MyFFT->complexToMagnitude();
         m_MajorPeak = m_MyFFT->majorPeak();
-        for(int i = 0; i < (m_FFT_Size >> 1); ++i)
+        for(int i = 0; i < m_FFT_Size; ++i)
         {
-          mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * m_Gain ) / m_32BitMax;
-          if(mp_RealBuffer[i] > 1.0) mp_RealBuffer[i] = 1.0;
-          if(mp_RealBuffer[i] > m_MaxFFTBinValue)
+          mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * Gain ) / m_32BitMax;
+          if(mp_RealBuffer[i] > 1.0)
+          {
+            mp_RealBuffer[i] = 1.0;
+          }
+          if(i < m_FFT_Size/2 && mp_RealBuffer[i] > m_MaxFFTBinValue)
           {
             m_MaxFFTBinValue = mp_RealBuffer[i];
             m_MaxFFTBinIndex = i;
