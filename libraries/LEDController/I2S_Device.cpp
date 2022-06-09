@@ -142,12 +142,12 @@ void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t v
 	}
 }
 
-void I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
+int32_t I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	memcpy(m_SoundBufferData, SoundBufferData, ByteCount);
-	WriteSamples(m_SoundBufferData, ByteCount);
 	ESP_LOGV("i2S Device", "%s: Sound Buffer Data Ready.", GetTitle());
+	return WriteSamples(m_SoundBufferData, ByteCount);
 }
 
 int32_t I2S_Device::GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCount)
@@ -165,6 +165,7 @@ int I2S_Device::ReadSamples()
 	{
 		//ESP_LOGV("Function Debug", "%s, ", __func__);
 		i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
+		if(bytes_read == 0) return 0;
 		size_t channel_bytes_read = bytes_read / 2;
 		size_t samplesRead = bytes_read / m_BytesPerSample;
 		size_t channelSamplesRead = channel_bytes_read / m_BytesPerSample;

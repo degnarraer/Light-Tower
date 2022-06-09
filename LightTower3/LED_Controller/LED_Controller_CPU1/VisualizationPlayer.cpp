@@ -37,10 +37,8 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
   m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
 
-  bool testVisualization = true;
-  if(true == testVisualization)
+  if(true == m_TestVisualization)
   {
-    m_Duration = 10000000;
     m_CurrentVisualization = ScrollingMaxBand::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
@@ -58,7 +56,7 @@ void VisualizationPlayer::RunMyScheduledTask()
 {
   m_CurrentTime = millis();
   m_CurrentDuration = m_CurrentTime - m_StartTime;
-  if(m_CurrentDuration >= m_Duration)
+  if(m_CurrentDuration >= m_Duration && false == m_TestVisualization)
   {
     GetRandomVisualization();
   }

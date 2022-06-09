@@ -66,7 +66,7 @@ void Bluetooth_Sink::Setup()
 	ESP_LOGD("Bluetooth_Device", "%s: Setup", GetTitle());
 	m_BytesPerSample = m_BitsPerSample/8;
 	m_TotalBytesToRead = m_BytesPerSample * m_BufferSize;
-	m_ChannelBytesToRead = m_ChannelBytesToRead * 2;
+	m_ChannelBytesToRead = m_TotalBytesToRead / 2;
 	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
 	m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
 	AllocateMemory();

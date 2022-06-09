@@ -26,100 +26,150 @@ void StatisticalEngine::Setup()
 {
   if(false == m_MemoryIsAllocated) AllocateMemory();
   SetupQueueManager();
+  unsigned long currentTime = millis();
+  m_NewBandDataCurrentTime = currentTime;
+  m_NewMaxBandSoundDataCurrentTime = currentTime;
+  m_NewSoundDataCurrentTime = currentTime;
 }
 
 bool StatisticalEngine::NewBandDataReady()
 {
+  unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BANDS")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS")) > 0);
   //Serial << A << "|" << B << "\n";
   if( A & B )
   {
+    m_NewBandDataCurrentTime = currentTime;
     m_NewBandDataReady = true;
+    m_NewBandDataTimedOut = false;
+    return true;
+  }
+  else if(currentTime - m_NewBandDataCurrentTime >= m_NewBandDataTimeOut)
+  {
+    m_NewBandDataReady = true;
+    m_NewBandDataTimedOut = true;
     return true;
   }
   else
   {
     m_NewBandDataReady = false;
+    m_NewBandDataTimedOut = false;
     return false;
   }
 }
 
 bool StatisticalEngine::NewMaxBandSoundDataReady()
 {
+  unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBAND")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBAND")) > 0);
   //Serial << A << "|" << B << "\n";
   if( A & B )
   {
+    m_NewMaxBandSoundDataCurrentTime = currentTime;
     m_NewMaxBandSoundDataReady = true;
+    m_NewMaxBandSoundDataTimedOut = false;
+    return true;
+  }
+  else if(currentTime - m_NewMaxBandSoundDataCurrentTime >= m_NewMaxBandSoundDataTimeOut)
+  {
+    m_NewMaxBandSoundDataReady = true;
+    m_NewMaxBandSoundDataTimedOut = true;
     return true;
   }
   else
   {
     m_NewMaxBandSoundDataReady = false;
+    m_NewMaxBandSoundDataTimedOut = false;
     return false;
   }
 }
 
 bool StatisticalEngine::NewSoundDataReady()
 {
+  unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD")) > 0);
   //Serial << A << "|" << B << "\n";
   if( A & B )
   {
+    m_NewSoundDataCurrentTime = currentTime;
     m_NewSoundDataReady = true;
+    m_NewSoundDataTimedOut = false;
+    return true;
+  }
+  else if(currentTime - m_NewSoundDataCurrentTime >= m_NewSoundDataTimeOut)
+  {
+    m_NewSoundDataReady = true;
+    m_NewSoundDataTimedOut = true;
     return true;
   }
   else
   {
     m_NewSoundDataReady = false;
+    m_NewSoundDataTimedOut = false;
     return false;
   }
 }
 
 bool StatisticalEngine::CanRunMyScheduledTask()
 {
-  if( true == NewSoundDataReady() || 
-      true == NewBandDataReady() ||
-      true == NewMaxBandSoundDataReady() )
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
+  return NewSoundDataReady() | NewBandDataReady() | NewMaxBandSoundDataReady();
 }
 
 void StatisticalEngine::RunMyScheduledTask()
 {
   if(true == m_NewSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetTotalByteCountForDataItem("R_PSD"), true, false);
-    GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetTotalByteCountForDataItem("L_PSD"), true, false);
-    
-    //To allow the original code to work, we combine the left and right channels into an average
-    m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
-    m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
-    m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
-    
-    if(true == STATISTICAL_ENGINE_DATA_DEBUG) Serial << "L: " << m_Left_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Left_Channel_Processed_Sound_Data.Minimum << "|" << m_Left_Channel_Processed_Sound_Data.Maximum << "\t" << "R: " << m_Right_Channel_Processed_Sound_Data.NormalizedPower << "|" << m_Right_Channel_Processed_Sound_Data.Minimum << "|" << m_Right_Channel_Processed_Sound_Data.Maximum << "\n";
-    UpdateSoundState();
+    if(false == m_NewSoundDataTimedOut)
+    {
+      GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetTotalByteCountForDataItem("R_PSD"), true, false);
+      GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetTotalByteCountForDataItem("L_PSD"), true, false);
+      
+      //To allow the original code to work, we combine the left and right channels into an average
+      m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
+      m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
+      m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
+      UpdateSoundState();
+    }
+    else
+    {
+      m_Power = 0;
+      m_signalMin = 0;
+      m_signalMax = 0;
+    }
   }
 
   if(true == m_NewBandDataReady)
   {
-    GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), true, false);
-    GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), true, false);
-    UpdateBandArray(); 
+    if(false == m_NewBandDataTimedOut)
+    {
+      GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), true, false);
+      GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), true, false);
+      UpdateBandArray(); 
+    }
+    else
+    {
+      memset(m_Right_Band_Values, 0.0, sizeof(m_Right_Band_Values));
+      memset(m_Left_Band_Values, 0.0, sizeof(m_Left_Band_Values));
+    }
   }
   
   if(true == m_NewMaxBandSoundDataReady)
   {
-    GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
-    GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
+    if(false == m_NewMaxBandSoundDataTimedOut)
+    {
+      GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
+      GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
+    }
+    else
+    {
+      m_Right_MaxBandSoundData.MaxBandNormalizedPower = 0.0;
+      m_Right_MaxBandSoundData.MaxBandIndex = 0;
+      m_Left_MaxBandSoundData.MaxBandNormalizedPower = 0.0;
+      m_Left_MaxBandSoundData.MaxBandIndex = 0;
+    }
   }
 }
 

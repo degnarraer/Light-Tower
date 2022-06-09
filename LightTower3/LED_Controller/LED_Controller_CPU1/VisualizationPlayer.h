@@ -55,6 +55,7 @@ class VisualizationPlayer : public Task
     typedef Visualization* (* GetInstanceFunctionPointer)(StatisticalEngineModelInterface &, LEDController &);
     LinkedList<GetInstanceFunctionPointer> m_MyVisiualizationInstantiations = LinkedList<GetInstanceFunctionPointer>();
     LinkedList<Visualization*> m_MyQueue = LinkedList<Visualization*>();
+    bool m_TestVisualization = true;
 };
 
 #endif

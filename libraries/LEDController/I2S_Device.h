@@ -76,7 +76,7 @@ class I2S_Device: public NamedItem
 	int32_t GetDataBufferValue(uint8_t* DataBuffer, size_t index);
 	void SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value);
 
-    void SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
+    int32_t SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     int32_t GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCount);
 	
     size_t GetSampleCount() { return m_SampleCount; }

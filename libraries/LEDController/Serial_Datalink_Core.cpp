@@ -48,7 +48,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 		{
 		  m_InboundStringData.trim();
 		  m_InboundStringData = m_InboundStringData.substring(m_Startinator.length(), m_InboundStringData.length() - m_Terminator.length());
-		  ESP_LOGD("Serial_Datalink", "RX: %s", m_InboundStringData.c_str());
+		  ESP_LOGV("Serial_Datalink", "RX: %s", m_InboundStringData.c_str());
 		  DeSerialize(m_InboundStringData);
 		  m_InboundStringData.clear();
 		}
