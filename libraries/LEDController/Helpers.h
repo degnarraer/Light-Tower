@@ -193,7 +193,7 @@ class QueueManager
 				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
-					void* DataBuffer = (void*)malloc(ByteCount);
+					void* DataBuffer = (void*)ps_malloc(ByteCount);
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
@@ -207,7 +207,7 @@ class QueueManager
 							ESP_LOGV("CommonUtils", "Error Receiving Queue!");
 						}
 					}
-					delete DataBuffer;
+					free(DataBuffer);
 				}
 			}
 			else
@@ -236,7 +236,7 @@ class QueueManager
 				size_t bytes = 0;
 				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
-				DataBuffer = malloc(bytes);
+				DataBuffer = ps_malloc(bytes);
 				switch(ConfigFile[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -267,7 +267,7 @@ class QueueManager
 			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
-				delete m_DataItem[i].DataBuffer;			
+				free(m_DataItem[i].DataBuffer);			
 				switch(m_DataItem[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -284,7 +284,7 @@ class QueueManager
 					break;
 				}
 			}
-			delete m_DataItem;
+			free(m_DataItem);
 			m_MemoryAllocated = false;
 		}
 		
@@ -372,7 +372,7 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			ESP_LOGV("Helpers", "MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", QueueCount, ByteCount);
-			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
+			uint8_t* DataBuffer = (uint8_t*)ps_malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 			  memset(DataBuffer, 0, ByteCount);
@@ -396,7 +396,7 @@ class CommonUtils
 			    ESP_LOGE("Helpers", "ERROR! Error Receiving Queue.");
 			  }
 			}
-			delete DataBuffer;
+			free(DataBuffer);
 		  }
 		  else
 		  {
@@ -411,7 +411,7 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			ESP_LOGV("Helpers", "Queue Messages Waiting: %i Receiver Queue Count: %i Byte Count: %i", QueueCount, GiveToQueueCount, ByteCount);
-			uint8_t* DataBuffer = (uint8_t*)malloc(ByteCount);
+			uint8_t* DataBuffer = (uint8_t*)ps_malloc(ByteCount);
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 				if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
@@ -445,7 +445,7 @@ class CommonUtils
 					ESP_LOGW("CommonUtils", "WARNING! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
-			delete DataBuffer;
+			free(DataBuffer);
 		  }
 		  else
 		  {
@@ -508,7 +508,7 @@ class CommonUtils
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
-					void* DataBuffer = (void*)malloc(ByteCount);
+					void* DataBuffer = (void*)ps_malloc(ByteCount);
 					for(int i = 0; i < QueueCount; ++i)
 					{
 						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
@@ -520,7 +520,7 @@ class CommonUtils
 							ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
 						}
 					}
-					delete DataBuffer;
+					free(DataBuffer);
 				}
 			}
 			else

@@ -66,10 +66,10 @@ class Manager: public NamedItem
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
     
-    static const int32_t m_CircularBufferSize = 4000; //2 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
+    static const int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
     bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
 
-    Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
+    Frame_t m_LinearFrameBuffer[1024];
     int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
     int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
     void UpdateNotificationRegistrationStatus();
