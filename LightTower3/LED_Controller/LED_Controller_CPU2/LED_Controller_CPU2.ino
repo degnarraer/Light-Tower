@@ -91,7 +91,7 @@ void setup() {
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 20,      // Priority of the task
+    configMAX_PRIORITIES - 10,      // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
     0                               // Core where the task should run
   );
@@ -112,27 +112,29 @@ void setup() {
     "ManagerTask",                  // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &ManagerTask,                   // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   ); 
+  
   xTaskCreatePinnedToCore
   (
     SerialDataLinkTXTaskLoop,       // Function to implement the task
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 20,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
+  
   xTaskCreatePinnedToCore
   (
     SerialDataLinkRXTaskLoop,       // Function to implement the task
     "SerialDataLinkRXTask",         // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 20,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -160,8 +162,8 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
-    vTaskDelay(10 / portTICK_PERIOD_MS);
     m_SoundProcessor.ProcessFFT();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -170,7 +172,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
 

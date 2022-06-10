@@ -139,7 +139,7 @@ void setup()
     "VisualizationTask",          // Name of the task
     20000,                        // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 2,     // Priority of the task
+    configMAX_PRIORITIES - 1,     // Priority of the task
     &VisualizationTask,           // Task handle.
     0                             // Core where the task should run
   );
@@ -150,7 +150,7 @@ void setup()
     "DataMoverTask",              // Name of the task
     4000,                         // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES,         // Priority of the task
+    configMAX_PRIORITIES - 1,    // Priority of the task
     &DataMoverTask,               // Task handle.
     1                             // Core where the task should run
   );
@@ -161,7 +161,7 @@ void setup()
     "SerialDataLinkSendTask",   // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 1,  // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
   );     
@@ -172,7 +172,7 @@ void setup()
     "SerialDataLinkRXTask",     // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
+    configMAX_PRIORITIES - 1,  // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
@@ -205,21 +205,21 @@ void loop() {
   }
 }
 
-void DataMoverTaskLoop(void * parameter)
-{
-  for(;;)
-  {
-    m_Manager.ProcessEventQueue();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
-  }
-}
-
 void VisualizationTaskLoop(void * parameter)
 {
   for(;;)
   {
     m_Scheduler.RunScheduler();
     vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+}
+
+void DataMoverTaskLoop(void * parameter)
+{
+  for(;;)
+  {
+    m_Manager.ProcessEventQueue();
+    vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
 
