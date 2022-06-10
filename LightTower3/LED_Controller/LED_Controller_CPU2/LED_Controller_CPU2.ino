@@ -93,7 +93,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   );
   xTaskCreatePinnedToCore
   (
@@ -103,7 +103,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 20,      // Priority of the task
     &ProcessFFTTask,                // Task handle.
-    0                               // Core where the task should run
+    1                               // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
