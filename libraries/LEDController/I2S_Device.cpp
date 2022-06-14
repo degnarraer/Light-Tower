@@ -63,7 +63,6 @@ void I2S_Device::Setup()
 	m_SampleCount = m_ChannelSampleCount * 2;
     m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
     m_TotalBytesToRead = m_ChannelBytesToRead * 2;
-	m_ConfigCount = 3;
 	DataType_t DataType;
 	switch(m_BitsPerSample)
 	{	
@@ -269,7 +268,6 @@ void I2S_Device::ProcessEventQueue()
 		i2s_event_t i2sEvent = {};
 		uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);   
 		// Iterate over all events in the i2s event queue
-		//for (uint8_t i = 0; i < i2sMsgCount; ++i)
 		for( int i = 0; i < i2sMsgCount; ++i )
 		{
 		  ESP_LOGV("i2S Device", "%s: Queue Count: %i", GetTitle(), i2sMsgCount);

@@ -65,10 +65,10 @@ void Bluetooth_Sink::Setup()
     //ESP_LOGV("Function Debug", "%s, ", __func__); 
 	ESP_LOGD("Bluetooth_Device", "%s: Setup", GetTitle());
 	m_BytesPerSample = m_BitsPerSample/8;
-	m_TotalBytesToRead = m_BytesPerSample * m_BufferSize;
-	m_ChannelBytesToRead = m_TotalBytesToRead / 2;
-	m_SampleCount = m_TotalBytesToRead / m_BytesPerSample;
-	m_ChannelSampleCount = m_ChannelBytesToRead / m_BytesPerSample;
+    m_ChannelSampleCount = m_BufferSize;
+	m_SampleCount = m_ChannelSampleCount * 2;
+    m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
+    m_TotalBytesToRead = m_BytesPerSample * m_SampleCount;
 	AllocateMemory();
 }
 void Bluetooth_Sink::ResgisterForDataBufferRXCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
@@ -81,7 +81,7 @@ void Bluetooth_Sink::data_received_callback()
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
-    //ESP_LOGV("Function Debug", "%s, ", __func__); 
+    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	for(int i = 0; i < length; ++i)
 	{
 		mp_Data[m_OurByteCount] = data[i];
@@ -100,8 +100,8 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 					int DataBufferIndex = m_BytesPerSample * j;
 					for(int k = 0; k < m_BytesPerSample; ++k)
 					{
-						mp_RightData[DataBufferIndex + j] = mp_Data[2*DataBufferIndex + j];
-						mp_LeftData[DataBufferIndex + j] = mp_Data[2*DataBufferIndex + m_BytesPerSample + j];
+						mp_RightData[DataBufferIndex + k] = mp_Data[2*DataBufferIndex + k];
+						mp_LeftData[DataBufferIndex + k] = mp_Data[2*DataBufferIndex + m_BytesPerSample + k];
 					}
 				}
 				if(NULL != m_Callee) 

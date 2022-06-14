@@ -219,7 +219,7 @@ void DataMoverTaskLoop(void * parameter)
   for(;;)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(2 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

@@ -37,6 +37,8 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
+  //Set Bluetooth Power to Max
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
   m_BT_In.Setup();

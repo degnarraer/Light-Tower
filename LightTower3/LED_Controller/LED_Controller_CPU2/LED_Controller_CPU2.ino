@@ -21,7 +21,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_CHANNEL_STEREO
                                  , true                               // Use APLL
                                  , I2S_BUFFER_COUNT                   // Buffer Count
-                                 , I2S_SAMPLE_COUNT                // Buffer Size
+                                 , I2S_SAMPLE_COUNT                   // Buffer Size
                                  , I2S1_SCLCK_PIN                     // Serial Clock Pin
                                  , I2S1_WD_PIN                        // Word Selection Pin
                                  , I2S1_SDIN_PIN                      // Serial Data In Pin
@@ -37,7 +37,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S_CHANNEL_STEREO
                                   , true                             // Use APLL
                                   , I2S_BUFFER_COUNT                 // Buffer Count
-                                  , I2S_SAMPLE_COUNT             // Buffer Size
+                                  , I2S_SAMPLE_COUNT                 // Buffer Size
                                   , I2S2_SCLCK_PIN                   // Serial Clock Pin
                                   , I2S2_WD_PIN                      // Word Selection Pin
                                   , I2S2_SDIN_PIN                    // Serial Data In Pin
@@ -172,7 +172,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(2 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

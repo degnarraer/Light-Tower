@@ -47,8 +47,9 @@ void Manager::FreeMemory()
 
 void Manager::Setup()
 {
-  ESP_LOGV("Manager", "%s, ", __func__);
   AllocateMemory();
+  //Set Bluetooth Power to Max
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_SoundProcessor.SetupSoundProcessor();
   m_I2S_In.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
@@ -61,8 +62,8 @@ void Manager::ProcessEventQueue()
 {
   ESP_LOGV("Function Debug", "%s, ", __func__);
   UpdateNotificationRegistrationStatus();
-  m_I2S_In.ProcessEventQueue();
   m_I2S_Out.ProcessEventQueue();
+  m_I2S_In.ProcessEventQueue();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -158,10 +159,12 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
     assert(ActualSampleReadCount <= sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
     assert(ActualSampleReadCount <= sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
     assert(ActualSampleReadCount <= sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
-    for(int i = 0; i < ActualSampleReadCount; ++i)
+    memset(m_RightDataBuffer, 0, sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
+    memset(m_LeftDataBuffer, 0, sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
+    for(int j = 0; j < ActualSampleReadCount; ++j)
     {
-      m_RightDataBuffer[i] = m_LinearFrameBuffer[i].channel1 << 16;
-      m_LeftDataBuffer[i] = m_LinearFrameBuffer[i].channel2 << 16;
+      m_RightDataBuffer[j] = m_LinearFrameBuffer[j].channel1 << 16;
+      m_LeftDataBuffer[j] = m_LinearFrameBuffer[j].channel2 << 16;
     }
     RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
     LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);

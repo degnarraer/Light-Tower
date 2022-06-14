@@ -89,7 +89,6 @@ class I2S_Device: public NamedItem
 	
   private:
 	I2S_Device_Callback* m_Callee = NULL;
-    size_t m_ConfigCount = 0;
     DataItemConfig_t* m_ItemConfig = NULL;
 	uint8_t* m_SoundBufferData;
 	uint8_t* m_RightChannel_SoundBufferData;
