@@ -172,7 +172,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
 

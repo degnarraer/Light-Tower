@@ -129,18 +129,8 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {  
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
-  int32_t LimitedBytesRequested = 0;
-  if(BytesRequested > sizeof(m_I2S_RXBuffer))
-  {
-    LimitedBytesRequested = sizeof(m_I2S_RXBuffer);
-  }
-  else
-  {
-    LimitedBytesRequested = BytesRequested;
-  }
-  assert(LimitedBytesRequested <= sizeof(m_I2S_RXBuffer));
-  BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, LimitedBytesRequested);
-  assert(BytesRead <= LimitedBytesRequested);
+  assert(BytesRequested <= sizeof(m_I2S_RXBuffer));
+  BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, BytesRequested);
   m_I2S_Out.SetSoundBufferData(m_I2S_RXBuffer, BytesRead);
   assert(BytesRead % m_32BitFrameByteCount == 0);
   int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
