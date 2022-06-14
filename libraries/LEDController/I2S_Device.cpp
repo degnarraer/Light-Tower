@@ -153,7 +153,7 @@ int32_t I2S_Device::GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCou
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	size_t bytes_read = 0;
-	i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, 0 );
+	i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, portMAX_DELAY );
 	return bytes_read;
 }
 

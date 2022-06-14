@@ -225,11 +225,17 @@ class QueueManager
 		void AllocateMemory()
 		{
 			//ESP_LOGV("Function Debug", "%s, ", __func__);
-			size_t ConfigBytes = sizeof(DataItem_t) * m_DataItemCount;
-			ESP_LOGI("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title.c_str(), m_DataItemCount, ConfigBytes);
 			m_DataItemCount = GetDataItemConfigCount();
+			size_t ConfigBytes = sizeof(struct DataItem_t) * m_DataItemCount;
 			DataItemConfig_t* ConfigFile = GetDataItemConfig();
-			m_DataItem = new DataItem_t[m_DataItemCount];
+			ESP_LOGE("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title.c_str(), m_DataItemCount, ConfigBytes);
+			
+			//Placement Allocation
+			void *DataItem_t_raw = ps_malloc(sizeof(DataItem_t) * m_DataItemCount);
+			m_DataItem = new(DataItem_t_raw) DataItem_t[m_DataItemCount];
+
+			//m_DataItem = new DataItem_t[m_DataItemCount];
+			assert(m_DataItem != NULL);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
 				void* DataBuffer;
@@ -259,8 +265,8 @@ class QueueManager
 				m_DataItem[i].TotalByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
 				m_DataItem[i].DataBuffer = DataBuffer;
-				m_MemoryAllocated = true;
 			}
+			m_MemoryAllocated = true;
 		}
 		void FreeMemory()
 		{

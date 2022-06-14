@@ -129,16 +129,16 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {  
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
-  assert(BytesRequested <= sizeof(m_I2S_RXBuffer));
-  BytesRead = m_I2S_In.GetSoundBufferData(m_I2S_RXBuffer, BytesRequested);
-  m_I2S_Out.SetSoundBufferData(m_I2S_RXBuffer, BytesRead);
+  uint8_t *I2S_RXBuffer = (uint8_t*)ps_malloc(BytesRequested);
+  BytesRead = m_I2S_In.GetSoundBufferData(I2S_RXBuffer, BytesRequested);
+  m_I2S_Out.SetSoundBufferData(I2S_RXBuffer, BytesRead);
   assert(BytesRead % m_32BitFrameByteCount == 0);
   int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
   for(int i = 0; i < FramesRead; ++i)
   {
     Frame aFrame;
-    aFrame.channel1 = ((int32_t*)m_I2S_RXBuffer)[2*i] >> 16;
-    aFrame.channel2 = ((int32_t*)m_I2S_RXBuffer)[2*i + 1] >> 16;
+    aFrame.channel1 = ((int32_t*)I2S_RXBuffer)[2*i] >> 16;
+    aFrame.channel2 = ((int32_t*)I2S_RXBuffer)[2*i + 1] >> 16;
     m_FrameBuffer.Write( (Frame_t&)(aFrame) );
     frame[i] = aFrame;
   }
@@ -160,5 +160,6 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
     LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
   }
   ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
+  free(I2S_RXBuffer);
   return FramesRead;
 }
