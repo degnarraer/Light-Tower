@@ -1,9 +1,13 @@
 #ifndef TUNES_H
 #define TUNES_H
 
+#define I2C_SDA_PIN               21
+#define I2C_SCL_PIN               22
+#define I2C_SLAVE_ADDR            0x04
+#define MAX_SLAVE_RESPONSE_LENGTH 32
+#define I2C_SLAVE_FREQ            1000000
+
 //PIN ASSIGNMENTS
-#define I2C_SDA_PIN             21
-#define I2C_SCL_PIN             22
 #define HARDWARE_SERIAL_RX_PIN  13
 #define HARDWARE_SERIAL_TX_PIN  14
 #define I2S2_SCLCK_PIN          25

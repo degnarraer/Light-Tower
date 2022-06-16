@@ -154,7 +154,7 @@ void I2CTaskLoop(void * parameter)
   for(;;)
   {
     m_I2C_Datalink.Loop();
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

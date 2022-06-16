@@ -21,6 +21,7 @@
 
 
 #include <Wire.h>
+#include <WireSlaveRequest.h>
 #include <DataTypes.h>
 #include <Helpers.h>
 
@@ -34,39 +35,28 @@ class I2C_Datalink: public NamedItem
     virtual ~I2C_Datalink(){}
     void Setup()
     {
-      I2C_0.begin(I2C_SDA_PIN, I2C_SCL_PIN, 100000);
+      I2C_0.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_SLAVE_FREQ);
     }
     void Loop() 
     {
-      byte error, address;
-      int nDevices;
-      Serial.println("Scanning...");
-      nDevices = 0;
-      for(address = 1; address < 127; address++ ) {
-        I2C_0.beginTransmission(address);
-        error = I2C_0.endTransmission();
-        if (error == 0) {
-          Serial.print("I2C device found at address 0x");
-          if (address<16) {
-            Serial.print("0");
-          }
-          Serial.println(address,HEX);
-          nDevices++;
-        }
-        else if (error==4) {
-          Serial.print("Unknow error at address 0x");
-          if (address<16) {
-            Serial.print("0");
-          }
-          Serial.println(address,HEX);
-        }    
+      WireSlaveRequest slaveReq(I2C_0, I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
+      slaveReq.setRetryDelay(5);
+      bool success = slaveReq.request();
+      if (success) 
+      {
+          while (1 < slaveReq.available()) 
+          {
+            char c = slaveReq.read();
+            Serial.print(c);
+          }   
+          int x = slaveReq.read();
+          Serial.println(x);
       }
-      if (nDevices == 0) {
-        Serial.println("No I2C devices found\n");
-      }
-      else {
-        Serial.println("done\n");
-      }      
+      else 
+      {
+          // if something went wrong, print the reason
+          Serial.println(slaveReq.lastStatusToString());
+      } 
     }
 };
 

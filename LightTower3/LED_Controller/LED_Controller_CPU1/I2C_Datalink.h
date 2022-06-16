@@ -29,15 +29,14 @@ class I2C_Datalink: public NamedItem
                   , public CommonUtils
 {
   private:
-    TwoWireSlave I2C_0 = TwoWireSlave(0);
   public:
     I2C_Datalink( String Title  ) : NamedItem(Title){}
     virtual ~I2C_Datalink(){}
     void Setup()
     {
-      if (true == I2C_0.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_SLAVE_ADDR)) 
+      if (true == WireSlave.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_SLAVE_ADDR)) 
       {
-        I2C_0.onRequest(RequestEvent);
+        WireSlave.onRequest(RequestEvent);
         Serial.println("I2C slave init success");
       }
       else
@@ -47,14 +46,14 @@ class I2C_Datalink: public NamedItem
     }
     void Loop() 
     {
-      I2C_0.update();
+      WireSlave.update();
     }
     static void RequestEvent()
     {
-      static byte y = 0;
+      static int y = 0;
   
       WireSlave.print("y is ");
-      WireSlave.write(y++);
+      WireSlave.print(y++);
     }
 };
 
