@@ -41,16 +41,13 @@ class I2C_Datalink: public NamedItem
     {
       WireSlaveRequest slaveReq(I2C_0, I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
       slaveReq.setRetryDelay(5);
-      bool success = slaveReq.request();
-      if (success) 
+      if (true == slaveReq.request()) 
       {
-          while (1 < slaveReq.available()) 
+          while (0 < slaveReq.available()) 
           {
-            char c = slaveReq.read();
+            char c = (char)slaveReq.read();
             Serial.print(c);
           }   
-          int x = slaveReq.read();
-          Serial.println(x);
       }
       else 
       {

@@ -51,9 +51,9 @@ class I2C_Datalink: public NamedItem
     static void RequestEvent()
     {
       static int y = 0;
-  
-      WireSlave.print("y is ");
-      WireSlave.print(y++);
+      String result = "The value for y is " + String(++y) + ".\n";
+      WireSlave.print(result);
+      Serial.print(result);
     }
 };
 
