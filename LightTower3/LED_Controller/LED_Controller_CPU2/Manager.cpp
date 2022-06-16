@@ -22,12 +22,10 @@ Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Source &BT_Out
-                , I2S_Device &I2S_In
                 , I2S_Device &I2S_OUT ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT_Out(BT_Out)
-                                       , m_I2S_In(I2S_In)
                                        , m_I2S_Out(I2S_OUT)
 { 
   ESP_LOGV("Manager", "%s, ", __func__);
@@ -51,9 +49,7 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_SoundProcessor.SetupSoundProcessor();
-  m_I2S_In.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
-  m_I2S_In.StartDevice();  
   m_I2S_Out.StartDevice();
   m_BT_Out.StartDevice();
 }
@@ -63,7 +59,6 @@ void Manager::ProcessEventQueue()
   ESP_LOGV("Function Debug", "%s, ", __func__);
   UpdateNotificationRegistrationStatus();
   m_I2S_Out.ProcessEventQueue();
-  m_I2S_In.ProcessEventQueue();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -71,26 +66,23 @@ void Manager::UpdateNotificationRegistrationStatus()
   bool IsConnected = m_BT_Out.IsConnected();
   if(true == IsConnected)
   {
-    m_I2S_In.DeResgisterForDataBufferRXCallback(this);
   }
   else
   {
-    m_I2S_In.ResgisterForDataBufferRXCallback(this);
   }
 }
 //I2S_Device_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
+  //if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
   {
-    m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
+  //if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
   {
     QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_PSD_IN");
     QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_FFT_IN");
@@ -108,7 +100,7 @@ void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBu
 void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() )
+  //if( DeviceTitle == m_I2S_In.GetTitle() )
   {
     QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_PSD_IN");
     QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_FFT_IN");
@@ -130,7 +122,7 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
   uint8_t *I2S_RXBuffer = (uint8_t*)ps_malloc(BytesRequested);
-  BytesRead = m_I2S_In.GetSoundBufferData(I2S_RXBuffer, BytesRequested);
+  //BytesRead = m_I2S_In.GetSoundBufferData(I2S_RXBuffer, BytesRequested);
   m_I2S_Out.SetSoundBufferData(I2S_RXBuffer, BytesRead);
   assert(BytesRead % m_32BitFrameByteCount == 0);
   int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
@@ -156,8 +148,8 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
       m_RightDataBuffer[j] = m_LinearFrameBuffer[j].channel1 << 16;
       m_LeftDataBuffer[j] = m_LinearFrameBuffer[j].channel2 << 16;
     }
-    RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
-    LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
+    //RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
+    //LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
   }
   ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
   free(I2S_RXBuffer);

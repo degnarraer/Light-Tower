@@ -3,14 +3,14 @@
 #include "VisualizationPlayer.h"
 #include "Models.h"
 #include "Tunes.h"
-
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "I2C_Datalink.h"
 #include "esp_log.h"
 
 TaskHandle_t DataMoverTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 TaskHandle_t VisualizationTask;
+TaskHandle_t I2CTask;
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
@@ -75,22 +75,6 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , I2S1_WD_PIN                        // Word Selection Pin
                                 , I2S1_SDIN_PIN                      // Serial Data In Pin
                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
-                      
-I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
-                                  , I2S_NUM_1                        // I2S Interface
-                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                  , I2S_SAMPLE_RATE
-                                  , I2S_BITS_PER_SAMPLE_32BIT
-                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                  , I2S_CHANNEL_STEREO
-                                  , true                            // Use APLL
-                                  , I2S_BUFFER_COUNT                // Buffer Count
-                                  , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
-                                  , I2S2_SCLCK_PIN                  // Serial Clock Pin
-                                  , I2S2_WD_PIN                     // Word Selection Pin
-                                  , I2S2_SDIN_PIN                   // Serial Data In Pin
-                                  , I2S2_SDOUT_PIN );               // Serial Data Out Pin
 
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
@@ -99,13 +83,14 @@ HardwareSerial m_hSerial = Serial1;
 SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
+
+I2C_Datalink m_I2C_Datalink = I2C_Datalink("I2C Datalink");
 Manager m_Manager = Manager("Manager"
                            , m_StatisticalEngine
                            , m_SerialDataLink
                            , m_BT_In
-                           , m_Mic_In
-                           , m_I2S_Out);
-                           
+                           , m_Mic_In );
+                     
 void setup()
 {
   //ESP32 Serial Communication
@@ -164,7 +149,7 @@ void setup()
     configMAX_PRIORITIES - 1,  // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
-  );     
+  );
   
   xTaskCreatePinnedToCore
   (
@@ -174,6 +159,17 @@ void setup()
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,  // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
+    1                           // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
+    I2CTaskLoop,                // Function to implement the task
+    "I2CTask",                  // Name of the task
+    4000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &I2CTask,                   // Task handle.
     1                           // Core where the task should run
   );
   
@@ -202,6 +198,15 @@ void loop() {
       ESP_LOGI("LED_Controller1", "SerialDataLinkRXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkRXTask));
       ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
+  }
+}
+
+void I2CTaskLoop(void * parameter)
+{
+  m_I2C_Datalink.Setup();
+  for(;;)
+  {
+    m_I2C_Datalink.Loop();
   }
 }
 

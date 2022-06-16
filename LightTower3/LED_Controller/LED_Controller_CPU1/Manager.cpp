@@ -22,13 +22,11 @@ Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Sink &BT_In
-                , I2S_Device &Mic_In
-                , I2S_Device &I2S_Out ): NamedItem(Title)
+                , I2S_Device &Mic_In ): NamedItem(Title)
                                        , m_StatisticalEngine(StatisticalEngine)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT_In(BT_In)
                                        , m_Mic_In(Mic_In)
-                                       , m_I2S_Out(I2S_Out)
 {
 }
 Manager::~Manager()
@@ -40,7 +38,6 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_Mic_In.Setup();
-  m_I2S_Out.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
   SetInputType(InputType_Bluetooth);
@@ -53,7 +50,6 @@ void Manager::ProcessEventQueue()
   {
     case InputType_Microphone:
       m_Mic_In.ProcessEventQueue();
-      m_I2S_Out.ProcessEventQueue();
     break;
     case InputType_Bluetooth:
     break;
@@ -112,17 +108,14 @@ void Manager::SetInputType(InputType_t Type)
     case InputType_Microphone:
       m_BT_In.StopDevice();
       m_Mic_In.StartDevice();
-      m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
       m_Mic_In.StopDevice();
       m_BT_In.StartDevice();
-      m_I2S_Out.StartDevice();
     break;
     default:
       m_Mic_In.StopDevice();
       m_BT_In.StopDevice();
-      m_I2S_Out.StopDevice();
     break;
   }
 }
@@ -133,9 +126,6 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 {
   if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
-    assert(m_I2S_Out.GetBytesToRead() == ByteCount);
-    assert(m_I2S_Out.GetSampleCount() == SampleCount);
-    m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)

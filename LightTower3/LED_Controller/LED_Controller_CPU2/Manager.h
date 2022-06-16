@@ -36,7 +36,6 @@ class Manager: public NamedItem
            , Sound_Processor &SoundProcessor
            , SerialDataLink &SerialDataLink
            , Bluetooth_Source &BT_Out
-           , I2S_Device &I2S_In
            , I2S_Device &I2S_Out );
     virtual ~Manager();
     void AllocateMemory();
@@ -58,7 +57,6 @@ class Manager: public NamedItem
     SerialDataLink &m_SerialDataLink;
 
     //I2S Sound Data RX
-    I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
     static const size_t m_32BitFrameByteCount = 4 * 2;
     

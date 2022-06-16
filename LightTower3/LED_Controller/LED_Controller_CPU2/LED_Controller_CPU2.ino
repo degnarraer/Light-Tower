@@ -1,7 +1,6 @@
 #include "Manager.h"
 #include "Tunes.h"
-
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "I2C_Datalink.h"
 #include "esp_log.h"
 
 TaskHandle_t ManagerTask;
@@ -9,24 +8,8 @@ TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
+TaskHandle_t I2CTask;
 
-
-I2S_Device m_I2S_In = I2S_Device( "I2S_In"
-                                 , I2S_NUM_0
-                                 , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
-                                 , I2S_SAMPLE_RATE
-                                 , I2S_BITS_PER_SAMPLE_32BIT
-                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                 , I2S_CHANNEL_STEREO
-                                 , true                               // Use APLL
-                                 , I2S_BUFFER_COUNT                   // Buffer Count
-                                 , I2S_SAMPLE_COUNT                   // Buffer Size
-                                 , I2S1_SCLCK_PIN                     // Serial Clock Pin
-                                 , I2S1_WD_PIN                        // Word Selection Pin
-                                 , I2S1_SDIN_PIN                      // Serial Data In Pin
-                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
-                      
 I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S_NUM_1                        // I2S Interface
                                   , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
@@ -52,7 +35,12 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-Manager m_Manager = Manager("Manager", m_SoundProcessor, m_SerialDataLink, m_BT_Out, m_I2S_In, m_I2S_Out);
+I2C_Datalink m_I2C_Datalink = I2C_Datalink("I2C Datalink");
+Manager m_Manager = Manager("Manager"
+                           , m_SoundProcessor
+                           , m_SerialDataLink
+                           , m_BT_Out
+                           , m_I2S_Out);
 
 //Bluetooth Source Callback
 int32_t get_data_channels(Frame *frame, int32_t channel_len)
@@ -79,7 +67,6 @@ void setup() {
   ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
  
   m_I2S_Out.Setup();
-  m_I2S_In.Setup();
   m_BT_Out.Setup();
   m_BT_Out.SetCallback(get_data_channels);
   m_Manager.Setup();
@@ -139,6 +126,17 @@ void setup() {
     1                               // Core where the task should run
   );
   
+  xTaskCreatePinnedToCore
+  (
+    I2CTaskLoop,                // Function to implement the task
+    "I2CTask",                  // Name of the task
+    4000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &I2CTask,                   // Task handle.
+    1                           // Core where the task should run
+  );
+  
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());
@@ -149,6 +147,17 @@ void loop()
 {
   // put your main code here, to run repeatedly:
 }
+
+void I2CTaskLoop(void * parameter)
+{
+  m_I2C_Datalink.Setup();
+  for(;;)
+  {
+    m_I2C_Datalink.Loop();
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
+  }
+}
+
 void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)

@@ -58,8 +58,7 @@ class Manager: public NamedItem
            , StatisticalEngine &StatisticalEngine
            , SerialDataLink &SerialDataLink
            , Bluetooth_Sink &BT_In
-           , I2S_Device &Mic_In
-           , I2S_Device &I2S_Out );
+           , I2S_Device &Mic_In );
     virtual ~Manager();
     void Setup();
     void ProcessEventQueue();
@@ -76,7 +75,6 @@ class Manager: public NamedItem
     SerialDataLink &m_SerialDataLink;
     Bluetooth_Sink &m_BT_In;
     I2S_Device &m_Mic_In;
-    I2S_Device &m_I2S_Out;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
     DAC_Data_Format_t m_DAC_Data_Format;
