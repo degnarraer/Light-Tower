@@ -5,7 +5,7 @@
 #define I2C_SCL_PIN               22
 #define I2C_SLAVE_ADDR            0x04
 #define MAX_SLAVE_RESPONSE_LENGTH 32
-#define I2C_SLAVE_FREQ            1000000
+#define I2C_MASTER_FREQ           1000000
 
 //PIN ASSIGNMENTS
 #define HARDWARE_SERIAL_RX_PIN  13

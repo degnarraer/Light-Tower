@@ -18,44 +18,38 @@
 
 #ifndef I2C_Datalink_H
 #define I2C_Datalink_H
-
-
 #include <Wire.h>
 #include <WireSlaveRequest.h>
-#include <DataTypes.h>
+#include <WireSlave.h>
 #include <Helpers.h>
 
 class I2C_Datalink: public NamedItem
-                  , public CommonUtils
 {
-  private:
-    TwoWire I2C_0 = TwoWire(0);
   public:
-    I2C_Datalink( String Title  ) : NamedItem(Title){}
+    I2C_Datalink( String Title, TwoWire &TwoWire, uint8_t SDA_Pin, uint8_t SCL_Pin )
+                : NamedItem(Title)
+                , m_TwoWire(&TwoWire)
+                , m_SDA_PIN(SDA_Pin)
+                , m_SCL_PIN(SCL_Pin){}
     virtual ~I2C_Datalink(){}
-    void Setup()
-    {
-      I2C_0.begin(I2C_SDA_PIN, I2C_SCL_PIN, I2C_SLAVE_FREQ);
-    }
-    void Loop() 
-    {
-      WireSlaveRequest slaveReq(I2C_0, I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
-      slaveReq.setRetryDelay(5);
-      if (true == slaveReq.request()) 
-      {
-          while (0 < slaveReq.available()) 
-          {
-            char c = (char)slaveReq.read();
-            Serial.print(c);
-          }   
-      }
-      else 
-      {
-          // if something went wrong, print the reason
-          Serial.println(slaveReq.lastStatusToString());
-      } 
-    }
+
+    //Master Functions
+    void SetupAsMaster(uint16_t MaxResponseLength, uint32_t Freq);
+    char ReadDataFromSlave(uint8_t SlaveAddress);
+
+    //Slave Functions
+    void SetupAsSlave(uint8_t My_Address, uint16_t MaxResponseLength);
+    void UpdateI2C();
+
+    //Callback Functions
+    static void ReceiveEvent(int howMany);
+    static void RequestEvent();
+  private:
+    TwoWire *m_TwoWire;
+    uint8_t m_SDA_PIN;
+    uint8_t m_SCL_PIN;
+    uint8_t m_Slave_Address;
+    uint16_t m_MaxResponseLength;
+    uint32_t m_Freq;
 };
-
-
 #endif

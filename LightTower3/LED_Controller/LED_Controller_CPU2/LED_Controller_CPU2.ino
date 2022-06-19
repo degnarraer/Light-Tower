@@ -35,7 +35,10 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-I2C_Datalink m_I2C_Datalink = I2C_Datalink("I2C Datalink");
+TwoWire m_TwoWire = TwoWire(0);
+I2C_Datalink m_I2C_Datalink = I2C_Datalink("I2C Sound Datalink", m_TwoWire, I2C_SDA_PIN, I2C_SCL_PIN);
+
+
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SerialDataLink
@@ -150,10 +153,10 @@ void loop()
 
 void I2CTaskLoop(void * parameter)
 {
-  m_I2C_Datalink.Setup();
+  m_I2C_Datalink.SetupAsMaster(MAX_SLAVE_RESPONSE_LENGTH, I2C_MASTER_FREQ);
   for(;;)
   {
-    m_I2C_Datalink.Loop();
+    m_I2C_Datalink.ReadDataFromSlave(I2C_SLAVE_ADDR);
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
