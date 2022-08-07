@@ -44,8 +44,8 @@ void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq
 void I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
 {
   WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, m_MaxResponseLength);
-  slaveReq.setRetryDelay(1);
-  slaveReq.setAttempts(5);
+  slaveReq.setRetryDelay(5);
+  slaveReq.setAttempts(3);
   if (true == slaveReq.request()) 
   {
     Serial << "Received Data: ";

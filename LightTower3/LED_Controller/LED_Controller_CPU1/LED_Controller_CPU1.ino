@@ -84,7 +84,9 @@ SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
-I2C_Datalink m_I2C_Datalink = I2C_Datalink("I2C Datalink");
+TwoWireSlave m_TwoWire = TwoWireSlave(0);
+I2C_Datalink_Slave m_I2C_Datalink = I2C_Datalink_Slave("I2C Sound Datalink", m_TwoWire, I2C_SDA_PIN, I2C_SCL_PIN);
+
 Manager m_Manager = Manager("Manager"
                            , m_StatisticalEngine
                            , m_SerialDataLink
@@ -170,7 +172,7 @@ void setup()
     NULL,                       // Task input parameter
     configMAX_PRIORITIES - 1,   // Priority of the task
     &I2CTask,                   // Task handle.
-    1                           // Core where the task should run
+    0                           // Core where the task should run
   );
   
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
@@ -203,15 +205,17 @@ void loop() {
 
 void I2CTaskLoop(void * parameter)
 {
-  m_I2C_Datalink.Setup();
+  ESP_LOGW("LED_Controller1", "Running I2CTaskLoop.");
+  m_I2C_Datalink.SetupSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
   for(;;)
   {
-    m_I2C_Datalink.Loop();
+    m_I2C_Datalink.UpdateI2C();
   }
 }
 
 void VisualizationTaskLoop(void * parameter)
 {
+  ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
     m_Scheduler.RunScheduler();
@@ -221,6 +225,7 @@ void VisualizationTaskLoop(void * parameter)
 
 void DataMoverTaskLoop(void * parameter)
 {
+  ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
     m_Manager.ProcessEventQueue();
@@ -230,6 +235,7 @@ void DataMoverTaskLoop(void * parameter)
 
 void SerialDataLinkTXTaskLoop(void * parameter)
 {
+  ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
     m_SerialDataLink.ProcessDataTXEventQueue();
@@ -239,6 +245,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 
 void SerialDataLinkRXTaskLoop(void * parameter)
 {
+  ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
     m_SerialDataLink.ProcessDataRXEventQueue();
