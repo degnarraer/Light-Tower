@@ -8,12 +8,12 @@
 #define I2C_MASTER_FREQ           1000000
 
 //PIN ASSIGNMENTS
-#define HARDWARE_SERIAL_RX_PIN  13
-#define HARDWARE_SERIAL_TX_PIN  14
-#define I2S2_SCLCK_PIN          25
-#define I2S2_WD_PIN             26
+#define HARDWARE_SERIAL_RX_PIN  25
+#define HARDWARE_SERIAL_TX_PIN  26
+#define I2S2_SCLCK_PIN          12
+#define I2S2_WD_PIN             13
 #define I2S2_SDIN_PIN           I2S_PIN_NO_CHANGE
-#define I2S2_SDOUT_PIN          33
+#define I2S2_SDOUT_PIN          14
 
 //App Tunes
 #define I2S_SAMPLE_RATE 44100

@@ -34,7 +34,7 @@ void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq
 void I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
 {
   WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
-  slaveReq.setRetryDelay(5);
+  slaveReq.setRetryDelay(3);
   slaveReq.setAttempts(3);
   if (true == slaveReq.request()) 
   {
@@ -87,20 +87,18 @@ void I2C_Datalink_Slave::UpdateI2C()
 //Callbacks
 void I2C_Datalink_Slave::ReceiveEvent(int howMany)
 {
-  Serial << "Receive Event: " << howMany << ". Data: ";
+  Serial.println("Receive Event");
   while (0 < m_TwoWireSlave->available())
-  //for( int i = 0; i < howMany; ++i )
   {
       char c = m_TwoWireSlave->read();
       Serial.print(c);
   }
-  Serial.println();
 }
 
 void I2C_Datalink_Slave::RequestEvent()
 {
   static int y = 0;
-  String result = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + String(++y) + "\n";
+  String result = "The value for y is " + String(++y) + ".\n";
   m_TwoWireSlave->print(result);
-  //Serial << "Sent Data: " << result;
+  Serial << "Sent Data: " << result;
 }

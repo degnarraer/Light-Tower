@@ -133,11 +133,22 @@ void setup()
   
   xTaskCreatePinnedToCore
   (
+    I2CTaskLoop,                // Function to implement the task
+    "I2CTask",                  // Name of the task
+    4000,                       // Stack size in words
+    NULL,                       // Task input parameter
+    configMAX_PRIORITIES - 1,   // Priority of the task
+    &I2CTask,                   // Task handle.
+    1                           // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     DataMoverTaskLoop,            // Function to implement the task
     "DataMoverTask",              // Name of the task
     4000,                         // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,    // Priority of the task
+    configMAX_PRIORITIES - 2,    // Priority of the task
     &DataMoverTask,               // Task handle.
     1                             // Core where the task should run
   );
@@ -148,7 +159,7 @@ void setup()
     "SerialDataLinkSendTask",   // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,  // Priority of the task
+    configMAX_PRIORITIES - 2,  // Priority of the task
     &SerialDataLinkTXTask,      // Task handle.
     1                           // Core where the task should run
   );
@@ -159,20 +170,9 @@ void setup()
     "SerialDataLinkRXTask",     // Name of the task
     4000,                       // Stack size in words
     NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,  // Priority of the task
+    configMAX_PRIORITIES - 2,  // Priority of the task
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    I2CTaskLoop,                // Function to implement the task
-    "I2CTask",                  // Name of the task
-    4000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
-    &I2CTask,                   // Task handle.
-    0                           // Core where the task should run
   );
   
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
@@ -210,6 +210,7 @@ void I2CTaskLoop(void * parameter)
   for(;;)
   {
     m_I2C_Datalink.UpdateI2C();
+    //vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -218,7 +219,7 @@ void VisualizationTaskLoop(void * parameter)
   ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
-    m_Scheduler.RunScheduler();
+    //m_Scheduler.RunScheduler();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -228,8 +229,8 @@ void DataMoverTaskLoop(void * parameter)
   ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
-    m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_Manager.ProcessEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -238,8 +239,8 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
-    m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_SerialDataLink.ProcessDataTXEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -248,7 +249,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
-    m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    //m_SerialDataLink.ProcessDataRXEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }

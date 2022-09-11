@@ -83,7 +83,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 10,      // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
   xTaskCreatePinnedToCore
   (
@@ -93,6 +93,17 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 20,      // Priority of the task
     &ProcessFFTTask,                // Task handle.
+    0                               // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
+    I2CTaskLoop,                    // Function to implement the task
+    "I2CTask",                      // Name of the task
+    4000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &I2CTask,                       // Task handle.
     1                               // Core where the task should run
   );
   
@@ -102,7 +113,7 @@ void setup() {
     "ManagerTask",                  // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &ManagerTask,                   // Task handle.
     1                               // Core where the task should run
   ); 
@@ -113,7 +124,7 @@ void setup() {
     "SerialDataLinkTXTask",         // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
@@ -124,21 +135,11 @@ void setup() {
     "SerialDataLinkRXTask",         // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES - 2,       // Priority of the task
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
   
-  xTaskCreatePinnedToCore
-  (
-    I2CTaskLoop,                // Function to implement the task
-    "I2CTask",                  // Name of the task
-    4000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
-    &I2CTask,                   // Task handle.
-    1                           // Core where the task should run
-  );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
@@ -157,8 +158,8 @@ void I2CTaskLoop(void * parameter)
   for(;;)
   {
     m_I2C_Datalink.WriteDataToSlave(I2C_SLAVE_ADDR, "Hello Dude!");
-    m_I2C_Datalink.ReadDataFromSlave(I2C_SLAVE_ADDR, 10);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+    m_I2C_Datalink.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
   }
 }
 
@@ -166,7 +167,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SoundProcessor.ProcessSoundPower();
+    //m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -175,7 +176,7 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SoundProcessor.ProcessFFT();
+    //m_SoundProcessor.ProcessFFT();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
@@ -184,7 +185,7 @@ void ManagerTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_Manager.ProcessEventQueue();
+    //m_Manager.ProcessEventQueue();
     vTaskDelay(2 / portTICK_PERIOD_MS);
   }
 }
@@ -193,7 +194,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SerialDataLink.ProcessDataRXEventQueue();
+    //m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -202,7 +203,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SerialDataLink.ProcessDataTXEventQueue();
+    //m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

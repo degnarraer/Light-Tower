@@ -17,16 +17,6 @@
 */
 #include "I2C_Datalink.h"
 
-
-void OnRequest()
-{
-  
-}
-void OnReceive(int HowMany)
-{
-  
-}
-
 void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq )
 {
   m_MaxResponseLength = MaxResponseLength;
@@ -43,9 +33,9 @@ void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq
 
 void I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
 {
-  WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, m_MaxResponseLength);
-  slaveReq.setRetryDelay(1);
-  slaveReq.setAttempts(5);
+  WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
+  slaveReq.setRetryDelay(3);
+  slaveReq.setAttempts(3);
   if (true == slaveReq.request()) 
   {
     Serial << "Received Data: ";
