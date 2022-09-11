@@ -3,7 +3,7 @@
 #include "VisualizationPlayer.h"
 #include "Models.h"
 #include "Tunes.h"
-#include "I2C_Datalink.h"
+#include <I2C_Datalink.h>
 #include "esp_log.h"
 
 TaskHandle_t DataMoverTask;
@@ -85,7 +85,12 @@ CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
 TwoWireSlave m_TwoWire = TwoWireSlave(0);
-I2C_Datalink_Slave m_I2C_Datalink = I2C_Datalink_Slave("I2C Sound Datalink", m_TwoWire, I2C_SDA_PIN, I2C_SCL_PIN);
+AudioStreamSender m_AudioSender = AudioStreamSender( "Audio Sender"
+                                                   , m_TwoWire
+                                                   , I2C_SLAVE_ADDR
+                                                   , MAX_SLAVE_RESPONSE_LENGTH
+                                                   , I2C_SDA_PIN
+                                                   , I2C_SCL_PIN);
 
 Manager m_Manager = Manager("Manager"
                            , m_StatisticalEngine
@@ -112,6 +117,7 @@ void setup()
   ESP_LOGI("LED_Controller1", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGI("LED_Controller1", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
   ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
@@ -129,17 +135,6 @@ void setup()
     configMAX_PRIORITIES - 1,     // Priority of the task
     &VisualizationTask,           // Task handle.
     0                             // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    I2CTaskLoop,                // Function to implement the task
-    "I2CTask",                  // Name of the task
-    4000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 1,   // Priority of the task
-    &I2CTask,                   // Task handle.
-    1                           // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -174,7 +169,6 @@ void setup()
     &SerialDataLinkRXTask,      // Task handle.
     1                           // Core where the task should run
   );
-  
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU1", "Total PSRAM: %d", ESP.getPsramSize());
@@ -182,36 +176,10 @@ void setup()
 }
 
 unsigned long myTime = millis();
-void loop() {
-  // put your main code here, to run repeatedly:
-  if(millis() - myTime > 10000)
-  {
-    myTime = millis();
-    size_t StackSizeThreshold = 100;
-    if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! DataMoverTask: Stack Size Low");
-    if( uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkTXTask: Stack Size Low");
-    if( uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkRXTask: Stack Size Low");
-    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
-    
-    if(true == TASK_STACK_SIZE_DEBUG)
-    {
-      ESP_LOGI("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
-      ESP_LOGI("LED_Controller1", "SerialDataLinkTXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkTXTask));
-      ESP_LOGI("LED_Controller1", "SerialDataLinkRXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkRXTask));
-      ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
-    }
-  }
-}
-
-void I2CTaskLoop(void * parameter)
+void loop() 
 {
-  ESP_LOGW("LED_Controller1", "Running I2CTaskLoop.");
-  m_I2C_Datalink.SetupSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
-  for(;;)
-  {
-    m_I2C_Datalink.UpdateI2C();
-    //vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
+  m_AudioSender.UpdateI2C();
+  RunTaskMonitor();
 }
 
 void VisualizationTaskLoop(void * parameter)
@@ -251,5 +219,26 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   {
     //m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
+  }
+}
+
+void RunTaskMonitor()
+{
+  if(millis() - myTime > 10000)
+  {
+    myTime = millis();
+    size_t StackSizeThreshold = 100;
+    if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! DataMoverTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkTXTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(SerialDataLinkRXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkRXTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
+    
+    if(true == TASK_STACK_SIZE_DEBUG)
+    {
+      ESP_LOGI("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
+      ESP_LOGI("LED_Controller1", "SerialDataLinkTXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkTXTask));
+      ESP_LOGI("LED_Controller1", "SerialDataLinkRXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkRXTask));
+      ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
+    }
   }
 }

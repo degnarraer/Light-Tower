@@ -154,12 +154,13 @@ void loop()
 
 void I2CTaskLoop(void * parameter)
 {
-  m_I2C_Datalink.SetupMaster(MAX_SLAVE_RESPONSE_LENGTH, I2C_MASTER_FREQ);
+  m_I2C_Datalink.SetupMaster(MAX_SLAVE_RESPONSE_LENGTH, I2C_MASTER_FREQ, I2C_MASTER_REQUEST_RETRY_COUNT, I2C_MASTER_REQUEST_TIMEOUT);
   for(;;)
   {
-    m_I2C_Datalink.WriteDataToSlave(I2C_SLAVE_ADDR, "Hello Dude!");
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    static int RequestCount = 0;
+    m_I2C_Datalink.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
     m_I2C_Datalink.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
+    ++RequestCount;
   }
 }
 
