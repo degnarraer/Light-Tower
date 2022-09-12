@@ -36,6 +36,8 @@ class I2C_Datalink
     uint8_t m_Slave_Address;
     uint16_t m_MaxResponseLength;
     uint32_t m_Freq;
+    uint8_t m_RequestAttempts;
+    uint8_t m_RequestTimeout;
 };
 
 class I2C_Datalink_Master: public NamedItem
@@ -49,16 +51,16 @@ class I2C_Datalink_Master: public NamedItem
     virtual ~I2C_Datalink_Master(){}
 
     //Master Functions
-    void SetupMaster(uint16_t MaxResponseLength, uint32_t Freq);
-    void ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count);
+	String ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count);
     void WriteDataToSlave(uint8_t SlaveAddress, String Data);
-  private:
-    TwoWire *m_TwoWire;
+  protected:
+    void SetupMaster(uint16_t MaxResponseLength, uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
+  private:  
+	TwoWire *m_TwoWire;
 };
 
 class I2C_Datalink_Slave: public NamedItem
                         , public I2C_Datalink
-                        , public TwoWireSlaveNotifier
 {
   public:
     I2C_Datalink_Slave( String Title, TwoWireSlave &TwoWireSlave, uint8_t SDA_Pin, uint8_t SCL_Pin )
@@ -66,13 +68,64 @@ class I2C_Datalink_Slave: public NamedItem
                       , I2C_Datalink(SDA_Pin, SCL_Pin)
                       , m_TwoWireSlave(&TwoWireSlave){}
     virtual ~I2C_Datalink_Slave(){}
-    void SetupSlave(uint8_t My_Address, uint16_t MaxResponseLength);
+    void Loop()
+	{
+		UpdateI2C();
+	}
+  protected:
+	void SetupSlave(uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee);
     void UpdateI2C();
-
-    //Callback Functions
-    void RequestEvent();
-    void ReceiveEvent(int HowMany);
-  private:
     TwoWireSlave *m_TwoWireSlave;
 };
+
+class AudioStreamRequester: public NamedItem
+						  , public I2C_Datalink_Master
+{
+	public:
+		AudioStreamRequester( String Title
+							, TwoWire &TwoWire
+							, uint8_t I2C_Slave_Address
+							, uint16_t MaxResponseLength
+							, uint32_t Freq
+							, uint8_t RequestAttempts
+							, uint8_t RequestTimeout
+							, uint8_t SDA_Pin
+							, uint8_t SCL_Pin )
+							: NamedItem(Title)
+							, I2C_Datalink_Master( Title + "_I2C", TwoWire, SDA_Pin, SCL_Pin )
+							{
+								SetupMaster(MaxResponseLength, Freq, RequestAttempts, RequestTimeout);
+							}
+		virtual ~AudioStreamRequester(){}
+		void RequestAudioStream(uint32_t count)
+		{
+			
+		}			
+};
+
+class AudioStreamSender: public NamedItem
+					   , public I2C_Datalink_Slave
+					   , public TwoWireSlaveNotifiee
+{
+	public:
+		AudioStreamSender( String Title
+						 , TwoWireSlave &TwoWireSlave
+						 , uint8_t I2C_Address
+						 , uint16_t MaxResponseLength
+						 , uint8_t SDA_Pin
+						 , uint8_t SCL_Pin )
+						 : NamedItem(Title)
+						 , I2C_Datalink_Slave( Title + "_I2C", TwoWireSlave, SDA_Pin, SCL_Pin )
+						 {
+							SetupSlave(I2C_Address, MaxResponseLength, this);
+						 }
+		virtual ~AudioStreamSender(){}
+		// TwoWireSlaveNotifiee Callbacks
+		void RequestEvent();
+		void ReceiveEvent(int HowMany);
+	private:
+		uint32_t m_RequestCount = 0;
+};
+
+
 #endif

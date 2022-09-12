@@ -11,6 +11,7 @@ TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 TaskHandle_t VisualizationTask;
 TaskHandle_t I2CTask;
+TaskHandle_t TaskMonitorTask;
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
@@ -139,6 +140,28 @@ void setup()
   
   xTaskCreatePinnedToCore
   (
+    TaskMonitorTaskLoop,        // Function to implement the task
+    "TaskMonitorTaskTask",          // Name of the task
+    1000,                        // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 1,     // Priority of the task
+    &VisualizationTask,           // Task handle.
+    0                             // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
+    I2CTaskLoop,            // Function to implement the task
+    "I2CTaskTask",              // Name of the task
+    4000,                         // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 1,    // Priority of the task
+    &DataMoverTask,               // Task handle.
+    1                             // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
     DataMoverTaskLoop,            // Function to implement the task
     "DataMoverTask",              // Name of the task
     4000,                         // Stack size in words
@@ -178,8 +201,6 @@ void setup()
 unsigned long myTime = millis();
 void loop() 
 {
-  m_AudioSender.UpdateI2C();
-  RunTaskMonitor();
 }
 
 void VisualizationTaskLoop(void * parameter)
@@ -188,45 +209,15 @@ void VisualizationTaskLoop(void * parameter)
   for(;;)
   {
     //m_Scheduler.RunScheduler();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
-void DataMoverTaskLoop(void * parameter)
+void TaskMonitorTaskLoop(void * parameter)
 {
   ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
-    //m_Manager.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
-
-void SerialDataLinkTXTaskLoop(void * parameter)
-{
-  ESP_LOGW("LED_Controller1", "Running Task.");
-  for(;;)
-  {
-    //m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
-
-void SerialDataLinkRXTaskLoop(void * parameter)
-{
-  ESP_LOGW("LED_Controller1", "Running Task.");
-  for(;;)
-  {
-    //m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-  }
-}
-
-void RunTaskMonitor()
-{
-  if(millis() - myTime > 10000)
-  {
-    myTime = millis();
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! DataMoverTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(SerialDataLinkTXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SerialDataLinkTXTask: Stack Size Low");
@@ -240,5 +231,45 @@ void RunTaskMonitor()
       ESP_LOGI("LED_Controller1", "SerialDataLinkRXTask Free Heap: %i", uxTaskGetStackHighWaterMark(SerialDataLinkRXTask));
       ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+void I2CTaskLoop(void * parameter)
+{
+  ESP_LOGW("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    m_AudioSender.UpdateI2C();
+  }
+}
+
+void DataMoverTaskLoop(void * parameter)
+{
+  ESP_LOGW("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    //m_Manager.ProcessEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SerialDataLinkTXTaskLoop(void * parameter)
+{
+  ESP_LOGW("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    //m_SerialDataLink.ProcessDataTXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SerialDataLinkRXTaskLoop(void * parameter)
+{
+  ESP_LOGW("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    //m_SerialDataLink.ProcessDataRXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

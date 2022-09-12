@@ -17,10 +17,12 @@
 */
 #include "I2C_Datalink.h"
 
-void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq )
+void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout )
 {
   m_MaxResponseLength = MaxResponseLength;
   m_Freq = Freq;
+  m_RequestAttempts = RequestAttempts;
+  m_RequestTimeout = RequestTimeout;
   if(true == m_TwoWire->begin(m_SDA_PIN, m_SCL_PIN))
   {
     ESP_LOGI("I2C_Datalink", "I2C Master Device Named \"%s\" joined I2C bus", GetTitle().c_str());    
@@ -31,24 +33,27 @@ void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq
   }
 }
 
-void I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
+String I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
 {
-  WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
-  slaveReq.setRetryDelay(5);
-  slaveReq.setAttempts(3);
-  if (true == slaveReq.request()) 
-  {
-    Serial << "Received Data: ";
-    while( 0 < slaveReq.available() ) 
-    {
-      char c = (char)slaveReq.read();
-      Serial << c;
-    }   
-  }
-  else 
-  {
-    ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
-  }
+	WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
+	slaveReq.setRetryDelay(m_RequestTimeout);
+	slaveReq.setAttempts(m_RequestAttempts);
+	String Result;
+	Result.clear();
+	if (true == slaveReq.request()) 
+	{
+		while( 0 < slaveReq.available() ) 
+		{
+			char c = (char)slaveReq.read();
+			Result += c;
+			Serial << c
+		}
+	}
+	else 
+	{
+		//ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
+	}
+	return Result.c_str();
 }
 void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
 {
@@ -64,10 +69,10 @@ void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
   m_TwoWire->endTransmission();
 }
 
-void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, uint16_t MaxResponseLength )
+void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee )
 {
   m_MaxResponseLength = MaxResponseLength;
-  m_TwoWireSlave->RegisterForNotification(this);
+  m_TwoWireSlave->RegisterForNotification(TwoWireSlaveNotifiee);
   ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" Registered for Notifications", GetTitle().c_str());
   if(true == m_TwoWireSlave->begin(m_SDA_PIN, m_SCL_PIN, My_Address))
   {
@@ -84,23 +89,24 @@ void I2C_Datalink_Slave::UpdateI2C()
   m_TwoWireSlave->update();
 }
 
+
 //Callbacks
-void I2C_Datalink_Slave::ReceiveEvent(int howMany)
+void AudioStreamSender::ReceiveEvent(int howMany)
 {
-  Serial << "Receive Event: " << howMany << ". Data: ";
+  String Result;
   while (0 < m_TwoWireSlave->available())
-  //for( int i = 0; i < howMany; ++i )
   {
       char c = m_TwoWireSlave->read();
-      Serial.print(c);
+	  Result += c;
   }
-  Serial.println();
+  m_RequestCount = Result.toInt();
+  Serial << "Receive Event: " << m_RequestCount << "\n";
 }
 
-void I2C_Datalink_Slave::RequestEvent()
+void AudioStreamSender::RequestEvent()
 {
   static int y = 0;
-  String result = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + String(++y) + "\n";
+  String result = "The value for y is " + String(++y) + ".\n";
   m_TwoWireSlave->print(result);
-  //Serial << "Sent Data: " << result;
+  Serial << "Sent Data: " << result;
 }

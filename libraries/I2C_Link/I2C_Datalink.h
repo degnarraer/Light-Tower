@@ -51,11 +51,12 @@ class I2C_Datalink_Master: public NamedItem
     virtual ~I2C_Datalink_Master(){}
 
     //Master Functions
-    void SetupMaster(uint16_t MaxResponseLength, uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
-    void ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count);
+	String ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count);
     void WriteDataToSlave(uint8_t SlaveAddress, String Data);
   protected:
-    TwoWire *m_TwoWire;
+    void SetupMaster(uint16_t MaxResponseLength, uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
+  private:  
+	TwoWire *m_TwoWire;
 };
 
 class I2C_Datalink_Slave: public NamedItem
@@ -67,9 +68,9 @@ class I2C_Datalink_Slave: public NamedItem
                       , I2C_Datalink(SDA_Pin, SCL_Pin)
                       , m_TwoWireSlave(&TwoWireSlave){}
     virtual ~I2C_Datalink_Slave(){}
-    void SetupSlave(uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee);
     void UpdateI2C();
   protected:
+	void SetupSlave(uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee);
     TwoWireSlave *m_TwoWireSlave;
 };
 
@@ -79,7 +80,7 @@ class AudioStreamRequester: public NamedItem
 	public:
 		AudioStreamRequester( String Title
 							, TwoWire &TwoWire
-							, uint8_t I2C_Address
+							, uint8_t I2C_Slave_Address
 							, uint16_t MaxResponseLength
 							, uint32_t Freq
 							, uint8_t RequestAttempts

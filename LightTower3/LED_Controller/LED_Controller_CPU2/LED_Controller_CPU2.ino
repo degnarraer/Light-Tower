@@ -36,7 +36,15 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , "AL HydraMini" );
 
 TwoWire m_TwoWire = TwoWire(0);
-I2C_Datalink_Master m_I2C_Datalink = I2C_Datalink_Master("I2C Sound Datalink", m_TwoWire, I2C_SDA_PIN, I2C_SCL_PIN);
+AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
+                                                                  , m_TwoWire
+                                                                  , I2C_SLAVE_ADDR
+                                                                  , MAX_SLAVE_RESPONSE_LENGTH
+                                                                  , I2C_MASTER_FREQ
+                                                                  , I2C_MASTER_REQUEST_RETRY_COUNT
+                                                                  , I2C_MASTER_REQUEST_TIMEOUT
+                                                                  , I2C_SDA_PIN
+                                                                  , I2C_SCL_PIN );
 
 
 Manager m_Manager = Manager("Manager"
@@ -104,7 +112,7 @@ void setup() {
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
     &I2CTask,                       // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -150,17 +158,19 @@ void setup() {
 void loop()
 {
   // put your main code here, to run repeatedly:
+  
+    static int RequestCount = 0;
+    //m_AudioStreamRequester.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
+    String Result = m_AudioStreamRequester.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
+    if(0 < Result.length()) Serial << Result + "\n";
+    ++RequestCount;
 }
 
 void I2CTaskLoop(void * parameter)
 {
-  m_I2C_Datalink.SetupMaster(MAX_SLAVE_RESPONSE_LENGTH, I2C_MASTER_FREQ, I2C_MASTER_REQUEST_RETRY_COUNT, I2C_MASTER_REQUEST_TIMEOUT);
   for(;;)
   {
-    static int RequestCount = 0;
-    m_I2C_Datalink.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
-    m_I2C_Datalink.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
-    ++RequestCount;
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

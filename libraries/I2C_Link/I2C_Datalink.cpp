@@ -33,24 +33,27 @@ void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq
   }
 }
 
-void I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
+String I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
 {
-  WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
-  slaveReq.setRetryDelay(m_RequestTimeout);
-  slaveReq.setAttempts(m_RequestAttempts);
-  if (true == slaveReq.request()) 
-  {
-    Serial << "Received Data: ";
-    while( 0 < slaveReq.available() ) 
-    {
-      char c = (char)slaveReq.read();
-      Serial << c;
-    }   
-  }
-  else 
-  {
-    //ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
-  }
+	WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
+	slaveReq.setRetryDelay(m_RequestTimeout);
+	slaveReq.setAttempts(m_RequestAttempts);
+	String Result;
+	Result.clear();
+	if (true == slaveReq.request()) 
+	{
+		while( 0 < slaveReq.available() ) 
+		{
+			char c = (char)slaveReq.read();
+			Result += c;
+			Serial << c;
+		}
+	}
+	else 
+	{
+		//ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
+	}
+	return Result.c_str();
 }
 void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
 {
