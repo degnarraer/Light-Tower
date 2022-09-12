@@ -4,7 +4,7 @@
 #define I2C_SDA_PIN                     21
 #define I2C_SCL_PIN                     22
 #define I2C_SLAVE_ADDR                  0x04
-#define MAX_SLAVE_RESPONSE_LENGTH       512
+#define MAX_SLAVE_RESPONSE_LENGTH       128
 #define I2C_MASTER_FREQ                 1000000
 #define I2C_MASTER_REQUEST_TIMEOUT      10
 #define I2C_MASTER_REQUEST_RETRY_COUNT  1
@@ -23,6 +23,6 @@
 #define I2S_BUFFER_COUNT                20
 #define I2S_SAMPLE_COUNT                128
 #define NUMBER_OF_BANDS                 32
-#define FFT_SIZE                        124
+#define FFT_SIZE                        512
 
 #endif TUNES_H

@@ -38,7 +38,6 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
 TwoWire m_TwoWire = TwoWire(0);
 AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
                                                                   , m_TwoWire
-                                                                  , I2C_SLAVE_ADDR
                                                                   , MAX_SLAVE_RESPONSE_LENGTH
                                                                   , I2C_MASTER_FREQ
                                                                   , I2C_MASTER_REQUEST_RETRY_COUNT
@@ -158,19 +157,18 @@ void setup() {
 void loop()
 {
   // put your main code here, to run repeatedly:
-  
-    static int RequestCount = 0;
-    //m_AudioStreamRequester.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
-    String Result = m_AudioStreamRequester.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
-    if(0 < Result.length()) Serial << Result + "\n";
-    ++RequestCount;
 }
 
 void I2CTaskLoop(void * parameter)
 {
   for(;;)
   {
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    Serial << "Requesting Data\n";
+    static int RequestCount = 0;
+    m_AudioStreamRequester.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
+    m_AudioStreamRequester.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
+    ++RequestCount;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 

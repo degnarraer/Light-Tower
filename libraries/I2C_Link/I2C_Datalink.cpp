@@ -39,21 +39,23 @@ String I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t cou
 	slaveReq.setRetryDelay(m_RequestTimeout);
 	slaveReq.setAttempts(m_RequestAttempts);
 	String Result;
-	Result.clear();
 	if (true == slaveReq.request()) 
 	{
-		while( 0 < slaveReq.available() ) 
+		uint32_t available = slaveReq.available();
+		Serial << available << "\n";
+		while( 0 < available ) 
 		{
 			char c = (char)slaveReq.read();
 			Result += c;
 			Serial << c;
+			available = slaveReq.available();
 		}
 	}
 	else 
 	{
-		//ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
+		ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
 	}
-	return Result.c_str();
+	return Result;
 }
 void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
 {
@@ -72,11 +74,12 @@ void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
 void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee )
 {
   m_MaxResponseLength = MaxResponseLength;
+  m_Slave_Address = My_Address;
   m_TwoWireSlave->RegisterForNotification(TwoWireSlaveNotifiee);
   ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" Registered for Notifications", GetTitle().c_str());
-  if(true == m_TwoWireSlave->begin(m_SDA_PIN, m_SCL_PIN, My_Address))
+  if(true == m_TwoWireSlave->begin(m_SDA_PIN, m_SCL_PIN, m_Slave_Address))
   {
-    ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" joined I2C bus with addr #%d", GetTitle().c_str(), My_Address);
+    ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" joined I2C bus with addr #%d", GetTitle().c_str(), m_Slave_Address);
   }
   else
   {
@@ -106,7 +109,7 @@ void AudioStreamSender::ReceiveEvent(int howMany)
 void AudioStreamSender::RequestEvent()
 {
   static int y = 0;
-  String result = "The value for y is " + String(++y) + ".\n";
-  m_TwoWireSlave->print(result);
+  String result = "y is " + String(++y) + ".\n";
+  m_TwoWireSlave->print(result.c_str());
   Serial << "Sent Data: " << result;
 }

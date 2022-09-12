@@ -85,9 +85,9 @@ SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
-TwoWireSlave m_TwoWire = TwoWireSlave(0);
+TwoWireSlave m_TwoWireSlave = TwoWireSlave(0);
 AudioStreamSender m_AudioSender = AudioStreamSender( "Audio Sender"
-                                                   , m_TwoWire
+                                                   , m_TwoWireSlave
                                                    , I2C_SLAVE_ADDR
                                                    , MAX_SLAVE_RESPONSE_LENGTH
                                                    , I2C_SDA_PIN
@@ -137,7 +137,8 @@ void setup()
     &VisualizationTask,           // Task handle.
     0                             // Core where the task should run
   );
-  
+
+  /*
   xTaskCreatePinnedToCore
   (
     TaskMonitorTaskLoop,        // Function to implement the task
@@ -145,18 +146,19 @@ void setup()
     1000,                        // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
-    &VisualizationTask,           // Task handle.
+    &TaskMonitorTask,           // Task handle.
     0                             // Core where the task should run
   );
+  */
   
   xTaskCreatePinnedToCore
   (
-    I2CTaskLoop,            // Function to implement the task
-    "I2CTaskTask",              // Name of the task
+    I2CTaskLoop,                  // Function to implement the task
+    "I2CTaskTask",                // Name of the task
     4000,                         // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,    // Priority of the task
-    &DataMoverTask,               // Task handle.
+    configMAX_PRIORITIES - 1,     // Priority of the task
+    &I2CTask,                     // Task handle.
     1                             // Core where the task should run
   );
   
@@ -166,39 +168,39 @@ void setup()
     "DataMoverTask",              // Name of the task
     4000,                         // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 2,    // Priority of the task
+    configMAX_PRIORITIES - 2,     // Priority of the task
     &DataMoverTask,               // Task handle.
     1                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkTXTaskLoop,   // Function to implement the task
-    "SerialDataLinkSendTask",   // Name of the task
-    4000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,  // Priority of the task
-    &SerialDataLinkTXTask,      // Task handle.
-    1                           // Core where the task should run
+    SerialDataLinkTXTaskLoop,     // Function to implement the task
+    "SerialDataLinkTXTask",       // Name of the task
+    4000,                         // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 2,     // Priority of the task
+    &SerialDataLinkTXTask,        // Task handle.
+    1                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkRXTaskLoop,   // Function to implement the task
-    "SerialDataLinkRXTask",     // Name of the task
-    4000,                       // Stack size in words
-    NULL,                       // Task input parameter
-    configMAX_PRIORITIES - 2,  // Priority of the task
-    &SerialDataLinkRXTask,      // Task handle.
-    1                           // Core where the task should run
+    SerialDataLinkRXTaskLoop,     // Function to implement the task
+    "SerialDataLinkRXTask",       // Name of the task
+    4000,                         // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 2,     // Priority of the task
+    &SerialDataLinkRXTask,        // Task handle.
+    1                             // Core where the task should run
   );
+  
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU1", "Total PSRAM: %d", ESP.getPsramSize());
   ESP_LOGE("LED_Controller_CPU1", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
-unsigned long myTime = millis();
 void loop() 
 {
 }

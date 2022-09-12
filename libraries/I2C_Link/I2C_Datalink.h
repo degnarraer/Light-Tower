@@ -80,7 +80,6 @@ class AudioStreamRequester: public NamedItem
 	public:
 		AudioStreamRequester( String Title
 							, TwoWire &TwoWire
-							, uint8_t I2C_Slave_Address
 							, uint16_t MaxResponseLength
 							, uint32_t Freq
 							, uint8_t RequestAttempts
