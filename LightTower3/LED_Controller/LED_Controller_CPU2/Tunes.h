@@ -5,9 +5,9 @@
 #define I2C_SCL_PIN                     22
 #define I2C_SLAVE_ADDR                  0x04
 #define MAX_SLAVE_RESPONSE_LENGTH       50
-#define I2C_MASTER_FREQ                 100000
-#define I2C_MASTER_REQUEST_TIMEOUT      3
-#define I2C_MASTER_REQUEST_RETRY_COUNT  3
+#define I2C_MASTER_FREQ                 3400000
+#define I2C_MASTER_REQUEST_TIMEOUT      5
+#define I2C_MASTER_REQUEST_RETRY_COUNT  5
 
 //PIN ASSIGNMENTS
 #define HARDWARE_SERIAL_RX_PIN          25
