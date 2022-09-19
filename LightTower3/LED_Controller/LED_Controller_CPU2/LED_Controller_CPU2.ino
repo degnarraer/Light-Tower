@@ -163,12 +163,11 @@ void I2CTaskLoop(void * parameter)
 {
   for(;;)
   {
-    Serial << "Requesting Data\n";
     static int RequestCount = 0;
-    m_AudioStreamRequester.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
-    m_AudioStreamRequester.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
+    //m_AudioStreamRequester.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
+    m_AudioStreamRequester.ReadDataFromSlave(I2C_SLAVE_ADDR, 30);
     ++RequestCount;
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

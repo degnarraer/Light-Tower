@@ -56,7 +56,7 @@ class I2C_Datalink_Master: public NamedItem
   protected:
     void SetupMaster(uint16_t MaxResponseLength, uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
   private:  
-	TwoWire *m_TwoWire;
+	TwoWire *m_TwoWire = NULL;
 };
 
 class I2C_Datalink_Slave: public NamedItem
@@ -71,7 +71,7 @@ class I2C_Datalink_Slave: public NamedItem
     void UpdateI2C();
   protected:
 	void SetupSlave(uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee);
-    TwoWireSlave *m_TwoWireSlave;
+    TwoWireSlave *m_TwoWireSlave = NULL;
 };
 
 class AudioStreamRequester: public NamedItem
@@ -115,7 +115,6 @@ class AudioStreamSender: public NamedItem
 							SetupSlave(I2C_Address, MaxResponseLength, this);
 						 }
 		virtual ~AudioStreamSender(){}
-		// TwoWireSlaveNotifiee Callbacks
 		void RequestEvent();
 		void ReceiveEvent(int HowMany);
 	private:

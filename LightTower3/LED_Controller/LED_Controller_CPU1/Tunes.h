@@ -15,7 +15,7 @@
 #define I2C_SDA_PIN               21
 #define I2C_SCL_PIN               22
 #define I2C_SLAVE_ADDR            0x04
-#define MAX_SLAVE_RESPONSE_LENGTH 128
+#define MAX_SLAVE_RESPONSE_LENGTH 124
 
 //App Tunes
 #define I2S_SAMPLE_RATE 44100
