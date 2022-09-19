@@ -112,7 +112,7 @@ void AudioStreamSender::ReceiveEvent(int howMany)
 void AudioStreamSender::RequestEvent()
 {
   static int y = 0;
-  String result = "y is " + String(++y) + ".\n";
+  String result = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z " + String(++y) + ".\n";
   m_TwoWireSlave->print(result.c_str());
   Serial << "Sent Data: " << result;
 }
