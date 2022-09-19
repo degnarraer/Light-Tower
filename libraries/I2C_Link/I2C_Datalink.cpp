@@ -68,7 +68,7 @@ void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
   {
     m_TwoWire->write(packer.read());
   }
-  m_TwoWire->endTransmission();
+  m_TwoWire->endTransmission(true);
 }
 
 void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee )
