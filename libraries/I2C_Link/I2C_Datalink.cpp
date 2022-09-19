@@ -74,12 +74,12 @@ void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
 void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee )
 {
   m_MaxResponseLength = MaxResponseLength;
-  m_Slave_Address = My_Address;
+  m_I2C_Address = My_Address;
   m_TwoWireSlave->RegisterForNotification(TwoWireSlaveNotifiee);
   ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" Registered for Notifications", GetTitle().c_str());
-  if(true == m_TwoWireSlave->begin(m_SDA_PIN, m_SCL_PIN, m_Slave_Address))
+  if(true == m_TwoWireSlave->begin(m_SDA_PIN, m_SCL_PIN, m_I2C_Address))
   {
-    ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" joined I2C bus with addr #%d", GetTitle().c_str(), m_Slave_Address);
+    ESP_LOGW("I2C_Datalink", "I2C Slave Device Named \"%s\" joined I2C bus with addr #%d", GetTitle().c_str(), m_I2C_Address);
   }
   else
   {
@@ -89,7 +89,10 @@ void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, uint16_t MaxResponseLen
 
 void I2C_Datalink_Slave::UpdateI2C()
 {
-  m_TwoWireSlave->update();
+	if(NULL != m_TwoWireSlave)
+	{
+		m_TwoWireSlave->update();
+	}
 }
 
 

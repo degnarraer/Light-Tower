@@ -240,6 +240,7 @@ void TaskMonitorTaskLoop(void * parameter)
 void I2CTaskLoop(void * parameter)
 {
   ESP_LOGW("LED_Controller1", "Running Task.");
+  m_AudioSender.SetupAudioStreamSender();
   for(;;)
   {
     m_AudioSender.UpdateI2C();
