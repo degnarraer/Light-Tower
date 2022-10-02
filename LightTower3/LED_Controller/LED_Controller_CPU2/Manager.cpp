@@ -118,11 +118,15 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 
 //Bluetooth Source Callback
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
-{  
+{
+  Serial << "Bluetooth Callback: " << channel_len << "\n";
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
-  uint8_t *I2S_RXBuffer = (uint8_t*)ps_malloc(BytesRequested);
-  //BytesRead = m_I2S_In.GetSoundBufferData(I2S_RXBuffer, BytesRequested);
+  uint8_t I2S_RXBuffer[BytesRequested];
+  BytesRead = m_AudioStreamRequester.RequestAudioStream(I2C_SLAVE_ADDR, I2S_RXBuffer, BytesRequested);
+  int32_t FramesRead = 0;
+  
+  /*
   m_I2S_Out.SetSoundBufferData(I2S_RXBuffer, BytesRead);
   assert(BytesRead % m_32BitFrameByteCount == 0);
   int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
@@ -152,7 +156,7 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
     //LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
   }
   ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
-  free(I2S_RXBuffer);
+  */
   return FramesRead;
 }
 

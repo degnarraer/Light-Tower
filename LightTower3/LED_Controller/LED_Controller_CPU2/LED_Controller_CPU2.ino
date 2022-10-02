@@ -80,6 +80,7 @@ void setup() {
     &ProcessSoundPowerTask,         // Task handle.
     0                               // Core where the task should run
   );
+  
   xTaskCreatePinnedToCore
   (
     ProcessFFTTaskLoop,             // Function to implement the task
@@ -123,8 +124,6 @@ void setup() {
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
-  
-  
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());

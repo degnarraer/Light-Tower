@@ -93,9 +93,12 @@ class AudioStreamRequester: public NamedItem
 								SetupMaster(MaxResponseLength, Freq, RequestAttempts, RequestTimeout);
 							}
 		virtual ~AudioStreamRequester(){}
-		void RequestAudioStream(uint32_t count)
+		int32_t RequestAudioStream(uint8_t SourceAddress, uint8_t *SoundBufferData, int32_t ByteCount)
 		{
-			
+			WriteDataToSlave(SourceAddress, String(ByteCount));
+			delay(2);
+			String Result = ReadDataFromSlave(SourceAddress,  124);
+			return 0;
 		}	
 		DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
 		size_t GetDataItemConfigCount() { return m_ConfigCount; }
