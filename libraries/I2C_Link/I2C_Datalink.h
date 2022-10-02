@@ -22,6 +22,7 @@
 #include <WireSlaveRequest.h>
 #include <WireSlave.h>
 #include <Helpers.h>
+#include <Serial_Datalink_Core.h>
 
 class I2C_Datalink
 {
@@ -95,12 +96,22 @@ class AudioStreamRequester: public NamedItem
 		void RequestAudioStream(uint32_t count)
 		{
 			
-		}			
+		}	
+		DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+		size_t GetDataItemConfigCount() { return m_ConfigCount; }
+
+	private:	
+		static const size_t m_ConfigCount = 1;
+		DataItemConfig_t m_ItemConfig[m_ConfigCount]
+		{
+		  { "Frame",      DataType_Frame_t,		512,    Transciever_RX,   1 },
+		};		
 };
 
 class AudioStreamSender: public NamedItem
 					   , public I2C_Datalink_Slave
 					   , public TwoWireSlaveNotifiee
+					   , public DataSerializer
 {
 	public:
 		AudioStreamSender( String Title
@@ -122,10 +133,22 @@ class AudioStreamSender: public NamedItem
 		//TwoWireSlaveNotifiee Callbacks
 		void RequestEvent();
 		void ReceiveEvent(int HowMany);
+		
+		DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+		size_t GetDataItemConfigCount() { return m_ConfigCount; }
 	private:
 		uint16_t m_RequestCount;
 		uint8_t m_I2C_Address;
 		uint16_t m_MaxResponseLength;
+		
+		static const size_t m_ConfigCount = 1;
+		DataItemConfig_t m_ItemConfig[m_ConfigCount]
+		{
+		  { "Frame",      DataType_Frame_t,		512,    Transciever_TX,   1 },
+		};
+		
+		
+		
 };
 
 

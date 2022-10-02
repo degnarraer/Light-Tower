@@ -155,3 +155,8 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   free(I2S_RXBuffer);
   return FramesRead;
 }
+
+void Manager::GetAudioStream()
+{
+  
+}

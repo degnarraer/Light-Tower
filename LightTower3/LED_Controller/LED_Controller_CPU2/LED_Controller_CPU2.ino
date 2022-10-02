@@ -1,6 +1,5 @@
 #include "Manager.h"
 #include "Tunes.h"
-#include <I2C_Datalink.h>
 #include "esp_log.h"
 
 TaskHandle_t ManagerTask;
@@ -34,17 +33,6 @@ BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
-
-TwoWire m_TwoWire = TwoWire(0);
-AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
-                                                                  , m_TwoWire
-                                                                  , MAX_SLAVE_RESPONSE_LENGTH
-                                                                  , I2C_MASTER_FREQ
-                                                                  , I2C_MASTER_REQUEST_RETRY_COUNT
-                                                                  , I2C_MASTER_REQUEST_TIMEOUT
-                                                                  , I2C_SDA_PIN
-                                                                  , I2C_SCL_PIN );
-
 
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
@@ -105,17 +93,6 @@ void setup() {
   
   xTaskCreatePinnedToCore
   (
-    I2CTaskLoop,                    // Function to implement the task
-    "I2CTask",                      // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &I2CTask,                       // Task handle.
-    0                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
     4000,                           // Stack size in words
@@ -157,18 +134,6 @@ void setup() {
 void loop()
 {
   // put your main code here, to run repeatedly:
-}
-
-void I2CTaskLoop(void * parameter)
-{
-  for(;;)
-  {
-    static int RequestCount = 0;
-    m_AudioStreamRequester.WriteDataToSlave(I2C_SLAVE_ADDR, String(RequestCount).c_str());
-    vTaskDelay(2 / portTICK_PERIOD_MS);
-    m_AudioStreamRequester.ReadDataFromSlave(I2C_SLAVE_ADDR, MAX_SLAVE_RESPONSE_LENGTH);
-    ++RequestCount;
-  }
 }
 
 void ProcessSoundPowerTaskLoop(void * parameter)

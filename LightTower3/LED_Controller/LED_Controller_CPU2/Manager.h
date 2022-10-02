@@ -21,6 +21,7 @@
 #include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
+#include <I2C_Datalink.h>
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSource.h>
@@ -56,6 +57,16 @@ class Manager: public NamedItem
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;
 
+    //I2C Datalink
+    TwoWire m_TwoWire = TwoWire(0);
+    AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
+                                                                      , m_TwoWire
+                                                                      , MAX_SLAVE_RESPONSE_LENGTH
+                                                                      , I2C_MASTER_FREQ
+                                                                      , I2C_MASTER_REQUEST_RETRY_COUNT
+                                                                      , I2C_MASTER_REQUEST_TIMEOUT
+                                                                      , I2C_SDA_PIN
+                                                                      , I2C_SCL_PIN );
     //I2S Sound Data RX
     I2S_Device &m_I2S_Out;
     static const size_t m_32BitFrameByteCount = 4 * 2;
@@ -70,6 +81,7 @@ class Manager: public NamedItem
     int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
     int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
     void UpdateNotificationRegistrationStatus();
+    void GetAudioStream();
 };
 
 #endif
