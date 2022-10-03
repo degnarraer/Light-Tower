@@ -3,7 +3,6 @@
 #include "VisualizationPlayer.h"
 #include "Models.h"
 #include "Tunes.h"
-#include <I2C_Datalink.h>
 #include "esp_log.h"
 
 TaskHandle_t DataMoverTask;
@@ -85,14 +84,6 @@ SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
-TwoWireSlave m_TwoWireSlave = TwoWireSlave(0);
-AudioStreamSender m_AudioSender = AudioStreamSender( "Audio Sender"
-                                                   , m_TwoWireSlave
-                                                   , I2C_SLAVE_ADDR
-                                                   , MAX_SLAVE_RESPONSE_LENGTH
-                                                   , I2C_SDA_PIN
-                                                   , I2C_SCL_PIN);
-
 Manager m_Manager = Manager("Manager"
                            , m_StatisticalEngine
                            , m_SerialDataLink
@@ -150,17 +141,6 @@ void setup()
     0                             // Core where the task should run
   );
   */
-  
-  xTaskCreatePinnedToCore
-  (
-    I2CTaskLoop,                  // Function to implement the task
-    "I2CTaskTask",                // Name of the task
-    4000,                         // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,     // Priority of the task
-    &I2CTask,                     // Task handle.
-    1                             // Core where the task should run
-  );
   
   xTaskCreatePinnedToCore
   (
@@ -234,16 +214,6 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-  }
-}
-
-void I2CTaskLoop(void * parameter)
-{
-  ESP_LOGW("LED_Controller1", "Running Task.");
-  m_AudioSender.SetupAudioStreamSender();
-  for(;;)
-  {
-    m_AudioSender.UpdateI2C();
   }
 }
 

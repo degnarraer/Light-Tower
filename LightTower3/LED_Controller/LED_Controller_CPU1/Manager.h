@@ -26,6 +26,8 @@
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSink.h>
 #include "Bluetooth_Device.h"
+#include <I2C_Datalink.h>
+#include "circle_buf.h"
 
 enum InputType_t
 {
@@ -73,11 +75,28 @@ class Manager: public NamedItem
   private:
     StatisticalEngine &m_StatisticalEngine;
     SerialDataLink &m_SerialDataLink;
-    Bluetooth_Sink &m_BT_In;
-    I2S_Device &m_Mic_In;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
     DAC_Data_Format_t m_DAC_Data_Format;
+
+    //I2S Sound Data RX
+    Bluetooth_Sink &m_BT_In;
+    I2S_Device &m_Mic_In;
+    static const size_t m_32BitFrameByteCount = 4 * 2;
+    static const size_t m_I2CFrameBufferByteCount = floor(MAX_SLAVE_RESPONSE_LENGTH / m_32BitFrameByteCount);
+    
+    static const int32_t m_CircularBufferSize = m_I2CFrameBufferByteCount * 10;
+    AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
+    
+    TwoWireSlave m_TwoWireSlave = TwoWireSlave(0);
+    AudioStreamSender m_AudioSender = AudioStreamSender ( "Audio Sender"
+                                                        , m_AudioBuffer
+                                                        , m_TwoWireSlave
+                                                        , I2C_SLAVE_ADDR
+                                                        , MAX_SLAVE_RESPONSE_LENGTH
+                                                        , I2C_SDA_PIN
+                                                        , I2C_SCL_PIN );
+                                                                                                                      
 };
 
 #endif

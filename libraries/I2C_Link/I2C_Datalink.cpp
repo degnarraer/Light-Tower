@@ -33,22 +33,21 @@ void I2C_Datalink_Master::SetupMaster( uint16_t MaxResponseLength, uint32_t Freq
   }
 }
 
-String I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t count)
+uint32_t I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint8_t *data, uint32_t ByteCount)
 {
 	Serial << "Read Data1\n";
-	WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, count);
+	WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, ByteCount);
 	slaveReq.setRetryDelay(m_RequestTimeout);
 	slaveReq.setAttempts(m_RequestAttempts);
-	String Result;
+	uint32_t receiveCount = 0;
 	if (true == slaveReq.request()) 
 	{
 		uint32_t available = slaveReq.available();
 		Serial << available << "\n";
 		while( 0 < available ) 
 		{
-			char c = (char)slaveReq.read();
-			Result += c;
-			Serial << c;
+			data[receiveCount] = slaveReq.read();
+			++receiveCount;
 			available = slaveReq.available();
 		}
 	}
@@ -56,13 +55,15 @@ String I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint32_t cou
 	{
 		ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
 	}
-	return Result.c_str();
+	return receiveCount;
 }
-void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, String Data)
+void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, uint8_t *data, uint32_t ByteCount)
 {
-  Serial << "Writing: " << Data.c_str() << "\n";
   WirePacker packer;
-  packer.write(Data.c_str());
+  for(int i = 0; i < ByteCount; ++i)
+  {
+	packer.write(data[i]);
+  }
   packer.end();
   m_TwoWire->beginTransmission(SlaveAddress);
   while (packer.available())
@@ -94,26 +95,4 @@ void I2C_Datalink_Slave::UpdateI2C()
 	{
 		m_TwoWireSlave->update();
 	}
-}
-
-
-//Callbacks
-void AudioStreamSender::ReceiveEvent(int howMany)
-{
-  String Result;
-  while (0 < m_TwoWireSlave->available())
-  {
-      char c = m_TwoWireSlave->read();
-	  Result += c;
-  }
-  m_RequestCount = Result.toInt();
-  Serial << "Receive Event: " << m_RequestCount << "\n";
-}
-
-void AudioStreamSender::RequestEvent()
-{
-  static int y = 0;
-  String result = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z " + String(++y) + ".\n";
-  m_TwoWireSlave->print(result.c_str());
-  Serial << "Sent Data: " << result;
 }

@@ -22,11 +22,12 @@ Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Sink &BT_In
-                , I2S_Device &Mic_In ): NamedItem(Title)
-                                       , m_StatisticalEngine(StatisticalEngine)
-                                       , m_SerialDataLink(SerialDataLink)
-                                       , m_BT_In(BT_In)
-                                       , m_Mic_In(Mic_In)
+                , I2S_Device &Mic_In )
+                : NamedItem(Title)
+                , m_StatisticalEngine(StatisticalEngine)
+                , m_SerialDataLink(SerialDataLink)
+                , m_BT_In(BT_In)
+                , m_Mic_In(Mic_In)
 {
 }
 Manager::~Manager()
@@ -42,10 +43,13 @@ void Manager::Setup()
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
+  m_AudioSender.SetupAudioStreamSender();
 }
 
 void Manager::ProcessEventQueue()
 {
+  m_AudioSender.UpdateStreamSender();
+  
   switch(m_InputType)
   {
     case InputType_Microphone:
@@ -126,6 +130,16 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 {
   if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
+    assert(ByteCount % m_32BitFrameByteCount == 0);
+    int32_t FramesRead = ByteCount / m_32BitFrameByteCount;
+    int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
+    for(int i = 0; i < FramesRead; ++i)
+    {
+      Frame aFrame;
+      aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
+      aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
+      m_AudioBuffer.WriteAudioFrame( (Frame_t&)(aFrame) );
+    }
   }
 }
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)

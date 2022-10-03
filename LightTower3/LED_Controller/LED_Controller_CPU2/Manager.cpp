@@ -59,6 +59,19 @@ void Manager::ProcessEventQueue()
   ESP_LOGV("Function Debug", "%s, ", __func__);
   UpdateNotificationRegistrationStatus();
   m_I2S_Out.ProcessEventQueue();
+
+
+  uint8_t I2C_RXBuffer[m_I2CFrameBufferByteCount];
+  int32_t BytesRead = m_AudioStreamRequester.RequestAudioStream(I2C_SLAVE_ADDR, I2C_RXBuffer, m_I2CFrameBufferByteCount);
+  assert(BytesRead % m_32BitFrameByteCount == 0);
+  int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
+  for(int i = 0; i < FramesRead; ++i)
+  {
+    Frame aFrame;
+    aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
+    aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
+    m_FrameBuffer.Write( (Frame_t&)(aFrame) );
+  }
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -123,7 +136,6 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   int32_t BytesRead = 0;
   int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
   uint8_t I2S_RXBuffer[BytesRequested];
-  BytesRead = m_AudioStreamRequester.RequestAudioStream(I2C_SLAVE_ADDR, I2S_RXBuffer, BytesRequested);
   int32_t FramesRead = 0;
   
   /*
@@ -158,9 +170,4 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
   */
   return FramesRead;
-}
-
-void Manager::GetAudioStream()
-{
-  
 }
