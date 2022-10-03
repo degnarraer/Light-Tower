@@ -70,7 +70,6 @@ class Manager: public NamedItem
     //I2S Sound Data RX
     I2S_Device &m_I2S_Out;
     static const size_t m_32BitFrameByteCount = 4 * 2;
-    static const size_t m_I2CFrameBufferByteCount = floor(MAX_SLAVE_RESPONSE_LENGTH / m_32BitFrameByteCount);
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;

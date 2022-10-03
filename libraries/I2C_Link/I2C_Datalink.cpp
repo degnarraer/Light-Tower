@@ -39,15 +39,15 @@ uint32_t I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint8_t *d
 	WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, ByteCount);
 	slaveReq.setRetryDelay(m_RequestTimeout);
 	slaveReq.setAttempts(m_RequestAttempts);
-	uint32_t receiveCount = 0;
+	uint32_t ReceiveCount = 0;
 	if (true == slaveReq.request()) 
 	{
 		uint32_t available = slaveReq.available();
 		Serial << available << "\n";
 		while( 0 < available ) 
 		{
-			data[receiveCount] = slaveReq.read();
-			++receiveCount;
+			data[ReceiveCount] = slaveReq.read();
+			++ReceiveCount;
 			available = slaveReq.available();
 		}
 	}
@@ -55,7 +55,7 @@ uint32_t I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, uint8_t *d
 	{
 		ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
 	}
-	return receiveCount;
+	return ReceiveCount;
 }
 void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, uint8_t *data, uint32_t ByteCount)
 {

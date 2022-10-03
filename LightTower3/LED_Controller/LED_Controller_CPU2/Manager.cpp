@@ -52,6 +52,7 @@ void Manager::Setup()
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.StartDevice();
   m_BT_Out.StartDevice();
+  m_AudioStreamRequester.SetupAudioStreamRequester();
 }
 
 void Manager::ProcessEventQueue()
@@ -61,8 +62,8 @@ void Manager::ProcessEventQueue()
   m_I2S_Out.ProcessEventQueue();
 
 
-  uint8_t I2C_RXBuffer[m_I2CFrameBufferByteCount];
-  int32_t BytesRead = m_AudioStreamRequester.RequestAudioStream(I2C_SLAVE_ADDR, I2C_RXBuffer, m_I2CFrameBufferByteCount);
+  uint8_t I2C_RXBuffer[MAX_SLAVE_RESPONSE_LENGTH];
+  int32_t BytesRead = m_AudioStreamRequester.RequestAudioStream(I2C_SLAVE_ADDR, I2C_RXBuffer, MAX_SLAVE_RESPONSE_LENGTH);
   assert(BytesRead % m_32BitFrameByteCount == 0);
   int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
   for(int i = 0; i < FramesRead; ++i)

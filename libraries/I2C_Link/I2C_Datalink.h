@@ -87,8 +87,13 @@ class AudioBuffer: public NamedItem
 			size_t size = 0;
 			if(xSemaphoreTake(m_FrameBufferBinarySemaphore, portMAX_DELAY) == pdTRUE)
 			{
+				ESP_LOGW("AudioBuffer", "Getting Audio Buffer Size");
 				size = m_AudioBuffer.size();
 				xSemaphoreGive(m_FrameBufferBinarySemaphore);
+			}
+			else
+			{
+				ESP_LOGW("AudioBuffer", "Failed to get Semaphore");
 			}
 			return size;
 		}
@@ -96,8 +101,13 @@ class AudioBuffer: public NamedItem
 		{
 			if(xSemaphoreTake(m_FrameBufferBinarySemaphore, portMAX_DELAY) == pdTRUE)
 			{
+				ESP_LOGW("AudioBuffer", "Writing Audio Buffer");
 				m_AudioBuffer.Write((Frame_t&)Frame);
 				xSemaphoreGive(m_FrameBufferBinarySemaphore);
+			}
+			else
+			{
+				ESP_LOGW("AudioBuffer", "Failed to get Semaphore");
 			}
 		}
 		void ReadAudioFrames(Frame_t *DataBuffer, size_t FrameCount)
@@ -105,6 +115,7 @@ class AudioBuffer: public NamedItem
 			Frame_t Frame;
 			if(xSemaphoreTake(m_FrameBufferBinarySemaphore, portMAX_DELAY) == pdTRUE)
 			{
+				ESP_LOGW("AudioBuffer", "Reading Audio Buffer");
 				m_AudioBuffer.Read(DataBuffer, FrameCount);
 				xSemaphoreGive(m_FrameBufferBinarySemaphore);
 			}
@@ -128,14 +139,24 @@ class AudioStreamRequester: public NamedItem
 							, uint8_t SCL_Pin )
 							: NamedItem(Title)
 							, I2C_Datalink_Master( Title + "_I2C", TwoWire, SDA_Pin, SCL_Pin )
-							{
-								SetupMaster(MaxResponseLength, Freq, RequestAttempts, RequestTimeout);
-							}
+							, m_MaxResponseLength(MaxResponseLength)
+							, m_Freq(Freq)
+							, m_RequestAttempts(RequestAttempts)
+							, m_RequestTimeout(RequestTimeout){}
 		virtual ~AudioStreamRequester(){}
-		uint32_t RequestAudioStream(uint8_t SourceAddress, uint8_t *SoundBufferData, int32_t ByteCount)
+		void SetupAudioStreamRequester()
+		{
+			SetupMaster(m_MaxResponseLength, m_Freq, m_RequestAttempts, m_RequestTimeout);
+		}
+		uint32_t RequestAudioStream(uint8_t SourceAddress, uint8_t *SoundBufferData, uint32_t ByteCount)
 		{
 			return ReadDataFromSlave(SourceAddress, SoundBufferData, ByteCount);
 		}
+	private:
+		uint16_t m_MaxResponseLength;
+		uint32_t m_Freq;
+		uint8_t m_RequestAttempts;
+		uint8_t m_RequestTimeout;
 };
 
 class AudioStreamSender: public NamedItem
@@ -162,19 +183,13 @@ class AudioStreamSender: public NamedItem
 		}
 		void UpdateStreamSender()
 		{
+			ESP_LOGW("AudioBuffer", "Updating I2C");
 			UpdateI2C();
 		}
 		//TwoWireSlaveNotifiee Callbacks
 		void ReceiveEvent(int howMany)
 		{
-		  String Result;
-		  while (0 < m_TwoWireSlave->available())
-		  {
-			  char c = m_TwoWireSlave->read();
-			  Result += c;
-		  }
-		  m_RequestCount = Result.toInt();
-		  Serial << "Receive Event: " << m_RequestCount << "\n";
+		  
 		}
 
 		void RequestEvent()
@@ -191,10 +206,8 @@ class AudioStreamSender: public NamedItem
 					}
 				}
 			}
-			Serial << "Sent Data\n";
 		}
 	private:
-		uint16_t m_RequestCount;
 		uint8_t m_I2C_Address;
 		uint16_t m_MaxResponseLength;
 		AudioBuffer &m_AudioBuffer;

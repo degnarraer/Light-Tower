@@ -222,7 +222,7 @@ void DataMoverTaskLoop(void * parameter)
   ESP_LOGW("LED_Controller1", "Running Task.");
   for(;;)
   {
-    //m_Manager.ProcessEventQueue();
+    m_Manager.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

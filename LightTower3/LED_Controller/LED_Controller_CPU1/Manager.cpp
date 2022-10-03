@@ -49,7 +49,6 @@ void Manager::Setup()
 void Manager::ProcessEventQueue()
 {
   m_AudioSender.UpdateStreamSender();
-  
   switch(m_InputType)
   {
     case InputType_Microphone:
@@ -128,8 +127,10 @@ void Manager::SetInputType(InputType_t Type)
 //Bluetooth_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
+  Serial << "Data Received\n";
   if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
+    Serial << "Bluetooth Data Received\n";
     assert(ByteCount % m_32BitFrameByteCount == 0);
     int32_t FramesRead = ByteCount / m_32BitFrameByteCount;
     int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
