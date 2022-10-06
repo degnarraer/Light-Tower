@@ -146,11 +146,11 @@ void setup()
   (
     DataMoverTaskLoop,            // Function to implement the task
     "DataMoverTask",              // Name of the task
-    4000,                         // Stack size in words
+    20000,                         // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 2,     // Priority of the task
     &DataMoverTask,               // Task handle.
-    1                             // Core where the task should run
+    0                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -183,6 +183,7 @@ void setup()
 
 void loop() 
 {
+    m_Manager.Loop();
 }
 
 void VisualizationTaskLoop(void * parameter)

@@ -38,17 +38,23 @@ void Manager::Setup()
 {
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  m_AudioBuffer.Initialize();
+  m_AudioSender.SetupAudioStreamSender();
   m_Mic_In.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
+  m_BT_In.ResgisterForDataBufferRXCallback(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
-  m_AudioSender.SetupAudioStreamSender();
+}
+
+void Manager::Loop()
+{
+  m_AudioSender.UpdateStreamSender();
 }
 
 void Manager::ProcessEventQueue()
 {
-  m_AudioSender.UpdateStreamSender();
   switch(m_InputType)
   {
     case InputType_Microphone:
@@ -127,25 +133,33 @@ void Manager::SetInputType(InputType_t Type)
 //Bluetooth_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
-  Serial << "Data Received\n";
   if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
-    Serial << "Bluetooth Data Received\n";
-    assert(ByteCount % m_32BitFrameByteCount == 0);
-    int32_t FramesRead = ByteCount / m_32BitFrameByteCount;
+    assert(ByteCount % sizeof(Frame_t) == 0);
+    size_t FramesRead = ByteCount / sizeof(Frame_t);
+    assert(FramesRead * 2 == SampleCount);
     int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
     for(int i = 0; i < FramesRead; ++i)
     {
-      Frame aFrame;
+      Frame_t aFrame;
       aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
       aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
-      m_AudioBuffer.WriteAudioFrame( (Frame_t&)(aFrame) );
+      if(false == m_AudioBuffer.WriteAudioFrame(aFrame))
+      {
+        ESP_LOGW("AudioBuffer", "Failed to Write. Buffer has %i slot(s) available", m_AudioBuffer.GetAvailableCount());
+        if(true != m_AudioBuffer.ClearAudioBuffer())
+        {
+          ESP_LOGW("AudioBuffer", "Failed to Clear Buffer");
+        }
+      }
     }
   }
 }
+
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
 }
+
 void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
 }

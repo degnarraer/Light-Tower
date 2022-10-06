@@ -63,6 +63,7 @@ class Manager: public NamedItem
            , I2S_Device &Mic_In );
     virtual ~Manager();
     void Setup();
+    void Loop();
     void ProcessEventQueue();
     void SetInputType(InputType_t Type);
     
@@ -82,8 +83,7 @@ class Manager: public NamedItem
     //I2S Sound Data RX
     Bluetooth_Sink &m_BT_In;
     I2S_Device &m_Mic_In;
-    static const size_t m_32BitFrameByteCount = 4 * 2;
-    static const size_t m_I2CFrameBufferByteCount = floor(MAX_SLAVE_RESPONSE_LENGTH / m_32BitFrameByteCount);
+    static const size_t m_I2CFrameBufferByteCount = floor(MAX_SLAVE_RESPONSE_LENGTH / sizeof(Frame_t));
     
     static const int32_t m_CircularBufferSize = m_I2CFrameBufferByteCount * 10;
     AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
@@ -93,7 +93,6 @@ class Manager: public NamedItem
                                                         , m_AudioBuffer
                                                         , m_TwoWireSlave
                                                         , I2C_SLAVE_ADDR
-                                                        , MAX_SLAVE_RESPONSE_LENGTH
                                                         , I2C_SDA_PIN
                                                         , I2C_SCL_PIN );
                                                                                                                       

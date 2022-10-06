@@ -42,6 +42,7 @@ class Manager: public NamedItem
     void AllocateMemory();
     void FreeMemory();
     void Setup();
+    void Loop();
     void ProcessEventQueue();
     void WriteDataToBluetooth();
 
@@ -57,11 +58,14 @@ class Manager: public NamedItem
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;
 
-    //I2C Datalink
+    //I2C Datalinkstatic 
+    const static int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
+    bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
+    AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
     TwoWire m_TwoWire = TwoWire(0);
     AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
+                                                                      , m_AudioBuffer
                                                                       , m_TwoWire
-                                                                      , MAX_SLAVE_RESPONSE_LENGTH
                                                                       , I2C_MASTER_FREQ
                                                                       , I2C_MASTER_REQUEST_RETRY_COUNT
                                                                       , I2C_MASTER_REQUEST_TIMEOUT
@@ -69,13 +73,9 @@ class Manager: public NamedItem
                                                                       , I2C_SCL_PIN );
     //I2S Sound Data RX
     I2S_Device &m_I2S_Out;
-    static const size_t m_32BitFrameByteCount = 4 * 2;
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
-    
-    static const int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
-    bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
 
     Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
     int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];

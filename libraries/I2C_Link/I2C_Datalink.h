@@ -25,6 +25,9 @@
 #include <Serial_Datalink_Core.h>
 #include "circle_buf.h"
 
+#define I2C_MAX_BYTES 124
+#define FRAMES_PER_PACKET 128
+
 class I2C_Datalink
 {
   public:
@@ -36,7 +39,6 @@ class I2C_Datalink
     uint8_t m_SDA_PIN;
     uint8_t m_SCL_PIN;
     uint8_t m_I2C_Address;
-    uint16_t m_MaxResponseLength;
     uint32_t m_Freq;
     uint8_t m_RequestAttempts;
     uint8_t m_RequestTimeout;
@@ -53,10 +55,10 @@ class I2C_Datalink_Master: public NamedItem
     virtual ~I2C_Datalink_Master(){}
 
     //Master Functions
-	uint32_t ReadDataFromSlave(uint8_t SlaveAddress, uint8_t *data, uint32_t count);
-    void WriteDataToSlave(uint8_t SlaveAddress, uint8_t *data, uint32_t ByteCount);
+	size_t ReadDataFromSlave(uint8_t SlaveAddress, unsigned char *data, size_t count);
+    void WriteDataToSlave(uint8_t SlaveAddress, unsigned char *data, size_t ByteCount);
   protected:
-    void SetupMaster(uint16_t MaxResponseLength, uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
+    void SetupMaster(uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
   private:  
 	TwoWire *m_TwoWire = NULL;
 };
@@ -72,7 +74,7 @@ class I2C_Datalink_Slave: public NamedItem
     virtual ~I2C_Datalink_Slave(){}
   protected:
     void UpdateI2C();
-	void SetupSlave( uint8_t My_Address, uint16_t MaxResponseLength, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee );
+	void SetupSlave( uint8_t My_Address, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee );
     TwoWireSlave *m_TwoWireSlave = NULL;
 };
 
@@ -80,49 +82,28 @@ class AudioBuffer: public NamedItem
 {
 	public:
 		AudioBuffer( String Title)
-				   : NamedItem(Title){}
+				   : NamedItem(Title)
+				   {}
 		virtual ~AudioBuffer(){}
-		size_t GetFrameCount()
-		{
-			size_t size = 0;
-			if(xSemaphoreTake(m_FrameBufferBinarySemaphore, portMAX_DELAY) == pdTRUE)
+		void Initialize()
+		{			
+			if(0 != pthread_mutex_init(&m_Lock, NULL))
 			{
-				ESP_LOGW("AudioBuffer", "Getting Audio Buffer Size");
-				size = m_AudioBuffer.size();
-				xSemaphoreGive(m_FrameBufferBinarySemaphore);
+			   ESP_LOGE("AudioBuffer", "Failed to Create Lock");
 			}
-			else
-			{
-				ESP_LOGW("AudioBuffer", "Failed to get Semaphore");
-			}
-			return size;
+			ClearAudioBuffer();
 		}
-		void WriteAudioFrame( Frame_t Frame )
-		{
-			if(xSemaphoreTake(m_FrameBufferBinarySemaphore, portMAX_DELAY) == pdTRUE)
-			{
-				ESP_LOGW("AudioBuffer", "Writing Audio Buffer");
-				m_AudioBuffer.Write((Frame_t&)Frame);
-				xSemaphoreGive(m_FrameBufferBinarySemaphore);
-			}
-			else
-			{
-				ESP_LOGW("AudioBuffer", "Failed to get Semaphore");
-			}
-		}
-		void ReadAudioFrames(Frame_t *DataBuffer, size_t FrameCount)
-		{
-			Frame_t Frame;
-			if(xSemaphoreTake(m_FrameBufferBinarySemaphore, portMAX_DELAY) == pdTRUE)
-			{
-				ESP_LOGW("AudioBuffer", "Reading Audio Buffer");
-				m_AudioBuffer.Read(DataBuffer, FrameCount);
-				xSemaphoreGive(m_FrameBufferBinarySemaphore);
-			}
-		}
+		size_t GetFrameCapacity();
+		bool ClearAudioBuffer();
+		size_t GetFrameCount();
+		size_t GetAvailableCount();
+		size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount );
+		bool WriteAudioFrame( Frame_t &FrameBuffer );
+		size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		bfs::optional<Frame_t> ReadAudioFrame();
 	private:
-		bfs::CircleBuf<Frame_t, 2048> m_AudioBuffer;
-		SemaphoreHandle_t m_FrameBufferBinarySemaphore = xSemaphoreCreateBinary();		
+		bfs::CircleBuf<Frame_t, 2048> m_CircularAudioBuffer;
+		pthread_mutex_t m_Lock;
 };
 
 class AudioStreamRequester: public NamedItem
@@ -130,33 +111,29 @@ class AudioStreamRequester: public NamedItem
 {
 	public:
 		AudioStreamRequester( String Title
+							, AudioBuffer &AudioBuffer
 							, TwoWire &TwoWire
-							, uint16_t MaxResponseLength
 							, uint32_t Freq
 							, uint8_t RequestAttempts
 							, uint8_t RequestTimeout
 							, uint8_t SDA_Pin
 							, uint8_t SCL_Pin )
 							: NamedItem(Title)
+							, m_AudioBuffer(AudioBuffer)
 							, I2C_Datalink_Master( Title + "_I2C", TwoWire, SDA_Pin, SCL_Pin )
-							, m_MaxResponseLength(MaxResponseLength)
 							, m_Freq(Freq)
 							, m_RequestAttempts(RequestAttempts)
 							, m_RequestTimeout(RequestTimeout){}
 		virtual ~AudioStreamRequester(){}
-		void SetupAudioStreamRequester()
-		{
-			SetupMaster(m_MaxResponseLength, m_Freq, m_RequestAttempts, m_RequestTimeout);
-		}
-		uint32_t RequestAudioStream(uint8_t SourceAddress, uint8_t *SoundBufferData, uint32_t ByteCount)
-		{
-			return ReadDataFromSlave(SourceAddress, SoundBufferData, ByteCount);
-		}
+		void SetupAudioStreamRequester();
+		size_t BufferMoreAudio(uint8_t SourceAddress);
+		size_t GetFrameCount();
+		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
 	private:
-		uint16_t m_MaxResponseLength;
 		uint32_t m_Freq;
 		uint8_t m_RequestAttempts;
 		uint8_t m_RequestTimeout;
+		AudioBuffer &m_AudioBuffer;
 };
 
 class AudioStreamSender: public NamedItem
@@ -168,48 +145,21 @@ class AudioStreamSender: public NamedItem
 						 , AudioBuffer &AudioBuffer
 						 , TwoWireSlave &TwoWireSlave
 						 , uint8_t I2C_Address
-						 , uint16_t MaxResponseLength
 						 , uint8_t SDA_Pin
 						 , uint8_t SCL_Pin )
 						 : NamedItem(Title)
-						 , I2C_Datalink_Slave( Title + "_I2C", TwoWireSlave, SDA_Pin, SCL_Pin )
 						 , m_AudioBuffer(AudioBuffer)
-						 , m_I2C_Address(I2C_Address)
-						 , m_MaxResponseLength(MaxResponseLength ){}
+						 , I2C_Datalink_Slave( Title + "_I2C", TwoWireSlave, SDA_Pin, SCL_Pin )
+						 , m_I2C_Address(I2C_Address){}
 		virtual ~AudioStreamSender(){}
-		void SetupAudioStreamSender()
-		{
-			SetupSlave(m_I2C_Address, m_MaxResponseLength, this);
-		}
-		void UpdateStreamSender()
-		{
-			ESP_LOGW("AudioBuffer", "Updating I2C");
-			UpdateI2C();
-		}
+		void SetupAudioStreamSender();
+		void UpdateStreamSender();
+		
 		//TwoWireSlaveNotifiee Callbacks
-		void ReceiveEvent(int howMany)
-		{
-		  
-		}
-
-		void RequestEvent()
-		{
-			Frame_t FrameBuffer[30];
-			if(30 <= m_AudioBuffer.GetFrameCount())
-			{
-				m_AudioBuffer.ReadAudioFrames(FrameBuffer, 30);
-				for(int i = 0; i < 30; ++i)
-				{
-					for(int j = 0; j < sizeof(Frame_t); ++j)
-					{
-						m_TwoWireSlave->write(((uint8_t*)FrameBuffer)[4*i+j]);
-					}
-				}
-			}
-		}
+		void ReceiveEvent(int howMany);
+		void RequestEvent();
 	private:
 		uint8_t m_I2C_Address;
-		uint16_t m_MaxResponseLength;
 		AudioBuffer &m_AudioBuffer;
 };
 

@@ -96,7 +96,7 @@ void setup() {
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
-    4000,                           // Stack size in words
+    20000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES - 2,       // Priority of the task
     &ManagerTask,                   // Task handle.
@@ -132,7 +132,6 @@ void setup() {
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
 }
 
 void ProcessSoundPowerTaskLoop(void * parameter)
@@ -158,7 +157,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(2 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

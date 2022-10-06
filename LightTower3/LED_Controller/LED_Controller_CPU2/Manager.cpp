@@ -48,11 +48,16 @@ void Manager::Setup()
   AllocateMemory();
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  m_AudioBuffer.Initialize();
+  m_AudioStreamRequester.SetupAudioStreamRequester();
   m_SoundProcessor.SetupSoundProcessor();
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.StartDevice();
   m_BT_Out.StartDevice();
-  m_AudioStreamRequester.SetupAudioStreamRequester();
+}
+
+void Manager::Loop()
+{
 }
 
 void Manager::ProcessEventQueue()
@@ -60,19 +65,7 @@ void Manager::ProcessEventQueue()
   ESP_LOGV("Function Debug", "%s, ", __func__);
   UpdateNotificationRegistrationStatus();
   m_I2S_Out.ProcessEventQueue();
-
-
-  uint8_t I2C_RXBuffer[MAX_SLAVE_RESPONSE_LENGTH];
-  int32_t BytesRead = m_AudioStreamRequester.RequestAudioStream(I2C_SLAVE_ADDR, I2C_RXBuffer, MAX_SLAVE_RESPONSE_LENGTH);
-  assert(BytesRead % m_32BitFrameByteCount == 0);
-  int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
-  for(int i = 0; i < FramesRead; ++i)
-  {
-    Frame aFrame;
-    aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
-    aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
-    m_FrameBuffer.Write( (Frame_t&)(aFrame) );
-  }
+  m_AudioStreamRequester.BufferMoreAudio(I2C_SLAVE_ADDR);
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -133,24 +126,17 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 //Bluetooth Source Callback
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
-  Serial << "Bluetooth Callback: " << channel_len << "\n";
-  int32_t BytesRead = 0;
-  int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
-  uint8_t I2S_RXBuffer[BytesRequested];
-  int32_t FramesRead = 0;
+  size_t BytesRequested = channel_len * sizeof(Frame_t);
+  size_t FramesAvailable = m_AudioStreamRequester.GetFrameCount();
+  size_t FramesRead = m_AudioStreamRequester.GetAudioFrames((Frame_t*)frame, channel_len);
+  assert(FramesRead <= channel_len);
+  size_t BytesRead = FramesRead * sizeof(Frame_t);
+  //ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);
+
   
+  //m_I2S_Out.SetSoundBufferData((uint8_t*)RXBuffer, BytesRead);
+
   /*
-  m_I2S_Out.SetSoundBufferData(I2S_RXBuffer, BytesRead);
-  assert(BytesRead % m_32BitFrameByteCount == 0);
-  int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
-  for(int i = 0; i < FramesRead; ++i)
-  {
-    Frame aFrame;
-    aFrame.channel1 = ((int32_t*)I2S_RXBuffer)[2*i] >> 16;
-    aFrame.channel2 = ((int32_t*)I2S_RXBuffer)[2*i + 1] >> 16;
-    m_FrameBuffer.Write( (Frame_t&)(aFrame) );
-    frame[i] = aFrame;
-  }
   int loopcount = floor(m_FrameBuffer.size() / I2S_SAMPLE_COUNT);
   for(int i = 0; i < loopcount; ++i)
   {
