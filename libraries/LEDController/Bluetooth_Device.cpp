@@ -120,9 +120,9 @@ void Bluetooth_Sink::AllocateMemory()
 	if(false == m_MemoryIsAllocated)
 	{
 		ESP_LOGD("Bluetooth_Device", "%s: Allocating Memory", GetTitle().c_str());
-		mp_Data = (uint8_t*)ps_malloc(m_TotalBytesToRead);
-		mp_RightData = (uint8_t*)ps_malloc(m_ChannelBytesToRead);
-		mp_LeftData = (uint8_t*)ps_malloc(m_ChannelBytesToRead);
+		mp_Data = (uint8_t*)heap_caps_malloc(m_TotalBytesToRead, MALLOC_CAP_SPIRAM);
+		mp_RightData = (uint8_t*)heap_caps_malloc(m_ChannelBytesToRead, MALLOC_CAP_SPIRAM);
+		mp_LeftData = (uint8_t*)heap_caps_malloc(m_ChannelBytesToRead, MALLOC_CAP_SPIRAM);
 		m_MemoryIsAllocated = true;
 		ESP_LOGD("Bluetooth_Device", "%s: Memory Allocated", GetTitle().c_str());
 	}
@@ -133,9 +133,9 @@ void Bluetooth_Sink::FreeMemory()
 	if(true == m_MemoryIsAllocated)
 	{
 		ESP_LOGD("Bluetooth_Device", "%s: Freeing Memory", GetTitle().c_str());
-		free(mp_Data);
-		free(mp_RightData);
-		free(mp_LeftData);
+		heap_caps_free(mp_Data);
+		heap_caps_free(mp_RightData);
+		heap_caps_free(mp_LeftData);
 		m_MemoryIsAllocated = false;
 		ESP_LOGD("Bluetooth_Device", "%s: Memory Freed", GetTitle().c_str());
 	}

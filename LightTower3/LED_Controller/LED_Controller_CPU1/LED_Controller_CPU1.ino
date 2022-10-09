@@ -183,7 +183,7 @@ void setup()
 
 void loop() 
 {
-    m_Manager.Loop();
+
 }
 
 void VisualizationTaskLoop(void * parameter)

@@ -62,15 +62,12 @@ class Manager: public NamedItem
     const static int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
     bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
     AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
-    TwoWire m_TwoWire = TwoWire(0);
     AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
                                                                       , m_AudioBuffer
-                                                                      , m_TwoWire
-                                                                      , I2C_MASTER_FREQ
-                                                                      , I2C_MASTER_REQUEST_RETRY_COUNT
-                                                                      , I2C_MASTER_REQUEST_TIMEOUT
-                                                                      , I2C_SDA_PIN
-                                                                      , I2C_SCL_PIN );
+                                                                      , 13
+                                                                      , 12
+                                                                      , 14
+                                                                      , 27 );
     //I2S Sound Data RX
     I2S_Device &m_I2S_Out;
     

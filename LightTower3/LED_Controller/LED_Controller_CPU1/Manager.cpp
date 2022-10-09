@@ -39,7 +39,7 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_AudioBuffer.Initialize();
-  m_AudioSender.SetupAudioStreamSender();
+  m_AudioSender.Setup();
   m_Mic_In.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
@@ -50,7 +50,6 @@ void Manager::Setup()
 
 void Manager::Loop()
 {
-  m_AudioSender.UpdateStreamSender();
 }
 
 void Manager::ProcessEventQueue()
@@ -65,7 +64,6 @@ void Manager::ProcessEventQueue()
     default:
     break;
   }
-  
   MoveDataFromQueueToQueue( "Manager 1"
                           , m_SerialDataLink.GetQueueHandleRXForDataItem("R_BANDS")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
@@ -135,9 +133,9 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 {
   if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
-    assert(ByteCount % sizeof(Frame_t) == 0);
+    assert(0 == ByteCount % sizeof(Frame_t));
     size_t FramesRead = ByteCount / sizeof(Frame_t);
-    assert(FramesRead * 2 == SampleCount);
+    assert(FramesRead == SampleCount);
     int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
     for(int i = 0; i < FramesRead; ++i)
     {
@@ -146,7 +144,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
       aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
       if(false == m_AudioBuffer.WriteAudioFrame(aFrame))
       {
-        ESP_LOGW("AudioBuffer", "Failed to Write. Buffer has %i slot(s) available", m_AudioBuffer.GetAvailableCount());
+        ESP_LOGW("AudioBuffer", "Failed to Write. Buffer has %i slot(s) available", m_AudioBuffer.GetFreeSpaceCount());
         if(true != m_AudioBuffer.ClearAudioBuffer())
         {
           ESP_LOGW("AudioBuffer", "Failed to Clear Buffer");

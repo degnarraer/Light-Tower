@@ -242,7 +242,7 @@ class QueueManager
 				size_t bytes = 0;
 				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
-				DataBuffer = ps_malloc(bytes);
+				DataBuffer = heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM);
 				switch(ConfigFile[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -290,7 +290,7 @@ class QueueManager
 					break;
 				}
 			}
-			free(m_DataItem);
+			heap_caps_free(m_DataItem);
 			m_MemoryAllocated = false;
 		}
 		
@@ -378,7 +378,7 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			ESP_LOGV("Helpers", "MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", QueueCount, ByteCount);
-			uint8_t* DataBuffer = (uint8_t*)ps_malloc(ByteCount);
+			uint8_t DataBuffer[ByteCount];
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 			  memset(DataBuffer, 0, ByteCount);
@@ -402,7 +402,6 @@ class CommonUtils
 			    ESP_LOGE("Helpers", "ERROR! Error Receiving Queue.");
 			  }
 			}
-			free(DataBuffer);
 		  }
 		  else
 		  {
@@ -417,7 +416,7 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			ESP_LOGV("Helpers", "Queue Messages Waiting: %i Receiver Queue Count: %i Byte Count: %i", QueueCount, GiveToQueueCount, ByteCount);
-			uint8_t* DataBuffer = (uint8_t*)ps_malloc(ByteCount);
+			uint8_t DataBuffer[ByteCount];
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 				if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
@@ -451,7 +450,6 @@ class CommonUtils
 					ESP_LOGW("CommonUtils", "WARNING! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
-			free(DataBuffer);
 		  }
 		  else
 		  {

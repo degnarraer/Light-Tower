@@ -300,15 +300,15 @@ void I2S_Device::AllocateMemory()
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Allocating Memory.", GetTitle());  
-	m_SoundBufferData = (uint8_t*)ps_malloc(m_TotalBytesToRead);
-	m_RightChannel_SoundBufferData = (uint8_t*)ps_malloc(m_ChannelBytesToRead);
-	m_LeftChannel_SoundBufferData = (uint8_t*)ps_malloc(m_ChannelBytesToRead);
+	m_SoundBufferData = (uint8_t*)heap_caps_malloc(m_TotalBytesToRead, MALLOC_CAP_SPIRAM);
+	m_RightChannel_SoundBufferData = (uint8_t*)heap_caps_malloc(m_ChannelBytesToRead, MALLOC_CAP_SPIRAM);
+	m_LeftChannel_SoundBufferData = (uint8_t*)heap_caps_malloc(m_ChannelBytesToRead, MALLOC_CAP_SPIRAM);
 }
 void I2S_Device::FreeMemory()
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Freeing Memory.", GetTitle());  
-	free(m_SoundBufferData);
-	free(m_RightChannel_SoundBufferData);
-	free(m_LeftChannel_SoundBufferData);
+	heap_caps_free(m_SoundBufferData);
+	heap_caps_free(m_RightChannel_SoundBufferData);
+	heap_caps_free(m_LeftChannel_SoundBufferData);
 }

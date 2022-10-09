@@ -96,9 +96,9 @@ void setup() {
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
-    20000,                          // Stack size in words
+    40000,                          // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
+    configMAX_PRIORITIES,           // Priority of the task
     &ManagerTask,                   // Task handle.
     1                               // Core where the task should run
   ); 
@@ -157,7 +157,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
 

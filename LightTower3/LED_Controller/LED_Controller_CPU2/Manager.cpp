@@ -49,7 +49,7 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_AudioBuffer.Initialize();
-  m_AudioStreamRequester.SetupAudioStreamRequester();
+  m_AudioStreamRequester.Setup();
   m_SoundProcessor.SetupSoundProcessor();
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.StartDevice();
@@ -63,9 +63,9 @@ void Manager::Loop()
 void Manager::ProcessEventQueue()
 {
   ESP_LOGV("Function Debug", "%s, ", __func__);
-  UpdateNotificationRegistrationStatus();
-  m_I2S_Out.ProcessEventQueue();
-  m_AudioStreamRequester.BufferMoreAudio(I2C_SLAVE_ADDR);
+  //UpdateNotificationRegistrationStatus();
+  //m_I2S_Out.ProcessEventQueue();
+  m_AudioStreamRequester.BufferMoreAudio();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()

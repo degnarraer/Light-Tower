@@ -87,14 +87,12 @@ class Manager: public NamedItem
     
     static const int32_t m_CircularBufferSize = m_I2CFrameBufferByteCount * 10;
     AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
-    
-    TwoWireSlave m_TwoWireSlave = TwoWireSlave(0);
     AudioStreamSender m_AudioSender = AudioStreamSender ( "Audio Sender"
                                                         , m_AudioBuffer
-                                                        , m_TwoWireSlave
-                                                        , I2C_SLAVE_ADDR
-                                                        , I2C_SDA_PIN
-                                                        , I2C_SCL_PIN );
+                                                        , 26
+                                                        , 25
+                                                        , 33
+                                                        , 32 );
                                                                                                                       
 };
 
