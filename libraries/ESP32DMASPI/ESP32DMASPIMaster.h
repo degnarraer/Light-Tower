@@ -120,20 +120,16 @@ public:
     // execute transaction and wait for transmission one by one
 
     size_t transfer(const uint8_t* tx_buf, const size_t size) {
-		printf("Transfer 1\n");
         return transfer(tx_buf, NULL, size);
     }
     size_t transfer(const uint8_t* tx_buf, uint8_t* rx_buf, const size_t size) {
-		printf("Transfer 2\n");
         return transfer(0, 0, 0, 0, 0, 0, tx_buf, rx_buf, size);
     }
     size_t transfer(const uint16_t cmd, const uint64_t addr, const uint8_t* tx_buf, const size_t size) {
-		printf("Transfer 3\n");
         return transfer(0, 0, 0, 0, cmd, addr, tx_buf, NULL, size);
     }
     size_t transfer(
         const uint16_t cmd, const uint64_t addr, const uint8_t* tx_buf, uint8_t* rx_buf, const size_t size) {
-		printf("Transfer 4\n");
         return transfer(0, 0, 0, 0, cmd, addr, tx_buf, rx_buf, size);
     }
     size_t transfer(
@@ -144,7 +140,6 @@ public:
         const uint8_t* tx_buf,
         uint8_t* rx_buf,
         const size_t size) {
-		printf("Transfer 5\n");
         return transfer(command_bits, address_bits, 0, 0, cmd, addr, tx_buf, rx_buf, size);
     }
     size_t transfer(
@@ -157,7 +152,6 @@ public:
         const uint8_t* tx_buf,
         uint8_t* rx_buf,
         const size_t size) {
-		printf("Transfer 6\n");
         if (!transactions.empty()) {
             printf(
                 "[WARN] cannot execute transfer if queued transaction exists. queued transactions = %d\n",
@@ -310,7 +304,6 @@ public:
         if_cfg.post_cb = post_cb;
     }
 
-
     void setDMAChannel(const uint8_t c) {  // default: auto
         if ((1 <= c) && (c <= 3)) {
             dma_chan = c;
@@ -322,25 +315,18 @@ public:
 
 private:
     bool initialize(const uint8_t spi_bus) {
-		printf("INITIALIZE: %i\n", spi_bus);
         host = (spi_bus == HSPI) ? HSPI_HOST : VSPI_HOST;
-		printf("HOST: %i\n", host);
         bus_cfg.flags |= SPICOMMON_BUSFLAG_MASTER;
-		printf("FLAGS: %i\n", bus_cfg.flags);
-
         esp_err_t e = spi_bus_initialize(host, &bus_cfg, dma_chan);
-		printf("ERROR: %d\n", e);
         if (e != ESP_OK) {
             printf("[ERROR] SPI bus initialize failed : %d\n", e);
             return false;
         }
-
         e = spi_bus_add_device(host, &if_cfg, &handle);
         if (e != ESP_OK) {
             printf("[ERROR] SPI bus add device failed : %d\n", e);
             return false;
         }
-
         return true;
     }
 

@@ -54,6 +54,7 @@ void SPI_Datalink_Slave::task_process_buffer()
 	while (1) 
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+		ESP_LOGE("SPI_Datalink_Slave", "Process Buffer Queue Size: %i  Data Size: %i", m_SPI_Slave.available(), m_SPI_Slave.size());
 		m_Notifiee->TransferBytesNotification(spi_tx_buf, spi_rx_buf, m_SPI_Slave.size());
 		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
@@ -94,7 +95,7 @@ size_t AudioBuffer::GetFrameCount()
 	return size;
 }
 
-size_t AudioBuffer::GetFreeSpaceCount()
+size_t AudioBuffer::GetFreeFrameCount()
 {
 	return GetFrameCapacity() - GetFrameCount();
 }
@@ -144,24 +145,15 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 }
 size_t AudioStreamRequester::BufferMoreAudio()
 {
-	size_t FailCount = 0;
 	size_t TotalFramesFilled = 0;
-	size_t TotalFramesToFill = m_AudioBuffer.GetFreeSpaceCount();
+	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
 	Serial << "Buffer\n";
-	size_t FreeSpaceAvailable = m_AudioBuffer.GetFreeSpaceCount();
-	Frame_t ReceivedFrames[FreeSpaceAvailable];
-	size_t BytesRead = TransferBytes(NULL, &((unsigned char &)ReceivedFrames), FreeSpaceAvailable*sizeof(Frame_t));
+	Frame_t BufferFrames[TotalFramesToFill];
+	size_t BytesRead = TransferBytes(NULL, &((unsigned char &)BufferFrames), TotalFramesToFill*sizeof(Frame_t));
 	Serial << "Bytes Read: " << BytesRead << "\n";
 	assert(0 == BytesRead % sizeof(Frame_t));
 	size_t FramesRead = BytesRead / sizeof(Frame_t);
-	if(true == m_AudioBuffer.WriteAudioFrames(ReceivedFrames, FramesRead))
-	{
-		TotalFramesFilled += FramesRead;
-	}
-	else
-	{
-		ESP_LOGE("AudioBuffer", "Buffer Overrun");	
-	}
+	TotalFramesFilled == m_AudioBuffer.WriteAudioFrames(BufferFrames, FramesRead);
 	ESP_LOGE("AudioBuffer", "Filled %i open Buffer Frames with %i Frames", TotalFramesToFill, TotalFramesFilled);
 	return TotalFramesFilled;
 }

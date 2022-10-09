@@ -169,7 +169,7 @@ class AudioBuffer: public NamedItem
 		size_t GetFrameCapacity();
 		bool ClearAudioBuffer();
 		size_t GetFrameCount();
-		size_t GetFreeSpaceCount();
+		size_t GetFreeFrameCount();
 		size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount );
 		bool WriteAudioFrame( Frame_t &FrameBuffer );
 		size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
@@ -228,7 +228,9 @@ class AudioStreamSender: public NamedItem
 		}
 		size_t TransferBytesNotification(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length)
 		{
-			return sizeof(Frame_t) * m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, Length / sizeof(Frame_t));
+			size_t BufferFrames = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, Length / sizeof(Frame_t));
+			Serial << "Buffer Frames: " << BufferFrames << "\n";
+			return sizeof(Frame_t) * BufferFrames;
 		}
 	private:
 		AudioBuffer &m_AudioBuffer;
