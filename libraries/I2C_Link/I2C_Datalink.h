@@ -60,6 +60,8 @@ class SPI_Datalink
 		virtual size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length) = 0;
 	private:
 	protected:
+		uint8_t* spi_tx_buf;
+		uint8_t* spi_rx_buf;
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
 		uint8_t m_SCK;
@@ -84,6 +86,8 @@ class SPI_Datalink_Master: public NamedItem
 		{
 			m_SPI_Master.setDataMode(SPI_MODE0);
 			m_SPI_Master.setFrequency(m_spiClk);
+			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
+			spi_rx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
 			m_SPI_Master.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Master.setDMAChannel(1);
 			m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
@@ -108,16 +112,16 @@ class SPI_Datalink_Slave: public NamedItem
 		void Setup_SPI_Slave()
 		{
 			m_SPI_Slave.setDMAChannel(1);
+			m_SPI_Slave.setDataMode(SPI_MODE0);
 			spi_tx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
 			spi_rx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
-			m_SPI_Slave.setDataMode(SPI_MODE0);
 			m_SPI_Slave.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
 			xTaskCreatePinnedToCore
 			(
 				static_task_wait_spi,
 				"task_wait_spi",
-				SPI_MAX_PACKET_BYTES,
+				2048,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_wait_spi,
@@ -143,8 +147,6 @@ class SPI_Datalink_Slave: public NamedItem
 		}
 	private:
 		SPI_Slave_Notifier *m_Notifiee = NULL;
-		uint8_t* spi_tx_buf;
-		uint8_t* spi_rx_buf;
 		ESP32DMASPI::Slave m_SPI_Slave;
 		TaskHandle_t task_handle_process_buffer = 0;
 		TaskHandle_t task_handle_wait_spi = 0;

@@ -41,12 +41,10 @@ void SPI_Datalink_Slave::task_wait_spi()
 	{
 		ESP_LOGE("SPI_Datalink_Slave", "Wait for transfer");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		uint8_t Buffer[SPI_MAX_DATA_BYTES];
 		size_t BufferSize = 0;
-		m_Notifiee->SetTransferBytesNotification(spi_rx_buf, Buffer, BufferSize);
+		m_Notifiee->SetTransferBytesNotification(spi_rx_buf, spi_tx_buf + sizeof(BufferSize), BufferSize);
 		//Insert Read Byte Count into Data Frame
 		memcpy(spi_tx_buf, &BufferSize, sizeof(BufferSize));
-		memcpy(spi_tx_buf + sizeof(BufferSize), Buffer, BufferSize);
 		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, BufferSize + sizeof(size_t));
 		xTaskNotifyGive(task_handle_process_buffer);		
 	}
@@ -157,14 +155,21 @@ size_t AudioStreamRequester::BufferMoreAudio()
 	size_t TotalPacketBytes = TotalBytesToFill + sizeof(size_t);
 	Serial << "Buffer More Audio Frames: " << TotalFramesToFill << "\n";
 	uint8_t Buffer[SPI_MAX_PACKET_BYTES];
-	size_t BytesRead = TransferBytes(Buffer, NULL, TotalPacketBytes);
+	size_t BytesRead = TransferBytes(Buffer, NULL, SPI_MAX_PACKET_BYTES);
 	Serial << "Bytes Read: " << BytesRead << "\n";
-	size_t ExpectedAudioFrameCount = ((size_t*)Buffer)[0];
-	Serial << "Expected Frames: " << ExpectedAudioFrameCount << "\n";
-	size_t FramesRead = BytesRead / sizeof(Frame_t);
-	size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)(Buffer+sizeof(size_t)), ExpectedAudioFrameCount);
-	ESP_LOGE("AudioBuffer", "Filled %i Frames", TotalFramesFilled);
-	return TotalFramesFilled;
+	if(BytesRead > 0)
+	{
+		size_t ExpectedAudioFrameCount = ((size_t*)Buffer)[0];
+		Serial << "Expected Frames: " << ExpectedAudioFrameCount << "\n";
+		size_t FramesRead = BytesRead / sizeof(Frame_t);
+		size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)(Buffer+sizeof(size_t)), ExpectedAudioFrameCount);
+		ESP_LOGE("AudioBuffer", "Filled %i Frames", TotalFramesFilled);
+		return TotalFramesFilled;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 size_t AudioStreamRequester::GetFrameCount()
