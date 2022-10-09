@@ -19,14 +19,14 @@
 #include "pthread.h"
 
 
-size_t SPI_Datalink_Master::TransferBytes(uint8_t * TXBuffer, uint8_t * RXBuffer, size_t Length)
+size_t SPI_Datalink_Master::TransferBytes(uint8_t * RXBuffer, uint8_t * TXBuffer, size_t Length)
 {
 	ESP_LOGE("SPI_Datalink_Master", "Transfer Data");
-	size_t ReceivedLength = m_SPI_Master.transfer(TXBuffer, RXBuffer, Length);
+	size_t ReceivedLength = m_SPI_Master.transfer(RXBuffer, TXBuffer, Length);
 	return ReceivedLength;
 }
 
-size_t SPI_Datalink_Slave::TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length)
+size_t SPI_Datalink_Slave::TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length)
 {
 	return 0;
 }
@@ -39,9 +39,16 @@ void SPI_Datalink_Slave::task_wait_spi()
 {
 	while (1)
 	{
+		ESP_LOGE("SPI_Datalink_Slave", "Wait for transfer");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, BUFFER_SIZE);
-		xTaskNotifyGive(task_handle_process_buffer);
+		uint8_t Buffer[SPI_MAX_DATA_BYTES];
+		size_t BufferSize = 0;
+		m_Notifiee->SetTransferBytesNotification(spi_rx_buf, Buffer, BufferSize);
+		//Insert Read Byte Count into Data Frame
+		memcpy(spi_tx_buf, &BufferSize, sizeof(BufferSize));
+		memcpy(spi_tx_buf + sizeof(BufferSize), Buffer, BufferSize);
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, BufferSize + sizeof(size_t));
+		xTaskNotifyGive(task_handle_process_buffer);		
 	}
 }
 void SPI_Datalink_Slave::static_task_process_buffer(void* pvParameters)
@@ -51,11 +58,11 @@ void SPI_Datalink_Slave::static_task_process_buffer(void* pvParameters)
 }
 void SPI_Datalink_Slave::task_process_buffer()
 {
-	while (1) 
+	while (1)
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		ESP_LOGE("SPI_Datalink_Slave", "Process Buffer Queue Size: %i  Data Size: %i", m_SPI_Slave.available(), m_SPI_Slave.size());
-		m_Notifiee->TransferBytesNotification(spi_tx_buf, spi_rx_buf, m_SPI_Slave.size());
+		m_Notifiee->GetTransferBytesNotification(spi_rx_buf, spi_tx_buf, m_SPI_Slave.size());
 		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
 	}
@@ -145,16 +152,18 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 }
 size_t AudioStreamRequester::BufferMoreAudio()
 {
-	size_t TotalFramesFilled = 0;
 	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
-	Serial << "Buffer\n";
-	Frame_t BufferFrames[TotalFramesToFill];
-	size_t BytesRead = TransferBytes(NULL, &((unsigned char &)BufferFrames), TotalFramesToFill*sizeof(Frame_t));
+	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
+	size_t TotalPacketBytes = TotalBytesToFill + sizeof(size_t);
+	Serial << "Buffer More Audio Frames: " << TotalFramesToFill << "\n";
+	uint8_t Buffer[SPI_MAX_PACKET_BYTES];
+	size_t BytesRead = TransferBytes(Buffer, NULL, TotalPacketBytes);
 	Serial << "Bytes Read: " << BytesRead << "\n";
-	assert(0 == BytesRead % sizeof(Frame_t));
+	size_t ExpectedAudioFrameCount = ((size_t*)Buffer)[0];
+	Serial << "Expected Frames: " << ExpectedAudioFrameCount << "\n";
 	size_t FramesRead = BytesRead / sizeof(Frame_t);
-	TotalFramesFilled == m_AudioBuffer.WriteAudioFrames(BufferFrames, FramesRead);
-	ESP_LOGE("AudioBuffer", "Filled %i open Buffer Frames with %i Frames", TotalFramesToFill, TotalFramesFilled);
+	size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)(Buffer+sizeof(size_t)), ExpectedAudioFrameCount);
+	ESP_LOGE("AudioBuffer", "Filled %i Frames", TotalFramesFilled);
 	return TotalFramesFilled;
 }
 

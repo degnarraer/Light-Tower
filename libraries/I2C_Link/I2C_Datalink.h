@@ -30,7 +30,9 @@
 
 #define AUDIO_BUFFER_LENGTH 4096
 #define I2C_MAX_BYTES 4096
-#define SPI_MAX_BYTES 16384
+#define SPI_MAX_DATA_BYTES 16384
+#define SPI_PACKET_BYTE_COUNT_LENGTH sizeof(size_t)
+#define SPI_MAX_PACKET_BYTES (SPI_MAX_DATA_BYTES + SPI_PACKET_BYTE_COUNT_LENGTH)
 #define MAX_FRAMES_PER_PACKET 1024
 
 class SPI_Slave_Notifier
@@ -38,7 +40,8 @@ class SPI_Slave_Notifier
 	public:
 		SPI_Slave_Notifier(){}
 		virtual ~SPI_Slave_Notifier(){}
-		virtual size_t TransferBytesNotification(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length) = 0;
+		virtual size_t SetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t &Length) = 0;
+		virtual size_t GetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length) = 0;
 	private:
 };
 
@@ -54,7 +57,7 @@ class SPI_Datalink
 					, m_SCK(SCK)
 					, m_SS(SS){}
 		virtual ~SPI_Datalink(){}
-		virtual size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length) = 0;
+		virtual size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length) = 0;
 	private:
 	protected:
 		uint8_t m_MISO;
@@ -62,7 +65,7 @@ class SPI_Datalink
 		uint8_t m_SCK;
 		uint8_t m_SS;
 		static const int m_spiClk = 1000000; // 1 MHz
-		static const uint32_t BUFFER_SIZE = SPI_MAX_BYTES;
+		static const uint32_t BUFFER_SIZE = SPI_PACKET_BYTE_COUNT_LENGTH;
 };
 
 class SPI_Datalink_Master: public NamedItem
@@ -85,7 +88,7 @@ class SPI_Datalink_Master: public NamedItem
 			m_SPI_Master.setDMAChannel(1);
 			m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
 		}
-		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
+		size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length);
 	private:
 		ESP32DMASPI::Master m_SPI_Master;
 };
@@ -114,7 +117,7 @@ class SPI_Datalink_Slave: public NamedItem
 			(
 				static_task_wait_spi,
 				"task_wait_spi",
-				2048,
+				SPI_MAX_PACKET_BYTES,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_wait_spi,
@@ -133,7 +136,7 @@ class SPI_Datalink_Slave: public NamedItem
 			xTaskNotifyGive(task_handle_wait_spi);
 				
 		}
-		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
+		size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length);
 		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee)
 		{
 			m_Notifiee = Notifiee;
@@ -226,10 +229,18 @@ class AudioStreamSender: public NamedItem
 			Setup_SPI_Slave();
 			RegisterForDataTransferNotification(this);
 		}
-		size_t TransferBytesNotification(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length)
+		size_t SetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t &Length)
+		{	
+			size_t AvailableFrameCount = m_AudioBuffer.GetFrameCount();
+			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, AvailableFrameCount);
+			Serial << "Buffered Write Frames: " << FramesBuffered << "\n";
+			Length = FramesBuffered * sizeof(Frame_t);
+			return Length;
+		}
+		size_t GetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length)
 		{
-			size_t BufferFrames = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, Length / sizeof(Frame_t));
-			Serial << "Buffer Frames: " << BufferFrames << "\n";
+			size_t BufferFrames = m_AudioBuffer.ReadAudioFrames((Frame_t *)RXBuffer, Length / sizeof(Frame_t));
+			Serial << "Buffered Read Frames: " << BufferFrames << "\n";
 			return sizeof(Frame_t) * BufferFrames;
 		}
 	private:
