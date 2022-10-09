@@ -22,6 +22,7 @@
 size_t SPI_Datalink_Master::TransferBytes(uint8_t * RXBuffer, uint8_t * TXBuffer, size_t Length)
 {
 	ESP_LOGE("SPI_Datalink_Master", "Transfer Data");
+	assert(Length <= SPI_MAX_DATA_BYTES);
 	size_t ReceivedLength = m_SPI_Master.transfer(RXBuffer, TXBuffer, Length);
 	return ReceivedLength;
 }
@@ -39,13 +40,14 @@ void SPI_Datalink_Slave::task_wait_spi()
 {
 	while (1)
 	{
-		ESP_LOGE("SPI_Datalink_Slave", "Wait for transfer");
+		ESP_LOGE("SPI_Datalink_Slave", "Waiting");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		size_t BufferSize = 0;
-		m_Notifiee->SetTransferBytesNotification(spi_rx_buf, spi_tx_buf + sizeof(BufferSize), BufferSize);
+		m_Notifiee->SetTransferBytesNotification(spi_rx_buf, spi_tx_buf, BufferSize);
 		//Insert Read Byte Count into Data Frame
-		memcpy(spi_tx_buf, &BufferSize, sizeof(BufferSize));
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, BufferSize + sizeof(size_t));
+		Serial << "Buffer Size: " << BufferSize << "\n";
+		ESP_LOGE("SPI_Datalink_Slave", "Wait for transfer %i Bytes.", BufferSize);
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, BufferSize);
 		xTaskNotifyGive(task_handle_process_buffer);		
 	}
 }
@@ -58,6 +60,7 @@ void SPI_Datalink_Slave::task_process_buffer()
 {
 	while (1)
 	{
+		ESP_LOGE("SPI_Datalink_Slave", "Processing");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		ESP_LOGE("SPI_Datalink_Slave", "Process Buffer Queue Size: %i  Data Size: %i", m_SPI_Slave.available(), m_SPI_Slave.size());
 		m_Notifiee->GetTransferBytesNotification(spi_rx_buf, spi_tx_buf, m_SPI_Slave.size());
@@ -152,17 +155,15 @@ size_t AudioStreamRequester::BufferMoreAudio()
 {
 	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
 	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
-	size_t TotalPacketBytes = TotalBytesToFill + sizeof(size_t);
+	size_t MaxBytes = SPI_MAX_DATA_BYTES;
 	Serial << "Buffer More Audio Frames: " << TotalFramesToFill << "\n";
-	uint8_t Buffer[SPI_MAX_PACKET_BYTES];
-	size_t BytesRead = TransferBytes(Buffer, NULL, SPI_MAX_PACKET_BYTES);
+	uint8_t Buffer[SPI_MAX_DATA_BYTES];
+	size_t BytesRead = TransferBytes(Buffer, NULL, min(TotalBytesToFill, MaxBytes));
 	Serial << "Bytes Read: " << BytesRead << "\n";
 	if(BytesRead > 0)
 	{
-		size_t ExpectedAudioFrameCount = ((size_t*)Buffer)[0];
-		Serial << "Expected Frames: " << ExpectedAudioFrameCount << "\n";
 		size_t FramesRead = BytesRead / sizeof(Frame_t);
-		size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)(Buffer+sizeof(size_t)), ExpectedAudioFrameCount);
+		size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)Buffer, FramesRead);
 		ESP_LOGE("AudioBuffer", "Filled %i Frames", TotalFramesFilled);
 		return TotalFramesFilled;
 	}
