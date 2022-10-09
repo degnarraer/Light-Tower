@@ -33,6 +33,15 @@
 #define SPI_MAX_BYTES 16384
 #define MAX_FRAMES_PER_PACKET 1024
 
+class SPI_Slave_Notifier
+{
+	public:
+		SPI_Slave_Notifier(){}
+		virtual ~SPI_Slave_Notifier(){}
+		virtual size_t TransferBytesNotification(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length) = 0;
+	private:
+};
+
 class SPI_Datalink
 {
 	public:
@@ -111,8 +120,6 @@ class SPI_Datalink_Slave: public NamedItem
 				&task_handle_wait_spi,
 				0
 			);
-			xTaskNotifyGive(task_handle_wait_spi);
-				
 			xTaskCreatePinnedToCore
 			(
 				static_task_process_buffer,
@@ -123,14 +130,21 @@ class SPI_Datalink_Slave: public NamedItem
 				&task_handle_process_buffer,
 				0
 			);
+			xTaskNotifyGive(task_handle_wait_spi);
+				
 		}
 		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
+		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee)
+		{
+			m_Notifiee = Notifiee;
+		}
 	private:
+		SPI_Slave_Notifier *m_Notifiee = NULL;
 		uint8_t* spi_tx_buf;
 		uint8_t* spi_rx_buf;
 		ESP32DMASPI::Slave m_SPI_Slave;
-		TaskHandle_t task_handle_process_buffer;
-		TaskHandle_t task_handle_wait_spi;
+		TaskHandle_t task_handle_process_buffer = 0;
+		TaskHandle_t task_handle_wait_spi = 0;
 		static void static_task_wait_spi(void* pvParameters);
 		void task_wait_spi();
 		static void static_task_process_buffer(void* pvParameters);
@@ -184,6 +198,7 @@ class AudioStreamRequester: public NamedItem
 		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
 		void Setup()
 		{
+			ESP_LOGE("AudioStreamRequester", "Setup");
 			Setup_SPI_Master();
 		}
 	private:
@@ -192,6 +207,7 @@ class AudioStreamRequester: public NamedItem
 
 class AudioStreamSender: public NamedItem
 					   , public SPI_Datalink_Slave
+					   , public SPI_Slave_Notifier
 {
 	public:
 		AudioStreamSender( String Title
@@ -206,11 +222,16 @@ class AudioStreamSender: public NamedItem
 		virtual ~AudioStreamSender(){}
 		void Setup()
 		{
+			ESP_LOGE("AudioStreamRequester", "Setup");
 			Setup_SPI_Slave();
+			RegisterForDataTransferNotification(this);
+		}
+		size_t TransferBytesNotification(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length)
+		{
+			return sizeof(Frame_t) * m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, Length / sizeof(Frame_t));
 		}
 	private:
 		AudioBuffer &m_AudioBuffer;
-		void RequestAudio();
 };
 
 

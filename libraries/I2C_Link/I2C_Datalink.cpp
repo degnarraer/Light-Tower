@@ -53,8 +53,8 @@ void SPI_Datalink_Slave::task_process_buffer()
 {
 	while (1) 
 	{
-		ESP_LOGE("SPI_Datalink_Slave", "Received Request");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+		m_Notifiee->TransferBytesNotification(spi_tx_buf, spi_rx_buf, m_SPI_Slave.size());
 		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
 	}
@@ -142,49 +142,27 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 	}
 	return FrameRead;
 }
-
 size_t AudioStreamRequester::BufferMoreAudio()
 {
 	size_t FailCount = 0;
-	size_t TotalBytesRead = 0;
 	size_t TotalFramesFilled = 0;
 	size_t TotalFramesToFill = m_AudioBuffer.GetFreeSpaceCount();
 	Serial << "Buffer\n";
-	if(MAX_FRAMES_PER_PACKET < TotalFramesToFill)
+	size_t FreeSpaceAvailable = m_AudioBuffer.GetFreeSpaceCount();
+	Frame_t ReceivedFrames[FreeSpaceAvailable];
+	size_t BytesRead = TransferBytes(NULL, &((unsigned char &)ReceivedFrames), FreeSpaceAvailable*sizeof(Frame_t));
+	Serial << "Bytes Read: " << BytesRead << "\n";
+	assert(0 == BytesRead % sizeof(Frame_t));
+	size_t FramesRead = BytesRead / sizeof(Frame_t);
+	if(true == m_AudioBuffer.WriteAudioFrames(ReceivedFrames, FramesRead))
 	{
-		while( (0 < TotalFramesToFill - TotalFramesFilled) && (MAX_FRAMES_PER_PACKET <= m_AudioBuffer.GetFreeSpaceCount()) )
-		{
-			size_t FreeSpaceAvailable = m_AudioBuffer.GetFreeSpaceCount();
-			Frame_t ReceivedFrames[FreeSpaceAvailable];
-			size_t BytesRead = TransferBytes(NULL, &((unsigned char &)ReceivedFrames), FreeSpaceAvailable*sizeof(Frame_t));
-			Serial << "Bytes Read: " << BytesRead << "\n";
-			TotalBytesRead += BytesRead;
-			if(0 != BytesRead)
-			{
-				assert(0 == BytesRead % sizeof(Frame_t));
-				size_t FramesRead = BytesRead / sizeof(Frame_t);
-				if(true == m_AudioBuffer.WriteAudioFrames(ReceivedFrames, FramesRead))
-				{
-					TotalFramesFilled += FramesRead;
-				}
-				else
-				{
-					ESP_LOGE("AudioBuffer", "Buffer Overrun");	
-				}
-			}
-			else
-			{
-				++FailCount;
-				if(FailCount >= 10) 
-				{
-					ESP_LOGE("AudioBuffer", "Buffer Update Fail");	
-					break;
-				}
-			}
-		}
+		TotalFramesFilled += FramesRead;
+	}
+	else
+	{
+		ESP_LOGE("AudioBuffer", "Buffer Overrun");	
 	}
 	ESP_LOGE("AudioBuffer", "Filled %i open Buffer Frames with %i Frames", TotalFramesToFill, TotalFramesFilled);
-	//assert(TotalFramesFilled == TotalBytesRead / sizeof(Frame_t));
 	return TotalFramesFilled;
 }
 
@@ -196,26 +174,6 @@ size_t AudioStreamRequester::GetFrameCount()
 size_t AudioStreamRequester::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 {
 	return m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
-}
-
-void AudioStreamSender::RequestAudio()
-{
-	Serial << "Request\n";
-	if(0 < m_AudioBuffer.GetFrameCount())
-	{
-		for(int i=0; i<MAX_FRAMES_PER_PACKET; ++i)
-		{
-			bfs::optional<Frame_t> ReadFrame = m_AudioBuffer.ReadAudioFrame();
-			if(ReadFrame)
-			{
-				for(int j = 0; j < sizeof(Frame_t); ++j)
-				{
-					unsigned char *data = (unsigned char*)(&ReadFrame);
-					
-				}
-			}
-		}
-	}
 }
 
 
