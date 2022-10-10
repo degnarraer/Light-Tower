@@ -40,14 +40,11 @@ void SPI_Datalink_Slave::task_wait_spi()
 {
 	while (1)
 	{
-		ESP_LOGE("SPI_Datalink_Slave", "Waiting");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		size_t BufferSize = 0;
-		m_Notifiee->SetTransferBytesNotification(spi_rx_buf, spi_tx_buf, BufferSize);
-		//Insert Read Byte Count into Data Frame
-		Serial << "Buffer Size: " << BufferSize << "\n";
-		ESP_LOGE("SPI_Datalink_Slave", "Wait for transfer %i Bytes.", BufferSize);
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, BufferSize);
+		size_t MaxBufferSize = SPI_MAX_DATA_BYTES;
+		size_t ReceivedBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, MaxBufferSize);
+		Serial << "Wait for TX with " << ReceivedBufferSize << " Bytes.\n";
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, ReceivedBufferSize);
 		xTaskNotifyGive(task_handle_process_buffer);		
 	}
 }
@@ -60,10 +57,9 @@ void SPI_Datalink_Slave::task_process_buffer()
 {
 	while (1)
 	{
-		ESP_LOGE("SPI_Datalink_Slave", "Processing");
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		ESP_LOGE("SPI_Datalink_Slave", "Process Buffer Queue Size: %i  Data Size: %i", m_SPI_Slave.available(), m_SPI_Slave.size());
-		m_Notifiee->GetTransferBytesNotification(spi_rx_buf, spi_tx_buf, m_SPI_Slave.size());
+		//ESP_LOGE("SPI_Datalink_Slave", "Process Buffer Queue Size: %i  Data Size: %i", m_SPI_Slave.available(), m_SPI_Slave.size());
+		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf, m_SPI_Slave.size());
 		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
 	}
@@ -154,21 +150,24 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 size_t AudioStreamRequester::BufferMoreAudio()
 {
 	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
+	if(0 == TotalFramesToFill)
+	{
+		m_AudioBuffer.ClearAudioBuffer();
+		TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
+	}
 	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
 	size_t MaxBytes = SPI_MAX_DATA_BYTES;
-	Serial << "Buffer More Audio Frames: " << TotalFramesToFill << "\n";
-	uint8_t Buffer[SPI_MAX_DATA_BYTES];
-	size_t BytesRead = TransferBytes(Buffer, NULL, min(TotalBytesToFill, MaxBytes));
-	Serial << "Bytes Read: " << BytesRead << "\n";
+	size_t BytesRead = TransferBytes(spi_rx_buf, spi_tx_buf, min(TotalBytesToFill, MaxBytes));
 	if(BytesRead > 0)
 	{
 		size_t FramesRead = BytesRead / sizeof(Frame_t);
-		size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)Buffer, FramesRead);
-		ESP_LOGE("AudioBuffer", "Filled %i Frames", TotalFramesFilled);
+		size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)spi_rx_buf, FramesRead);
+		Serial << "Frames to Buffer: " << TotalFramesToFill << "\tFrames Buffered: " << TotalFramesFilled << "\n"; 
 		return TotalFramesFilled;
 	}
 	else
 	{
+		Serial << "Frames to Buffer: " << TotalFramesToFill << "\tFrames Buffered: 0\n"; 
 		return 0;
 	}
 }
@@ -233,7 +232,6 @@ size_t I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, unsigned cha
 
 	if (true == slaveReq.request()) 
 	{
-		Serial << "Request\n";
 		while( 0 < slaveReq.available() && ByteCountRead < ByteCountToRead ) 
 		{
 			data[ByteCountRead] = slaveReq.read();

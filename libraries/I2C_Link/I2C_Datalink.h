@@ -30,7 +30,7 @@
 
 #define AUDIO_BUFFER_LENGTH 4096
 #define I2C_MAX_BYTES 4096
-#define SPI_MAX_DATA_BYTES 1024
+#define SPI_MAX_DATA_BYTES 4096
 #define MAX_FRAMES_PER_PACKET 1024
 
 class SPI_Slave_Notifier
@@ -38,8 +38,8 @@ class SPI_Slave_Notifier
 	public:
 		SPI_Slave_Notifier(){}
 		virtual ~SPI_Slave_Notifier(){}
-		virtual size_t SetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t &Length) = 0;
-		virtual size_t GetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length) = 0;
+		virtual size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t MaxBytesToSend) = 0;
+		virtual size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived) = 0;
 	private:
 };
 
@@ -81,12 +81,17 @@ class SPI_Datalink_Master: public NamedItem
 		void Setup_SPI_Master()
 		{
 			m_SPI_Master.setDMAChannel(1);
+			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
+			spi_rx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
 			m_SPI_Master.setDataMode(SPI_MODE0);
 			m_SPI_Master.setFrequency(m_spiClk);
 			m_SPI_Master.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
 		}
 		size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length);
+	protected:
+		uint8_t* spi_tx_buf;
+		uint8_t* spi_rx_buf;
 	private:
 		ESP32DMASPI::Master m_SPI_Master;
 };
@@ -115,7 +120,7 @@ class SPI_Datalink_Slave: public NamedItem
 			(
 				static_task_wait_spi,
 				"task_wait_spi",
-				2048,
+				4096,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_wait_spi,
@@ -125,7 +130,7 @@ class SPI_Datalink_Slave: public NamedItem
 			(
 				static_task_process_buffer,
 				"task_process_buffer",
-				2048,
+				4096,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_process_buffer,
@@ -139,9 +144,10 @@ class SPI_Datalink_Slave: public NamedItem
 		{
 			m_Notifiee = Notifiee;
 		}
-	private:
+	protected:
 		uint8_t* spi_tx_buf;
 		uint8_t* spi_rx_buf;
+	private:
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
 		TaskHandle_t task_handle_process_buffer = 0;
@@ -227,19 +233,19 @@ class AudioStreamSender: public NamedItem
 			Setup_SPI_Slave();
 			RegisterForDataTransferNotification(this);
 		}
-		size_t SetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t &Length)
+		
+		size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t MaxBytesToSend)
 		{	
 			size_t AvailableFrameCount = m_AudioBuffer.GetFrameCount();
-			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, AvailableFrameCount);
-			Serial << "Buffered Write Frames: " << FramesBuffered << "\n";
-			Length = FramesBuffered * sizeof(Frame_t);
-			return Length;
+			size_t MaxFramesToSend = MaxBytesToSend / sizeof(Frame_t);
+			Serial << "Available Frames: " << AvailableFrameCount << "\n";
+			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, min(AvailableFrameCount, MaxFramesToSend));
+			size_t ByteLength = FramesBuffered * sizeof(Frame_t);
+			return ByteLength;
 		}
-		size_t GetTransferBytesNotification(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length)
+		size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
 		{
-			size_t BufferFrames = m_AudioBuffer.ReadAudioFrames((Frame_t *)RXBuffer, Length / sizeof(Frame_t));
-			Serial << "Buffered Read Frames: " << BufferFrames << "\n";
-			return sizeof(Frame_t) * BufferFrames;
+			return sizeof 0;
 		}
 	private:
 		AudioBuffer &m_AudioBuffer;

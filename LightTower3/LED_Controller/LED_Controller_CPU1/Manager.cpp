@@ -133,24 +133,34 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 {
   if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
   {
-    assert(0 == ByteCount % sizeof(Frame_t));
-    size_t FramesRead = ByteCount / sizeof(Frame_t);
-    assert(FramesRead == SampleCount);
+    assert(0 == ByteCount % sizeof(int32_t));
+    size_t FramesToRead = ByteCount / sizeof(int32_t);
+    assert(FramesToRead == SampleCount);
     int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
-    for(int i = 0; i < FramesRead; ++i)
+    size_t TotalFreeFrames = m_AudioBuffer.GetFreeFrameCount();
+    size_t TotalFramesRead = 0;
+    for(int i = 0; i < FramesToRead; ++i)
     {
       Frame_t aFrame;
       aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
       aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
       if(false == m_AudioBuffer.WriteAudioFrame(aFrame))
       {
-        ESP_LOGW("AudioBuffer", "Failed to Write. Buffer has %i slot(s) available", m_AudioBuffer.GetFreeSpaceCount());
-        if(true != m_AudioBuffer.ClearAudioBuffer())
+        if(false == m_AudioBuffer.ClearAudioBuffer() || 0 == m_AudioBuffer.GetFreeFrameCount() )
         {
-          ESP_LOGW("AudioBuffer", "Failed to Clear Buffer");
+          ESP_LOGE("AudioBuffer", "Failed to Clear Audio Buffer");
+        }
+        else
+        {
+          ESP_LOGE("AudioBuffer", "Cleared Audio Buffer!");
         }
       }
+      else
+      {
+        ++TotalFramesRead;
+      }
     }
+    ESP_LOGE("AudioBuffer", "Buffered %i of %i free frames of %i Total Free Frames", TotalFramesRead, FramesToRead, TotalFreeFrames);
   }
 }
 
