@@ -64,8 +64,8 @@ class Manager: public NamedItem
     AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
     AudioStreamRequester m_AudioStreamRequester = AudioStreamRequester( "Audio Stream Requester"
                                                                       , m_AudioBuffer
-                                                                      , 13
                                                                       , 12
+                                                                      , 13
                                                                       , 14
                                                                       , 27 );
     //I2S Sound Data RX

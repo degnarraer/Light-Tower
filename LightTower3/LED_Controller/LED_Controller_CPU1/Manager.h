@@ -83,16 +83,14 @@ class Manager: public NamedItem
     //I2S Sound Data RX
     Bluetooth_Sink &m_BT_In;
     I2S_Device &m_Mic_In;
-    static const size_t m_I2CFrameBufferByteCount = floor(MAX_SLAVE_RESPONSE_LENGTH / sizeof(Frame_t));
     
-    static const int32_t m_CircularBufferSize = m_I2CFrameBufferByteCount * 10;
     AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
     AudioStreamSender m_AudioSender = AudioStreamSender ( "Audio Sender"
                                                         , m_AudioBuffer
-                                                        , 26
-                                                        , 25
-                                                        , 33
-                                                        , 32 );
+                                                        , 12
+                                                        , 13
+                                                        , 14
+                                                        , 27 );
                                                                                                                       
 };
 

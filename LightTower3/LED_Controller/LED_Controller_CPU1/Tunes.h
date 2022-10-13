@@ -6,16 +6,14 @@
 #define DATA_PIN_STRIP2_PIN       2
 #define DATA_PIN_STRIP3_PIN       4
 #define DATA_PIN_STRIP4_PIN       5
-#define I2S1_SCLCK_PIN            12
-#define I2S1_WD_PIN               13
-#define I2S1_SDIN_PIN             14
+#define I2S1_SCLCK_PIN            25
+#define I2S1_WD_PIN               26
+#define I2S1_SDIN_PIN             33
 #define I2S1_SDOUT_PIN            I2S_PIN_NO_CHANGE
 #define HARDWARE_SERIAL_RX_PIN    22
 #define HARDWARE_SERIAL_TX_PIN    23
-#define I2C_SDA_PIN               25
-#define I2C_SCL_PIN               26
-#define I2C_SLAVE_ADDR            0x04
-#define MAX_SLAVE_RESPONSE_LENGTH 124
+
+
 
 //App Tunes
 #define I2S_SAMPLE_RATE 44100

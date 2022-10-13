@@ -54,16 +54,6 @@ class Slave {
 		.intr_flags = 0
 	};
 	
-	/*
-    spi_bus_config_t bus_cfg {
-        .mosi_io_num = 13,        // HSPI
-        .miso_io_num = 12,        // HSPI
-        .sclk_io_num = 14,        // HSPI
-        .max_transfer_sz = 4092,  // default: 4092 if DMA enabled, SOC_SPI_MAXIMUM_BUFFER_SIZE if DMA disabled
-        .flags = SPICOMMON_BUSFLAG_SLAVE,
-    };
-	*/
-	
     spi_host_device_t host {HSPI_HOST};
     int dma_chan {SPI_DMA_CH_AUTO};  // must be 1, 2 or SPI_DMA_CH_AUTO
 

@@ -42,9 +42,8 @@ void SPI_Datalink_Slave::task_wait_spi()
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		size_t MaxBufferSize = SPI_MAX_DATA_BYTES;
-		size_t ReceivedBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, MaxBufferSize);
-		Serial << "Wait for TX with " << ReceivedBufferSize << " Bytes.\n";
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, ReceivedBufferSize);
+		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, MaxBufferSize);
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, ActualBufferSize);
 		xTaskNotifyGive(task_handle_process_buffer);		
 	}
 }
@@ -58,7 +57,6 @@ void SPI_Datalink_Slave::task_process_buffer()
 	while (1)
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		//ESP_LOGE("SPI_Datalink_Slave", "Process Buffer Queue Size: %i  Data Size: %i", m_SPI_Slave.available(), m_SPI_Slave.size());
 		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf, m_SPI_Slave.size());
 		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
@@ -157,19 +155,15 @@ size_t AudioStreamRequester::BufferMoreAudio()
 	}
 	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
 	size_t MaxBytes = SPI_MAX_DATA_BYTES;
-	size_t BytesRead = TransferBytes(spi_rx_buf, spi_tx_buf, min(TotalBytesToFill, MaxBytes));
-	if(BytesRead > 0)
+	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, MaxBytes);
+	size_t FramesRead = BytesRead / sizeof(Frame_t);
+	for(int i = 0; i < BytesRead; ++i)
 	{
-		size_t FramesRead = BytesRead / sizeof(Frame_t);
-		size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)spi_rx_buf, FramesRead);
-		Serial << "Frames to Buffer: " << TotalFramesToFill << "\tFrames Buffered: " << TotalFramesFilled << "\n"; 
-		return TotalFramesFilled;
+		Serial << "i=" << i << " " << spi_rx_buf[i] << "\n";
 	}
-	else
-	{
-		Serial << "Frames to Buffer: " << TotalFramesToFill << "\tFrames Buffered: 0\n"; 
-		return 0;
-	}
+	size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)spi_rx_buf, FramesRead);
+	Serial << "Frames to Buffer: " << TotalFramesToFill << "\tFrames Buffered: " << TotalFramesFilled << "\n"; 
+	return TotalFramesFilled;
 }
 
 size_t AudioStreamRequester::GetFrameCount()

@@ -32,6 +32,8 @@
 #define I2C_MAX_BYTES 4096
 #define SPI_MAX_DATA_BYTES 4096
 #define MAX_FRAMES_PER_PACKET 1024
+#define DUTY_CYCLE_POS 128
+#define CLOCK_SPEED 4000000
 
 class SPI_Slave_Notifier
 {
@@ -46,23 +48,24 @@ class SPI_Slave_Notifier
 class SPI_Datalink
 {
 	public:
-		SPI_Datalink( uint8_t MISO
+		SPI_Datalink( uint8_t SCK
+					, uint8_t MISO
 					, uint8_t MOSI
-					, uint8_t SCK
 					, uint8_t SS )
-					: m_MOSI(MOSI)
+					: m_SCK(SCK)
 					, m_MISO(MISO)
-					, m_SCK(SCK)
-					, m_SS(SS){}
+					, m_MOSI(MOSI)
+					, m_SS(SS)
+					{
+					}
 		virtual ~SPI_Datalink(){}
 		virtual size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length) = 0;
 	private:
 	protected:
+		uint8_t m_SCK;
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
-		uint8_t m_SCK;
 		uint8_t m_SS;
-		static const int m_spiClk = 1000000; // 1 MHz
 		static const uint32_t BUFFER_SIZE = SPI_MAX_DATA_BYTES;
 };
 
@@ -71,22 +74,24 @@ class SPI_Datalink_Master: public NamedItem
 {
 	public:
 		SPI_Datalink_Master( String Title
+						   , uint8_t SCK
 						   , uint8_t MISO
 						   , uint8_t MOSI
-						   , uint8_t SCK
 						   , uint8_t SS )
 						   : NamedItem(Title)
-						   , SPI_Datalink(MISO, MOSI, SCK, SS){}
+						   , SPI_Datalink(SCK, MISO, MOSI, SS){}
 		virtual ~SPI_Datalink_Master(){}
 		void Setup_SPI_Master()
 		{
-			m_SPI_Master.setDMAChannel(1);
 			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
 			spi_rx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
-			m_SPI_Master.setDataMode(SPI_MODE0);
-			m_SPI_Master.setFrequency(m_spiClk);
+			m_SPI_Master.setDMAChannel(1);
 			m_SPI_Master.setMaxTransferSize(BUFFER_SIZE);
+			m_SPI_Master.setDataMode(SPI_MODE0);
+			m_SPI_Master.setFrequency(CLOCK_SPEED);
+			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
 			m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+			Serial << "SPI Master Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
 		}
 		size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length);
 	protected:
@@ -101,21 +106,22 @@ class SPI_Datalink_Slave: public NamedItem
 {
 	public:
 		SPI_Datalink_Slave( String Title
+						  , uint8_t SCK
 						  , uint8_t MISO
 						  , uint8_t MOSI
-						  , uint8_t SCK
 						  , uint8_t SS )
 						  : NamedItem(Title)
-						  , SPI_Datalink(MISO, MOSI, SCK, SS ){}
+						  , SPI_Datalink(SCK, MISO, MOSI, SS){}
 		virtual ~SPI_Datalink_Slave(){}
 		void Setup_SPI_Slave()
 		{
-			m_SPI_Slave.setDMAChannel(1);
-			m_SPI_Slave.setDataMode(SPI_MODE0);
-			m_SPI_Slave.setMaxTransferSize(BUFFER_SIZE);
 			spi_tx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
 			spi_rx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
+			m_SPI_Slave.setDMAChannel(1);
+			m_SPI_Slave.setMaxTransferSize(BUFFER_SIZE);
+			m_SPI_Slave.setDataMode(SPI_MODE0);
 			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+			Serial << "SPI Slave Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
 			xTaskCreatePinnedToCore
 			(
 				static_task_wait_spi,
@@ -239,13 +245,18 @@ class AudioStreamSender: public NamedItem
 			size_t AvailableFrameCount = m_AudioBuffer.GetFrameCount();
 			size_t MaxFramesToSend = MaxBytesToSend / sizeof(Frame_t);
 			Serial << "Available Frames: " << AvailableFrameCount << "\n";
-			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, min(AvailableFrameCount, MaxFramesToSend));
-			size_t ByteLength = FramesBuffered * sizeof(Frame_t);
-			return ByteLength;
+			//size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, min(AvailableFrameCount, MaxFramesToSend));
+			for(int i = 0; i < MaxBytesToSend; ++i)
+			{
+				TXBuffer[i] = i & 0xFF;
+				//Serial << "i=" << i << " " << TXBuffer[i] << "\n";
+			}
+			//size_t ByteLength = FramesBuffered * sizeof(Frame_t);
+			return MaxBytesToSend; //ByteLength;
 		}
 		size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
 		{
-			return sizeof 0;
+			return 0;
 		}
 	private:
 		AudioBuffer &m_AudioBuffer;
