@@ -109,12 +109,12 @@ class DataSerializer: public CommonUtils
 		}
 		size_t DeSerialize(String InputString, String Name, uint8_t *DataBuffer, size_t MaxBytes)
 		{
-			int16_t first = InputString.indexOf(m_Startinator);
+			int16_t first = InputString.indexOf(m_Startinator) + m_Startinator.length();
 			int16_t last = InputString.indexOf(m_Terminator);
 			Serial << first << " " << last << "\n";
 			if(first >= 0 && last >= 0)
 			{
-				String json = InputString.substring(first, last - first);
+				String json = InputString.substring(first, last);
 				Serial << json << "\n";
 				DeserializationError error = deserializeJson(docIn, json.c_str());
 				// Test if parsing succeeds.
