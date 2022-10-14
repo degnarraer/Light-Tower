@@ -111,11 +111,11 @@ class DataSerializer: public CommonUtils
 		{
 			int16_t first = InputString.indexOf(m_Startinator) + m_Startinator.length();
 			int16_t last = InputString.indexOf(m_Terminator);
-			Serial << first << " " << last << "\n";
 			if(first >= 0 && last >= 0)
 			{
+				assert(last > first);
 				String json = InputString.substring(first, last);
-				Serial << json << "\n";
+				Serial << "JSon: " << json << "\n";
 				DeserializationError error = deserializeJson(docIn, json.c_str());
 				// Test if parsing succeeds.
 				if (error)

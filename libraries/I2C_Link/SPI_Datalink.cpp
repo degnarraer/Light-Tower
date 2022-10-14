@@ -164,7 +164,12 @@ size_t AudioStreamRequester::BufferMoreAudio()
 	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
 	size_t MaxBytes = SPI_MAX_DATA_BYTES;
 	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, MaxBytes);
-	String Packet = String((char *)spi_rx_buf);
+	String Packet;
+	for(int i = 0; i < MaxBytes; ++i)
+	{
+		if(0 == (char *)spi_rx_buf[i]) break;
+		Packet = Packet + ((char *)spi_rx_buf)[i];
+	}
 	uint8_t DataBuffer[MaxBytes];
 	size_t DataSize = DeSerialize(Packet, "AudioData", DataBuffer, MaxBytes);
 	size_t FramesRead = DataSize / sizeof(Frame_t);
