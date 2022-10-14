@@ -15,13 +15,12 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "I2C_Datalink.h"
+#include "SPI_Datalink.h"
 #include "pthread.h"
 
 
 size_t SPI_Datalink_Master::TransferBytes(uint8_t * RXBuffer, uint8_t * TXBuffer, size_t Length)
 {
-	ESP_LOGE("SPI_Datalink_Master", "Transfer Data");
 	assert(Length <= SPI_MAX_DATA_BYTES);
 	size_t ReceivedLength = m_SPI_Master.transfer(RXBuffer, TXBuffer, Length);
 	return ReceivedLength;
@@ -41,9 +40,16 @@ void SPI_Datalink_Slave::task_wait_spi()
 	while (1)
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
 		size_t MaxBufferSize = SPI_MAX_DATA_BYTES;
-		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, MaxBufferSize);
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, ActualBufferSize);
+		uint8_t Buffer[MaxBufferSize];
+		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(Buffer, MaxBufferSize);
+		assert( 0 == ActualBufferSize % sizeof(Frame_t) );
+		size_t ActualFrameCount = ActualBufferSize / sizeof(Frame_t);
+		String DataToSend = Serialize("AudioData", DataType_Frame_t, Buffer, ActualFrameCount);
+		assert(strlen(DataToSend.c_str()) <= MaxBufferSize);
+		memcpy(spi_tx_buf, (char *)DataToSend.c_str(), strlen(DataToSend.c_str()));
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, MaxBufferSize);
 		xTaskNotifyGive(task_handle_process_buffer);		
 	}
 }
@@ -59,6 +65,7 @@ void SPI_Datalink_Slave::task_process_buffer()
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf, m_SPI_Slave.size());
 		m_SPI_Slave.pop();
+		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 		xTaskNotifyGive(task_handle_wait_spi);
 	}
 }
@@ -147,6 +154,7 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 }
 size_t AudioStreamRequester::BufferMoreAudio()
 {
+	memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
 	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
 	if(0 == TotalFramesToFill)
 	{
@@ -156,13 +164,17 @@ size_t AudioStreamRequester::BufferMoreAudio()
 	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
 	size_t MaxBytes = SPI_MAX_DATA_BYTES;
 	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, MaxBytes);
-	size_t FramesRead = BytesRead / sizeof(Frame_t);
 	for(int i = 0; i < BytesRead; ++i)
 	{
-		Serial << "i=" << i << " " << spi_rx_buf[i] << "\n";
+		Serial << spi_rx_buf[i];
 	}
-	size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)spi_rx_buf, FramesRead);
-	Serial << "Frames to Buffer: " << TotalFramesToFill << "\tFrames Buffered: " << TotalFramesFilled << "\n"; 
+	Serial << "\n";
+	String Packet = String((char *)spi_rx_buf);
+	uint8_t DataBuffer[MaxBytes];
+	size_t DataSize = DeSerialize(Packet, "AudioData", DataBuffer, MaxBytes);
+	size_t FramesRead = DataSize / sizeof(Frame_t);
+	size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)DataBuffer, FramesRead);
+	memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 	return TotalFramesFilled;
 }
 
@@ -174,108 +186,4 @@ size_t AudioStreamRequester::GetFrameCount()
 size_t AudioStreamRequester::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 {
 	return m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void I2C_Datalink_Master::SetupMaster( uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout )
-{
-  m_Freq = Freq;
-  m_RequestAttempts = RequestAttempts;
-  m_RequestTimeout = RequestTimeout;
-  if(true == m_TwoWire->begin(m_SDA_PIN, m_SCL_PIN))
-  {
-    ESP_LOGI("I2C_Datalink", "I2C Master Device Named \"%s\" joined I2C bus", GetTitle().c_str());    
-  }
-  else
-  {
-    ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Setup Failed", GetTitle().c_str());
-  }
-}
-
-size_t I2C_Datalink_Master::ReadDataFromSlave(uint8_t SlaveAddress, unsigned char *data, size_t ByteCountToRead)
-{
-	WireSlaveRequest slaveReq(*m_TwoWire, SlaveAddress, I2C_MAX_BYTES);
-	slaveReq.setRetryDelay(m_RequestTimeout);
-	slaveReq.setAttempts(m_RequestAttempts);
-	size_t ByteCountRead = 0;
-
-	if (true == slaveReq.request()) 
-	{
-		while( 0 < slaveReq.available() && ByteCountRead < ByteCountToRead ) 
-		{
-			data[ByteCountRead] = slaveReq.read();
-			++ByteCountRead;
-		}
-	}
-	else 
-	{
-		ESP_LOGE("I2C_Datalink", "I2C Master Device Named \"%s\" Read Data Request Error: %s", GetTitle().c_str(), slaveReq.lastStatusToString().c_str());
-	}
-	
-	ESP_LOGE("I2C_Datalink", "Bytes Requested: %i\tBytes Read: %i", ByteCountToRead, ByteCountRead);
-	return ByteCountRead;
-}
-
-void I2C_Datalink_Master::WriteDataToSlave(uint8_t SlaveAddress, unsigned char *data, size_t ByteCountToWrite)
-{
-  WirePacker packer;
-  for(int i = 0; i < ByteCountToWrite; ++i)
-  {
-	packer.write(data[i]);
-  }
-  packer.end();
-  m_TwoWire->beginTransmission(SlaveAddress);
-  while (packer.available())
-  {
-    m_TwoWire->write(packer.read());
-  }
-  m_TwoWire->endTransmission(true);
-}
-
-void I2C_Datalink_Slave::SetupSlave( uint8_t My_Address, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee )
-{
-  m_I2C_Address = My_Address;
-  m_TwoWireSlave->RegisterForNotification(TwoWireSlaveNotifiee);
-  ESP_LOGI("I2C_Datalink", "I2C Slave Device Named \"%s\" Registered for Notifications", GetTitle().c_str());
-  if(true == m_TwoWireSlave->begin(m_SDA_PIN, m_SCL_PIN, m_I2C_Address))
-  {
-    ESP_LOGI("I2C_Datalink", "I2C Slave Device Named \"%s\" joined I2C bus with addr #%d", GetTitle().c_str(), m_I2C_Address);
-  }
-  else
-  {
-    ESP_LOGE("I2C_Datalink", "I2C Slave Device Named \"%s\" Setup Failed!", GetTitle().c_str());
-  }
-}
-
-void I2C_Datalink_Slave::UpdateI2C()
-{
-	if(NULL != m_TwoWireSlave)
-	{
-		m_TwoWireSlave->update();
-	}
 }

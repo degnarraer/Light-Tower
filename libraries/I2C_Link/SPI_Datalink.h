@@ -27,6 +27,7 @@
 #include <SPI.h>
 #include <ESP32DMASPIMaster.h>
 #include <ESP32DMASPISlave.h>
+#include "DataSerializer.h"
 
 #define AUDIO_BUFFER_LENGTH 4096
 #define I2C_MAX_BYTES 4096
@@ -45,7 +46,7 @@ class SPI_Slave_Notifier
 	private:
 };
 
-class SPI_Datalink
+class SPI_Datalink: public DataSerializer
 {
 	public:
 		SPI_Datalink( uint8_t SCK
@@ -83,8 +84,10 @@ class SPI_Datalink_Master: public NamedItem
 		virtual ~SPI_Datalink_Master(){}
 		void Setup_SPI_Master()
 		{
-			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
 			spi_rx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
+			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
+			memset(spi_rx_buf, 0, BUFFER_SIZE);
+			memset(spi_tx_buf, 0, BUFFER_SIZE);
 			m_SPI_Master.setDMAChannel(1);
 			m_SPI_Master.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Master.setDataMode(SPI_MODE0);
@@ -115,8 +118,10 @@ class SPI_Datalink_Slave: public NamedItem
 		virtual ~SPI_Datalink_Slave(){}
 		void Setup_SPI_Slave()
 		{
-			spi_tx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
 			spi_rx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
+			spi_tx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
+			memset(spi_rx_buf, 0, BUFFER_SIZE);
+			memset(spi_tx_buf, 0, BUFFER_SIZE);
 			m_SPI_Slave.setDMAChannel(1);
 			m_SPI_Slave.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Slave.setDataMode(SPI_MODE0);
@@ -126,7 +131,7 @@ class SPI_Datalink_Slave: public NamedItem
 			(
 				static_task_wait_spi,
 				"task_wait_spi",
-				4096,
+				10000,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_wait_spi,
@@ -136,7 +141,7 @@ class SPI_Datalink_Slave: public NamedItem
 			(
 				static_task_process_buffer,
 				"task_process_buffer",
-				4096,
+				10000,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_process_buffer,
@@ -244,15 +249,9 @@ class AudioStreamSender: public NamedItem
 		{	
 			size_t AvailableFrameCount = m_AudioBuffer.GetFrameCount();
 			size_t MaxFramesToSend = MaxBytesToSend / sizeof(Frame_t);
-			Serial << "Available Frames: " << AvailableFrameCount << "\n";
-			//size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, min(AvailableFrameCount, MaxFramesToSend));
-			for(int i = 0; i < MaxBytesToSend; ++i)
-			{
-				TXBuffer[i] = i & 0xFF;
-				//Serial << "i=" << i << " " << TXBuffer[i] << "\n";
-			}
-			//size_t ByteLength = FramesBuffered * sizeof(Frame_t);
-			return MaxBytesToSend; //ByteLength;
+			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, min(AvailableFrameCount, MaxFramesToSend));
+			size_t ByteLength = FramesBuffered * sizeof(Frame_t);
+			return ByteLength;
 		}
 		size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
 		{
@@ -261,70 +260,5 @@ class AudioStreamSender: public NamedItem
 	private:
 		AudioBuffer &m_AudioBuffer;
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class I2C_Datalink
-{
-  public:
-    I2C_Datalink( uint8_t SDA_Pin, uint8_t SCL_Pin )
-                : m_SDA_PIN(SDA_Pin)
-                , m_SCL_PIN(SCL_Pin){}
-    virtual ~I2C_Datalink(){}
-  protected:
-    uint8_t m_SDA_PIN;
-    uint8_t m_SCL_PIN;
-    uint8_t m_I2C_Address;
-    uint32_t m_Freq;
-    uint8_t m_RequestAttempts;
-    uint8_t m_RequestTimeout;
-};
-
-class I2C_Datalink_Master: public NamedItem
-                         , public I2C_Datalink
-{
-  public:
-    I2C_Datalink_Master( String Title, TwoWire &TwoWire, uint8_t SDA_Pin, uint8_t SCL_Pin )
-                       : NamedItem(Title)
-                       , I2C_Datalink(SDA_Pin, SCL_Pin)
-                       , m_TwoWire(&TwoWire){}
-    virtual ~I2C_Datalink_Master(){}
-
-    //Master Functions
-	size_t ReadDataFromSlave(uint8_t SlaveAddress, unsigned char *data, size_t count);
-    void WriteDataToSlave(uint8_t SlaveAddress, unsigned char *data, size_t ByteCount);
-  protected:
-    void SetupMaster(uint32_t Freq, uint8_t RequestAttempts, uint8_t RequestTimeout);
-  private:  
-	TwoWire *m_TwoWire = NULL;
-};
-
-class I2C_Datalink_Slave: public NamedItem
-                        , public I2C_Datalink
-{
-  public:
-    I2C_Datalink_Slave( String Title, TwoWireSlave &TwoWireSlave, uint8_t SDA_Pin, uint8_t SCL_Pin )
-                      : NamedItem(Title)
-                      , I2C_Datalink(SDA_Pin, SCL_Pin)
-                      , m_TwoWireSlave(&TwoWireSlave){}
-    virtual ~I2C_Datalink_Slave(){}
-  protected:
-    void UpdateI2C();
-	void SetupSlave( uint8_t My_Address, TwoWireSlaveNotifiee *TwoWireSlaveNotifiee );
-    TwoWireSlave *m_TwoWireSlave = NULL;
-};
-
 
 #endif

@@ -26,7 +26,7 @@
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSink.h>
 #include "Bluetooth_Device.h"
-#include <I2C_Datalink.h>
+#include <SPI_Datalink.h>
 #include "circle_buf.h"
 
 enum InputType_t

@@ -21,7 +21,7 @@
 #include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-#include <I2C_Datalink.h>
+#include <SPI_Datalink.h>
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSource.h>
