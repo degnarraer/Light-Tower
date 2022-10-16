@@ -33,7 +33,7 @@
 #define I2C_MAX_BYTES 4096
 #define SPI_MAX_DATA_BYTES 4096
 #define MAX_FRAMES_PER_PACKET 1024
-#define DUTY_CYCLE_POS 200
+#define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
 class SPI_Slave_Notifier
@@ -87,15 +87,22 @@ class SPI_Datalink_Master: public NamedItem
 			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
 			memset(spi_rx_buf, 0, BUFFER_SIZE);
 			memset(spi_tx_buf, 0, BUFFER_SIZE);
-			m_SPI_Master.setDMAChannel(1);
+			m_SPI_Master.setDMAChannel(2);
 			m_SPI_Master.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Master.setDataMode(SPI_MODE0);
 			m_SPI_Master.setFrequency(CLOCK_SPEED);
 			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
-			m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
-			Serial << "SPI Master Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
+			Begin();
 		}
 		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
+		bool Begin() 
+		{ 
+			return m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+		}
+		bool End()
+		{
+			return m_SPI_Master.end();
+		}
 	protected:
 		uint8_t* spi_tx_buf;
 		uint8_t* spi_rx_buf;
@@ -121,7 +128,7 @@ class SPI_Datalink_Slave: public NamedItem
 			spi_tx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
 			memset(spi_rx_buf, 0, BUFFER_SIZE);
 			memset(spi_tx_buf, 0, BUFFER_SIZE);
-			m_SPI_Slave.setDMAChannel(1);
+			m_SPI_Slave.setDMAChannel(2);
 			m_SPI_Slave.setMaxTransferSize(BUFFER_SIZE);
 			m_SPI_Slave.setDataMode(SPI_MODE0);
 			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);

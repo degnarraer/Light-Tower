@@ -193,7 +193,7 @@ class QueueManager
 				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
-					void* DataBuffer = (void*)ps_malloc(ByteCount);
+					void* DataBuffer [ByteCount];
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
@@ -207,7 +207,6 @@ class QueueManager
 							ESP_LOGV("CommonUtils", "Error Receiving Queue!");
 						}
 					}
-					free(DataBuffer);
 				}
 			}
 			else
@@ -231,7 +230,7 @@ class QueueManager
 			ESP_LOGE("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title.c_str(), m_DataItemCount, ConfigBytes);
 			
 			//Placement Allocation
-			void *DataItem_t_raw = ps_malloc(sizeof(DataItem_t) * m_DataItemCount);
+			void *DataItem_t_raw = heap_caps_malloc(sizeof(DataItem_t) * m_DataItemCount, MALLOC_CAP_SPIRAM);
 			m_DataItem = new(DataItem_t_raw) DataItem_t[m_DataItemCount];
 
 			//m_DataItem = new DataItem_t[m_DataItemCount];
@@ -273,7 +272,7 @@ class QueueManager
 			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
-				free(m_DataItem[i].DataBuffer);			
+				heap_caps_free(m_DataItem[i].DataBuffer);			
 				switch(m_DataItem[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -512,7 +511,7 @@ class CommonUtils
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
-					void* DataBuffer = (void*)ps_malloc(ByteCount);
+					void* DataBuffer[ByteCount];
 					for(int i = 0; i < QueueCount; ++i)
 					{
 						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
@@ -524,7 +523,6 @@ class CommonUtils
 							ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
 						}
 					}
-					free(DataBuffer);
 				}
 			}
 			else
