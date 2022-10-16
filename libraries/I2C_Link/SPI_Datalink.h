@@ -33,7 +33,7 @@
 #define I2C_MAX_BYTES 4096
 #define SPI_MAX_DATA_BYTES 4096
 #define MAX_FRAMES_PER_PACKET 1024
-#define DUTY_CYCLE_POS 128
+#define DUTY_CYCLE_POS 200
 #define CLOCK_SPEED 4000000
 
 class SPI_Slave_Notifier
@@ -60,7 +60,6 @@ class SPI_Datalink: public DataSerializer
 					{
 					}
 		virtual ~SPI_Datalink(){}
-		virtual size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length) = 0;
 	private:
 	protected:
 		uint8_t m_SCK;
@@ -96,7 +95,7 @@ class SPI_Datalink_Master: public NamedItem
 			m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
 			Serial << "SPI Master Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
 		}
-		size_t TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length);
+		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
 	protected:
 		uint8_t* spi_tx_buf;
 		uint8_t* spi_rx_buf;
@@ -211,6 +210,7 @@ class AudioStreamRequester: public NamedItem
 							, m_AudioBuffer(AudioBuffer)
 							, SPI_Datalink_Master(Title + "SPI", MISO, MOSI, SCK, SS){}
 		virtual ~AudioStreamRequester(){}
+		size_t DataBufferBytesAvailable(){}
 		size_t BufferMoreAudio();
 		size_t GetFrameCount();
 		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);

@@ -19,10 +19,10 @@
 #include "pthread.h"
 
 
-size_t SPI_Datalink_Master::TransferBytes(uint8_t * RXBuffer, uint8_t * TXBuffer, size_t Length)
+size_t SPI_Datalink_Master::TransferBytes(uint8_t * TXBuffer, uint8_t * RXBuffer, size_t Length)
 {
 	assert(Length <= SPI_MAX_DATA_BYTES);
-	size_t ReceivedLength = m_SPI_Master.transfer(RXBuffer, TXBuffer, Length);
+	size_t ReceivedLength = m_SPI_Master.transfer(TXBuffer, RXBuffer, Length);
 	return ReceivedLength;
 }
 
@@ -41,15 +41,14 @@ void SPI_Datalink_Slave::task_wait_spi()
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-		size_t MaxBufferSize = SPI_MAX_DATA_BYTES;
-		uint8_t Buffer[MaxBufferSize];
-		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(Buffer, MaxBufferSize);
+		uint8_t Buffer[SPI_MAX_DATA_BYTES];
+		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(Buffer, SPI_MAX_DATA_BYTES);
 		assert( 0 == ActualBufferSize % sizeof(Frame_t) );
 		size_t ActualFrameCount = ActualBufferSize / sizeof(Frame_t);
 		String DataToSend = Serialize("AudioData", DataType_Frame_t, Buffer, ActualFrameCount);
-		assert(strlen(DataToSend.c_str()) <= MaxBufferSize);
-		memcpy(spi_tx_buf, (char *)DataToSend.c_str(), strlen(DataToSend.c_str()));
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, MaxBufferSize);
+		assert(strlen(DataToSend.c_str()) <= SPI_MAX_DATA_BYTES);
+		memcpy(spi_tx_buf, &*DataToSend.begin(), DataToSend.length()+1);
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, SPI_MAX_DATA_BYTES);
 		xTaskNotifyGive(task_handle_process_buffer);		
 	}
 }
@@ -155,6 +154,7 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 size_t AudioStreamRequester::BufferMoreAudio()
 {
 	memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
+	size_t TotalFramesFilled = 0;
 	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
 	if(0 == TotalFramesToFill)
 	{
@@ -162,19 +162,17 @@ size_t AudioStreamRequester::BufferMoreAudio()
 		TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
 	}
 	size_t TotalBytesToFill = TotalFramesToFill*sizeof(Frame_t);
-	size_t MaxBytes = SPI_MAX_DATA_BYTES;
-	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, MaxBytes);
-	String Packet;
-	for(int i = 0; i < MaxBytes; ++i)
+	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, SPI_MAX_DATA_BYTES);
+	if(BytesRead > 0)
 	{
-		if(0 == (char *)spi_rx_buf[i]) break;
-		Packet = Packet + ((char *)spi_rx_buf)[i];
+		std::string Packet(((char*)spi_rx_buf));
+		Serial << "String: " << Packet.c_str() << "\n";
+		uint8_t DataBuffer[SPI_MAX_DATA_BYTES];
+		size_t DataSize = DeSerialize(Packet.c_str(), "AudioData", DataBuffer, SPI_MAX_DATA_BYTES);
+		size_t FramesRead = DataSize / sizeof(Frame_t);
+		TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)DataBuffer, FramesRead);
+		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);	
 	}
-	uint8_t DataBuffer[MaxBytes];
-	size_t DataSize = DeSerialize(Packet, "AudioData", DataBuffer, MaxBytes);
-	size_t FramesRead = DataSize / sizeof(Frame_t);
-	size_t TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)DataBuffer, FramesRead);
-	memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 	return TotalFramesFilled;
 }
 
