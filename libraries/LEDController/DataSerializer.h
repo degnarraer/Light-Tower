@@ -115,7 +115,6 @@ class DataSerializer: public CommonUtils
 			{
 				assert(last > first);
 				String json = InputString.substring(first, last);
-				Serial << "JSon: " << json << "\n";
 				DeserializationError error = deserializeJson(docIn, json.c_str());
 				// Test if parsing succeeds.
 				if (error)

@@ -110,7 +110,7 @@ public:
 
         esp_err_t e = spi_slave_transmit(host, &transactions.back(), portMAX_DELAY);
         if (e != ESP_OK) {
-            printf("[ERROR] SPI device transmit failed : %d\n", e);
+            //printf("[ERROR] SPI device transmit failed : %d\n", e);
             transactions.pop_back();
             return 0;
         }

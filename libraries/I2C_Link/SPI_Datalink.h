@@ -29,10 +29,10 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define AUDIO_BUFFER_LENGTH 4096
-#define I2C_MAX_BYTES 4096
-#define SPI_MAX_DATA_BYTES 4096
-#define MAX_FRAMES_PER_PACKET 1024
+#define AUDIO_BUFFER_LENGTH 1024
+#define I2C_MAX_BYTES 1024
+#define SPI_MAX_DATA_BYTES 1024
+#define MAX_FRAMES_PER_PACKET 128
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -256,7 +256,10 @@ class AudioStreamSender: public NamedItem
 		{	
 			size_t AvailableFrameCount = m_AudioBuffer.GetFrameCount();
 			size_t MaxFramesToSend = MaxBytesToSend / sizeof(Frame_t);
-			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames((Frame_t *)TXBuffer, min(AvailableFrameCount, MaxFramesToSend));
+			size_t MaxFramesPerPacket = MAX_FRAMES_PER_PACKET;
+			size_t MinFramesToSend = min( min( AvailableFrameCount, MaxFramesToSend ), MaxFramesPerPacket);
+			
+			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames( (Frame_t *)TXBuffer, MinFramesToSend);
 			size_t ByteLength = FramesBuffered * sizeof(Frame_t);
 			return ByteLength;
 		}

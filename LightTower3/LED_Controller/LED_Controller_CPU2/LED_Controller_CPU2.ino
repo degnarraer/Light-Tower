@@ -96,7 +96,7 @@ void setup() {
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
-    40000,                          // Stack size in words
+    4000,                           // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES,           // Priority of the task
     &ManagerTask,                   // Task handle.

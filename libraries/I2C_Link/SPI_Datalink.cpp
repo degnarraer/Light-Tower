@@ -47,9 +47,11 @@ void SPI_Datalink_Slave::task_wait_spi()
 		size_t ActualFrameCount = ActualBufferSize / sizeof(Frame_t);
 		String DataToSend = Serialize("AudioData", DataType_Frame_t, Buffer, ActualFrameCount);
 		assert(strlen(DataToSend.c_str()) <= SPI_MAX_DATA_BYTES);
-		memcpy(spi_tx_buf, &*DataToSend.begin(), DataToSend.length()+1);
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, SPI_MAX_DATA_BYTES);
-		xTaskNotifyGive(task_handle_process_buffer);		
+		memcpy(spi_tx_buf, (char*)DataToSend.c_str() , DataToSend.length());
+		if(true == m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, SPI_MAX_DATA_BYTES))
+		{
+			xTaskNotifyGive(task_handle_process_buffer);
+		}
 	}
 }
 void SPI_Datalink_Slave::static_task_process_buffer(void* pvParameters)
