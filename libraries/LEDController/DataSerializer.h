@@ -35,7 +35,8 @@ class DataSerializer: public CommonUtils
 			m_DataItemsCount = DataItemCount;
 		}
 		
-		String Serialize(String Name, DataType_t DataType, void* Object, size_t Count)
+		
+		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
 			docOut.clear();
@@ -56,7 +57,7 @@ class DataSerializer: public CommonUtils
 			Result = m_Startinator + Result + m_Terminator;
 			return Result;
 		}
-		void DeSerialize(String json)
+		void DeSerializeJsonToMatchingDataItem(String json)
 		{
 			DeserializationError error = deserializeJson(docIn, json.c_str());
 			// Test if parsing succeeds.
@@ -107,6 +108,45 @@ class DataSerializer: public CommonUtils
 				}
 			}
 		}
+		bool SerializeByteArray(uint8_t *InputBuffer, size_t InputBufferSize, uint8_t *OutputBuffer, size_t OutputBufferSize, size_t DataByteCount)
+		{
+			if(OutputBufferSize >= InputBufferSize + sizeof(DataByteCount) )
+			{
+				memcpy(OutputBuffer, &DataByteCount, sizeof(DataByteCount));
+				memcpy(OutputBuffer + sizeof(DataByteCount), InputBuffer, InputBufferSize);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		size_t DeSerializeByteArray(uint8_t *InputBuffer, size_t InputBufferSize, uint8_t *OutputBuffer, size_t OutputBufferSize)
+		{
+			/*
+			Serial << "Input Buffer: ";
+			for(int i = 0; i < 10; ++i)
+			{
+				Serial << InputBuffer[i] << ",";
+			}
+			Serial << "\n";
+			*/
+			size_t BufferedByteCount;
+			assert(OutputBufferSize >= InputBufferSize - sizeof(BufferedByteCount) );
+			BufferedByteCount = ((size_t*)InputBuffer)[0];
+			Serial << "Buffered Bytes: " << BufferedByteCount << "\n";
+			assert(OutputBufferSize >= BufferedByteCount);
+			memcpy(OutputBuffer, InputBuffer + sizeof(BufferedByteCount), BufferedByteCount);
+			/*
+			Serial << "Output Buffer: ";
+			for(int i = 0; i < 10; ++i)
+			{
+				Serial << OutputBuffer[i] << ",";
+			}
+			Serial << "\n";
+			*/
+			return BufferedByteCount;
+		}
 		size_t DeSerialize(String InputString, String Name, uint8_t *DataBuffer, size_t MaxBytes)
 		{
 			int16_t first = InputString.indexOf(m_Startinator) + m_Startinator.length();
@@ -133,7 +173,8 @@ class DataSerializer: public CommonUtils
 						int ByteCountIn = docIn[m_TotalByteCountTag];
 						int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn[m_DataTypeTag]));
 						int DataByteCount = docIn[m_DataTag].size();
-						if(ByteCountInCalc == DataByteCount && DataByteCount <= MaxBytes)
+						Serial << "DBC: " << DataByteCount << "\tBCI: " << ByteCountIn << "\n";
+						if(ByteCountIn == DataByteCount && ByteCountIn <= MaxBytes)
 						{
 							for(int i = 0; i < DataByteCount; ++i)
 							{
@@ -172,8 +213,8 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<5000> docIn;
-		StaticJsonDocument<5000> docOut;
+		StaticJsonDocument<10000> docIn;
+		StaticJsonDocument<10000> docOut;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags

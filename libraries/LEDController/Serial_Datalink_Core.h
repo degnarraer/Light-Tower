@@ -53,7 +53,7 @@ class SerialDataLinkCore: public DataSerializer
   
   void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
   {
-	  String DataToSend = m_Startinator + Serialize(Name, DataType, Object, Count) + m_Terminator;
+	  String DataToSend = m_Startinator + SerializeDataToJson(Name, DataType, Object, Count) + m_Terminator;
 	  ESP_LOGD("Serial_Datalink", "TX: %s", DataToSend.c_str());
 	  m_hSerial.print(DataToSend.c_str());
   }

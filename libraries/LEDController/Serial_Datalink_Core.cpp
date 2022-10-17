@@ -49,7 +49,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 		  m_InboundStringData.trim();
 		  m_InboundStringData = m_InboundStringData.substring(m_Startinator.length(), m_InboundStringData.length() - m_Terminator.length());
 		  ESP_LOGV("Serial_Datalink", "RX: %s", m_InboundStringData.c_str());
-		  DeSerialize(m_InboundStringData);
+		  DeSerializeJsonToMatchingDataItem(m_InboundStringData);
 		  m_InboundStringData.clear();
 		}
 		if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)

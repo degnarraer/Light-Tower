@@ -29,10 +29,10 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define AUDIO_BUFFER_LENGTH 1024
-#define I2C_MAX_BYTES 1024
+#define AUDIO_BUFFER_LENGTH 4096
 #define SPI_MAX_DATA_BYTES 1024
-#define MAX_FRAMES_PER_PACKET 128
+#define SPI_MAX_SERIALIZED_BYTES 1028
+#define MAX_FRAMES_PER_PACKET 256
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -66,7 +66,6 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
 		uint8_t m_SS;
-		static const uint32_t BUFFER_SIZE = SPI_MAX_DATA_BYTES;
 };
 
 class SPI_Datalink_Master: public NamedItem
@@ -83,12 +82,12 @@ class SPI_Datalink_Master: public NamedItem
 		virtual ~SPI_Datalink_Master(){}
 		void Setup_SPI_Master()
 		{
-			spi_rx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
-			spi_tx_buf = m_SPI_Master.allocDMABuffer(BUFFER_SIZE);
-			memset(spi_rx_buf, 0, BUFFER_SIZE);
-			memset(spi_tx_buf, 0, BUFFER_SIZE);
+			spi_rx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_SERIALIZED_BYTES);
+			spi_tx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_SERIALIZED_BYTES);
+			memset(spi_rx_buf, 0, SPI_MAX_SERIALIZED_BYTES);
+			memset(spi_tx_buf, 0, SPI_MAX_SERIALIZED_BYTES);
 			m_SPI_Master.setDMAChannel(2);
-			m_SPI_Master.setMaxTransferSize(BUFFER_SIZE);
+			m_SPI_Master.setMaxTransferSize(SPI_MAX_SERIALIZED_BYTES);
 			m_SPI_Master.setDataMode(SPI_MODE0);
 			m_SPI_Master.setFrequency(CLOCK_SPEED);
 			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
@@ -124,12 +123,12 @@ class SPI_Datalink_Slave: public NamedItem
 		virtual ~SPI_Datalink_Slave(){}
 		void Setup_SPI_Slave()
 		{
-			spi_rx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
-			spi_tx_buf = m_SPI_Slave.allocDMABuffer(BUFFER_SIZE);
-			memset(spi_rx_buf, 0, BUFFER_SIZE);
-			memset(spi_tx_buf, 0, BUFFER_SIZE);
+			spi_rx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_SERIALIZED_BYTES);
+			spi_tx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_SERIALIZED_BYTES);
+			memset(spi_rx_buf, 0, SPI_MAX_SERIALIZED_BYTES);
+			memset(spi_tx_buf, 0, SPI_MAX_SERIALIZED_BYTES);
 			m_SPI_Slave.setDMAChannel(2);
-			m_SPI_Slave.setMaxTransferSize(BUFFER_SIZE);
+			m_SPI_Slave.setMaxTransferSize(SPI_MAX_SERIALIZED_BYTES);
 			m_SPI_Slave.setDataMode(SPI_MODE0);
 			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
 			Serial << "SPI Slave Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
@@ -258,7 +257,6 @@ class AudioStreamSender: public NamedItem
 			size_t MaxFramesToSend = MaxBytesToSend / sizeof(Frame_t);
 			size_t MaxFramesPerPacket = MAX_FRAMES_PER_PACKET;
 			size_t MinFramesToSend = min( min( AvailableFrameCount, MaxFramesToSend ), MaxFramesPerPacket);
-			
 			size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames( (Frame_t *)TXBuffer, MinFramesToSend);
 			size_t ByteLength = FramesBuffered * sizeof(Frame_t);
 			return ByteLength;

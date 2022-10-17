@@ -48,10 +48,6 @@ void Manager::Setup()
   //SetInputType(InputType_Microphone);
 }
 
-void Manager::Loop()
-{
-}
-
 void Manager::ProcessEventQueue()
 {
   switch(m_InputType)
@@ -160,7 +156,7 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
         ++TotalFramesRead;
       }
     }
-    ESP_LOGE("AudioBuffer", "Buffered %i of %i free frames of %i Total Free Frames", TotalFramesRead, FramesToRead, TotalFreeFrames);
+    //ESP_LOGE("AudioBuffer", "Buffered %i of %i free frames of %i Total Free Frames", TotalFramesRead, FramesToRead, TotalFreeFrames);
   }
 }
 

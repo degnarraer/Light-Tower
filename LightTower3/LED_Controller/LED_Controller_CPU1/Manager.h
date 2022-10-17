@@ -63,7 +63,6 @@ class Manager: public NamedItem
            , I2S_Device &Mic_In );
     virtual ~Manager();
     void Setup();
-    void Loop();
     void ProcessEventQueue();
     void SetInputType(InputType_t Type);
     

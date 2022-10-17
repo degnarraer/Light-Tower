@@ -4,6 +4,7 @@
 #include "Models.h"
 #include "Tunes.h"
 #include "esp_log.h"
+#include <esp_task_wdt.h>
 
 TaskHandle_t DataMoverTask;
 TaskHandle_t SerialDataLinkTXTask;
@@ -174,16 +175,15 @@ void setup()
     &SerialDataLinkRXTask,        // Task handle.
     1                             // Core where the task should run
   );
-  
+  esp_task_wdt_init(30, true);
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU1", "Total PSRAM: %d", ESP.getPsramSize());
   ESP_LOGE("LED_Controller_CPU1", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
-void loop() 
+void loop()
 {
-
 }
 
 void VisualizationTaskLoop(void * parameter)
@@ -192,7 +192,7 @@ void VisualizationTaskLoop(void * parameter)
   for(;;)
   {
     //m_Scheduler.RunScheduler();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -224,7 +224,7 @@ void DataMoverTaskLoop(void * parameter)
   for(;;)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -234,7 +234,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
   for(;;)
   {
     //m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -244,6 +244,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
   for(;;)
   {
     //m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
