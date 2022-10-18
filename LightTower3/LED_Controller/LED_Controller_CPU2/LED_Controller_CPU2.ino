@@ -124,10 +124,10 @@ void setup() {
     &SerialDataLinkRXTask,          // Task handle.
     1                               // Core where the task should run
   );
-  ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGE("LED_Controller_CPU2", "Free PSRAM: %d", ESP.getFreePsram());
+  //ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
+  //ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
+  //ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());
+  //ESP_LOGE("LED_Controller_CPU2", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void loop()
@@ -157,6 +157,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 

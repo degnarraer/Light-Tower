@@ -92,7 +92,6 @@ class SPI_Datalink_Master: public NamedItem
 			m_SPI_Master.setFrequency(CLOCK_SPEED);
 			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
 			Begin();
-			Serial << "SPI Master Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
 		}
 		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
 		bool Begin() 
@@ -149,7 +148,6 @@ class SPI_Datalink_Slave: public NamedItem
 				0
 			);
 			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
-			Serial << "SPI Slave Begin: " << m_SCK << " " << m_MISO << " " << m_MOSI << " " << m_SS << "\n";
 			xTaskNotifyGive(task_handle_wait_spi);
 				
 		}
@@ -214,7 +212,7 @@ class AudioStreamMaster: public NamedItem
 		
 		size_t GetFrameCount();
 		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
-		bool SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		size_t SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
 		bool SetAudioFrame(Frame_t Frame);
 		
 		size_t BufferMoreAudio();
@@ -242,7 +240,7 @@ class AudioStreamSlave: public NamedItem
 		
 		size_t GetFrameCount();
 		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
-		bool SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		size_t SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
 		bool SetAudioFrame(Frame_t Frame);
 		
 		//SPI_SLAVE_NOTIFIER Callbacks

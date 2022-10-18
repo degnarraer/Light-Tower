@@ -47,12 +47,12 @@ void Manager::Setup()
 {
   AllocateMemory();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
-  m_AudioBuffer.Initialize();
-  m_AudioStreamSlave.Setup();
   m_SoundProcessor.SetupSoundProcessor();
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.StartDevice();
   m_BT_Out.StartDevice();
+  m_AudioBuffer.Initialize();
+  m_AudioStreamSlave.Setup();
 }
 
 void Manager::Loop()
