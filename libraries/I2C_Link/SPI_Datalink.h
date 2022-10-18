@@ -29,8 +29,8 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define AUDIO_BUFFER_LENGTH 2048
-#define SPI_MAX_DATA_BYTES 8192
+#define AUDIO_BUFFER_LENGTH 4096
+#define SPI_MAX_DATA_BYTES 1024
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 

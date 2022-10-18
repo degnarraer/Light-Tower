@@ -39,7 +39,8 @@ void SPI_Datalink_Slave::task_wait_spi()
 		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
 		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, SPI_MAX_DATA_BYTES);
 		assert( 0 == ActualBufferSize % sizeof(Frame_t) );
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, ActualBufferSize );
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, SPI_MAX_DATA_BYTES );
+		delay(1);
 		xTaskNotifyGive(task_handle_process_buffer);
 	}
 }
