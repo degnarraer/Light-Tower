@@ -39,7 +39,7 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_AudioBuffer.Initialize();
-  m_AudioSender.Setup();
+  m_AudioStreamMaster.Setup();
   m_Mic_In.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
@@ -132,31 +132,25 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
     assert(0 == ByteCount % sizeof(int32_t));
     size_t FramesToRead = ByteCount / sizeof(int32_t);
     assert(FramesToRead == SampleCount);
-    int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
     size_t TotalFreeFrames = m_AudioBuffer.GetFreeFrameCount();
-    size_t TotalFramesRead = 0;
+    size_t TotalFramesSent = 0;
+    int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
+    if(TotalFreeFrames <= SampleCount)
+    {
+      m_AudioBuffer.ClearAudioBuffer();
+    }
     for(int i = 0; i < FramesToRead; ++i)
     {
       Frame_t aFrame;
       aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
       aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
-      if(false == m_AudioBuffer.WriteAudioFrame(aFrame))
+      if(true == m_AudioStreamMaster.SetAudioFrame(aFrame))
       {
-        if(false == m_AudioBuffer.ClearAudioBuffer() || 0 == m_AudioBuffer.GetFreeFrameCount() )
-        {
-          ESP_LOGE("AudioBuffer", "Failed to Clear Audio Buffer");
-        }
-        else
-        {
-          ESP_LOGE("AudioBuffer", "Cleared Audio Buffer!");
-        }
-      }
-      else
-      {
-        ++TotalFramesRead;
+        ++TotalFramesSent;
       }
     }
-    //ESP_LOGE("AudioBuffer", "Buffered %i of %i free frames of %i Total Free Frames", TotalFramesRead, FramesToRead, TotalFreeFrames);
+    Serial << TotalFramesSent << " of " << TotalFreeFrames << "\n";
+    m_AudioStreamMaster.SendAudioFrames();
   }
 }
 

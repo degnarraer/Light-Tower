@@ -39,27 +39,27 @@ class DataSerializer: public CommonUtils
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
-			docOut.clear();
-			docOut[m_NameTag] = Name;
-			docOut[m_CountTag] = Count;
-			docOut[m_DataTypeTag] = DataTypeStrings[DataType];
-			JsonArray data = docOut.createNestedArray(m_DataTag);
-			docOut[m_TotalByteCountTag] = GetSizeOfDataType(DataType) * Count;
-			for(int i = 0; i < docOut[m_TotalByteCountTag]; ++i)
+			doc.clear();
+			doc[m_NameTag] = Name;
+			doc[m_CountTag] = Count;
+			doc[m_DataTypeTag] = DataTypeStrings[DataType];
+			JsonArray data = doc.createNestedArray(m_DataTag);
+			doc[m_TotalByteCountTag] = GetSizeOfDataType(DataType) * Count;
+			for(int i = 0; i < doc[m_TotalByteCountTag]; ++i)
 			{
 				uint8_t Value = ((uint8_t*)Object)[i];
 				CheckSum += Value;
 				data.add(Value);
 			}
-			docOut[m_CheckSumTag] = CheckSum;
+			doc[m_CheckSumTag] = CheckSum;
 			String Result;
-			serializeJson(docOut, Result);
+			serializeJson(doc, Result);
 			Result = m_Startinator + Result + m_Terminator;
 			return Result;
 		}
 		void DeSerializeJsonToMatchingDataItem(String json)
 		{
-			DeserializationError error = deserializeJson(docIn, json.c_str());
+			DeserializationError error = deserializeJson(doc, json.c_str());
 			// Test if parsing succeeds.
 			if (error)
 			{
@@ -73,21 +73,21 @@ class DataSerializer: public CommonUtils
 					for(int i = 0; i < m_DataItemsCount; ++i)
 					{
 						const String ItemName = (m_DataItems[i]).Name;
-						const String DocName = docIn[m_NameTag];
+						const String DocName = doc[m_NameTag];
 						if(true == ItemName.equals(DocName))
 						{
 							int CheckSumCalc = 0;
-							int CheckSumIn = docIn[m_CheckSumTag];
-							int CountIn = docIn[m_CountTag];
-							int ByteCountIn = docIn[m_TotalByteCountTag];
-							int DataByteCount = docIn[m_DataTag].size();
+							int CheckSumIn = doc[m_CheckSumTag];
+							int CountIn = doc[m_CountTag];
+							int ByteCountIn = doc[m_TotalByteCountTag];
+							int DataByteCount = doc[m_DataTag].size();
 							uint8_t Buffer[DataByteCount];
 							if(ByteCountIn == DataByteCount)
 							{
 								for(int j = 0; j < DataByteCount; ++j)
 								{
-									CheckSumCalc += (uint8_t)(docIn[m_DataTag][j]);
-									Buffer[j] = (uint8_t)(docIn[m_DataTag][j]);
+									CheckSumCalc += (uint8_t)(doc[m_DataTag][j]);
+									Buffer[j] = (uint8_t)(doc[m_DataTag][j]);
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
@@ -123,28 +123,12 @@ class DataSerializer: public CommonUtils
 		}
 		size_t DeSerializeByteArray(uint8_t *InputBuffer, size_t InputBufferSize, uint8_t *OutputBuffer, size_t OutputBufferSize)
 		{
-			/*
-			Serial << "Input Buffer: ";
-			for(int i = 0; i < 10; ++i)
-			{
-				Serial << InputBuffer[i] << ",";
-			}
-			Serial << "\n";
-			*/
 			size_t BufferedByteCount;
 			assert(OutputBufferSize >= InputBufferSize - sizeof(BufferedByteCount) );
 			BufferedByteCount = ((size_t*)InputBuffer)[0];
 			Serial << "Buffered Bytes: " << BufferedByteCount << "\n";
 			assert(OutputBufferSize >= BufferedByteCount);
 			memcpy(OutputBuffer, InputBuffer + sizeof(BufferedByteCount), BufferedByteCount);
-			/*
-			Serial << "Output Buffer: ";
-			for(int i = 0; i < 10; ++i)
-			{
-				Serial << OutputBuffer[i] << ",";
-			}
-			Serial << "\n";
-			*/
 			return BufferedByteCount;
 		}
 		size_t DeSerialize(String InputString, String Name, uint8_t *DataBuffer, size_t MaxBytes)
@@ -155,7 +139,7 @@ class DataSerializer: public CommonUtils
 			{
 				assert(last > first);
 				String json = InputString.substring(first, last);
-				DeserializationError error = deserializeJson(docIn, json.c_str());
+				DeserializationError error = deserializeJson(doc, json.c_str());
 				// Test if parsing succeeds.
 				if (error)
 				{
@@ -164,27 +148,27 @@ class DataSerializer: public CommonUtils
 				}
 				else
 				{
-					const String DocName = docIn[m_NameTag];
+					const String DocName = doc[m_NameTag];
 					if(true == DocName.equals(Name))
 					{
 						int CheckSumCalc = 0;
-						int CheckSumIn = docIn[m_CheckSumTag];
-						int CountIn = docIn[m_CountTag];
-						int ByteCountIn = docIn[m_TotalByteCountTag];
-						int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn[m_DataTypeTag]));
-						int DataByteCount = docIn[m_DataTag].size();
+						int CheckSumIn = doc[m_CheckSumTag];
+						int CountIn = doc[m_CountTag];
+						int ByteCountIn = doc[m_TotalByteCountTag];
+						int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(doc[m_DataTypeTag]));
+						int DataByteCount = doc[m_DataTag].size();
 						Serial << "DBC: " << DataByteCount << "\tBCI: " << ByteCountIn << "\n";
 						if(ByteCountIn == DataByteCount && ByteCountIn <= MaxBytes)
 						{
 							for(int i = 0; i < DataByteCount; ++i)
 							{
-								CheckSumCalc += (uint8_t)(docIn[m_DataTag][i]);
+								CheckSumCalc += (uint8_t)(doc[m_DataTag][i]);
 							}
 							if(CheckSumCalc == CheckSumIn)
 							{
 								for(int i = 0; i < DataByteCount; ++i)
 								{
-									DataBuffer[i] = (uint8_t)(docIn[m_DataTag][i]);
+									DataBuffer[i] = (uint8_t)(doc[m_DataTag][i]);
 								}
 								return DataByteCount;
 							}
@@ -213,8 +197,7 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<10000> docIn;
-		StaticJsonDocument<10000> docOut;
+		StaticJsonDocument<10000> doc;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags

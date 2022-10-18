@@ -46,10 +46,9 @@ void Manager::FreeMemory()
 void Manager::Setup()
 {
   AllocateMemory();
-  //Set Bluetooth Power to Max
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
-  m_AudioStreamRequester.Setup();
+  m_AudioStreamSlave.Setup();
   m_SoundProcessor.SetupSoundProcessor();
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.StartDevice();
@@ -65,7 +64,6 @@ void Manager::ProcessEventQueue()
   ESP_LOGV("Function Debug", "%s, ", __func__);
   //UpdateNotificationRegistrationStatus();
   //m_I2S_Out.ProcessEventQueue();
-  m_AudioStreamRequester.BufferMoreAudio();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -127,8 +125,8 @@ void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuf
 int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
 {
   size_t BytesRequested = channel_len * sizeof(Frame_t);
-  size_t FramesAvailable = m_AudioStreamRequester.GetFrameCount();
-  size_t FramesRead = m_AudioStreamRequester.GetAudioFrames((Frame_t*)frame, channel_len);
+  size_t FramesAvailable = m_AudioStreamSlave.GetFrameCount();
+  size_t FramesRead = m_AudioStreamSlave.GetAudioFrames((Frame_t*)frame, channel_len);
   assert(FramesRead <= channel_len);
   size_t BytesRead = FramesRead * sizeof(Frame_t);
   ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);

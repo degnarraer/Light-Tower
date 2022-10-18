@@ -84,12 +84,12 @@ class Manager: public NamedItem
     I2S_Device &m_Mic_In;
     
     AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
-    AudioStreamSender m_AudioSender = AudioStreamSender ( "Audio Sender"
-                                                        , m_AudioBuffer
-                                                        , 12
-                                                        , 13
-                                                        , 14
-                                                        , 27 );
+    AudioStreamMaster m_AudioStreamMaster = AudioStreamMaster ( "Audio Sender"
+                                                              , m_AudioBuffer
+                                                              , 12
+                                                              , 13
+                                                              , 14
+                                                              , 27 );
                                                                                                                       
 };
 

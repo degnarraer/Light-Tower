@@ -18,18 +18,13 @@
 #include "SPI_Datalink.h"
 #include "pthread.h"
 
-
 size_t SPI_Datalink_Master::TransferBytes(uint8_t * TXBuffer, uint8_t * RXBuffer, size_t Length)
 {
-	assert(Length <= SPI_MAX_SERIALIZED_BYTES);
+	assert(Length <= SPI_MAX_DATA_BYTES);
 	size_t ReceivedLength = m_SPI_Master.transfer(TXBuffer, RXBuffer, Length);
 	return ReceivedLength;
 }
 
-size_t SPI_Datalink_Slave::TransferBytes(uint8_t *RXBuffer, uint8_t *TXBuffer, size_t Length)
-{
-	return 0;
-}
 void SPI_Datalink_Slave::static_task_wait_spi(void* pvParameters)
 {
 	SPI_Datalink_Slave* slave = (SPI_Datalink_Slave*)pvParameters;
@@ -42,15 +37,10 @@ void SPI_Datalink_Slave::task_wait_spi()
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-		uint8_t Buffer[SPI_MAX_DATA_BYTES];
-		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(Buffer, SPI_MAX_DATA_BYTES);
+		size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, SPI_MAX_DATA_BYTES);
 		assert( 0 == ActualBufferSize % sizeof(Frame_t) );
-		size_t ActualFrameCount = ActualBufferSize / sizeof(Frame_t);
-		if(true == SerializeByteArray(Buffer, SPI_MAX_DATA_BYTES, spi_tx_buf, SPI_MAX_SERIALIZED_BYTES, ActualBufferSize))
-		{
-			m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, SPI_MAX_DATA_BYTES);
-			xTaskNotifyGive(task_handle_process_buffer);
-		}
+		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, ActualBufferSize );
+		xTaskNotifyGive(task_handle_process_buffer);
 	}
 }
 void SPI_Datalink_Slave::static_task_process_buffer(void* pvParameters)
@@ -64,9 +54,9 @@ void SPI_Datalink_Slave::task_process_buffer()
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf, m_SPI_Slave.size());
-		m_SPI_Slave.pop();
 		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
+		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
 	}
 }
@@ -121,12 +111,12 @@ size_t AudioBuffer::WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount )
 	return FramesWritten;
 }
 
-bool AudioBuffer::WriteAudioFrame( Frame_t &FrameBuffer )
+bool AudioBuffer::WriteAudioFrame( Frame_t Frame )
 {
 	bool Success;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		Success = m_CircularAudioBuffer.Write(FrameBuffer);
+		Success = m_CircularAudioBuffer.Write(Frame);
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return Success;
@@ -153,39 +143,97 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 	}
 	return FrameRead;
 }
-size_t AudioStreamRequester::BufferMoreAudio()
+void AudioStreamMaster::Setup()
 {
-	memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-	memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-	size_t TotalFramesFilled = 0;
-	size_t TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
-	if(0 == TotalFramesToFill)
-	{
-		m_AudioBuffer.ClearAudioBuffer();
-		TotalFramesToFill = m_AudioBuffer.GetFreeFrameCount();
-	}
-	if(MAX_FRAMES_PER_PACKET <= TotalFramesToFill)
-	{
-		size_t TotalBytesToFill = MAX_FRAMES_PER_PACKET*sizeof(Frame_t) + sizeof(size_t);
-		assert(SPI_MAX_SERIALIZED_BYTES == TotalBytesToFill);
-		size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, TotalBytesToFill);
-		delay(1);
-		uint8_t DataBuffer[SPI_MAX_DATA_BYTES];
-		size_t DataSize = DeSerializeByteArray(spi_rx_buf, SPI_MAX_DATA_BYTES, DataBuffer, SPI_MAX_DATA_BYTES);
-		size_t FramesRead = DataSize / sizeof(Frame_t);
-		TotalFramesFilled = m_AudioBuffer.WriteAudioFrames((Frame_t*)DataBuffer, FramesRead);
-		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-	}
-	return TotalFramesFilled;
+	ESP_LOGE("AudioStreamMaster", "Setup Audio Stream");
+	Setup_SPI_Master();
 }
 
-size_t AudioStreamRequester::GetFrameCount()
+size_t AudioStreamMaster::GetFrameCount()
 {
 	return m_AudioBuffer.GetFrameCount();
 }
 
-size_t AudioStreamRequester::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
+size_t AudioStreamMaster::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 {
 	return m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
+}
+
+bool AudioStreamMaster::SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
+{
+	return m_AudioBuffer.WriteAudioFrames(FrameBuffer, FrameCount);
+}
+
+bool AudioStreamMaster::SetAudioFrame(Frame_t Frame)
+{
+	return m_AudioBuffer.WriteAudioFrame(Frame);
+}
+
+size_t AudioStreamMaster::BufferMoreAudio()
+{
+	return 0;
+}
+
+void AudioStreamMaster::SendAudioFrames()
+{
+	memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
+	memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
+	size_t BufferedBytesAvailable = m_AudioBuffer.GetFrameCount() * sizeof(Frame_t);
+	size_t Max_SPI_Bytes = SPI_MAX_DATA_BYTES;
+	size_t BytesToSend = min(BufferedBytesAvailable, Max_SPI_Bytes);
+	Serial << "Send Bytes: " << BytesToSend << "\n";
+	size_t FrameToSend = BytesToSend / sizeof(Frame_t);
+	size_t ActualFramesToSend = m_AudioBuffer.ReadAudioFrames((Frame_t*)spi_tx_buf, FrameToSend);
+	Serial << ActualFramesToSend << "\n";
+	size_t ActualBytesToSend =  ActualFramesToSend * sizeof(Frame_t);
+	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, ActualBytesToSend);
+}
+
+void AudioStreamSlave::Setup()
+{
+	ESP_LOGE("AudioStreamSlave", "Setup Audio Stream");
+	Setup_SPI_Slave();
+	RegisterForDataTransferNotification(this);
+}
+
+size_t AudioStreamSlave::GetFrameCount()
+{
+	return m_AudioBuffer.GetFrameCount();
+}
+
+size_t AudioStreamSlave::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
+{
+	return m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
+}
+
+bool AudioStreamSlave::SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
+{
+	return m_AudioBuffer.WriteAudioFrames(FrameBuffer, FrameCount);
+}
+
+bool AudioStreamSlave::SetAudioFrame(Frame_t Frame)
+{
+	return m_AudioBuffer.WriteAudioFrame(Frame);
+}
+
+
+size_t AudioStreamSlave::SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend)
+{
+	size_t FramesToSend = BytesToSend / sizeof(Frame_t);
+	size_t FramesBuffered = m_AudioBuffer.ReadAudioFrames( (Frame_t *)TXBuffer, FramesToSend);
+	size_t ByteLength = FramesBuffered * sizeof(Frame_t);
+	return ByteLength;
+}
+
+size_t AudioStreamSlave::ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
+{
+	Serial << "Received: " << BytesReceived << "\n";
+	bool Result = m_AudioBuffer.WriteAudioFrames((Frame_t*)RXBuffer, BytesReceived / sizeof(Frame_t));
+	Serial << "Write Success: " << Result << "\n";
+	//if(false == Result)
+	//{
+	//	m_AudioBuffer.ClearAudioBuffer();
+	//	Result = m_AudioBuffer.WriteAudioFrames((Frame_t*)RXBuffer, BytesReceived / sizeof(Frame_t));
+	//}
+	return Result;
 }
