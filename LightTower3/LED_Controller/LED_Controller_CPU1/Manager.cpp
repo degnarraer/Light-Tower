@@ -38,12 +38,11 @@ void Manager::Setup()
 {
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
-  m_AudioBuffer.Initialize();
   m_AudioStreamMaster.Setup();
   m_Mic_In.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
-  m_BT_In.ResgisterForDataBufferRXCallback(this);
+  m_BT_In.ResgisterForRxCallback(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
 }
@@ -122,36 +121,25 @@ void Manager::SetInputType(InputType_t Type)
     break;
   }
 }
-
-//I2S_Device_Callback
 //Bluetooth_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
+void Manager::BTDataReceived(const uint8_t *data, uint32_t length)
 {
-  if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
-  {
-    assert(0 == ByteCount % sizeof(int32_t));
-    size_t FramesToRead = ByteCount / sizeof(int32_t);
-    assert(FramesToRead == SampleCount);
-    size_t TotalFreeFrames = m_AudioBuffer.GetFreeFrameCount();
-    size_t TotalFramesSent = 0;
-    int32_t *I2C_RXBuffer = (int32_t*)DataBuffer;
-    if(TotalFreeFrames <= SampleCount)
-    {
-      m_AudioBuffer.ClearAudioBuffer();
-    }
-    for(int i = 0; i < FramesToRead; ++i)
+    assert(0 == length % sizeof(int32_t));
+    size_t FramesToTx = length / sizeof(int32_t) / 2;
+    int32_t *I2C_RXBuffer = (int32_t*)data;
+    for(int i = 0; i < FramesToTx; ++i)
     {
       Frame_t aFrame;
-      aFrame.channel1 = ((int32_t*)I2C_RXBuffer)[2*i] >> 16;
-      aFrame.channel2 = ((int32_t*)I2C_RXBuffer)[2*i + 1] >> 16;
-      if(true == m_AudioStreamMaster.SetAudioFrame(aFrame))
-      {
-        ++TotalFramesSent;
-      }
+      aFrame.channel1 = I2C_RXBuffer[2*i] >> 16;
+      aFrame.channel2 = I2C_RXBuffer[2*i + 1] >> 16;
+      m_AudioStreamMaster.GetTxBufferPointer()[i] = aFrame;
     }
-    Serial << TotalFramesSent << " of " << TotalFreeFrames << "\n";
-    m_AudioStreamMaster.SendAudioFrames();
-  }
+    m_AudioStreamMaster.TxAudioFrames(FramesToTx);
+}
+//I2S_Device_Callback
+void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
+{
+
 }
 
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)

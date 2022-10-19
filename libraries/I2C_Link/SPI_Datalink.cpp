@@ -148,42 +148,10 @@ void AudioStreamMaster::Setup()
 	Setup_SPI_Master();
 }
 
-size_t AudioStreamMaster::GetFrameCount()
+size_t AudioStreamMaster::TxAudioFrames(size_t FrameCount)
 {
-	return m_AudioBuffer.GetFrameCount();
-}
-
-size_t AudioStreamMaster::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
-{
-	return m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
-}
-
-size_t AudioStreamMaster::SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
-{
-	return m_AudioBuffer.WriteAudioFrames(FrameBuffer, FrameCount);
-}
-
-bool AudioStreamMaster::SetAudioFrame(Frame_t Frame)
-{
-	return m_AudioBuffer.WriteAudioFrame(Frame);
-}
-
-size_t AudioStreamMaster::BufferMoreAudio()
-{
-	return 0;
-}
-
-void AudioStreamMaster::SendAudioFrames()
-{
-	memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-	memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-	size_t BufferedBytesAvailable = m_AudioBuffer.GetFrameCount() * sizeof(Frame_t);
-	size_t Max_SPI_Bytes = SPI_MAX_DATA_BYTES;
-	size_t BytesToSend = min(BufferedBytesAvailable, Max_SPI_Bytes);
-	size_t FrameToSend = BytesToSend / sizeof(Frame_t);
-	size_t ActualFramesToSend = m_AudioBuffer.ReadAudioFrames((Frame_t*)spi_tx_buf, FrameToSend);
-	size_t ActualBytesToSend =  ActualFramesToSend * sizeof(Frame_t);
-	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, ActualBytesToSend);
+	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, FrameCount*sizeof(Frame_t));
+	return BytesRead;
 }
 
 void AudioStreamSlave::Setup()

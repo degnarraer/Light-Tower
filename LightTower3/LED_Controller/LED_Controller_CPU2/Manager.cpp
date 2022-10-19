@@ -129,7 +129,8 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   size_t FramesRead = m_AudioStreamSlave.GetAudioFrames((Frame_t*)frame, channel_len);
   assert(FramesRead <= channel_len);
   size_t BytesRead = FramesRead * sizeof(Frame_t);
-  ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);
+
+  //ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);
   //m_I2S_Out.SetSoundBufferData((uint8_t*)RXBuffer, BytesRead);
 
   /*

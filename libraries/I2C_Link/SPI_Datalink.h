@@ -199,26 +199,18 @@ class AudioStreamMaster: public NamedItem
 {
 	public:
 		AudioStreamMaster( String Title
-							, AudioBuffer &AudioBuffer
-							, uint32_t MISO
-							, uint8_t MOSI
-							, uint8_t SCK
-							, uint8_t SS )
-							: NamedItem(Title)
-							, m_AudioBuffer(AudioBuffer)
-							, SPI_Datalink_Master(Title + "SPI", MISO, MOSI, SCK, SS){}
+						 , uint32_t MISO
+						 , uint8_t MOSI
+						 , uint8_t SCK
+						 , uint8_t SS )
+						 : NamedItem(Title)
+						 , SPI_Datalink_Master(Title + "SPI", MISO, MOSI, SCK, SS){}
 		virtual ~AudioStreamMaster(){}
 		void Setup();
-		
-		size_t GetFrameCount();
-		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
-		size_t SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
-		bool SetAudioFrame(Frame_t Frame);
-		
-		size_t BufferMoreAudio();
-		void SendAudioFrames();
+		size_t TxAudioFrames(size_t FrameCount);
+		Frame_t* GetTxBufferPointer(){ return (Frame_t*)spi_tx_buf; }
+		size_t GetMaxFameCountToTx(){ return SPI_MAX_DATA_BYTES / sizeof(Frame_t); }
 	private:
-		AudioBuffer &m_AudioBuffer;
 };
 
 class AudioStreamSlave: public NamedItem

@@ -67,6 +67,8 @@ class Manager: public NamedItem
     void SetInputType(InputType_t Type);
     
     //Bluetooth_Callback
+    void BTDataReceived(const uint8_t *data, uint32_t length);
+    
     //I2S_Device_Callback
     void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
     void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
@@ -82,10 +84,7 @@ class Manager: public NamedItem
     //I2S Sound Data RX
     Bluetooth_Sink &m_BT_In;
     I2S_Device &m_Mic_In;
-    
-    AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
     AudioStreamMaster m_AudioStreamMaster = AudioStreamMaster ( "Audio Sender"
-                                                              , m_AudioBuffer
                                                               , 12
                                                               , 13
                                                               , 14
