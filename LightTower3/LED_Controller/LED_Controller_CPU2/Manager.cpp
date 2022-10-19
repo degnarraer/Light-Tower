@@ -130,28 +130,7 @@ int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
   assert(FramesRead <= channel_len);
   size_t BytesRead = FramesRead * sizeof(Frame_t);
 
-  //ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);
+  ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);
   //m_I2S_Out.SetSoundBufferData((uint8_t*)RXBuffer, BytesRead);
-
-  /*
-  int loopcount = floor(m_FrameBuffer.size() / I2S_SAMPLE_COUNT);
-  for(int i = 0; i < loopcount; ++i)
-  {
-    int32_t ActualSampleReadCount = m_FrameBuffer.Read(m_LinearFrameBuffer, sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
-    assert(ActualSampleReadCount <= sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
-    assert(ActualSampleReadCount <= sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
-    assert(ActualSampleReadCount <= sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
-    memset(m_RightDataBuffer, 0, sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
-    memset(m_LeftDataBuffer, 0, sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
-    for(int j = 0; j < ActualSampleReadCount; ++j)
-    {
-      m_RightDataBuffer[j] = m_LinearFrameBuffer[j].channel1 << 16;
-      m_LeftDataBuffer[j] = m_LinearFrameBuffer[j].channel2 << 16;
-    }
-    //RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
-    //LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
-  }
-  ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
-  */
   return FramesRead;
 }

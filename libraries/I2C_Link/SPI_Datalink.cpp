@@ -65,7 +65,7 @@ size_t AudioBuffer::GetFrameCapacity()
 	size_t Capacity = 0;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		Capacity = m_CircularAudioBuffer.capacity();
+		Capacity = m_CircularAudioBuffer->capacity();
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return Capacity;
@@ -76,7 +76,7 @@ bool AudioBuffer::ClearAudioBuffer()
 	bool Success = false;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		m_CircularAudioBuffer.Clear();
+		m_CircularAudioBuffer->Clear();
 		Success = true;
 		pthread_mutex_unlock(&m_Lock);
 	}
@@ -88,7 +88,7 @@ size_t AudioBuffer::GetFrameCount()
 	size_t size = 0;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		size = m_CircularAudioBuffer.size();
+		size = m_CircularAudioBuffer->size();
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return size;
@@ -104,7 +104,7 @@ size_t AudioBuffer::WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount )
 	size_t FramesWritten = 0;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		FramesWritten = m_CircularAudioBuffer.Write(FrameBuffer, FrameCount);
+		FramesWritten = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return FramesWritten;
@@ -115,7 +115,7 @@ bool AudioBuffer::WriteAudioFrame( Frame_t Frame )
 	bool Success;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		Success = m_CircularAudioBuffer.Write(Frame);
+		Success = m_CircularAudioBuffer->Write(Frame);
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return Success;
@@ -126,7 +126,7 @@ size_t AudioBuffer::ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 	size_t FramesRead = 0;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		FramesRead = m_CircularAudioBuffer.Read(FrameBuffer, FrameCount);
+		FramesRead = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return FramesRead;
@@ -137,7 +137,7 @@ bfs::optional<Frame_t> AudioBuffer::ReadAudioFrame()
 	bfs::optional<Frame_t> FrameRead;
 	if(0 == pthread_mutex_lock(&m_Lock))
 	{
-		FrameRead = m_CircularAudioBuffer.Read();
+		FrameRead = m_CircularAudioBuffer->Read();
 		pthread_mutex_unlock(&m_Lock);
 	}
 	return FrameRead;
@@ -151,6 +151,7 @@ void AudioStreamMaster::Setup()
 size_t AudioStreamMaster::TxAudioFrames(size_t FrameCount)
 {
 	size_t BytesRead = TransferBytes(spi_tx_buf, spi_rx_buf, FrameCount*sizeof(Frame_t));
+	m_FramesAdded = 0;
 	return BytesRead;
 }
 
@@ -168,17 +169,31 @@ size_t AudioStreamSlave::GetFrameCount()
 
 size_t AudioStreamSlave::GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 {
-	return m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
+	size_t FramesRead = 0;
+    UpdateCanStreamStatus();
+	if(true == CanStream())
+	{
+		FramesRead = m_AudioBuffer.ReadAudioFrames(FrameBuffer, FrameCount);
+		UpdateCanStreamStatus();
+	}
+	return FramesRead;
 }
 
 size_t AudioStreamSlave::SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 {
-	return m_AudioBuffer.WriteAudioFrames(FrameBuffer, FrameCount);
+	UpdateCanStreamStatus();
+	size_t FramesWritten = m_AudioBuffer.WriteAudioFrames(FrameBuffer, FrameCount);
+	UpdateCanStreamStatus();
+	Serial << m_AudioBuffer.GetNormalizedFillPercent() << "\n";
+	return FramesWritten;
 }
 
 bool AudioStreamSlave::SetAudioFrame(Frame_t Frame)
 {
-	return m_AudioBuffer.WriteAudioFrame(Frame);
+	UpdateCanStreamStatus();
+	bool Result = m_AudioBuffer.WriteAudioFrame(Frame);
+	UpdateCanStreamStatus();
+	return Result;
 }
 
 size_t AudioStreamSlave::SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend)

@@ -127,12 +127,14 @@ void Manager::BTDataReceived(const uint8_t *data, uint32_t length)
     assert(0 == length % sizeof(int32_t));
     size_t FramesToTx = length / sizeof(int32_t) / 2;
     int32_t *I2C_RXBuffer = (int32_t*)data;
+    Serial << FramesToTx << "|" << m_AudioStreamMaster.GetMaxFameCountToTx() << "\n";
+    assert(m_AudioStreamMaster.GetMaxFameCountToTx() >= FramesToTx);
     for(int i = 0; i < FramesToTx; ++i)
     {
       Frame_t aFrame;
       aFrame.channel1 = I2C_RXBuffer[2*i] >> 16;
       aFrame.channel2 = I2C_RXBuffer[2*i + 1] >> 16;
-      m_AudioStreamMaster.GetTxBufferPointer()[i] = aFrame;
+      m_AudioStreamMaster.AddAudioFrame(aFrame);
     }
     m_AudioStreamMaster.TxAudioFrames(FramesToTx);
 }

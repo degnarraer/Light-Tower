@@ -29,8 +29,8 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define AUDIO_BUFFER_LENGTH 4096
-#define SPI_MAX_DATA_BYTES 1024
+#define AUDIO_BUFFER_FRAME_LENGTH 10000
+#define SPI_MAX_DATA_BYTES 4096
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -172,14 +172,32 @@ class AudioBuffer: public NamedItem
 		AudioBuffer( String Title)
 				   : NamedItem(Title)
 				   {}
-		virtual ~AudioBuffer(){}
+		virtual ~AudioBuffer()
+		{
+			FreeMemory();
+		}
 		void Initialize()
-		{			
+		{	
+			AllocateMemory();		
 			if(0 != pthread_mutex_init(&m_Lock, NULL))
 			{
 			   ESP_LOGE("AudioBuffer", "Failed to Create Lock");
 			}
-			ClearAudioBuffer();
+		}
+		void AllocateMemory()
+		{
+			Serial << "Allocate Memory\n";
+			size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>);
+			void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>*)heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
+			m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>;
+		}
+		void FreeMemory()
+		{
+			heap_caps_free(m_CircularAudioBuffer);
+		}
+		float GetNormalizedFillPercent() 
+		{ 
+			return (float)GetFrameCount() / (float)GetFrameCapacity(); 
 		}
 		size_t GetFrameCapacity();
 		size_t GetFrameCount();
@@ -190,7 +208,7 @@ class AudioBuffer: public NamedItem
 		bool ClearAudioBuffer();
 		bfs::optional<Frame_t> ReadAudioFrame();
 	private:
-		bfs::CircleBuf<Frame_t, AUDIO_BUFFER_LENGTH> m_CircularAudioBuffer;
+		bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH> *m_CircularAudioBuffer;
 		pthread_mutex_t m_Lock;
 };
 
@@ -208,9 +226,17 @@ class AudioStreamMaster: public NamedItem
 		virtual ~AudioStreamMaster(){}
 		void Setup();
 		size_t TxAudioFrames(size_t FrameCount);
-		Frame_t* GetTxBufferPointer(){ return (Frame_t*)spi_tx_buf; }
+		void AddAudioFrame(Frame_t aFrame)
+		{
+			if(m_FramesAdded * sizeof(Frame_t) < SPI_MAX_DATA_BYTES)
+			{
+				((Frame_t*)spi_tx_buf)[m_FramesAdded] = aFrame;
+				++m_FramesAdded;
+			}
+		}
 		size_t GetMaxFameCountToTx(){ return SPI_MAX_DATA_BYTES / sizeof(Frame_t); }
 	private:
+		size_t m_FramesAdded = 0;
 };
 
 class AudioStreamSlave: public NamedItem
@@ -226,7 +252,13 @@ class AudioStreamSlave: public NamedItem
 						 , uint8_t SS )
 						 : NamedItem(Title)
 						 , m_AudioBuffer(AudioBuffer)
-						 , SPI_Datalink_Slave(Title + "SPI", MISO, MOSI, SCK, SS){}
+						 , SPI_Datalink_Slave(Title + "SPI", MISO, MOSI, SCK, SS)
+						 {							 
+							if(0 != pthread_mutex_init(&m_Lock, NULL))
+							{
+							   ESP_LOGE("AudioStreamSlave", "Failed to Create Lock");
+							}
+						 }
 		virtual ~AudioStreamSlave(){}
 		void Setup();
 		
@@ -235,11 +267,48 @@ class AudioStreamSlave: public NamedItem
 		size_t SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
 		bool SetAudioFrame(Frame_t Frame);
 		
+		bool CanStream()
+		{
+			bool Result = false;
+			if(0 == pthread_mutex_lock(&m_Lock))
+			{
+				Result = m_CanStream;
+				pthread_mutex_unlock(&m_Lock);
+			}
+			return Result;
+		}
+		bool SetCanStream(bool CanStream)
+		{
+			bool Result = false;
+			if(0 == pthread_mutex_lock(&m_Lock))
+			{
+				m_CanStream = CanStream;
+				pthread_mutex_unlock(&m_Lock);
+				Result = true;
+			}
+			return Result;
+		}
+		
+		void UpdateCanStreamStatus()
+		{
+			if(m_AudioBuffer.GetNormalizedFillPercent() <= 0.1f) 
+			{
+				Serial << "False\n";
+				SetCanStream(false);
+			}
+			if(m_AudioBuffer.GetNormalizedFillPercent() >= 0.5f) 
+			{
+				Serial << "True\n";
+				SetCanStream(true);
+			}
+		}
 		//SPI_SLAVE_NOTIFIER Callbacks
 		size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend);
 		size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived);
 	private:
 		AudioBuffer &m_AudioBuffer;
+		bool m_CanStream = false;
+		pthread_mutex_t m_Lock;
 };
 
 #endif
