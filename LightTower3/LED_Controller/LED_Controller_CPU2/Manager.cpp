@@ -22,10 +22,12 @@ Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Source &BT_Out
+                , I2S_Device &I2S_In
                 , I2S_Device &I2S_OUT ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT_Out(BT_Out)
+                                       , m_I2S_In(I2S_In)
                                        , m_I2S_Out(I2S_OUT)
 { 
   ESP_LOGV("Manager", "%s, ", __func__);
@@ -51,8 +53,6 @@ void Manager::Setup()
   m_I2S_Out.ResgisterForDataBufferRXCallback(this);
   m_I2S_Out.StartDevice();
   m_BT_Out.StartDevice();
-  m_AudioBuffer.Initialize();
-  m_AudioStreamSlave.Setup();
 }
 
 void Manager::Loop()
@@ -87,50 +87,19 @@ void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t
 void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  //if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
-  {
-    QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_PSD_IN");
-    QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_FFT_IN");
-    if(NULL != Queue1 && NULL != Queue2)
-    {
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("R_PSD_IN") == ByteCount);
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("R_FFT_IN") == ByteCount);
-      static bool R_PSD_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue1, false, "Right Channel Data: R_PSD_IN", R_PSD_IN_Push_Successful);
-      static bool R_FFT_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue2, false, "Right Channel Data: R_FFT_IN", R_FFT_IN_Push_Successful);
-    }
-  }
 }
 void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
 {
   //ESP_LOGV("Manager", "%s, ", __func__);
-  //if( DeviceTitle == m_I2S_In.GetTitle() )
-  {
-    QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_PSD_IN");
-    QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_FFT_IN");
-    if(NULL != Queue1 && NULL != Queue2)
-    {
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("L_PSD_IN") == ByteCount);
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("L_FFT_IN") == ByteCount);
-      static bool L_PSD_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue1, false, "Left Channel Data: L_PSD_IN", L_PSD_IN_Push_Successful);
-      static bool L_FFT_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue2, false, "Left Channel Data: L_FFT_IN", L_FFT_IN_Push_Successful);
-    } 
-  }
 }
 
 //Bluetooth Source Callback
-int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
+int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  size_t BytesRequested = channel_len * sizeof(Frame_t);
-  size_t FramesAvailable = m_AudioStreamSlave.GetFrameCount();
-  size_t FramesRead = m_AudioStreamSlave.GetAudioFrames((Frame_t*)frame, channel_len);
-  assert(FramesRead <= channel_len);
-  size_t BytesRead = FramesRead * sizeof(Frame_t);
-
-  ESP_LOGE("Manager", "%i | %i | %i | %i", channel_len, FramesAvailable, BytesRead, FramesRead);
-  //m_I2S_Out.SetSoundBufferData((uint8_t*)RXBuffer, BytesRead);
-  return FramesRead;
+  if(channel_len <= 0 || Data == NULL)
+  {
+    return 0;
+  }
+  
+  return 0;
 }

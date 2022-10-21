@@ -9,6 +9,22 @@ TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 TaskHandle_t I2CTask;
 
+I2S_Device m_I2S_In = I2S_Device( "I2S_In"
+                                 , I2S_NUM_0
+                                 , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
+                                 , I2S_SAMPLE_RATE
+                                 , I2S_BITS_PER_SAMPLE_32BIT
+                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                 , I2S_CHANNEL_STEREO
+                                 , true                               // Use APLL
+                                 , I2S_BUFFER_COUNT                   // Buffer Count
+                                 , I2S_SAMPLE_COUNT                   // Buffer Size
+                                 , I2S1_SCLCK_PIN                     // Serial Clock Pin
+                                 , I2S1_WD_PIN                        // Word Selection Pin
+                                 , I2S1_SDIN_PIN                      // Serial Data In Pin
+                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
+
 I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S_NUM_1                        // I2S Interface
                                   , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
@@ -17,7 +33,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
                                   , I2S_CHANNEL_FMT_RIGHT_LEFT
                                   , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                   , I2S_CHANNEL_STEREO
-                                  , true                             // Use APLL
+                                  , false                            // Use APLL
                                   , I2S_BUFFER_COUNT                 // Buffer Count
                                   , I2S_SAMPLE_COUNT                 // Buffer Size
                                   , I2S2_SCLCK_PIN                   // Serial Clock Pin
@@ -38,12 +54,13 @@ Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SerialDataLink
                            , m_BT_Out
-                           , m_I2S_Out);
+                           , m_I2S_Out
+                           , m_I2S_In);
 
 //Bluetooth Source Callback
-int32_t get_data_channels(Frame *frame, int32_t channel_len)
+int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  return m_Manager.get_data_channels(frame, channel_len);
+  return m_Manager.SetBTTxData(Data, channel_len);
 }
 
 void setup() {
@@ -66,7 +83,7 @@ void setup() {
  
   m_I2S_Out.Setup();
   m_BT_Out.Setup();
-  m_BT_Out.SetCallback(get_data_channels);
+  m_BT_Out.SetCallback(SetBTTxData);
   m_Manager.Setup();
   m_SerialDataLink.SetupSerialDataLink();
 

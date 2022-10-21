@@ -37,6 +37,7 @@ class Manager: public NamedItem
            , Sound_Processor &SoundProcessor
            , SerialDataLink &SerialDataLink
            , Bluetooth_Source &BT_Out
+           , I2S_Device &I2S_In
            , I2S_Device &I2S_Out );
     virtual ~Manager();
     void AllocateMemory();
@@ -47,7 +48,7 @@ class Manager: public NamedItem
     void WriteDataToBluetooth();
 
     //Bluetooth Get Data Callback
-    int32_t get_data_channels(Frame *frame, int32_t channel_len);
+    int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
     //I2S_Device_Callback
     void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
@@ -61,14 +62,9 @@ class Manager: public NamedItem
     //I2C Datalinkstatic 
     const static int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
     bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
-    AudioBuffer m_AudioBuffer = AudioBuffer("AudioBuffer");
-    AudioStreamSlave m_AudioStreamSlave = AudioStreamSlave( "Audio Stream Slave"
-                                                          , m_AudioBuffer
-                                                          , 12
-                                                          , 13
-                                                          , 14
-                                                          , 27 );
+
     //I2S Sound Data RX
+    I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
     
     //Bluetooth Data

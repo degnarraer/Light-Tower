@@ -22,12 +22,14 @@ Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Sink &BT_In
-                , I2S_Device &Mic_In )
+                , I2S_Device &Mic_In
+                , I2S_Device &I2S_Out )
                 : NamedItem(Title)
                 , m_StatisticalEngine(StatisticalEngine)
                 , m_SerialDataLink(SerialDataLink)
                 , m_BT_In(BT_In)
-                , m_Mic_In(Mic_In)
+                , m_Mic_In(Mic_In) 
+                , m_I2S_Out(I2S_Out)
 {
 }
 Manager::~Manager()
@@ -38,7 +40,6 @@ void Manager::Setup()
 {
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
-  m_AudioStreamMaster.Setup();
   m_Mic_In.Setup();
   m_BT_In.Setup();
   m_Mic_In.ResgisterForDataBufferRXCallback(this);
@@ -124,19 +125,7 @@ void Manager::SetInputType(InputType_t Type)
 //Bluetooth_Callback
 void Manager::BTDataReceived(const uint8_t *data, uint32_t length)
 {
-    assert(0 == length % sizeof(int32_t));
-    size_t FramesToTx = length / sizeof(int32_t) / 2;
-    int32_t *I2C_RXBuffer = (int32_t*)data;
-    Serial << FramesToTx << "|" << m_AudioStreamMaster.GetMaxFameCountToTx() << "\n";
-    assert(m_AudioStreamMaster.GetMaxFameCountToTx() >= FramesToTx);
-    for(int i = 0; i < FramesToTx; ++i)
-    {
-      Frame_t aFrame;
-      aFrame.channel1 = I2C_RXBuffer[2*i] >> 16;
-      aFrame.channel2 = I2C_RXBuffer[2*i + 1] >> 16;
-      m_AudioStreamMaster.AddAudioFrame(aFrame);
-    }
-    m_AudioStreamMaster.TxAudioFrames(FramesToTx);
+
 }
 //I2S_Device_Callback
 void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)

@@ -60,7 +60,8 @@ class Manager: public NamedItem
            , StatisticalEngine &StatisticalEngine
            , SerialDataLink &SerialDataLink
            , Bluetooth_Sink &BT_In
-           , I2S_Device &Mic_In );
+           , I2S_Device &Mic_In
+           , I2S_Device &I2S_Out );
     virtual ~Manager();
     void Setup();
     void ProcessEventQueue();
@@ -83,12 +84,9 @@ class Manager: public NamedItem
 
     //I2S Sound Data RX
     Bluetooth_Sink &m_BT_In;
-    I2S_Device &m_Mic_In;
-    AudioStreamMaster m_AudioStreamMaster = AudioStreamMaster ( "Audio Sender"
-                                                              , 12
-                                                              , 13
-                                                              , 14
-                                                              , 27 );
+    I2S_Device &m_Mic_In; 
+    I2S_Device &m_I2S_Out;
+
                                                                                                                       
 };
 

@@ -6,6 +6,10 @@
 //PIN ASSIGNMENTS
 #define HARDWARE_SERIAL_RX_PIN          22
 #define HARDWARE_SERIAL_TX_PIN          23
+#define I2S1_SCLCK_PIN                  12
+#define I2S1_WD_PIN                     13
+#define I2S1_SDIN_PIN                   14
+#define I2S1_SDOUT_PIN                  15
 #define I2S2_SCLCK_PIN                  25
 #define I2S2_WD_PIN                     26
 #define I2S2_SDIN_PIN                   I2S_PIN_NO_CHANGE

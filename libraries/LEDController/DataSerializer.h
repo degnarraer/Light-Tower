@@ -126,7 +126,6 @@ class DataSerializer: public CommonUtils
 			size_t BufferedByteCount;
 			assert(OutputBufferSize >= InputBufferSize - sizeof(BufferedByteCount) );
 			BufferedByteCount = ((size_t*)InputBuffer)[0];
-			Serial << "Buffered Bytes: " << BufferedByteCount << "\n";
 			assert(OutputBufferSize >= BufferedByteCount);
 			memcpy(OutputBuffer, InputBuffer + sizeof(BufferedByteCount), BufferedByteCount);
 			return BufferedByteCount;

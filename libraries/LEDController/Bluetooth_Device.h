@@ -46,13 +46,13 @@ class Bluetooth_Source: public NamedItem
 			m_BTSource.set_local_name("LED Tower of Power");
 			m_BTSource.set_task_priority(configMAX_PRIORITIES - 0);
 		}
-		void SetCallback(music_data_channels_cb_t callback)
+		void SetCallback(music_data_cb_t callback)
 		{
 			m_callback = callback;
 		}			
 		void StartDevice()
 		{
-			m_BTSource.start(mp_SourceName, m_callback);
+			m_BTSource.start_raw(mp_SourceName, m_callback);
 		}
 		void StopDevice()
 		{
@@ -60,7 +60,7 @@ class Bluetooth_Source: public NamedItem
 		bool IsConnected() {return m_BTSource.is_connected();}
 	private:
 		BluetoothA2DPSource& m_BTSource;
-		music_data_channels_cb_t m_callback = NULL;
+		music_data_cb_t m_callback = NULL;
 		const char *mp_SourceName;
 };
 

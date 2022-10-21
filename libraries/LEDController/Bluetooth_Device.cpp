@@ -50,7 +50,7 @@ void Bluetooth_Sink::InstallDevice()
 	  .dma_buf_len = m_BufferSize,
 	  .use_apll = m_Use_APLL,
 	  .tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
-	  .fixed_mclk = 0
+	  .fixed_mclk = 1
 	};
 	i2s_pin_config_t my_pin_config = 
 	{
@@ -65,7 +65,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
-	m_BTSink.set_volume(200);
+	m_BTSink.set_volume(100);
 	ESP_LOGD("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice()
