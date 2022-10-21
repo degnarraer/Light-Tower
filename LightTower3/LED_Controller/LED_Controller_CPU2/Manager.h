@@ -51,10 +51,8 @@ class Manager: public NamedItem
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    
+    void I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length);
+  
   private:
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;

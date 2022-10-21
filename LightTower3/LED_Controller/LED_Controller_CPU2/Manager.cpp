@@ -77,20 +77,11 @@ void Manager::UpdateNotificationRegistrationStatus()
   }
 }
 //I2S_Device_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
+
+//I2S_Device_Callback
+void Manager::I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length)
 {
-  //ESP_LOGV("Manager", "%s, ", __func__);
-  //if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
-  {
-  }
-}
-void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-  //ESP_LOGV("Manager", "%s, ", __func__);
-}
-void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-  //ESP_LOGV("Manager", "%s, ", __func__);
+
 }
 
 //Bluetooth Source Callback
