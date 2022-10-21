@@ -35,14 +35,6 @@ enum InputType_t
   InputType_Bluetooth
 };
 
-enum DAC_Data_Format_t
-{
-  DAC_Data_Format_Default,
-  DAC_Data_Format_LSB16,
-  DAC_Data_Format_LSB20,
-  DAC_Data_Format_LSB24,
-};
-
 enum Mute_State_t
 {
   Mute_State_Un_Muted = 0,
@@ -78,14 +70,13 @@ class Manager: public NamedItem
     SerialDataLink &m_SerialDataLink;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
-    DAC_Data_Format_t m_DAC_Data_Format;
 
-    //I2S Sound Data RX
+    //Bluetooth Data
     Bluetooth_Sink &m_BT_In;
+    
+    //I2S Sound Data RX
     I2S_Device &m_Mic_In; 
-    I2S_Device &m_I2S_Out;
-
-                                                                                                                      
+    I2S_Device &m_I2S_Out;                                                                                                                    
 };
 
 #endif

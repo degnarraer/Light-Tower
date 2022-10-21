@@ -43,7 +43,6 @@ class Manager: public NamedItem
     void AllocateMemory();
     void FreeMemory();
     void Setup();
-    void Loop();
     void ProcessEventQueue();
     void WriteDataToBluetooth();
 
@@ -57,20 +56,13 @@ class Manager: public NamedItem
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;
 
-    //I2C Datalinkstatic 
-    const static int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
-    bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
-
-    //I2S Sound Data RX
+    //I2S Sound Data
     I2S_Device &m_I2S_In;
     I2S_Device &m_I2S_Out;
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
 
-    Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
-    int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
-    int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
     void UpdateNotificationRegistrationStatus();
 };
 

@@ -55,10 +55,6 @@ void Manager::Setup()
   m_BT_Out.StartDevice();
 }
 
-void Manager::Loop()
-{
-}
-
 void Manager::ProcessEventQueue()
 {
   ESP_LOGV("Function Debug", "%s, ", __func__);
