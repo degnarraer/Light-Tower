@@ -143,10 +143,7 @@ void I2S_Device::SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t v
 
 int32_t I2S_Device::SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__);
-	memcpy(m_SoundBufferData, SoundBufferData, ByteCount);
-	ESP_LOGV("i2S Device", "%s: Sound Buffer Data Ready.", GetTitle());
-	return WriteSamples(m_SoundBufferData, ByteCount);
+	return WriteSamples(SoundBufferData, ByteCount);
 }
 
 int32_t I2S_Device::GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCount)
@@ -163,28 +160,13 @@ int I2S_Device::ReadSamples()
 	if(NULL != m_Callee)
 	{
 		//ESP_LOGV("Function Debug", "%s, ", __func__);
-		i2s_read(m_I2S_PORT, m_SoundBufferData, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
+		uint8_t DataBuffer[m_BufferSize];
+		i2s_read(m_I2S_PORT, DataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
 		if(bytes_read == 0) return 0;
 		size_t channel_bytes_read = bytes_read / 2;
 		size_t samplesRead = bytes_read / m_BytesPerSample;
 		size_t channelSamplesRead = channel_bytes_read / m_BytesPerSample;
-		m_Callee->DataBufferModifyRX(GetTitle(), m_SoundBufferData, bytes_read, samplesRead);
-
-		if(I2S_CHANNEL_STEREO == m_i2s_channel)
-		{
-			int channel_samples_read = channel_bytes_read / m_BytesPerSample;
-			for(int i = 0; i < channel_samples_read; ++i)
-			{
-			  int DataBufferIndex = m_BytesPerSample * i;
-			  for(int j = 0; j < m_BytesPerSample; ++j)
-			  {
-				m_RightChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + j];
-				m_LeftChannel_SoundBufferData[DataBufferIndex + j] = m_SoundBufferData[2*DataBufferIndex + m_BytesPerSample + j];
-			  }
-			}
-			m_Callee->RightChannelDataBufferModifyRX(GetTitle(), m_RightChannel_SoundBufferData, channel_bytes_read, channelSamplesRead);
-			m_Callee->LeftChannelDataBufferModifyRX(GetTitle(), m_LeftChannel_SoundBufferData, channel_bytes_read, channelSamplesRead);
-		}
+		m_Callee->I2SDataReceived(GetTitle(), DataBuffer, bytes_read);
 	}
 	return bytes_read;
 }
@@ -300,15 +282,9 @@ void I2S_Device::AllocateMemory()
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Allocating Memory.", GetTitle());  
-	m_SoundBufferData = (uint8_t*)heap_caps_malloc(m_TotalBytesToRead, MALLOC_CAP_SPIRAM);
-	m_RightChannel_SoundBufferData = (uint8_t*)heap_caps_malloc(m_ChannelBytesToRead, MALLOC_CAP_SPIRAM);
-	m_LeftChannel_SoundBufferData = (uint8_t*)heap_caps_malloc(m_ChannelBytesToRead, MALLOC_CAP_SPIRAM);
 }
 void I2S_Device::FreeMemory()
 {
     //ESP_LOGV("Function Debug", "%s, ", __func__);
 	ESP_LOGD("i2S Device", "%s: Freeing Memory.", GetTitle());  
-	heap_caps_free(m_SoundBufferData);
-	heap_caps_free(m_RightChannel_SoundBufferData);
-	heap_caps_free(m_LeftChannel_SoundBufferData);
 }

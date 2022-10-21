@@ -128,15 +128,7 @@ void Manager::BTDataReceived(const uint8_t *data, uint32_t length)
 
 }
 //I2S_Device_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
+void Manager::I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length)
 {
 
-}
-
-void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-}
-
-void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
 }

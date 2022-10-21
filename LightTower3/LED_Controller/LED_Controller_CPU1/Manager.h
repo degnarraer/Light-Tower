@@ -71,10 +71,8 @@ class Manager: public NamedItem
     void BTDataReceived(const uint8_t *data, uint32_t length);
     
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-
+    void I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length);
+    
   private:
     StatisticalEngine &m_StatisticalEngine;
     SerialDataLink &m_SerialDataLink;

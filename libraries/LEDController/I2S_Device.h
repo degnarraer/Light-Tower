@@ -36,9 +36,8 @@ class I2S_Device_Callback
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
+				//Callbacks called by this class
+		virtual void I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length) = 0;
 };
 
 class I2S_Device: public NamedItem
@@ -90,9 +89,7 @@ class I2S_Device: public NamedItem
   private:
 	I2S_Device_Callback* m_Callee = NULL;
     DataItemConfig_t* m_ItemConfig = NULL;
-	uint8_t* m_SoundBufferData;
-	uint8_t* m_RightChannel_SoundBufferData;
-	uint8_t* m_LeftChannel_SoundBufferData;
+	
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
