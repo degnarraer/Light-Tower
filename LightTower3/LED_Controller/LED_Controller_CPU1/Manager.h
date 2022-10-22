@@ -60,10 +60,10 @@ class Manager: public NamedItem
     void SetInputType(InputType_t Type);
     
     //Bluetooth_Callback
-    void BTDataReceived(const uint8_t *data, uint32_t length);
+    void BTDataReceived(uint8_t *data, uint32_t length);
     
     //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length);
+    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
     
   private:
     StatisticalEngine &m_StatisticalEngine;

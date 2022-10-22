@@ -37,7 +37,7 @@ class I2S_Device_Callback
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
 				//Callbacks called by this class
-		virtual void I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length) = 0;
+		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
 };
 
 class I2S_Device: public NamedItem
@@ -60,29 +60,13 @@ class I2S_Device: public NamedItem
               , int SerialDataInPin
               , int SerialDataOutPin );
     virtual ~I2S_Device();
-    void ResgisterForDataBufferRXCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
-    void DeResgisterForDataBufferRXCallback(I2S_Device_Callback* callee)
-	{ 
-		if(m_Callee == callee)
-		{
-			m_Callee = NULL;
-		}
-	}
+    void SetCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
     void StartDevice();
     void StopDevice();
-	size_t GetBytesPerSample() { return m_BytesPerSample; }
 
-	int32_t GetDataBufferValue(uint8_t* DataBuffer, size_t index);
-	void SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value);
-
-    int32_t SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
-    int32_t GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCount);
+    size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
+    size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
 	
-    size_t GetSampleCount() { return m_SampleCount; }
-    size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
-    size_t GetBytesToRead() {return m_TotalBytesToRead; }
-    size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
-    int GetSampleRate() { return m_SampleRate; }
     void Setup();
     void ProcessEventQueue();
 	
@@ -112,11 +96,10 @@ class I2S_Device: public NamedItem
     const i2s_port_t m_I2S_PORT;
     QueueHandle_t m_i2s_event_queue = NULL;
 
-    int ReadSamples();
-    int WriteSamples(uint8_t *samples, size_t ByteCount);
+    size_t ReadSamples();
+    size_t WriteSamples(uint8_t *samples, size_t ByteCount);
     void InstallDevice();
-	void AllocateMemory();
-	void FreeMemory();
+    void UninstallDevice();
 };
 
 #endif

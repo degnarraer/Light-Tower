@@ -22,36 +22,22 @@ Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
                 , SerialDataLink &SerialDataLink
                 , Bluetooth_Source &BT_Out
-                , I2S_Device &I2S_In
-                , I2S_Device &I2S_OUT ): NamedItem(Title)
+                , I2S_Device &I2S_In ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
                                        , m_SerialDataLink(SerialDataLink)
                                        , m_BT_Out(BT_Out)
                                        , m_I2S_In(I2S_In)
-                                       , m_I2S_Out(I2S_OUT)
-{ 
-  ESP_LOGV("Manager", "%s, ", __func__);
+{
 }
 Manager::~Manager()
-{
-  FreeMemory();
-  ESP_LOGV("Manager", "%s, ", __func__);
-}
-
-void Manager::AllocateMemory()
-{
-}
-void Manager::FreeMemory()
 {
 }
 
 void Manager::Setup()
 {
-  AllocateMemory();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
-  m_I2S_Out.ResgisterForDataBufferRXCallback(this);
-  m_I2S_Out.StartDevice();
+  m_I2S_In.StartDevice();
   m_BT_Out.StartDevice();
 }
 
@@ -59,7 +45,7 @@ void Manager::ProcessEventQueue()
 {
   ESP_LOGV("Function Debug", "%s, ", __func__);
   //UpdateNotificationRegistrationStatus();
-  //m_I2S_Out.ProcessEventQueue();
+  m_I2S_In.ProcessEventQueue();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -72,21 +58,15 @@ void Manager::UpdateNotificationRegistrationStatus()
   {
   }
 }
-//I2S_Device_Callback
 
 //I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length)
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {
-
 }
 
 //Bluetooth Source Callback
 int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  if(channel_len <= 0 || Data == NULL)
-  {
-    return 0;
-  }
-  
-  return 0;
+  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
+  return ByteReceived;
 }

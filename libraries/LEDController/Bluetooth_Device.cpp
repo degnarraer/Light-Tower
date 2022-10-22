@@ -20,7 +20,6 @@
 
 void Bluetooth_Sink::Setup()
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__); 
 	ESP_LOGD("Bluetooth_Device", "%s: Setup", GetTitle());
 }
 void Bluetooth_Sink::ResgisterForRxCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
@@ -28,17 +27,16 @@ void Bluetooth_Sink::ResgisterForRxCallback(Bluetooth_Sink_Callback* callee){ m_
 //Callbacks for Bluetooth 
 void Bluetooth_Sink::data_received_callback() 
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__); 
 }
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
-	m_Callee->BTDataReceived(data, length);
+	m_Callee->BTDataReceived((uint8_t*)data, length);
 }
 
 void Bluetooth_Sink::InstallDevice()
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__);   
+	ESP_LOGI("Bluetooth Device", "%s: Configuring Bluetooth Device.", GetTitle());
 	static i2s_config_t i2s_config = {
 	  .mode = m_i2s_Mode,
 	  .sample_rate = m_SampleRate, // updated automatically by A2DP
@@ -66,11 +64,10 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(100);
-	ESP_LOGD("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
+	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice()
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(false == m_Is_Running)
 	{
 		ESP_LOGD("Bluetooth_Device", "Starting Bluetooth");
@@ -82,7 +79,6 @@ void Bluetooth_Sink::StartDevice()
 }
 void Bluetooth_Sink::StopDevice()
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(true == m_Is_Running)
 	{
 		ESP_LOGD("Bluetooth_Device", "Stopping Bluetooth");

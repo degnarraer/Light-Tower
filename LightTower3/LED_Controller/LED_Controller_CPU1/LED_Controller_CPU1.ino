@@ -10,7 +10,6 @@ TaskHandle_t DataMoverTask;
 TaskHandle_t SerialDataLinkTXTask;
 TaskHandle_t SerialDataLinkRXTask;
 TaskHandle_t VisualizationTask;
-TaskHandle_t I2CTask;
 TaskHandle_t TaskMonitorTask;
 
 BluetoothA2DPSink m_BTSink;
@@ -20,17 +19,17 @@ Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , I2S_NUM_1                          // I2S Interface
                                        , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                                        , I2S_SAMPLE_RATE
-                                       , I2S_BITS_PER_SAMPLE_32BIT
+                                       , I2S_BITS_PER_SAMPLE_16BIT
                                        , I2S_CHANNEL_FMT_RIGHT_LEFT
                                        , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                        , I2S_CHANNEL_STEREO
                                        , true                               // Use APLL                                    
                                        , I2S_BUFFER_COUNT                   // Buffer Count
                                        , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                       , I2S1_SCLCK_PIN                     // Serial Clock Pin
-                                       , I2S1_WD_PIN                        // Word Selection Pin
-                                       , I2S1_SDIN_PIN                      // Serial Data In Pin
-                                       , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
+                                       , I2S2_SCLCK_PIN                     // Serial Clock Pin
+                                       , I2S2_WD_PIN                        // Word Selection Pin
+                                       , I2S2_SDIN_PIN                      // Serial Data In Pin
+                                       , I2S2_SDOUT_PIN );                  // Serial Data Out Pin
                                     
 //Callbacks for Bluetooth Sink
 void data_received_callback() 
@@ -65,33 +64,33 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone In"
                                 , I2S_NUM_0                          // I2S Interface
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
                                 , I2S_SAMPLE_RATE
-                                , I2S_BITS_PER_SAMPLE_32BIT
+                                , I2S_BITS_PER_SAMPLE_16BIT
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
                                 , true                               // Use APLL
                                 , I2S_BUFFER_COUNT                   // Buffer Count
                                 , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                , I2S2_SCLCK_PIN                     // Serial Clock Pin
-                                , I2S2_WD_PIN                        // Word Selection Pin
-                                , I2S2_SDIN_PIN                      // Serial Data In Pin
-                                , I2S2_SDOUT_PIN );                  // Serial Data Out Pin
+                                , I2S1_SCLCK_PIN                     // Serial Clock Pin
+                                , I2S1_WD_PIN                        // Word Selection Pin
+                                , I2S1_SDIN_PIN                      // Serial Data In Pin
+                                , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
 
 I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
-                                  , I2S_NUM_1                        // I2S Interface
-                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                  , I2S_SAMPLE_RATE
-                                  , I2S_BITS_PER_SAMPLE_32BIT
-                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                  , I2S_CHANNEL_STEREO
-                                  , true                            // Use APLL
-                                  , I2S_BUFFER_COUNT                // Buffer Count
-                                  , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
-                                  , I2S1_SCLCK_PIN                  // Serial Clock Pin
-                                  , I2S1_WD_PIN                     // Word Selection Pin
-                                  , I2S1_SDIN_PIN                   // Serial Data In Pin
-                                  , I2S1_SDOUT_PIN );               // Serial Data Out Pin
+                                 , I2S_NUM_1                        // I2S Interface
+                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                 , I2S_SAMPLE_RATE
+                                 , I2S_BITS_PER_SAMPLE_16BIT
+                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                 , I2S_CHANNEL_STEREO
+                                 , true                            // Use APLL
+                                 , I2S_BUFFER_COUNT                // Buffer Count
+                                 , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
+                                 , I2S2_SCLCK_PIN                  // Serial Clock Pin
+                                 , I2S2_WD_PIN                     // Word Selection Pin
+                                 , I2S2_SDIN_PIN                   // Serial Data In Pin
+                                 , I2S2_SDOUT_PIN );               // Serial Data Out Pin
                                   
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
@@ -241,7 +240,7 @@ void DataMoverTaskLoop(void * parameter)
   for(;;)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 

@@ -41,8 +41,9 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_Mic_In.Setup();
+  m_I2S_Out.Setup();
   m_BT_In.Setup();
-  m_Mic_In.ResgisterForDataBufferRXCallback(this);
+  m_Mic_In.SetCallback(this);
   m_BT_In.ResgisterForRxCallback(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
@@ -54,8 +55,10 @@ void Manager::ProcessEventQueue()
   {
     case InputType_Microphone:
       m_Mic_In.ProcessEventQueue();
+      m_I2S_Out.ProcessEventQueue();
     break;
     case InputType_Bluetooth:
+      m_I2S_Out.ProcessEventQueue();
     break;
     default:
     break;
@@ -111,24 +114,26 @@ void Manager::SetInputType(InputType_t Type)
     case InputType_Microphone:
       m_BT_In.StopDevice();
       m_Mic_In.StartDevice();
+      m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
-      m_Mic_In.StopDevice();
       m_BT_In.StartDevice();
+      m_Mic_In.StopDevice();
+      m_I2S_Out.StopDevice();
     break;
     default:
-      m_Mic_In.StopDevice();
       m_BT_In.StopDevice();
+      m_Mic_In.StopDevice();
+      m_I2S_Out.StopDevice();
     break;
   }
 }
 //Bluetooth_Callback
-void Manager::BTDataReceived(const uint8_t *data, uint32_t length)
+void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 {
-
 }
 //I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length)
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {
-
+  m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
 }

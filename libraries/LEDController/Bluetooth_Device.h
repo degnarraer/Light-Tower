@@ -71,7 +71,7 @@ class Bluetooth_Sink_Callback
 		virtual ~Bluetooth_Sink_Callback(){}
 	
 		//Callbacks called by this class
-		virtual void BTDataReceived(const uint8_t *data, uint32_t length) = 0;
+		virtual void BTDataReceived(uint8_t *data, uint32_t length) = 0;
 };
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils

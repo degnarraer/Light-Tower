@@ -21,7 +21,6 @@
 #include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-#include <SPI_Datalink.h>
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include <BluetoothA2DPSource.h>
@@ -37,20 +36,17 @@ class Manager: public NamedItem
            , Sound_Processor &SoundProcessor
            , SerialDataLink &SerialDataLink
            , Bluetooth_Source &BT_Out
-           , I2S_Device &I2S_In
            , I2S_Device &I2S_Out );
     virtual ~Manager();
-    void AllocateMemory();
-    void FreeMemory();
     void Setup();
     void ProcessEventQueue();
     void WriteDataToBluetooth();
 
-    //Bluetooth Get Data Callback
+    //Bluetooth Set Data Callback
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
     //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, const uint8_t *data, uint32_t length);
+    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
   
   private:
     Sound_Processor &m_SoundProcessor;
@@ -58,7 +54,6 @@ class Manager: public NamedItem
 
     //I2S Sound Data
     I2S_Device &m_I2S_In;
-    I2S_Device &m_I2S_Out;
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
