@@ -28,7 +28,6 @@
 #include <ESP32DMASPIMaster.h>
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
-#include "AudioBuffer.h"
 
 #define AUDIO_BUFFER_FRAME_LENGTH 1024
 #define SPI_FRAMES_LENGTH 1
@@ -166,6 +165,51 @@ class SPI_Datalink_Slave: public NamedItem
 		void task_wait_spi();
 		static void static_task_process_buffer(void* pvParameters);
 		void task_process_buffer();
+};
+
+class AudioBuffer: public NamedItem
+{
+	public:
+		AudioBuffer( String Title)
+				   : NamedItem(Title)
+				   {}
+		virtual ~AudioBuffer()
+		{
+			FreeMemory();
+		}
+		void Initialize()
+		{	
+			AllocateMemory();		
+			if(0 != pthread_mutex_init(&m_Lock, NULL))
+			{
+			   ESP_LOGE("AudioBuffer", "Failed to Create Lock");
+			}
+		}
+		void AllocateMemory()
+		{
+			size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>);
+			void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>*)heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
+			m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>;
+		}
+		void FreeMemory()
+		{
+			heap_caps_free(m_CircularAudioBuffer);
+		}
+		float GetNormalizedFillPercent() 
+		{ 
+			return (float)GetFrameCount() / (float)GetFrameCapacity(); 
+		}
+		size_t GetFrameCapacity();
+		size_t GetFrameCount();
+		size_t GetFreeFrameCount();
+		size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount );
+		bool WriteAudioFrame( Frame_t FrameBuffer );
+		bool ClearAudioBuffer();
+		bfs::optional<Frame_t> ReadAudioFrame();
+	private:
+		bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH> *m_CircularAudioBuffer;
+		pthread_mutex_t m_Lock;
 };
 
 class AudioStreamMaster: public NamedItem

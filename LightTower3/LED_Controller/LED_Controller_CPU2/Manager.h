@@ -20,11 +20,11 @@
 
 #include <I2S_Device.h>
 #include <DataTypes.h>
-#include <BluetoothA2DPSource.h>
 #include <Helpers.h>
-#include "Bluetooth_Device.h"
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
+#include <BluetoothA2DPSource.h>
+#include "Bluetooth_Device.h"
 #include "circle_buf.h"
 
 class Manager: public NamedItem
@@ -51,7 +51,6 @@ class Manager: public NamedItem
   private:
     Sound_Processor &m_SoundProcessor;
     SerialDataLink &m_SerialDataLink;
-    //AudioBuffer m_AudioBuffer;
 
     //I2S Sound Data
     I2S_Device &m_I2S_In;
