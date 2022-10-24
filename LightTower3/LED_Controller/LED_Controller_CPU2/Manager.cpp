@@ -67,6 +67,13 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
 //Bluetooth Source Callback
 int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
+  uint8_t Buffer[channel_len];
+  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Buffer, channel_len);
+  assert(0 == ByteReceived % sizeof(Frame_t)); 
+  memcpy(Data, Buffer, ByteReceived);
+  for(int i = 0; i < ByteReceived; ++i)
+  {
+    m_AudioBuffer.Push(((Frame_t*)Buffer)[i]);
+  }
   return ByteReceived;
 }

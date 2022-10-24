@@ -1,5 +1,7 @@
 #ifndef DataTypes_H
-#define DataTypes_H 
+#define DataTypes_H
+
+#include "Arduino.h"
 
 class NamedItem
 {

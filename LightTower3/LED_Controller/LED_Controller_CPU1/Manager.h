@@ -18,16 +18,14 @@
 
 #ifndef I2S_EventHander_H
 #define I2S_EventHander_H
-
-#include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-#include "Statistical_Engine.h"
-#include "Serial_Datalink_Config.h"
+#include <I2S_Device.h>
 #include <BluetoothA2DPSink.h>
 #include "Bluetooth_Device.h"
-#include <SPI_Datalink.h>
-#include "circle_buf.h"
+#include "Statistical_Engine.h"
+#include "Serial_Datalink_Config.h"
+#include "AudioBuffer.h"
 
 enum InputType_t
 {
@@ -68,6 +66,7 @@ class Manager: public NamedItem
   private:
     StatisticalEngine &m_StatisticalEngine;
     SerialDataLink &m_SerialDataLink;
+    AudioBuffer m_AudioBuffer;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
 
