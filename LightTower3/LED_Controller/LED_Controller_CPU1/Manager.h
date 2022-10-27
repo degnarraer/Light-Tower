@@ -66,7 +66,6 @@ class Manager: public NamedItem
   private:
     StatisticalEngine &m_StatisticalEngine;
     SerialDataLink &m_SerialDataLink;
-    AudioBuffer m_AudioBuffer;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
 

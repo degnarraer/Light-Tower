@@ -54,7 +54,7 @@ class DataSerializer: public CommonUtils
 			doc[m_CheckSumTag] = CheckSum;
 			String Result;
 			serializeJson(doc, Result);
-			Result = m_Startinator + Result + m_Terminator;
+			Result = Result;
 			return Result;
 		}
 		void DeSerializeJsonToMatchingDataItem(String json)

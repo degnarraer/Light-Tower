@@ -29,6 +29,13 @@ struct __attribute__((packed)) Frame_t {
   int16_t channel2;
 };
 
+enum BitLength_t
+{
+  BitLength_32,
+  BitLength_16,
+  BitLength_8,
+};
+
 enum DataType_t
 {
   DataType_Int8_t,

@@ -47,7 +47,6 @@ void read_data_stream(const uint8_t *data, uint32_t length)
 // for esp_a2d_connection_state_t see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp_a2dp.html#_CPPv426esp_a2d_connection_state_t
 void connection_state_changed(esp_a2d_connection_state_t state, void *ptr)
 {
-  ESP_LOGV("Debug", "%s, ", __func__);
   ESP_LOGD("Startup", "State: %s", m_BTSink.to_str(state));
 }
 
@@ -55,7 +54,6 @@ void connection_state_changed(esp_a2d_connection_state_t state, void *ptr)
 // for esp_a2d_audio_state_t see https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/bluetooth/esp_a2dp.html#_CPPv421esp_a2d_audio_state_t
 void audio_state_changed(esp_a2d_audio_state_t state, void *ptr)
 {
-  ESP_LOGV("Debug", "%s, ", __func__);
   ESP_LOGD("Startup", "State: %s", m_BTSink.to_str(state));
 }
 
@@ -146,18 +144,16 @@ void setup()
     0                             // Core where the task should run
   );
 
-  /*
   xTaskCreatePinnedToCore
   (
     TaskMonitorTaskLoop,        // Function to implement the task
     "TaskMonitorTaskTask",          // Name of the task
-    1000,                        // Stack size in words
+    5000,                        // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
     &TaskMonitorTask,           // Task handle.
-    0                             // Core where the task should run
+    1                             // Core where the task should run
   );
-  */
   
   xTaskCreatePinnedToCore
   (
@@ -167,7 +163,7 @@ void setup()
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 2,     // Priority of the task
     &DataMoverTask,               // Task handle.
-    0                             // Core where the task should run
+    1                             // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
@@ -204,17 +200,17 @@ void loop()
 
 void VisualizationTaskLoop(void * parameter)
 {
-  ESP_LOGW("LED_Controller1", "Running Task.");
+  ESP_LOGI("LED_Controller1", "Running Task.");
   for(;;)
   {
-    //m_Scheduler.RunScheduler();
+    m_Scheduler.RunScheduler();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
 void TaskMonitorTaskLoop(void * parameter)
 {
-  ESP_LOGW("LED_Controller1", "Running Task.");
+  ESP_LOGI("LED_Controller1", "Running Task.");
   for(;;)
   {
     size_t StackSizeThreshold = 100;
@@ -236,7 +232,7 @@ void TaskMonitorTaskLoop(void * parameter)
 
 void DataMoverTaskLoop(void * parameter)
 {
-  ESP_LOGW("LED_Controller1", "Running Task.");
+  ESP_LOGI("LED_Controller1", "Running Task.");
   for(;;)
   {
     m_Manager.ProcessEventQueue();
@@ -246,20 +242,20 @@ void DataMoverTaskLoop(void * parameter)
 
 void SerialDataLinkTXTaskLoop(void * parameter)
 {
-  ESP_LOGW("LED_Controller1", "Running Task.");
+  ESP_LOGI("LED_Controller1", "Running Task.");
   for(;;)
   {
-    //m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SerialDataLink.ProcessDataTXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
 void SerialDataLinkRXTaskLoop(void * parameter)
 {
-  ESP_LOGW("LED_Controller1", "Running Task.");
+  ESP_LOGI("LED_Controller1", "Running Task.");
   for(;;)
   {
-    //m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SerialDataLink.ProcessDataRXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

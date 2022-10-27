@@ -25,17 +25,27 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
 
 HardwareSerial m_hSerial = Serial1;
-SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
-Sound_Processor m_SoundProcessor = Sound_Processor("Sound Processor", m_SerialDataLink);
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
-                                            
+
+AudioBuffer<441> m_AudioBufferAmplitude;
+AudioBuffer<512> m_AudioBufferFFT;
+
+SerialDataLink m_SerialDataLink = SerialDataLink( "Serial Datalink"
+                                                , m_hSerial);
+                                                
+Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
+                                                  , m_SerialDataLink
+                                                  , m_AudioBufferAmplitude
+                                                  , m_AudioBufferFFT );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SerialDataLink
+                           , m_AudioBufferAmplitude
+                           , m_AudioBufferFFT
                            , m_BT_Out
                            , m_I2S_In);
 
@@ -68,6 +78,8 @@ void setup()
   m_BT_Out.Setup();
   m_BT_Out.SetCallback(SetBTTxData);
   m_SerialDataLink.SetupSerialDataLink();
+  m_AudioBufferAmplitude.Initialize();
+  m_AudioBufferFFT.Initialize();
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore
@@ -100,7 +112,7 @@ void setup()
     NULL,                           // Task input parameter
     configMAX_PRIORITIES,           // Priority of the task
     &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   ); 
   
   xTaskCreatePinnedToCore
@@ -138,8 +150,8 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
   {
-    //m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SoundProcessor.ProcessSoundPower();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -147,8 +159,8 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
-    //m_SoundProcessor.ProcessFFT();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SoundProcessor.ProcessFFT();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -165,7 +177,7 @@ void SerialDataLinkRXTaskLoop(void * parameter)
 {
   while(true)
   {
-    //m_SerialDataLink.ProcessDataRXEventQueue();
+    m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
@@ -174,7 +186,7 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 {
   while(true)
   {
-    //m_SerialDataLink.ProcessDataTXEventQueue();
+    m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
