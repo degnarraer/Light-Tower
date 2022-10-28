@@ -37,8 +37,8 @@ class Sound_Processor: public NamedItem
   public:
     Sound_Processor( String Title
                    , SerialDataLink &SerialDataLink
-                   , AudioBuffer<441> &AudioBufferAmplitude
-                   , AudioBuffer<512> &AudioBufferFFT);
+                   , AudioBuffer<1764> &AudioBufferAmplitude
+                   , AudioBuffer<2048> &AudioBufferFFT);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain){m_Gain = Gain;}
@@ -47,8 +47,8 @@ class Sound_Processor: public NamedItem
   private:
     QueueManager *m_QueueManager;
     SerialDataLink &m_SerialDataLink;
-    AudioBuffer<441> &m_AudioBufferAmplitude;
-    AudioBuffer<512> &m_AudioBufferFFT;
+    AudioBuffer<1764> &m_AudioBufferAmplitude;
+    AudioBuffer<2048> &m_AudioBufferFFT;
 
     //Memory Management
     bool m_MemoryIsAllocated = false;

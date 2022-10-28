@@ -60,6 +60,19 @@ class FFT_Calculator
       assert(true == m_SolutionReady);
       return &m_MajorPeak;
     }
+    size_t GetRequiredValueCount()
+    {
+      return m_FFT_Size - m_CurrentIndex;
+    }
+    bool PushValuesAndCalculateNormalizedFFT(int32_t *value, size_t Count, float Gain)
+    {
+      bool result = false;
+      for(int i = 0; i < Count; ++i)
+      {
+        result = PushValueAndCalculateNormalizedFFT(value[i], Gain);
+      }
+      return result;
+    }
     bool PushValueAndCalculateNormalizedFFT(int32_t value, float Gain)
     {
       m_SolutionReady = false;

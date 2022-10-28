@@ -22,7 +22,8 @@
 
 
 #include "Datatypes.h"
-#include "CircularBuffer.h"
+#include "CircularBuffer.h" 
+#include "circle_buf.h"
 
 template <uint32_t T>
 class AudioBuffer
@@ -30,6 +31,124 @@ class AudioBuffer
   public:
     AudioBuffer(){}
     virtual ~AudioBuffer()
+    {
+      FreeMemory();
+    }
+    void Initialize()
+	{ 
+	  AllocateMemory();   
+	  if(0 != pthread_mutex_init(&m_Lock, NULL))
+	  {
+		 ESP_LOGE("TestClass", "Failed to Create Lock");
+	  }
+	}
+
+	void AllocateMemory()
+	{
+		size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, T>);
+		void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, T>*)heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
+		m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, T>;
+	}
+
+	void FreeMemory()
+	{
+	 heap_caps_free(m_CircularAudioBuffer);
+	}
+	size_t GetFrameCapacity()
+	{
+		size_t Capacity = 0;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			Capacity = m_CircularAudioBuffer->capacity();
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return Capacity;
+	}
+
+	bool ClearAudioBuffer()
+	{
+		bool Success = false;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			m_CircularAudioBuffer->Clear();
+			Success = true;
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return Success;
+	}
+
+	size_t GetFrameCount()
+	{
+		size_t size = 0;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			size = m_CircularAudioBuffer->size();
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return size;
+	}
+
+	size_t GetFreeFrameCount()
+	{
+		return GetFrameCapacity() - GetFrameCount();
+	}
+
+	size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount )
+	{
+		size_t FramesWritten = 0;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			FramesWritten = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return FramesWritten;
+	}
+
+	bool WriteAudioFrame( Frame_t Frame )
+	{
+		bool Success = false;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			Success = m_CircularAudioBuffer->Write(Frame);
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return Success;
+	}
+
+	size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
+	{
+		size_t FramesRead = 0;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			FramesRead = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return FramesRead;
+	}
+
+	bfs::optional<Frame_t> ReadAudioFrame()
+	{
+		bfs::optional<Frame_t> FrameRead;
+		if(0 == pthread_mutex_lock(&m_Lock))
+		{
+			FrameRead = m_CircularAudioBuffer->Read();
+			pthread_mutex_unlock(&m_Lock);
+		}
+		return FrameRead;
+	}
+	
+	private:
+		bfs::CircleBuf<Frame_t, T> *m_CircularAudioBuffer;
+		pthread_mutex_t m_Lock;
+};
+
+
+template <uint32_t T>
+class ContinuousAudioBuffer
+{
+  public:
+    ContinuousAudioBuffer(){}
+    virtual ~ContinuousAudioBuffer()
     {
       FreeMemory();
     }
@@ -153,6 +272,6 @@ class AudioBuffer
 	  private:
 		CircularBuffer<Frame_t, T> *m_CircularAudioBuffer;
 		pthread_mutex_t m_Lock;
-	};
+};
 
 #endif

@@ -21,8 +21,8 @@
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
                 , SerialDataLink &SerialDataLink
-                , AudioBuffer<441> &AudioBufferAmplitude
-                , AudioBuffer<512> &AudioBufferFFT
+                , AudioBuffer<1764> &AudioBufferAmplitude
+                , AudioBuffer<2048> &AudioBufferFFT
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
@@ -47,7 +47,6 @@ void Manager::Setup()
 
 void Manager::ProcessEventQueue()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
   UpdateNotificationRegistrationStatus();
   m_I2S_In.ProcessEventQueue();
 }
@@ -71,14 +70,18 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
 //Bluetooth Source Callback
 int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  uint8_t Buffer[channel_len];
-  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Buffer, channel_len);
+  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
   assert(0 == ByteReceived % sizeof(Frame_t)); 
-  size_t FramesReceived = ByteReceived / sizeof(Frame_t);
-  memcpy(Data, Buffer, ByteReceived);
-  for(int i = 0; i < FramesReceived; ++i)
+  size_t FrameCount = ByteReceived / sizeof(Frame_t);
+  if(m_AudioBufferAmplitude.GetFreeFrameCount() < FrameCount)
   {
-    m_AudioBufferAmplitude.Push(((Frame_t*)Buffer)[i]);
+    m_AudioBufferAmplitude.ClearAudioBuffer();
   }
+  if(m_AudioBufferFFT.GetFreeFrameCount() < FrameCount)
+  {
+    m_AudioBufferFFT.ClearAudioBuffer();
+  }
+  m_AudioBufferAmplitude.WriteAudioFrames((Frame_t*)Data, FrameCount);
+  m_AudioBufferFFT.WriteAudioFrames((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }

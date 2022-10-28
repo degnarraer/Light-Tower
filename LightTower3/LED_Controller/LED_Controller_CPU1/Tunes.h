@@ -35,7 +35,7 @@
 
 //App Debugging
 #define STARTUP_DEBUG false
-#define TASK_STACK_SIZE_DEBUG false
+#define TASK_STACK_SIZE_DEBUG true
 #define HEAP_SIZE_DEBUG false
 
 //Visualization Debug Messages

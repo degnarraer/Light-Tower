@@ -63,7 +63,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
-	m_BTSink.set_volume(100);
+	m_BTSink.set_volume(200);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice()
