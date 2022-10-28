@@ -132,7 +132,6 @@ void StatisticalEngine::RunMyScheduledTask()
       m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
       m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
       UpdateSoundState();
-      Serial << "Power: " << m_Power << "\n";
     }
     else
     {

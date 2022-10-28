@@ -696,11 +696,11 @@ public:
       : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
       , m_Depth(Depth)
     {
-      if (true == debugMemory) Serial << "New: MaximumBandPowerModel\n";
+      if (true == debugMemory) Serial << "New: MaximumBandModel\n";
     }
     virtual ~MaximumBandModel()
     {
-      if (true == debugMemory) Serial << "Delete: MaximumBandPowerModel\n";
+      if (true == debugMemory) Serial << "Delete: MaximumBandModel\n";
     }
 protected:
     //StatisticalEngineModelInterfaceUsers
@@ -711,7 +711,8 @@ private:
     BandData m_MaxBandData;
     unsigned int m_Depth = 0;
     //Model
-    void UpdateValue() {
+    void UpdateValue()
+    {
       SetCurrentValue( m_MaxBandData );
     }
     void SetupModel() { }
@@ -720,6 +721,7 @@ private:
     }
     void RunModelTask()
     {
+      Serial << "Run\n";
       unsigned int maxBandIndex = 0;
       float maxBandPowerValue = 0.0;
       unsigned int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
@@ -738,43 +740,6 @@ private:
     }
 };
 
-class MaximumBinModel: public DataModelWithNewValueNotification<struct BandData>
-{
-public:
-    MaximumBinModel( String Title, unsigned int Depth, StatisticalEngineModelInterface &StatisticalEngineModelInterface )
-      : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
-      , m_Depth(Depth)
-    {
-      if (true == debugMemory) Serial << "New: MaximumBandPowerModel\n";
-    }
-    virtual ~MaximumBinModel()
-    {
-      if (true == debugMemory) Serial << "Delete: MaximumBandPowerModel\n";
-    }
-protected:
-    //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() {
-      return true;
-    }
-private:
-    BandData m_MaxBandData;
-    unsigned int m_Depth = 0;
-    //Model
-    void UpdateValue() {
-      SetCurrentValue( m_MaxBandData );
-    }
-    void SetupModel() { }
-    bool CanRunModelTask() {
-      return true;
-    }
-    void RunModelTask()
-    {
-      MaxBandSoundData_t MaxBandSoundData = m_StatisticalEngineModelInterface.GetMaxBandSoundData();
-      m_MaxBandData.Power = MaxBandSoundData.MaxBandNormalizedPower;
-      m_MaxBandData.Band = MaxBandSoundData.MaxBandIndex;
-      m_MaxBandData.Color = GetColor(MaxBandSoundData.MaxBandIndex, MaxBandSoundData.TotalBands);
-    }
-};
 class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
   , public ModelEventNotificationCallee<BandData>
 {

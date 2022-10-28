@@ -150,7 +150,6 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -160,7 +159,6 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SoundProcessor.ProcessFFT();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -170,7 +168,6 @@ void ManagerTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_Manager.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -180,7 +177,6 @@ void SerialDataLinkRXTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
@@ -190,7 +186,6 @@ void SerialDataLinkTXTaskLoop(void * parameter)
 {
   while(true)
   {
-    yield();
     m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
