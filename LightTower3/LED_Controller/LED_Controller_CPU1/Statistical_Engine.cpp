@@ -37,7 +37,7 @@ bool StatisticalEngine::NewBandDataReady()
   unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BANDS")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS")) > 0);
-  //Serial << A << "|" << B << "\n";
+  Serial << "NewBandData: " <<  A << "|" << B << "\n";
   if( A & B )
   {
     m_NewBandDataCurrentTime = currentTime;
@@ -64,7 +64,7 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBAND")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBAND")) > 0);
-  //Serial << A << "|" << B << "\n";
+  Serial << "NewMaxBand: " << A << "|" << B << "\n";
   if( A & B )
   {
     m_NewMaxBandSoundDataCurrentTime = currentTime;
@@ -91,7 +91,7 @@ bool StatisticalEngine::NewSoundDataReady()
   unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD")) > 0);
-  //Serial << A << "|" << B << "\n";
+  Serial << "NewSoundData: " <<  A << "|" << B << "\n";
   if( A & B )
   {
     m_NewSoundDataCurrentTime = currentTime;
