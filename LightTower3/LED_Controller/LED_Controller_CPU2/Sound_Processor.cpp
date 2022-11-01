@@ -19,10 +19,10 @@
 #include "Sound_Processor.h"
 
 Sound_Processor::Sound_Processor( String Title
-                                , SerialDataLink &SerialDataLink )
+                                , SPIDataLinkMaster &SPIDataLinkMaster )
                                 : NamedItem(Title)
-                                , QueueManager(Title, m_ConfigCount)
-                                , m_SerialDataLink(SerialDataLink)
+                                , QueueManager(Title, m_SoundProcessorConfigCount)
+                                , m_SPIDataLinkMaster(SPIDataLinkMaster)
 {
 }
 Sound_Processor::~Sound_Processor()
@@ -32,8 +32,8 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::SetupSoundProcessor()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  if(true == m_MemoryIsAllocated)FreeMemory();
   AllocateMemory();
+  SetupQueueManager();
 }
 void Sound_Processor::AllocateMemory()
 {
@@ -52,50 +52,54 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Left_Channel_FFT()
   bool R_FFT_Calculated = false;
   bool L_FFT_Calculated = false;
   
-  if(QueueIn != NULL && uxQueueMessagesWaiting(QueueIn) > 0)
+  if(QueueIn != NULL)
   {
-    size_t FrameCount = GetSampleCountForDataItem("FFT_Frames");
-    size_t ByteCount = GetTotalByteCountForDataItem("FFT_Frames");
-    Frame_t FrameBuffer[FrameCount];
-    GetValueFromRXQueue(FrameBuffer, "Amplitude_Frames", ByteCount, false, false);
-    for(int i = 0; i < FrameCount; ++i)
+    if(uxQueueMessagesWaiting(QueueIn) > 0)
     {
-      if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(FrameBuffer[i].channel1, m_FFT_Gain))
+      size_t FrameCount = GetSampleCountForDataItem("FFT_Frames");
+      size_t ByteCount = GetTotalByteCountForDataItem("FFT_Frames");
+      
+      Frame_t *FrameBuffer = (Frame_t*)GetDataBufferForDataItem("FFT_Frames");
+      GetValueFromRXQueue((void*)FrameBuffer, "FFT_Frames", ByteCount, false);
+  
+      for(int i = 0; i < FrameCount; ++i)
       {
-        Sound_16Bit_44100Hz_Right_Channel_FFT();
-        R_FFT_Calculated = true;
+        if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(FrameBuffer[i].channel1, m_FFT_Gain))
+        {
+          Sound_16Bit_44100Hz_Right_Channel_FFT();
+          R_FFT_Calculated = true;
+        }
+        if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(FrameBuffer[i].channel2, m_FFT_Gain))
+        {
+          Sound_16Bit_44100Hz_Left_Channel_FFT();
+          L_FFT_Calculated = true;
+        }
+        assert(R_FFT_Calculated == L_FFT_Calculated);
       }
-      if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(FrameBuffer[i].channel2, m_FFT_Gain))
-      {
-        Sound_16Bit_44100Hz_Left_Channel_FFT();
-        L_FFT_Calculated = true;
-      }
-      assert(R_FFT_Calculated == L_FFT_Calculated);
     }
   }
 }
 
 void Sound_Processor::Sound_16Bit_44100Hz_Right_Channel_FFT()
 {
-  Serial << "Calculate1\n";
-  QueueHandle_t R_Bands_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_BANDS");
-  QueueHandle_t R_MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_MAXBAND");
-  QueueHandle_t R_MajorFreq_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
+  QueueHandle_t R_Bands_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_BANDS");
+  QueueHandle_t R_MaxBin_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_MAXBAND");
+  QueueHandle_t R_MajorFreq_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
   if(NULL != R_Bands_QueueOut && NULL != R_MaxBin_QueueOut && NULL != R_MajorFreq_QueueOut )
   {
-    size_t R_Bands_DataBufferByteCount = m_SerialDataLink.GetTotalByteCountForDataItem("R_BANDS");
-    size_t R_MaxBand_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAXBAND");
+    size_t R_Bands_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_BANDS");
+    size_t R_MaxBand_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("R_MAXBAND");
     assert(1 == R_MaxBand_SampleCount);
-    size_t R_Bands_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_BANDS");
+    size_t R_Bands_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("R_BANDS");
     assert(NUMBER_OF_BANDS == R_Bands_SampleCount);
-    size_t R_MaxBand_DataBufferByteCount = m_SerialDataLink.GetTotalByteCountForDataItem("R_MAXBAND");
-    size_t R_MajorFreq_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("R_MAJOR_FREQ");
-    size_t R_MajorFreq_DataBufferByteCount = m_SerialDataLink.GetTotalByteCountForDataItem("R_MAJOR_FREQ");
+    size_t R_MaxBand_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_MAXBAND");
+    size_t R_MajorFreq_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("R_MAJOR_FREQ");
+    size_t R_MajorFreq_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_MAJOR_FREQ");
     assert(sizeof(MaxBandSoundData_t) == R_MaxBand_DataBufferByteCount);
     assert(1 == R_MajorFreq_SampleCount);
     assert(sizeof(float) == R_MajorFreq_DataBufferByteCount);
-    float *R_Bands_DataBuffer = (float*)m_SerialDataLink.GetDataBufferForDataItem("R_BANDS");
-    MaxBandSoundData_t *R_MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("R_MAXBAND");
+    float *R_Bands_DataBuffer = (float*)m_SPIDataLinkMaster.GetDataBufferForDataItem("R_BANDS");
+    MaxBandSoundData_t *R_MaxBandDataBuffer = (MaxBandSoundData_t *)m_SPIDataLinkMaster.GetDataBufferForDataItem("R_MAXBAND");
     float MaxBandMagnitude = 0;
     int16_t MaxBandIndex = 0;
     memset(R_Bands_DataBuffer, 0, R_Bands_DataBufferByteCount);
@@ -121,25 +125,24 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Channel_FFT()
 }
 void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
 {
-  Serial << "Calculate2\n";
-  QueueHandle_t L_Bands_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_BANDS");
-  QueueHandle_t L_MaxBin_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_MAXBAND");
-  QueueHandle_t L_MajorFreq_QueueOut = m_SerialDataLink.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
+  QueueHandle_t L_Bands_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_BANDS");
+  QueueHandle_t L_MaxBin_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_MAXBAND");
+  QueueHandle_t L_MajorFreq_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
   if( NULL != L_Bands_QueueOut && NULL != L_MaxBin_QueueOut && NULL != L_MajorFreq_QueueOut )
   {
-    size_t L_Bands_DataBufferByteCount = m_SerialDataLink.GetTotalByteCountForDataItem("L_BANDS");
-    size_t L_MaxBand_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAXBAND");
-    float *L_Bands_DataBuffer = (float*)m_SerialDataLink.GetDataBufferForDataItem("L_BANDS");
+    size_t L_Bands_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_BANDS");
+    size_t L_MaxBand_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("L_MAXBAND");
+    float *L_Bands_DataBuffer = (float*)m_SPIDataLinkMaster.GetDataBufferForDataItem("L_BANDS");
     assert(1 == L_MaxBand_SampleCount);
-    size_t L_Bands_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_BANDS");
+    size_t L_Bands_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("L_BANDS");
     assert(NUMBER_OF_BANDS == L_Bands_SampleCount);
-    size_t L_MaxBand_DataBufferByteCount = m_SerialDataLink.GetTotalByteCountForDataItem("L_MAXBAND");
-    size_t L_MajorFreq_SampleCount = m_SerialDataLink.GetSampleCountForDataItem("L_MAJOR_FREQ");
-    size_t L_MajorFreq_DataBufferByteCount = m_SerialDataLink.GetTotalByteCountForDataItem("L_MAJOR_FREQ");
+    size_t L_MaxBand_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_MAXBAND");
+    size_t L_MajorFreq_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("L_MAJOR_FREQ");
+    size_t L_MajorFreq_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_MAJOR_FREQ");
     assert(sizeof(MaxBandSoundData_t) == L_MaxBand_DataBufferByteCount);
     assert(1 == L_MajorFreq_SampleCount);
     assert(sizeof(float) == L_MajorFreq_DataBufferByteCount);
-    MaxBandSoundData_t *L_MaxBandDataBuffer = (MaxBandSoundData_t *)m_SerialDataLink.GetDataBufferForDataItem("L_MAXBAND");
+    MaxBandSoundData_t *L_MaxBandDataBuffer = (MaxBandSoundData_t *)m_SPIDataLinkMaster.GetDataBufferForDataItem("L_MAXBAND");
     float MaxBandMagnitude = 0;
     int16_t MaxBandIndex = 0;
     memset(L_Bands_DataBuffer, 0, L_Bands_DataBufferByteCount);
@@ -166,33 +169,36 @@ void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
 void Sound_Processor::Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power()
 {
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("Amplitude_Frames");
-  QueueHandle_t QueueOut1 = m_SerialDataLink.GetQueueHandleTXForDataItem("R_PSD");
-  QueueHandle_t QueueOut2 = m_SerialDataLink.GetQueueHandleTXForDataItem("L_PSD");
-  assert(1 == m_SerialDataLink.GetSampleCountForDataItem("R_PSD"));
-  assert(1 == m_SerialDataLink.GetSampleCountForDataItem("L_PSD"));
-  
-  if(QueueIn != NULL && QueueOut1 != NULL && QueueOut2 != NULL && uxQueueMessagesWaiting(QueueIn) > 0)
+  QueueHandle_t QueueOut1 = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_PSD");
+  QueueHandle_t QueueOut2 = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_PSD");
+  if(QueueIn != NULL && QueueOut1 != NULL && QueueOut2 != NULL)
   {
-    size_t FrameCount = GetSampleCountForDataItem("Amplitude_Frames");
-    size_t ByteCount = GetTotalByteCountForDataItem("Amplitude_Frames");
-    Frame_t FrameBuffer[FrameCount];
-    GetValueFromRXQueue(FrameBuffer, "Amplitude_Frames", ByteCount, false, false);
-    for(int i = 0; i < FrameCount; ++i)
+    assert(1 == m_SPIDataLinkMaster.GetSampleCountForDataItem("R_PSD"));
+    assert(1 == m_SPIDataLinkMaster.GetSampleCountForDataItem("L_PSD"));
+    if(uxQueueMessagesWaiting(QueueIn) > 0)
     {
-      if(true == m_RightSoundData.PushValueAndCalculateSoundData(FrameBuffer[i].channel1))
+      size_t FrameCount = GetSampleCountForDataItem("Amplitude_Frames");
+      size_t ByteCount = GetTotalByteCountForDataItem("Amplitude_Frames");
+         
+      Frame_t *FrameBuffer = (Frame_t*)GetDataBufferForDataItem("Amplitude_Frames");
+      GetValueFromRXQueue((void*)FrameBuffer, "Amplitude_Frames", ByteCount, false);
+      for(int i = 0; i < FrameCount; ++i)
       {
-        static bool R_PSD_Push_Successful = true;
-        if( NULL != QueueOut1 )
+        if(true == m_RightSoundData.PushValueAndCalculateSoundData(FrameBuffer[i].channel1))
         {
-          PushValueToQueue(m_RightSoundData.GetProcessedSoundDataPointer(), QueueOut1, false, "Right Processed Sound Data: R_PSD", R_PSD_Push_Successful);
+          static bool R_PSD_Push_Successful = true;
+          if( NULL != QueueOut1 )
+          {
+            PushValueToQueue(m_RightSoundData.GetProcessedSoundDataPointer(), QueueOut1, false, "Right Processed Sound Data: R_PSD", R_PSD_Push_Successful);
+          }
         }
-      }
-      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(FrameBuffer[i].channel2))
-      {
-        static bool L_PSD_Push_Successful = true;
-        if( NULL != QueueOut2 )
+        if(true == m_LeftSoundData.PushValueAndCalculateSoundData(FrameBuffer[i].channel2))
         {
-          PushValueToQueue(m_LeftSoundData.GetProcessedSoundDataPointer(), QueueOut2, false, "Left Processed Sound Data: L_PSD", L_PSD_Push_Successful);
+          static bool L_PSD_Push_Successful = true;
+          if( NULL != QueueOut2 )
+          {
+            PushValueToQueue(m_LeftSoundData.GetProcessedSoundDataPointer(), QueueOut2, false, "Left Processed Sound Data: L_PSD", L_PSD_Push_Successful);
+          }
         }
       }
     }

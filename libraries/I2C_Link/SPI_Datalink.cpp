@@ -18,11 +18,62 @@
 #include "SPI_Datalink.h"
 #include "pthread.h"
 
-size_t SPI_Datalink_Master::TransferBytes(uint8_t * TXBuffer, uint8_t * RXBuffer, size_t Length)
+void SPI_Datalink_Master::ProcessDataTXEventQueue()
+{
+	if(NULL != m_DataItems)
+	{
+		for(int i = 0; i < m_DataItemsCount; ++i)
+		{
+			if(NULL != m_DataItems[i].QueueHandle_TX)
+			{
+				if(uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) > 0)
+				{
+					ESP_LOGV("Serial_Datalink", "%s Queue Count : %i", m_Title, uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX));
+					ProcessTXData(m_DataItems[i]);
+				}
+			}
+		}
+	}
+}
+
+size_t SPI_Datalink_Master::TransferBytes(size_t Length)
 {
 	assert(Length <= SPI_MAX_DATA_BYTES);
-	size_t ReceivedLength = m_SPI_Master.transfer(TXBuffer, RXBuffer, Length);
+	size_t ReceivedLength = m_SPI_Master.transfer(spi_tx_buf, spi_rx_buf, Length);
 	return ReceivedLength;
+}
+
+bool SPI_Datalink_Master::Begin() 
+{ 
+	return m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+}
+bool SPI_Datalink_Master::End()
+{
+	return m_SPI_Master.end();
+}
+
+void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
+{
+	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
+	ESP_LOGD("SPI_Datalink", "TX: %s", );
+	assert(strlen(DataToSend.c_str()) < SPI_MAX_DATA_BYTES);
+	memcpy(spi_tx_buf, DataToSend.c_str(), strlen(DataToSend.c_str()));
+	TransferBytes(strlen(DataToSend.c_str()));
+}
+
+void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
+{
+	if(NULL != DataItem.QueueHandle_TX)
+	{
+		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
+		if(MessageCount > 0)
+		{
+			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
+			{
+				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
+			}
+		}
+	}
 }
 
 void SPI_Datalink_Slave::static_task_wait_spi(void* pvParameters)
@@ -57,4 +108,9 @@ void SPI_Datalink_Slave::task_process_buffer()
 		m_SPI_Slave.pop();
 		xTaskNotifyGive(task_handle_wait_spi);
 	}
+}
+
+void SPI_Datalink_Slave::ProcessDataRXEventQueue()
+{
+	
 }

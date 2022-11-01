@@ -5,8 +5,7 @@
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
-TaskHandle_t SerialDataLinkTXTask;
-TaskHandle_t SerialDataLinkRXTask;
+TaskHandle_t SPIDataLinkMasterTXTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_NUM_1
@@ -24,21 +23,18 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S1_SDIN_PIN                      // Serial Data In Pin
                                  , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
 
-HardwareSerial m_hSerial = Serial1;
-
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-SerialDataLink m_SerialDataLink = SerialDataLink( "Serial Datalink"
-                                                , m_hSerial);
-                                                
+SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink", 15, 17, 18, 19, 0);
+                                             
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SerialDataLink );                                            
+                                                  , m_SPIDataLinkMaster );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
-                           , m_SerialDataLink
+                           , m_SPIDataLinkMaster
                            , m_BT_Out
                            , m_I2S_In);
 
@@ -49,13 +45,7 @@ int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
 }
 
 void setup() 
-{
-  //ESP32 Serial Communication
-  m_hSerial.setRxBufferSize(1000);
-  m_hSerial.flush();
-  m_hSerial.begin(250000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
-  m_hSerial.flush();
-    
+{  
   //PC Serial Communication
   Serial.flush();
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
@@ -66,67 +56,19 @@ void setup()
   ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
   ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
-  
-  m_I2S_In.Setup();
-  m_BT_Out.Setup();
-  m_BT_Out.SetCallback(SetBTTxData);
-  m_SerialDataLink.SetupSerialDataLink();
-  m_Manager.Setup();
 
-  xTaskCreatePinnedToCore
-  (
-    ProcessSoundPowerTaskLoop,      // Function to implement the task
-    "ProcessSoundPowerTask",        // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &ProcessSoundPowerTask,         // Task handle.
-    0                               // Core where the task should run
-  );
+  m_I2S_In.Setup();
+  m_BT_Out.SetCallback(SetBTTxData);
+  m_BT_Out.Setup();
+  m_SoundProcessor.SetupSoundProcessor();
+  m_SPIDataLinkMaster.SetupSPIDataLink();
+  m_Manager.Setup();
   
-  xTaskCreatePinnedToCore
-  (
-    ProcessFFTTaskLoop,             // Function to implement the task
-    "ProcessFFTTask",               // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,      // Priority of the task
-    &ProcessFFTTask,                // Task handle.
-    0                               // Core where the task should run
-  );
+  xTaskCreatePinnedToCore( ManagerTaskLoop, "ManagerTask", 20000, NULL, configMAX_PRIORITIES-1, &ManagerTask, 1); 
+  xTaskCreatePinnedToCore( SPIDataLinkMasterTXTaskLoop, "SPIDataLinkMasterTXTask", 4000, NULL, configMAX_PRIORITIES - 2, &SPIDataLinkMasterTXTask, 1);
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask", 10000, NULL, configMAX_PRIORITIES - 1, &ProcessSoundPowerTask, 0);
+  xTaskCreatePinnedToCore( ProcessFFTTaskLoop, "ProcessFFTTask", 4000, NULL, configMAX_PRIORITIES - 1, &ProcessFFTTask, 0);
   
-  xTaskCreatePinnedToCore
-  (
-    ManagerTaskLoop,                // Function to implement the task
-    "ManagerTask",                  // Name of the task
-    10000,                          // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES,           // Priority of the task
-    &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
-  ); 
-  
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkTXTaskLoop,       // Function to implement the task
-    "SerialDataLinkTXTask",         // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
-    &SerialDataLinkTXTask,          // Task handle.
-    1                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkRXTaskLoop,       // Function to implement the task
-    "SerialDataLinkRXTask",         // Name of the task
-    2000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
-    &SerialDataLinkRXTask,          // Task handle.
-    1                               // Core where the task should run
-  );
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());
@@ -142,7 +84,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -151,7 +93,7 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -164,20 +106,11 @@ void ManagerTaskLoop(void * parameter)
   }
 }
 
-void SerialDataLinkRXTaskLoop(void * parameter)
+void SPIDataLinkMasterTXTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-
-void SerialDataLinkTXTaskLoop(void * parameter)
-{
-  while(true)
-  {
-    m_SerialDataLink.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    m_SPIDataLinkMaster.ProcessDataTXEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }

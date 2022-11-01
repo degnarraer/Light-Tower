@@ -29,9 +29,7 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define AUDIO_BUFFER_FRAME_LENGTH 1024
-#define SPI_FRAMES_LENGTH 1
-#define SPI_MAX_DATA_BYTES SPI_FRAMES_LENGTH * sizeof(Frame_t)
+#define SPI_MAX_DATA_BYTES 1000
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -51,14 +49,22 @@ class SPI_Datalink: public DataSerializer
 		SPI_Datalink( uint8_t SCK
 					, uint8_t MISO
 					, uint8_t MOSI
-					, uint8_t SS )
+					, uint8_t SS
+					, uint8_t DMA_Channel)
 					: m_SCK(SCK)
 					, m_MISO(MISO)
 					, m_MOSI(MOSI)
 					, m_SS(SS)
+					, m_DMA_Channel(DMA_Channel)
 					{
 					}
 		virtual ~SPI_Datalink(){}
+		void SetSerialDataLinkDataItems(DataItem_t& DataItems, size_t Count) 
+		{ 
+			m_DataItems = &DataItems;
+			m_DataItemsCount = Count;
+			SetDataSerializerDataItems(DataItems, Count);
+		}
 	protected:
 		uint8_t* spi_tx_buf;
 		uint8_t* spi_rx_buf;
@@ -66,58 +72,60 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
 		uint8_t m_SS;
-	private:
+		uint8_t m_DMA_Channel = 0;
+		DataItem_t* m_DataItems;
+		size_t m_DataItemsCount = 0;
+	private:	
 };
 
-class SPI_Datalink_Master: public NamedItem
-						 , public SPI_Datalink
+class SPI_Datalink_Master: public SPI_Datalink
 {
 	public:
 		SPI_Datalink_Master( String Title
 						   , uint8_t SCK
 						   , uint8_t MISO
 						   , uint8_t MOSI
-						   , uint8_t SS )
-						   : NamedItem(Title)
-						   , SPI_Datalink(SCK, MISO, MOSI, SS){}
+						   , uint8_t SS
+						   , uint8_t DMA_Channel )
+						   : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
+						   , m_Title(Title){}
 		virtual ~SPI_Datalink_Master(){}
+		void ProcessDataTXEventQueue();
+	protected:
 		void Setup_SPI_Master()
 		{
 			spi_rx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
 			spi_tx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
 			memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 			memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-			m_SPI_Master.setDMAChannel(2);
+			m_SPI_Master.setDMAChannel(m_DMA_Channel);
 			m_SPI_Master.setMaxTransferSize(SPI_MAX_DATA_BYTES);
 			m_SPI_Master.setDataMode(SPI_MODE0);
 			m_SPI_Master.setFrequency(CLOCK_SPEED);
 			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
 			Begin();
 		}
-		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
-		bool Begin() 
-		{ 
-			return m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
-		}
-		bool End()
-		{
-			return m_SPI_Master.end();
-		}
+		size_t TransferBytes(size_t Length);
+		bool Begin();
+		bool End();
 	private:
+		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
+		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
+		void ProcessTXData(DataItem_t DataItem);
 };
 
-class SPI_Datalink_Slave: public NamedItem
-						, public SPI_Datalink
+class SPI_Datalink_Slave: public SPI_Datalink
 {
 	public:
 		SPI_Datalink_Slave( String Title
 						  , uint8_t SCK
 						  , uint8_t MISO
 						  , uint8_t MOSI
-						  , uint8_t SS )
-						  : NamedItem(Title)
-						  , SPI_Datalink(SCK, MISO, MOSI, SS){}
+						  , uint8_t SS
+						  , uint8_t DMA_Channel )
+						  : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
+						  , m_Title(Title){}
 		virtual ~SPI_Datalink_Slave(){}
 		void Setup_SPI_Slave()
 		{
@@ -125,14 +133,14 @@ class SPI_Datalink_Slave: public NamedItem
 			spi_tx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
 			memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 			memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-			m_SPI_Slave.setDMAChannel(2);
+			m_SPI_Slave.setDMAChannel(m_DMA_Channel);
 			m_SPI_Slave.setMaxTransferSize(SPI_MAX_DATA_BYTES);
 			m_SPI_Slave.setDataMode(SPI_MODE0);
 			xTaskCreatePinnedToCore
 			(
 				static_task_wait_spi,
 				"task_wait_spi",
-				10000,
+				SPI_MAX_DATA_BYTES,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_wait_spi,
@@ -142,7 +150,7 @@ class SPI_Datalink_Slave: public NamedItem
 			(
 				static_task_process_buffer,
 				"task_process_buffer",
-				10000,
+				SPI_MAX_DATA_BYTES,
 				this,
 				configMAX_PRIORITIES-1,
 				&task_handle_process_buffer,
@@ -156,7 +164,9 @@ class SPI_Datalink_Slave: public NamedItem
 		{
 			m_Notifiee = Notifiee;
 		}
+		void ProcessDataRXEventQueue();
 	private:
+		String m_Title = "";
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
 		TaskHandle_t task_handle_process_buffer = 0;

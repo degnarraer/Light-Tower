@@ -39,12 +39,14 @@ class Bluetooth_Source: public NamedItem
 		virtual ~Bluetooth_Source(){}
 		void Setup()
 		{
+			ESP_LOGE("Bluetooth Device", "%s: Configuring Bluetooth Device.", GetTitle().c_str()); 
 			m_BTSource.set_nvs_init(true);
 			m_BTSource.set_reset_ble(true);
 			m_BTSource.set_auto_reconnect(false);
 			m_BTSource.set_ssp_enabled(false);
 			m_BTSource.set_local_name("LED Tower of Power");
-			m_BTSource.set_task_priority(configMAX_PRIORITIES - 0);
+			m_BTSource.set_task_priority(configMAX_PRIORITIES - 1);
+			ESP_LOGE("Bluetooth Device", "%s: Bluetooth Device Configured.", GetTitle().c_str()); 
 		}
 		void SetCallback(music_data_cb_t callback)
 		{
@@ -52,7 +54,16 @@ class Bluetooth_Source: public NamedItem
 		}			
 		void StartDevice()
 		{
-			m_BTSource.start_raw(mp_SourceName, m_callback);
+			ESP_LOGE("Bluetooth Device", "%s: Starting Bluetooth Device.", GetTitle().c_str());
+			if(NULL != mp_SourceName && NULL != m_callback)
+			{
+				m_BTSource.start_raw(mp_SourceName, m_callback);
+				ESP_LOGE("Bluetooth Device", "%s: Bluetooth Device Started.", GetTitle().c_str());
+			}
+			else
+			{
+				ESP_LOGE("Bluetooth Device", "%s: Failed to Start Bluetooth Device!", GetTitle().c_str());
+			}
 		}
 		void StopDevice()
 		{
@@ -143,6 +154,7 @@ class Bluetooth_Sink: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
 	bool m_Is_Running = false;
+	bool m_Is_Installed = false;
 	const char *mp_SinkName;
 	void InstallDevice();
 
