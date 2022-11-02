@@ -48,7 +48,7 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , StatisticalEngine &StatisticalEngine
-           , SerialDataLink &SerialDataLink
+           , SPIDataLinkSlave &SPIDataLinkSlave
            , Bluetooth_Sink &BT_In
            , I2S_Device &Mic_In
            , I2S_Device &I2S_Out );
@@ -65,7 +65,7 @@ class Manager: public NamedItem
     
   private:
     StatisticalEngine &m_StatisticalEngine;
-    SerialDataLink &m_SerialDataLink;
+    SPIDataLinkSlave &m_SPIDataLinkSlave;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
 

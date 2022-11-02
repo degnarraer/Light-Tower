@@ -18,7 +18,6 @@
 
 #ifndef SERIAL_DATALINK_CONFIG_H
 #define SERIAL_DATALINK_CONFIG_H
-#include <Serial_Datalink_Core.h>
 #include "SPI_Datalink.h"
 
 class SPIDataLinkMaster: public NamedItem
@@ -43,6 +42,10 @@ class SPIDataLinkMaster: public NamedItem
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
       Setup_SPI_Master();
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
+    }
+    void ProcessTXEventQueue()
+    {
+      ProcessDataTXEventQueue();
     }
   private:
     

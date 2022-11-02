@@ -110,7 +110,7 @@ void SPIDataLinkMasterTXTaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SPIDataLinkMaster.ProcessDataTXEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    m_SPIDataLinkMaster.ProcessTXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

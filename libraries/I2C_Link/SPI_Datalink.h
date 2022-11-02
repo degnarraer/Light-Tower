@@ -29,7 +29,7 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define SPI_MAX_DATA_BYTES 1000
+#define SPI_MAX_DATA_BYTES 2000
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -50,7 +50,7 @@ class SPI_Datalink: public DataSerializer
 					, uint8_t MISO
 					, uint8_t MOSI
 					, uint8_t SS
-					, uint8_t DMA_Channel)
+					, uint8_t DMA_Channel )
 					: m_SCK(SCK)
 					, m_MISO(MISO)
 					, m_MOSI(MOSI)
@@ -66,8 +66,8 @@ class SPI_Datalink: public DataSerializer
 			SetDataSerializerDataItems(DataItems, Count);
 		}
 	protected:
-		uint8_t* spi_tx_buf;
-		uint8_t* spi_rx_buf;
+		uint8_t* spi_tx_buf = NULL;
+		uint8_t* spi_rx_buf = NULL;
 		uint8_t m_SCK;
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
@@ -90,21 +90,9 @@ class SPI_Datalink_Master: public SPI_Datalink
 						   : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
 						   , m_Title(Title){}
 		virtual ~SPI_Datalink_Master(){}
-		void ProcessDataTXEventQueue();
 	protected:
-		void Setup_SPI_Master()
-		{
-			spi_rx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
-			spi_tx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
-			memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-			memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-			m_SPI_Master.setDMAChannel(m_DMA_Channel);
-			m_SPI_Master.setMaxTransferSize(SPI_MAX_DATA_BYTES);
-			m_SPI_Master.setDataMode(SPI_MODE0);
-			m_SPI_Master.setFrequency(CLOCK_SPEED);
-			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
-			Begin();
-		}
+		void ProcessDataTXEventQueue();
+		void Setup_SPI_Master();
 		size_t TransferBytes(size_t Length);
 		bool Begin();
 		bool End();
@@ -123,49 +111,18 @@ class SPI_Datalink_Slave: public SPI_Datalink
 						  , uint8_t MISO
 						  , uint8_t MOSI
 						  , uint8_t SS
-						  , uint8_t DMA_Channel )
+						  , uint8_t DMA_Channel
+						  , uint8_t Core )
 						  : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
-						  , m_Title(Title){}
+						  , m_Title(Title)
+						  , m_Core(Core){}
 		virtual ~SPI_Datalink_Slave(){}
-		void Setup_SPI_Slave()
-		{
-			spi_rx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
-			spi_tx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
-			memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-			memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-			m_SPI_Slave.setDMAChannel(m_DMA_Channel);
-			m_SPI_Slave.setMaxTransferSize(SPI_MAX_DATA_BYTES);
-			m_SPI_Slave.setDataMode(SPI_MODE0);
-			xTaskCreatePinnedToCore
-			(
-				static_task_wait_spi,
-				"task_wait_spi",
-				SPI_MAX_DATA_BYTES,
-				this,
-				configMAX_PRIORITIES-1,
-				&task_handle_wait_spi,
-				0
-			);
-			xTaskCreatePinnedToCore
-			(
-				static_task_process_buffer,
-				"task_process_buffer",
-				SPI_MAX_DATA_BYTES,
-				this,
-				configMAX_PRIORITIES-1,
-				&task_handle_process_buffer,
-				0
-			);
-			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
-			xTaskNotifyGive(task_handle_wait_spi);
-				
-		}
-		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee)
-		{
-			m_Notifiee = Notifiee;
-		}
+		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
+	protected:
 		void ProcessDataRXEventQueue();
+		void Setup_SPI_Slave();
 	private:
+		uint8_t m_Core = 0;
 		String m_Title = "";
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
