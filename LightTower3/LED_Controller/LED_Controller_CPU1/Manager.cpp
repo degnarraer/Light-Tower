@@ -20,13 +20,13 @@
 
 Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
-                , SerialDataLink &SerialDataLink
+                , SPIDataLinkSlave &SPIDataLinkSlave
                 , Bluetooth_Sink &BT_In
                 , I2S_Device &Mic_In
                 , I2S_Device &I2S_Out )
                 : NamedItem(Title)
                 , m_StatisticalEngine(StatisticalEngine)
-                , m_SerialDataLink(SerialDataLink)
+                , m_SPIDataLinkSlave(SPIDataLinkSlave)
                 , m_BT_In(BT_In)
                 , m_Mic_In(Mic_In) 
                 , m_I2S_Out(I2S_Out)
@@ -64,44 +64,44 @@ void Manager::ProcessEventQueue()
     break;
   }
   MoveDataFromQueueToQueue( "Manager 1"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_BANDS")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_BANDS")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("R_BANDS")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_BANDS")
                           , false
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 2"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_PSD")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("R_PSD")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_PSD")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 3"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_MAXBAND")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAXBAND")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBAND")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("R_MAXBAND")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAXBAND")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 4"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_BANDS")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("L_BANDS")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_BANDS")
                           , false
                           , false );
 
   MoveDataFromQueueToQueue( "Manager 5"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_PSD")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("L_PSD")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_PSD")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 6"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAXBAND")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("L_MAXBAND")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAXBAND")
                           , false
                           , false );
 }
