@@ -20,11 +20,11 @@
 
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
-                , SerialDataLink &SerialDataLink
+                , SPIDataLinkMaster &SPIDataLinkMaster
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
-                                       , m_SerialDataLink(SerialDataLink)
+                                       , m_SPIDataLinkMaster(SPIDataLinkMaster)
                                        , m_BT_Out(BT_Out)
                                        , m_I2S_In(I2S_In)
 {
@@ -69,20 +69,30 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
   assert(0 == ByteReceived % sizeof(Frame_t)); 
   size_t FrameCount = ByteReceived / sizeof(Frame_t);
-
+  m_AmplitudeAudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
+  m_FFTAudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
+ 
   QueueHandle_t FFTQueue = m_SoundProcessor.GetQueueHandleRXForDataItem("FFT_Frames");
   QueueHandle_t AmplitudeQueue = m_SoundProcessor.GetQueueHandleRXForDataItem("Amplitude_Frames");
 
   if(FFTQueue != NULL && AmplitudeQueue != NULL)
   {
-    size_t FFTFrameCount = m_SoundProcessor.GetSampleCountForDataItem("FFT_Frames");
+    Frame_t *AmplitudeFrameBuffer = (Frame_t*)m_SoundProcessor.GetDataBufferForDataItem("Amplitude_Frames");
+    Frame_t *FFTFrameBuffer = (Frame_t*)m_SoundProcessor.GetDataBufferForDataItem("FFT_Frames");
     size_t AmplitudeFrameCount = m_SoundProcessor.GetSampleCountForDataItem("Amplitude_Frames");
-    assert(FFTFrameCount < channel_len / sizeof(Frame_t));
-    assert(AmplitudeFrameCount < channel_len / sizeof(Frame_t));
-    bool FFTPushError = false;
-    PushValueToQueue(Data, FFTQueue, false, "Manager BT Received: FFT", FFTPushError);
-    bool AmplitudePushError = false;
-    PushValueToQueue(Data, FFTQueue, false, "Manager BT Received: Amplitude", AmplitudePushError);
+    size_t FFTFrameCount = m_SoundProcessor.GetSampleCountForDataItem("FFT_Frames");
+    for(int i = 0; i < m_AmplitudeAudioBuffer.GetFreeFrameCount() / AmplitudeFrameCount; ++i)
+    {
+      m_AmplitudeAudioBuffer.ReadAudioFrames(AmplitudeFrameBuffer, AmplitudeFrameCount);
+      static bool AmplitudePushError = false;
+      PushValueToQueue(AmplitudeFrameBuffer, AmplitudeQueue, false, "Manager Amplitude Buffer", AmplitudePushError);
+    }
+    for(int i = 0; i < m_FFTAudioBuffer.GetFreeFrameCount() / FFTFrameCount; ++i)
+    {
+      m_FFTAudioBuffer.ReadAudioFrames(FFTFrameBuffer, FFTFrameCount);
+      static bool FFTPushError = false;
+      PushValueToQueue(FFTFrameBuffer, FFTQueue, false, "Manager FFT Buffer", FFTPushError);
+    }
   }
   return ByteReceived;
 }

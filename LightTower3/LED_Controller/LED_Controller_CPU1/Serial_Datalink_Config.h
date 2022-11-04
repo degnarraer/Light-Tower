@@ -44,7 +44,6 @@ class SPIDataLinkSlave: public NamedItem
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
       RegisterForDataTransferNotification(this);
-      Setup_SPI_Slave();
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
     }
      

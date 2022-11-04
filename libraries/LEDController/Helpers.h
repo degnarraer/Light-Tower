@@ -72,11 +72,11 @@ class QueueManager
 						return m_DataItem[i].QueueHandle_RX;
 					}
 				}
-				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name);
+				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name.c_str());
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name);
+				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name.c_str());
 			}
 			return NULL;
 		}
@@ -93,11 +93,11 @@ class QueueManager
 						return m_DataItem[i].QueueHandle_TX;
 					}
 				}
-				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name);
+				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name.c_str());
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name);
+				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name.c_str());
 			}
 			return NULL;
 		}

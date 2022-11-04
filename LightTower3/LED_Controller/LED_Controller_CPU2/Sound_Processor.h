@@ -37,14 +37,14 @@ class Sound_Processor: public NamedItem
 {
   public:
     Sound_Processor( String Title
-                   , SerialDataLink &SerialDataLink);
+                   , SPIDataLinkMaster &SPIDataLinkMaster);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain){m_Gain = Gain;}
     void SetFFTGain(float Gain){m_FFT_Gain = Gain;}
     
   private:
-    SerialDataLink &m_SerialDataLink;
+    SPIDataLinkMaster &m_SPIDataLinkMaster;
 
     //Memory Management
     bool m_MemoryIsAllocated = false;
@@ -94,8 +94,8 @@ class Sound_Processor: public NamedItem
     static const size_t m_ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
-      { "FFT_Frames",       DataType_Frame_t,   412,    Transciever_RX,   5 },
-      { "Amplitude_Frames", DataType_Frame_t,   512,    Transciever_RX,   5 },
+      { "FFT_Frames",       DataType_Frame_t,   512,    Transciever_RX,   5 },
+      { "Amplitude_Frames", DataType_Frame_t,   441,    Transciever_RX,   5 },
     };
     size_t GetDataItemConfigCount() { return m_ConfigCount; }
 };

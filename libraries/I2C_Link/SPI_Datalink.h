@@ -88,7 +88,10 @@ class SPI_Datalink_Master: public SPI_Datalink
 						   , uint8_t SS
 						   , uint8_t DMA_Channel )
 						   : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
-						   , m_Title(Title){}
+						   , m_Title(Title)
+						   {
+							  Setup_SPI_Master(); 
+						   }
 		virtual ~SPI_Datalink_Master(){}
 	protected:
 		void ProcessDataTXEventQueue();
@@ -115,7 +118,10 @@ class SPI_Datalink_Slave: public SPI_Datalink
 						  , uint8_t Core )
 						  : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
 						  , m_Title(Title)
-						  , m_Core(Core){}
+						  , m_Core(Core)
+						  {
+							 Setup_SPI_Slave(); 
+						  }
 		virtual ~SPI_Datalink_Slave(){}
 		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
 	protected:

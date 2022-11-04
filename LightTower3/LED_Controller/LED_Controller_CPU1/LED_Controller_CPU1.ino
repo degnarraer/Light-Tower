@@ -121,7 +121,7 @@ void setup()
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
-  //m_SPIDataLinkSlave.SetupSPIDataLinkSlave();
+  m_SPIDataLinkSlave.SetupSPIDataLink();
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);

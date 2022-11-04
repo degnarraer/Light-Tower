@@ -5,8 +5,6 @@
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
-TaskHandle_t SerialDataLinkTXTask;
-TaskHandle_t SerialDataLinkRXTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_NUM_1
@@ -24,21 +22,18 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S1_SDIN_PIN                      // Serial Data In Pin
                                  , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
 
-HardwareSerial m_hSerial = Serial1;
-
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-SerialDataLink m_SerialDataLink = SerialDataLink( "Serial Datalink"
-                                                , m_hSerial);
+SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink", 15, 17, 18, 19, 1);
                                                 
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SerialDataLink );                                            
+                                                  , m_SPIDataLinkMaster );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
-                           , m_SerialDataLink
+                           , m_SPIDataLinkMaster
                            , m_BT_Out
                            , m_I2S_In);
 
@@ -50,12 +45,6 @@ int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
 
 void setup() 
 {
-  //ESP32 Serial Communication
-  m_hSerial.setRxBufferSize(1000);
-  m_hSerial.flush();
-  m_hSerial.begin(250000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
-  m_hSerial.flush();
-    
   //PC Serial Communication
   Serial.flush();
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
@@ -70,7 +59,7 @@ void setup()
   m_I2S_In.Setup();
   m_BT_Out.Setup();
   m_BT_Out.SetCallback(SetBTTxData);
-  m_SerialDataLink.SetupSerialDataLink();
+  m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore
@@ -104,29 +93,8 @@ void setup()
     configMAX_PRIORITIES,           // Priority of the task
     &ManagerTask,                   // Task handle.
     1                               // Core where the task should run
-  ); 
-  
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkTXTaskLoop,       // Function to implement the task
-    "SerialDataLinkTXTask",         // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
-    &SerialDataLinkTXTask,          // Task handle.
-    1                               // Core where the task should run
   );
   
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkRXTaskLoop,       // Function to implement the task
-    "SerialDataLinkRXTask",         // Name of the task
-    2000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 2,       // Priority of the task
-    &SerialDataLinkRXTask,          // Task handle.
-    1                               // Core where the task should run
-  );
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());
@@ -160,24 +128,6 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-
-void SerialDataLinkRXTaskLoop(void * parameter)
-{
-  while(true)
-  {
-    m_SerialDataLink.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-  }
-}
-
-void SerialDataLinkTXTaskLoop(void * parameter)
-{
-  while(true)
-  {
-    m_SerialDataLink.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
