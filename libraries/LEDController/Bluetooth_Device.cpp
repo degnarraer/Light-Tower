@@ -64,38 +64,26 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(200);
-	m_Is_Installed = true;
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice()
 {
-	ESP_LOGE("Bluetooth_Device", "Starting Bluetooth");
 	if(false == m_Is_Running)
 	{
-		if(false == m_Is_Installed)
-		{
-			InstallDevice();
-		}
+		ESP_LOGD("Bluetooth_Device", "Starting Bluetooth");
+		InstallDevice();
 		m_BTSink.start(mp_SinkName);
 		m_Is_Running = true;
-		ESP_LOGE("Bluetooth_Device", "Bluetooth Started");
-	}
-	else
-	{
-		ESP_LOGE("Bluetooth_Device", "Bluetooth Device Already Started");
+		ESP_LOGD("Bluetooth_Device", "Bluetooth Started");
 	}
 }
 void Bluetooth_Sink::StopDevice()
 {
-	ESP_LOGE("Bluetooth_Device", "Stopping Bluetooth");
 	if(true == m_Is_Running)
 	{
+		ESP_LOGD("Bluetooth_Device", "Stopping Bluetooth");
 		m_BTSink.stop();
 		m_Is_Running = false;
 		ESP_LOGD("Bluetooth_Device", "Bluetooth Stopped");
-	}
-	else
-	{
-		ESP_LOGE("Bluetooth_Device", "Bluetooth Device Already Stopped");
 	}
 }
