@@ -20,11 +20,15 @@
 
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
-                , SPIDataLinkMaster &SPIDataLinkMaster
+                , SerialDataLink &SerialDataLink
+                , AudioBuffer<1764> &AudioBufferAmplitude
+                , AudioBuffer<2048> &AudioBufferFFT
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
-                                       , m_SPIDataLinkMaster(SPIDataLinkMaster)
+                                       , m_SerialDataLink(SerialDataLink)
+                                       , m_AudioBufferAmplitude(AudioBufferAmplitude)
+                                       , m_AudioBufferFFT(AudioBufferFFT)
                                        , m_BT_Out(BT_Out)
                                        , m_I2S_In(I2S_In)
 {
@@ -36,10 +40,9 @@ Manager::~Manager()
 void Manager::Setup()
 {
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
-  m_AmplitudeAudioBuffer.Initialize();
-  m_FFTAudioBuffer.Initialize();
+  m_SoundProcessor.SetupSoundProcessor();
   m_I2S_In.StartDevice();
-  m_BT_Out.StartDevice(); 
+  m_BT_Out.StartDevice();
 }
 
 void Manager::ProcessEventQueue()
@@ -70,31 +73,15 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
   assert(0 == ByteReceived % sizeof(Frame_t)); 
   size_t FrameCount = ByteReceived / sizeof(Frame_t);
-  m_AmplitudeAudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
-  m_FFTAudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
-
-  QueueHandle_t FFTQueue = m_SoundProcessor.GetQueueHandleRXForDataItem("FFT_Frames");
-  QueueHandle_t AmplitudeQueue = m_SoundProcessor.GetQueueHandleRXForDataItem("Amplitude_Frames");
-  if(FFTQueue != NULL && AmplitudeQueue != NULL)
+  if(m_AudioBufferAmplitude.GetFreeFrameCount() < FrameCount)
   {
-    size_t AmplitudeFrameCount = m_SoundProcessor.GetSampleCountForDataItem("Amplitude_Frames");
-    size_t FFTFrameCount = m_SoundProcessor.GetSampleCountForDataItem("FFT_Frames");
-    
-    Frame_t *AmplitudeFrameBuffer = (Frame_t*)m_SoundProcessor.GetDataBufferForDataItem("Amplitude_Frames");
-    Frame_t *FFTFrameBuffer = (Frame_t*)m_SoundProcessor.GetDataBufferForDataItem("FFT_Frames");
-
-    for(int i = 0; i < m_AmplitudeAudioBuffer.GetFreeFrameCount() / AmplitudeFrameCount; ++i)
-    {
-      m_AmplitudeAudioBuffer.ReadAudioFrames(AmplitudeFrameBuffer, AmplitudeFrameCount);
-      static bool AmplitudePushError = false;
-      PushValueToQueue(AmplitudeFrameBuffer, AmplitudeQueue, false, "Manager Amplitude Buffer", AmplitudePushError);
-    }
-    for(int i = 0; i < m_FFTAudioBuffer.GetFreeFrameCount() / FFTFrameCount; ++i)
-    {
-      m_FFTAudioBuffer.ReadAudioFrames(FFTFrameBuffer, FFTFrameCount);
-      static bool FFTPushError = false;
-      PushValueToQueue(FFTFrameBuffer, FFTQueue, false, "Manager FFT Buffer", FFTPushError);
-    }
+    m_AudioBufferAmplitude.ClearAudioBuffer();
   }
+  if(m_AudioBufferFFT.GetFreeFrameCount() < FrameCount)
+  {
+    m_AudioBufferFFT.ClearAudioBuffer();
+  }
+  m_AudioBufferAmplitude.WriteAudioFrames((Frame_t*)Data, FrameCount);
+  m_AudioBufferFFT.WriteAudioFrames((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }

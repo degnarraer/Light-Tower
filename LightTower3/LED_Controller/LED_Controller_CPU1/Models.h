@@ -721,6 +721,7 @@ private:
     }
     void RunModelTask()
     {
+      Serial << "Run\n";
       unsigned int maxBandIndex = 0;
       float maxBandPowerValue = 0.0;
       unsigned int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();

@@ -34,7 +34,9 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , Sound_Processor &SoundProcessor
-           , SPIDataLinkMaster &SPIDataLinkMaster
+           , SerialDataLink &SerialDataLink
+           , AudioBuffer<1764> &AudioBufferAmplitude
+           , AudioBuffer<2048> &AudioBufferFFT
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out );
     virtual ~Manager();
@@ -49,9 +51,9 @@ class Manager: public NamedItem
   
   private:
     Sound_Processor &m_SoundProcessor;
-    SPIDataLinkMaster &m_SPIDataLinkMaster;
-    AudioBuffer<1000> m_AmplitudeAudioBuffer;
-    AudioBuffer<1000> m_FFTAudioBuffer;
+    SerialDataLink &m_SerialDataLink;
+    AudioBuffer<1764> &m_AudioBufferAmplitude;
+    AudioBuffer<2048> &m_AudioBufferFFT;
 
     //I2S Sound Data
     I2S_Device &m_I2S_In;

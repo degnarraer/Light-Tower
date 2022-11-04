@@ -29,7 +29,9 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define SPI_MAX_DATA_BYTES 2000
+#define AUDIO_BUFFER_FRAME_LENGTH 1024
+#define SPI_FRAMES_LENGTH 1
+#define SPI_MAX_DATA_BYTES SPI_FRAMES_LENGTH * sizeof(Frame_t)
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -49,81 +51,112 @@ class SPI_Datalink: public DataSerializer
 		SPI_Datalink( uint8_t SCK
 					, uint8_t MISO
 					, uint8_t MOSI
-					, uint8_t SS
-					, uint8_t DMA_Channel )
+					, uint8_t SS )
 					: m_SCK(SCK)
 					, m_MISO(MISO)
 					, m_MOSI(MOSI)
 					, m_SS(SS)
-					, m_DMA_Channel(DMA_Channel)
 					{
 					}
 		virtual ~SPI_Datalink(){}
-		void SetSerialDataLinkDataItems(DataItem_t& DataItems, size_t Count) 
-		{ 
-			m_DataItems = &DataItems;
-			m_DataItemsCount = Count;
-			SetDataSerializerDataItems(DataItems, Count);
-		}
 	protected:
-		uint8_t* spi_tx_buf = NULL;
-		uint8_t* spi_rx_buf = NULL;
+		uint8_t* spi_tx_buf;
+		uint8_t* spi_rx_buf;
 		uint8_t m_SCK;
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
 		uint8_t m_SS;
-		uint8_t m_DMA_Channel = 0;
-		DataItem_t* m_DataItems;
-		size_t m_DataItemsCount = 0;
-	private:	
+	private:
 };
 
-class SPI_Datalink_Master: public SPI_Datalink
+class SPI_Datalink_Master: public NamedItem
+						 , public SPI_Datalink
 {
 	public:
 		SPI_Datalink_Master( String Title
 						   , uint8_t SCK
 						   , uint8_t MISO
 						   , uint8_t MOSI
-						   , uint8_t SS
-						   , uint8_t DMA_Channel )
-						   : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
-						   , m_Title(Title){}
+						   , uint8_t SS )
+						   : NamedItem(Title)
+						   , SPI_Datalink(SCK, MISO, MOSI, SS){}
 		virtual ~SPI_Datalink_Master(){}
-	protected:
-		void ProcessDataTXEventQueue();
-		void Setup_SPI_Master();
-		size_t TransferBytes(size_t Length);
-		bool Begin();
-		bool End();
+		void Setup_SPI_Master()
+		{
+			spi_rx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
+			spi_tx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
+			memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
+			memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
+			m_SPI_Master.setDMAChannel(2);
+			m_SPI_Master.setMaxTransferSize(SPI_MAX_DATA_BYTES);
+			m_SPI_Master.setDataMode(SPI_MODE0);
+			m_SPI_Master.setFrequency(CLOCK_SPEED);
+			m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
+			Begin();
+		}
+		size_t TransferBytes(uint8_t *TXBuffer, uint8_t *RXBuffer, size_t Length);
+		bool Begin() 
+		{ 
+			return m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+		}
+		bool End()
+		{
+			return m_SPI_Master.end();
+		}
 	private:
-		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
-		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
-		void ProcessTXData(DataItem_t DataItem);
 };
 
-class SPI_Datalink_Slave: public SPI_Datalink
+class SPI_Datalink_Slave: public NamedItem
+						, public SPI_Datalink
 {
 	public:
 		SPI_Datalink_Slave( String Title
 						  , uint8_t SCK
 						  , uint8_t MISO
 						  , uint8_t MOSI
-						  , uint8_t SS
-						  , uint8_t DMA_Channel
-						  , uint8_t Core )
-						  : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
-						  , m_Title(Title)
-						  , m_Core(Core){}
+						  , uint8_t SS )
+						  : NamedItem(Title)
+						  , SPI_Datalink(SCK, MISO, MOSI, SS){}
 		virtual ~SPI_Datalink_Slave(){}
-		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
-	protected:
-		void ProcessDataRXEventQueue();
-		void Setup_SPI_Slave();
+		void Setup_SPI_Slave()
+		{
+			spi_rx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
+			spi_tx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
+			memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
+			memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
+			m_SPI_Slave.setDMAChannel(2);
+			m_SPI_Slave.setMaxTransferSize(SPI_MAX_DATA_BYTES);
+			m_SPI_Slave.setDataMode(SPI_MODE0);
+			xTaskCreatePinnedToCore
+			(
+				static_task_wait_spi,
+				"task_wait_spi",
+				10000,
+				this,
+				configMAX_PRIORITIES-1,
+				&task_handle_wait_spi,
+				0
+			);
+			xTaskCreatePinnedToCore
+			(
+				static_task_process_buffer,
+				"task_process_buffer",
+				10000,
+				this,
+				configMAX_PRIORITIES-1,
+				&task_handle_process_buffer,
+				0
+			);
+			m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+			xTaskNotifyGive(task_handle_wait_spi);
+				
+		}
+		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee)
+		{
+			m_Notifiee = Notifiee;
+		}
 	private:
-		uint8_t m_Core = 0;
-		String m_Title = "";
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
 		TaskHandle_t task_handle_process_buffer = 0;
@@ -132,6 +165,108 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		void task_wait_spi();
 		static void static_task_process_buffer(void* pvParameters);
 		void task_process_buffer();
+};
+
+class AudioBuffer: public NamedItem
+{
+	public:
+		AudioBuffer( String Title)
+				   : NamedItem(Title)
+				   {}
+		virtual ~AudioBuffer()
+		{
+			FreeMemory();
+		}
+		void Initialize()
+		{	
+			AllocateMemory();		
+			if(0 != pthread_mutex_init(&m_Lock, NULL))
+			{
+			   ESP_LOGE("AudioBuffer", "Failed to Create Lock");
+			}
+		}
+		void AllocateMemory()
+		{
+			size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>);
+			void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>*)heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
+			m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH>;
+		}
+		void FreeMemory()
+		{
+			heap_caps_free(m_CircularAudioBuffer);
+		}
+		float GetNormalizedFillPercent() 
+		{ 
+			return (float)GetFrameCount() / (float)GetFrameCapacity(); 
+		}
+		size_t GetFrameCapacity();
+		size_t GetFrameCount();
+		size_t GetFreeFrameCount();
+		size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount );
+		bool WriteAudioFrame( Frame_t FrameBuffer );
+		bool ClearAudioBuffer();
+		bfs::optional<Frame_t> ReadAudioFrame();
+	private:
+		bfs::CircleBuf<Frame_t, AUDIO_BUFFER_FRAME_LENGTH> *m_CircularAudioBuffer;
+		pthread_mutex_t m_Lock;
+};
+
+class AudioStreamMaster: public NamedItem
+					   , public SPI_Datalink_Master
+{
+	public:
+		AudioStreamMaster( String Title
+						 , AudioBuffer &AudioBuffer
+						 , uint32_t MISO
+						 , uint8_t MOSI
+						 , uint8_t SCK
+						 , uint8_t SS )
+						 : NamedItem(Title)
+						 , m_AudioBuffer(AudioBuffer)
+						 , SPI_Datalink_Master(Title + "SPI", MISO, MOSI, SCK, SS){}
+		virtual ~AudioStreamMaster(){}
+		void Setup();
+		bool AddAudioFrame(Frame_t aFrame)
+		{
+			bool Result = false;
+			Result = m_AudioBuffer.WriteAudioFrame(aFrame);
+			return Result;
+		}
+		size_t TxAudioFrames();
+		size_t GetMaxFameCountToTx(){ return SPI_MAX_DATA_BYTES / sizeof(Frame_t); }
+	private:
+		AudioBuffer &m_AudioBuffer;
+};
+
+class AudioStreamSlave: public NamedItem
+					   , public SPI_Datalink_Slave
+					   , public SPI_Slave_Notifier
+{
+	public:
+		AudioStreamSlave( String Title
+						 , AudioBuffer &AudioBuffer
+						 , uint32_t MISO
+						 , uint8_t MOSI
+						 , uint8_t SCK
+						 , uint8_t SS )
+						 : NamedItem(Title)
+						 , m_AudioBuffer(AudioBuffer)
+						 , SPI_Datalink_Slave(Title + "SPI", MISO, MOSI, SCK, SS){}
+		virtual ~AudioStreamSlave(){}
+		void Setup();
+		
+		size_t GetFrameCount();
+		size_t GetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		size_t SetAudioFrames(Frame_t *FrameBuffer, size_t FrameCount);
+		bool SetAudioFrame(Frame_t Frame);
+
+		//SPI_SLAVE_NOTIFIER Callbacks
+		size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend);
+		size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived);
+	private:
+		AudioBuffer &m_AudioBuffer;
+		bool m_CanSend = false;
 };
 
 #endif
