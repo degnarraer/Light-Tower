@@ -57,7 +57,6 @@ I2S_Device::~I2S_Device()
 
 void I2S_Device::Setup()
 {
-	ESP_LOGE("i2S Device", "%s: Setting up I2S Device", GetTitle().c_str());
     m_BytesPerSample = m_BitsPerSample/8;
     m_ChannelSampleCount = m_BufferSize;
 	m_SampleCount = m_ChannelSampleCount * 2;
@@ -81,31 +80,26 @@ void I2S_Device::Setup()
 		default:
 		break;
 	}
-	ESP_LOGE("i2S Device", "%s: I2S Device Setup", GetTitle().c_str());
 }
 
 void I2S_Device::StartDevice()
 {
-	ESP_LOGE("i2S Device", "%s: Starting I2S Device", GetTitle().c_str());
 	if(false == m_Is_Running)
 	{
 		InstallDevice();
 		i2s_start(m_I2S_PORT);
 		m_Is_Running = true;
 	}
-	ESP_LOGE("i2S Device", "%s: I2S Device Started", GetTitle().c_str());
 }
 
 void I2S_Device::StopDevice()
 {
-	ESP_LOGE("i2S Device", "%s: Stopping I2S Device", GetTitle().c_str());
 	if(true == m_Is_Running)
 	{
 		UninstallDevice();
 		i2s_stop(m_I2S_PORT);
 		m_Is_Running = false;
 	}
-	ESP_LOGE("i2S Device", "%s: I2S Device Stopped", GetTitle().c_str());
 }
 
 size_t I2S_Device::WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
@@ -118,7 +112,7 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
 	size_t bytes_read = 0;
 	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, portMAX_DELAY ) != ESP_OK)
 	{
-		ESP_LOGE("i2S Device", "%s: Error Reading Samples", GetTitle().c_str());
+		ESP_LOGE("i2S Device", "%s: Error Reading Samples\n", GetTitle());
 		return bytes_read;
 	}
 	return bytes_read;
@@ -132,7 +126,7 @@ size_t I2S_Device::ReadSamples()
 		uint8_t DataBuffer[m_BufferSize];
 		i2s_read(m_I2S_PORT, DataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
 		if(bytes_read == 0) return 0;
-		m_Callee->I2SDataReceived(GetTitle().c_str(), DataBuffer, bytes_read);
+		m_Callee->I2SDataReceived(GetTitle(), DataBuffer, bytes_read);
 	}
 	return bytes_read;
 }
@@ -144,7 +138,7 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
 	if(bytes_written != ByteCount)
 	{
-		ESP_LOGE("i2S Device", "%s: Error Writting All Bytes", GetTitle().c_str()); 
+		ESP_LOGE("i2S Device", "%s: Error Writting All Bytes\n", GetTitle()); 
 	}
 	return bytes_written;
 }
@@ -155,7 +149,7 @@ void I2S_Device::UninstallDevice()
 }
 void I2S_Device::InstallDevice()
 {
-	ESP_LOGE("i2S Device", "%s: Installing Driver.", GetTitle().c_str());
+	ESP_LOGI("i2S Device", "%s: Configuring I2S Device.", GetTitle());
   esp_err_t err;
   // The I2S config as per the example
   const i2s_config_t i2s_config = {
@@ -205,7 +199,7 @@ void I2S_Device::InstallDevice()
 	ESP_LOGE("i2S Device", "%s: Failed setting pin: %s", GetTitle().c_str(), err);
     ESP.restart();
   }
-  ESP_LOGE("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
+  ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
 }
 
 void I2S_Device::ProcessEventQueue()
@@ -218,7 +212,7 @@ void I2S_Device::ProcessEventQueue()
 		// Iterate over all events in the i2s event queue
 		for( int i = 0; i < i2sMsgCount; ++i )
 		{
-			ESP_LOGV("i2S Device", "%s: Queue Count: %i", GetTitle().c_str(), i2sMsgCount);
+			ESP_LOGV("i2S Device", "%s: Queue Count: %i", GetTitle(), i2sMsgCount);
 			// Take next event from queue
 			if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, 0) == pdTRUE )
 			{

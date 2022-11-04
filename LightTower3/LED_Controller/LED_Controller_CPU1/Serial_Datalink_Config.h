@@ -16,56 +16,33 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef SerialDataLinkConfig_H
+#define SerialDataLinkConfig_H
+#include <Serial_Datalink_Core.h>
 
-#ifndef SERIAL_DATALINK_CONFIG_H
-#define SERIAL_DATALINK_CONFIG_H
-#include "SPI_Datalink.h"
-
-class SPIDataLinkSlave: public NamedItem
-                      , public SPI_Datalink_Slave
-                      , public SPI_Slave_Notifier
-                      , public QueueManager
+class Manager;
+class SerialDataLink: public NamedItem
+                    , public SerialDataLinkCore
+                    , public QueueManager
 {
   public:
-    SPIDataLinkSlave( String Title
-                    , uint8_t SCK
-                    , uint8_t MISO
-                    , uint8_t MOSI
-                    , uint8_t SS
-                    , uint8_t DMA_Channel
-                    , uint8_t Core )
-                    : NamedItem(Title) 
-                    , QueueManager(Title, m_SPIDatalinkConfigCount)
-                    , SPI_Datalink_Slave(Title, SCK, MISO, MOSI, SS, DMA_Channel, Core) {}
-    virtual ~SPIDataLinkSlave(){}
-    void SetupSPIDataLink()
+    SerialDataLink(String Title, HardwareSerial &hSerial): NamedItem(Title)
+                                                         , SerialDataLinkCore(Title, hSerial)
+                                                         , QueueManager(Title, m_ConfigCount) {}
+    virtual ~SerialDataLink(){}
+    void SetupSerialDataLink()
     {
-      ESP_LOGE("SPI_Datalink_Config", "%s: Setting Up", GetTitle().c_str());
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
-      RegisterForDataTransferNotification(this);
-      Setup_SPI_Slave();
-      ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
     }
-     
-    //SPI_Slave_Notifier Interface
-    size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend)
-    {
-      Serial << "TX Bytes to Send: " << BytesToSend << "\n";
-      return 0;
-    }
-    size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
-    {
-      String Result = String((char*)RXBuffer);
-      Serial << "RX Received " << BytesReceived << " Bytes: " << Result << "\n";
-      //DeSerializeJsonToMatchingDataItem(Result);
-      return BytesReceived;
-    }
-  private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 8;
-    DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_ConfigCount; }
+    
+  private:
+    static const size_t m_ConfigCount = 8;
+    DataItemConfig_t m_ItemConfig[m_ConfigCount]
     {
       { "R_BANDS",      DataType_Float,                  32,  Transciever_RX,   1 },
       { "L_BANDS",      DataType_Float,                  32,  Transciever_RX,   1 },
@@ -76,8 +53,8 @@ class SPIDataLinkSlave: public NamedItem
       { "R_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   1 },
       { "L_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   1 },
     };
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }
+
 };
+
 
 #endif

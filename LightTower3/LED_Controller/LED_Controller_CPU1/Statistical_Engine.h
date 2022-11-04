@@ -163,6 +163,9 @@ class StatisticalEngine : public NamedItem
     float BandRunningAverageValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentAverageBandIndex = -1;
     bool m_NewBandDataReady = false;
+    unsigned long m_NewBandDataCurrentTime = 0;
+    unsigned long m_NewBandDataTimeOut = 1000;
+    bool m_NewBandDataTimedOut = false;
     bool NewBandDataReady();
     void UpdateBandArray();
     void UpdateRunningAverageBandArray();
@@ -176,6 +179,9 @@ class StatisticalEngine : public NamedItem
     
     //Sound State Output
     bool m_NewSoundDataReady = false;
+    unsigned long m_NewSoundDataCurrentTime = 0;
+    unsigned long m_NewSoundDataTimeOut = 1000;
+    bool m_NewSoundDataTimedOut = false;
     float m_Power;
     float m_PowerDb;
     int32_t m_signalMin;

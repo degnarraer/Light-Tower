@@ -31,21 +31,14 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-AudioBuffer<1764> m_AudioBufferAmplitude;
-AudioBuffer<2048> m_AudioBufferFFT;
-
 SerialDataLink m_SerialDataLink = SerialDataLink( "Serial Datalink"
                                                 , m_hSerial);
                                                 
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SerialDataLink
-                                                  , m_AudioBufferAmplitude
-                                                  , m_AudioBufferFFT );                                            
+                                                  , m_SerialDataLink );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SerialDataLink
-                           , m_AudioBufferAmplitude
-                           , m_AudioBufferFFT
                            , m_BT_Out
                            , m_I2S_In);
 
@@ -78,8 +71,6 @@ void setup()
   m_BT_Out.Setup();
   m_BT_Out.SetCallback(SetBTTxData);
   m_SerialDataLink.SetupSerialDataLink();
-  m_AudioBufferAmplitude.Initialize();
-  m_AudioBufferFFT.Initialize();
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore
@@ -99,7 +90,7 @@ void setup()
     "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
+    configMAX_PRIORITIES - 1,      // Priority of the task
     &ProcessFFTTask,                // Task handle.
     0                               // Core where the task should run
   );
