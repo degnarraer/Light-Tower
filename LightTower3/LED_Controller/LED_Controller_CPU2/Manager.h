@@ -52,6 +52,8 @@ class Manager: public NamedItem
     SPIDataLinkMaster &m_SPIDataLinkMaster;
     AudioBuffer<1000> m_AmplitudeAudioBuffer;
     AudioBuffer<1000> m_FFTAudioBuffer;
+    Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+    Frame_t m_FFTFrameBuffer[FFT_BUFFER_FRAME_COUNT];
     
     //I2S Sound Data
     I2S_Device &m_I2S_In;

@@ -32,8 +32,8 @@ class SPIDataLinkMaster: public NamedItem
                      , uint8_t MOSI
                      , uint8_t SS
                      , uint8_t DMA_Channel)
-                     : NamedItem(Title) 
-                     , QueueManager(Title, m_SPIDatalinkConfigCount)
+                     : NamedItem(Title)
+                     , QueueManager(Title, GetDataItemConfigCount())
                      , SPI_Datalink_Master(Title, SCK, MISO, MOSI, SS, DMA_Channel) {}
     virtual ~SPIDataLinkMaster(){}
     void SetupSPIDataLink()

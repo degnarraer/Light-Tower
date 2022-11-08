@@ -93,8 +93,8 @@ class SPI_Datalink_Master: public SPI_Datalink
 							  Setup_SPI_Master(); 
 						   }
 		virtual ~SPI_Datalink_Master(){}
-	protected:
 		void ProcessDataTXEventQueue();
+	protected:
 		void Setup_SPI_Master();
 		size_t TransferBytes(size_t Length);
 		bool Begin();
@@ -124,8 +124,8 @@ class SPI_Datalink_Slave: public SPI_Datalink
 						  }
 		virtual ~SPI_Datalink_Slave(){}
 		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
-	protected:
 		void ProcessDataRXEventQueue();
+	protected:
 		void Setup_SPI_Slave();
 	private:
 		uint8_t m_Core = 0;

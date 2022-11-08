@@ -81,15 +81,16 @@ struct DataItemConfig_t
 
 struct DataItem_t
 {
-  String Name;
-  QueueHandle_t QueueHandle_RX = NULL;
-  QueueHandle_t QueueHandle_TX = NULL;
-  Transciever_T TransceiverConfig;
-  DataType_t DataType;
-  size_t Count = 0;
-  size_t TotalByteCount = 0;
-  bool DataPushHasErrored = false;
-  void* DataBuffer;
+	String Name;
+	QueueHandle_t QueueHandle_RX = NULL;
+	QueueHandle_t QueueHandle_TX = NULL;
+	Transciever_T TransceiverConfig;
+	DataType_t DataType;
+	size_t Count = 0;
+	size_t TotalByteCount = 0;
+	bool DataPushHasErrored = false;
+	void* DataBuffer;
+	pthread_mutex_t Lock;
 };
 
 struct ProcessedSoundData_t

@@ -5,6 +5,7 @@
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
+TaskHandle_t ProcessSPITXTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_NUM_1
@@ -79,7 +80,7 @@ void setup()
     "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &ProcessFFTTask,                // Task handle.
     0                               // Core where the task should run
   );
@@ -92,6 +93,17 @@ void setup()
     NULL,                           // Task input parameter
     configMAX_PRIORITIES,           // Priority of the task
     &ManagerTask,                   // Task handle.
+    1                               // Core where the task should run
+  );
+  
+  xTaskCreatePinnedToCore
+  (
+    SPI_TX_TaskLoop,                // Function to implement the task
+    "SPI TX Task Task",             // Name of the task
+    1000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES,           // Priority of the task
+    &ProcessSPITXTask,              // Task handle.
     1                               // Core where the task should run
   );
   
@@ -110,7 +122,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -119,7 +131,7 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -128,6 +140,15 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void SPI_TX_TaskLoop(void * parameter)
+{
+  while(true)
+  {
+    m_SPIDataLinkMaster.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }

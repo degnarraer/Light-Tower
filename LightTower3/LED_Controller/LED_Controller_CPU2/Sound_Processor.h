@@ -91,13 +91,13 @@ class Sound_Processor: public NamedItem
 
     //QueueManager Interface
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    static const size_t m_ConfigCount = 8;
-    DataItemConfig_t m_ItemConfig[m_ConfigCount]
+    static const size_t m_SoundProcessorConfigCount = 2;
+    DataItemConfig_t m_ItemConfig[m_SoundProcessorConfigCount]
     {
-      { "FFT_Frames",       DataType_Frame_t,   512,    Transciever_RX,   5 },
-      { "Amplitude_Frames", DataType_Frame_t,   441,    Transciever_RX,   5 },
+      { "FFT_Frames",       DataType_Frame_t,   FFT_BUFFER_FRAME_COUNT,       Transciever_RX,   5 },
+      { "Amplitude_Frames", DataType_Frame_t,   AMPLITUDE_BUFFER_FRAME_COUNT, Transciever_RX,   5 },
     };
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
+    size_t GetDataItemConfigCount() { return m_SoundProcessorConfigCount; }
 };
 
 #endif

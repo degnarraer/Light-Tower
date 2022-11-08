@@ -19,5 +19,7 @@
 #define I2S_SAMPLE_COUNT                512
 #define NUMBER_OF_BANDS                 32
 #define FFT_SIZE                        512
+#define FFT_BUFFER_FRAME_COUNT          512
+#define AMPLITUDE_BUFFER_FRAME_COUNT    441
 
 #endif TUNES_H

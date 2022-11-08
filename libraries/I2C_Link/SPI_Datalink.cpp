@@ -45,7 +45,6 @@ void SPI_Datalink_Master::ProcessDataTXEventQueue()
 			{
 				if(uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) > 0)
 				{
-					ESP_LOGV("Serial_Datalink", "%s Queue Count : %i", m_Title, uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX));
 					ProcessTXData(m_DataItems[i]);
 				}
 			}
@@ -94,6 +93,7 @@ void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
 		{
 			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
 			{
+				Serial << "Encoding Message\n";
 				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
 			}
 		}

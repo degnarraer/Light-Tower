@@ -193,13 +193,11 @@ class QueueManager
 				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
-					void* DataBuffer [ByteCount];
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
+						if ( xQueueReceive(Queue, Value, 0) == pdTRUE )
 						{
-							memcpy(Value, DataBuffer, ByteCount);
 							result = true;
 						}
 						else
@@ -214,6 +212,53 @@ class QueueManager
 				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 			return result;
+		}
+		bool LockDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(true == Name.equals(m_DataItem[i].Name))
+					{
+						if(0 == pthread_mutex_lock(&m_DataItem[i].Lock))
+						{
+						 return true;
+						}
+						else
+						{
+							ESP_LOGE("TestClass", "Failed to Create Lock");
+							return false;
+						}
+					}
+				}
+				return false;
+			}
+			else
+			{
+				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				return false;
+			}
+		}
+		bool UnLockDataItem(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(true == Name.equals(m_DataItem[i].Name))
+					{
+						pthread_mutex_unlock(&m_DataItem[i].Lock);
+						return true;
+					}
+				}
+				return false;
+			}
+			else
+			{
+				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				return false;
+			}
 		}
 		
 	private:
@@ -263,7 +308,11 @@ class QueueManager
 				m_DataItem[i].Count = ConfigFile[i].Count;
 				m_DataItem[i].TotalByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
-				m_DataItem[i].DataBuffer = DataBuffer;
+				m_DataItem[i].DataBuffer = DataBuffer; 
+				if(0 != pthread_mutex_init(&m_DataItem[i].Lock, NULL))
+				{
+				 ESP_LOGE("CommonUtils", "Failed to Create Lock");
+				}
 			}
 			m_MemoryAllocated = true;
 		}
