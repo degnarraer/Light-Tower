@@ -29,7 +29,12 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink", 15, 17, 18, 19, 1);
+SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink"
+                                                         , SPI1_PIN_SCK
+                                                         , SPI1_PIN_MISO
+                                                         , SPI1_PIN_MOSI
+                                                         , SPI1_PIN_SS
+                                                         , 1 );
                                                 
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
                                                   , m_SPIDataLinkMaster );                                            

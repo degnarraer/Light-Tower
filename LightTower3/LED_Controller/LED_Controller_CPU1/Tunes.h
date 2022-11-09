@@ -19,10 +19,10 @@
 #define I2S2_SDIN_PIN             I2S_PIN_NO_CHANGE
 #define I2S2_SDOUT_PIN            14
 
-
-#define HARDWARE_SERIAL_RX_PIN    22
-#define HARDWARE_SERIAL_TX_PIN    23
-
+#define SPI1_PIN_SCK               15
+#define SPI1_PIN_MISO              17
+#define SPI1_PIN_MOSI              18
+#define SPI1_PIN_SS                19
 
 
 //App Tunes
@@ -53,7 +53,7 @@ const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
-const bool   debugModels = false;
+const bool   debugModels = true;
 const bool   debugSetBandValueStatisticalEngine = false;
 const bool   debugGetBandValueStatisticalEngine = false;
 const bool   debugGravitationalModel = false;

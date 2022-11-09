@@ -88,7 +88,7 @@ class StatisticalEngine : public NamedItem
     StatisticalEngine()
       : NamedItem("StatisticalEngine")
       , Task(GetTitle())
-      , QueueManager(GetTitle() + "_QueueManager", m_ConfigCount)
+      , QueueManager(GetTitle() + "_QueueManager", m_StatisticalEngineConfigCount)
       , m_Power(0)
       , m_PowerDb(0){}
     virtual ~StatisticalEngine()
@@ -96,10 +96,6 @@ class StatisticalEngine : public NamedItem
       FreeMemory();
     }
     
-    //QueueManager
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
-
     //SoundState
     SoundState GetSoundState();
     
@@ -141,8 +137,10 @@ class StatisticalEngine : public NamedItem
     void AllocateMemory();
     void FreeMemory();
     bool m_MemoryIsAllocated = false;
-    static const size_t m_ConfigCount = 8;
-    DataItemConfig_t m_ItemConfig[m_ConfigCount]
+
+    //QueueManager
+    static const size_t m_StatisticalEngineConfigCount = 8;
+    DataItemConfig_t m_ItemConfig[m_StatisticalEngineConfigCount]
     {
       { "R_BANDS",      DataType_Float,                  32,  Transciever_RX,   5 },
       { "L_BANDS",      DataType_Float,                  32,  Transciever_RX,   5 },
@@ -153,7 +151,8 @@ class StatisticalEngine : public NamedItem
       { "R_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   5 },
       { "L_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   5 },
     };
-
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_StatisticalEngineConfigCount; }
     bool m_ProcessFFT = true;
     
     //BAND Circular Buffer

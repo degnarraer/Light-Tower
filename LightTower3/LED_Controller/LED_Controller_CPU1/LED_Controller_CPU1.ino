@@ -92,8 +92,14 @@ StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
 
-SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink", 15, 17, 18, 19, 2, 0);
-
+SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink"
+                                                      , SPI1_PIN_SCK
+                                                      , SPI1_PIN_MISO
+                                                      , SPI1_PIN_MOSI
+                                                      , SPI1_PIN_SS
+                                                      , 2
+                                                      , 1 );
+                                                      
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 

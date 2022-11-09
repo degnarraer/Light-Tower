@@ -47,6 +47,7 @@ bool StatisticalEngine::NewBandDataReady()
   }
   else if(currentTime - m_NewBandDataCurrentTime >= m_NewBandDataTimeOut)
   {
+    Serial << "NewBandData Timeout\n";
     m_NewBandDataReady = true;
     m_NewBandDataTimedOut = true;
     return true;
@@ -74,6 +75,7 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   }
   else if(currentTime - m_NewMaxBandSoundDataCurrentTime >= m_NewMaxBandSoundDataTimeOut)
   {
+    Serial << "NewMaxBand Timeout\n";
     m_NewMaxBandSoundDataReady = true;
     m_NewMaxBandSoundDataTimedOut = true;
     return true;
@@ -101,6 +103,7 @@ bool StatisticalEngine::NewSoundDataReady()
   }
   else if(currentTime - m_NewSoundDataCurrentTime >= m_NewSoundDataTimeOut)
   {
+    Serial << "NewSoundData Timeout\n";
     m_NewSoundDataReady = true;
     m_NewSoundDataTimedOut = true;
     return true;

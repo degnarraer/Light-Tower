@@ -12,6 +12,11 @@
 #define I2S1_SDIN_PIN                   14
 #define I2S1_SDOUT_PIN                  I2S_PIN_NO_CHANGE
 
+#define SPI1_PIN_SCK               15
+#define SPI1_PIN_MISO              17
+#define SPI1_PIN_MOSI              18
+#define SPI1_PIN_SS                19
+
 //App Tunes
 #define I2S_SAMPLE_RATE                 44100
 #define MAX_VISUALIZATION_FREQUENCY     4000.0

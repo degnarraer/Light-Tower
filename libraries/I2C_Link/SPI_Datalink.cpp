@@ -82,7 +82,7 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 		DataToSend += "\0";
 	}
 	DataToSendLength += PadCount;
-	ESP_LOGE("SPI_Datalink", "TX: %s", DataToSend.c_str());
+	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
 	memcpy(spi_tx_buf, DataToSend.c_str(), DataToSendLength);
 	TransferBytes(DataToSendLength);
