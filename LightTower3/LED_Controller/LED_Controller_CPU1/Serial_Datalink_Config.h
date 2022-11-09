@@ -35,7 +35,7 @@ class SPIDataLinkSlave: public NamedItem
                     , uint8_t DMA_Channel
                     , uint8_t Core )
                     : NamedItem(Title) 
-                    , QueueManager(Title, m_SPIDatalinkConfigCount)
+                    , QueueManager(Title, GetDataItemConfigCount())
                     , SPI_Datalink_Slave(Title, SCK, MISO, MOSI, SS, DMA_Channel, Core) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()
@@ -50,14 +50,12 @@ class SPIDataLinkSlave: public NamedItem
     //SPI_Slave_Notifier Interface
     size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend)
     {
-      Serial << "TX Bytes to Send: " << BytesToSend << "\n";
       return 0;
     }
     size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
     {
       String Result = String((char*)RXBuffer);
-      Serial << "RX Received " << BytesReceived << " Bytes: " << Result << "\n";
-      //DeSerializeJsonToMatchingDataItem(Result);
+      DeSerializeJsonToMatchingDataItem(Result);
       return BytesReceived;
     }
   private:

@@ -85,16 +85,17 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
     size_t AvailableFFTFrameCount = m_FFTAudioBuffer.GetFrameCount();
     size_t AmplitudeLoopCount = AvailableAmplitudeFrameCount  / RequiredAmplitudeFrameCount;
     size_t FFTLoopCount = AvailableFFTFrameCount / RequiredFFTFrameCount;
-    
+
+    /*
     Serial << "Loop Counts: " << RequiredAmplitudeFrameCount << "|" 
                               << AvailableAmplitudeFrameCount  << "|" 
                               << AmplitudeLoopCount  << "|" 
                               << RequiredFFTFrameCount  << "|"
                               << AvailableFFTFrameCount  << "|"
                               << FFTLoopCount  << "\n";
+    */
     for(int i = 0; i < AmplitudeLoopCount; ++i)
     {
-      Serial << "Pushing Amplitude Frames!\n";
       size_t FramesRead = m_AmplitudeAudioBuffer.ReadAudioFrames(m_AmplitudeFrameBuffer, RequiredAmplitudeFrameCount);
       assert(FramesRead == RequiredAmplitudeFrameCount);
       static bool AmplitudePushError = false;
@@ -102,7 +103,6 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
     }
     for(int i = 0; i < FFTLoopCount; ++i)
     {
-      Serial << "Pushing FFT Frames!\n";
       size_t FramesRead = m_FFTAudioBuffer.ReadAudioFrames(m_FFTFrameBuffer, RequiredFFTFrameCount);
       assert(FramesRead == RequiredFFTFrameCount);
       static bool FFTPushError = false;

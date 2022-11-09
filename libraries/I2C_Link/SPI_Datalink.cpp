@@ -72,7 +72,11 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 {
 	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
-	size_t PadCount = DataToSendLength % 4;
+	size_t PadCount = 0;
+	if(0 != DataToSendLength % 4)
+	{
+		PadCount = 4 - DataToSendLength % 4;
+	}
 	for(int i = 0; i < PadCount; ++i)
 	{
 		DataToSend += "\0";
@@ -93,7 +97,6 @@ void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
 		{
 			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
 			{
-				Serial << "Encoding Message\n";
 				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
 			}
 		}

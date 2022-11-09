@@ -6,6 +6,7 @@ TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
 TaskHandle_t ProcessSPITXTask;
+TaskHandle_t TaskMonitorTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_NUM_1
@@ -100,11 +101,22 @@ void setup()
   (
     SPI_TX_TaskLoop,                // Function to implement the task
     "SPI TX Task Task",             // Name of the task
-    1000,                           // Stack size in words
+    10000,                          // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES,           // Priority of the task
     &ProcessSPITXTask,              // Task handle.
     1                               // Core where the task should run
+  );
+
+  xTaskCreatePinnedToCore
+  (
+    TaskMonitorTaskLoop,        // Function to implement the task
+    "TaskMonitorTaskTask",          // Name of the task
+    5000,                        // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES - 1,     // Priority of the task
+    &TaskMonitorTask,           // Task handle.
+    1                             // Core where the task should run
   );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
@@ -122,7 +134,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(20 / portTICK_PERIOD_MS);
   }
 }
 
@@ -150,5 +162,29 @@ void SPI_TX_TaskLoop(void * parameter)
   {
     m_SPIDataLinkMaster.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void TaskMonitorTaskLoop(void * parameter)
+{
+  ESP_LOGI("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    size_t StackSizeThreshold = 100;
+    if( uxTaskGetStackHighWaterMark(ManagerTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ManagerTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(ProcessSoundPowerTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessSoundPowerTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(ProcessFFTTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessFFTTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(ProcessSPITXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessSPITXTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(TaskMonitorTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! TaskMonitorTask: Stack Size Low");
+    
+    if(true == TASK_STACK_SIZE_DEBUG)
+    {
+      ESP_LOGI("LED_Controller1", "ManagerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ManagerTask));
+      ESP_LOGI("LED_Controller1", "ProcessSoundPowerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSoundPowerTask));
+      ESP_LOGI("LED_Controller1", "ProcessFFTTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessFFTTask));
+      ESP_LOGI("LED_Controller1", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
+      ESP_LOGI("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
+    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
