@@ -198,18 +198,22 @@ void Sound_Processor::Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power()
     GetValueFromRXQueue(FrameBuffer, "Amplitude_Frames", AmplitudeByteCount, false, false);
     for(int i = 0; i < AmplitudeFrameCount; ++i)
     {
+      bool R_Amplitude_Calculated = false;
+      bool L_Amplitude_Calculated = false;
       if(true == m_RightSoundData.PushValueAndCalculateSoundData(FrameBuffer[i].channel1))
       {
+        R_Amplitude_Calculated = true;
         if( NULL != QueueOut1 )
         {
           ProcessedSoundData_t PSD = m_RightSoundData.GetProcessedSoundData();
-          Serial << "Max: " << PSD.NormalizedPower << "\n";
+          Serial << "Normalized: " << PSD.NormalizedPower << "\n";
           static bool R_PSD_Push_Successful = true;
           PushValueToQueue(&PSD, QueueOut1, false, "Right Processed Sound Data: R_PSD", R_PSD_Push_Successful);
         }
       }
       if(true == m_LeftSoundData.PushValueAndCalculateSoundData(FrameBuffer[i].channel2))
       {
+        L_Amplitude_Calculated = true;
         if( NULL != QueueOut2 )
         {
           ProcessedSoundData_t PSD = m_LeftSoundData.GetProcessedSoundData();
@@ -217,6 +221,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power()
           PushValueToQueue(&PSD, QueueOut2, false, "Left Processed Sound Data: L_PSD", L_PSD_Push_Successful);
         }
       }
+      assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
     }
   }
 }

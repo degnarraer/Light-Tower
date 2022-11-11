@@ -21,7 +21,6 @@
 #include "Statistical_Engine.h"
 
 
-//CalculateFPS calculateFPS2("Statistical Engine", 1000);
 void StatisticalEngine::Setup()
 {
   if(false == m_MemoryIsAllocated) AllocateMemory();
@@ -39,7 +38,7 @@ bool StatisticalEngine::NewBandDataReady()
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS")) > 0);
   if( A & B )
   {
-    Serial << "NewBandData\n";
+    ESP_LOGV("Statistical_Engine", "NewBandDataReady");
     m_NewBandDataCurrentTime = currentTime;
     m_NewBandDataReady = true;
     m_NewBandDataTimedOut = false;
@@ -47,7 +46,6 @@ bool StatisticalEngine::NewBandDataReady()
   }
   else if(currentTime - m_NewBandDataCurrentTime >= m_NewBandDataTimeOut)
   {
-    Serial << "NewBandData Timeout\n";
     m_NewBandDataReady = true;
     m_NewBandDataTimedOut = true;
     return true;
@@ -67,7 +65,7 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBAND")) > 0);
   if( A & B )
   {
-    Serial << "NewMaxBand\n";
+    ESP_LOGE("Statistical_Engine", "NewMaxBandSoundDataReady");
     m_NewMaxBandSoundDataCurrentTime = currentTime;
     m_NewMaxBandSoundDataReady = true;
     m_NewMaxBandSoundDataTimedOut = false;
@@ -75,7 +73,6 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   }
   else if(currentTime - m_NewMaxBandSoundDataCurrentTime >= m_NewMaxBandSoundDataTimeOut)
   {
-    Serial << "NewMaxBand Timeout\n";
     m_NewMaxBandSoundDataReady = true;
     m_NewMaxBandSoundDataTimedOut = true;
     return true;
@@ -95,7 +92,7 @@ bool StatisticalEngine::NewSoundDataReady()
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD")) > 0);
   if( A & B )
   {
-    Serial << "NewSoundData\n";
+    ESP_LOGV("Statistical_Engine", "NewSoundDataReady");
     m_NewSoundDataCurrentTime = currentTime;
     m_NewSoundDataReady = true;
     m_NewSoundDataTimedOut = false;
@@ -103,7 +100,6 @@ bool StatisticalEngine::NewSoundDataReady()
   }
   else if(currentTime - m_NewSoundDataCurrentTime >= m_NewSoundDataTimeOut)
   {
-    Serial << "NewSoundData Timeout\n";
     m_NewSoundDataReady = true;
     m_NewSoundDataTimedOut = true;
     return true;
@@ -118,60 +114,73 @@ bool StatisticalEngine::NewSoundDataReady()
 
 bool StatisticalEngine::CanRunMyScheduledTask()
 {
-  return NewSoundDataReady() | NewBandDataReady() | NewMaxBandSoundDataReady();
+  bool result = NewSoundDataReady() || NewBandDataReady() || NewMaxBandSoundDataReady();
+  return result;
 }
 
 void StatisticalEngine::RunMyScheduledTask()
 {
   if(true == m_NewSoundDataReady)
   {
-    if(false == m_NewSoundDataTimedOut)
+    if(0 == pthread_mutex_lock(&m_ProcessedSoundDataLock))
     {
-      GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetTotalByteCountForDataItem("R_PSD"), true, false);
-      GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetTotalByteCountForDataItem("L_PSD"), true, false);
-      
-      //To allow the original code to work, we combine the left and right channels into an average
-      m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
-      m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
-      m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
-      UpdateSoundState();
-    }
-    else
-    {
-      m_Power = 0;
-      m_signalMin = 0;
-      m_signalMax = 0;
+      if(true == m_NewSoundDataTimedOut)
+      {
+        m_Power = 0;
+        m_signalMin = 0;
+        m_signalMax = 0;
+      }
+      else
+      {
+        GetValueFromQueue(&m_Right_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("R_PSD"), GetTotalByteCountForDataItem("R_PSD"), true, false);
+        GetValueFromQueue(&m_Left_Channel_Processed_Sound_Data, GetQueueHandleRXForDataItem("L_PSD"), GetTotalByteCountForDataItem("L_PSD"), true, false);
+        
+        //To allow the original code to work, we combine the left and right channels into an average
+        m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
+        m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
+        m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
+        UpdateSoundState();
+      }
+      pthread_mutex_unlock(&m_ProcessedSoundDataLock);
     }
   }
 
   if(true == m_NewBandDataReady)
   {
-    if(false == m_NewBandDataTimedOut)
+    if(0 == pthread_mutex_lock(&m_BandValuesLock))
     {
-      GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), true, false);
-      GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), true, false);
-      UpdateBandArray(); 
-    }
-    else
-    {
-      memset(m_Right_Band_Values, 0.0, sizeof(m_Right_Band_Values));
-      memset(m_Left_Band_Values, 0.0, sizeof(m_Left_Band_Values));
+      if(true == m_NewBandDataTimedOut)
+      {
+        memset(m_Right_Band_Values, 0.0, sizeof(m_Right_Band_Values));
+        memset(m_Left_Band_Values, 0.0, sizeof(m_Left_Band_Values));
+      }
+      else
+      {
+        GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), true, false);
+        GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), true, false);
+        UpdateBandArray();
+      }       
+      pthread_mutex_unlock(&m_BandValuesLock);
     }
   }
   
   if(true == m_NewMaxBandSoundDataReady)
   {
-    if(false == m_NewMaxBandSoundDataTimedOut)
+    if(0 == pthread_mutex_lock(&m_MaxBinSoundDataLock))
     {
-      GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
-      GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
-    }
-    else
-    {
-      m_Right_MaxBandSoundData.MaxBandNormalizedPower = 0.0;
-      m_Right_MaxBandSoundData.MaxBandIndex = 0;
-      m_Left_MaxBandSoundData.MaxBandNormalizedPower = 0.0;
-      m_Left_MaxBandSoundData.MaxBandIndex = 0;
+      if(true == m_NewMaxBandSoundDataTimedOut)
+      {
+        m_Right_MaxBandSoundData.MaxBandNormalizedPower = 0.0;
+        m_Right_MaxBandSoundData.MaxBandIndex = 0;
+        m_Left_MaxBandSoundData.MaxBandNormalizedPower = 0.0;
+        m_Left_MaxBandSoundData.MaxBandIndex = 0;
+      }
+      else
+      {
+        GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
+        GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
+      }
+      pthread_mutex_unlock(&m_MaxBinSoundDataLock);
     }
   }
 }
@@ -301,40 +310,49 @@ float StatisticalEngine::GetFreqForBin(unsigned int bin)
 
 float StatisticalEngine::GetBandValue(unsigned int band, unsigned int depth)
 {
-  float result;
-  if(band < m_NumBands && depth < BAND_SAVE_LENGTH)
+  float result = 0.0;
+  if(0 == pthread_mutex_lock(&m_BandValuesLock))
   {
-    int position = 0;
-    if (depth <= currentBandIndex)
+    if(band < m_NumBands && depth < BAND_SAVE_LENGTH)
     {
-      position = currentBandIndex - depth;
+      int position = 0;
+      if (depth <= currentBandIndex)
+      {
+        position = currentBandIndex - depth;
+      }
+      else
+      {
+        position = BAND_SAVE_LENGTH - (depth - currentBandIndex);
+      }
+      result = BandValues[band][position];
+      if(true == debugGetBandValueStatisticalEngine) Serial << "Band: " << band << " " << "Depth: " << depth << " " << "Result: " << result << "\n";
     }
     else
     {
-      position = BAND_SAVE_LENGTH - (depth - currentBandIndex);
+      if(true == debugMode) Serial << "!!ERROR: Bin Array Out of Bounds\n";
+      result = 0.0;
     }
-    result = BandValues[band][position];
-    if(true == debugGetBandValueStatisticalEngine) Serial << "Band: " << band << " " << "Depth: " << depth << " " << "Result: " << result << "\n";
-    return result;
+    pthread_mutex_unlock(&m_BandValuesLock);
   }
-  else
-  {
-    if(true == debugMode) Serial << "!!ERROR: Bin Array Out of Bounds\n";
-    return 0;
-  }
+  return result;
 }
 
 float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
 {
-  float total = 0;
-  unsigned int count = 0;
-  for(int i = 0; i < BAND_SAVE_LENGTH && i <= depth; ++i)
+  float total = 0.0;
+  float result = 0.0;
+  if(0 == pthread_mutex_lock(&m_BandValuesLock))
   {
-    total += GetBandValue(band, i);
-    ++count;
+    unsigned int count = 0;
+    for(int i = 0; i < BAND_SAVE_LENGTH && i <= depth; ++i)
+    {
+      total += GetBandValue(band, i);
+      ++count;
+    }
+    float result = total / count;
+    if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
+    pthread_mutex_unlock(&m_BandValuesLock);
   }
-  float result = total / count;
-  if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   return result;
 }
 float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsigned int depth, unsigned int TotalBands)
@@ -342,20 +360,30 @@ float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsign
   assert(band < TotalBands);
   assert(TotalBands <= m_NumBands);
   assert(TotalBands > 0);
-  int bandSeparation = m_NumBands / TotalBands;
-  int startBand = band * bandSeparation;
-  int endBand = startBand + bandSeparation;
   float result = 0.0;
-  for(int b = startBand; b < endBand; ++b)
+  if(0 == pthread_mutex_lock(&m_BandValuesLock))
   {
-    result += GetBandAverage(b, depth);
+    int bandSeparation = m_NumBands / TotalBands;
+    int startBand = band * bandSeparation;
+    int endBand = startBand + bandSeparation;
+    for(int b = startBand; b < endBand; ++b)
+    {
+      result += GetBandAverage(b, depth);
+    }
+    if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
+    pthread_mutex_unlock(&m_BandValuesLock);
   }
-  if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
   return result;
 }
 
 float StatisticalEngine::GetNormalizedSoundPower()
 { 
-  if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << m_Power << "\n";
-  return m_Power;
+  float Result = 0;
+  if(0 == pthread_mutex_lock(&m_ProcessedSoundDataLock))
+  {
+    Result = m_Power;
+    if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << m_Power << "\n";
+    pthread_mutex_unlock(&m_ProcessedSoundDataLock);
+  }
+  return Result;
 }

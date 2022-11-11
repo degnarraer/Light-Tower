@@ -560,14 +560,10 @@ class CommonUtils
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
-					void* DataBuffer[ByteCount];
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, DataBuffer, 0) == pdTRUE )
-						{
-							memcpy(Value, DataBuffer, ByteCount);
-						}
-						else
+						if ( xQueueReceive(Queue, Value, 0) != pdTRUE )
+						
 						{
 							ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
 						}

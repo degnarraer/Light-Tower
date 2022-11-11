@@ -82,7 +82,7 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 		DataToSend += "\0";
 	}
 	DataToSendLength += PadCount;
-	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
+	ESP_LOGE("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
 	memcpy(spi_tx_buf, DataToSend.c_str(), DataToSendLength);
 	TransferBytes(DataToSendLength);
@@ -95,7 +95,7 @@ void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
 		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
 		if(MessageCount > 0)
 		{
-			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
+			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, portMAX_DELAY) == pdTRUE )
 			{
 				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
 			}
@@ -120,7 +120,7 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 		"task_wait_spi",
 		10000,
 		this,
-		configMAX_PRIORITIES-1,
+		configMAX_PRIORITIES,
 		&task_handle_wait_spi,
 		m_Core
 	);
@@ -130,7 +130,7 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 		"task_process_buffer",
 		10000,
 		this,
-		configMAX_PRIORITIES-1,
+		configMAX_PRIORITIES,
 		&task_handle_process_buffer,
 		m_Core
 	);
@@ -152,6 +152,7 @@ void SPI_Datalink_Slave::task_wait_spi()
 	while(true)
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+		yield();
 		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
 		if(NULL != m_Notifiee)
@@ -173,6 +174,7 @@ void SPI_Datalink_Slave::task_process_buffer()
 	while(true)
 	{
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+		yield();
 		if(NULL != m_Notifiee)
 		{
 			m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf, m_SPI_Slave.size());

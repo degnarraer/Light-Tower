@@ -131,26 +131,16 @@ void setup()
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
-  
-  xTaskCreatePinnedToCore
-  (
-    VisualizationTaskLoop,        // Function to implement the task
-    "VisualizationTask",          // Name of the task
-    20000,                        // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,     // Priority of the task
-    &VisualizationTask,           // Task handle.
-    0                             // Core where the task should run
-  );
+
 
   xTaskCreatePinnedToCore
   (
-    TaskMonitorTaskLoop,        // Function to implement the task
-    "TaskMonitorTaskTask",          // Name of the task
-    5000,                        // Stack size in words
+    TaskMonitorTaskLoop,          // Function to implement the task
+    "TaskMonitorTaskTask",        // Name of the task
+    5000,                         // Stack size in words
     NULL,                         // Task input parameter
     configMAX_PRIORITIES - 1,     // Priority of the task
-    &TaskMonitorTask,           // Task handle.
+    &TaskMonitorTask,             // Task handle.
     1                             // Core where the task should run
   );
   
@@ -158,13 +148,23 @@ void setup()
   (
     DataMoverTaskLoop,            // Function to implement the task
     "DataMoverTask",              // Name of the task
-    20000,                         // Stack size in words
+    20000,                        // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 2,     // Priority of the task
+    configMAX_PRIORITIES,         // Priority of the task
     &DataMoverTask,               // Task handle.
     1                             // Core where the task should run
   );
-  
+    
+  xTaskCreatePinnedToCore
+  (
+    VisualizationTaskLoop,        // Function to implement the task
+    "VisualizationTask",          // Name of the task
+    30000,                        // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES,         // Priority of the task
+    &VisualizationTask,           // Task handle.
+    0                             // Core where the task should run
+  );
   esp_task_wdt_init(30, true);
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
@@ -178,9 +178,10 @@ void loop()
 
 void VisualizationTaskLoop(void * parameter)
 {
-  ESP_LOGI("LED_Controller1", "Running Task.");
+  ESP_LOGE("LED_Controller1", "Running Task.");
   for(;;)
   {
+    ESP_LOGV("LED_Controller1", "Visualization Loop");  
     m_Scheduler.RunScheduler();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -188,7 +189,7 @@ void VisualizationTaskLoop(void * parameter)
 
 void TaskMonitorTaskLoop(void * parameter)
 {
-  ESP_LOGI("LED_Controller1", "Running Task.");
+  ESP_LOGE("LED_Controller1", "Running Task.");
   for(;;)
   {
     size_t StackSizeThreshold = 100;
@@ -200,15 +201,16 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGI("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
       ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(10000 / portTICK_PERIOD_MS);
   }
 }
 
 void DataMoverTaskLoop(void * parameter)
 {
-  ESP_LOGI("LED_Controller1", "Running Task.");
+  ESP_LOGE("LED_Controller1", "Running Task.");
   for(;;)
   {
+    ESP_LOGV("LED_Controller1", "Manager Loop"); 
     m_Manager.ProcessEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }

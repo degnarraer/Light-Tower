@@ -39,7 +39,7 @@
 #define HEAP_SIZE_DEBUG false
 
 //Visualization Debug Messages
-const bool   debugMode = true;
+const bool   debugMode = false;
 const int    debugLevel = 1;
 
 const bool   debugNanInf = false;
@@ -53,7 +53,7 @@ const bool   debugSoundPower = false;
 const bool   debugVisualization = false;
 const bool   debugView = false;
 const bool   debugLEDs = false;
-const bool   debugModels = true;
+const bool   debugModels = false;
 const bool   debugSetBandValueStatisticalEngine = false;
 const bool   debugGetBandValueStatisticalEngine = false;
 const bool   debugGravitationalModel = false;

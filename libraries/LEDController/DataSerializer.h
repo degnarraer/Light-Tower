@@ -91,6 +91,7 @@ class DataSerializer: public CommonUtils
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
+									ESP_LOGV("Serial_Datalink", "%s: Deserialized", ItemName.c_str());
 									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
 								}
 								else
