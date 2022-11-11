@@ -139,6 +139,7 @@ void StatisticalEngine::RunMyScheduledTask()
         m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
         m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
         m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
+        Serial << m_signalMin << "|" << m_Power << "|" << m_signalMax << "\n";
         UpdateSoundState();
       }
       pthread_mutex_unlock(&m_ProcessedSoundDataLock);

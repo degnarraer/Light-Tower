@@ -19,17 +19,32 @@
 #define FFT_CALCULATOR_H
 
 #include "arduinoFFT.h"
-
+#include <DataTypes.h>
 
 class FFT_Calculator
 {
   public:
-    FFT_Calculator(int32_t FFT_Size, int32_t SampleRate): m_FFT_Size(FFT_Size)
-                                                        , m_FFT_SampleRate(SampleRate)
+    FFT_Calculator(int32_t FFT_Size, int32_t SampleRate, BitLength_t BitLength ): m_FFT_Size(FFT_Size)
+                                                                                , m_FFT_SampleRate(SampleRate)
     {
       mp_RealBuffer = (float*)malloc(sizeof(float)*m_FFT_Size);
       mp_ImaginaryBuffer = (float*)malloc(sizeof(float)*m_FFT_Size);
       m_MyFFT = new ArduinoFFT<float>(mp_RealBuffer, mp_ImaginaryBuffer, m_FFT_Size, m_FFT_SampleRate);
+      switch(BitLength)
+      {
+        case BitLength_32:
+          m_BitLengthMaxValue = pow(2,32);
+        break;
+        case BitLength_16:
+          m_BitLengthMaxValue = pow(2,16);
+        break;
+        case BitLength_8:
+          m_BitLengthMaxValue = pow(2,8);
+        break;
+        default:
+          m_BitLengthMaxValue = pow(2,32);
+        break;
+      }
     }
     virtual ~FFT_Calculator()
     {
@@ -92,7 +107,7 @@ class FFT_Calculator
         m_MajorPeak = m_MyFFT->majorPeak();
         for(int i = 0; i < m_FFT_Size; ++i)
         {
-          mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * Gain ) / m_32BitMax;
+          mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * Gain ) / m_BitLengthMaxValue;
           if(mp_RealBuffer[i] > 1.0)
           {
             mp_RealBuffer[i] = 1.0;
@@ -118,7 +133,7 @@ class FFT_Calculator
     int32_t m_MaxFFTBinIndex = 0;
     float m_MajorPeak = 0;
     bool m_SolutionReady = false;
-    uint32_t m_32BitMax = pow(2,32);
+    uint32_t m_BitLengthMaxValue = 0;
     ArduinoFFT<float>*m_MyFFT;
 };
 
