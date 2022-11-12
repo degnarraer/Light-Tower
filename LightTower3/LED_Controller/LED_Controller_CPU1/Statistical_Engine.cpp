@@ -34,9 +34,13 @@ void StatisticalEngine::Setup()
 bool StatisticalEngine::NewBandDataReady()
 {
   unsigned long currentTime = millis();
-  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BANDS")) > 0);
-  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS")) > 0);
-  if( A || B )
+
+  size_t R_BANDS_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BANDS"));
+  size_t L_BANDS_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS"));
+  ESP_LOGE("NewSoundDataReady", "New Band Data Messages Waiting: %i | %i", R_BANDS_Size, L_BANDS_Size);
+  bool A = (R_BANDS_Size > 0);
+  bool B = (L_BANDS_Size > 0);
+  if( true == A && true == B )
   {
     ESP_LOGV("Statistical_Engine", "NewBandDataReady");
     m_NewBandDataCurrentTime = currentTime;
@@ -61,9 +65,12 @@ bool StatisticalEngine::NewBandDataReady()
 bool StatisticalEngine::NewMaxBandSoundDataReady()
 {
   unsigned long currentTime = millis();
-  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBAND")) > 0);
-  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBAND")) > 0);
-  if( A || B )
+  size_t R_MAXBAND_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBAND"));
+  size_t L_MAXBAND_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBAND"));
+  ESP_LOGE("NewMaxBandSoundDataReady", "New Max Band Sound Messages Waiting: %i | %i", R_MAXBAND_Size, L_MAXBAND_Size);
+  bool A = (R_MAXBAND_Size > 0);
+  bool B = (L_MAXBAND_Size > 0);
+  if( true == A && true == B )
   {
     ESP_LOGE("Statistical_Engine", "NewMaxBandSoundDataReady");
     m_NewMaxBandSoundDataCurrentTime = currentTime;
@@ -88,9 +95,13 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
 bool StatisticalEngine::NewSoundDataReady()
 {
   unsigned long currentTime = millis();
-  bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD")) > 0);
-  bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD")) > 0);
-  if( A || B )
+  size_t R_PSD_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD"));
+  size_t L_PSD_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD"));
+  ESP_LOGE("NewSoundDataReady", "New Sound Data Messages Waiting: %i | %i", R_PSD_Size, L_PSD_Size);
+  bool A = (R_PSD_Size > 0);
+  bool B = (L_PSD_Size > 0);
+  
+  if( true == A && true == B )
   {
     ESP_LOGV("Statistical_Engine", "NewSoundDataReady");
     m_NewSoundDataCurrentTime = currentTime;
@@ -139,7 +150,7 @@ void StatisticalEngine::RunMyScheduledTask()
         m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
         m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
         m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
-        Serial << m_signalMin << "|" << m_Power << "|" << m_signalMax << "\n";
+        ESP_LOGE("Statistical_Engine", "New SoundData Ready: %d | %f | %d", m_signalMin, m_Power, m_signalMax);
         UpdateSoundState();
       }
       pthread_mutex_unlock(&m_ProcessedSoundDataLock);
@@ -200,46 +211,50 @@ void StatisticalEngine::FreeMemory()
 
 void StatisticalEngine::UpdateSoundState()
 {
-  int delta = 0;
-  float gain = 0.0;
-  if(m_Power >= SOUND_DETECT_THRESHOLD)
+  if(0 == pthread_mutex_lock(&m_ProcessedSoundDataLock))
   {
-    float  numerator = m_Power - SOUND_DETECT_THRESHOLD;
-    float  denomanator = SOUND_DETECT_THRESHOLD;
-    if(numerator < 0) numerator = 0;
-    gain = (numerator/denomanator);
-    delta = m_soundAdder * gain;
-  }
-  else
-  {
-    float  numerator = SOUND_DETECT_THRESHOLD - m_Power;
-    float  denomanator = SOUND_DETECT_THRESHOLD;
-    if(numerator < 0) numerator = 0;
-    gain = (numerator/denomanator);
-    delta = m_silenceSubtractor * gain;
-  }
-  m_silenceIntegrator += delta;
-  if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
-  if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
-  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << m_PowerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
-  if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
-  {
-    ESP_LOGD("Statistical_Engine", "Sound Detected.");
-    soundState = SoundState::SoundDetected;
-    m_cb->MicrophoneStateChange(soundState);
-  }
-  else if(soundState == SoundState::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
-  {
-    ESP_LOGD("Statistical_Engine", "Silence Detected.");
-    soundState = SoundState::SilenceDetected;
-    m_silenceStartTime = millis();
-    m_cb->MicrophoneStateChange(soundState);
-  }
-  else if(soundState == SoundState::SilenceDetected && millis() - m_silenceStartTime >= 120000)
-  {
-    ESP_LOGD("Statistical_Engine", "Lasting Silence Detected.");
-    soundState = SoundState::LastingSilenceDetected;
-    m_cb->MicrophoneStateChange(soundState);
+    int delta = 0;
+    float gain = 0.0;
+    if(m_Power >= SOUND_DETECT_THRESHOLD)
+    {
+      float  numerator = m_Power - SOUND_DETECT_THRESHOLD;
+      float  denomanator = SOUND_DETECT_THRESHOLD;
+      if(numerator < 0) numerator = 0;
+      gain = (numerator/denomanator);
+      delta = m_soundAdder * gain;
+    }
+    else
+    {
+      float  numerator = SOUND_DETECT_THRESHOLD - m_Power;
+      float  denomanator = SOUND_DETECT_THRESHOLD;
+      if(numerator < 0) numerator = 0;
+      gain = (numerator/denomanator);
+      delta = m_silenceSubtractor * gain;
+    }
+    m_silenceIntegrator += delta;
+    if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
+    if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
+    if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << m_PowerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
+    if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
+    {
+      ESP_LOGD("Statistical_Engine", "Sound Detected.");
+      soundState = SoundState::SoundDetected;
+      m_cb->MicrophoneStateChange(soundState);
+    }
+    else if(soundState == SoundState::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
+    {
+      ESP_LOGD("Statistical_Engine", "Silence Detected.");
+      soundState = SoundState::SilenceDetected;
+      m_silenceStartTime = millis();
+      m_cb->MicrophoneStateChange(soundState);
+    }
+    else if(soundState == SoundState::SilenceDetected && millis() - m_silenceStartTime >= 120000)
+    {
+      ESP_LOGD("Statistical_Engine", "Lasting Silence Detected.");
+      soundState = SoundState::LastingSilenceDetected;
+      m_cb->MicrophoneStateChange(soundState);
+    }
+    pthread_mutex_unlock(&m_ProcessedSoundDataLock);
   }
 }
 
@@ -383,7 +398,6 @@ float StatisticalEngine::GetNormalizedSoundPower()
   if(0 == pthread_mutex_lock(&m_ProcessedSoundDataLock))
   {
     Result = m_Power;
-    if(true == debugSoundPower) Serial << "StatisticalEngine: Get Sound Power: " << m_Power << "\n";
     pthread_mutex_unlock(&m_ProcessedSoundDataLock);
   }
   return Result;

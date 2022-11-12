@@ -54,6 +54,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Left_Channel_FFT()
   
   if(QueueIn != NULL && uxQueueMessagesWaiting(QueueIn) > 0)
   {
+    ESP_LOGV("Sound_Processor", "Pushing FFT Data");
     size_t FFTFrameCount = GetSampleCountForDataItem("FFT_Frames");
     size_t FFTByteCount = GetTotalByteCountForDataItem("FFT_Frames");
     
@@ -83,6 +84,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Channel_FFT()
   QueueHandle_t R_MajorFreq_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
   if(NULL != R_Bands_QueueOut && NULL != R_MaxBin_QueueOut && NULL != R_MajorFreq_QueueOut )
   {
+    ESP_LOGV("Sound_Processor", "Calculating Right FFT");
     size_t R_Bands_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_BANDS");
     size_t R_MaxBand_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_MAXBAND");
     size_t R_MajorFreq_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_MAJOR_FREQ");
@@ -132,6 +134,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
   QueueHandle_t L_MajorFreq_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
   if( NULL != L_Bands_QueueOut && NULL != L_MaxBin_QueueOut && NULL != L_MajorFreq_QueueOut )
   {
+    ESP_LOGV("Sound_Processor", "Calculating Left FFT");
     size_t L_Bands_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_BANDS");
     size_t L_MaxBand_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_MAXBAND");
     size_t L_MajorFreq_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_MAJOR_FREQ");

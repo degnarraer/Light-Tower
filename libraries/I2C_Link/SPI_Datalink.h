@@ -117,11 +117,9 @@ class SPI_Datalink_Slave: public SPI_Datalink
 						  , uint8_t MISO
 						  , uint8_t MOSI
 						  , uint8_t SS
-						  , uint8_t DMA_Channel
-						  , uint8_t Core )
+						  , uint8_t DMA_Channel )
 						  : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
 						  , m_Title(Title)
-						  , m_Core(Core)
 						  {
 							 Setup_SPI_Slave(); 
 						  }
@@ -133,7 +131,6 @@ class SPI_Datalink_Slave: public SPI_Datalink
 	private:
 		uint8_t* spi_tx_buf[N_SLAVE_QUEUES];
 		uint8_t* spi_rx_buf[N_SLAVE_QUEUES];
-		uint8_t m_Core = 0;
 		String m_Title = "";
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
