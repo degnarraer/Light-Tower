@@ -91,7 +91,7 @@ class DataSerializer: public CommonUtils
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
-									ESP_LOGV("Serial_Datalink", "%s: Deserialized", ItemName.c_str());
+									ESP_LOGE("Serial_Datalink", "%s: Deserialized", ItemName.c_str());
 									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
 								}
 								else
@@ -157,7 +157,6 @@ class DataSerializer: public CommonUtils
 						int ByteCountIn = doc[m_TotalByteCountTag];
 						int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(doc[m_DataTypeTag]));
 						int DataByteCount = doc[m_DataTag].size();
-						Serial << "DBC: " << DataByteCount << "\tBCI: " << ByteCountIn << "\n";
 						if(ByteCountIn == DataByteCount && ByteCountIn <= MaxBytes)
 						{
 							for(int i = 0; i < DataByteCount; ++i)

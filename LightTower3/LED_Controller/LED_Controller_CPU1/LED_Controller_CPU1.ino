@@ -9,6 +9,7 @@
 TaskHandle_t DataMoverTask;
 TaskHandle_t VisualizationTask;
 TaskHandle_t TaskMonitorTask;
+TaskHandle_t SPI_RX_Task;
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
@@ -98,7 +99,7 @@ SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink"
                                                       , SPI1_PIN_MOSI
                                                       , SPI1_PIN_SS
                                                       , 2
-                                                      , 1 );
+                                                      , 0 );
                                                       
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
@@ -150,11 +151,22 @@ void setup()
     "DataMoverTask",              // Name of the task
     20000,                        // Stack size in words
     NULL,                         // Task input parameter
-    configMAX_PRIORITIES,         // Priority of the task
+    configMAX_PRIORITIES-1,       // Priority of the task
     &DataMoverTask,               // Task handle.
     1                             // Core where the task should run
   );
-    
+
+  xTaskCreatePinnedToCore
+  (
+    SPI_RX_TaskLoop,              // Function to implement the task
+    "SPI_RX_Task",                // Name of the task
+    10000,                        // Stack size in words
+    NULL,                         // Task input parameter
+    configMAX_PRIORITIES-1,       // Priority of the task
+    &SPI_RX_Task,                 // Task handle.
+    1                             // Core where the task should run
+  );
+  
   xTaskCreatePinnedToCore
   (
     VisualizationTaskLoop,        // Function to implement the task
@@ -185,6 +197,16 @@ void VisualizationTaskLoop(void * parameter)
     m_Scheduler.RunScheduler();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
+}
+
+void SPI_RX_TaskLoop(void * parameter)
+{
+  ESP_LOGE("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    m_SPIDataLinkSlave.ProcessDataRXEventQueue();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }  
 }
 
 void TaskMonitorTaskLoop(void * parameter)

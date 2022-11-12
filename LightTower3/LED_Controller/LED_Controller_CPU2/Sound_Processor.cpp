@@ -206,7 +206,6 @@ void Sound_Processor::Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power()
         if( NULL != QueueOut1 )
         {
           ProcessedSoundData_t PSD = m_RightSoundData.GetProcessedSoundData();
-          Serial << "Normalized: " << PSD.NormalizedPower << "\n";
           static bool R_PSD_Push_Successful = true;
           PushValueToQueue(&PSD, QueueOut1, false, "Right Processed Sound Data: R_PSD", R_PSD_Push_Successful);
         }

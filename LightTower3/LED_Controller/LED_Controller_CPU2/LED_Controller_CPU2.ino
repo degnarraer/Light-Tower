@@ -139,7 +139,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -148,7 +148,7 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(25 / portTICK_PERIOD_MS);
   }
 }
 
@@ -190,6 +190,6 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGI("LED_Controller1", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
       ESP_LOGI("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
     }
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(30000 / portTICK_PERIOD_MS);
   }
 }

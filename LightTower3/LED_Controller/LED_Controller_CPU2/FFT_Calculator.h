@@ -20,6 +20,7 @@
 
 #include "arduinoFFT.h"
 #include <DataTypes.h>
+#include "Streaming.h"
 
 class FFT_Calculator
 {
@@ -133,7 +134,7 @@ class FFT_Calculator
     int32_t m_MaxFFTBinIndex = 0;
     float m_MajorPeak = 0;
     bool m_SolutionReady = false;
-    uint32_t m_BitLengthMaxValue = 0;
+    float m_BitLengthMaxValue = 1.0;
     ArduinoFFT<float>*m_MyFFT;
 };
 

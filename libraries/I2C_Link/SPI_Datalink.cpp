@@ -19,20 +19,22 @@
 #include "pthread.h"
 
 void SPI_Datalink_Master::Setup_SPI_Master()
-{
-	spi_rx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
-	spi_tx_buf = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
-	if(NULL == spi_rx_buf || NULL == spi_tx_buf)
+{	
+    for (uint8_t i = 0; i < N_MASTER_QUEUES; ++i) 
 	{
-		ESP_LOGE("SPI_Datalink", "Error Creating DMA Buffers!");
+		spi_rx_buf[i] = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
+		spi_tx_buf[i] = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
+		if(NULL == spi_rx_buf[i] || NULL == spi_tx_buf[i])
+		{
+			ESP_LOGE("SPI_Datalink", "Error Creating DMA Buffers!");
+		}
 	}
 	m_SPI_Master.setDMAChannel(m_DMA_Channel);
 	m_SPI_Master.setMaxTransferSize(SPI_MAX_DATA_BYTES);
 	m_SPI_Master.setDataMode(SPI_MODE0);
 	m_SPI_Master.setFrequency(CLOCK_SPEED);
 	m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
-	memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-	memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
+	m_SPI_Master.setQueueSize(N_MASTER_QUEUES);
 	Begin();
 }
 void SPI_Datalink_Master::ProcessDataTXEventQueue()
@@ -52,11 +54,11 @@ void SPI_Datalink_Master::ProcessDataTXEventQueue()
 	}
 }
 
-size_t SPI_Datalink_Master::TransferBytes(size_t Length)
+void SPI_Datalink_Master::QueueSingleTransaction(uint8_t *tx_Buff, uint8_t *rx_Buff, size_t Length)
 {
 	assert(Length <= SPI_MAX_DATA_BYTES);
-	size_t ReceivedLength = m_SPI_Master.transfer(spi_tx_buf, spi_rx_buf, Length);
-	return ReceivedLength;
+	m_SPI_Master.queue(tx_Buff, rx_Buff, Length);
+	m_SPI_Master.yield();
 }
 
 bool SPI_Datalink_Master::Begin() 
@@ -82,10 +84,10 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 		DataToSend += "\0";
 	}
 	DataToSendLength += PadCount;
-	ESP_LOGE("SPI_Datalink", "TX: %s", DataToSend.c_str());
+	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
-	memcpy(spi_tx_buf, DataToSend.c_str(), DataToSendLength);
-	TransferBytes(DataToSendLength);
+	memcpy(spi_tx_buf[0], DataToSend.c_str(), DataToSendLength);
+	QueueSingleTransaction(spi_tx_buf[0], spi_rx_buf[0], DataToSendLength);
 }
 
 void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
@@ -105,86 +107,46 @@ void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
 void SPI_Datalink_Slave::Setup_SPI_Slave()
 {
 	ESP_LOGE("SPI_Datalink", "Configuring SPI Slave");
-	spi_rx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
-	spi_tx_buf = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
-	if(NULL == spi_rx_buf || NULL == spi_tx_buf)
+    for (uint8_t i = 0; i < N_SLAVE_QUEUES; ++i) 
 	{
-		ESP_LOGE("SPI_Datalink", "Error Creating DMA Buffers!");
+		spi_rx_buf[i] = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
+		spi_tx_buf[i] = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
+		if(NULL == spi_rx_buf[i] || NULL == spi_tx_buf[i])
+		{
+			ESP_LOGE("SPI_Datalink", "Error Creating DMA Buffers!");
+		}
 	}
 	m_SPI_Slave.setDMAChannel(m_DMA_Channel);
 	m_SPI_Slave.setMaxTransferSize(SPI_MAX_DATA_BYTES);
+	m_SPI_Slave.setQueueSize(N_SLAVE_QUEUES);
 	m_SPI_Slave.setDataMode(SPI_MODE0);
-	xTaskCreatePinnedToCore
-	(
-		static_task_wait_spi,
-		"task_wait_spi",
-		10000,
-		this,
-		configMAX_PRIORITIES,
-		&task_handle_wait_spi,
-		m_Core
-	);
-	xTaskCreatePinnedToCore
-	(
-		static_task_process_buffer,
-		"task_process_buffer",
-		10000,
-		this,
-		configMAX_PRIORITIES,
-		&task_handle_process_buffer,
-		m_Core
-	);
+
 	m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
 	ESP_LOGE("SPI_Datalink", "SPI Slave Configured");
-	xTaskNotifyGive(task_handle_wait_spi);
 }
 void SPI_Datalink_Slave::RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee)
 {
 	m_Notifiee = Notifiee;
 }
-void SPI_Datalink_Slave::static_task_wait_spi(void* pvParameters)
-{
-	SPI_Datalink_Slave* slave = (SPI_Datalink_Slave*)pvParameters;
-	slave->task_wait_spi();
-}
-void SPI_Datalink_Slave::task_wait_spi()
-{
-	while(true)
-	{
-		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		yield();
-		memset(spi_rx_buf, 0, SPI_MAX_DATA_BYTES);
-		memset(spi_tx_buf, 0, SPI_MAX_DATA_BYTES);
-		if(NULL != m_Notifiee)
-		{
-			size_t ActualBufferSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf, SPI_MAX_DATA_BYTES);
-			assert( 0 == ActualBufferSize % sizeof(Frame_t) );
-		}
-		m_SPI_Slave.wait(spi_rx_buf, spi_tx_buf, SPI_MAX_DATA_BYTES );
-		xTaskNotifyGive(task_handle_process_buffer);
-	}
-}
-void SPI_Datalink_Slave::static_task_process_buffer(void* pvParameters)
-{
-	SPI_Datalink_Slave* slave = (SPI_Datalink_Slave*)pvParameters;
-	slave->task_process_buffer();
-}
-void SPI_Datalink_Slave::task_process_buffer()
-{
-	while(true)
-	{
-		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		yield();
-		if(NULL != m_Notifiee)
-		{
-			m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf, m_SPI_Slave.size());
-		}
-		m_SPI_Slave.pop();
-		xTaskNotifyGive(task_handle_wait_spi);
-	}
-}
 
 void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 {
+	for(size_t q = m_Queued_Transactions; q < N_SLAVE_QUEUES; ++q)
+	{
+		memset(spi_rx_buf[q], 0, SPI_MAX_DATA_BYTES);
+		memset(spi_tx_buf[q], 0, SPI_MAX_DATA_BYTES);
+		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[q], SPI_MAX_DATA_BYTES);
+		m_SPI_Slave.queue(spi_rx_buf[q], spi_rx_buf[q], SPI_MAX_DATA_BYTES);
+		++m_Queued_Transactions;
+	}
 	
+	const size_t received_transactions = m_SPI_Slave.available();
+    for (size_t q = 0; q < received_transactions; ++q)
+	{
+		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[q], m_SPI_Slave.size());
+        m_SPI_Slave.pop();
+		--m_Queued_Transactions;
+    }
 }
+
+

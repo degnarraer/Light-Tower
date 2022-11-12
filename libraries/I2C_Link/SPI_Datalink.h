@@ -29,7 +29,9 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define SPI_MAX_DATA_BYTES 2000
+#define SPI_MAX_DATA_BYTES 500
+#define N_SLAVE_QUEUES 10
+#define N_MASTER_QUEUES 10
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
@@ -66,8 +68,6 @@ class SPI_Datalink: public DataSerializer
 			SetDataSerializerDataItems(DataItems, Count);
 		}
 	protected:
-		uint8_t* spi_tx_buf = NULL;
-		uint8_t* spi_rx_buf = NULL;
 		uint8_t m_SCK;
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
@@ -75,6 +75,7 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_DMA_Channel = 0;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
+		size_t m_Queued_Transactions = 0;
 	private:	
 };
 
@@ -96,10 +97,12 @@ class SPI_Datalink_Master: public SPI_Datalink
 		void ProcessDataTXEventQueue();
 	protected:
 		void Setup_SPI_Master();
-		size_t TransferBytes(size_t Length);
+		void QueueSingleTransaction(uint8_t *tx_Buff, uint8_t *rx_Buff, size_t Length);
 		bool Begin();
 		bool End();
 	private:
+		uint8_t *spi_tx_buf[N_MASTER_QUEUES];
+		uint8_t *spi_rx_buf[N_MASTER_QUEUES];
 		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
 		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
@@ -123,21 +126,17 @@ class SPI_Datalink_Slave: public SPI_Datalink
 							 Setup_SPI_Slave(); 
 						  }
 		virtual ~SPI_Datalink_Slave(){}
-		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
 		void ProcessDataRXEventQueue();
+		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
 	protected:
 		void Setup_SPI_Slave();
 	private:
+		uint8_t* spi_tx_buf[N_SLAVE_QUEUES];
+		uint8_t* spi_rx_buf[N_SLAVE_QUEUES];
 		uint8_t m_Core = 0;
 		String m_Title = "";
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
-		TaskHandle_t task_handle_process_buffer = 0;
-		TaskHandle_t task_handle_wait_spi = 0;
-		static void static_task_wait_spi(void* pvParameters);
-		void task_wait_spi();
-		static void static_task_process_buffer(void* pvParameters);
-		void task_process_buffer();
 };
 
 #endif
