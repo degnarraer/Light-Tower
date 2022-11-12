@@ -106,7 +106,7 @@ void setup()
   (
     SPI_TX_TaskLoop,                // Function to implement the task
     "SPI TX Task Task",             // Name of the task
-    10000,                          // Stack size in words
+    2000,                           // Stack size in words
     NULL,                           // Task input parameter
     configMAX_PRIORITIES,           // Priority of the task
     &ProcessSPITXTask,              // Task handle.
@@ -115,13 +115,13 @@ void setup()
 
   xTaskCreatePinnedToCore
   (
-    TaskMonitorTaskLoop,        // Function to implement the task
+    TaskMonitorTaskLoop,            // Function to implement the task
     "TaskMonitorTaskTask",          // Name of the task
-    5000,                        // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,     // Priority of the task
-    &TaskMonitorTask,           // Task handle.
-    1                             // Core where the task should run
+    5000,                           // Stack size in words
+    NULL,                           // Task input parameter
+    configMAX_PRIORITIES - 1,       // Priority of the task
+    &TaskMonitorTask,               // Task handle.
+    1                               // Core where the task should run
   );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());

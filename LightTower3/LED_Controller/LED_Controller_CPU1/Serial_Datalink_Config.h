@@ -32,11 +32,10 @@ class SPIDataLinkSlave: public NamedItem
                     , uint8_t MISO
                     , uint8_t MOSI
                     , uint8_t SS
-                    , uint8_t DMA_Channel
-                    , uint8_t Core )
+                    , uint8_t DMA_Channel )
                     : NamedItem(Title) 
                     , QueueManager(Title, GetDataItemConfigCount())
-                    , SPI_Datalink_Slave(Title, SCK, MISO, MOSI, SS, DMA_Channel, Core) {}
+                    , SPI_Datalink_Slave(Title, SCK, MISO, MOSI, SS, DMA_Channel) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()
     {

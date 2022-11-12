@@ -36,7 +36,7 @@ bool StatisticalEngine::NewBandDataReady()
   unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BANDS")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS")) > 0);
-  if( A & B )
+  if( A || B )
   {
     ESP_LOGV("Statistical_Engine", "NewBandDataReady");
     m_NewBandDataCurrentTime = currentTime;
@@ -63,7 +63,7 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_MAXBAND")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_MAXBAND")) > 0);
-  if( A & B )
+  if( A || B )
   {
     ESP_LOGE("Statistical_Engine", "NewMaxBandSoundDataReady");
     m_NewMaxBandSoundDataCurrentTime = currentTime;
@@ -90,7 +90,7 @@ bool StatisticalEngine::NewSoundDataReady()
   unsigned long currentTime = millis();
   bool A = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_PSD")) > 0);
   bool B = (uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_PSD")) > 0);
-  if( A & B )
+  if( A || B )
   {
     ESP_LOGV("Statistical_Engine", "NewSoundDataReady");
     m_NewSoundDataCurrentTime = currentTime;

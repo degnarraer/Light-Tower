@@ -98,8 +98,7 @@ SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink"
                                                       , SPI1_PIN_MISO
                                                       , SPI1_PIN_MOSI
                                                       , SPI1_PIN_SS
-                                                      , 2
-                                                      , 0 );
+                                                      , 2 );
                                                       
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
