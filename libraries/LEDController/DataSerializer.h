@@ -24,6 +24,7 @@
 #include "Streaming.h"
 
 class DataSerializer: public CommonUtils
+					, public QueueController
 
 {
 	public:

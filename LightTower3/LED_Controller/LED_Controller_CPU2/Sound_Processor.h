@@ -34,6 +34,7 @@
 class Sound_Processor: public NamedItem
                      , public CommonUtils
                      , public QueueManager
+                     , public QueueController
 {
   public:
     Sound_Processor( String Title

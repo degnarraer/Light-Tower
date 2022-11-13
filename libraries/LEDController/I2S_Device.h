@@ -42,6 +42,7 @@ class I2S_Device_Callback
 
 class I2S_Device: public NamedItem
 				, public CommonUtils
+				, public QueueController
 {
   public:
     I2S_Device( String Title

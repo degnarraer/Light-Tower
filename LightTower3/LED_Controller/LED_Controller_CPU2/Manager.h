@@ -30,6 +30,7 @@
 class Manager: public NamedItem
              , public I2S_Device_Callback
              , public CommonUtils
+             , public QueueController
 {
   public:
     Manager( String Title

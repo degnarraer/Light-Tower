@@ -26,6 +26,7 @@
 
 class Bluetooth_Source: public NamedItem
 					  , public CommonUtils
+					  , public QueueController
 {
 	public:
 		Bluetooth_Source( String Title
@@ -75,6 +76,7 @@ class Bluetooth_Sink_Callback
 };
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
+				    , public QueueController
 {
   public:
     Bluetooth_Sink( String Title
