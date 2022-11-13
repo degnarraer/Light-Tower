@@ -54,13 +54,6 @@ void SPI_Datalink_Master::ProcessDataTXEventQueue()
 	}
 }
 
-void SPI_Datalink_Master::QueueSingleTransaction(uint8_t *tx_Buff, uint8_t *rx_Buff, size_t Length)
-{
-	assert(Length <= SPI_MAX_DATA_BYTES);
-	m_SPI_Master.queue(tx_Buff, rx_Buff, Length);
-	m_SPI_Master.yield();
-}
-
 bool SPI_Datalink_Master::Begin() 
 { 
 	return m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
@@ -72,8 +65,9 @@ bool SPI_Datalink_Master::End()
 
 void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
-	memset(spi_rx_buf[0], 0, SPI_MAX_DATA_BYTES);
-	memset(spi_tx_buf[0], 0, SPI_MAX_DATA_BYTES);
+	size_t CurrentIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
+	memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
+	memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
 	size_t PadCount = 0;
@@ -88,8 +82,14 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 	DataToSendLength += PadCount;
 	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
-	memcpy(spi_tx_buf[0], DataToSend.c_str(), DataToSendLength);
-	QueueSingleTransaction(spi_tx_buf[0], spi_rx_buf[0], DataToSendLength);
+	memcpy(spi_tx_buf[CurrentIndex], DataToSend.c_str(), DataToSendLength);
+	delay(1);
+	if(CurrentIndex == N_MASTER_QUEUES)
+	{
+		m_SPI_Master.yield();
+		m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataToSendLength);
+	}
+	++m_Queued_Transactions;
 }
 
 void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
@@ -136,16 +136,19 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 	const size_t received_transactions = m_SPI_Slave.available();
     for (size_t q = 0; q < received_transactions; ++q)
 	{
-		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[q], m_SPI_Slave.size());
+		size_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
+		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentIndex], m_SPI_Slave.size());
         m_SPI_Slave.pop();
-		--m_Queued_Transactions;
+		++m_DeQueued_Transactions;
     }
-	for(size_t q = 0; q < N_SLAVE_QUEUES - m_Queued_Transactions; ++q)
+	const size_t remained_transactions = m_SPI_Slave.remained();
+	for(size_t q = 0; q < N_SLAVE_QUEUES - remained_transactions; ++q)
 	{
-		memset(spi_rx_buf[q], 0, SPI_MAX_DATA_BYTES);
-		memset(spi_tx_buf[q], 0, SPI_MAX_DATA_BYTES);
-		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[q], SPI_MAX_DATA_BYTES);
-		m_SPI_Slave.queue(spi_rx_buf[q], NULL, SPI_MAX_DATA_BYTES);
+		size_t CurrentIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
+		memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
+		memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
+		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+		m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 		++m_Queued_Transactions;
 	}
 }

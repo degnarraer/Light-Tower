@@ -75,7 +75,6 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_DMA_Channel = 0;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
-		size_t m_Queued_Transactions = 0;
 	private:	
 };
 
@@ -97,7 +96,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 		void ProcessDataTXEventQueue();
 	protected:
 		void Setup_SPI_Master();
-		void QueueSingleTransaction(uint8_t *tx_Buff, uint8_t *rx_Buff, size_t Length);
+		void Yield(){ m_SPI_Master.yield(); }
 		bool Begin();
 		bool End();
 	private:
@@ -107,6 +106,8 @@ class SPI_Datalink_Master: public SPI_Datalink
 		ESP32DMASPI::Master m_SPI_Master;
 		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
 		void ProcessTXData(DataItem_t DataItem);
+		size_t m_Queued_Transactions = 0;
+		size_t m_DeQueued_Transactions = 0;
 };
 
 class SPI_Datalink_Slave: public SPI_Datalink
@@ -134,6 +135,8 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		String m_Title = "";
 		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
+		size_t m_Queued_Transactions = 0;
+		size_t m_DeQueued_Transactions = 0;
 };
 
 #endif
