@@ -103,8 +103,7 @@ SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink"
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
-Manager m_Manager = Manager("Manager"
-                           , m_StatisticalEngine
+Manager m_Manager = Manager("Manager", m_StatisticalEngine
                            , m_SPIDataLinkSlave
                            , m_BT_In
                            , m_Mic_In
@@ -132,50 +131,11 @@ void setup()
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
 
-
-  xTaskCreatePinnedToCore
-  (
-    TaskMonitorTaskLoop,          // Function to implement the task
-    "TaskMonitorTaskTask",        // Name of the task
-    5000,                         // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES - 1,     // Priority of the task
-    &TaskMonitorTask,             // Task handle.
-    1                             // Core where the task should run
-  );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitorTaskTask", 5000, NULL, configMAX_PRIORITIES - 1, &TaskMonitorTask, 1 );
+  xTaskCreatePinnedToCore( DataMoverTaskLoop, "DataMoverTask", 20000, NULL, configMAX_PRIORITIES-1, &DataMoverTask, 1 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task", 10000, NULL, configMAX_PRIORITIES-1, &SPI_RX_Task, 1 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask", 30000, NULL, configMAX_PRIORITIES, &VisualizationTask, 0 );
   
-  xTaskCreatePinnedToCore
-  (
-    DataMoverTaskLoop,            // Function to implement the task
-    "DataMoverTask",              // Name of the task
-    20000,                        // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES-1,       // Priority of the task
-    &DataMoverTask,               // Task handle.
-    1                             // Core where the task should run
-  );
-
-  xTaskCreatePinnedToCore
-  (
-    SPI_RX_TaskLoop,              // Function to implement the task
-    "SPI_RX_Task",                // Name of the task
-    10000,                        // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES-1,       // Priority of the task
-    &SPI_RX_Task,                 // Task handle.
-    1                             // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    VisualizationTaskLoop,        // Function to implement the task
-    "VisualizationTask",          // Name of the task
-    30000,                        // Stack size in words
-    NULL,                         // Task input parameter
-    configMAX_PRIORITIES,         // Priority of the task
-    &VisualizationTask,           // Task handle.
-    0                             // Core where the task should run
-  );
   esp_task_wdt_init(30, true);
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());

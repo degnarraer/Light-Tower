@@ -40,13 +40,15 @@ class DataSerializer: public CommonUtils
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
+			size_t TotalByteCount = GetSizeOfDataType(DataType) * Count;
+			
 			doc.clear();
-			doc[m_NameTag] = Name;
+			doc[m_NameTag] = Name.c_str();
 			doc[m_CountTag] = Count;
 			doc[m_DataTypeTag] = DataTypeStrings[DataType];
 			JsonArray data = doc.createNestedArray(m_DataTag);
-			doc[m_TotalByteCountTag] = GetSizeOfDataType(DataType) * Count;
-			for(int i = 0; i < doc[m_TotalByteCountTag]; ++i)
+			doc[m_TotalByteCountTag] = TotalByteCount;
+			for(int i = 0; i < TotalByteCount; ++i)
 			{
 				uint8_t Value = ((uint8_t*)Object)[i];
 				CheckSum += Value;
@@ -56,7 +58,7 @@ class DataSerializer: public CommonUtils
 			String Result;
 			serializeJson(doc, Result);
 			Result = Result;
-			return Result;
+			return Result.c_str();
 		}
 		void DeSerializeJsonToMatchingDataItem(String json)
 		{
@@ -77,11 +79,11 @@ class DataSerializer: public CommonUtils
 						const String DocName = doc[m_NameTag];
 						if(true == ItemName.equals(DocName))
 						{
-							int CheckSumCalc = 0;
-							int CheckSumIn = doc[m_CheckSumTag];
-							int CountIn = doc[m_CountTag];
-							int ByteCountIn = doc[m_TotalByteCountTag];
-							int DataByteCount = doc[m_DataTag].size();
+							size_t CheckSumCalc = 0;
+							size_t CheckSumIn = doc[m_CheckSumTag];
+							size_t CountIn = doc[m_CountTag];
+							size_t ByteCountIn = doc[m_TotalByteCountTag];
+							size_t DataByteCount = doc[m_DataTag].size();
 							uint8_t Buffer[DataByteCount];
 							if(ByteCountIn == DataByteCount)
 							{
@@ -196,7 +198,7 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<10000> doc;
+		StaticJsonDocument<20000> doc;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags

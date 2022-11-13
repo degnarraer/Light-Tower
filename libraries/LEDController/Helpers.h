@@ -9,7 +9,6 @@ class CommonUtils
 		template <class T>
 		T ScaleWithLimits(T& Input, T Scalar, T LowerLimit, T UpperLimit)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			double Result = (double)Input * (double) Scalar;
 			if(Result > UpperLimit)
 			{
@@ -32,51 +31,66 @@ class CommonUtils
 		}
 		size_t GetSizeOfDataType(DataType_t DataType)
 		{
+			uint32_t Result = 0;
 			switch(DataType)
 			{
 				case DataType_Int8_t:
-					return sizeof(int8_t);
+					Result = sizeof(int8_t);
 				break;
+				
 				case DataType_Int16_t:
-					return sizeof(int16_t);
+					Result = sizeof(int16_t);
 				break;
+				
 				case DataType_Int32_t:
-					return sizeof(int32_t);
+					Result = sizeof(int32_t);
 				break;
+				
 				case DataType_Uint8_t:
-					return sizeof(uint8_t);
+					Result = sizeof(uint8_t);
 				break;
+				
 				case DataType_Uint16_t:
-					return sizeof(uint16_t);
+					Result = sizeof(uint16_t);
 				break;
+				
 				case DataType_Uint32_t:
-					return sizeof(uint32_t);
+					Result = sizeof(uint32_t);
 				break;
+				
 				case DataType_String:
-					return sizeof(String);
+					Result = sizeof(String);
 				break;
+				
 				case DataType_Float:
-					return sizeof(float);
+					Result = sizeof(float);
 				break;
+				
 				case DataType_Double:
-					return sizeof(double);
+					Result = sizeof(double);
 				break;
+				
 				case DataType_ProcessedSoundData_t:
-					return sizeof(ProcessedSoundData_t);
+					Result = sizeof(ProcessedSoundData_t);
 				break;
+				
 				case DataType_MaxBandSoundData_t:
-					return sizeof(MaxBandSoundData_t);
+					Result = sizeof(MaxBandSoundData_t);
 				break;
+				
 				case DataType_Frame_t:
-					return sizeof(Frame_t);
+					Result = sizeof(Frame_t);
 				break;
+				
 				case DataType_ProcessedSoundFrame_t:
-					return sizeof(ProcessedSoundFrame_t);
+					Result = sizeof(ProcessedSoundFrame_t);
 				break;
+				
 				default:
-					return 0;
+					Result = 0;
 				break;
 			}
+			return Result;
 		}
 };
 
@@ -125,7 +139,6 @@ class QueueController
 
 		void MoveDataFromQueueToQueues(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
-		  //ESP_LOGV("Function Debug", "%s, ", __func__);
 		  if(NULL != TakeFromQueue)
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
@@ -174,7 +187,6 @@ class QueueController
 
 		void CreateQueue(QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			ESP_LOGV("Helpers", "Creating Queue of size: %i", ByteCount);
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL)
@@ -185,7 +197,6 @@ class QueueController
 
 		void PushValueToQueue(void* Value, QueueHandle_t Queue, bool WaitForOpenSlot, const String &DebugTitle, bool &DataPushHasErrored)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != Queue)
 			{
 				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
@@ -224,16 +235,13 @@ class QueueManager: public CommonUtils
 	public:
 		QueueManager(String Title): m_Title(Title)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 		}
 		QueueManager(String Title, size_t DataItemCount): m_Title(Title)
 													    , m_DataItemCount(DataItemCount)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 		}
 		virtual ~QueueManager()
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(true == m_MemoryAllocated)FreeMemory();
 		}
 		virtual DataItemConfig_t* GetDataItemConfig() = 0;
@@ -244,20 +252,17 @@ class QueueManager: public CommonUtils
 		
 		void SetupQueueManager(size_t DataItemCount)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			m_DataItemCount = DataItemCount;
 			SetupQueueManager();
 		}
 		void SetupQueueManager()
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			ESP_LOGD("CommonUtils", "%s: Setup", m_Title.c_str());
 			if(true == m_MemoryAllocated)FreeMemory();
 			AllocateMemory();
 		}
 		size_t GetQueueByteCountForDataItem(String Name)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -307,7 +312,6 @@ class QueueManager: public CommonUtils
 		
 		QueueHandle_t GetQueueHandleRXForDataItem(String Name)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -328,7 +332,6 @@ class QueueManager: public CommonUtils
 
 		QueueHandle_t GetQueueHandleTXForDataItem(String Name)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -349,7 +352,6 @@ class QueueManager: public CommonUtils
 		
 		size_t GetTotalByteCountForDataItem(String Name)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -369,7 +371,6 @@ class QueueManager: public CommonUtils
 		
 		size_t GetSampleCountForDataItem(String Name)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -389,7 +390,6 @@ class QueueManager: public CommonUtils
 		
 		void* GetDataBufferForDataItem(String Name)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
@@ -409,7 +409,6 @@ class QueueManager: public CommonUtils
 		
 		void PushValueToTXQueue(void* Value, String Name, bool WaitForOpenSlot)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
@@ -429,7 +428,6 @@ class QueueManager: public CommonUtils
 		
 		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
@@ -500,7 +498,6 @@ class QueueManager: public CommonUtils
 		bool m_MemoryAllocated = false;
 		void AllocateMemory()
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			m_DataItemCount = GetDataItemConfigCount();
 			size_t ConfigBytes = sizeof(struct DataItem_t) * m_DataItemCount;
 			DataItemConfig_t* ConfigFile = GetDataItemConfig();
@@ -552,7 +549,6 @@ class QueueManager: public CommonUtils
 		}
 		void FreeMemory()
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
 				heap_caps_free(m_DataItem[i].DataBuffer);			
@@ -578,7 +574,6 @@ class QueueManager: public CommonUtils
 		
 		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage)
 		{
-			//ESP_LOGV("Function Debug", "%s, ", __func__);
 			ESP_LOGV("Helpers", "Creating %i Queue(s), Named: %s of size: %i for a total of %i", QueueCount, Name, ByteCount, ByteCount*QueueCount);
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL)
