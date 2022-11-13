@@ -84,16 +84,20 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
 	memcpy(spi_tx_buf[CurrentIndex], DataToSend.c_str(), DataToSendLength);
 	delay(1);
-	if(CurrentIndex == N_MASTER_QUEUES)
+	if(CurrentIndex == 0)
 	{
-		m_SPI_Master.yield();
-		m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataToSendLength);
+		TransmitQueuedData();
 	}
+	m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataToSendLength);
 	++m_Queued_Transactions;
 }
 
 void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
 {
+	if(true == m_TransmitQueuedDataFlag)
+	{
+		TransmitQueuedData();
+	}
 	if(NULL != DataItem.QueueHandle_TX)
 	{
 		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);

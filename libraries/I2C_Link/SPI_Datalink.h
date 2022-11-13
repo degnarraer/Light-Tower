@@ -94,9 +94,18 @@ class SPI_Datalink_Master: public SPI_Datalink
 						   }
 		virtual ~SPI_Datalink_Master(){}
 		void ProcessDataTXEventQueue();
+		void TriggerEarlyDataTransmit()
+		{ 
+			m_TransmitQueuedDataFlag = true;
+		}
 	protected:
 		void Setup_SPI_Master();
-		void Yield(){ m_SPI_Master.yield(); }
+		void TransmitQueuedData()
+		{ 
+			m_SPI_Master.yield();
+			m_Queued_Transactions = 0;
+			m_TransmitQueuedDataFlag = false;
+		}
 		bool Begin();
 		bool End();
 	private:
@@ -108,6 +117,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 		void ProcessTXData(DataItem_t DataItem);
 		size_t m_Queued_Transactions = 0;
 		size_t m_DeQueued_Transactions = 0;
+		bool m_TransmitQueuedDataFlag = false;
 };
 
 class SPI_Datalink_Slave: public SPI_Datalink

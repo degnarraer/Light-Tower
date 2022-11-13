@@ -43,8 +43,11 @@ class SPIDataLinkMaster: public NamedItem
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
     }
+    void TransmitQueuedData()
+    {
+      TriggerEarlyDataTransmit();
+    }
   private:
-    
     //QueueManager Interface
     static const size_t m_SPIDatalinkConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
