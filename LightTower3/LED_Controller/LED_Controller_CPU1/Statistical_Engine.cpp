@@ -172,8 +172,8 @@ void StatisticalEngine::RunMyScheduledTask()
     }
     else
     {
-      GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), true, false);
-      GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), true, false);
+      GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), GetTotalByteCountForDataItem("R_BANDS"), false, false);
+      GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), GetTotalByteCountForDataItem("L_BANDS"), false, false);
       UpdateBandArray();
     }       
     pthread_mutex_unlock(&m_BandValuesLock);
@@ -191,8 +191,8 @@ void StatisticalEngine::RunMyScheduledTask()
     }
     else
     {
-      GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), true, false);
-      GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), true, false);
+      GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), GetTotalByteCountForDataItem("R_MAXBAND"), false, false);
+      GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), GetTotalByteCountForDataItem("L_MAXBAND"), false, false);
     }
     pthread_mutex_unlock(&m_MaxBinSoundDataLock);
   }

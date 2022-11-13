@@ -133,15 +133,6 @@ void SPI_Datalink_Slave::RegisterForDataTransferNotification(SPI_Slave_Notifier 
 
 void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 {
-	for(size_t q = 0; q < N_SLAVE_QUEUES - m_Queued_Transactions; ++q)
-	{
-		memset(spi_rx_buf[q], 0, SPI_MAX_DATA_BYTES);
-		memset(spi_tx_buf[q], 0, SPI_MAX_DATA_BYTES);
-		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[q], SPI_MAX_DATA_BYTES);
-		m_SPI_Slave.queue(spi_rx_buf[q], spi_tx_buf[q], SPI_MAX_DATA_BYTES);
-		++m_Queued_Transactions;
-	}
-	
 	const size_t received_transactions = m_SPI_Slave.available();
     for (size_t q = 0; q < received_transactions; ++q)
 	{
@@ -149,6 +140,14 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
         m_SPI_Slave.pop();
 		--m_Queued_Transactions;
     }
+	for(size_t q = 0; q < N_SLAVE_QUEUES - m_Queued_Transactions; ++q)
+	{
+		memset(spi_rx_buf[q], 0, SPI_MAX_DATA_BYTES);
+		memset(spi_tx_buf[q], 0, SPI_MAX_DATA_BYTES);
+		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[q], SPI_MAX_DATA_BYTES);
+		m_SPI_Slave.queue(spi_rx_buf[q], NULL, SPI_MAX_DATA_BYTES);
+		++m_Queued_Transactions;
+	}
 }
 
 

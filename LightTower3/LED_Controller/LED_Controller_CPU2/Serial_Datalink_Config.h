@@ -49,13 +49,13 @@ class SPIDataLinkMaster: public NamedItem
     static const size_t m_SPIDatalinkConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "R_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   5 },
-      { "L_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   5 },
-      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,                  Transciever_TX,   5 },
-      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   5 },
-      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   5 },
-      { "R_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   5 },
-      { "L_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   5 },
+      { "R_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   1 },
+      { "L_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   1 },
+      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,                  Transciever_TX,   1 },
+      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   1 },
+      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   1 },
+      { "R_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   1 },
+      { "L_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   1 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }
