@@ -35,7 +35,7 @@ bool StatisticalEngine::NewSoundDataReady()
 {
   unsigned long currentTime = millis();
   size_t PSF_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("Processed_Frame"));
-  if(PSF_Size > 0)ESP_LOGE("Statistical_Engine", "New Sound Data Messages Waiting: %i", PSF_Size);
+  if(PSF_Size > 0)ESP_LOGV("Statistical_Engine", "New Sound Data Messages Waiting: %i", PSF_Size);
   if( 0 < PSF_Size )
   {
     ESP_LOGV("Statistical_Engine", "New Sound Data Ready");
@@ -141,7 +141,7 @@ void StatisticalEngine::RunMyScheduledTask()
         m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
         m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
         m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
-        ESP_LOGE("Statistical_Engine", "New SoundData Ready: %d | %f | %d", m_signalMin, m_Power, m_signalMax);
+        ESP_LOGV("Statistical_Engine", "New SoundData Ready: %d | %f | %d", m_signalMin, m_Power, m_signalMax);
         UpdateSoundState();
       }
       else

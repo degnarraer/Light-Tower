@@ -120,11 +120,11 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Channel_FFT()
     R_MaxBandDataBuffer.TotalBands = R_Bands_SampleCount;
 
     static bool R_Bands_Push_Successful = true;
-    //PushValueToQueue(R_Bands_DataBuffer, R_Bands_QueueOut, false, "Right Bands: R_BANDS", R_Bands_Push_Successful);
+    PushValueToQueue(R_Bands_DataBuffer, R_Bands_QueueOut, false, "Right Bands: R_BANDS", R_Bands_Push_Successful);
     static bool R_MaxBand_Push_Successful = true;
-    //PushValueToQueue(&R_MaxBandDataBuffer, R_MaxBin_QueueOut, false, "Right Max Band: R_MAXBAND", R_MaxBand_Push_Successful);
+    PushValueToQueue(&R_MaxBandDataBuffer, R_MaxBin_QueueOut, false, "Right Max Band: R_MAXBAND", R_MaxBand_Push_Successful);
     static bool R_MajorFreq_Push_Successful = true;
-    //PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
+    PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
   }
 }
 void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
@@ -170,11 +170,11 @@ void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
     L_MaxBandDataBuffer.TotalBands = L_Bands_SampleCount;
 
     static bool L_Bands_Push_Successful = true;
-    //PushValueToQueue(L_Bands_DataBuffer, L_Bands_QueueOut, false, "Left Bands: L_BANDS", L_Bands_Push_Successful);
+    PushValueToQueue(L_Bands_DataBuffer, L_Bands_QueueOut, false, "Left Bands: L_BANDS", L_Bands_Push_Successful);
     static bool L_MaxBand_Push_Successful = true;
-    //PushValueToQueue(&L_MaxBandDataBuffer, L_MaxBin_QueueOut, false, "Left Max Band: L_MAXBAND", L_MaxBand_Push_Successful);
+    PushValueToQueue(&L_MaxBandDataBuffer, L_MaxBin_QueueOut, false, "Left Max Band: L_MAXBAND", L_MaxBand_Push_Successful);
     static bool L_MajorFreq_Push_Successful = true;
-    //PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
+    PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
   }
 }
 void Sound_Processor::Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power()
