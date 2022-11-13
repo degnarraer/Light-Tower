@@ -213,7 +213,7 @@ class QueueManager
 			}
 			return result;
 		}
-		bool LockDataItem(String Name)
+		void LockDataItem(String Name)
 		{
 			if(NULL != m_DataItem)
 			{
@@ -221,26 +221,16 @@ class QueueManager
 				{
 					if(true == Name.equals(m_DataItem[i].Name))
 					{
-						if(0 == pthread_mutex_lock(&m_DataItem[i].Lock))
-						{
-						 return true;
-						}
-						else
-						{
-							ESP_LOGE("TestClass", "Failed to Create Lock");
-							return false;
-						}
+						pthread_mutex_lock(&m_DataItem[i].Lock);
 					}
 				}
-				return false;
 			}
 			else
 			{
 				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
-				return false;
 			}
 		}
-		bool UnLockDataItem(String Name)
+		void UnLockDataItem(String Name)
 		{
 			if(NULL != m_DataItem)
 			{
@@ -249,15 +239,12 @@ class QueueManager
 					if(true == Name.equals(m_DataItem[i].Name))
 					{
 						pthread_mutex_unlock(&m_DataItem[i].Lock);
-						return true;
 					}
 				}
-				return false;
 			}
 			else
 			{
 				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
-				return false;
 			}
 		}
 		
@@ -308,8 +295,10 @@ class QueueManager
 				m_DataItem[i].Count = ConfigFile[i].Count;
 				m_DataItem[i].TotalByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
-				m_DataItem[i].DataBuffer = DataBuffer; 
-				if(0 != pthread_mutex_init(&m_DataItem[i].Lock, NULL))
+				m_DataItem[i].DataBuffer = DataBuffer; pthread_mutexattr_t Attr;
+				pthread_mutexattr_init(&Attr);
+				pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
+				if(0 != pthread_mutex_init(&m_DataItem[i].Lock, &Attr))
 				{
 				 ESP_LOGE("CommonUtils", "Failed to Create Lock");
 				}
@@ -391,7 +380,10 @@ class QueueManager
 					return sizeof(MaxBandSoundData_t);
 				break;
 				case DataType_Frame_t:
-					return sizeof(DataType_Frame_t);
+					return sizeof(Frame_t);
+				break;
+				case DataType_ProcessedSoundFrame_t:
+					return sizeof(ProcessedSoundFrame_t);
 				break;
 				default:
 					return 0;
@@ -421,39 +413,41 @@ class CommonUtils
 			
 		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
 		{
-		  //ESP_LOGV("Function Debug", "%s, ", __func__);
-		  if(NULL != TakeFromQueue && NULL != GiveToQueue)
-		  {
-			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-			ESP_LOGV("Helpers", "MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", QueueCount, ByteCount);
-			uint8_t DataBuffer[ByteCount];
-			for (uint8_t i = 0; i < QueueCount; ++i)
+			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
-			  memset(DataBuffer, 0, ByteCount);
-			  if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
-			  {
-				if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
+				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
+				ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
+				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
-					if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
+				  
+					if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
 					{
-						ESP_LOGV("Helpers", "Error Setting Queue");
+						uint8_t DataBuffer[ByteCount];
+						if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
+						{
+							if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
+							{
+								ESP_LOGV("Helpers", "%s: Error Setting Queue", DebugTitle.c_str());
+							}
+							else
+							{
+								ESP_LOGV("Helpers", "%s: Added Data to Queue", DebugTitle.c_str());
+							}
+						}
+						else
+						{
+							ESP_LOGV("Helpers", "%s: ERROR! Error Receiving Queue.", DebugTitle.c_str());
+						}
 					}
-					ESP_LOGV("Helpers", "Added Data to Queue");
+					else
+					{
+						ESP_LOGV("Helpers", "%s: WARNING! Queue Full.", DebugTitle.c_str());
+					}
 				}
-				else
-				{
-					ESP_LOGW("Helpers", "WARNING! Queue Full.");
-				}	
-			  }
-			  else
-			  {
-			    ESP_LOGE("Helpers", "ERROR! Error Receiving Queue.");
-			  }
 			}
-		  }
 		  else
 		  {
-			ESP_LOGW("CommonUtils", "WARNING! NULL Queue.");
+			ESP_LOGV("CommonUtils", "%s: WARNING! NULL Queue.", DebugTitle.c_str());
 		  }
 		}
 		
@@ -464,9 +458,10 @@ class CommonUtils
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 			ESP_LOGV("Helpers", "Queue Messages Waiting: %i Receiver Queue Count: %i Byte Count: %i", QueueCount, GiveToQueueCount, ByteCount);
-			uint8_t DataBuffer[ByteCount];
+			
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
+				uint8_t DataBuffer[ByteCount];
 				if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
 				{
 					for(int j = 0; j < GiveToQueueCount; ++j)
@@ -551,28 +546,32 @@ class CommonUtils
 			}
 		}
 		
-		void GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
+		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
+			bool Result = false;
 			if(NULL != Queue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(Queue);
-				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
+				if(true == DebugMessage)ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
 				if(QueueCount > 0)
 				{
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, Value, 0) != pdTRUE )
-						
+						if ( xQueueReceive(Queue, Value, 0) == pdTRUE )
 						{
-							ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
+							Result = true;
+						}
+						else
+						{
+							if(true == DebugMessage)ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
 						}
 					}
 				}
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+				if(true == DebugMessage)ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 		}
 		
@@ -616,7 +615,10 @@ class CommonUtils
 					return sizeof(MaxBandSoundData_t);
 				break;
 				case DataType_Frame_t:
-					return sizeof(DataType_Frame_t);
+					return sizeof(Frame_t);
+				break;
+				case DataType_ProcessedSoundFrame_t:
+					return sizeof(ProcessedSoundFrame_t);
 				break;
 				default:
 					return 0;

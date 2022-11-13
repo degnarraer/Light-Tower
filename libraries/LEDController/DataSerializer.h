@@ -91,17 +91,16 @@ class DataSerializer: public CommonUtils
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
-									ESP_LOGV("Serial_Datalink", "%s: Deserialized", ItemName.c_str());
 									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
 								}
 								else
 								{
-									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error for String: %s", json.c_str());
+									ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error for String: %s", json.c_str());
 								}
 							}
 							else
 							{
-								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
+								ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
 							}
 							return;
 						}

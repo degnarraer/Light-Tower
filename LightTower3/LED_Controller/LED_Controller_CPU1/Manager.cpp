@@ -63,45 +63,54 @@ void Manager::ProcessEventQueue()
     default:
     break;
   }
+  
+
   MoveDataFromQueueToQueue( "Manager 1"
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Processed_Frame")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("Processed_Frame")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Processed_Frame")
+                          , false
+                          , false );
+                          
+  MoveDataFromQueueToQueue( "Manager 2"
                           , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_BANDS")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
                           , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_BANDS")
                           , false
                           , false );
-
-  MoveDataFromQueueToQueue( "Manager 2"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_PSD")
+                          
+  MoveDataFromQueueToQueue( "Manager 3"
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_BANDS")
                           , false
                           , false );
                           
-  MoveDataFromQueueToQueue( "Manager 3"
+  MoveDataFromQueueToQueue( "Manager 4"
                           , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAXBAND")
                           , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBAND")
                           , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAXBAND")
                           , false
                           , false );
                           
-  MoveDataFromQueueToQueue( "Manager 4"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_BANDS")
-                          , false
-                          , false );
-
   MoveDataFromQueueToQueue( "Manager 5"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_PSD")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAXBAND")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 6"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAXBAND")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAJOR_FREQ")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAJOR_FREQ")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAJOR_FREQ")
+                          , false
+                          , false );
+                          
+  MoveDataFromQueueToQueue( "Manager 7"
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAJOR_FREQ")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAJOR_FREQ")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAJOR_FREQ")
                           , false
                           , false );
 }

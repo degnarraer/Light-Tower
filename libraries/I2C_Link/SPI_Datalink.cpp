@@ -72,6 +72,8 @@ bool SPI_Datalink_Master::End()
 
 void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
+	memset(spi_rx_buf[0], 0, SPI_MAX_DATA_BYTES);
+	memset(spi_tx_buf[0], 0, SPI_MAX_DATA_BYTES);
 	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
 	size_t PadCount = 0;
@@ -95,7 +97,7 @@ void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
 	if(NULL != DataItem.QueueHandle_TX)
 	{
 		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
-		if(MessageCount > 0)
+		for(int i = 0; i < MessageCount; ++i)
 		{
 			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, portMAX_DELAY) == pdTRUE )
 			{
@@ -131,12 +133,12 @@ void SPI_Datalink_Slave::RegisterForDataTransferNotification(SPI_Slave_Notifier 
 
 void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 {
-	for(size_t q = m_Queued_Transactions; q < N_SLAVE_QUEUES; ++q)
+	for(size_t q = 0; q < N_SLAVE_QUEUES - m_Queued_Transactions; ++q)
 	{
 		memset(spi_rx_buf[q], 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf[q], 0, SPI_MAX_DATA_BYTES);
 		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[q], SPI_MAX_DATA_BYTES);
-		m_SPI_Slave.queue(spi_rx_buf[q], spi_rx_buf[q], SPI_MAX_DATA_BYTES);
+		m_SPI_Slave.queue(spi_rx_buf[q], spi_tx_buf[q], SPI_MAX_DATA_BYTES);
 		++m_Queued_Transactions;
 	}
 	

@@ -50,6 +50,7 @@ enum DataType_t
   DataType_ProcessedSoundData_t,
   DataType_MaxBandSoundData_t,
   DataType_Frame_t,
+  DataType_ProcessedSoundFrame_t,
   DataType_Undef,
 };
 
@@ -67,6 +68,7 @@ static const char* DataTypeStrings[] =
   "ProcessedSoundData_t",
   "MaxBandSoundData_t",
   "Frame_t",
+  "ProcessedSoundFrame_t",
   "Undefined"
 };
 
@@ -98,6 +100,12 @@ struct ProcessedSoundData_t
 	float NormalizedPower;
 	int32_t Minimum;
 	int32_t Maximum;
+};
+
+struct ProcessedSoundFrame_t
+{
+	ProcessedSoundData_t Channel1;
+	ProcessedSoundData_t Channel2;
 };
 
 struct MaxBandSoundData_t

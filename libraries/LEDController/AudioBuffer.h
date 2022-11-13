@@ -36,11 +36,13 @@ class AudioBuffer
     }
     void Initialize()
 	{ 
-	  AllocateMemory();   
-	  if(0 != pthread_mutex_init(&m_Lock, NULL))
-	  {
-		 ESP_LOGE("TestClass", "Failed to Create Lock");
-	  }
+		AllocateMemory();pthread_mutexattr_t Attr;
+		pthread_mutexattr_init(&Attr);
+		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
+		if(0 != pthread_mutex_init(&m_Lock, &Attr))
+		{   
+			ESP_LOGE("TestClass", "Failed to Create Lock");
+		}
 	}
 
 	void AllocateMemory()
@@ -57,34 +59,28 @@ class AudioBuffer
 	size_t GetFrameCapacity()
 	{
 		size_t Capacity = 0;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Capacity = m_CircularAudioBuffer->capacity();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Capacity = m_CircularAudioBuffer->capacity();
+		pthread_mutex_unlock(&m_Lock);
 		return Capacity;
 	}
 
 	bool ClearAudioBuffer()
 	{
 		bool Success = false;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			m_CircularAudioBuffer->Clear();
-			Success = true;
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		m_CircularAudioBuffer->Clear();
+		Success = true;
+		pthread_mutex_unlock(&m_Lock);
 		return Success;
 	}
 
 	size_t GetFrameCount()
 	{
 		size_t size = 0;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			size = m_CircularAudioBuffer->size();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		size = m_CircularAudioBuffer->size();
+		pthread_mutex_unlock(&m_Lock);
 		return size;
 	}
 
@@ -96,44 +92,36 @@ class AudioBuffer
 	size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount )
 	{
 		size_t FramesWritten = 0;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			FramesWritten = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		FramesWritten = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
+		pthread_mutex_unlock(&m_Lock);
 		return FramesWritten;
 	}
 
 	bool WriteAudioFrame( Frame_t Frame )
 	{
 		bool Success = false;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Success = m_CircularAudioBuffer->Write(Frame);
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Success = m_CircularAudioBuffer->Write(Frame);
+		pthread_mutex_unlock(&m_Lock);
 		return Success;
 	}
 
 	size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 	{
 		size_t FramesRead = 0;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			FramesRead = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		FramesRead = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
+		pthread_mutex_unlock(&m_Lock);
 		return FramesRead;
 	}
 
 	bfs::optional<Frame_t> ReadAudioFrame()
 	{
 		bfs::optional<Frame_t> FrameRead;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			FrameRead = m_CircularAudioBuffer->Read();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		FrameRead = m_CircularAudioBuffer->Read();
+		pthread_mutex_unlock(&m_Lock);
 		return FrameRead;
 	}
 	
@@ -154,11 +142,14 @@ class ContinuousAudioBuffer
     }
     void Initialize()
 	{ 
-	  AllocateMemory();   
-	  if(0 != pthread_mutex_init(&m_Lock, NULL))
-	  {
-		 ESP_LOGE("TestClass", "Failed to Create Lock");
-	  }
+		AllocateMemory();  
+		pthread_mutexattr_t Attr;
+		pthread_mutexattr_init(&Attr);
+		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
+		if(0 != pthread_mutex_init(&m_Lock, &Attr))
+		{
+			ESP_LOGE("TestClass", "Failed to Create Lock");
+		}
 	}
 
 	void AllocateMemory()
@@ -176,98 +167,80 @@ class ContinuousAudioBuffer
 	bool Push(Frame_t Frame)
 	{
 		bool Result = false;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->push(Frame);
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->push(Frame);
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	Frame_t Pop()
 	{
 		Frame_t Result;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->pop();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->pop();
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	bool Unshift(Frame_t Frame)
 	{
 		bool Result = false;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->unshift(Frame);
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->unshift(Frame);
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	Frame_t Shift()
 	{
 		Frame_t Result;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->shift();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->shift();
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	bool IsEmpty()
 	{
 		bool Result = false;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->isEmpty();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->isEmpty();
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	bool IsFull()
 	{
 		bool Result = false;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->isFull();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->isFull();
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	size_t Size()
 	{
 		size_t Result = 0;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->size();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->size();
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	size_t Available()
 	{
 		size_t Result = 0;
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			Result = m_CircularAudioBuffer->available();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		Result = m_CircularAudioBuffer->available();
+		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	void Clear()
 	{
-		if(0 == pthread_mutex_lock(&m_Lock))
-		{
-			m_CircularAudioBuffer->clear();
-			pthread_mutex_unlock(&m_Lock);
-		}
+		pthread_mutex_lock(&m_Lock);
+		m_CircularAudioBuffer->clear();
+		pthread_mutex_unlock(&m_Lock);
 	}
 	  private:
 		CircularBuffer<Frame_t, T> *m_CircularAudioBuffer;
