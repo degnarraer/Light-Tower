@@ -259,7 +259,7 @@ bool BluetoothA2DPSource::bt_app_work_dispatch(bt_app_cb_t p_cback, uint16_t eve
     if (param_len == 0) {
         return bt_app_send_msg(&msg);
     } else if (p_params && param_len > 0) {
-        if ((msg.param = ps_malloc(param_len)) != NULL) {
+        if ((msg.param = heap_caps_malloc(param_len, MALLOC_CAP_SPIRAM)) != NULL) {
             memcpy(msg.param, p_params, param_len);
             /* check if caller has provided a copy callback to do the deep copy */
             if (p_copy_cback) {
@@ -309,7 +309,7 @@ void BluetoothA2DPSource::bt_app_task_handler(void *arg)
                 } 
 
                 if (msg.param) {
-                    free(msg.param);
+                    heap_caps_free(msg.param);
                 }
             }
         } else {
@@ -322,7 +322,7 @@ void BluetoothA2DPSource::bt_app_task_handler(void *arg)
 void BluetoothA2DPSource::bt_app_task_start_up(void)
 {
     s_bt_app_task_queue = xQueueCreate(10, sizeof(app_msg_t));
-    xTaskCreatePinnedToCore(ccall_bt_app_task_handler, "BtAppT", 2048, NULL, task_priority, &s_bt_app_task_handle, 0);
+    xTaskCreatePinnedToCore(ccall_bt_app_task_handler, "BtAppT", 2048, NULL, task_priority, &s_bt_app_task_handle, 1);
     return;
 }
 

@@ -319,7 +319,7 @@ bool BluetoothA2DPSink::app_work_dispatch(app_callback_t p_cback, uint16_t event
     if (param_len == 0) {
         return app_send_msg(&msg);
     } else if (p_params && param_len > 0) {
-        if ((msg.param = ps_malloc(param_len)) != NULL) {
+        if ((msg.param = heap_caps_malloc(param_len, MALLOC_CAP_SPIRAM)) != NULL) {
             memcpy(msg.param, p_params, param_len);
             return app_send_msg(&msg);
         }
@@ -374,7 +374,7 @@ void BluetoothA2DPSink::app_task_handler(void *arg)
             } // switch (msg.sig)
 
             if (msg.param) {
-                free(msg.param);
+                heap_caps_free(msg.param);
             }
         } else {
             delay(10);
@@ -413,7 +413,7 @@ void BluetoothA2DPSink::app_alloc_meta_buffer(esp_avrc_ct_cb_param_t *param)
 {
     ESP_LOGD(BT_AV_TAG, "%s", __func__);
     esp_avrc_ct_cb_param_t *rc = (esp_avrc_ct_cb_param_t *)(param);
-    uint8_t *attr_text = (uint8_t *) ps_malloc (rc->meta_rsp.attr_length + 1);
+    uint8_t *attr_text = (uint8_t *) heap_caps_malloc (rc->meta_rsp.attr_length + 1, MALLOC_CAP_SPIRAM);
     memcpy(attr_text, rc->meta_rsp.attr_text, rc->meta_rsp.attr_length);
     attr_text[rc->meta_rsp.attr_length] = 0;
 
@@ -795,7 +795,7 @@ void BluetoothA2DPSink::av_hdl_avrc_evt(uint16_t event, void *p_param)
             avrc_metadata_callback(rc->meta_rsp.attr_id, rc->meta_rsp.attr_text);
         }
 
-        free(rc->meta_rsp.attr_text);
+        heap_caps_free(rc->meta_rsp.attr_text);
         break;
     }
     case ESP_AVRC_CT_CHANGE_NOTIFY_EVT: {

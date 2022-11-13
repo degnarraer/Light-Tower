@@ -18,27 +18,19 @@
 
 #ifndef I2S_EventHander_H
 #define I2S_EventHander_H
-
-#include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-#include "Statistical_Engine.h"
-#include "Serial_Datalink_Config.h"
+#include <I2S_Device.h>
 #include <BluetoothA2DPSink.h>
 #include "Bluetooth_Device.h"
+#include "Statistical_Engine.h"
+#include "Serial_Datalink_Config.h"
+#include "AudioBuffer.h"
 
 enum InputType_t
 {
   InputType_Microphone,
   InputType_Bluetooth
-};
-
-enum DAC_Data_Format_t
-{
-  DAC_Data_Format_Default,
-  DAC_Data_Format_LSB16,
-  DAC_Data_Format_LSB20,
-  DAC_Data_Format_LSB24,
 };
 
 enum Mute_State_t
@@ -52,11 +44,12 @@ class Manager: public NamedItem
              , public I2S_Device_Callback
              , public Bluetooth_Sink_Callback
              , public CommonUtils
+             , public QueueController
 {
   public:
     Manager( String Title
            , StatisticalEngine &StatisticalEngine
-           , SerialDataLink &SerialDataLink
+           , SPIDataLinkSlave &SPIDataLinkSlave
            , Bluetooth_Sink &BT_In
            , I2S_Device &Mic_In
            , I2S_Device &I2S_Out );
@@ -66,20 +59,23 @@ class Manager: public NamedItem
     void SetInputType(InputType_t Type);
     
     //Bluetooth_Callback
+    void BTDataReceived(uint8_t *data, uint32_t length);
+    
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-
+    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
+    
   private:
     StatisticalEngine &m_StatisticalEngine;
-    SerialDataLink &m_SerialDataLink;
-    Bluetooth_Sink &m_BT_In;
-    I2S_Device &m_Mic_In;
-    I2S_Device &m_I2S_Out;
+    SPIDataLinkSlave &m_SPIDataLinkSlave;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
-    DAC_Data_Format_t m_DAC_Data_Format;
+
+    //Bluetooth Data
+    Bluetooth_Sink &m_BT_In;
+    
+    //I2S Sound Data RX
+    I2S_Device &m_Mic_In; 
+    I2S_Device &m_I2S_Out;                                                                                                                    
 };
 
 #endif

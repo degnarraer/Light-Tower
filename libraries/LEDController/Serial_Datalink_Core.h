@@ -25,109 +25,7 @@
 #define SERIAL_FAIL_DEBUG true
 #define SERIAL_RX_LENGTH_LIMIT 1000
 #include <HardwareSerial.h>
-#include <Arduino.h>
-#include <Helpers.h>
-#include "Streaming.h"
-#include <ArduinoJson.h>
-
-class DataSerializer: public CommonUtils
-
-{
-	public:
-		DataSerializer(){}
-		virtual ~DataSerializer(){}
-		void SetDataSerializerDataItems(DataItem_t& DataItem, size_t DataItemCount)
-		{
-			m_DataItems = &DataItem;
-			m_DataItemsCount = DataItemCount;
-		}
-		
-		String Serialize(String Name, DataType_t DataType, void* Object, size_t Count)
-		{
-			int32_t CheckSum = 0;
-			docOut.clear();
-			docOut[m_NameTag] = Name;
-			docOut[m_CountTag] = Count;
-			docOut[m_DataTypeTag] = DataTypeStrings[DataType];
-			JsonArray data = docOut.createNestedArray(m_DataTag);
-			docOut[m_TotalByteCountTag] = GetSizeOfDataType(DataType) * Count;
-			for(int i = 0; i < docOut[m_TotalByteCountTag]; ++i)
-			{
-				uint8_t Value = ((uint8_t*)Object)[i];
-				CheckSum += Value;
-				data.add(Value);
-			}
-			docOut[m_CheckSumTag] = CheckSum;
-			String Result;
-			serializeJson(docOut, Result);
-			return Result;
-		}
-		void DeSerialize(String json)
-		{
-			DeserializationError error = deserializeJson(docIn, json.c_str());
-			// Test if parsing succeeds.
-			if (error)
-			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
-				return;
-			}
-			else
-			{
-				if(NULL != m_DataItems)
-				{
-					for(int i = 0; i < m_DataItemsCount; ++i)
-					{
-						const String ItemName = (m_DataItems[i]).Name;
-						const String DocName = docIn[m_NameTag];
-						if(true == ItemName.equals(DocName))
-						{
-							int CheckSumCalc = 0;
-							int CheckSumIn = docIn[m_CheckSumTag];
-							int CountIn = docIn[m_CountTag];
-							int ByteCountIn = docIn[m_TotalByteCountTag];
-							int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(docIn[m_DataTypeTag]));
-							int DataByteCount = docIn[m_DataTag].size();
-							uint8_t* Buffer = (uint8_t*)ps_malloc(DataByteCount);
-							if(ByteCountInCalc == DataByteCount)
-							{
-								for(int j = 0; j < DataByteCount; ++j)
-								{
-									CheckSumCalc += (uint8_t)(docIn[m_DataTag][j]);
-									Buffer[j] = (uint8_t)(docIn[m_DataTag][j]);
-								}
-								if(CheckSumCalc == CheckSumIn)
-								{
-									PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
-								}
-								else
-								{
-									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error for String: %s", json.c_str());
-								}
-							}
-							else
-							{
-								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
-							}
-							free(Buffer);
-							return;
-						}
-					}
-				}
-			}
-		}
-	private:
-		StaticJsonDocument<5000> docIn;
-		StaticJsonDocument<5000> docOut;
-		DataItem_t* m_DataItems;
-		size_t m_DataItemsCount = 0;
-		//Tags
-		String m_NameTag = "N";
-		String m_CheckSumTag = "S";
-		String m_CountTag = "C";
-		String m_DataTag = "D";
-		String m_DataTypeTag = "T";
-		String m_TotalByteCountTag = "B";
-};
+#include "DataSerializer.h"
 
 class SerialDataLinkCore: public DataSerializer
 {
@@ -155,7 +53,7 @@ class SerialDataLinkCore: public DataSerializer
   
   void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
   {
-	  String DataToSend = m_Startinator + Serialize(Name, DataType, Object, Count) + m_Terminator;
+	  String DataToSend = m_Startinator + SerializeDataToJson(Name, DataType, Object, Count) + m_Terminator;
 	  ESP_LOGD("Serial_Datalink", "TX: %s", DataToSend.c_str());
 	  m_hSerial.print(DataToSend.c_str());
   }

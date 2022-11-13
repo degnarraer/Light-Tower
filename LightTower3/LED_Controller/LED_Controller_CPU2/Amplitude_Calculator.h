@@ -18,11 +18,14 @@
 #ifndef AMPLITUDE_CALCULATOR_H
 #define AMPLITUDE_CALCULATOR_H
 #include <DataTypes.h>
+#include "Streaming.h"
 
 class Amplitude_Calculator
 {
   public:
-    Amplitude_Calculator(int32_t RequiredSampleCount): m_RequiredSampleCount(RequiredSampleCount)
+    Amplitude_Calculator( int32_t RequiredSampleCount, BitLength_t BitLength )
+                        : m_RequiredSampleCount(RequiredSampleCount)
+                        , m_BitLength(BitLength)
     {
     }
     virtual ~Amplitude_Calculator()
@@ -54,21 +57,78 @@ class Amplitude_Calculator
       {
         m_PushCount = 0;
         int32_t peakToPeak = (m_ProcessedSoundData.Maximum - m_ProcessedSoundData.Minimum);
-        m_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)m_32BitMax;
+        m_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)GetBitMax();
         m_ProcessedSoundDataOutput = m_ProcessedSoundData;
         m_SolutionReady = true;
-        m_ProcessedSoundData.Minimum = INT32_MAX;
-        m_ProcessedSoundData.Maximum = INT32_MIN;
+        m_ProcessedSoundData.Minimum = GetMax();
+        m_ProcessedSoundData.Maximum = GetMin();
       }
       return m_SolutionReady;
     }
   private:
+    int32_t GetMax()
+    {
+      switch(m_BitLength)
+      {
+        case BitLength_32:
+          return INT32_MAX;
+        break;
+        case BitLength_16:
+          return INT16_MAX;
+        break;
+        case BitLength_8:
+          return INT8_MAX;
+        break;
+        default:
+          return INT32_MAX;
+        break;
+      }
+    }
+    int32_t GetMin()
+    {
+      switch(m_BitLength)
+      {
+        case BitLength_32:
+          return INT32_MIN;
+        break;
+        case BitLength_16:
+          return INT16_MIN;
+        break;
+        case BitLength_8:
+          return INT8_MIN;
+        break;
+        default:
+          return INT32_MIN;
+        break;
+      }
+    }
+    float GetBitMax()
+    {
+      switch(m_BitLength)
+      {
+        case BitLength_32:
+          return m_32BitLength;
+        break;
+        case BitLength_16:
+          return m_16BitLength;
+        break;
+        case BitLength_8:
+          return m_8BitLength;
+        break;
+        default:
+          return m_32BitLength;
+        break;
+      }
+    }
     ProcessedSoundData_t m_ProcessedSoundData;
     ProcessedSoundData_t m_ProcessedSoundDataOutput;
     int32_t m_RequiredSampleCount = 0;
     int32_t m_PushCount = 0;
     bool m_SolutionReady = false;
-    uint32_t m_32BitMax = pow(2,32);
+    BitLength_t m_BitLength;
+    uint32_t m_32BitLength = pow(2,32);
+    uint32_t m_16BitLength = pow(2,16);
+    uint32_t m_8BitLength = pow(2,8);
 };
          
 #endif

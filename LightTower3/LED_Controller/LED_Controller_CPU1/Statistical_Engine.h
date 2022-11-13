@@ -88,18 +88,22 @@ class StatisticalEngine : public NamedItem
     StatisticalEngine()
       : NamedItem("StatisticalEngine")
       , Task(GetTitle())
-      , QueueManager(GetTitle() + "_QueueManager", m_ConfigCount)
+      , QueueManager(GetTitle() + "_QueueManager", m_StatisticalEngineConfigCount)
       , m_Power(0)
-      , m_PowerDb(0){}
+      , m_PowerDb(0)
+      {
+        pthread_mutexattr_t Attr;
+        pthread_mutexattr_init(&Attr);
+        pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
+        if(0 != pthread_mutex_init(&m_BandValuesLock, &Attr)){ ESP_LOGE("Statistical Engine", "Failed to Create Lock");}      
+        if(0 != pthread_mutex_init(&m_ProcessedSoundDataLock, &Attr)){ ESP_LOGE("Statistical Engine", "Failed to Create Lock");}
+        if(0 != pthread_mutex_init(&m_MaxBinSoundDataLock, &Attr)){ ESP_LOGE("Statistical Engine", "Failed to Create Lock");}
+      }
     virtual ~StatisticalEngine()
     {
       FreeMemory();
     }
     
-    //QueueManager
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
-
     //SoundState
     SoundState GetSoundState();
     
@@ -141,22 +145,25 @@ class StatisticalEngine : public NamedItem
     void AllocateMemory();
     void FreeMemory();
     bool m_MemoryIsAllocated = false;
-    static const size_t m_ConfigCount = 8;
-    DataItemConfig_t m_ItemConfig[m_ConfigCount]
-    {
-      { "R_BANDS",      DataType_Float,                  32,  Transciever_RX,   5 },
-      { "L_BANDS",      DataType_Float,                  32,  Transciever_RX,   5 },
-      { "R_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   5 },
-      { "L_PSD",        DataType_ProcessedSoundData_t,   1,   Transciever_RX,   5 },
-      { "R_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   5 },
-      { "L_MAXBAND",    DataType_MaxBandSoundData_t,     1,   Transciever_RX,   5 },
-      { "R_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   5 },
-      { "L_MAJOR_FREQ", DataType_Float,                  1,   Transciever_RX,   5 },
-    };
 
+    //QueueManager
+    static const size_t m_StatisticalEngineConfigCount = 8;
+    DataItemConfig_t m_ItemConfig[m_StatisticalEngineConfigCount]
+    {
+      { "R_BANDS",          DataType_Float,                  32,  Transciever_RX,   1 },
+      { "L_BANDS",          DataType_Float,                  32,  Transciever_RX,   1 },
+      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,   Transciever_RX,   1 },
+      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   1 },
+      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   1 },
+      { "R_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   1 },
+      { "L_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   1 },
+    };
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_StatisticalEngineConfigCount; }
     bool m_ProcessFFT = true;
     
     //BAND Circular Buffer
+    pthread_mutex_t m_BandValuesLock;
     static const unsigned int m_NumBands = 32; //Need way to set this
     float BandValues[m_NumBands][BAND_SAVE_LENGTH];
     int currentBandIndex = -1;
@@ -182,10 +189,6 @@ class StatisticalEngine : public NamedItem
     unsigned long m_NewSoundDataCurrentTime = 0;
     unsigned long m_NewSoundDataTimeOut = 1000;
     bool m_NewSoundDataTimedOut = false;
-    float m_Power;
-    float m_PowerDb;
-    int32_t m_signalMin;
-    int32_t m_signalMax;
     float m_AmpGain = 1.0;
     float m_FFTGain = 10.0;
     bool NewSoundDataReady();
@@ -195,6 +198,7 @@ class StatisticalEngine : public NamedItem
     size_t m_BandInputByteCount = sizeof(float) * m_NumBands;
     
     //Right Channel Input Sound Data
+    pthread_mutex_t m_ProcessedSoundDataLock;
     float m_Right_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Right_Channel_Processed_Sound_Data;
 
@@ -202,7 +206,13 @@ class StatisticalEngine : public NamedItem
     float m_Left_Band_Values[m_NumBands];
     ProcessedSoundData_t m_Left_Channel_Processed_Sound_Data;
 
+    float m_Power;
+    float m_PowerDb;
+    int32_t m_signalMin;
+    int32_t m_signalMax;
+    
     //Max Bin Sound Data
+    pthread_mutex_t m_MaxBinSoundDataLock;
     bool m_NewMaxBandSoundDataReady = false;
     unsigned long m_NewMaxBandSoundDataCurrentTime = 0;
     unsigned long m_NewMaxBandSoundDataTimeOut = 1000;

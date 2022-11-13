@@ -22,16 +22,13 @@ SerialDataLinkCore::SerialDataLinkCore(String Title, HardwareSerial &hSerial): m
 																			 , m_hSerial(hSerial)
 																			 , DataSerializer()
 {
-	//ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 SerialDataLinkCore::~SerialDataLinkCore()
 {
-	//ESP_LOGV("Function Debug", "%s, ", __func__);
 }
 
 void SerialDataLinkCore::ProcessDataRXEventQueue()
 {
-  //ESP_LOGV("Function Debug", "%s, ", __func__);
   int32_t ByteCount = m_hSerial.available();
   for(int i = 0; i < ByteCount; ++i)
   {
@@ -49,7 +46,7 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 		  m_InboundStringData.trim();
 		  m_InboundStringData = m_InboundStringData.substring(m_Startinator.length(), m_InboundStringData.length() - m_Terminator.length());
 		  ESP_LOGV("Serial_Datalink", "RX: %s", m_InboundStringData.c_str());
-		  DeSerialize(m_InboundStringData);
+		  DeSerializeJsonToMatchingDataItem(m_InboundStringData);
 		  m_InboundStringData.clear();
 		}
 		if(m_InboundStringData.length() > SERIAL_RX_LENGTH_LIMIT)
@@ -68,7 +65,6 @@ void SerialDataLinkCore::ProcessDataRXEventQueue()
 
 void SerialDataLinkCore::ProcessDataTXEventQueue()
 {
-  //ESP_LOGV("Function Debug", "%s, ", __func__);
   if(NULL != m_DataItems)
   {
     for(int i = 0; i < m_DataItemsCount; ++i)

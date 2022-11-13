@@ -18,59 +18,50 @@
 #ifndef MANAGER_H
 #define MANAGER_H
 
-#include <I2S_Device.h>
 #include <DataTypes.h>
 #include <Helpers.h>
-#include "Sound_Processor.h"
-#include "Serial_Datalink_Config.h"
+#include <I2S_Device.h>
 #include <BluetoothA2DPSource.h>
 #include "Bluetooth_Device.h"
-#include "circle_buf.h"
+#include "Sound_Processor.h"
+#include "Serial_Datalink_Config.h"
+#include "AudioBuffer.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
              , public CommonUtils
+             , public QueueController
 {
   public:
     Manager( String Title
            , Sound_Processor &SoundProcessor
-           , SerialDataLink &SerialDataLink
+           , SPIDataLinkMaster &SPIDataLinkMaster
            , Bluetooth_Source &BT_Out
-           , I2S_Device &I2S_In
            , I2S_Device &I2S_Out );
     virtual ~Manager();
-    void AllocateMemory();
-    void FreeMemory();
     void Setup();
     void ProcessEventQueue();
-    void WriteDataToBluetooth();
 
-    //Bluetooth Get Data Callback
-    int32_t get_data_channels(Frame *frame, int32_t channel_len);
+    //Bluetooth Set Data Callback
+    int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
     //I2S_Device_Callback
-    void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount);
-    
+    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
+  
   private:
     Sound_Processor &m_SoundProcessor;
-    SerialDataLink &m_SerialDataLink;
-
-    //I2S Sound Data RX
+    SPIDataLinkMaster &m_SPIDataLinkMaster;
+    AudioBuffer<1000> m_AmplitudeAudioBuffer;
+    AudioBuffer<1000> m_FFTAudioBuffer;
+    Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+    Frame_t m_FFTFrameBuffer[FFT_BUFFER_FRAME_COUNT];
+    
+    //I2S Sound Data
     I2S_Device &m_I2S_In;
-    I2S_Device &m_I2S_Out;
-    static const size_t m_32BitFrameByteCount = 4 * 2;
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
-    
-    static const int32_t m_CircularBufferSize = 4 * I2S_SAMPLE_COUNT * I2S_BUFFER_COUNT;
-    bfs::CircleBuf<Frame_t, m_CircularBufferSize> m_FrameBuffer;
 
-    Frame_t m_LinearFrameBuffer[I2S_SAMPLE_COUNT];
-    int32_t m_RightDataBuffer[I2S_SAMPLE_COUNT];
-    int32_t m_LeftDataBuffer[I2S_SAMPLE_COUNT];
     void UpdateNotificationRegistrationStatus();
 };
 

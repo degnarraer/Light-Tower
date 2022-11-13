@@ -20,15 +20,16 @@
 
 Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
-                , SerialDataLink &SerialDataLink
+                , SPIDataLinkSlave &SPIDataLinkSlave
                 , Bluetooth_Sink &BT_In
                 , I2S_Device &Mic_In
-                , I2S_Device &I2S_Out ): NamedItem(Title)
-                                       , m_StatisticalEngine(StatisticalEngine)
-                                       , m_SerialDataLink(SerialDataLink)
-                                       , m_BT_In(BT_In)
-                                       , m_Mic_In(Mic_In)
-                                       , m_I2S_Out(I2S_Out)
+                , I2S_Device &I2S_Out )
+                : NamedItem(Title)
+                , m_StatisticalEngine(StatisticalEngine)
+                , m_SPIDataLinkSlave(SPIDataLinkSlave)
+                , m_BT_In(BT_In)
+                , m_Mic_In(Mic_In) 
+                , m_I2S_Out(I2S_Out)
 {
 }
 Manager::~Manager()
@@ -42,7 +43,8 @@ void Manager::Setup()
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
   m_BT_In.Setup();
-  m_Mic_In.ResgisterForDataBufferRXCallback(this);
+  m_Mic_In.SetCallback(this);
+  m_BT_In.ResgisterForRxCallback(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
 }
@@ -56,50 +58,59 @@ void Manager::ProcessEventQueue()
       m_I2S_Out.ProcessEventQueue();
     break;
     case InputType_Bluetooth:
+      m_I2S_Out.ProcessEventQueue();
     break;
     default:
     break;
   }
   
+
   MoveDataFromQueueToQueue( "Manager 1"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_BANDS")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("R_BANDS")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Processed_Frame")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("Processed_Frame")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Processed_Frame")
                           , false
                           , false );
-
+                          
   MoveDataFromQueueToQueue( "Manager 2"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_PSD")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("R_PSD")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_BANDS")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_BANDS")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 3"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("R_MAXBAND")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBAND")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("R_MAXBAND")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_BANDS")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 4"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("L_BANDS")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAXBAND")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBAND")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAXBAND")
                           , false
                           , false );
-
+                          
   MoveDataFromQueueToQueue( "Manager 5"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_PSD")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("L_PSD")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAXBAND")
                           , false
                           , false );
                           
   MoveDataFromQueueToQueue( "Manager 6"
-                          , m_SerialDataLink.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_SerialDataLink.GetTotalByteCountForDataItem("L_MAXBAND")
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAJOR_FREQ")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAJOR_FREQ")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAJOR_FREQ")
+                          , false
+                          , false );
+                          
+  MoveDataFromQueueToQueue( "Manager 7"
+                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAJOR_FREQ")
+                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAJOR_FREQ")
+                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAJOR_FREQ")
                           , false
                           , false );
 }
@@ -115,32 +126,23 @@ void Manager::SetInputType(InputType_t Type)
       m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
-      m_Mic_In.StopDevice();
       m_BT_In.StartDevice();
-      m_I2S_Out.StartDevice();
+      m_Mic_In.StopDevice();
+      m_I2S_Out.StopDevice();
     break;
     default:
-      m_Mic_In.StopDevice();
       m_BT_In.StopDevice();
+      m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
     break;
   }
 }
-
-//I2S_Device_Callback
 //Bluetooth_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-  if((DeviceTitle == m_Mic_In.GetTitle() || DeviceTitle == m_BT_In.GetTitle()) && ByteCount > 0)
-  {
-    assert(m_I2S_Out.GetBytesToRead() == ByteCount);
-    assert(m_I2S_Out.GetSampleCount() == SampleCount);
-    m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
-  }
-}
-void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
+void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 {
 }
-void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
+//I2S_Device_Callback
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {
+  m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
 }

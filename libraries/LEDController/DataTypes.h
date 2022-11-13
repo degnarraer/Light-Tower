@@ -1,5 +1,7 @@
 #ifndef DataTypes_H
-#define DataTypes_H 
+#define DataTypes_H
+
+#include "Arduino.h"
 
 class NamedItem
 {
@@ -27,6 +29,13 @@ struct __attribute__((packed)) Frame_t {
   int16_t channel2;
 };
 
+enum BitLength_t
+{
+  BitLength_32,
+  BitLength_16,
+  BitLength_8,
+};
+
 enum DataType_t
 {
   DataType_Int8_t,
@@ -41,6 +50,7 @@ enum DataType_t
   DataType_ProcessedSoundData_t,
   DataType_MaxBandSoundData_t,
   DataType_Frame_t,
+  DataType_ProcessedSoundFrame_t,
   DataType_Undef,
 };
 
@@ -58,6 +68,7 @@ static const char* DataTypeStrings[] =
   "ProcessedSoundData_t",
   "MaxBandSoundData_t",
   "Frame_t",
+  "ProcessedSoundFrame_t",
   "Undefined"
 };
 
@@ -72,15 +83,16 @@ struct DataItemConfig_t
 
 struct DataItem_t
 {
-  String Name;
-  QueueHandle_t QueueHandle_RX = NULL;
-  QueueHandle_t QueueHandle_TX = NULL;
-  Transciever_T TransceiverConfig;
-  DataType_t DataType;
-  size_t Count = 0;
-  size_t TotalByteCount = 0;
-  bool DataPushHasErrored = false;
-  void* DataBuffer;
+	String Name;
+	QueueHandle_t QueueHandle_RX = NULL;
+	QueueHandle_t QueueHandle_TX = NULL;
+	Transciever_T TransceiverConfig;
+	DataType_t DataType;
+	size_t Count = 0;
+	size_t TotalByteCount = 0;
+	bool DataPushHasErrored = false;
+	void* DataBuffer;
+	pthread_mutex_t Lock;
 };
 
 struct ProcessedSoundData_t
@@ -88,6 +100,12 @@ struct ProcessedSoundData_t
 	float NormalizedPower;
 	int32_t Minimum;
 	int32_t Maximum;
+};
+
+struct ProcessedSoundFrame_t
+{
+	ProcessedSoundData_t Channel1;
+	ProcessedSoundData_t Channel2;
 };
 
 struct MaxBandSoundData_t

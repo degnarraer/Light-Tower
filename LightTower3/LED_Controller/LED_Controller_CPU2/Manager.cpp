@@ -20,49 +20,32 @@
 
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
-                , SerialDataLink &SerialDataLink
+                , SPIDataLinkMaster &SPIDataLinkMaster
                 , Bluetooth_Source &BT_Out
-                , I2S_Device &I2S_In
-                , I2S_Device &I2S_OUT ): NamedItem(Title)
+                , I2S_Device &I2S_In ): NamedItem(Title)
                                        , m_SoundProcessor(SoundProcessor)
-                                       , m_SerialDataLink(SerialDataLink)
+                                       , m_SPIDataLinkMaster(SPIDataLinkMaster)
                                        , m_BT_Out(BT_Out)
                                        , m_I2S_In(I2S_In)
-                                       , m_I2S_Out(I2S_OUT)
-{ 
-  ESP_LOGV("Manager", "%s, ", __func__);
+{
 }
 Manager::~Manager()
-{
-  FreeMemory();
-  ESP_LOGV("Manager", "%s, ", __func__);
-}
-
-void Manager::AllocateMemory()
-{
-}
-void Manager::FreeMemory()
 {
 }
 
 void Manager::Setup()
 {
-  AllocateMemory();
-  //Set Bluetooth Power to Max
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
-  m_I2S_In.ResgisterForDataBufferRXCallback(this);
-  m_I2S_Out.ResgisterForDataBufferRXCallback(this);
-  m_I2S_In.StartDevice();  
-  m_I2S_Out.StartDevice();
+  m_AmplitudeAudioBuffer.Initialize();
+  m_FFTAudioBuffer.Initialize();
+  m_I2S_In.StartDevice();
   m_BT_Out.StartDevice();
 }
 
 void Manager::ProcessEventQueue()
 {
-  ESP_LOGV("Function Debug", "%s, ", __func__);
   UpdateNotificationRegistrationStatus();
-  m_I2S_Out.ProcessEventQueue();
   m_I2S_In.ProcessEventQueue();
 }
 
@@ -71,95 +54,52 @@ void Manager::UpdateNotificationRegistrationStatus()
   bool IsConnected = m_BT_Out.IsConnected();
   if(true == IsConnected)
   {
-    m_I2S_In.DeResgisterForDataBufferRXCallback(this);
   }
   else
   {
-    m_I2S_In.ResgisterForDataBufferRXCallback(this);
-  }
-}
-//I2S_Device_Callback
-void Manager::DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-  //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
-  {
-    m_I2S_Out.SetSoundBufferData(DataBuffer, ByteCount);
-  }
-}
-void Manager::RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-  //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() && ByteCount > 0)
-  {
-    QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_PSD_IN");
-    QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("R_FFT_IN");
-    if(NULL != Queue1 && NULL != Queue2)
-    {
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("R_PSD_IN") == ByteCount);
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("R_FFT_IN") == ByteCount);
-      static bool R_PSD_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue1, false, "Right Channel Data: R_PSD_IN", R_PSD_IN_Push_Successful);
-      static bool R_FFT_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue2, false, "Right Channel Data: R_FFT_IN", R_FFT_IN_Push_Successful);
-    }
-  }
-}
-void Manager::LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount)
-{
-  //ESP_LOGV("Manager", "%s, ", __func__);
-  if( DeviceTitle == m_I2S_In.GetTitle() )
-  {
-    QueueHandle_t Queue1 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_PSD_IN");
-    QueueHandle_t Queue2 = m_SoundProcessor.GetQueueHandleRXForDataItem("L_FFT_IN");
-    if(NULL != Queue1 && NULL != Queue2)
-    {
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("L_PSD_IN") == ByteCount);
-      assert(m_SoundProcessor.GetQueueByteCountForDataItem("L_FFT_IN") == ByteCount);
-      static bool L_PSD_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue1, false, "Left Channel Data: L_PSD_IN", L_PSD_IN_Push_Successful);
-      static bool L_FFT_IN_Push_Successful = true;
-      PushValueToQueue(DataBuffer, Queue2, false, "Left Channel Data: L_FFT_IN", L_FFT_IN_Push_Successful);
-    } 
   }
 }
 
+//I2S_Device_Callback
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
+{
+}
+
 //Bluetooth Source Callback
-int32_t Manager::get_data_channels(Frame *frame, int32_t channel_len)
-{  
-  int32_t BytesRead = 0;
-  int32_t BytesRequested = channel_len * m_32BitFrameByteCount;
-  uint8_t *I2S_RXBuffer = (uint8_t*)ps_malloc(BytesRequested);
-  BytesRead = m_I2S_In.GetSoundBufferData(I2S_RXBuffer, BytesRequested);
-  m_I2S_Out.SetSoundBufferData(I2S_RXBuffer, BytesRead);
-  assert(BytesRead % m_32BitFrameByteCount == 0);
-  int32_t FramesRead = BytesRead / m_32BitFrameByteCount;
-  for(int i = 0; i < FramesRead; ++i)
+int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
+{
+  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
+  assert(0 == ByteReceived % sizeof(Frame_t)); 
+  size_t FrameCount = ByteReceived / sizeof(Frame_t);
+  m_AmplitudeAudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
+  m_FFTAudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
+ 
+  QueueHandle_t FFTQueue = m_SoundProcessor.GetQueueHandleRXForDataItem("FFT_Frames");
+  QueueHandle_t AmplitudeQueue = m_SoundProcessor.GetQueueHandleRXForDataItem("Amplitude_Frames");
+
+  if(FFTQueue != NULL && AmplitudeQueue != NULL)
   {
-    Frame aFrame;
-    aFrame.channel1 = ((int32_t*)I2S_RXBuffer)[2*i] >> 16;
-    aFrame.channel2 = ((int32_t*)I2S_RXBuffer)[2*i + 1] >> 16;
-    m_FrameBuffer.Write( (Frame_t&)(aFrame) );
-    frame[i] = aFrame;
-  }
-  int loopcount = floor(m_FrameBuffer.size() / I2S_SAMPLE_COUNT);
-  for(int i = 0; i < loopcount; ++i)
-  {
-    int32_t ActualSampleReadCount = m_FrameBuffer.Read(m_LinearFrameBuffer, sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
-    assert(ActualSampleReadCount <= sizeof(m_LinearFrameBuffer)/sizeof(m_LinearFrameBuffer[0]));
-    assert(ActualSampleReadCount <= sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
-    assert(ActualSampleReadCount <= sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
-    memset(m_RightDataBuffer, 0, sizeof(m_RightDataBuffer)/sizeof(m_RightDataBuffer[0]));
-    memset(m_LeftDataBuffer, 0, sizeof(m_LeftDataBuffer)/sizeof(m_LeftDataBuffer[0]));
-    for(int j = 0; j < ActualSampleReadCount; ++j)
+    size_t RequiredAmplitudeFrameCount = m_SoundProcessor.GetSampleCountForDataItem("Amplitude_Frames");
+    size_t AvailableAmplitudeFrameCount = m_AmplitudeAudioBuffer.GetFrameCount();
+    size_t RequiredFFTFrameCount = m_SoundProcessor.GetSampleCountForDataItem("FFT_Frames");
+    size_t AvailableFFTFrameCount = m_FFTAudioBuffer.GetFrameCount();
+    size_t AmplitudeLoopCount = AvailableAmplitudeFrameCount  / RequiredAmplitudeFrameCount;
+    size_t FFTLoopCount = AvailableFFTFrameCount / RequiredFFTFrameCount;
+    
+    for(int i = 0; i < AmplitudeLoopCount; ++i)
     {
-      m_RightDataBuffer[j] = m_LinearFrameBuffer[j].channel1 << 16;
-      m_LeftDataBuffer[j] = m_LinearFrameBuffer[j].channel2 << 16;
+      size_t FramesRead = m_AmplitudeAudioBuffer.ReadAudioFrames(m_AmplitudeFrameBuffer, RequiredAmplitudeFrameCount);
+      assert(FramesRead == RequiredAmplitudeFrameCount);
+      static bool AmplitudePushError = false;
+      PushValueToQueue(m_AmplitudeFrameBuffer, AmplitudeQueue, false, "Manager Amplitude Buffer", AmplitudePushError);
     }
-    RightChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_RightDataBuffer), ActualSampleReadCount * sizeof(m_RightDataBuffer[0]), ActualSampleReadCount);
-    LeftChannelDataBufferModifyRX(m_I2S_In.GetTitle(), ((uint8_t*)m_LeftDataBuffer), ActualSampleReadCount * sizeof(m_LeftDataBuffer[0]), ActualSampleReadCount);
+    for(int i = 0; i < FFTLoopCount; ++i)
+    {
+      size_t FramesRead = m_FFTAudioBuffer.ReadAudioFrames(m_FFTFrameBuffer, RequiredFFTFrameCount);
+      assert(FramesRead == RequiredFFTFrameCount);
+      static bool FFTPushError = false;
+      PushValueToQueue(m_FFTFrameBuffer, FFTQueue, false, "Manager FFT Buffer", FFTPushError);
+    }
   }
-  ESP_LOGV("Manager", "Samples Requested: %i\tBytes Read: %i\tSamples Read: %i", channel_len, BytesRead, SamplesRead);
-  free(I2S_RXBuffer);
-  return FramesRead;
+  return ByteReceived;
 }

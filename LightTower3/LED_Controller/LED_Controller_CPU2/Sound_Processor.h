@@ -29,24 +29,23 @@
 #include "Streaming.h"
 #include "float.h"
 #include "Serial_Datalink_Config.h"
+#include "AudioBuffer.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
                      , public QueueManager
+                     , public QueueController
 {
   public:
-    Sound_Processor(String Title, SerialDataLink &SerialDataLink);
+    Sound_Processor( String Title
+                   , SPIDataLinkMaster &SPIDataLinkMaster);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain){m_Gain = Gain;}
     void SetFFTGain(float Gain){m_FFT_Gain = Gain;}
     
-    //QueueManager Interface
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_ConfigCount; }
   private:
-    QueueManager* m_QueueManager;
-    SerialDataLink& m_SerialDataLink;
+    SPIDataLinkMaster &m_SPIDataLinkMaster;
 
     //Memory Management
     bool m_MemoryIsAllocated = false;
@@ -60,48 +59,46 @@ class Sound_Processor: public NamedItem
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
     float m_IMNP441_1PA_Value = 420426.0; //Digital output at 1PA
-    uint32_t m_24BitMax = pow(2,24);      //Used for Amplitude of 24 bit MIC values
-    uint32_t m_16BitMax = pow(2,16);      //Used for Amplitude of 16 bit FFT values
-    uint32_t m_32BitMax = pow(2,32);      //Used for Amplitude of 16 bit FFT values
+    uint32_t m_24BitLength = pow(2,24);      //Used for Amplitude of 24 bit MIC values
+    uint32_t m_16BitLength = pow(2,16);      //Used for Amplitude of 16 bit FFT values
+    uint32_t m_32BitLength = pow(2,32);      //Used for Amplitude of 16 bit FFT values
     
   public:
     void ProcessSoundPower()
     {
-      Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
-      Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
+      Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power();
     }
   private:
-    void Sound_32Bit_44100Hz_Calculate_Right_Channel_Power();
-    void Sound_32Bit_44100Hz_Calculate_Left_Channel_Power();
-    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441);
-    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441);
-
+    void Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power();
+    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441, BitLength_16);
+    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441, BitLength_16);
+    
   public:
     void ProcessFFT()
     {
-      Sound_32Bit_44100Hz_Right_Channel_FFT();
-      Sound_32Bit_44100Hz_Left_Channel_FFT();
+      Sound_16Bit_44100Hz_Right_Left_Channel_FFT();
     }
   private:
-    void Sound_32Bit_44100Hz_Right_Channel_FFT();
-    void Sound_32Bit_44100Hz_Left_Channel_FFT();
-    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
-    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE);
+    void Sound_16Bit_44100Hz_Right_Left_Channel_FFT();
+    void Sound_16Bit_44100Hz_Right_Channel_FFT();
+    void Sound_16Bit_44100Hz_Left_Channel_FFT();
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
 
     void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;
 
-    //QueueManager Configuration
-    static const size_t m_ConfigCount = 4;
-    DataItemConfig_t m_ItemConfig[m_ConfigCount]
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    static const size_t m_SoundProcessorConfigCount = 2;
+    DataItemConfig_t m_ItemConfig[m_SoundProcessorConfigCount]
     {
-      { "R_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "L_PSD_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   1 },
-      { "R_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
-      { "L_FFT_IN", DataType_Int32_t, I2S_SAMPLE_COUNT,   Transciever_RX,   FFT_SIZE/I2S_SAMPLE_COUNT },
+      { "FFT_Frames",       DataType_Frame_t,   FFT_BUFFER_FRAME_COUNT,       Transciever_RX,   5 },
+      { "Amplitude_Frames", DataType_Frame_t,   AMPLITUDE_BUFFER_FRAME_COUNT, Transciever_RX,   5 },
     };
+    size_t GetDataItemConfigCount() { return m_SoundProcessorConfigCount; }
 };
 
 #endif

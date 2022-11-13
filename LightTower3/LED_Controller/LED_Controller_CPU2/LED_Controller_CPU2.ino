@@ -1,21 +1,18 @@
 #include "Manager.h"
 #include "Tunes.h"
-
-#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "esp_log.h"
 
 TaskHandle_t ManagerTask;
 TaskHandle_t ProcessSoundPowerTask;
 TaskHandle_t ProcessFFTTask;
-TaskHandle_t SerialDataLinkTXTask;
-TaskHandle_t SerialDataLinkRXTask;
-
+TaskHandle_t ProcessSPITXTask;
+TaskHandle_t TaskMonitorTask;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
-                                 , I2S_NUM_0
+                                 , I2S_NUM_1
                                  , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
                                  , I2S_SAMPLE_RATE
-                                 , I2S_BITS_PER_SAMPLE_32BIT
+                                 , I2S_BITS_PER_SAMPLE_16BIT
                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                  , I2S_CHANNEL_STEREO
@@ -26,47 +23,35 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S1_WD_PIN                        // Word Selection Pin
                                  , I2S1_SDIN_PIN                      // Serial Data In Pin
                                  , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
-                      
-I2S_Device m_I2S_Out = I2S_Device( "I2S_Out"
-                                  , I2S_NUM_1                        // I2S Interface
-                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                  , I2S_SAMPLE_RATE
-                                  , I2S_BITS_PER_SAMPLE_32BIT
-                                  , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                  , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                  , I2S_CHANNEL_STEREO
-                                  , true                             // Use APLL
-                                  , I2S_BUFFER_COUNT                 // Buffer Count
-                                  , I2S_SAMPLE_COUNT                 // Buffer Size
-                                  , I2S2_SCLCK_PIN                   // Serial Clock Pin
-                                  , I2S2_WD_PIN                      // Word Selection Pin
-                                  , I2S2_SDIN_PIN                    // Serial Data In Pin
-                                  , I2S2_SDOUT_PIN );                // Serial Data Out Pin
-
-HardwareSerial m_hSerial = Serial1;
-SerialDataLink m_SerialDataLink = SerialDataLink("Serial Datalink", m_hSerial);
-Sound_Processor m_SoundProcessor = Sound_Processor("Sound Processor", m_SerialDataLink);
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "AL HydraMini" );
 
-Manager m_Manager = Manager("Manager", m_SoundProcessor, m_SerialDataLink, m_BT_Out, m_I2S_In, m_I2S_Out);
+SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink"
+                                                         , SPI1_PIN_SCK
+                                                         , SPI1_PIN_MISO
+                                                         , SPI1_PIN_MOSI
+                                                         , SPI1_PIN_SS
+                                                         , 1 );
+                                                
+Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
+                                                  , m_SPIDataLinkMaster );                                            
+Manager m_Manager = Manager("Manager"
+                           , m_SoundProcessor
+                           , m_SPIDataLinkMaster
+                           , m_BT_Out
+                           , m_I2S_In);
 
-//Bluetooth Source Callback
-int32_t get_data_channels(Frame *frame, int32_t channel_len)
+
+int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  return m_Manager.get_data_channels(frame, channel_len);
+  return m_Manager.SetBTTxData(Data, channel_len);
 }
 
-void setup() {
-  //ESP32 Serial Communication
-  m_hSerial.setRxBufferSize(1000);
-  m_hSerial.flush();
-  m_hSerial.begin(250000, SERIAL_8E2, HARDWARE_SERIAL_RX_PIN, HARDWARE_SERIAL_TX_PIN); // pins rx2, tx2, 9600 bps, 8 bits no parity 1 stop bit
-  m_hSerial.flush();
-    
+void setup() 
+{
   //PC Serial Communication
   Serial.flush();
   Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
@@ -77,13 +62,12 @@ void setup() {
   ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
   ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
- 
-  m_I2S_Out.Setup();
+  
   m_I2S_In.Setup();
   m_BT_Out.Setup();
-  m_BT_Out.SetCallback(get_data_channels);
+  m_BT_Out.SetCallback(SetBTTxData);
+  m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
-  m_SerialDataLink.SetupSerialDataLink();
 
   xTaskCreatePinnedToCore
   (
@@ -91,51 +75,52 @@ void setup() {
     "ProcessSoundPowerTask",        // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 10,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &ProcessSoundPowerTask,         // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
+  
   xTaskCreatePinnedToCore
   (
     ProcessFFTTaskLoop,             // Function to implement the task
     "ProcessFFTTask",               // Name of the task
     4000,                           // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 20,      // Priority of the task
+    configMAX_PRIORITIES - 1,       // Priority of the task
     &ProcessFFTTask,                // Task handle.
-    1                               // Core where the task should run
+    0                               // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
     ManagerTaskLoop,                // Function to implement the task
     "ManagerTask",                  // Name of the task
-    4000,                           // Stack size in words
+    10000,                          // Stack size in words
     NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
+    configMAX_PRIORITIES,           // Priority of the task
     &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
-  ); 
-  
-  xTaskCreatePinnedToCore
-  (
-    SerialDataLinkTXTaskLoop,       // Function to implement the task
-    "SerialDataLinkTXTask",         // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &SerialDataLinkTXTask,          // Task handle.
     1                               // Core where the task should run
   );
   
   xTaskCreatePinnedToCore
   (
-    SerialDataLinkRXTaskLoop,       // Function to implement the task
-    "SerialDataLinkRXTask",         // Name of the task
+    SPI_TX_TaskLoop,                // Function to implement the task
+    "SPI TX Task Task",             // Name of the task
     2000,                           // Stack size in words
     NULL,                           // Task input parameter
+    configMAX_PRIORITIES,           // Priority of the task
+    &ProcessSPITXTask,              // Task handle.
+    1                               // Core where the task should run
+  );
+
+  xTaskCreatePinnedToCore
+  (
+    TaskMonitorTaskLoop,            // Function to implement the task
+    "TaskMonitorTaskTask",          // Name of the task
+    5000,                           // Stack size in words
+    NULL,                           // Task input parameter
     configMAX_PRIORITIES - 1,       // Priority of the task
-    &SerialDataLinkRXTask,          // Task handle.
+    &TaskMonitorTask,               // Task handle.
     1                               // Core where the task should run
   );
   
@@ -147,8 +132,8 @@ void setup() {
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
 }
+
 void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
@@ -163,7 +148,7 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(25 / portTICK_PERIOD_MS);
   }
 }
 
@@ -172,24 +157,39 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(2 / portTICK_PERIOD_MS);
-  }
-}
-
-void SerialDataLinkRXTaskLoop(void * parameter)
-{
-  while(true)
-  {
-    m_SerialDataLink.ProcessDataRXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
-void SerialDataLinkTXTaskLoop(void * parameter)
+void SPI_TX_TaskLoop(void * parameter)
 {
   while(true)
   {
-    m_SerialDataLink.ProcessDataTXEventQueue();
+    m_SPIDataLinkMaster.ProcessDataTXEventQueue();
     vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
+}
+
+void TaskMonitorTaskLoop(void * parameter)
+{
+  ESP_LOGI("LED_Controller1", "Running Task.");
+  for(;;)
+  {
+    size_t StackSizeThreshold = 100;
+    if( uxTaskGetStackHighWaterMark(ManagerTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ManagerTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(ProcessSoundPowerTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessSoundPowerTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(ProcessFFTTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessFFTTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(ProcessSPITXTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessSPITXTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(TaskMonitorTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! TaskMonitorTask: Stack Size Low");
+    
+    if(true == TASK_STACK_SIZE_DEBUG)
+    {
+      ESP_LOGI("LED_Controller1", "ManagerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ManagerTask));
+      ESP_LOGI("LED_Controller1", "ProcessSoundPowerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSoundPowerTask));
+      ESP_LOGI("LED_Controller1", "ProcessFFTTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessFFTTask));
+      ESP_LOGI("LED_Controller1", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
+      ESP_LOGI("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
+    }
+    vTaskDelay(30000 / portTICK_PERIOD_MS);
   }
 }

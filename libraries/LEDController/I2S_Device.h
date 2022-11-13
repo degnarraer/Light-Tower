@@ -36,13 +36,13 @@ class I2S_Device_Callback
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void DataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
-		virtual void RightChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
-		virtual void LeftChannelDataBufferModifyRX(String DeviceTitle, uint8_t* DataBuffer, size_t ByteCount, size_t SampleCount) = 0;
+				//Callbacks called by this class
+		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
 };
 
 class I2S_Device: public NamedItem
 				, public CommonUtils
+				, public QueueController
 {
   public:
     I2S_Device( String Title
@@ -61,38 +61,20 @@ class I2S_Device: public NamedItem
               , int SerialDataInPin
               , int SerialDataOutPin );
     virtual ~I2S_Device();
-    void ResgisterForDataBufferRXCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
-    void DeResgisterForDataBufferRXCallback(I2S_Device_Callback* callee)
-	{ 
-		if(m_Callee == callee)
-		{
-			m_Callee = NULL;
-		}
-	}
+    void SetCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
     void StartDevice();
     void StopDevice();
-	size_t GetBytesPerSample() { return m_BytesPerSample; }
 
-	int32_t GetDataBufferValue(uint8_t* DataBuffer, size_t index);
-	void SetDataBufferValue(uint8_t* DataBuffer, size_t index, int32_t value);
-
-    int32_t SetSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
-    int32_t GetSoundBufferData(uint8_t *SoundBufferData, int32_t ByteCount);
+    size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
+    size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
 	
-    size_t GetSampleCount() { return m_SampleCount; }
-    size_t GetChannelSampleCount() { return m_ChannelSampleCount; }
-    size_t GetBytesToRead() {return m_TotalBytesToRead; }
-    size_t GetChannelBytesToRead() {return m_ChannelBytesToRead; }
-    int GetSampleRate() { return m_SampleRate; }
     void Setup();
     void ProcessEventQueue();
 	
   private:
 	I2S_Device_Callback* m_Callee = NULL;
     DataItemConfig_t* m_ItemConfig = NULL;
-	uint8_t* m_SoundBufferData;
-	uint8_t* m_RightChannel_SoundBufferData;
-	uint8_t* m_LeftChannel_SoundBufferData;
+	
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
@@ -115,11 +97,10 @@ class I2S_Device: public NamedItem
     const i2s_port_t m_I2S_PORT;
     QueueHandle_t m_i2s_event_queue = NULL;
 
-    int ReadSamples();
-    int WriteSamples(uint8_t *samples, size_t ByteCount);
+    size_t ReadSamples();
+    size_t WriteSamples(uint8_t *samples, size_t ByteCount);
     void InstallDevice();
-	void AllocateMemory();
-	void FreeMemory();
+    void UninstallDevice();
 };
 
 #endif
