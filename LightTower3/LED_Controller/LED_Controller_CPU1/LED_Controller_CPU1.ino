@@ -133,7 +133,7 @@ void setup()
 
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitorTaskTask", 5000, NULL, configMAX_PRIORITIES - 1, &TaskMonitorTask, 1 );
   xTaskCreatePinnedToCore( DataMoverTaskLoop, "DataMoverTask", 20000, NULL, configMAX_PRIORITIES-1, &DataMoverTask, 1 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task", 10000, NULL, configMAX_PRIORITIES-1, &SPI_RX_Task, 1 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task", 10000, NULL, configMAX_PRIORITIES, &SPI_RX_Task, 1 );
   xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask", 30000, NULL, configMAX_PRIORITIES, &VisualizationTask, 0 );
   
   esp_task_wdt_init(30, true);
@@ -164,7 +164,7 @@ void SPI_RX_TaskLoop(void * parameter)
   for(;;)
   {
     m_SPIDataLinkSlave.ProcessDataRXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }  
 }
 
@@ -193,6 +193,6 @@ void DataMoverTaskLoop(void * parameter)
   {
     ESP_LOGV("LED_Controller1", "Manager Loop"); 
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }

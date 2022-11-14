@@ -83,8 +83,7 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
 	memcpy(spi_tx_buf[CurrentIndex], DataToSend.c_str(), DataToSendLength);
-	delay(1);
-	if(CurrentIndex == 0)
+	if(m_Queued_Transactions - m_Queued_TransactionsReset >= N_MASTER_QUEUES)
 	{
 		TransmitQueuedData();
 	}

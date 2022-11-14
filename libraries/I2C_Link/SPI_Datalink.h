@@ -103,8 +103,8 @@ class SPI_Datalink_Master: public SPI_Datalink
 		void TransmitQueuedData()
 		{ 
 			m_SPI_Master.yield();
-			m_Queued_Transactions = 0;
 			m_TransmitQueuedDataFlag = false;
+			m_Queued_TransactionsReset = m_Queued_Transactions;
 		}
 		bool Begin();
 		bool End();
@@ -116,6 +116,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
 		void ProcessTXData(DataItem_t DataItem);
 		size_t m_Queued_Transactions = 0;
+		size_t m_Queued_TransactionsReset = 0;
 		size_t m_DeQueued_Transactions = 0;
 		bool m_TransmitQueuedDataFlag = false;
 };

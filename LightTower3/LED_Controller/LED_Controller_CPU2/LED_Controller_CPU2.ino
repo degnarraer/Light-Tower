@@ -148,7 +148,7 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(20 / portTICK_PERIOD_MS);
   }
 }
 
@@ -157,7 +157,7 @@ void ManagerTaskLoop(void * parameter)
   while(true)
   {
     m_Manager.ProcessEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
@@ -166,7 +166,7 @@ void SPI_TX_TaskLoop(void * parameter)
   while(true)
   {
     m_SPIDataLinkMaster.ProcessDataTXEventQueue();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 
