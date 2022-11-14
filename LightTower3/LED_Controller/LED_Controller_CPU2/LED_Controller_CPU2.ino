@@ -139,7 +139,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(20 / portTICK_PERIOD_MS);
   }
 }
 
