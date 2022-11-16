@@ -65,7 +65,7 @@ bool SPI_Datalink_Master::End()
 
 void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
-	size_t CurrentIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
+	size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
 	memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 	memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
@@ -87,6 +87,7 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 	{
 		TransmitQueuedData();
 	}
+	delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 	m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataToSendLength);
 	++m_Queued_Transactions;
 }
@@ -141,6 +142,7 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 	{
 		size_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentIndex], m_SPI_Slave.size());
+		memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
         m_SPI_Slave.pop();
 		++m_DeQueued_Transactions;
     }
@@ -148,10 +150,17 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 	for(size_t q = 0; q < N_SLAVE_QUEUES - remained_transactions; ++q)
 	{
 		size_t CurrentIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
-		memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-		m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+		if(SendBytesSize > 0)
+		{
+			m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SendBytesSize);
+			
+		}
+		else
+		{
+			m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+		}
 		++m_Queued_Transactions;
 	}
 }

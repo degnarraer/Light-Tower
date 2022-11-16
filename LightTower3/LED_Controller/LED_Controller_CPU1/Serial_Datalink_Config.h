@@ -53,9 +53,12 @@ class SPIDataLinkSlave: public NamedItem
     }
     size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
     {
-      String Result = String((char*)RXBuffer);
-      ESP_LOGV("SPI_Datalink_Config", "Received: %s", Result.c_str());
-      DeSerializeJsonToMatchingDataItem(Result.c_str());
+      if(BytesReceived > 0)
+      {
+        String Result = String((char*)RXBuffer);
+        ESP_LOGV("SPI_Datalink_Config", "Received: %s", Result.c_str());
+        DeSerializeJsonToMatchingDataItem(Result.c_str());
+      }
       return BytesReceived;
     }
   private:
@@ -64,13 +67,13 @@ class SPIDataLinkSlave: public NamedItem
     static const size_t m_SPIDatalinkConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "R_BANDS",          DataType_Float,                  32,  Transciever_RX,   5 },
-      { "L_BANDS",          DataType_Float,                  32,  Transciever_RX,   5 },
-      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,   Transciever_RX,   5 },
-      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   5 },
-      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   5 },
-      { "R_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   5 },
-      { "L_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   5 },
+      { "R_BANDS",          DataType_Float,                  32,  Transciever_RX,   10 },
+      { "L_BANDS",          DataType_Float,                  32,  Transciever_RX,   10 },
+      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,   Transciever_RX,   10 },
+      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   10 },
+      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   10 },
+      { "R_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   10 },
+      { "L_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   10 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

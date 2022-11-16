@@ -70,10 +70,11 @@ class DataSerializer: public CommonUtils
 		void DeSerializeJsonToMatchingDataItem(String json)
 		{
 			DeserializationError error = deserializeJson(doc, json.c_str());
+			Serial << json.c_str() << "\n";
 			// Test if parsing succeeds.
 			if (error)
 			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
+				ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
 				return;
 			}
 			else
