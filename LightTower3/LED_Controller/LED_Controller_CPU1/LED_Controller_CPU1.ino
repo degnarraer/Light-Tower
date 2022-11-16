@@ -131,10 +131,10 @@ void setup()
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
 
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitorTaskTask", 5000, NULL, configMAX_PRIORITIES - 1, &TaskMonitorTask, 1 );
-  xTaskCreatePinnedToCore( DataMoverTaskLoop, "DataMoverTask", 20000, NULL, configMAX_PRIORITIES-1, &DataMoverTask, 1 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task", 10000, NULL, configMAX_PRIORITIES, &SPI_RX_Task, 1 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask", 30000, NULL, configMAX_PRIORITIES, &VisualizationTask, 0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  5000,   NULL,   configMAX_PRIORITIES - 3,   &TaskMonitorTask,     1 );
+  xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        20000,  NULL,   configMAX_PRIORITIES - 2,   &DataMoverTask,       1 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          10000,  NULL,   configMAX_PRIORITIES - 1,   &SPI_RX_Task,         1 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    30000,  NULL,   configMAX_PRIORITIES - 1,   &VisualizationTask,   0 );
   
   esp_task_wdt_init(30, true);
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());

@@ -54,7 +54,7 @@ void setup()
 {
   //PC Serial Communication
   Serial.flush();
-  Serial.begin(500000); // 9600 bps, 8 bits no parity 1 stop bit
+  Serial.begin(500000);
   Serial.flush();
   
   ESP_LOGV("LED_Controller2", "%s, ", __func__);
@@ -69,60 +69,11 @@ void setup()
   m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
 
-  xTaskCreatePinnedToCore
-  (
-    ProcessSoundPowerTaskLoop,      // Function to implement the task
-    "ProcessSoundPowerTask",        // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &ProcessSoundPowerTask,         // Task handle.
-    0                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    ProcessFFTTaskLoop,             // Function to implement the task
-    "ProcessFFTTask",               // Name of the task
-    4000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &ProcessFFTTask,                // Task handle.
-    0                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    ManagerTaskLoop,                // Function to implement the task
-    "ManagerTask",                  // Name of the task
-    10000,                          // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES,           // Priority of the task
-    &ManagerTask,                   // Task handle.
-    1                               // Core where the task should run
-  );
-  
-  xTaskCreatePinnedToCore
-  (
-    SPI_TX_TaskLoop,                // Function to implement the task
-    "SPI TX Task Task",             // Name of the task
-    2000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES,           // Priority of the task
-    &ProcessSPITXTask,              // Task handle.
-    1                               // Core where the task should run
-  );
-
-  xTaskCreatePinnedToCore
-  (
-    TaskMonitorTaskLoop,            // Function to implement the task
-    "TaskMonitorTaskTask",          // Name of the task
-    5000,                           // Stack size in words
-    NULL,                           // Task input parameter
-    configMAX_PRIORITIES - 1,       // Priority of the task
-    &TaskMonitorTask,               // Task handle.
-    1                               // Core where the task should run
-  );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  4000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSoundPowerTask,   0 );
+  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         4000,   NULL,   configMAX_PRIORITIES - 3,   &ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            10000,  NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
+  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       4000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    5000,   NULL,   configMAX_PRIORITIES - 2,   &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
@@ -138,6 +89,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     m_SoundProcessor.ProcessSoundPower();
     vTaskDelay(20 / portTICK_PERIOD_MS);
   }
@@ -147,6 +99,7 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     m_SoundProcessor.ProcessFFT();
     vTaskDelay(20 / portTICK_PERIOD_MS);
   }

@@ -18,6 +18,7 @@
 
 #ifndef DataSerializer_H
 #define DataSerializer_H
+#include <stdlib.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <Helpers.h>
@@ -36,30 +37,36 @@ class DataSerializer: public CommonUtils
 			m_DataItemsCount = DataItemCount;
 		}
 		
-		
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
-			size_t TotalByteCount = GetSizeOfDataType(DataType) * Count;
+			size_t ObjectByteCount = GetSizeOfDataType(DataType);
 			
 			doc.clear();
 			doc[m_NameTag] = Name.c_str();
 			doc[m_CountTag] = Count;
 			doc[m_DataTypeTag] = DataTypeStrings[DataType];
 			JsonArray data = doc.createNestedArray(m_DataTag);
-			doc[m_TotalByteCountTag] = TotalByteCount;
-			for(int i = 0; i < TotalByteCount; ++i)
+			doc[m_TotalByteCountTag] = ObjectByteCount * Count;
+			for(int i = 0; i < Count; ++i)
 			{
-				uint8_t Value = ((uint8_t*)Object)[i];
-				CheckSum += Value;
-				data.add(Value);
+				String BytesString = "";
+				for(int j = 0; j < ObjectByteCount; ++j)
+				{
+					uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
+					char ByteHexValue[2];
+					sprintf(ByteHexValue,"%02X", DecValue);
+					BytesString += String(ByteHexValue);
+					CheckSum += DecValue;
+				}
+				data.add(BytesString);
 			}
 			doc[m_CheckSumTag] = CheckSum;
 			String Result;
 			serializeJson(doc, Result);
-			Result = Result;
 			return Result.c_str();
 		}
+		
 		void DeSerializeJsonToMatchingDataItem(String json)
 		{
 			DeserializationError error = deserializeJson(doc, json.c_str());
@@ -83,14 +90,24 @@ class DataSerializer: public CommonUtils
 							size_t CheckSumIn = doc[m_CheckSumTag];
 							size_t CountIn = doc[m_CountTag];
 							size_t ByteCountIn = doc[m_TotalByteCountTag];
-							size_t DataByteCount = doc[m_DataTag].size();
-							uint8_t Buffer[DataByteCount];
-							if(ByteCountIn == DataByteCount)
+							size_t ActualDataCount = doc[m_DataTag].size();
+							DataType_t DataType = GetDataTypeFromString(doc[m_DataTypeTag]);
+							size_t ObjectByteCount = GetSizeOfDataType(DataType);
+							uint8_t Buffer[ByteCountIn];
+							if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
 							{
-								for(int j = 0; j < DataByteCount; ++j)
+								for(int j = 0; j < CountIn; ++j)
 								{
-									CheckSumCalc += (uint8_t)(doc[m_DataTag][j]);
-									Buffer[j] = (uint8_t)(doc[m_DataTag][j]);
+									String BytesString = doc[m_DataTag][j];
+									for(int k = 0; k < ObjectByteCount; ++k)
+									{
+										size_t startIndex = 2*k;
+										char hexArray[2];
+										strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
+										long decValue = strtol(String(hexArray).c_str(), NULL, 16);
+										CheckSumCalc += decValue;
+										Buffer[j * ObjectByteCount + k] = decValue;
+									}
 								}
 								if(CheckSumCalc == CheckSumIn)
 								{
@@ -98,7 +115,7 @@ class DataSerializer: public CommonUtils
 								}
 								else
 								{
-									ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error for String: %s", json.c_str());
+									ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i) for String: %s", CheckSumCalc, CheckSumIn, json.c_str());
 								}
 							}
 							else
@@ -109,92 +126,6 @@ class DataSerializer: public CommonUtils
 						}
 					}
 				}
-			}
-		}
-		bool SerializeByteArray(uint8_t *InputBuffer, size_t InputBufferSize, uint8_t *OutputBuffer, size_t OutputBufferSize, size_t DataByteCount)
-		{
-			if(OutputBufferSize >= InputBufferSize + sizeof(DataByteCount) )
-			{
-				memcpy(OutputBuffer, &DataByteCount, sizeof(DataByteCount));
-				memcpy(OutputBuffer + sizeof(DataByteCount), InputBuffer, InputBufferSize);
-				return true;
-			}
-			else
-			{
-				return false;
-			}
-		}
-		size_t DeSerializeByteArray(uint8_t *InputBuffer, size_t InputBufferSize, uint8_t *OutputBuffer, size_t OutputBufferSize)
-		{
-			size_t BufferedByteCount;
-			assert(OutputBufferSize >= InputBufferSize - sizeof(BufferedByteCount) );
-			BufferedByteCount = ((size_t*)InputBuffer)[0];
-			assert(OutputBufferSize >= BufferedByteCount);
-			memcpy(OutputBuffer, InputBuffer + sizeof(BufferedByteCount), BufferedByteCount);
-			return BufferedByteCount;
-		}
-		size_t DeSerialize(String InputString, String Name, uint8_t *DataBuffer, size_t MaxBytes)
-		{
-			int16_t first = InputString.indexOf(m_Startinator) + m_Startinator.length();
-			int16_t last = InputString.indexOf(m_Terminator);
-			if(first >= 0 && last >= 0)
-			{
-				assert(last > first);
-				String json = InputString.substring(first, last);
-				DeserializationError error = deserializeJson(doc, json.c_str());
-				// Test if parsing succeeds.
-				if (error)
-				{
-					ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
-					return 0;
-				}
-				else
-				{
-					const String DocName = doc[m_NameTag];
-					if(true == DocName.equals(Name))
-					{
-						int CheckSumCalc = 0;
-						int CheckSumIn = doc[m_CheckSumTag];
-						int CountIn = doc[m_CountTag];
-						int ByteCountIn = doc[m_TotalByteCountTag];
-						int ByteCountInCalc = CountIn * GetSizeOfDataType((DataType_t)GetDataTypeFromString(doc[m_DataTypeTag]));
-						int DataByteCount = doc[m_DataTag].size();
-						if(ByteCountIn == DataByteCount && ByteCountIn <= MaxBytes)
-						{
-							for(int i = 0; i < DataByteCount; ++i)
-							{
-								CheckSumCalc += (uint8_t)(doc[m_DataTag][i]);
-							}
-							if(CheckSumCalc == CheckSumIn)
-							{
-								for(int i = 0; i < DataByteCount; ++i)
-								{
-									DataBuffer[i] = (uint8_t)(doc[m_DataTag][i]);
-								}
-								return DataByteCount;
-							}
-							else
-							{
-								ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error for String: %s", json.c_str());
-								return 0;
-							}
-						}
-						else
-						{
-							ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
-						}
-						return 0;
-					}
-					else
-					{
-						ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Data Packet Name Did Not Match: %s", Name.c_str());
-						return 0;
-					}
-				}
-			}
-			else
-			{
-				return 0;
 			}
 		}
 	private:
