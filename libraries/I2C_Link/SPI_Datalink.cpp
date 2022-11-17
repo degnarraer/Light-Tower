@@ -145,9 +145,9 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
     for (size_t q = 0; q < received_transactions; ++q)
 	{
 		size_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
-		memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 		m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentIndex], m_SPI_Slave.size());
         m_SPI_Slave.pop();
+		memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 		++m_DeQueued_Transactions;
     }
 	const size_t remained_transactions = m_SPI_Slave.remained();

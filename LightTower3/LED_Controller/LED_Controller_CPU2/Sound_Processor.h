@@ -57,11 +57,11 @@ class Sound_Processor: public NamedItem
     float m_FFT_Gain = 1.0;
 
     //DB Conversion taken from INMP441 Datasheet
-    float m_IMNP441_1PA_Offset = 94;      //DB Output at 1PA
-    float m_IMNP441_1PA_Value = 420426.0; //Digital output at 1PA
-    uint32_t m_24BitLength = pow(2,24);      //Used for Amplitude of 24 bit MIC values
-    uint32_t m_16BitLength = pow(2,16);      //Used for Amplitude of 16 bit FFT values
-    uint32_t m_32BitLength = pow(2,32);      //Used for Amplitude of 16 bit FFT values
+    float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
+    float m_IMNP441_1PA_Value = 420426.0;     //Digital output at 1PA
+    uint32_t m_24BitLength = pow(2,24);       //Used for Amplitude of 24 bit MIC values
+    uint32_t m_16BitLength = pow(2,16);       //Used for Amplitude of 16 bit FFT values
+    uint32_t m_32BitLength = pow(2,32);       //Used for Amplitude of 16 bit FFT values
     
   public:
     void ProcessSoundPower()

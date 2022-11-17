@@ -53,13 +53,16 @@ class SPIDataLinkSlave: public NamedItem
     }
     size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
     {
-      if(BytesReceived > 0)
+      size_t SizeResult = 0;
+      String ResultString;
+      if(NULL != RXBuffer && BytesReceived > 0)
       {
-        String Result = String((char*)RXBuffer);
-        ESP_LOGV("SPI_Datalink_Config", "Received: %s", Result.c_str());
-        DeSerializeJsonToMatchingDataItem(Result.c_str());
+        ResultString = String((char*)RXBuffer);
+        ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
+        DeSerializeJsonToMatchingDataItem(ResultString.c_str());
+        
       }
-      return BytesReceived;
+      return ResultString.length();
     }
   private:
     
