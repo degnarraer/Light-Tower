@@ -133,8 +133,8 @@ void setup()
 
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 3,   &TaskMonitorTask,     1 );
   xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 2,   &DataMoverTask,       1 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          2000,  NULL,   configMAX_PRIORITIES - 1,   &SPI_RX_Task,         1 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    2000,  NULL,   configMAX_PRIORITIES - 1,   &VisualizationTask,   0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          3000,  NULL,   configMAX_PRIORITIES - 1,   &SPI_RX_Task,         1 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 1,   &VisualizationTask,   0 );
   
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
@@ -153,7 +153,7 @@ void VisualizationTaskLoop(void * parameter)
   {
     ESP_LOGV("LED_Controller1", "Visualization Loop");  
     m_Scheduler.RunScheduler();
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }
 

@@ -28,18 +28,18 @@ void VisualizationPlayer::Setup()
   m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
   m_MyVisiualizationInstantiations.add(WaterFireFromEdge::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
-  m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
+  //m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
   m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
-  m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
-  m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
+  //m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
+  //m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
   m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
   m_MyVisiualizationInstantiations.add(VerticalBassSpriteTower::GetInstance);
   m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
-  m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
+  //m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
 
   if(true == m_TestVisualization)
   {
-    m_CurrentVisualization = ScrollingMaxBand::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
+    m_CurrentVisualization = SolidColorTower::GetInstance(m_StatisticalEngineModelInterface, m_LEDController);
     AddTask(*m_CurrentVisualization);
     m_StartTime = millis();
   }

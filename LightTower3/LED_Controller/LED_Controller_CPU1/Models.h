@@ -685,7 +685,6 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
       m_HSV = rgb2hsv_approximate(m_InputColor);
     }
     void NewValueNotification(float Value, String context) {
-      Serial << "NEW VALUE: " << Value << "\n";
       m_NormalizedPower = Value;
     }
 };
