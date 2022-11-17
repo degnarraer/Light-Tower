@@ -95,8 +95,8 @@ class Sound_Processor: public NamedItem
     static const size_t m_SoundProcessorConfigCount = 2;
     DataItemConfig_t m_ItemConfig[m_SoundProcessorConfigCount]
     {
-      { "FFT_Frames",       DataType_Frame_t,   FFT_BUFFER_FRAME_COUNT,       Transciever_RX,   10 },
-      { "Amplitude_Frames", DataType_Frame_t,   AMPLITUDE_BUFFER_FRAME_COUNT, Transciever_RX,   10 },
+      { "FFT_Frames",       DataType_Frame_t,   FFT_BUFFER_FRAME_COUNT,       Transciever_RX,   4 },
+      { "Amplitude_Frames", DataType_Frame_t,   AMPLITUDE_BUFFER_FRAME_COUNT, Transciever_RX,   4 },
     };
     size_t GetDataItemConfigCount() { return m_SoundProcessorConfigCount; }
 };

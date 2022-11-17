@@ -35,8 +35,8 @@
 
 //App Debugging
 #define STARTUP_DEBUG false
-#define TASK_STACK_SIZE_DEBUG false
-#define HEAP_SIZE_DEBUG false
+#define TASK_STACK_SIZE_DEBUG true
+#define HEAP_SIZE_DEBUG true
 
 //Visualization Debug Messages
 const bool   debugMode = false;

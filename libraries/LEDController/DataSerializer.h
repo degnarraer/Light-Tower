@@ -70,7 +70,6 @@ class DataSerializer: public CommonUtils
 		void DeSerializeJsonToMatchingDataItem(String json)
 		{
 			DeserializationError error = deserializeJson(doc, json.c_str());
-			Serial << json.c_str() << "\n";
 			// Test if parsing succeeds.
 			if (error)
 			{
@@ -130,7 +129,7 @@ class DataSerializer: public CommonUtils
 			}
 		}
 	private:
-		StaticJsonDocument<20000> doc;
+		StaticJsonDocument<10000> doc;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags

@@ -131,12 +131,11 @@ void setup()
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
 
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  5000,   NULL,   configMAX_PRIORITIES - 3,   &TaskMonitorTask,     1 );
-  xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        20000,  NULL,   configMAX_PRIORITIES - 2,   &DataMoverTask,       1 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          10000,  NULL,   configMAX_PRIORITIES - 1,   &SPI_RX_Task,         1 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    30000,  NULL,   configMAX_PRIORITIES - 1,   &VisualizationTask,   0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 3,   &TaskMonitorTask,     1 );
+  xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 2,   &DataMoverTask,       1 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          2000,  NULL,   configMAX_PRIORITIES - 1,   &SPI_RX_Task,         1 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    2000,  NULL,   configMAX_PRIORITIES - 1,   &VisualizationTask,   0 );
   
-  esp_task_wdt_init(30, true);
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU1", "Total PSRAM: %d", ESP.getPsramSize());
@@ -154,7 +153,7 @@ void VisualizationTaskLoop(void * parameter)
   {
     ESP_LOGV("LED_Controller1", "Visualization Loop");  
     m_Scheduler.RunScheduler();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -179,10 +178,12 @@ void TaskMonitorTaskLoop(void * parameter)
     
     if(true == TASK_STACK_SIZE_DEBUG)
     {
-      ESP_LOGI("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
-      ESP_LOGI("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
+      ESP_LOGE("LED_Controller1", "TaskMonitorTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
+      ESP_LOGE("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
+      ESP_LOGE("LED_Controller1", "SPI_RX_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_RX_Task));
+      ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
-    vTaskDelay(10000 / portTICK_PERIOD_MS);
+    vTaskDelay(30000 / portTICK_PERIOD_MS);
   }
 }
 

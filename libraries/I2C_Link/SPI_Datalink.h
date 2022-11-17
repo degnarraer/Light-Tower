@@ -114,7 +114,6 @@ class SPI_Datalink_Master: public SPI_Datalink
 		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
 		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
-		void ProcessTXData(DataItem_t DataItem);
 		size_t m_Queued_Transactions = 0;
 		size_t m_Queued_TransactionsReset = 0;
 		size_t m_DeQueued_Transactions = 0;

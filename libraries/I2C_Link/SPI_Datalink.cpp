@@ -41,15 +41,37 @@ void SPI_Datalink_Master::ProcessDataTXEventQueue()
 {
 	if(NULL != m_DataItems)
 	{
+		if(true == m_TransmitQueuedDataFlag)
+		{
+			TransmitQueuedData();
+		}
+		size_t MessageCount = 0;
+		size_t MaxTransmits = 5;
 		for(int i = 0; i < m_DataItemsCount; ++i)
 		{
 			if(NULL != m_DataItems[i].QueueHandle_TX)
 			{
-				if(uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) > 0)
+				MessageCount += uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX);
+			}
+		}
+		
+		while(MessageCount > 0 && MaxTransmits > 0)
+		{
+			for(int i = 0; i < m_DataItemsCount; ++i)
+			{
+				if(NULL != m_DataItems[i].QueueHandle_TX)
 				{
-					ProcessTXData(m_DataItems[i]);
+					if(uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) > 0)
+					{
+						if ( xQueueReceive(m_DataItems[i].QueueHandle_TX, m_DataItems[i].DataBuffer, portMAX_DELAY) == pdTRUE )
+						{
+							EncodeAndTransmitData(m_DataItems[i].Name, m_DataItems[i].DataType, m_DataItems[i].DataBuffer, m_DataItems[i].Count);
+							--MessageCount;
+						}
+					}
 				}
 			}
+			--MaxTransmits;
 		}
 	}
 }
@@ -92,24 +114,6 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 	++m_Queued_Transactions;
 }
 
-void SPI_Datalink_Master::ProcessTXData(DataItem_t DataItem)
-{
-	if(true == m_TransmitQueuedDataFlag)
-	{
-		TransmitQueuedData();
-	}
-	if(NULL != DataItem.QueueHandle_TX)
-	{
-		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
-		for(int i = 0; i < MessageCount; ++i)
-		{
-			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, portMAX_DELAY) == pdTRUE )
-			{
-				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
-			}
-		}
-	}
-}
 void SPI_Datalink_Slave::Setup_SPI_Slave()
 {
 	ESP_LOGE("SPI_Datalink", "Configuring SPI Slave");
@@ -155,7 +159,6 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 		if(SendBytesSize > 0)
 		{
 			m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SendBytesSize);
-			
 		}
 		else
 		{
