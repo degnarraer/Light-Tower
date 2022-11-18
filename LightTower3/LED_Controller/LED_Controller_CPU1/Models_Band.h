@@ -67,7 +67,7 @@ class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float
     {
       if (true == debugMemory) Serial << "New: ReducedBandsBandPowerModel\n";
     }
-    virtual ~ReducedBandsBandPowerModel(){if (true == debugMemory) Serial << "Delete: ReducedBandsBandPowerModel\n" }
+    virtual ~ReducedBandsBandPowerModel(){if (true == debugMemory) Serial << "Delete: ReducedBandsBandPowerModel\n"; }
 
     //Model
     void UpdateValue()
