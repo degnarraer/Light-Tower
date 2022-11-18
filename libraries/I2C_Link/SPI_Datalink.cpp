@@ -88,8 +88,6 @@ bool SPI_Datalink_Master::End()
 void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
 	size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
-	memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
-	memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
 	size_t PadCount = 0;
@@ -150,14 +148,12 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 			m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentIndex], m_SPI_Slave.size());
 			m_SPI_Slave.pop();
 			++m_DeQueued_Transactions;
-			memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
         }
     }
 	const size_t remained_transactions = m_SPI_Slave.remained();
 	for(size_t q = 0; q < N_SLAVE_QUEUES - remained_transactions; ++q)
 	{
 		size_t CurrentIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
-		memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 		size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 		if(SendBytesSize > 0)
 		{

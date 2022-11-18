@@ -149,7 +149,7 @@ void loop()
 void VisualizationTaskLoop(void * parameter)
 {
   ESP_LOGE("LED_Controller1", "Running Task.");
-  for(;;)
+  while(true)
   {
     ESP_LOGV("LED_Controller1", "Visualization Loop");  
     m_Scheduler.RunScheduler();
@@ -160,7 +160,7 @@ void VisualizationTaskLoop(void * parameter)
 void SPI_RX_TaskLoop(void * parameter)
 {
   ESP_LOGE("LED_Controller1", "Running Task.");
-  for(;;)
+  while(true)
   {
     m_SPIDataLinkSlave.ProcessDataRXEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
@@ -170,7 +170,7 @@ void SPI_RX_TaskLoop(void * parameter)
 void TaskMonitorTaskLoop(void * parameter)
 {
   ESP_LOGE("LED_Controller1", "Running Task.");
-  for(;;)
+  while(true)
   {
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! DataMoverTask: Stack Size Low");
@@ -190,7 +190,7 @@ void TaskMonitorTaskLoop(void * parameter)
 void DataMoverTaskLoop(void * parameter)
 {
   ESP_LOGE("LED_Controller1", "Running Task.");
-  for(;;)
+  while(true)
   {
     ESP_LOGV("LED_Controller1", "Manager Loop"); 
     m_Manager.ProcessEventQueue();
