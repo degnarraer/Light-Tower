@@ -144,13 +144,13 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 	const size_t received_transactions = m_SPI_Slave.available();
     for (size_t q = 0; q < received_transactions; ++q)
 	{
-		size_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 		if(NULL != m_Notifiee)
 		{
+			size_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 			m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentIndex], m_SPI_Slave.size());
 			m_SPI_Slave.pop();
-			memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 			++m_DeQueued_Transactions;
+			memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
         }
     }
 	const size_t remained_transactions = m_SPI_Slave.remained();
@@ -162,12 +162,13 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 		if(SendBytesSize > 0)
 		{
 			m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SendBytesSize);
+			++m_Queued_Transactions;
 		}
 		else
 		{
 			m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+			++m_Queued_Transactions;
 		}
-		++m_Queued_Transactions;
 	}
 }
 
