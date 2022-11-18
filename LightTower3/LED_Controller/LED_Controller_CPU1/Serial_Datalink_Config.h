@@ -57,7 +57,10 @@ class SPIDataLinkSlave: public NamedItem
       String ResultString;
       if(NULL != RXBuffer && BytesReceived > 0)
       {
-        ResultString = String((char*)RXBuffer);
+        for (int i = 0; i < BytesReceived; i++) 
+        { 
+          ResultString += RXBuffer[i];
+        } 
         ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
         DeSerializeJsonToMatchingDataItem(ResultString.c_str());
         
