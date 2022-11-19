@@ -18,7 +18,9 @@
 
 #ifndef Bluetooth_Device_H
 #define Bluetooth_Device_H 
+#define BT_COMPATIBLE_DEVICE_TIMEOUT 5000
 
+#include <vector> 
 #include <Arduino.h>
 #include <Helpers.h>
 #include <BluetoothA2DPSink.h>
@@ -27,7 +29,14 @@
 class Bluetooth_Source: public NamedItem
 					  , public CommonUtils
 					  , public QueueController
+					  , public BTCompatibleDeviceFoundCallee
 {
+	struct ActiveCompatibleDevices_t
+	{
+		CompatibleBTDevice_t CompatibleBTDevice;
+		unsigned long LastUpdateTime;
+	};
+	
 	public:
 		Bluetooth_Source( String Title
 						, BluetoothA2DPSource& BTSource
@@ -44,6 +53,8 @@ class Bluetooth_Source: public NamedItem
 			m_BTSource.set_reset_ble(true);
 			m_BTSource.set_auto_reconnect(false);
 			m_BTSource.set_ssp_enabled(false);
+			m_BTSource.set_BT_compatible_device_found_callback(this);
+			xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask);
 			m_BTSource.set_local_name("LED Tower of Power");
 			m_BTSource.set_task_priority(configMAX_PRIORITIES - 0);
 		}
@@ -59,10 +70,61 @@ class Bluetooth_Source: public NamedItem
 		{
 		}
 		bool IsConnected() {return m_BTSource.is_connected();}
+		
+		//BT Compatible Device Found Callback
+		void compatible_device_found(CompatibleBTDevice_t compatible_bt_device)
+		{
+			bool Found = false;
+			for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+			{
+				if(0 == m_ActiveCompatibleDevices[i].CompatibleBTDevice.name.compare(compatible_bt_device.name))
+				{
+					Found = true;
+					m_ActiveCompatibleDevices[i].LastUpdateTime = millis();
+					m_ActiveCompatibleDevices[i].CompatibleBTDevice.rssi = compatible_bt_device.rssi;
+					break;
+				}
+			}
+			if(false == Found)
+			{
+				ActiveCompatibleDevices_t NewDevice;
+				NewDevice.CompatibleBTDevice = compatible_bt_device;
+				NewDevice.LastUpdateTime = millis();
+				m_ActiveCompatibleDevices.push_back(NewDevice);
+			}	
+		}
+		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
+		{
+			Bluetooth_Source* BT_Source = (Bluetooth_Source*)Parameters;
+			BT_Source->CompatibleDeviceTrackerTaskLoop();
+		}
+		void CompatibleDeviceTrackerTaskLoop()
+		{
+			while(true)
+			{
+				unsigned long CurrentTime = millis();
+				for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+				{
+					if(CurrentTime - m_ActiveCompatibleDevices[i].LastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
+					{
+						m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
+						break;
+					}
+				}
+				ESP_LOGE("Bluetooth_Device",  "**************DEVICES**************");
+				for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+				{
+					ESP_LOGE("Bluetooth_Device", "Device name: %s Device rssi: %i", m_ActiveCompatibleDevices[i].CompatibleBTDevice.name.c_str(), m_ActiveCompatibleDevices[i].CompatibleBTDevice.rssi);
+				}
+				vTaskDelay(500 / portTICK_PERIOD_MS);
+			}
+		}
 	private:
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_callback = NULL;
 		const char *mp_SourceName;
+		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
+		TaskHandle_t CompatibleDeviceTrackerTask;
 };
 
 class Bluetooth_Sink_Callback

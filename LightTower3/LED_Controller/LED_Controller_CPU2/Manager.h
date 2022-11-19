@@ -47,7 +47,7 @@ class Manager: public NamedItem
     
     //I2S_Device_Callback
     void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
-  
+
   private:
     Sound_Processor &m_SoundProcessor;
     SPIDataLinkMaster &m_SPIDataLinkMaster;

@@ -28,6 +28,6 @@
 #define AMPLITUDE_BUFFER_FRAME_COUNT    441
 
 
-#define TASK_STACK_SIZE_DEBUG           true
+#define TASK_STACK_SIZE_DEBUG           false
 
 #endif TUNES_H

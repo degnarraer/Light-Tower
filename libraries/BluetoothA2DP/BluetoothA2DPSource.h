@@ -45,6 +45,20 @@ extern "C" int32_t ccall_get_data_default(uint8_t *data, int32_t len) ;
  * @copyright Apache License Version 2
  */
 
+struct CompatibleBTDevice_t
+{
+	std::string name;
+	int32_t rssi;
+};
+
+class BTCompatibleDeviceFoundCallee
+{
+	public:
+		BTCompatibleDeviceFoundCallee(){}
+		virtual ~BTCompatibleDeviceFoundCallee(){}
+		virtual void compatible_device_found(CompatibleBTDevice_t device) = 0;
+};
+
 class BluetoothA2DPSource : public BluetoothA2DPCommon {
   friend void ccall_bt_av_hdl_stack_evt(uint16_t event, void *p_param);
   friend void ccall_bt_app_task_handler(void *arg);
@@ -65,6 +79,10 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
 
     /// Destructor
     ~BluetoothA2DPSource();
+
+	void set_BT_compatible_device_found_callback(BTCompatibleDeviceFoundCallee *cb){
+		bt_compatible_device_found_callee = cb;
+	}
 
     /// activate Secure Simple Pairing 
     virtual void set_ssp_enabled(bool active){
@@ -192,6 +210,9 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     // volume 
     uint8_t volume_value = 0;
     bool is_volume_used = false;
+	
+	//Compatible Device Callee
+	BTCompatibleDeviceFoundCallee *bt_compatible_device_found_callee = NULL;
 
 #ifdef CURRENT_ESP_IDF
     esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap;

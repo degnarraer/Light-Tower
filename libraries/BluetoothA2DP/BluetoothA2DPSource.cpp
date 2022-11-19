@@ -412,6 +412,13 @@ void BluetoothA2DPSource::filter_inquiry_scan_result(esp_bt_gap_cb_param_t *para
 			for (const char* name : bt_names)
 			{
 				int len = strlen(name);
+				if(NULL != bt_compatible_device_found_callee)
+				{
+					CompatibleBTDevice_t compatible_device;
+					compatible_device.name = (char *)s_peer_bdname;
+					compatible_device.rssi = rssi;
+					bt_compatible_device_found_callee->compatible_device_found(compatible_device);
+				}
 				ESP_LOGI(BT_AV_TAG, "--Checking match: %s", name);
 				if (strncmp((char *)s_peer_bdname, name, len) == 0) {
 					this->bt_name = (char *) s_peer_bdname;
