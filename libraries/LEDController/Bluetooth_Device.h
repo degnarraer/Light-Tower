@@ -29,11 +29,11 @@
 class Bluetooth_Source: public NamedItem
 					  , public CommonUtils
 					  , public QueueController
-					  , public BTCompatibleDeviceFoundCallee
 {
 	struct ActiveCompatibleDevices_t
 	{
-		CompatibleBTDevice_t CompatibleBTDevice;
+		std::string Name;
+		int32_t Rssi;
 		unsigned long LastUpdateTime;
 	};
 	
@@ -53,42 +53,61 @@ class Bluetooth_Source: public NamedItem
 			m_BTSource.set_reset_ble(true);
 			m_BTSource.set_auto_reconnect(false);
 			m_BTSource.set_ssp_enabled(false);
-			m_BTSource.set_BT_compatible_device_found_callback(this);
 			xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask);
 			m_BTSource.set_local_name("LED Tower of Power");
 			m_BTSource.set_task_priority(configMAX_PRIORITIES - 0);
 		}
-		void SetCallback(music_data_cb_t callback)
+		void SetMusicDataCallback(music_data_cb_t callback)
 		{
-			m_callback = callback;
-		}			
+			m_MusicDataCallback = callback;
+		}
+		void Set_SSID_Is_Valid_Callback(ssid_is_valid_cb_t callback)
+		{
+			m_SSID_Is_Valid_Callback = callback;
+		}
 		void StartDevice()
 		{
-			m_BTSource.start_raw(mp_SourceName, m_callback);
+			m_BTSource.start_raw(m_SSID_Is_Valid_Callback, m_MusicDataCallback);
 		}
 		void StopDevice()
 		{
 		}
 		bool IsConnected() {return m_BTSource.is_connected();}
 		
-		//BT Compatible Device Found Callback
-		void compatible_device_found(CompatibleBTDevice_t compatible_bt_device)
+		//Callback from BT Source for compatible devices to connect to
+		bool ConnectToThisDevice(const char* ssid, int32_t rssi)
+		{
+			compatible_device_found(ssid, rssi);
+			return String(mp_SourceName).equals(String(ssid));
+		}
+	private:
+	
+		BluetoothA2DPSource& m_BTSource;
+		music_data_cb_t m_MusicDataCallback = NULL;
+		ssid_is_valid_cb_t m_SSID_Is_Valid_Callback = NULL;
+		const char *mp_SourceName;
+		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
+		TaskHandle_t CompatibleDeviceTrackerTask;
+		
+		void compatible_device_found(const char* ssid, int32_t rssi)
 		{
 			bool Found = false;
+			String SSID = String(ssid);
 			for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 			{
-				if(0 == m_ActiveCompatibleDevices[i].CompatibleBTDevice.name.compare(compatible_bt_device.name))
+				if(0 == m_ActiveCompatibleDevices[i].Name.compare(SSID.c_str()))
 				{
 					Found = true;
 					m_ActiveCompatibleDevices[i].LastUpdateTime = millis();
-					m_ActiveCompatibleDevices[i].CompatibleBTDevice.rssi = compatible_bt_device.rssi;
+					m_ActiveCompatibleDevices[i].Rssi = rssi;
 					break;
 				}
 			}
 			if(false == Found)
 			{
 				ActiveCompatibleDevices_t NewDevice;
-				NewDevice.CompatibleBTDevice = compatible_bt_device;
+				NewDevice.Name = SSID.c_str();
+				NewDevice.Rssi = rssi;
 				NewDevice.LastUpdateTime = millis();
 				m_ActiveCompatibleDevices.push_back(NewDevice);
 			}	
@@ -111,20 +130,14 @@ class Bluetooth_Source: public NamedItem
 						break;
 					}
 				}
-				ESP_LOGE("Bluetooth_Device",  "**************DEVICES**************");
+				if(0 < m_ActiveCompatibleDevices.size())ESP_LOGE("Bluetooth_Device",  "**************DEVICES**************");
 				for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 				{
-					ESP_LOGE("Bluetooth_Device", "Device name: %s Device rssi: %i", m_ActiveCompatibleDevices[i].CompatibleBTDevice.name.c_str(), m_ActiveCompatibleDevices[i].CompatibleBTDevice.rssi);
+					ESP_LOGE("Bluetooth_Device", "Device name: %s Device rssi: %i", m_ActiveCompatibleDevices[i].Name.c_str(), m_ActiveCompatibleDevices[i].Rssi);
 				}
 				vTaskDelay(500 / portTICK_PERIOD_MS);
 			}
 		}
-	private:
-		BluetoothA2DPSource& m_BTSource;
-		music_data_cb_t m_callback = NULL;
-		const char *mp_SourceName;
-		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
-		TaskHandle_t CompatibleDeviceTrackerTask;
 };
 
 class Bluetooth_Sink_Callback

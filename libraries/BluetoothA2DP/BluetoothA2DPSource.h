@@ -25,6 +25,7 @@ typedef void (* bt_app_cb_t) (uint16_t event, void *param);
 typedef  int32_t (* music_data_cb_t) (uint8_t *data, int32_t len);
 typedef  int32_t (* music_data_channels_cb_t) (Frame *data, int32_t len);
 typedef void (* bt_app_copy_cb_t) (app_msg_t *msg, void *p_dest, void *p_src);
+typedef bool (* ssid_is_valid_cb_t) (const char* ssid, int32_t rssi);
 
 extern "C" void ccall_bt_av_hdl_stack_evt(uint16_t event, void *p_param);
 extern "C" void ccall_bt_app_task_handler(void *arg);
@@ -44,20 +45,6 @@ extern "C" int32_t ccall_get_data_default(uint8_t *data, int32_t len) ;
  * @author Phil Schatzmann
  * @copyright Apache License Version 2
  */
-
-struct CompatibleBTDevice_t
-{
-	std::string name;
-	int32_t rssi;
-};
-
-class BTCompatibleDeviceFoundCallee
-{
-	public:
-		BTCompatibleDeviceFoundCallee(){}
-		virtual ~BTCompatibleDeviceFoundCallee(){}
-		virtual void compatible_device_found(CompatibleBTDevice_t device) = 0;
-};
 
 class BluetoothA2DPSource : public BluetoothA2DPCommon {
   friend void ccall_bt_av_hdl_stack_evt(uint16_t event, void *p_param);
@@ -79,10 +66,6 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
 
     /// Destructor
     ~BluetoothA2DPSource();
-
-	void set_BT_compatible_device_found_callback(BTCompatibleDeviceFoundCallee *cb){
-		bt_compatible_device_found_callee = cb;
-	}
 
     /// activate Secure Simple Pairing 
     virtual void set_ssp_enabled(bool active){
@@ -111,11 +94,15 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
      * @param callback: function that provides the audio stream as array of Frame
      * @param is_ssp_enabled: Flag to activate Secure Simple Pairing 
      */
-    virtual void start(const char* name, music_data_channels_cb_t callback = NULL);
+    virtual void start(const char* name, music_data_channels_cb_t music_data_channels_callback = NULL);
 
+	/// starts the bluetooth source with empty name and calls callback for each compatible device found
+	virtual void start(ssid_is_valid_cb_t ssid_is_valid_callBack, music_data_channels_cb_t music_data_channels_callback = NULL);
+	
     /// starts the bluetooth source. Supports multiple alternative names
-    virtual void start(std::vector<const char*> names, music_data_channels_cb_t callback = NULL);
+    virtual void start(std::vector<const char*> names, music_data_channels_cb_t music_data_channels_callback = NULL);
 
+	
     /**
      * @brief starts the bluetooth source 
      * 
@@ -125,10 +112,13 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
      * from PCM data normally formatted as 44.1kHz sampling rate, two-channel 16-bit sample data
      *  @param is_ssp_enabled: Flag to activate Secure Simple Pairing 
      */ 
-    virtual void start_raw(const char* name, music_data_cb_t callback = NULL);
+    virtual void start_raw(const char* name, music_data_cb_t music_data_callback = NULL);
+
+	/// start_raw the bluetooth source with empty name and calls callback for each compatible device found
+	virtual void start_raw(ssid_is_valid_cb_t ssid_is_valid_callBack, music_data_cb_t music_data_callback = NULL);
 
     /// start_raw which supports multiple alternative names
-    virtual void start_raw(std::vector<const char*> names, music_data_cb_t callback = NULL);
+    virtual void start_raw(std::vector<const char*> names, music_data_cb_t music_data_callback = NULL);
 
 
     /// Defines the pin code. If nothing is defined we use "1234"
@@ -206,14 +196,14 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     bool nvs_init = true;
     bool reset_ble = true;
     music_data_cb_t data_stream_callback;
-
+	
     // volume 
     uint8_t volume_value = 0;
     bool is_volume_used = false;
 	
-	//Compatible Device Callee
-	BTCompatibleDeviceFoundCallee *bt_compatible_device_found_callee = NULL;
-
+	//Compatible Device is valid callback
+	ssid_is_valid_cb_t ssid_is_valid_check_callback;
+	
 #ifdef CURRENT_ESP_IDF
     esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap;
 #endif

@@ -50,6 +50,10 @@ int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
   return m_Manager.SetBTTxData(Data, channel_len);
 }
 
+static bool ConnectToThisDevice(const char* ssid, int32_t rssi)
+{
+  return m_BT_Out.ConnectToThisDevice(ssid, rssi);
+}
 void setup() 
 {
   //PC Serial Communication
@@ -65,7 +69,8 @@ void setup()
   
   m_I2S_In.Setup();
   m_BT_Out.Setup();
-  m_BT_Out.SetCallback(SetBTTxData);
+  m_BT_Out.SetMusicDataCallback(SetBTTxData);
+  m_BT_Out.Set_SSID_Is_Valid_Callback(ConnectToThisDevice);
   m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
 
