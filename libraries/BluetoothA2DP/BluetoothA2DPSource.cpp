@@ -145,23 +145,23 @@ void BluetoothA2DPSource::set_pin_code(const char *pin_code, esp_bt_pin_type_t p
     strcpy((char*)this->pin_code, pin_code);
 }
 
-void BluetoothA2DPSource::start(const char* name, music_data_channels_cb_t music_data_channels_callback) {
+void BluetoothA2DPSource::start(const char* name, music_data_channels_cb_t music_data_channels_cb) {
     std::vector<const char*> names = {name};
-    start(names, music_data_channels_callback);
+    start(names, music_data_channels_cb);
 }
 
-void BluetoothA2DPSource::start(ssid_is_valid_cb_t ssid_is_valid_callBack, music_data_channels_cb_t music_data_channels_callback) {
-	ssid_is_valid_check_callback = ssid_is_valid_callBack;
+void BluetoothA2DPSource::start(ssid_to_connect_check_cb_t ssid_to_connect_check_cb, music_data_channels_cb_t music_data_channels_cb) {
+	ssid_to_connect_check_callback = ssid_to_connect_check_cb;
 	std::string name = "";
 	std::vector<const char*> names = {(const char*)name.c_str()};
-    start(names, music_data_channels_callback);
+    start(names, music_data_channels_cb);
 }
 
-void BluetoothA2DPSource::start(std::vector<const char*> names, music_data_channels_cb_t music_data_channels_callback) {
+void BluetoothA2DPSource::start(std::vector<const char*> names, music_data_channels_cb_t music_data_channels_cb) {
     ESP_LOGD(BT_APP_TAG, "%s, ", __func__);
-    if (music_data_channels_callback!=NULL){
+    if (music_data_channels_cb!=NULL){
         // we use the indicated callback
-        this->data_stream_channels_callback = music_data_channels_callback;
+        this->data_stream_channels_callback = music_data_channels_cb;
         start_raw(names, ccall_get_channel_data_wrapper);
     } else {
         // we use the callback which supports write_data
@@ -169,22 +169,22 @@ void BluetoothA2DPSource::start(std::vector<const char*> names, music_data_chann
     }
 }
 
-void BluetoothA2DPSource::start_raw(const char* name, music_data_cb_t music_data_callback) {
+void BluetoothA2DPSource::start_raw(const char* name, music_data_cb_t music_data_cb) {
     std::vector<const char*> names = {name};
-    start_raw(names, music_data_callback);
+    start_raw(names, music_data_cb);
 }
 
-void BluetoothA2DPSource::start_raw(ssid_is_valid_cb_t ssid_is_valid_callBack, music_data_cb_t music_data_callback) {
-	ssid_is_valid_check_callback = ssid_is_valid_callBack;
+void BluetoothA2DPSource::start_raw(ssid_to_connect_check_cb_t ssid_to_connect_check_cb, music_data_cb_t music_data_cb) {
+	ssid_to_connect_check_callback = ssid_to_connect_check_cb;
 	std::string name = "";
 	std::vector<const char*> names = {(const char*)name.c_str()};
-    start_raw(names, music_data_callback);
+    start_raw(names, music_data_cb);
 }
 
-void BluetoothA2DPSource::start_raw(std::vector<const char*> names, music_data_cb_t music_data_callback) {
+void BluetoothA2DPSource::start_raw(std::vector<const char*> names, music_data_cb_t music_data_cb) {
     ESP_LOGD(BT_APP_TAG, "%s, ", __func__);
     this->bt_names = names;
-    this->data_stream_callback = music_data_callback;
+    this->data_stream_callback = music_data_cb;
 
     // get last connection if not available
     if(!has_last_connection()){
@@ -425,9 +425,9 @@ void BluetoothA2DPSource::filter_inquiry_scan_result(esp_bt_gap_cb_param_t *para
 			
 			// If using is valid check callback, ask the callback if the compatible device name is correct
 			// Otherwise check if the compatible device name matches the name at initialization
-			if(NULL != ssid_is_valid_check_callback)
+			if(NULL != ssid_to_connect_check_callback)
 			{
-				found = ssid_is_valid_check_callback((char *)s_peer_bdname, rssi);
+				found = ssid_to_connect_check_callback((char *)s_peer_bdname, rssi);
 			}
 			else
 			{

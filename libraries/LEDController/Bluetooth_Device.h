@@ -61,13 +61,13 @@ class Bluetooth_Source: public NamedItem
 		{
 			m_MusicDataCallback = callback;
 		}
-		void Set_SSID_Is_Valid_Callback(ssid_is_valid_cb_t callback)
+		void Set_SSID_To_Connect_Check_Callback(ssid_to_connect_check_cb_t callback)
 		{
-			m_SSID_Is_Valid_Callback = callback;
+			m_SSID_To_Connect_Check_Callback = callback;
 		}
 		void StartDevice()
 		{
-			m_BTSource.start_raw(m_SSID_Is_Valid_Callback, m_MusicDataCallback);
+			m_BTSource.start_raw(m_SSID_To_Connect_Check_Callback, m_MusicDataCallback);
 		}
 		void StopDevice()
 		{
@@ -75,16 +75,17 @@ class Bluetooth_Source: public NamedItem
 		bool IsConnected() {return m_BTSource.is_connected();}
 		
 		//Callback from BT Source for compatible devices to connect to
-		bool ConnectToThisDevice(const char* ssid, int32_t rssi)
+		bool ConnectToThisSSID(const char* ssid, int32_t rssi)
 		{
 			compatible_device_found(ssid, rssi);
+			Serial << String(mp_SourceName).c_str() << " equals " << String(ssid).c_str() << "\n";
 			return String(mp_SourceName).equals(String(ssid));
 		}
 	private:
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		ssid_is_valid_cb_t m_SSID_Is_Valid_Callback = NULL;
+		ssid_to_connect_check_cb_t m_SSID_To_Connect_Check_Callback = NULL;
 		const char *mp_SourceName;
 		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
 		TaskHandle_t CompatibleDeviceTrackerTask;

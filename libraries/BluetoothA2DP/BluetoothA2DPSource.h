@@ -25,7 +25,7 @@ typedef void (* bt_app_cb_t) (uint16_t event, void *param);
 typedef  int32_t (* music_data_cb_t) (uint8_t *data, int32_t len);
 typedef  int32_t (* music_data_channels_cb_t) (Frame *data, int32_t len);
 typedef void (* bt_app_copy_cb_t) (app_msg_t *msg, void *p_dest, void *p_src);
-typedef bool (* ssid_is_valid_cb_t) (const char* ssid, int32_t rssi);
+typedef bool (* ssid_to_connect_check_cb_t) (const char* ssid, int32_t rssi);
 
 extern "C" void ccall_bt_av_hdl_stack_evt(uint16_t event, void *p_param);
 extern "C" void ccall_bt_app_task_handler(void *arg);
@@ -97,7 +97,7 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     virtual void start(const char* name, music_data_channels_cb_t music_data_channels_callback = NULL);
 
 	/// starts the bluetooth source with empty name and calls callback for each compatible device found
-	virtual void start(ssid_is_valid_cb_t ssid_is_valid_callBack, music_data_channels_cb_t music_data_channels_callback = NULL);
+	virtual void start(ssid_to_connect_check_cb_t ssid_to_connect_check_cb, music_data_channels_cb_t music_data_channels_cb = NULL);
 	
     /// starts the bluetooth source. Supports multiple alternative names
     virtual void start(std::vector<const char*> names, music_data_channels_cb_t music_data_channels_callback = NULL);
@@ -115,7 +115,7 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     virtual void start_raw(const char* name, music_data_cb_t music_data_callback = NULL);
 
 	/// start_raw the bluetooth source with empty name and calls callback for each compatible device found
-	virtual void start_raw(ssid_is_valid_cb_t ssid_is_valid_callBack, music_data_cb_t music_data_callback = NULL);
+	virtual void start_raw(ssid_to_connect_check_cb_t ssid_to_connect_check_cb, music_data_cb_t music_data_cb = NULL);
 
     /// start_raw which supports multiple alternative names
     virtual void start_raw(std::vector<const char*> names, music_data_cb_t music_data_callback = NULL);
@@ -202,7 +202,7 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     bool is_volume_used = false;
 	
 	//Compatible Device is valid callback
-	ssid_is_valid_cb_t ssid_is_valid_check_callback;
+	ssid_to_connect_check_cb_t ssid_to_connect_check_callback;
 	
 #ifdef CURRENT_ESP_IDF
     esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap;
