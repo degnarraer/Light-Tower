@@ -124,7 +124,7 @@ void setup()
   ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequency());
   
   m_BTSink.set_stream_reader(read_data_stream, true);
-  m_BTSink.set_on_data_received(data_received_callback);  
+  //m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
   m_SPIDataLinkSlave.SetupSPIDataLink();
   m_Scheduler.AddTask(m_CalculateFPS);

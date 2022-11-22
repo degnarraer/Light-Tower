@@ -61,7 +61,7 @@ void Manager::UpdateNotificationRegistrationStatus()
 }
 
 //I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len)
 {
 }
 

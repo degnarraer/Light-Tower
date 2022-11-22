@@ -46,7 +46,7 @@ class Manager: public NamedItem
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
     //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
+    void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
 
   private:
     Sound_Processor &m_SoundProcessor;

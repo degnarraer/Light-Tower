@@ -74,7 +74,6 @@ class Bluetooth_Source: public NamedItem
 		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi)
 		{
 			compatible_device_found(ssid, rssi);
-			Serial << String(mp_SourceName).c_str() << " equals " << String(ssid).c_str() << "\n";
 			return String(mp_SourceName).equals(String(ssid));
 		}
 	private:
@@ -198,7 +197,7 @@ class Bluetooth_Sink: public NamedItem
     
   private:
 	Bluetooth_Sink_Callback* m_Callee = NULL;
-	A2DPSimpleExponentialVolumeControl m_VolumeControl;
+	A2DPDefaultVolumeControl m_VolumeControl;
 	BluetoothA2DPSink& m_BTSink;
 	i2s_port_t m_I2S_PORT;
     

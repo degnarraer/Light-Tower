@@ -31,7 +31,10 @@ void Bluetooth_Sink::data_received_callback()
 
 void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
-	m_Callee->BTDataReceived((uint8_t*)data, length);
+	if(NULL != m_Callee)
+	{
+		m_Callee->BTDataReceived((uint8_t*)data, length);
+	}
 }
 
 void Bluetooth_Sink::InstallDevice()
@@ -63,7 +66,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_priority(configMAX_PRIORITIES - 1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
-	m_BTSink.set_volume(200);
+	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice()
