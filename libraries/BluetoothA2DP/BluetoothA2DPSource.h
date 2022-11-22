@@ -25,7 +25,6 @@ typedef void (* bt_app_cb_t) (uint16_t event, void *param);
 typedef  int32_t (* music_data_cb_t) (uint8_t *data, int32_t len);
 typedef  int32_t (* music_data_channels_cb_t) (Frame *data, int32_t len);
 typedef void (* bt_app_copy_cb_t) (app_msg_t *msg, void *p_dest, void *p_src);
-typedef bool (* ssid_to_connect_check_cb_t) (const char* ssid, int32_t rssi);
 
 extern "C" void ccall_bt_av_hdl_stack_evt(uint16_t event, void *p_param);
 extern "C" void ccall_bt_app_task_handler(void *arg);
@@ -74,12 +73,12 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
 
     /// activate / deactivate the automatic reconnection to the last address (per default this is on)
     virtual void set_auto_reconnect(bool active){
-      this->is_auto_reconnect = active;
+      this->reconnect_status = active ? AutoReconnect:NoReconnect;
     }
 
     /// automatically tries to reconnect to the indicated address
     virtual void set_auto_reconnect(esp_bd_addr_t addr){
-      this->is_auto_reconnect = true;
+      set_auto_reconnect(true);
     	memcpy(last_connection,addr,ESP_BD_ADDR_LEN);
     }
 
@@ -92,17 +91,18 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
      * @brief starts the bluetooth source
      * @param name: Bluetooth name of the device to connect to
      * @param callback: function that provides the audio stream as array of Frame
-     * @param is_ssp_enabled: Flag to activate Secure Simple Pairing 
      */
-    virtual void start(const char* name, music_data_channels_cb_t music_data_channels_callback = NULL);
+    virtual void start(const char* name, music_data_channels_cb_t callback = NULL);
 
-	/// starts the bluetooth source with empty name and calls callback for each compatible device found
-	virtual void start(ssid_to_connect_check_cb_t ssid_to_connect_check_cb, music_data_channels_cb_t music_data_channels_cb = NULL);
-	
+    /// Starts w/o indicating the name. Connections will be managed via set_ssid_callback()
+    virtual void start(music_data_channels_cb_t callback = NULL) {
+        std::vector<const char*> names; // empty vector
+        start(names, callback);
+    }
+
     /// starts the bluetooth source. Supports multiple alternative names
-    virtual void start(std::vector<const char*> names, music_data_channels_cb_t music_data_channels_callback = NULL);
+    virtual void start(std::vector<const char*> names, music_data_channels_cb_t callback = NULL);
 
-	
     /**
      * @brief starts the bluetooth source 
      * 
@@ -112,13 +112,16 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
      * from PCM data normally formatted as 44.1kHz sampling rate, two-channel 16-bit sample data
      *  @param is_ssp_enabled: Flag to activate Secure Simple Pairing 
      */ 
-    virtual void start_raw(const char* name, music_data_cb_t music_data_callback = NULL);
+    virtual void start_raw(const char* name, music_data_cb_t callback = NULL);
 
-	/// start_raw the bluetooth source with empty name and calls callback for each compatible device found
-	virtual void start_raw(ssid_to_connect_check_cb_t ssid_to_connect_check_cb, music_data_cb_t music_data_cb = NULL);
-
+	/// Starts w/o indicating the name. Connections will be managed via set_ssid_callback()
+    virtual void start_raw(music_data_cb_t callback = NULL) {
+        std::vector<const char*> names; // empty vector
+        start_raw(names, callback);
+    }
+	
     /// start_raw which supports multiple alternative names
-    virtual void start_raw(std::vector<const char*> names, music_data_cb_t music_data_callback = NULL);
+    virtual void start_raw(std::vector<const char*> names, music_data_cb_t callback = NULL);
 
 
     /// Defines the pin code. If nothing is defined we use "1234"
@@ -149,20 +152,13 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
      */
     virtual void set_reset_ble(bool doInit);
 
-    /// Sets the volume (range 0 - 255)
-    virtual void set_volume(uint8_t volume){
-      ESP_LOGI(BT_AV_TAG, "set_volume: %d", volume);
-      volume_value = volume;
-      is_volume_used = true;
-    }
-        
-    /// Determines the actual volume
-    virtual int get_volume(){
-      return is_volume_used ? volume_value : 0;
-    }
-
     /// callback for data
     virtual int32_t get_data_default(uint8_t *data, int32_t len);
+
+    /// Define callback to be notified about the found ssids
+    void set_ssid_callback(bool(*callback)(const char*ssid, esp_bd_addr_t address, int rrsi)){
+      ssid_callback = callback;
+    }
 
 
   protected:
@@ -177,12 +173,11 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     esp_bt_pin_code_t pin_code;
     uint32_t pin_code_len;
 
-    esp_bd_addr_t s_peer_bda;
     uint8_t s_peer_bdname[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
     int s_a2d_state=0; // Next Target Connection State
     int s_media_state=0;
     int s_intv_cnt=0;
-    int s_connecting_intv;
+    int s_connecting_heatbeat_count;
     uint32_t s_pkt_cnt;
     TimerHandle_t s_tmr;
     xQueueHandle s_bt_app_task_queue = nullptr;
@@ -190,21 +185,16 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     // support for raw data
     SoundData *sound_data = nullptr;
     int32_t sound_data_current_pos = 0;
-    bool hasSoundData = false;
+    bool has_sound_data_flag = false;
 
     // initialization
     bool nvs_init = true;
     bool reset_ble = true;
     music_data_cb_t data_stream_callback;
-	
-    // volume 
-    uint8_t volume_value = 0;
-    bool is_volume_used = false;
-	
-	//Compatible Device is valid callback
-	ssid_to_connect_check_cb_t ssid_to_connect_check_callback;
-	
-#ifdef CURRENT_ESP_IDF
+
+    bool(*ssid_callback)(const char*ssid, esp_bd_addr_t address, int rrsi) = nullptr;
+
+#ifdef ESP_IDF_4
     esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap;
 #endif
 
@@ -252,7 +242,11 @@ class BluetoothA2DPSource : public BluetoothA2DPCommon {
     /// resets the last connectioin so that we can reconnect
     virtual void reset_last_connection();
 
-#ifdef CURRENT_ESP_IDF
+    virtual esp_err_t esp_a2d_connect(esp_bd_addr_t peer) {
+        return esp_a2d_source_connect(peer);
+    }
+
+#ifdef ESP_IDF_4
     void bt_av_notify_evt_handler(uint8_t event, esp_avrc_rn_param_t *param);
     void bt_av_volume_changed(void);
 #endif

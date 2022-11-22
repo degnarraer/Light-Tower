@@ -15,6 +15,7 @@
 
 #pragma once
 #include "BluetoothA2DPCommon.h"
+#include "freertos/ringbuf.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,12 +36,13 @@ extern "C" void ccall_app_a2d_callback(esp_a2d_cb_event_t event, esp_a2d_cb_para
 extern "C" void ccall_app_rc_ct_callback(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param);
 extern "C" void ccall_app_gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
 extern "C" void ccall_app_task_handler(void *arg);
+extern "C" void ccall_i2s_task_handler(void *arg);
 extern "C" void ccall_audio_data_callback(const uint8_t *data, uint32_t len);
 extern "C" void ccall_av_hdl_stack_evt(uint16_t event, void *p_param);
 extern "C" void ccall_av_hdl_a2d_evt(uint16_t event, void *p_param);
 extern "C" void ccall_av_hdl_avrc_evt(uint16_t event, void *p_param);
 
-#ifdef CURRENT_ESP_IDF
+#ifdef ESP_IDF_4
 extern "C" void ccall_app_rc_tg_callback(esp_avrc_tg_cb_event_t event, esp_avrc_tg_cb_param_t *param);
 extern "C" void ccall_av_hdl_avrc_tg_evt(uint16_t event, void *p_param);
 #endif    
@@ -66,6 +68,8 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     friend void ccall_app_gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
     /// task handler
     friend void ccall_app_task_handler(void *arg);
+    /// task hander for i2s 
+    friend void ccall_i2s_task_handler(void *arg);
     /// Callback for music stream 
     friend void ccall_audio_data_callback(const uint8_t *data, uint32_t len);
     /// av event handler
@@ -75,7 +79,7 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     /// avrc event handler 
     friend void ccall_av_hdl_avrc_evt(uint16_t event, void *p_param);
 
-#ifdef CURRENT_ESP_IDF
+#ifdef ESP_IDF_4
 
     /// handle esp_avrc_tg_cb_event_t
     friend void ccall_app_rc_tg_callback(esp_avrc_tg_cb_event_t event, esp_avrc_tg_cb_param_t *param);
@@ -129,14 +133,6 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     /// Define callback which is called when we receive data
     virtual void set_on_data_received(void (*callBack)());
     
-    // /// Obsolete: please use set_on_connection_state_changed - Set the callback that is called when the BT device is connected
-    // DEPRECATED
-    // virtual void set_on_connected2BT(void (*callBack)());
-    
-    // /// Obsolete: please use set_on_connection_state_changed - Set the callback that is called when the BT device is dis_connected
-    // DEPRECATED
-    // virtual void set_on_dis_connected2BT(void (*callBack)());
-
     /// Allows you to reject unauthorized addresses
     virtual void set_address_validator(bool (*callBack)(esp_bd_addr_t remote_bda)){
         address_validator = callBack;
@@ -171,7 +167,9 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
         set_mono_downmix(channels==I2S_CHANNEL_MONO);
     }
     /// mix stereo into single mono signal
-    virtual void set_mono_downmix(bool enabled) { mono_downmix = enabled; }
+    virtual void set_mono_downmix(bool enabled) {
+        volume_control()->set_mono_downmix(enabled);
+    }
     /// Defines the bits per sample for output (if > 16 output will be expanded)
     virtual void set_bits_per_sample(int bps) { i2s_config.bits_per_sample = (i2s_bits_per_sample_t) bps; }
     
@@ -206,22 +204,65 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     }
 
     /// Defines the number of times that the system tries to automatically reconnect to the last system
-    virtual void set_auto_reconnect(bool reconnect, bool afterNormalDisconnect=false, int count=AUTOCONNECT_TRY_NUM ){
-        is_auto_reconnect = reconnect;
-        reconnect_on_normal_disconnect = afterNormalDisconnect;
+    virtual void set_auto_reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM ){
+        reconnect_status = reconnect ? AutoReconnect : NoReconnect;
         try_reconnect_max_count = count;
     }
-    
 
- #ifdef CURRENT_ESP_IDF
+    /// Provides the address of the connected device
+    virtual esp_bd_addr_t* get_current_peer_address() {
+        return &peer_bd_addr;
+    }
+
+    /// Defines the queue size of the event task 
+    void set_event_queue_size(int size){
+        event_queue_size = size;
+    }
+
+    /// Defines the stack size of the event task (in bytes)
+    void set_event_stack_size(int size){
+        event_stack_size = size;
+    }
+
+
+    /// Activates the rssi reporting
+    void set_rssi_active(bool active){
+        rssi_active = active;
+    }
+
+    /// provides the last rssi parameters
+    esp_bt_gap_cb_param_t::read_rssi_delta_param get_last_rssi() {
+        return last_rssi_delta;
+    }
+
+    /// Defines the callback that is called when we get an new rssi value
+    void set_rssi_callback(void (*callback)(esp_bt_gap_cb_param_t::read_rssi_delta_param &rssi)){
+        rssi_callbak = callback;
+    }
+
+    /// Defines the delay that is added to delay the startup when we automatically reconnect
+    void set_reconnect_delay(int delay){
+        reconnect_delay = delay;
+    }
+
+ #ifdef ESP_IDF_4
     /// Get the name of the connected source device
     virtual const char* get_connected_source_name();
+    /// Provides the result of the last result for the esp_avrc_tg_get_rn_evt_cap() callback (Available from ESP_IDF_4)
+    bool is_avrc_peer_rn_cap(esp_avrc_rn_event_ids_t cmd) {
+        return esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST, &s_avrc_peer_rn_cap, cmd);
+    }
+    /// Returns true if the is_avrc_peer_rn_cap() method can be called
+    bool is_avrc_peer_rn_cap_available() {
+        return s_avrc_peer_rn_cap.bits != 0;
+    }
  #endif
 
   protected:
     // protected data
     xQueueHandle app_task_queue = nullptr;
     xTaskHandle app_task_handle = nullptr;
+
     i2s_config_t i2s_config;
     i2s_pin_config_t pin_config;    
     const char * bt_name = nullptr;
@@ -231,15 +272,12 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     char pin_code_str[20] = {0};
     bool is_i2s_output = true;
     bool player_init = false;
-    bool mono_downmix = false;
     i2s_channel_t i2s_channels = I2S_CHANNEL_STEREO;
     i2s_port_t i2s_port = I2S_NUM_0; 
     int connection_rety_count = 0;
-    esp_bd_addr_t peer_bd_addr = {0};
     static const esp_spp_mode_t esp_spp_mode = ESP_SPP_MODE_CB;
     _lock_t s_volume_lock;
     uint8_t s_volume = 0;
-    bool is_volume_used = false;
     bool s_volume_notify;
     int pin_code_int = 0;
     PinCodeRequest pin_code_request = Undefined;
@@ -255,10 +293,16 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     void (*sample_rate_callback)(uint16_t rate)=nullptr;
     bool swap_left_right = false;
     int try_reconnect_max_count = AUTOCONNECT_TRY_NUM;
-    bool reconnect_on_normal_disconnect = false;
-    bool end_in_progress = false;
+    int event_queue_size = 20;
+    int event_stack_size = 3072;
+   
+    // RSSI support
+    esp_bt_gap_cb_param_t::read_rssi_delta_param last_rssi_delta;
+    bool rssi_active = false;
+    void (*rssi_callbak)(esp_bt_gap_cb_param_t::read_rssi_delta_param &rssi) = nullptr;
+    int reconnect_delay = 1000;
 
-#ifdef CURRENT_ESP_IDF
+#ifdef ESP_IDF_4
     esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap;
     char remote_name[ESP_BT_GAP_MAX_BDNAME_LEN + 1];
 #endif
@@ -282,7 +326,9 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     }
 
     virtual bool is_reconnect(esp_a2d_disc_rsn_t type) {
-        return reconnect_on_normal_disconnect || type==ESP_A2D_DISC_RSN_ABNORMAL;
+        bool result = is_autoreconnect_allowed && (reconnect_status==AutoReconnect || reconnect_status==IsReconnecting) && has_last_connection();
+        ESP_LOGI(BT_AV_TAG,"is_reconnect: %s", result ? "true":"false");
+        return result;
     }
 
     /**
@@ -311,7 +357,7 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
     virtual void handle_audio_cfg(uint16_t event, void *p_param);
 
 
-#ifdef CURRENT_ESP_IDF
+#ifdef ESP_IDF_4
     virtual void volume_set_by_local_host(uint8_t volume);
     virtual void volume_set_by_controller(uint8_t volume);
     virtual void av_notify_evt_handler(uint8_t& event_id, esp_avrc_rn_param_t& event_parameter);
@@ -320,8 +366,26 @@ class BluetoothA2DPSink : public BluetoothA2DPCommon {
 #else
     virtual void av_notify_evt_handler(uint8_t event_id, uint32_t event_parameter);
 #endif    
-        
+
+    /// output audio data e.g. to i2s or to queue
+    virtual size_t write_audio(const uint8_t *data, size_t size){
+        return i2s_write_data(data, size);
+    }
+
+    /// dummy functions needed for BluetoothA2DPSinkQueued
+    virtual void i2s_task_handler(void *arg) {}
+    virtual void bt_i2s_task_start_up(void) {}
+    virtual void bt_i2s_task_shut_down(void) {}
+
+    /// writes the data to i2s
+    size_t i2s_write_data(const uint8_t* data, size_t item_size);
+
+    virtual esp_err_t esp_a2d_connect(esp_bd_addr_t peer) {
+        return esp_a2d_sink_connect(peer);
+    }
+
 };
+
 
 
 #ifdef __cplusplus

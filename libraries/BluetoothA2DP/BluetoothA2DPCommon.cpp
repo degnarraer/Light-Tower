@@ -24,16 +24,52 @@ esp_a2d_connection_state_t BluetoothA2DPCommon::get_connection_state() {
 }
 
 
+/// activate / deactivate the automatic reconnection to the last address (per default this is on)
+void BluetoothA2DPCommon::set_auto_reconnect(bool active){
+    this->reconnect_status = active ? AutoReconnect:NoReconnect;
+}
+
+/// Reconnects to the last device
+bool BluetoothA2DPCommon::reconnect() {
+    is_autoreconnect_allowed = true;
+    reconnect_status = IsReconnecting;
+    reconnect_timout = millis() + default_reconnect_timout;
+    return connect_to(peer_bd_addr);
+}
+
+bool BluetoothA2DPCommon::connect_to(esp_bd_addr_t peer){
+    ESP_LOGW(BT_AV_TAG, "connect_to to %s", to_str(last_connection));
+    set_scan_mode_connectable(true);
+    delay(100);
+    esp_err_t err = esp_a2d_connect(peer);
+    if (err!=ESP_OK){
+        ESP_LOGE(BT_AV_TAG, "esp_a2d_source_connect:%d", err);
+    }
+    return err==ESP_OK;
+}
+
+/// Calls disconnect or reconnect
+void BluetoothA2DPCommon::set_connected(bool active){
+    if (active){
+        reconnect();
+    } else {
+        disconnect();
+    }
+}
+
+
+/// Closes the connection
 void BluetoothA2DPCommon::disconnect()
 {
     ESP_LOGI(BT_AV_TAG, "disconect a2d: %s", to_str(last_connection));
+
+    // Prevent automatic reconnect
+    is_autoreconnect_allowed = false;
+
     esp_err_t status = esp_a2d_sink_disconnect(last_connection);
-    if (status == ESP_FAIL)
-    {
+    if (status == ESP_FAIL) {
         ESP_LOGE(BT_AV_TAG, "Failed disconnecting to device!");
     }
-    // reconnect should not work after end
-    clean_last_connection();
 }
 
 
@@ -133,17 +169,15 @@ void BluetoothA2DPCommon::get_last_connection(){
     if (err == ESP_OK) {
         memcpy(last_connection,bda,size);
     } 
-    char bda_str[18];
     ESP_LOGD(BT_AV_TAG, "=> %s", to_str(last_connection));
 
 }
 
 void BluetoothA2DPCommon::set_last_connection(esp_bd_addr_t bda){
     ESP_LOGD(BT_AV_TAG, "set_last_connection: %s", to_str(bda));
-    size_t size = sizeof(esp_bd_addr_t);
 
     //same value, nothing to store
-    if ( memcmp(bda, last_connection, size) == 0 ) {
+    if ( memcmp(bda, last_connection, ESP_BD_ADDR_LEN) == 0 ) {
         ESP_LOGD(BT_AV_TAG, "no change!");
         return; 
     }
@@ -154,7 +188,7 @@ void BluetoothA2DPCommon::set_last_connection(esp_bd_addr_t bda){
     if (err != ESP_OK){
          ESP_LOGE(BT_AV_TAG, "NVS OPEN ERROR");
     }
-    err = nvs_set_blob(my_handle, last_bda_nvs_name(), bda, size);
+    err = nvs_set_blob(my_handle, last_bda_nvs_name(), bda, ESP_BD_ADDR_LEN);
     if (err == ESP_OK) {
         err = nvs_commit(my_handle);
     } else {
@@ -164,7 +198,7 @@ void BluetoothA2DPCommon::set_last_connection(esp_bd_addr_t bda){
         ESP_LOGE(BT_AV_TAG, "NVS COMMIT ERROR");
     }
     nvs_close(my_handle);
-    memcpy(last_connection,bda,size);
+    memcpy(last_connection, bda, ESP_BD_ADDR_LEN);
 }
 
 void BluetoothA2DPCommon::clean_last_connection() {
@@ -173,13 +207,6 @@ void BluetoothA2DPCommon::clean_last_connection() {
     set_last_connection(cleanBda);
 }
 
-void BluetoothA2DPCommon::connect_to_last_device(){
-    ESP_LOGD(BT_AV_TAG, "%s", __func__);
-    esp_err_t status = esp_a2d_sink_connect(last_connection);
-    if ( status == ESP_FAIL ){
-        ESP_LOGE(BT_AV_TAG,"Failed connecting to device!");
-    } 
-}
 
 /// Set the callback that is called when the connection state is changed
 void BluetoothA2DPCommon::set_on_connection_state_changed(void (*callBack)(esp_a2d_connection_state_t state, void*), void* obj){
@@ -188,10 +215,19 @@ void BluetoothA2DPCommon::set_on_connection_state_changed(void (*callBack)(esp_a
 }
 
 /// Set the callback that is called when the audio state is changed
+/// This callback is called before the I2S bus is changed.
 void BluetoothA2DPCommon::set_on_audio_state_changed(void (*callBack)(esp_a2d_audio_state_t state, void*), void* obj){
     audio_state_callback = callBack;
     audio_state_obj = obj;
 }
+
+/// Set the callback that is called after the audio state has changed.
+/// This callback is called after the I2S bus has changed.
+void BluetoothA2DPCommon::set_on_audio_state_changed_post(void (*callBack)(esp_a2d_audio_state_t state, void*), void* obj){
+    audio_state_callback_post = callBack;
+    audio_state_obj_post = obj;
+}
+
 
 /// Prevents that the same method is executed multiple times within the indicated time limit
 void BluetoothA2DPCommon::debounce(void(*cb)(void),int ms){
@@ -227,7 +263,7 @@ const char* BluetoothA2DPCommon::to_str(esp_bd_addr_t bda){
 
 
 
-#ifdef CURRENT_ESP_IDF
+#ifdef ESP_IDF_4
 
 /// Defines if the bluetooth is discoverable
 void BluetoothA2DPCommon::set_discoverability(esp_bt_discovery_mode_t d) {
