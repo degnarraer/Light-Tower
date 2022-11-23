@@ -38,7 +38,7 @@ bool StatisticalEngine::NewSoundDataReady()
   if(PSF_Size > 0)ESP_LOGV("Statistical_Engine", "New Sound Data Messages Waiting: %i", PSF_Size);
   if( 0 < PSF_Size )
   {
-    ESP_LOGV("Statistical_Engine", "New Sound Data Ready");
+    ESP_LOGD("Statistical_Engine", "New Sound Data Ready");
     m_NewSoundDataCurrentTime = currentTime;
     m_NewSoundDataReady = true;
     m_NewSoundDataTimedOut = false;
@@ -46,7 +46,7 @@ bool StatisticalEngine::NewSoundDataReady()
   }
   else if(currentTime - m_NewSoundDataCurrentTime >= m_NewSoundDataTimeOut && false == m_NewSoundDataTimedOut)
   {
-    ESP_LOGE("Statistical_Engine", "New Sound Data Timeout");
+    ESP_LOGW("Statistical_Engine", "New Sound Data Timeout");
     m_NewSoundDataReady = true;
     m_NewSoundDataTimedOut = true;
     return true;
@@ -63,12 +63,12 @@ bool StatisticalEngine::NewBandDataReady()
   unsigned long currentTime = millis();
   size_t R_BANDS_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("R_BANDS"));
   size_t L_BANDS_Size = uxQueueMessagesWaiting(GetQueueHandleRXForDataItem("L_BANDS"));
-  ESP_LOGV("NewBandDataReady", "New Band Sound Data Messages Waiting: %i | %i", R_BANDS_Size, L_BANDS_Size);
+  ESP_LOGD("NewBandDataReady", "New Band Sound Data Messages Waiting: %i | %i", R_BANDS_Size, L_BANDS_Size);
   bool A = R_BANDS_Size > 0;
   bool B = L_BANDS_Size > 0;
   if( true == A && true == B )
   {
-    ESP_LOGV("Statistical_Engine", "NewBandDataReady");
+    ESP_LOGD("Statistical_Engine", "NewBandDataReady");
     m_NewBandDataCurrentTime = currentTime;
     m_NewBandDataReady = true;
     m_NewBandDataTimedOut = false;
@@ -76,7 +76,7 @@ bool StatisticalEngine::NewBandDataReady()
   }
   else if(currentTime - m_NewBandDataCurrentTime >= m_NewBandDataTimeOut && false == m_NewBandDataTimedOut)
   {
-    ESP_LOGE("Statistical_Engine", "New Band Data Timeout");
+    ESP_LOGW("Statistical_Engine", "New Band Data Timeout");
     m_NewBandDataReady = true;
     m_NewBandDataTimedOut = true;
     return true;
@@ -98,7 +98,7 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   bool B = (L_MAXBAND_Size > 0);
   if( true == A && true == B )
   {
-    ESP_LOGV("Statistical_Engine", "New Max Band Sound Data Ready");
+    ESP_LOGD("Statistical_Engine", "New Max Band Sound Data Ready");
     m_NewMaxBandSoundDataCurrentTime = currentTime;
     m_NewMaxBandSoundDataReady = true;
     m_NewMaxBandSoundDataTimedOut = false;
@@ -106,7 +106,7 @@ bool StatisticalEngine::NewMaxBandSoundDataReady()
   }
   else if(currentTime - m_NewMaxBandSoundDataCurrentTime >= m_NewMaxBandSoundDataTimeOut && false == m_NewMaxBandSoundDataTimedOut)
   {
-    ESP_LOGE("Statistical_Engine", "New Max Band Sound Data Timeout");
+    ESP_LOGW("Statistical_Engine", "New Max Band Sound Data Timeout");
     m_NewMaxBandSoundDataReady = true;
     m_NewMaxBandSoundDataTimedOut = true;
     return true;

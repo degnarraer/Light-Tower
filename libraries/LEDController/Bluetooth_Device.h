@@ -47,35 +47,15 @@ class Bluetooth_Source: public NamedItem
 		{
 		}
 		virtual ~Bluetooth_Source(){}
-		void Setup()
-		{
-			m_BTSource.set_nvs_init(true);
-			m_BTSource.set_reset_ble(true);
-			m_BTSource.set_auto_reconnect(false);
-			m_BTSource.set_ssp_enabled(false);
-			xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask);
-			m_BTSource.set_local_name("LED Tower of Power");
-			m_BTSource.set_task_priority(configMAX_PRIORITIES - 0);
-		}
-		void SetMusicDataCallback(music_data_cb_t callback)
-		{
-			m_MusicDataCallback = callback;
-		}
-		void StartDevice()
-		{
-			m_BTSource.start_raw(m_MusicDataCallback);
-		}
-		void StopDevice()
-		{
-		}
-		bool IsConnected() {return m_BTSource.is_connected();}
+		void Setup();
+		void InstallDevice();;
+		void StartDevice();
+		void StopDevice();
+		bool IsConnected();
+		void SetMusicDataCallback(music_data_cb_t callback);
 		
 		//Callback from BT Source for compatible devices to connect to
-		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi)
-		{
-			compatible_device_found(ssid, rssi);
-			return String(mp_SourceName).equals(String(ssid));
-		}
+		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi);
 	private:
 	
 		BluetoothA2DPSource& m_BTSource;
@@ -83,56 +63,11 @@ class Bluetooth_Source: public NamedItem
 		const char *mp_SourceName;
 		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
 		TaskHandle_t CompatibleDeviceTrackerTask;
+		bool m_Is_Running = false;
 		
-		void compatible_device_found(const char* ssid, int32_t rssi)
-		{
-			bool Found = false;
-			String SSID = String(ssid);
-			for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
-			{
-				if(0 == m_ActiveCompatibleDevices[i].Name.compare(SSID.c_str()))
-				{
-					Found = true;
-					m_ActiveCompatibleDevices[i].LastUpdateTime = millis();
-					m_ActiveCompatibleDevices[i].Rssi = rssi;
-					break;
-				}
-			}
-			if(false == Found)
-			{
-				ActiveCompatibleDevices_t NewDevice;
-				NewDevice.Name = SSID.c_str();
-				NewDevice.Rssi = rssi;
-				NewDevice.LastUpdateTime = millis();
-				m_ActiveCompatibleDevices.push_back(NewDevice);
-			}	
-		}
-		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
-		{
-			Bluetooth_Source* BT_Source = (Bluetooth_Source*)Parameters;
-			BT_Source->CompatibleDeviceTrackerTaskLoop();
-		}
-		void CompatibleDeviceTrackerTaskLoop()
-		{
-			while(true)
-			{
-				unsigned long CurrentTime = millis();
-				for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
-				{
-					if(CurrentTime - m_ActiveCompatibleDevices[i].LastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
-					{
-						m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
-						break;
-					}
-				}
-				if(0 < m_ActiveCompatibleDevices.size())ESP_LOGE("Bluetooth_Device",  "**************DEVICES**************");
-				for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
-				{
-					ESP_LOGE("Bluetooth_Device", "Device name: %s Device rssi: %i", m_ActiveCompatibleDevices[i].Name.c_str(), m_ActiveCompatibleDevices[i].Rssi);
-				}
-				vTaskDelay(500 / portTICK_PERIOD_MS);
-			}
-		}
+		void compatible_device_found(const char* ssid, int32_t rssi);
+		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
+		void CompatibleDeviceTrackerTaskLoop();
 };
 
 class Bluetooth_Sink_Callback

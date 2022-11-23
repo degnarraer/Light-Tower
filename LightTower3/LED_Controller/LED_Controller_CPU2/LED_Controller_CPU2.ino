@@ -96,7 +96,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   {
     yield();
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -106,7 +106,7 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     yield();
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 

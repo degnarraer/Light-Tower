@@ -1,0 +1,8 @@
+[submodule "ESP32-A2DP"]
+	path = ESP32-A2DP
+	url = https://github.com/degnarraer/ESP32-A2DP.git
+	branch = main
+[submodule "libraries/ESP32-A2DP"]
+	path = libraries/ESP32-A2DP
+	url = https://github.com/degnarraer/ESP32-A2DP.git
+	branch = main
