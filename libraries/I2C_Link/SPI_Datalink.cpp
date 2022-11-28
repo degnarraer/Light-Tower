@@ -158,13 +158,17 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 			size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 			if(SendBytesSize > 0)
 			{
-				m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SendBytesSize);
-				++m_Queued_Transactions;
+				if(true == m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SendBytesSize))
+				{
+					++m_Queued_Transactions;
+				}
 			}
 			else
 			{
-				m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-				++m_Queued_Transactions;
+				if(true == m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
+				{
+					++m_Queued_Transactions;
+				}
 			}
 		}
 	}

@@ -27,7 +27,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
-                                            , "AL HydraMini" );
+                                            , "JBL Flip 6" );
 
 SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink"
                                                          , SPI1_PIN_SCK
