@@ -137,12 +137,12 @@ class DataSerializer: public CommonUtils
 		}
 		bool AllTagsExist()
 		{
-			JsonVariant FoundObject1 = doc[m_NameTag];
-			JsonVariant FoundObject2 = doc[m_CheckSumTag];
-			JsonVariant FoundObject3 = doc[m_CountTag];
-			JsonVariant FoundObject4 = doc[m_DataTag];
-			JsonVariant FoundObject5 = doc[m_DataTypeTag];
-			JsonVariant FoundObject6 = doc[m_TotalByteCountTag];
+			JsonVarient FoundObject1 = doc[m_NameTag];
+			JsonVarient FoundObject2 = doc[m_CheckSumTag];
+			JsonVarient FoundObject3 = doc[m_CountTag];
+			JsonVarient FoundObject4 = doc[m_DataTag];
+			JsonVarient FoundObject5 = doc[m_DataTypeTag];
+			JsonVarient FoundObject6 = doc[m_TotalByteCountTag];
 			bool result = !(FoundObject1.isNull()) &&
 						  !(FoundObject2.isNull()) &&
 						  !(FoundObject3.isNull()) &&
