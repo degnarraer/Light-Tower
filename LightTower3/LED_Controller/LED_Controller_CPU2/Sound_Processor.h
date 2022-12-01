@@ -54,7 +54,7 @@ class Sound_Processor: public NamedItem
     
     //Adjustments
     float m_Gain = 1.0;
-    float m_FFT_Gain = 1.0;
+    float m_FFT_Gain = 10.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA

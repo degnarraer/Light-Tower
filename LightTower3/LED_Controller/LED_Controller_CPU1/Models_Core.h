@@ -397,4 +397,34 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
     }
 };
 
+class StaticPowerModel: public DataModelWithNewValueNotification<float>
+{
+  public:
+    StaticPowerModel( String Title
+                    , float NormalizedPower
+                    , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+                    : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+                    , m_Result(NormalizedPower)
+    {
+      if (true == debugMemory) Serial << "New: StaticPowerModel\n";
+    }
+    virtual ~StaticPowerModel()
+    {
+      if (true == debugMemory) Serial << "Delete: StaticPowerModel\n";
+    }
+
+    //Model
+    void UpdateValue(){SetCurrentValue(m_Result);}
+
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return false; }
+  private:
+    float m_Result = 0.0;
+    
+    //Model
+    void SetupModel() {}
+    bool CanRunModelTask() { return true; }
+    void RunModelTask(){}
+};
 #endif

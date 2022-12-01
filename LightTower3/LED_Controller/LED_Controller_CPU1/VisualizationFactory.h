@@ -857,6 +857,57 @@ class PowerPerBinTower: public Visualization
   private:
 };
 
+
+//********* TestVisualization *********
+class TestVisualization: public Visualization
+{
+  public:
+    TestVisualization( StatisticalEngineModelInterface &StatisticalEngineModelInterface
+                     , LEDController &LEDController)
+                     : Visualization( StatisticalEngineModelInterface, LEDController)
+    {
+      if (true == debugMemory) Serial << "New: TestVisualization\n";
+    }
+    virtual ~TestVisualization()
+    {
+      if (true == debugMemory) Serial << "Deleted: TestVisualization\n";
+    }
+    
+    //Visualization
+    static Visualization* GetInstance(StatisticalEngineModelInterface &StatisticalEngineModelInterface, LEDController &LEDController)
+    {
+      if (true == debugMemory) Serial << "TestVisualization: Get Instance\n";
+      TestVisualization *vis = new TestVisualization(StatisticalEngineModelInterface, LEDController);
+      return vis;
+    }
+    void SetupVisualization()
+    {
+      int numVisualizations = m_StatisticalEngineModelInterface.GetNumberOfBands();
+      for(int i = 0; i < SCREEN_HEIGHT; ++i)
+      {
+        ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, i, SCREEN_WIDTH, 1);
+        AddNewedView(*sprite, false);
+        AddNewedModel(m_StaticPowerModel);
+        RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, SCREEN_HEIGHT);
+        AddNewedModel(*colorModel);
+        SettableColorPowerModel *settableColorPowerModel = new SettableColorPowerModel("Settable Power Model");
+        AddNewedModel(*settableColorPowerModel);
+        settableColorPowerModel->ConnectColorModel(*colorModel);
+        settableColorPowerModel->ConnectPowerModel(m_StaticPowerModel);
+        sprite->ConnectColorModel(*settableColorPowerModel); 
+      }
+      ColorSpriteView *background = new ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
+      AddNewedView(*background, true);
+    }
+    bool CanRunVisualization()
+    {
+      return true;
+    }
+    void RunVisualization() {}
+  private:
+    StaticPowerModel m_StaticPowerModel = StaticPowerModel("Static Power Model 1", 1.0, m_StatisticalEngineModelInterface);
+};
+
 //********* Rotating 4 Sprites View *********
 class Rotating4Sprites: public Visualization
 {
