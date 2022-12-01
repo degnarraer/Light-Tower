@@ -1,0 +1,118 @@
+/*
+    Light Tower by Rob Shockency
+    Copyright (C) 2020 Rob Shockency degnarraer@yahoo.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef Models_Power_H
+#define Models_Power_H
+
+#include "Models_Core.h"
+
+class SoundPowerModel: public DataModelWithNewValueNotification<float>
+{
+  public:
+    SoundPowerModel( String Title
+                   , unsigned int depth
+                   , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+      : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+      , m_Depth(depth)
+    {
+      if (true == debugMemory) Serial << "New: SoundPowerModel\n";
+    }
+    virtual ~SoundPowerModel()
+    {
+      if (true == debugMemory) Serial << "Delete: SoundPowerModel\n";
+    }
+
+    //Model
+    void UpdateValue()
+    {
+      SetCurrentValue(m_Result);
+    }
+
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() {
+      return false;
+    }
+  private:
+    float m_Result = 0.0;
+    unsigned int m_Depth = 0;
+    unsigned int m_CircularBufferIndex = 0;
+    float m_RunningAverageCircularBuffer[POWER_SAVE_LENGTH] = {0};
+    //Model
+    void SetupModel() {}
+    bool CanRunModelTask() {
+      return true;
+    }
+    void RunModelTask()
+    {
+      int bufferIndex = m_CircularBufferIndex % POWER_SAVE_LENGTH;
+      m_RunningAverageCircularBuffer[bufferIndex] = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
+      float total = 0.0;
+      int count = 0;
+      int depth = m_Depth;
+      if (depth > POWER_SAVE_LENGTH - 1) depth = POWER_SAVE_LENGTH - 1;
+      for (int i = 0; i <= depth; ++i)
+      {
+        int index = bufferIndex + i;
+        if (index <= POWER_SAVE_LENGTH - 1)
+        {
+          total += m_RunningAverageCircularBuffer[index];
+        }
+        else
+        {
+          total += m_RunningAverageCircularBuffer[index - POWER_SAVE_LENGTH];
+        }
+        ++count;
+      }
+      m_Result = total / count;
+      ++m_CircularBufferIndex;
+    }
+};
+
+class StaticPowerModel: public DataModelWithNewValueNotification<float>
+{
+  public:
+    StaticPowerModel( String Title
+                    , float NormalizedPower
+                    , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+                    : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+                    , m_Result(NormalizedPower)
+    {
+      if (true == debugMemory) Serial << "New: StaticPowerModel\n";
+    }
+    virtual ~StaticPowerModel()
+    {
+      if (true == debugMemory) Serial << "Delete: StaticPowerModel\n";
+    }
+
+    //Model
+    void UpdateValue(){SetCurrentValue(m_Result);}
+
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return false; }
+  private:
+    float m_Result = 0.0;
+    
+    //Model
+    void SetupModel() {}
+    bool CanRunModelTask() { return true; }
+    void RunModelTask(){}
+};
+
+#endif
