@@ -13,7 +13,7 @@ void View::AddSubView(View &subView)
 { 
   SubViewClearStruct sVCD;
   sVCD.SubView = &subView;
-  m_SubViewClearStructs.add(sVCD);
+  m_SubViewClearStructs.add(0, sVCD);
   AddTask(subView);
 }
 void View::AddSubView(View &subView, bool clearViewBeforeMerge)
@@ -21,7 +21,7 @@ void View::AddSubView(View &subView, bool clearViewBeforeMerge)
   SubViewClearStruct sVCD;
   sVCD.SubView = &subView;
   sVCD.ClearViewBeforeMerge = clearViewBeforeMerge;
-  m_SubViewClearStructs.add(sVCD);
+  m_SubViewClearStructs.add(0, sVCD);
   AddTask(subView);
 }
 void View::AddSubView(View &subView, bool clearViewBeforeMerge, position x, position y, size width, size height )
@@ -34,7 +34,7 @@ void View::AddSubView(View &subView, bool clearViewBeforeMerge, position x, posi
   sVCS.Y_To_Clear = y;
   sVCS.W_To_Clear = width;
   sVCS.H_To_Clear = height;
-  m_SubViewClearStructs.add(sVCS);
+  m_SubViewClearStructs.add(0, sVCS);
   AddTask(subView);
 }
 CRGB View::GetPixel(int x, int y)
@@ -100,7 +100,7 @@ void View::RunMyPostTask()
 void View::MergeSubViews()
 {
   //Z Order is 1st subview added on top, last subview added on bottom
-  for(int v = m_SubViewClearStructs.size() - 1; v >= 0; --v)
+  for(int v = 0; v < m_SubViewClearStructs.size(); ++v)
   {
     View *subView = m_SubViewClearStructs.get(v).SubView;
     position aX = subView->GetPixelArray()->GetX();

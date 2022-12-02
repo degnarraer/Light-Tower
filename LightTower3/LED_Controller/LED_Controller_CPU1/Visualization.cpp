@@ -101,12 +101,12 @@ void Visualization::AddNewedModel(Model &model)
 void Visualization::AddNewedView(View &view)
 {
   AddSubView(view, true);
-  m_MyNewedViews.add(&view);
+  m_MyNewedViews.add(0, &view);
 }
 void Visualization::AddNewedView(View &view, bool clearViewBeforeMerge)
 {
   AddSubView(view, clearViewBeforeMerge);
-  m_MyNewedViews.add(&view);
+  m_MyNewedViews.add(0, &view);
 }
 void Visualization::DeleteAllNewedObjects()
 {
