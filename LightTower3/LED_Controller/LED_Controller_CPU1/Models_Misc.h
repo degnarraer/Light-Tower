@@ -19,8 +19,6 @@
 #ifndef Models_Misc_H
 #define Models_Misc_H
 
-#include "Models_Core.h"
-
 class GravitationalModel: public ModelWithNewValueNotification<Position>
                         , public ModelEventNotificationCallee<Position>
 {

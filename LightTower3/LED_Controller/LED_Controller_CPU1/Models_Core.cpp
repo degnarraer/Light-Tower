@@ -17,7 +17,7 @@ CRGB Model::FadeColor(CRGB color, float scalar)
 {
   CHSV hsv = rgb2hsv_approximate(color);
   CRGB rgb;
-  hsv.value = (uint8_t )round(hsv.value*scalar);
+  hsv.value = (uint8_t )floor(hsv.value*scalar);
   hsv2rgb_rainbow(hsv, rgb);
   return rgb;
 }
