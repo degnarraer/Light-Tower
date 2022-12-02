@@ -19,7 +19,8 @@
 #ifndef Models_H
 #define Models_H
 #include "Models_Color.h"
-#include "Models_Band.h"
+#include "Models_Band.h" 
+#include "Models_Power.h"
 #include "Models_Misc.h"
 
 #endif
