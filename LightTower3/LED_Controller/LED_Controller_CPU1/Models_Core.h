@@ -26,6 +26,11 @@
 #include "Statistical_Engine.h"
 #include "LEDControllerInterface.h"
 
+struct Power
+{
+  float NormalizedPower;
+};
+
 struct BandData
 {
   float Power;

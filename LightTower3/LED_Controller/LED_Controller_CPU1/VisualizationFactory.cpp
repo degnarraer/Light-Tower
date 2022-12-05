@@ -354,14 +354,18 @@ void VerticalBandTower::SetupVisualization()
     int visHeight = yPosition2 - yPosition1;
     int band = i;
     if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numBands << "\n";
-    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight);
+    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight, MergeType_Layer);
     AddNewedView(*sprite, true);
+    
     BandPowerModel *bandPower = new BandPowerModel("Band Power Model", i, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
+    
     RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numBands);
     AddNewedModel(*colorModel);
+    
     SettableColorPowerModel *settableColorPowerModel = new SettableColorPowerModel("Settable Power Model");
     AddNewedModel(*settableColorPowerModel);
+    
     settableColorPowerModel->ConnectColorModel(*colorModel);
     settableColorPowerModel->ConnectPowerModel(*bandPower);
     sprite->ConnectColorModel(*settableColorPowerModel); 

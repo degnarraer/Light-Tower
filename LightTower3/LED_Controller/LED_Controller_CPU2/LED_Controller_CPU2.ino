@@ -35,14 +35,17 @@ SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink"
                                                          , SPI1_PIN_MOSI
                                                          , SPI1_PIN_SS
                                                          , 1 );
-                                                
+
+ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                             
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SPIDataLinkMaster );                                            
+                                                  , m_SPIDataLinkMaster
+                                                  , m_AudioBuffer );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SPIDataLinkMaster
                            , m_BT_Out
-                           , m_I2S_In);
+                           , m_I2S_In
+                           , m_AudioBuffer );
 
 
 int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
@@ -74,11 +77,11 @@ void setup()
   m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
 
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSoundPowerTask,   0 );
-  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         4000,   NULL,   configMAX_PRIORITIES - 3,   &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
-  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPITXTask,        1 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 2,   &TaskMonitorTask,         1 );
+  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         4000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 2,   &ManagerTask,             1 );
+  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 3,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 4,   &ProcessSoundPowerTask,   1 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 5,   &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
@@ -96,7 +99,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   {
     yield();
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(25 / portTICK_PERIOD_MS);
   }
 }
 
@@ -142,11 +145,17 @@ void TaskMonitorTaskLoop(void * parameter)
     
     if(true == TASK_STACK_SIZE_DEBUG)
     {
-      ESP_LOGE("LED_Controller1", "ManagerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ManagerTask));
-      ESP_LOGE("LED_Controller1", "ProcessSoundPowerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSoundPowerTask));
-      ESP_LOGE("LED_Controller1", "ProcessFFTTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessFFTTask));
-      ESP_LOGE("LED_Controller1", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
-      ESP_LOGE("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
+      /*
+      uint32_t TaskCount = 4;
+      char pcWriteBuffer[40*TaskCount];
+      vTaskGetRunTimeStats(pcWriteBuffer);
+      ESP_LOGE("LED_Controller1", "%s", String(pcWriteBuffer).c_str());
+      */
+      ESP_LOGE("LED_Controller2", "ManagerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ManagerTask));
+      ESP_LOGE("LED_Controller2", "ProcessSoundPowerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSoundPowerTask));
+      ESP_LOGE("LED_Controller2", "ProcessFFTTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessFFTTask));
+      ESP_LOGE("LED_Controller2", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
+      ESP_LOGE("LED_Controller2", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
     }
     vTaskDelay(30000 / portTICK_PERIOD_MS);
   }

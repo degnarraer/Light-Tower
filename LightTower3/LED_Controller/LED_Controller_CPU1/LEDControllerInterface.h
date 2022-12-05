@@ -135,7 +135,7 @@ class LEDController
     void Setup()
     {
     }
-    void UpdateLEDs(PixelArray *pixelArray)
+    bool UpdateLEDs(PixelArray *pixelArray)
     {
       if(true == debugLEDs) Serial << "******LED Controller LEDs******\n"; 
       bool ChangeFound = false;

@@ -19,10 +19,12 @@
 #include "Sound_Processor.h"
 
 Sound_Processor::Sound_Processor( String Title
-                                , SPIDataLinkMaster &SPIDataLinkMaster )
+                                , SPIDataLinkMaster &SPIDataLinkMaster
+                                , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> AudioBuffer)
                                 : NamedItem(Title)
                                 , QueueManager(Title, GetDataItemConfigCount())
                                 , m_SPIDataLinkMaster(SPIDataLinkMaster)
+                                , m_AudioBuffer(AudioBuffer)
 {
 }
 Sound_Processor::~Sound_Processor()
@@ -46,7 +48,7 @@ void Sound_Processor::FreeMemory()
   m_MemoryIsAllocated = false;
 }
 
-void Sound_Processor::Sound_16Bit_44100Hz_Right_Left_Channel_FFT()
+void Sound_Processor::Calculate_FFTs()
 {
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("FFT_Frames");
   bool R_FFT_Calculated = false;
@@ -64,12 +66,12 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Left_Channel_FFT()
     {
       if(true == m_R_FFT.PushValueAndCalculateNormalizedFFT(FrameBuffer[i].channel1, m_FFT_Gain))
       {
-        Sound_16Bit_44100Hz_Right_Channel_FFT();
+        Calculate_Right_Channel_FFT();
         R_FFT_Calculated = true;
       }
       if(true == m_L_FFT.PushValueAndCalculateNormalizedFFT(FrameBuffer[i].channel2, m_FFT_Gain))
       {
-        Sound_16Bit_44100Hz_Left_Channel_FFT();
+        Calculate_Left_Channel_FFT();
         L_FFT_Calculated = true;
       }
       assert(R_FFT_Calculated == L_FFT_Calculated);
@@ -77,7 +79,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Left_Channel_FFT()
   }
 }
 
-void Sound_Processor::Sound_16Bit_44100Hz_Right_Channel_FFT()
+void Sound_Processor::Calculate_Right_Channel_FFT()
 {
   QueueHandle_t R_Bands_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_BANDS");
   QueueHandle_t R_MaxBin_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_MAXBAND");
@@ -128,7 +130,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Right_Channel_FFT()
     m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
   }
 }
-void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
+void Sound_Processor::Calculate_Left_Channel_FFT()
 {
   QueueHandle_t L_Bands_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_BANDS");
   QueueHandle_t L_MaxBin_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_MAXBAND");
@@ -179,7 +181,7 @@ void Sound_Processor::Sound_16Bit_44100Hz_Left_Channel_FFT()
     m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
   }
 }
-void Sound_Processor::Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power()
+void Sound_Processor::Calculate_Power()
 {
   QueueHandle_t QueueIn = GetQueueHandleRXForDataItem("Amplitude_Frames");
   QueueHandle_t QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("Processed_Frame");

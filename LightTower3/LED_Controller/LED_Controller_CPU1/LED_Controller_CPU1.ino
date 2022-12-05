@@ -4,7 +4,6 @@
 #include "Models.h"
 #include "Tunes.h"
 #include "esp_log.h"
-#include <esp_task_wdt.h>
 
 TaskHandle_t DataMoverTask;
 TaskHandle_t VisualizationTask;
@@ -178,6 +177,12 @@ void TaskMonitorTaskLoop(void * parameter)
     
     if(true == TASK_STACK_SIZE_DEBUG)
     {
+      /*
+      uint32_t TaskCount = 4;
+      char pcWriteBuffer[40*TaskCount];
+      vTaskGetRunTimeStats(pcWriteBuffer);
+      ESP_LOGE("LED_Controller1", "%s", String(pcWriteBuffer).c_str());
+      */
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
       ESP_LOGE("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
       ESP_LOGE("LED_Controller1", "SPI_RX_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_RX_Task));

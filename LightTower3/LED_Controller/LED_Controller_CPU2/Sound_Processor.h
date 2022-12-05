@@ -38,7 +38,8 @@ class Sound_Processor: public NamedItem
 {
   public:
     Sound_Processor( String Title
-                   , SPIDataLinkMaster &SPIDataLinkMaster);
+                   , SPIDataLinkMaster &SPIDataLinkMaster
+                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> AudioBuffer);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain){m_Gain = Gain;}
@@ -46,7 +47,8 @@ class Sound_Processor: public NamedItem
     
   private:
     SPIDataLinkMaster &m_SPIDataLinkMaster;
-
+    ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
+    
     //Memory Management
     bool m_MemoryIsAllocated = false;
     void AllocateMemory();
@@ -54,7 +56,7 @@ class Sound_Processor: public NamedItem
     
     //Adjustments
     float m_Gain = 1.0;
-    float m_FFT_Gain = 1.0;
+    float m_FFT_Gain = 10.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
@@ -66,22 +68,22 @@ class Sound_Processor: public NamedItem
   public:
     void ProcessSoundPower()
     {
-      Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power();
+      Calculate_Power();
     }
   private:
-    void Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power();
+    void Calculate_Power();
     Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441, BitLength_16);
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441, BitLength_16);
     
   public:
     void ProcessFFT()
     {
-      Sound_16Bit_44100Hz_Right_Left_Channel_FFT();
+      Calculate_FFTs();
     }
   private:
-    void Sound_16Bit_44100Hz_Right_Left_Channel_FFT();
-    void Sound_16Bit_44100Hz_Right_Channel_FFT();
-    void Sound_16Bit_44100Hz_Left_Channel_FFT();
+    void Calculate_FFTs();
+    void Calculate_Right_Channel_FFT();
+    void Calculate_Left_Channel_FFT();
     FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
     FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
 

@@ -173,11 +173,41 @@ class ContinuousAudioBuffer
 		return Result;
 	}
 
+	size_t Push(Frame_t *Frame, size_t Count)
+	{
+		size_t Result = 0;
+		pthread_mutex_lock(&m_Lock);
+		for(int i = 0; i < Count; ++i)
+		{
+			if( false == m_CircularAudioBuffer->push(Frame[i]) )
+			{
+				pthread_mutex_unlock(&m_Lock);
+				return Result;
+			}
+			++Result;
+		}
+		pthread_mutex_unlock(&m_Lock);
+		return Result;
+	}
+
 	Frame_t Pop()
 	{
 		Frame_t Result;
 		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->pop();
+		pthread_mutex_unlock(&m_Lock);
+		return Result;
+	}
+
+	size_t Pop(Frame_t *Frame, size_t Count)
+	{
+		size_t Result = 0;
+		pthread_mutex_lock(&m_Lock);
+		for(int i = 0; i < Count; ++i)
+		{
+			Frame[i] == m_CircularAudioBuffer->pop();
+			++Result;
+		}
 		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
@@ -191,11 +221,41 @@ class ContinuousAudioBuffer
 		return Result;
 	}
 
+	size_t Unshift(Frame_t *Frame, size_t Count)
+	{
+		size_t Result = 0;
+		pthread_mutex_lock(&m_Lock);
+		for(int i = 0; i < Count; ++i)
+		{
+			if( false == m_CircularAudioBuffer->unshift(Frame[i]) )
+			{
+				pthread_mutex_unlock(&m_Lock);
+				return Result;
+			}
+			++Result;
+		}
+		pthread_mutex_unlock(&m_Lock);
+		return Result;
+	}
+
 	Frame_t Shift()
 	{
 		Frame_t Result;
 		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->shift();
+		pthread_mutex_unlock(&m_Lock);
+		return Result;
+	}
+
+	size_t Shift(Frame_t *Frame, size_t Count)
+	{
+		size_t Result = 0;
+		pthread_mutex_lock(&m_Lock);
+		for(int i = 0; i < Count; ++i)
+		{
+			Frame[i] = m_CircularAudioBuffer->shift();
+			++Result;
+		}
 		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
@@ -234,6 +294,18 @@ class ContinuousAudioBuffer
 		Result = m_CircularAudioBuffer->available();
 		pthread_mutex_unlock(&m_Lock);
 		return Result;
+	}
+	uint32_t GetBufferValues(Frame_t *Buffer, uint32_t Count)
+	{
+		uint32_t ReturnCount = 0;
+		pthread_mutex_lock(&m_Lock);
+		for(int i = 0; i < Count && i < m_CircularAudioBuffer.size(); ++i)
+		{
+			Buffer[i] = m_CircularAudioBuffer[i];
+			++ReturnCount;
+		}
+		pthread_mutex_unlock(&m_Lock);
+		return ReturnCount;
 	}
 
 	void Clear()
