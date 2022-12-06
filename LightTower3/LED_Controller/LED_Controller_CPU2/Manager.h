@@ -38,7 +38,7 @@ class Manager: public NamedItem
            , SPIDataLinkMaster &SPIDataLinkMaster
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
-           , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> AudioBuffer);
+           , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Manager();
     void Setup();
     void ProcessEventQueue();
@@ -52,8 +52,6 @@ class Manager: public NamedItem
   private:
     Sound_Processor &m_SoundProcessor;
     SPIDataLinkMaster &m_SPIDataLinkMaster;
-    AudioBuffer<1000> m_AmplitudeAudioBuffer;
-    AudioBuffer<1000> m_FFTAudioBuffer;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     Frame_t m_FFTFrameBuffer[FFT_BUFFER_FRAME_COUNT];

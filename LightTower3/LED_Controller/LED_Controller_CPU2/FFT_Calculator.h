@@ -53,6 +53,12 @@ class FFT_Calculator
       free(mp_ImaginaryBuffer);
       free(m_MyFFT);
     }
+    void ResetCalculator()
+    {
+      m_SolutionReady = false;
+      m_CurrentIndex = 0;
+      
+    }
     int32_t GetFreeSpace() { return m_FFT_Size - m_CurrentIndex; }
     float GetFFTBufferValue(int32_t index)
     {

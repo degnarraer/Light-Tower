@@ -33,13 +33,12 @@
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
-                     , public QueueManager
                      , public QueueController
 {
   public:
     Sound_Processor( String Title
                    , SPIDataLinkMaster &SPIDataLinkMaster
-                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> AudioBuffer);
+                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain){m_Gain = Gain;}
@@ -72,8 +71,7 @@ class Sound_Processor: public NamedItem
     }
   private:
     void Calculate_Power();
-    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441, BitLength_16);
-    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441, BitLength_16);
+    Amplitude_Calculator m_SoundData = Amplitude_Calculator(441, BitLength_16);
     
   public:
     void ProcessFFT()
@@ -82,8 +80,8 @@ class Sound_Processor: public NamedItem
     }
   private:
     void Calculate_FFTs();
-    void Calculate_Right_Channel_FFT();
-    void Calculate_Left_Channel_FFT();
+    void Update_Right_Bands_And_Send_Result();
+    void Update_Left_Bands_And_Send_Result();
     FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
     FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
 
@@ -91,16 +89,6 @@ class Sound_Processor: public NamedItem
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;
-
-    //QueueManager Interface
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    static const size_t m_SoundProcessorConfigCount = 2;
-    DataItemConfig_t m_ItemConfig[m_SoundProcessorConfigCount]
-    {
-      { "FFT_Frames",       DataType_Frame_t,   FFT_BUFFER_FRAME_COUNT,       Transciever_RX,   4 },
-      { "Amplitude_Frames", DataType_Frame_t,   AMPLITUDE_BUFFER_FRAME_COUNT, Transciever_RX,   4 },
-    };
-    size_t GetDataItemConfigCount() { return m_SoundProcessorConfigCount; }
 };
 
 #endif

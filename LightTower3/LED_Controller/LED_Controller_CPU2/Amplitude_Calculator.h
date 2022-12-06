@@ -41,6 +41,40 @@ class Amplitude_Calculator
       assert(true == m_SolutionReady);
       return &m_ProcessedSoundDataOutput;
     }
+    ProcessedSoundFrame_t CalculateSoundData(Frame_t *Frames, uint32_t Count)
+    {
+      ResetData();
+      m_SolutionReady = false;
+      for(int i = 0; i < Count; ++i)
+      {
+        if(Frames[i].channel1 < m_ProcessedSoundFrame.Channel1.Minimum)
+        {
+          m_ProcessedSoundFrame.Channel1.Minimum = Frames[i].channel1;
+        }
+        if(Frames[i].channel1 > m_ProcessedSoundFrame.Channel1.Maximum)
+        {
+          m_ProcessedSoundFrame.Channel1.Maximum = Frames[i].channel1;
+        }
+        
+        if(Frames[i].channel2 < m_ProcessedSoundFrame.Channel2.Minimum)
+        {
+          m_ProcessedSoundFrame.Channel2.Minimum = Frames[i].channel2;
+        }
+        if(Frames[i].channel2 > m_ProcessedSoundFrame.Channel2.Maximum)
+        {
+          m_ProcessedSoundFrame.Channel2.Maximum = Frames[i].channel2;
+        } 
+      }
+      m_ProcessedSoundFrame.Channel1.NormalizedPower = (float)(m_ProcessedSoundFrame.Channel1.Maximum - m_ProcessedSoundFrame.Channel1.Minimum) / (float)GetBitMax();
+      m_ProcessedSoundFrame.Channel2.NormalizedPower = (float)(m_ProcessedSoundFrame.Channel2.Maximum - m_ProcessedSoundFrame.Channel2.Minimum) / (float)GetBitMax();
+      m_ProcessedSoundFrameOutput = m_ProcessedSoundFrame;
+      m_ProcessedSoundFrame.Channel1.Minimum = GetMax();
+      m_ProcessedSoundFrame.Channel1.Maximum = GetMin();
+      m_ProcessedSoundFrame.Channel2.Minimum = GetMax();
+      m_ProcessedSoundFrame.Channel2.Maximum = GetMin();
+      m_SolutionReady = true; 
+      return m_ProcessedSoundFrame;
+    }
     bool PushValueAndCalculateSoundData(int32_t value)
     {
       m_SolutionReady = false;
@@ -55,17 +89,21 @@ class Amplitude_Calculator
       ++m_PushCount;
       if(m_PushCount >= m_RequiredSampleCount)
       {
-        m_PushCount = 0;
         int32_t peakToPeak = (m_ProcessedSoundData.Maximum - m_ProcessedSoundData.Minimum);
         m_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)GetBitMax();
         m_ProcessedSoundDataOutput = m_ProcessedSoundData;
         m_SolutionReady = true;
-        m_ProcessedSoundData.Minimum = GetMax();
-        m_ProcessedSoundData.Maximum = GetMin();
+        ResetData();
       }
       return m_SolutionReady;
     }
   private:
+    void ResetData()
+    {
+      m_PushCount = 0;
+      m_ProcessedSoundData.Minimum = GetMax();
+      m_ProcessedSoundData.Maximum = GetMin();
+    }
     int32_t GetMax()
     {
       switch(m_BitLength)
@@ -122,6 +160,8 @@ class Amplitude_Calculator
     }
     ProcessedSoundData_t m_ProcessedSoundData;
     ProcessedSoundData_t m_ProcessedSoundDataOutput;
+    ProcessedSoundFrame_t m_ProcessedSoundFrame;
+    ProcessedSoundFrame_t m_ProcessedSoundFrameOutput;
     int32_t m_RequiredSampleCount = 0;
     int32_t m_PushCount = 0;
     bool m_SolutionReady = false;
