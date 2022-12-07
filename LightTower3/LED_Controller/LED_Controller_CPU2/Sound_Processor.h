@@ -71,7 +71,8 @@ class Sound_Processor: public NamedItem
     }
   private:
     void Calculate_Power();
-    Amplitude_Calculator m_SoundData = Amplitude_Calculator(441, BitLength_16);
+    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
+    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     
   public:
     void ProcessFFT()

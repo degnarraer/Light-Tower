@@ -78,6 +78,7 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
         ++count;
       }
       m_Result = total / count;
+      if(m_Result >= 1.0) m_Result = 1.0;
       ++m_CircularBufferIndex;
     }
 };

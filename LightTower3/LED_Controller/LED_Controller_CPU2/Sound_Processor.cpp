@@ -175,14 +175,45 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
   }
 }
 void Sound_Processor::Calculate_Power()
-{
-    QueueHandle_t QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("Processed_Frame");
+{    
+  QueueHandle_t QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("Processed_Frame");
+  if(QueueOut != NULL)
+  {
+    size_t PSF_ByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("Processed_Frame");
+    size_t PSF_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("Processed_Frame");
+    assert(1 == PSF_SampleCount);
+    assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
+    
     Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-    m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
-    ProcessedSoundFrame_t PSF = m_SoundData.CalculateSoundData( Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
-    static bool PSF_Push_Successful = true;
-    PushValueToQueue(&PSF, QueueOut, false, "Processed Sound Frame: Processed_Frame", PSF_Push_Successful);
-    m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
+    size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
+    for(int i = 0; i < ReadFrames; ++i)
+    {
+      bool R_Amplitude_Calculated = false;
+      bool L_Amplitude_Calculated = false;
+      ProcessedSoundData_t R_PSD;
+      ProcessedSoundData_t L_PSD;
+      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1))
+      {
+        R_Amplitude_Calculated = true;
+        R_PSD = m_RightSoundData.GetProcessedSoundData();
+      }
+      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2))
+      {
+        L_Amplitude_Calculated = true;
+        L_PSD = m_LeftSoundData.GetProcessedSoundData();
+      }
+      assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
+      if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
+      {
+        ProcessedSoundFrame_t PSF;
+        PSF.Channel1 = R_PSD;
+        PSF.Channel2 = L_PSD;
+        static bool PSF_Push_Successful = true;
+        PushValueToQueue(&PSF, QueueOut, false, "Processed Sound Frame: Processed_Frame", PSF_Push_Successful);
+        m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
+      }
+    }
+  }
 }
 void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size)
 {

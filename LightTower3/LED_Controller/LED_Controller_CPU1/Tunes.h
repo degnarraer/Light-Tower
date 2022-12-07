@@ -57,6 +57,7 @@ const bool   debugModels = false;
 const bool   debugSetBandValueStatisticalEngine = false;
 const bool   debugGetBandValueStatisticalEngine = false;
 const bool   debugGravitationalModel = false;
+const bool   debugSilenceIntegrator = false;
 const bool   debugMemory = false;
 const bool   debugFreeMemory = false;
 const bool   debugAssertions = false;
@@ -107,11 +108,12 @@ const float triggerLevelGain = 1.1;
 
 //Sound Detection
 const float   SOUND_DETECT_THRESHOLD = 0.05;
+const int     lastingSilenceTImeout = 10000;
 const int     silenceIntegratorMax = 50000;
 const int     silenceDetectedThreshold = 0.1*silenceIntegratorMax;
 const int     soundDetectedThreshold = 0.9*silenceIntegratorMax;
-const int     soundAdder = 1000;
-const int     silenceSubtractor = -10;
+const int     soundAdder = 1000000;
+const int     silenceSubtractor = -50000;
 
 //CALCULATED TUNES
 const int FFT_M = (int)log2(FFT_MAX);

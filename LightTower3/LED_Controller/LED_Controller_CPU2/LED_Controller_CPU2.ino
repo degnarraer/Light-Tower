@@ -78,9 +78,9 @@ void setup()
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         4000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSoundPowerTask,   1 );
-  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPITXTask,        1 );
-  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 2,   &ManagerTask,             1 );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSoundPowerTask,   1 );
+  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 3,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 3,   &ManagerTask,             1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 4,   &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
@@ -97,8 +97,9 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 
@@ -106,8 +107,9 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(50 / portTICK_PERIOD_MS);
   }
 }
 

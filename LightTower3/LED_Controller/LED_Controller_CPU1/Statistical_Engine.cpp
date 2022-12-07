@@ -29,6 +29,7 @@ void StatisticalEngine::Setup()
   m_NewBandDataCurrentTime = currentTime;
   m_NewMaxBandSoundDataCurrentTime = currentTime;
   m_NewSoundDataCurrentTime = currentTime;
+  xTaskCreate( StaticUpdateSoundState,   "StaticUpdateSoundStateTask",  2000,  this,   configMAX_PRIORITIES - 3,   &m_SoundDetectionTask);
 }
 
 bool StatisticalEngine::NewSoundDataReady()
@@ -142,14 +143,12 @@ void StatisticalEngine::RunMyScheduledTask()
         m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
         m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
         ESP_LOGV("Statistical_Engine", "New SoundData Ready: %d | %f | %d", m_signalMin, m_Power, m_signalMax);
-        UpdateSoundState();
       }
       else
       {
         m_Power = 0;
         m_signalMin = 0;
         m_signalMax = 0;
-        UpdateSoundState();
       }
     }
     else
@@ -157,7 +156,6 @@ void StatisticalEngine::RunMyScheduledTask()
       m_Power = 0;
       m_signalMin = 0;
       m_signalMax = 0;
-      UpdateSoundState();
     }
     pthread_mutex_unlock(&m_ProcessedSoundDataLock);
   }
@@ -210,51 +208,68 @@ void StatisticalEngine::FreeMemory()
   m_MemoryIsAllocated = false;
 }
 
+void StatisticalEngine::StaticUpdateSoundState(void * Parameters)
+{
+  StatisticalEngine* aStatisticalEngine = (StatisticalEngine*)Parameters;
+  aStatisticalEngine->UpdateSoundState();
+}
+
 void StatisticalEngine::UpdateSoundState()
 {
-  pthread_mutex_lock(&m_ProcessedSoundDataLock);
-  int delta = 0;
-  float gain = 0.0;
-  if(m_Power >= SOUND_DETECT_THRESHOLD)
+  while(true)
   {
-    float  numerator = m_Power - SOUND_DETECT_THRESHOLD;
-    float  denomanator = SOUND_DETECT_THRESHOLD;
-    if(numerator < 0) numerator = 0;
-    gain = (numerator/denomanator);
-    delta = m_soundAdder * gain;
+    pthread_mutex_lock(&m_ProcessedSoundDataLock);
+
+    m_currentMicros = micros();
+    unsigned long deltaTime = m_currentMicros - m_previousMicros;
+    float deltaTimeScalar = (float)deltaTime / (float)1000000;
+    
+    int delta = 0;
+    float gain = 0.0;
+    if(m_Power >= SOUND_DETECT_THRESHOLD)
+    {
+      float  numerator = m_Power - SOUND_DETECT_THRESHOLD;
+      float  denomanator = SOUND_DETECT_THRESHOLD;
+      if(numerator < 0) numerator = 0;
+      gain = (numerator/denomanator);
+      delta = m_soundAdder * gain;
+    }
+    else
+    {
+      float  numerator = SOUND_DETECT_THRESHOLD - m_Power;
+      float  denomanator = SOUND_DETECT_THRESHOLD;
+      if(numerator < 0) numerator = 0;
+      gain = (numerator/denomanator);
+      delta = m_silenceSubtractor * gain;
+    }
+    delta *= deltaTimeScalar;
+    m_silenceIntegrator += delta;
+    if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
+    if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
+    if(true == debugSilenceIntegrator) Serial << "Power Db: " << m_PowerDb << "\tDelta Time Gain: " << deltaTimeScalar << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
+    if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
+    {
+      ESP_LOGE("Statistical_Engine", "Sound Detected.");
+      soundState = SoundState::SoundDetected;
+      m_cb->MicrophoneStateChange(soundState);
+    }
+    else if(soundState == SoundState::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
+    {
+      ESP_LOGE("Statistical_Engine", "Silence Detected.");
+      soundState = SoundState::SilenceDetected;
+      m_silenceStartTime = millis();
+      m_cb->MicrophoneStateChange(soundState);
+    }
+    else if(soundState == SoundState::SilenceDetected && millis() - m_silenceStartTime >= lastingSilenceTImeout)
+    {
+      ESP_LOGE("Statistical_Engine", "Lasting Silence Detected.");
+      soundState = SoundState::LastingSilenceDetected;
+      m_cb->MicrophoneStateChange(soundState);
+    }
+    m_previousMicros = m_currentMicros;
+    pthread_mutex_unlock(&m_ProcessedSoundDataLock);
+    vTaskDelay(10 / portTICK_PERIOD_MS);
   }
-  else
-  {
-    float  numerator = SOUND_DETECT_THRESHOLD - m_Power;
-    float  denomanator = SOUND_DETECT_THRESHOLD;
-    if(numerator < 0) numerator = 0;
-    gain = (numerator/denomanator);
-    delta = m_silenceSubtractor * gain;
-  }
-  m_silenceIntegrator += delta;
-  if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
-  if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
-  if(true == debugMode && debugLevel >= 3) Serial << "Power Db: " << m_PowerDb << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
-  if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
-  {
-    ESP_LOGD("Statistical_Engine", "Sound Detected.");
-    soundState = SoundState::SoundDetected;
-    m_cb->MicrophoneStateChange(soundState);
-  }
-  else if(soundState == SoundState::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
-  {
-    ESP_LOGD("Statistical_Engine", "Silence Detected.");
-    soundState = SoundState::SilenceDetected;
-    m_silenceStartTime = millis();
-    m_cb->MicrophoneStateChange(soundState);
-  }
-  else if(soundState == SoundState::SilenceDetected && millis() - m_silenceStartTime >= 120000)
-  {
-    ESP_LOGD("Statistical_Engine", "Lasting Silence Detected.");
-    soundState = SoundState::LastingSilenceDetected;
-    m_cb->MicrophoneStateChange(soundState);
-  }
-  pthread_mutex_unlock(&m_ProcessedSoundDataLock);
 }
 
 void StatisticalEngine::UpdateBandArray()
@@ -362,6 +377,7 @@ float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
     ++count;
   }
   result = total / count;
+  if(result >= 1.0) result = 1.0;
   if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   pthread_mutex_unlock(&m_BandValuesLock);
   return result;
@@ -380,6 +396,7 @@ float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsign
   {
     result += GetBandAverage(b, depth);
   }
+  if(result >= 1.0) result = 1.0;
   if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
   pthread_mutex_unlock(&m_BandValuesLock);
   return result;
