@@ -19,7 +19,7 @@
 #ifndef LEDControllerInterface_H
 #define LEDControllerInterface_H
 
-#define FASTLED_ALLOW_INTERRUPTS 1
+#define FASTLED_ALLOW_INTERRUPTS 10
 #define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
 #include "Tunes.h"

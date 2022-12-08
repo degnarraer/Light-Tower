@@ -86,9 +86,9 @@ class Model: public NamedItem
     virtual void UpdateValue() = 0;
 
   protected:
-    CRGB GetColor(unsigned int numerator, unsigned int denominator);
+    CRGB GetRainbowColor(unsigned int numerator, unsigned int denominator);
     CRGB GetRandomNonGrayColor();
-    CRGB FadeColor(CRGB color, float scalar);
+    CRGB DimColor(CRGB color, float scalar);
   private:
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;

@@ -378,7 +378,7 @@ float StatisticalEngine::GetBandAverage(unsigned int band, unsigned int depth)
     ++count;
   }
   result = total / count;
-  if(result >= 1.0) result = 1.0;
+  if(result > 1.0) result = 1.0;
   if(true == debugMode && debugLevel >= 5) Serial << "GetBandAverage Band: " << band << "\tDepth: " << depth << "\tResult: " << result <<"\n";
   pthread_mutex_unlock(&m_BandValuesLock);
   return result;
@@ -397,7 +397,7 @@ float StatisticalEngine::GetBandAverageForABandOutOfNBands(unsigned band, unsign
   {
     result += GetBandAverage(b, depth);
   }
-  if(result >= 1.0) result = 1.0;
+  if(result > 1.0) result = 1.0;
   if(true == debugVisualization) Serial << "Separation:" << bandSeparation << "\tStart:" << startBand << "\tEnd:" << endBand << "\tResult:" << result << "\n";
   pthread_mutex_unlock(&m_BandValuesLock);
   return result;

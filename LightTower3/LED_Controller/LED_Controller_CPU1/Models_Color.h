@@ -133,7 +133,7 @@ class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
     }
     void RunModelTask()
     {
-      m_Color = GetColor(m_Numerator, m_Denominator);
+      m_Color = GetRainbowColor(m_Numerator, m_Denominator);
     }
 };
 
@@ -175,7 +175,7 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
     void RunModelTask()
     {
       float normalizedPower = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
-      m_OutputColor = FadeColor(m_InputColor, normalizedPower);
+      m_OutputColor = DimColor(m_InputColor, normalizedPower);
       if (true == debugModels) Serial << "ColorPowerModel normalizedPower: " << normalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
 
@@ -214,7 +214,6 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
   private:
     CRGB m_InputColor = CRGB::Black;
     CRGB m_OutputColor = CRGB::Black;
-    CHSV m_HSV = rgb2hsv_approximate(m_InputColor);
     float m_NormalizedPower = 0.0;
     //Model
     void UpdateValue() { SetCurrentValue( m_OutputColor ); }
@@ -222,9 +221,7 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     bool CanRunModelTask(){return true;}
     void RunModelTask()
     {
-      CHSV hsv = m_HSV;
-      hsv.value = (uint8_t ) floor(((float)hsv.value * m_NormalizedPower));
-      hsv2rgb_rainbow(hsv, m_OutputColor);
+      m_OutputColor = DimColor(m_InputColor, m_NormalizedPower); 
       if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower<< " Input Color:  R:" << m_InputColor.red << " G:" << m_InputColor.green << " B:" << m_InputColor.blue << "\tResulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
 
@@ -232,18 +229,11 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     void NewValueNotification(CRGB Value, String context) 
     {
       m_InputColor = Value;
-      m_HSV = rgb2hsv_approximate(m_InputColor);
     }
     void NewValueNotification(float Value, String context)
     {
-      if(Value < 1.0)
-      {
         m_NormalizedPower = Value;
-      }
-      else
-      {
-        m_NormalizedPower = 1.0;
-      }
+        if(m_NormalizedPower > 1.0) m_NormalizedPower = 1.0; 
     }
 };
 
@@ -266,7 +256,6 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
   private:
     CRGB m_InputColor = CRGB::Black;
     CRGB m_OutputColor = CRGB::Black;
-    CHSV m_HSV = rgb2hsv_approximate(m_InputColor);
     float m_NormalizedPower = 0;
 
     //Model
@@ -281,9 +270,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
     }
     void RunModelTask()
     {
-      CHSV hsv = m_HSV;
-      hsv.value = (uint8_t ) round(((float)hsv.value * m_NormalizedPower));
-      hsv2rgb_rainbow(hsv, m_OutputColor);
+      m_OutputColor = DimColor(m_InputColor, m_NormalizedPower);
       if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower << " Resulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
 
@@ -293,8 +280,8 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
       if(context.equals("BandData"))
       {
         m_InputColor = Value.Color;
-        m_HSV = rgb2hsv_approximate(m_InputColor);
         m_NormalizedPower = Value.Power;
+        if(m_NormalizedPower > 1.0) m_NormalizedPower = 1.0; 
       }
     }
 };

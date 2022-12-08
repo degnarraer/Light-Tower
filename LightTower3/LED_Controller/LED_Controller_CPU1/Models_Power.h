@@ -83,4 +83,53 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
     }
 };
 
+class CyclingPowerModel: public DataModelWithNewValueNotification<float>
+{
+  public:
+    CyclingPowerModel( String Title
+                     , unsigned int MilliSeconds
+                     , unsigned int MaxCount
+                     , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
+                     : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
+                     , m_MilliSeconds(MilliSeconds)
+                     , m_MaxCount(MaxCount) { if (true == debugMemory) Serial << "New: CyclingPowerModel\n"; }
+    virtual ~CyclingPowerModel() { if (true == debugMemory) Serial << "Delete: CyclingPowerModel\n"; }
+    
+    //Model
+    void UpdateValue() { SetCurrentValue(m_Result); }
+
+  protected:
+    //StatisticalEngineModelInterfaceUsers
+    bool RequiresFFT() { return false; }
+  private:
+    uint32_t m_Count = 0;
+    const uint32_t m_MaxCount = 1000;
+    float m_Result = 0.0;
+    unsigned int m_MilliSeconds = 0;
+    unsigned long m_CurrentTime;
+    unsigned long m_PreviousTime;
+    float m_RunningAverageCircularBuffer[POWER_SAVE_LENGTH] = {0};
+    //Model
+    void SetupModel() {}
+    bool CanRunModelTask() {
+      m_CurrentTime = millis();
+      if(m_CurrentTime - m_PreviousTime >= m_MilliSeconds)
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    void RunModelTask()
+    {
+      ++m_Count;
+      m_Result = (float)(m_Count%m_MaxCount)/(float)m_MaxCount;
+      Serial << m_Result << "\n";
+      m_PreviousTime = m_CurrentTime;
+    }
+};
+
+
 #endif

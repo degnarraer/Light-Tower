@@ -106,7 +106,7 @@ class View: public Task
     };
     LinkedList<SubViewWithProperties_t> m_SubViewWithProperties  = LinkedList<SubViewWithProperties_t>();
     void MergeSubViews();
-    CRGB FadeColor(CRGB color, float scalar)
+    CRGB DimColor(CRGB color, float scalar)
     {
       byte fadeAmount = (byte)(scalar*255);
       if(fadeAmount > 255) fadeAmount = 255;

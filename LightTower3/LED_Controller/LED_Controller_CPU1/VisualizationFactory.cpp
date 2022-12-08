@@ -346,6 +346,9 @@ Visualization* VerticalBandTower::GetInstance(StatisticalEngineModelInterface &S
 }
 void VerticalBandTower::SetupVisualization()
 {
+  //CyclingPowerModel *bandPower = new CyclingPowerModel("Cycling Power Model", 250, 100, m_StatisticalEngineModelInterface);
+  //AddNewedModel(*bandPower);
+  
   int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
   for(int i = 0; i < numBands; ++i)
   {
@@ -356,7 +359,7 @@ void VerticalBandTower::SetupVisualization()
     if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numBands << "\n";
     ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight, MergeType_Layer);
     AddNewedView(*sprite, false);
-    
+
     BandPowerModel *bandPower = new BandPowerModel("Band Power Model", i, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
     

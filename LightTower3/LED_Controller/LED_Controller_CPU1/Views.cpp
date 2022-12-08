@@ -343,7 +343,7 @@ void ColorSpriteView::NewValueNotification(Position value, String context)
 }
 void ColorSpriteView::NewValueNotification(BandData value, String context)
 {
-  m_MyColor = FadeColor(value.Color, value.Power);
+  m_MyColor = DimColor(value.Color, value.Power);
 }
 void ColorSpriteView::SetupMyView(){}
 bool ColorSpriteView::CanRunMyViewScheduledTask(){ return true; }
