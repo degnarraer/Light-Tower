@@ -54,7 +54,7 @@ class Manager: public NamedItem
     SPIDataLinkMaster &m_SPIDataLinkMaster;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-    Frame_t m_FFTFrameBuffer[FFT_BUFFER_FRAME_COUNT];
+    Frame_t m_FFTFrameBuffer[FFT_SIZE];
     
     //I2S Sound Data
     I2S_Device &m_I2S_In;

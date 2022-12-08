@@ -153,14 +153,12 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
     AssignToBands(L_Bands_DataBuffer, &m_L_FFT, FFT_SIZE);
     for(int16_t j = 0; j < L_Bands_SampleCount; ++j)
     {
-      Serial << L_Bands_DataBuffer[j] << " ";
       if(L_Bands_DataBuffer[j] > MaxBandMagnitude)
       {
         MaxBandMagnitude = L_Bands_DataBuffer[j];
         MaxBandIndex = j;
       }
     }
-    Serial << "\n";
     L_MaxBandDataBuffer.MaxBandNormalizedPower = MaxBandMagnitude;
     L_MaxBandDataBuffer.MaxBandIndex = MaxBandIndex;
     L_MaxBandDataBuffer.TotalBands = L_Bands_SampleCount;
@@ -222,6 +220,8 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
     float magnitude = FFT_Calculator->GetFFTBufferValue(i);
     float freq = GetFreqForBin(i);
     int bandIndex = -1;
+
+    //SAE BAND BRAKEDOWN
     if(freq > 0 && freq <= 43) bandIndex = 0;
     else if(freq > 43 && freq <= 86) bandIndex = 1;
     else if(freq > 86 && freq <= 129) bandIndex = 2;
@@ -254,6 +254,7 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
     else if(freq > 12500 && freq <= 16000) bandIndex = 29;
     else if(freq > 16000 && freq <= 20000) bandIndex = 30;
     else if(freq > 20000 ) bandIndex = 31;
+    
     if(bandIndex >= 0 && freq < I2S_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
     if(Band_Data[bandIndex] > 1.0)
     {

@@ -94,7 +94,7 @@ class View: public Task
     position m_Y;
     size m_W;
     size m_H;
-    struct SubViewClearStruct
+    struct SubViewWithProperties_t
     {
       View* SubView = NULL;
       bool ClearViewBeforeMerge = false;
@@ -104,7 +104,7 @@ class View: public Task
       size W_To_Clear = 0;
       size H_To_Clear = 0;
     };
-    LinkedList<SubViewClearStruct> m_SubViewClearStructs  = LinkedList<SubViewClearStruct>();
+    LinkedList<SubViewWithProperties_t> m_SubViewWithProperties  = LinkedList<SubViewWithProperties_t>();
     void MergeSubViews();
     CRGB FadeColor(CRGB color, float scalar)
     {

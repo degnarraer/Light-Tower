@@ -223,7 +223,7 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     void RunModelTask()
     {
       CHSV hsv = m_HSV;
-      hsv.value = (uint8_t ) round(((float)hsv.value * m_NormalizedPower));
+      hsv.value = (uint8_t ) floor(((float)hsv.value * m_NormalizedPower));
       hsv2rgb_rainbow(hsv, m_OutputColor);
       if (true == debugModels) Serial << "SettableColorPowerModel normalizedPower: " << m_NormalizedPower<< " Input Color:  R:" << m_InputColor.red << " G:" << m_InputColor.green << " B:" << m_InputColor.blue << "\tResulting Color:  R:" << m_OutputColor.red << " G:" << m_OutputColor.green << " B:" << m_OutputColor.blue << " \n";
     }
@@ -236,7 +236,14 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
     }
     void NewValueNotification(float Value, String context)
     {
-      m_NormalizedPower = Value;
+      if(Value < 1.0)
+      {
+        m_NormalizedPower = Value;
+      }
+      else
+      {
+        m_NormalizedPower = 1.0;
+      }
     }
 };
 

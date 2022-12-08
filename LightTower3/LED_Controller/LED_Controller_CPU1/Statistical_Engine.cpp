@@ -140,6 +140,7 @@ void StatisticalEngine::RunMyScheduledTask()
         
         //To allow the original code to work, we combine the left and right channels into an average
         m_Power = (m_Right_Channel_Processed_Sound_Data.NormalizedPower + m_Left_Channel_Processed_Sound_Data.NormalizedPower) / 2.0;
+        if(m_Power > 1.0) m_Power = 1.0;
         m_signalMin = (m_Right_Channel_Processed_Sound_Data.Minimum + m_Left_Channel_Processed_Sound_Data.Minimum) / 2.0;
         m_signalMax = (m_Right_Channel_Processed_Sound_Data.Maximum + m_Left_Channel_Processed_Sound_Data.Maximum) / 2.0;
         ESP_LOGV("Statistical_Engine", "New SoundData Ready: %d | %f | %d", m_signalMin, m_Power, m_signalMax);
@@ -406,7 +407,14 @@ float StatisticalEngine::GetNormalizedSoundPower()
 { 
   float Result = 0;
   pthread_mutex_lock(&m_ProcessedSoundDataLock);
-  Result = m_Power;
+  if(m_Power <= 1.0)
+  {
+    Result = m_Power;
+  }
+  else
+  {
+    Result = 1.0;
+  }
   pthread_mutex_unlock(&m_ProcessedSoundDataLock);
   return Result;
 }

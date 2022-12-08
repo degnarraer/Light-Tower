@@ -19,7 +19,7 @@
 #ifndef LEDControllerInterface_H
 #define LEDControllerInterface_H
 
-#define FASTLED_ALLOW_INTERRUPTS 0
+#define FASTLED_ALLOW_INTERRUPTS 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
 #include "Tunes.h"
@@ -43,9 +43,9 @@ class PixelArray
     }
     void Clear()
     {
-      for(int x = 0; x <= m_W-1; ++x)
+      for(int x = 0; x < m_W; ++x)
       {
-        for(int y = 0; y <= m_H-1; ++y)
+        for(int y = 0; y < m_H; ++y)
         {
           m_Pixels[x][y] = CRGB::Black;
         }
@@ -58,7 +58,7 @@ class PixelArray
     }
     CRGB GetPixel(position x, position y)
     {
-      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
+      if( (x >= m_X) && (x < m_X + m_W) && (y >= m_Y) && (y < m_Y + m_H) )
       {
         return m_Pixels[x - m_X][y - m_Y];
       }
@@ -69,7 +69,7 @@ class PixelArray
     }
     void SetPixel(position x, position y, CRGB value)
     {
-      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
+      if( (x >= m_X) && (x < m_X + m_W) && (y >= m_Y) && (y < m_Y + m_H) )
       {
         m_Pixels[x - m_X][y - m_Y] = value;
       }
@@ -80,11 +80,11 @@ class PixelArray
       m_Y = pa.GetY();
       m_W = pa.GetWidth();
       m_H = pa.GetHeight();
-      for(position x = m_X; x <= m_X + m_W - 1; ++x)
+      for(position x = m_X; x < m_X + m_W; ++x)
       {
-        for(position y = m_Y; y <= m_Y + m_H - 1; ++y)
+        for(position y = m_Y; y < m_Y + m_H; ++y)
         {
-          m_Pixels[x][y] = pa.GetPixel(x, y);
+          m_Pixels[x-m_X][y-m_Y] = pa.GetPixel(x, y);
         }
       }
     }
