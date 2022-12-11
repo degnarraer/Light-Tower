@@ -355,7 +355,7 @@ void VerticalBandTower::SetupVisualization()
     int band = i;
     if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numBands << "\n";
     ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight, MergeType_Layer);
-    AddNewedView(*sprite, false);
+    AddNewedView(*sprite, true);
 
     BandPowerModel *bandPower = new BandPowerModel("Band Power Model", i, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
