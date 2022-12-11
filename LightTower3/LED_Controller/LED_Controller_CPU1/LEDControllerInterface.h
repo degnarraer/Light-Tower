@@ -144,15 +144,22 @@ class LEDController
       {
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
-          CRGB bufColor = pixelArray->GetPixel(x, y); 
+          CRGB bufColor = pixelArray->GetPixel(x, y);
+          if(m_LEDStrip[x][y].red != bufColor.red || m_LEDStrip[x][y].green != bufColor.green || m_LEDStrip[x][y].blue != bufColor.blue)
+          {
+            ChangeFound = true;
+          }
           m_LEDStrip[x][y].red = bufColor.red;
           m_LEDStrip[x][y].green = bufColor.green;
           m_LEDStrip[x][y].blue = bufColor.blue;
           if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";
+      } 
+      if(true == ChangeFound)
+      {
+        FastLED.show();
       }
-      FastLED.show();
     }
     void TurnOffLEDs()
     {
