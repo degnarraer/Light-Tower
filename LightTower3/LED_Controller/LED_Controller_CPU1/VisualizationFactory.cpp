@@ -346,9 +346,6 @@ Visualization* VerticalBandTower::GetInstance(StatisticalEngineModelInterface &S
 }
 void VerticalBandTower::SetupVisualization()
 {
-  //CyclingPowerModel *bandPower = new CyclingPowerModel("Cycling Power Model", 250, 100, m_StatisticalEngineModelInterface);
-  //AddNewedModel(*bandPower);
-  
   int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
   for(int i = 0; i < numBands; ++i)
   {

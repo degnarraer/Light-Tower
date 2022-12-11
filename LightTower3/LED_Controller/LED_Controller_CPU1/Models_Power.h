@@ -126,7 +126,6 @@ class CyclingPowerModel: public DataModelWithNewValueNotification<float>
     {
       ++m_Count;
       m_Result = (float)(m_Count%m_MaxCount)/(float)m_MaxCount;
-      Serial << m_Result << "\n";
       m_PreviousTime = m_CurrentTime;
     }
 };

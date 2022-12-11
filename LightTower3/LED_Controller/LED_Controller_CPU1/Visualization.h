@@ -47,7 +47,9 @@ class Visualization: public View
     Visualization( StatisticalEngineModelInterface &StatisticalEngineModelInterface, 
                    LEDController &LEDController) : View("Visualization", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
                                                  , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
-                                                 , m_LEDController(LEDController){}
+                                                 , m_LEDController(LEDController)
+    {
+    }
                
     virtual ~Visualization()
     {

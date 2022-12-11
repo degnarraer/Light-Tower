@@ -19,7 +19,7 @@
 #ifndef LEDControllerInterface_H
 #define LEDControllerInterface_H
 
-#define FASTLED_ALLOW_INTERRUPTS 10
+#define FASTLED_ALLOW_INTERRUPTS 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
 #include "Tunes.h"
@@ -131,6 +131,7 @@ class LEDController
       FastLED.addLeds<WS2812B, DATA_PIN_STRIP3_PIN, RGB>(m_LEDStrip[2], NUMLEDS);
       FastLED.addLeds<WS2812B, DATA_PIN_STRIP4_PIN, RGB>(m_LEDStrip[3], NUMLEDS);
       FastLED.setBrightness(255);
+      //FastLED.setCorrection(TypicalLEDStrip);
     }
     void Setup()
     {
@@ -144,10 +145,6 @@ class LEDController
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelArray->GetPixel(x, y); 
-          if(m_LEDStrip[x][y].red != bufColor.red || m_LEDStrip[x][y].green != bufColor.green || m_LEDStrip[x][y].blue != bufColor.blue)
-          {
-            ChangeFound = true;
-          }
           m_LEDStrip[x][y].red = bufColor.red;
           m_LEDStrip[x][y].green = bufColor.green;
           m_LEDStrip[x][y].blue = bufColor.blue;
@@ -155,10 +152,7 @@ class LEDController
         }
         if(true == debugLEDs) Serial << "\n";
       }
-      if(true == ChangeFound)
-      {
-        FastLED.show();
-      }
+      FastLED.show();
     }
     void TurnOffLEDs()
     {
