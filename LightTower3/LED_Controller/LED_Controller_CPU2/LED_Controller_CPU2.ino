@@ -87,11 +87,11 @@ void setup()
   m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
 
-  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   0,                          &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   0,                          &ProcessSoundPowerTask,   0 );
-  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPITXTask,        1 );
-  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 2,   &TaskMonitorTask,         1 );
+  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   0,                           &ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 10,   &ProcessSoundPowerTask,   0 );
+  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 10,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 10,   &ManagerTask,             1 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 1,    &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
@@ -105,12 +105,14 @@ void loop()
 
 void ProcessSoundPowerTaskLoop(void * parameter)
 {
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
     yield();
     ++ProcessSoundPowerTaskLoopCount;
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -128,9 +130,10 @@ void ProcessFFTTaskLoop(void * parameter)
 void ManagerTaskLoop(void * parameter)
 {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20; //delay for mS
+  const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
+    yield();
     ++ManagerTaskLoopCount;
     m_Manager.ProcessEventQueue();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -140,9 +143,10 @@ void ManagerTaskLoop(void * parameter)
 void SPI_TX_TaskLoop(void * parameter)
 {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20; //delay for mS
+  const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
+    yield();
     ++ProcessSPITXTaskLoopCount;
     m_SPIDataLinkMaster.ProcessDataTXEventQueue();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -155,6 +159,7 @@ void TaskMonitorTaskLoop(void * parameter)
   const TickType_t xFrequency = 5000; //delay for mS
   while(true)
   {
+    yield();
     unsigned long CurrentTime = millis();
     ++TaskMonitorTaskLoopCount;
     if(true == TASK_LOOP_COUNT_DEBUG)

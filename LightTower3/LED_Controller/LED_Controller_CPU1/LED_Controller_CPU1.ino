@@ -138,10 +138,10 @@ void setup()
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
 
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 3,   &TaskMonitorTask,     0 );
-  xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 2,   &DataMoverTask,       0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          3000,  NULL,   configMAX_PRIORITIES - 1,   &SPI_RX_Task,         0 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 1,   &VisualizationTask,   1 );
+  xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 10,   &DataMoverTask,       0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          3000,  NULL,   configMAX_PRIORITIES - 10,   &SPI_RX_Task,         0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 1,    &TaskMonitorTask,     0 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 10,   &VisualizationTask,   1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
   
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
@@ -156,9 +156,10 @@ void loop()
 void VisualizationTaskLoop(void * parameter)
 {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20; //delay for mS
+  const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
+    yield();
     ++VisualizationTaskLoopCount;
     m_Scheduler.RunScheduler();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -171,6 +172,7 @@ void SPI_RX_TaskLoop(void * parameter)
   const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
+    yield();
     ++SPI_RX_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessDataRXEventQueue();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -183,6 +185,7 @@ void TaskMonitorTaskLoop(void * parameter)
   const TickType_t xFrequency = 5000; //delay for mS
   while(true)
   {
+    yield();
     unsigned long CurrentTime = millis();
     ++TaskMonitorTaskLoopCount;
 
@@ -221,6 +224,7 @@ void DataMoverTaskLoop(void * parameter)
   const TickType_t xFrequency = 20; //delay for mS
   while(true)
   {
+    yield();
     ++DataMoveTaskLoopCount;
     m_Manager.ProcessEventQueue();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
