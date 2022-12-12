@@ -140,7 +140,7 @@ void setup()
 
   xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 10,   &DataMoverTask,       0 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 1,    &TaskMonitorTask,     0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          3000,  NULL,   1,                           &SPI_RX_Task,         1 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          3000,  NULL,   1,                           &SPI_RX_Task,         0 );
   xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    4000,  NULL,   2,                           &VisualizationTask,   1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
   
   ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
