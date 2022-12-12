@@ -166,7 +166,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_i2s_config(i2s_config);
 	m_BTSink.set_i2s_port(m_I2S_PORT);
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
-	m_BTSink.set_task_core(0);
+	m_BTSink.set_task_core(1);
 	m_BTSink.set_task_priority(configMAX_PRIORITIES-1);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(100);
