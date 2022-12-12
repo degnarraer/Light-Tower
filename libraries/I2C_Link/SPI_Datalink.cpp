@@ -107,7 +107,7 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 	{
 		TransmitQueuedData();
 	}
-	//delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
+	delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 	m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataToSendLength);
 	++m_Queued_Transactions;
 }

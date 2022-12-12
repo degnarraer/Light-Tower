@@ -89,7 +89,7 @@ void setup()
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 10,  &ProcessFFTTask,          0 );
   xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSoundPowerTask,   0 );
-  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   1,                          &ProcessSPITXTask,        1 );
   xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        2000,   NULL,   configMAX_PRIORITIES - 1,   &TaskMonitorTask,         1 );
   
@@ -141,6 +141,7 @@ void SPI_TX_TaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     ++ProcessSPITXTaskLoopCount;
     m_SPIDataLinkMaster.ProcessDataTXEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
