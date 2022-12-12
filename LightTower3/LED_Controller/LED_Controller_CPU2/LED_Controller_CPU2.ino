@@ -89,7 +89,7 @@ void setup()
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   0,                           &ProcessFFTTask,          0 );
   xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 10,   &ProcessSoundPowerTask,   0 );
-  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 10,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   1,                           &ProcessSPITXTask,        1 );
   xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 10,   &ManagerTask,             1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 1,    &TaskMonitorTask,         1 );
   
@@ -109,7 +109,6 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
-    yield();
     ++ProcessSoundPowerTaskLoopCount;
     m_SoundProcessor.ProcessSoundPower();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -133,7 +132,6 @@ void ManagerTaskLoop(void * parameter)
   const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
-    yield();
     ++ManagerTaskLoopCount;
     m_Manager.ProcessEventQueue();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -142,14 +140,12 @@ void ManagerTaskLoop(void * parameter)
 
 void SPI_TX_TaskLoop(void * parameter)
 {
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 10; //delay for mS
   while(true)
   {
     yield();
     ++ProcessSPITXTaskLoopCount;
     m_SPIDataLinkMaster.ProcessDataTXEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -159,7 +155,6 @@ void TaskMonitorTaskLoop(void * parameter)
   const TickType_t xFrequency = 5000; //delay for mS
   while(true)
   {
-    yield();
     unsigned long CurrentTime = millis();
     ++TaskMonitorTaskLoopCount;
     if(true == TASK_LOOP_COUNT_DEBUG)
