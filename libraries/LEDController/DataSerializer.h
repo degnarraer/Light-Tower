@@ -73,7 +73,7 @@ class DataSerializer: public CommonUtils
 			// Test if parsing succeeds.
 			if (error)
 			{
-				ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
+				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s. For String: %s", error.c_str(), json.c_str());
 				return;
 			}
 			else
@@ -117,12 +117,12 @@ class DataSerializer: public CommonUtils
 									}
 									else
 									{
-										ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i) for String: %s", CheckSumCalc, CheckSumIn, json.c_str());
+										ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i) for String: %s", CheckSumCalc, CheckSumIn, json.c_str());
 									}
 								}
 								else
 								{
-									ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
+									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error for String: %s", json.c_str());
 								}
 								return;
 							}
@@ -130,7 +130,7 @@ class DataSerializer: public CommonUtils
 					}
 					else
 					{
-						ESP_LOGE("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags for String: %s", json.c_str());
+						ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags for String: %s", json.c_str());
 					}
 				}
 			}

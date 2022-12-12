@@ -2,11 +2,21 @@
 #include "Tunes.h"
 #include "esp_log.h"
 
+unsigned long LoopCountTimer = 0;
 TaskHandle_t ManagerTask;
+uint32_t ManagerTaskLoopCount = 0;
+
 TaskHandle_t ProcessSoundPowerTask;
+uint32_t ProcessSoundPowerTaskLoopCount = 0;
+
 TaskHandle_t ProcessFFTTask;
+uint32_t ProcessFFTTaskLoopCount = 0;
+
 TaskHandle_t ProcessSPITXTask;
+uint32_t ProcessSPITXTaskLoopCount = 0;
+
 TaskHandle_t TaskMonitorTask;
+uint32_t TaskMonitorTaskLoopCount = 0;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                  , I2S_NUM_1
@@ -35,14 +45,17 @@ SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink"
                                                          , SPI1_PIN_MOSI
                                                          , SPI1_PIN_SS
                                                          , 1 );
-                                                
+
+ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SPIDataLinkMaster );                                            
+                                                  , m_SPIDataLinkMaster
+                                                  , m_AudioBuffer );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SPIDataLinkMaster
                            , m_BT_Out
-                           , m_I2S_In);
+                           , m_I2S_In
+                           , m_AudioBuffer );
 
 
 int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
@@ -74,10 +87,10 @@ void setup()
   m_SPIDataLinkMaster.SetupSPIDataLink();
   m_Manager.Setup();
 
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSoundPowerTask,   0 );
-  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         4000,   NULL,   configMAX_PRIORITIES - 3,   &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
+  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   0,                          &ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   0,                          &ProcessSoundPowerTask,   0 );
   xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPITXTask,        1 );
+  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,   NULL,   configMAX_PRIORITIES - 2,   &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
@@ -95,8 +108,9 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ++ProcessSoundPowerTaskLoopCount;
     m_SoundProcessor.ProcessSoundPower();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
@@ -105,34 +119,59 @@ void ProcessFFTTaskLoop(void * parameter)
   while(true)
   {
     yield();
+    ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(50 / portTICK_PERIOD_MS);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
   }
 }
 
 void ManagerTaskLoop(void * parameter)
 {
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 20; //delay for mS
   while(true)
   {
+    ++ManagerTaskLoopCount;
     m_Manager.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
 void SPI_TX_TaskLoop(void * parameter)
 {
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 20; //delay for mS
   while(true)
   {
+    ++ProcessSPITXTaskLoopCount;
     m_SPIDataLinkMaster.ProcessDataTXEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
 void TaskMonitorTaskLoop(void * parameter)
 {
-  ESP_LOGI("LED_Controller1", "Running Task.");
-  for(;;)
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 5000; //delay for mS
+  while(true)
   {
+    unsigned long CurrentTime = millis();
+    ++TaskMonitorTaskLoopCount;
+    if(true == TASK_LOOP_COUNT_DEBUG)
+    {
+      unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
+      ESP_LOGE("LED_Controller1", "ProcessSoundPowerTaskLoopCount: %f", (float)ProcessSoundPowerTaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "ProcessFFTTaskLoopCount: %f", (float)ProcessFFTTaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "ManagerTaskLoopCount: %f", (float)ManagerTaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "ProcessSPITXTaskLoopCount: %f", (float)ProcessSPITXTaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
+      ProcessSoundPowerTaskLoopCount = 0;
+      ProcessFFTTaskLoopCount = 0;
+      ManagerTaskLoopCount = 0;
+      ProcessSPITXTaskLoopCount = 0;
+      TaskMonitorTaskLoopCount = 0;
+    }
+
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(ManagerTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ManagerTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(ProcessSoundPowerTask) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! ProcessSoundPowerTask: Stack Size Low");
@@ -142,12 +181,13 @@ void TaskMonitorTaskLoop(void * parameter)
     
     if(true == TASK_STACK_SIZE_DEBUG)
     {
-      ESP_LOGE("LED_Controller1", "ManagerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ManagerTask));
-      ESP_LOGE("LED_Controller1", "ProcessSoundPowerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSoundPowerTask));
-      ESP_LOGE("LED_Controller1", "ProcessFFTTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessFFTTask));
-      ESP_LOGE("LED_Controller1", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
-      ESP_LOGE("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
+      ESP_LOGE("LED_Controller2", "ManagerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ManagerTask));
+      ESP_LOGE("LED_Controller2", "ProcessSoundPowerTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSoundPowerTask));
+      ESP_LOGE("LED_Controller2", "ProcessFFTTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessFFTTask));
+      ESP_LOGE("LED_Controller2", "ProcessSPITXTask Free Heap: %i", uxTaskGetStackHighWaterMark(ProcessSPITXTask));
+      ESP_LOGE("LED_Controller2", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
     }
-    vTaskDelay(30000 / portTICK_PERIOD_MS);
+    LoopCountTimer = CurrentTime;
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

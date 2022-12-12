@@ -24,10 +24,11 @@
 #define I2S_SAMPLE_COUNT                256
 #define NUMBER_OF_BANDS                 32
 #define FFT_SIZE                        512
-#define FFT_BUFFER_FRAME_COUNT          512
-#define AMPLITUDE_BUFFER_FRAME_COUNT    441
+#define AMPLITUDE_BUFFER_FRAME_COUNT    100
+#define AUDIO_BUFFER_SIZE               2048
 
 
 #define TASK_STACK_SIZE_DEBUG           false
+#define TASK_LOOP_COUNT_DEBUG           true
 
 #endif TUNES_H

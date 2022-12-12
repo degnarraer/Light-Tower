@@ -26,6 +26,11 @@
 #include "Statistical_Engine.h"
 #include "LEDControllerInterface.h"
 
+struct Power
+{
+  float NormalizedPower;
+};
+
 struct BandData
 {
   float Power;
@@ -81,9 +86,9 @@ class Model: public NamedItem
     virtual void UpdateValue() = 0;
 
   protected:
-    CRGB GetColor(unsigned int numerator, unsigned int denominator);
+    CRGB GetRainbowColor(unsigned int numerator, unsigned int denominator);
     CRGB GetRandomNonGrayColor();
-    CRGB FadeColor(CRGB color, float scalar);
+    CRGB DimColor(CRGB color, float scalar);
   private:
     virtual void SetupModel() = 0;
     virtual bool CanRunModelTask() = 0;
@@ -332,69 +337,6 @@ class DataModelWithNewValueNotification: public DataModel
 
     //StatisticalEngineModelInterfaceUsers
     virtual bool RequiresFFT() = 0;
-};
-
-class SoundPowerModel: public DataModelWithNewValueNotification<float>
-{
-  public:
-    SoundPowerModel( String Title
-                   , unsigned int depth
-                   , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
-      : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
-      , m_Depth(depth)
-    {
-      if (true == debugMemory) Serial << "New: SoundPowerModel\n";
-    }
-    virtual ~SoundPowerModel()
-    {
-      if (true == debugMemory) Serial << "Delete: SoundPowerModel\n";
-    }
-
-    //Model
-    void UpdateValue()
-    {
-      SetCurrentValue(m_Result);
-    }
-
-  protected:
-    //StatisticalEngineModelInterfaceUsers
-    bool RequiresFFT() {
-      return false;
-    }
-  private:
-    float m_Result = 0.0;
-    unsigned int m_Depth = 0;
-    unsigned int m_CircularBufferIndex = 0;
-    float m_RunningAverageCircularBuffer[POWER_SAVE_LENGTH] = {0};
-    //Model
-    void SetupModel() {}
-    bool CanRunModelTask() {
-      return true;
-    }
-    void RunModelTask()
-    {
-      int bufferIndex = m_CircularBufferIndex % POWER_SAVE_LENGTH;
-      m_RunningAverageCircularBuffer[bufferIndex] = m_StatisticalEngineModelInterface.GetNormalizedSoundPower();
-      float total = 0.0;
-      int count = 0;
-      int depth = m_Depth;
-      if (depth > POWER_SAVE_LENGTH - 1) depth = POWER_SAVE_LENGTH - 1;
-      for (int i = 0; i <= depth; ++i)
-      {
-        int index = bufferIndex + i;
-        if (index <= POWER_SAVE_LENGTH - 1)
-        {
-          total += m_RunningAverageCircularBuffer[index];
-        }
-        else
-        {
-          total += m_RunningAverageCircularBuffer[index - POWER_SAVE_LENGTH];
-        }
-        ++count;
-      }
-      m_Result = total / count;
-      ++m_CircularBufferIndex;
-    }
 };
 
 #endif

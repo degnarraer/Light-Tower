@@ -13,34 +13,26 @@ void Model::RunMyScheduledTask()
   RunModelTask();
   UpdateValue();
 }
-CRGB Model::FadeColor(CRGB color, float scalar)
+CRGB Model::DimColor(CRGB color, float scalar)
 {
   CHSV hsv = rgb2hsv_approximate(color);
+  hsv.value *= scalar;
   CRGB rgb;
-  hsv.value = (uint8_t )floor(hsv.value*scalar);
-  hsv2rgb_rainbow(hsv, rgb);
+  hsv2rgb_spectrum(hsv, rgb);
   return rgb;
 }
-CRGB Model::GetColor(unsigned int numerator, unsigned int denominator)
+CRGB Model::GetRainbowColor(unsigned int numerator, unsigned int denominator)
 {
-  CHSV hsv;
+  CHSV hsv = CHSV((uint8_t )floor(((float)numerator/(float)denominator*(float)255)), 255, 255);
   CRGB rgb;
-  uint8_t  hue = (uint8_t )floor(((float)numerator/(float)denominator*(float)255));
-  uint8_t  saturation = 255;
-  uint8_t  value = 255;
-  hsv = CHSV(hue, saturation, value);
-  hsv2rgb_rainbow(hsv, rgb);
+  hsv2rgb_spectrum(hsv, rgb);
   return rgb;
 }
 CRGB Model::GetRandomNonGrayColor()
 { 
-  CHSV hsv;
+  CHSV hsv = CHSV((uint8_t )random8(), 255, 255);
   CRGB rgb;
-  uint8_t  hue = (uint8_t )random(0, 256);
-  uint8_t  saturation = 255;
-  uint8_t  value = 255;
-  hsv = CHSV(hue, saturation, value);
-  hsv2rgb_rainbow(hsv, rgb);
+  hsv2rgb_spectrum(hsv, rgb);
   return rgb;
 }
 

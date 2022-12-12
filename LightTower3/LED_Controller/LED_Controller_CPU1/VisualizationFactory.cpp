@@ -346,28 +346,30 @@ Visualization* VerticalBandTower::GetInstance(StatisticalEngineModelInterface &S
 }
 void VerticalBandTower::SetupVisualization()
 {
-  int numVisualizations = m_StatisticalEngineModelInterface.GetNumberOfBands();
-  for(int i = 0; i < numVisualizations; ++i)
+  int numBands = m_StatisticalEngineModelInterface.GetNumberOfBands();
+  for(int i = 0; i < numBands; ++i)
   {
-    int yPosition1 = (int)round(i*(float)SCREEN_HEIGHT/(float)numVisualizations);
-    int yPosition2 = (int)round((i+1)*(float)SCREEN_HEIGHT/(float)numVisualizations);
+    int yPosition1 = (int)round(i*(float)SCREEN_HEIGHT/(float)numBands);
+    int yPosition2 = (int)round((i+1)*(float)SCREEN_HEIGHT/(float)numBands);
     int visHeight = yPosition2 - yPosition1;
     int band = i;
-    if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numVisualizations << "\n";
-    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight);
-    AddNewedView(*sprite, false);
+    if(true == debugVisualization) Serial << "Index:" << i << "\tY:" << yPosition1 << "\tH:" << visHeight << "\tB:" << band << " of " << numBands << "\n";
+    ColorSpriteView *sprite = new ColorSpriteView("Sprite", 0, yPosition1, SCREEN_WIDTH, visHeight, MergeType_Layer);
+    AddNewedView(*sprite, true);
+
     BandPowerModel *bandPower = new BandPowerModel("Band Power Model", i, m_StatisticalEngineModelInterface);
     AddNewedModel(*bandPower);
-    RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numVisualizations);
+    
+    RainbowColorModel *colorModel = new RainbowColorModel("Color Model", i, numBands);
     AddNewedModel(*colorModel);
+    
     SettableColorPowerModel *settableColorPowerModel = new SettableColorPowerModel("Settable Power Model");
     AddNewedModel(*settableColorPowerModel);
+    
     settableColorPowerModel->ConnectColorModel(*colorModel);
     settableColorPowerModel->ConnectPowerModel(*bandPower);
     sprite->ConnectColorModel(*settableColorPowerModel); 
   }
-  ColorSpriteView *background = new ColorSpriteView("Background", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
-  AddNewedView(*background, true);
 }
 bool VerticalBandTower::CanRunVisualization()
 { 

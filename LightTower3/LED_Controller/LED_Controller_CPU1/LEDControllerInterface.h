@@ -19,7 +19,7 @@
 #ifndef LEDControllerInterface_H
 #define LEDControllerInterface_H
 
-#define FASTLED_ALLOW_INTERRUPTS 0
+#define FASTLED_ALLOW_INTERRUPTS 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
 #include "Tunes.h"
@@ -43,9 +43,9 @@ class PixelArray
     }
     void Clear()
     {
-      for(int x = 0; x <= m_W-1; ++x)
+      for(int x = 0; x < m_W; ++x)
       {
-        for(int y = 0; y <= m_H-1; ++y)
+        for(int y = 0; y < m_H; ++y)
         {
           m_Pixels[x][y] = CRGB::Black;
         }
@@ -58,7 +58,7 @@ class PixelArray
     }
     CRGB GetPixel(position x, position y)
     {
-      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
+      if( (x >= m_X) && (x < m_X + m_W) && (y >= m_Y) && (y < m_Y + m_H) )
       {
         return m_Pixels[x - m_X][y - m_Y];
       }
@@ -69,7 +69,7 @@ class PixelArray
     }
     void SetPixel(position x, position y, CRGB value)
     {
-      if( (x >= m_X) && (x <= m_X + m_W - 1) && (y >= m_Y) && (y <= m_Y + m_H - 1) )
+      if( (x >= m_X) && (x < m_X + m_W) && (y >= m_Y) && (y < m_Y + m_H) )
       {
         m_Pixels[x - m_X][y - m_Y] = value;
       }
@@ -80,11 +80,11 @@ class PixelArray
       m_Y = pa.GetY();
       m_W = pa.GetWidth();
       m_H = pa.GetHeight();
-      for(position x = m_X; x <= m_X + m_W - 1; ++x)
+      for(position x = m_X; x < m_X + m_W; ++x)
       {
-        for(position y = m_Y; y <= m_Y + m_H - 1; ++y)
+        for(position y = m_Y; y < m_Y + m_H; ++y)
         {
-          m_Pixels[x][y] = pa.GetPixel(x, y);
+          m_Pixels[x-m_X][y-m_Y] = pa.GetPixel(x, y);
         }
       }
     }
@@ -131,26 +131,35 @@ class LEDController
       FastLED.addLeds<WS2812B, DATA_PIN_STRIP3_PIN, RGB>(m_LEDStrip[2], NUMLEDS);
       FastLED.addLeds<WS2812B, DATA_PIN_STRIP4_PIN, RGB>(m_LEDStrip[3], NUMLEDS);
       FastLED.setBrightness(255);
+      //FastLED.setCorrection(TypicalLEDStrip);
     }
     void Setup()
     {
     }
-    void UpdateLEDs(PixelArray *pixelArray)
+    bool UpdateLEDs(PixelArray *pixelArray)
     {
-      if(true == debugLEDs) Serial << "******LED Controller LEDs******\n";
+      if(true == debugLEDs) Serial << "******LED Controller LEDs******\n"; 
+      bool ChangeFound = false;
       for(int y = 0; y < SCREEN_HEIGHT; ++ y)
       {
         for(int x = 0; x < SCREEN_WIDTH; ++x)
         {
           CRGB bufColor = pixelArray->GetPixel(x, y);
+          if(m_LEDStrip[x][y].red != bufColor.red || m_LEDStrip[x][y].green != bufColor.green || m_LEDStrip[x][y].blue != bufColor.blue)
+          {
+            ChangeFound = true;
+          }
           m_LEDStrip[x][y].red = bufColor.red;
           m_LEDStrip[x][y].green = bufColor.green;
           m_LEDStrip[x][y].blue = bufColor.blue;
           if(true == debugLEDs) Serial << "\tR:" << bufColor.red << "\tG:" << bufColor.green << "\tB:" << bufColor.blue << " \t";
         }
         if(true == debugLEDs) Serial << "\n";
+      } 
+      if(true == ChangeFound)
+      {
+        FastLED.show();
       }
-      FastLED.show();
     }
     void TurnOffLEDs()
     {

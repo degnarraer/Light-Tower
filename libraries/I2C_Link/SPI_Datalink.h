@@ -29,7 +29,7 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define SPI_MAX_DATA_BYTES 500
+#define SPI_MAX_DATA_BYTES 800
 #define N_SLAVE_QUEUES 20
 #define N_MASTER_QUEUES 20
 #define DUTY_CYCLE_POS 128
@@ -104,7 +104,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 		{ 
 			m_SPI_Master.yield();
 			m_TransmitQueuedDataFlag = false;
-			m_Queued_TransactionsReset = m_Queued_Transactions;
+			m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
 		}
 		bool Begin();
 		bool End();
@@ -115,7 +115,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 		ESP32DMASPI::Master m_SPI_Master;
 		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
 		size_t m_Queued_Transactions = 0;
-		size_t m_Queued_TransactionsReset = 0;
+		size_t m_Queued_Transactions_Reset_Point = 0;
 		size_t m_DeQueued_Transactions = 0;
 		bool m_TransmitQueuedDataFlag = false;
 };

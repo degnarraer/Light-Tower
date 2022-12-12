@@ -11,30 +11,30 @@ void View::SetPosition(position x, position y)
 void View::SetSize(size w, size h){ m_W = w; m_H = h; }
 void View::AddSubView(View &subView)
 { 
-  SubViewClearStruct sVCD;
-  sVCD.SubView = &subView;
-  m_SubViewClearStructs.add(sVCD);
+  SubViewWithProperties_t sVWP;
+  sVWP.SubView = &subView;
+  m_SubViewWithProperties.add(0, sVWP);
   AddTask(subView);
 }
 void View::AddSubView(View &subView, bool clearViewBeforeMerge)
 { 
-  SubViewClearStruct sVCD;
-  sVCD.SubView = &subView;
-  sVCD.ClearViewBeforeMerge = clearViewBeforeMerge;
-  m_SubViewClearStructs.add(sVCD);
+  SubViewWithProperties_t sVWP;
+  sVWP.SubView = &subView;
+  sVWP.ClearViewBeforeMerge = clearViewBeforeMerge;
+  m_SubViewWithProperties.add(0, sVWP);
   AddTask(subView);
 }
 void View::AddSubView(View &subView, bool clearViewBeforeMerge, position x, position y, size width, size height )
 {
-  SubViewClearStruct sVCS;
-  sVCS.SubView = &subView;
-  sVCS.ClearViewBeforeMerge = clearViewBeforeMerge;
-  sVCS.SpecifiedClearArea = true;
-  sVCS.X_To_Clear = x;
-  sVCS.Y_To_Clear = y;
-  sVCS.W_To_Clear = width;
-  sVCS.H_To_Clear = height;
-  m_SubViewClearStructs.add(sVCS);
+  SubViewWithProperties_t sVWP;
+  sVWP.SubView = &subView;
+  sVWP.ClearViewBeforeMerge = clearViewBeforeMerge;
+  sVWP.SpecifiedClearArea = true;
+  sVWP.X_To_Clear = x;
+  sVWP.Y_To_Clear = y;
+  sVWP.W_To_Clear = width;
+  sVWP.H_To_Clear = height;
+  m_SubViewWithProperties.add(0, sVWP);
   AddTask(subView);
 }
 CRGB View::GetPixel(int x, int y)
@@ -44,12 +44,12 @@ CRGB View::GetPixel(int x, int y)
 bool View::RemoveSubView(View &subView)
 {
   bool viewFound = false;
-  for(int i = 0; i < m_SubViewClearStructs.size(); ++i)
+  for(int i = 0; i < m_SubViewWithProperties.size(); ++i)
   {
-    if(m_SubViewClearStructs.get(i).SubView == &subView)
+    if(m_SubViewWithProperties.get(i).SubView == &subView)
     {
       viewFound = true;
-      m_SubViewClearStructs.remove(i);
+      m_SubViewWithProperties.remove(i);
       break;
     }
   }
@@ -100,53 +100,49 @@ void View::RunMyPostTask()
 void View::MergeSubViews()
 {
   //Z Order is 1st subview added on top, last subview added on bottom
-  for(int v = m_SubViewClearStructs.size() - 1; v >= 0; --v)
+  for(int v = 0; v < m_SubViewWithProperties.size(); ++v)
   {
-    View *subView = m_SubViewClearStructs.get(v).SubView;
-    position aX = subView->GetPixelArray()->GetX();
-    position aY = subView->GetPixelArray()->GetY();
-    size aWidth = subView->GetPixelArray()->GetWidth();
-    size aHeight = subView->GetPixelArray()->GetHeight();
-    for(int x = aX; x < aX+aWidth; ++x)
+    View *subView = m_SubViewWithProperties.get(v).SubView;
+    position sub_X = subView->GetPixelArray()->GetX();
+    position sub_Y = subView->GetPixelArray()->GetY();
+    size sub_Width = subView->GetPixelArray()->GetWidth();
+    size sub_Height = subView->GetPixelArray()->GetHeight();
+    for(int x = sub_X; x < sub_X+sub_Width; ++x)
     {
-      for(int y = aY; y < aY+aHeight; ++y)
+      for(int y = sub_Y; y < sub_Y+sub_Height; ++y)
       {
-        SubViewClearStruct sVCS = m_SubViewClearStructs.get(v);
-        if( true == sVCS.ClearViewBeforeMerge )
+        SubViewWithProperties_t sVWP = m_SubViewWithProperties.get(v);
+        if( true == sVWP.ClearViewBeforeMerge )
         {
-          if( false == sVCS.SpecifiedClearArea )
+          if( false == sVWP.SpecifiedClearArea )
           {
             m_PixelArray->SetPixel(x, y, CRGB::Black);
           }
-          else if( x >= sVCS.X_To_Clear && x < sVCS.X_To_Clear + sVCS.W_To_Clear && y >= sVCS.Y_To_Clear && y < sVCS.Y_To_Clear + sVCS.H_To_Clear )
+          else if( x >= sVWP.X_To_Clear && x < sVWP.X_To_Clear + sVWP.W_To_Clear && y >= sVWP.Y_To_Clear && y < sVWP.Y_To_Clear + sVWP.H_To_Clear )
           {
             m_PixelArray->SetPixel(x, y, CRGB::Black);
           }
         }
         if( true == debugLEDs ) Serial << "Pixel Value " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
-        if( subView->GetPixel(x, y).red != 0 || subView->GetPixel(x, y).green != 0 || subView->GetPixel(x, y).blue != 0 )
+        switch(subView->GetMergeType())
         {
-          switch(subView->GetMergeType())
+          default:
+          case MergeType_Layer:
           {
-            case MergeType_Layer:
-            {
-              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
-              m_PixelArray->SetPixel(x, y, subView->GetPixel(x, y));
-            }
-            break;
-            case MergeType_Add:
-            {
-              if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
-              CRGB pixel;
-              pixel.red = qadd8(subView->GetPixel(x, y).red, m_PixelArray->GetPixel(x, y).red);
-              pixel.blue = qadd8(subView->GetPixel(x, y).blue, m_PixelArray->GetPixel(x, y).blue);
-              pixel.green = qadd8(subView->GetPixel(x, y).green, m_PixelArray->GetPixel(x, y).green);
-              m_PixelArray->SetPixel(x, y, pixel);
-            }
-            break;
-            default:
-            break;
+            if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
+            m_PixelArray->SetPixel(x, y, subView->GetPixel(x, y));
           }
+          break;
+          case MergeType_Add:
+          {
+            if(true == debugLEDs) Serial << "Set Pixel " << x << "|" << y << " to: " << "\tR:" << subView->GetPixel(x, y).red << "\tG:" << subView->GetPixel(x, y).green << "\tB:" << subView->GetPixel(x, y).blue << "\n";
+            CRGB pixel;
+            pixel.red = qadd8(subView->GetPixel(x, y).red, m_PixelArray->GetPixel(x, y).red);
+            pixel.blue = qadd8(subView->GetPixel(x, y).blue, m_PixelArray->GetPixel(x, y).blue);
+            pixel.green = qadd8(subView->GetPixel(x, y).green, m_PixelArray->GetPixel(x, y).green);
+            m_PixelArray->SetPixel(x, y, pixel);
+          }
+          break;
         }
       }
     }
@@ -347,7 +343,7 @@ void ColorSpriteView::NewValueNotification(Position value, String context)
 }
 void ColorSpriteView::NewValueNotification(BandData value, String context)
 {
-  m_MyColor = FadeColor(value.Color, value.Power);
+  m_MyColor = DimColor(value.Color, value.Power);
 }
 void ColorSpriteView::SetupMyView(){}
 bool ColorSpriteView::CanRunMyViewScheduledTask(){ return true; }

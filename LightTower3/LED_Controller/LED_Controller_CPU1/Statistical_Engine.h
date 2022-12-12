@@ -192,9 +192,9 @@ class StatisticalEngine : public NamedItem
     float m_AmpGain = 1.0;
     float m_FFTGain = 10.0;
     bool NewSoundDataReady();
+    static void StaticUpdateSoundState(void * Parameters);
     void UpdateSoundState();
 
- //Sound Detection
     size_t m_BandInputByteCount = sizeof(float) * m_NumBands;
     
     //Right Channel Input Sound Data
@@ -222,16 +222,16 @@ class StatisticalEngine : public NamedItem
     MaxBandSoundData_t m_Left_MaxBandSoundData;
 
     //Sound Detection
+    TaskHandle_t  m_SoundDetectionTask;
     const int     m_silenceDetectedThreshold = silenceDetectedThreshold;
     const int     m_soundDetectedThreshold = soundDetectedThreshold;
     const int     m_silenceIntegratorMax = silenceIntegratorMax;
     int           m_silenceIntegrator = 0;
     const int     m_silenceIntegratorMin = 0;  
     long          m_silenceStartTime;
-    unsigned long m_startMicros;
+
     unsigned long m_previousMicros;
     unsigned long m_currentMicros;
-    unsigned long m_finalMicros;
     const int     m_soundAdder = soundAdder;
     const int     m_silenceSubtractor = silenceSubtractor;
     SoundState    soundState = SoundState::SilenceDetected;

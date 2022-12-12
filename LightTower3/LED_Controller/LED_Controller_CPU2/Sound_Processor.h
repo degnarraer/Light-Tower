@@ -33,12 +33,12 @@
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
-                     , public QueueManager
                      , public QueueController
 {
   public:
     Sound_Processor( String Title
-                   , SPIDataLinkMaster &SPIDataLinkMaster);
+                   , SPIDataLinkMaster &SPIDataLinkMaster
+                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain){m_Gain = Gain;}
@@ -46,7 +46,8 @@ class Sound_Processor: public NamedItem
     
   private:
     SPIDataLinkMaster &m_SPIDataLinkMaster;
-
+    ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
+    
     //Memory Management
     bool m_MemoryIsAllocated = false;
     void AllocateMemory();
@@ -54,7 +55,7 @@ class Sound_Processor: public NamedItem
     
     //Adjustments
     float m_Gain = 1.0;
-    float m_FFT_Gain = 1.0;
+    float m_FFT_Gain = 10.0;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
@@ -66,22 +67,22 @@ class Sound_Processor: public NamedItem
   public:
     void ProcessSoundPower()
     {
-      Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power();
+      Calculate_Power();
     }
   private:
-    void Sound_16Bit_44100Hz_Calculate_Right_Left_Channel_Power();
-    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(441, BitLength_16);
-    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(441, BitLength_16);
+    void Calculate_Power();
+    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
+    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     
   public:
     void ProcessFFT()
     {
-      Sound_16Bit_44100Hz_Right_Left_Channel_FFT();
+      Calculate_FFTs();
     }
   private:
-    void Sound_16Bit_44100Hz_Right_Left_Channel_FFT();
-    void Sound_16Bit_44100Hz_Right_Channel_FFT();
-    void Sound_16Bit_44100Hz_Left_Channel_FFT();
+    void Calculate_FFTs();
+    void Update_Right_Bands_And_Send_Result();
+    void Update_Left_Bands_And_Send_Result();
     FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
     FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
 
@@ -89,16 +90,6 @@ class Sound_Processor: public NamedItem
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;
-
-    //QueueManager Interface
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    static const size_t m_SoundProcessorConfigCount = 2;
-    DataItemConfig_t m_ItemConfig[m_SoundProcessorConfigCount]
-    {
-      { "FFT_Frames",       DataType_Frame_t,   FFT_BUFFER_FRAME_COUNT,       Transciever_RX,   4 },
-      { "Amplitude_Frames", DataType_Frame_t,   AMPLITUDE_BUFFER_FRAME_COUNT, Transciever_RX,   4 },
-    };
-    size_t GetDataItemConfigCount() { return m_SoundProcessorConfigCount; }
 };
 
 #endif

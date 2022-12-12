@@ -130,7 +130,7 @@ private:
       }
       m_MaxBandData.Power = maxBandPowerValue;
       m_MaxBandData.Band = maxBandIndex;
-      m_MaxBandData.Color = GetColor(maxBandIndex, numBands - 1);
+      m_MaxBandData.Color = GetRainbowColor(maxBandIndex, numBands - 1);
     }
 };
 

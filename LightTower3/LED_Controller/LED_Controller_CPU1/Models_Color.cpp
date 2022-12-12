@@ -69,7 +69,7 @@ void ColorFadingModel::NewValueNotification(BandData value, String context)
   {
     m_StartTime = millis();
     m_StartColor = m_CurrentColor;
-    m_EndColor = FadeColor(value.Color, value.Power); 
+    m_EndColor = DimColor(value.Color, value.Power); 
   }
 }
 
