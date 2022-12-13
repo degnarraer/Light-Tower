@@ -32,7 +32,7 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_ssp_enabled(false);
 	xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask);
 	m_BTSource.set_local_name("LED Tower of Power");
-	m_BTSource.set_task_core(1);
+	m_BTSource.set_task_core(0);
 	m_BTSource.set_task_priority(configMAX_PRIORITIES-1);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
