@@ -119,6 +119,7 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
+    yield();
     ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
     vTaskDelay(10 / portTICK_PERIOD_MS);
