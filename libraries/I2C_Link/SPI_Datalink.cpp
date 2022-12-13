@@ -150,14 +150,14 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 			++m_DeQueued_Transactions;
 		}
 		
-		while(true)
+		while( N_SLAVE_QUEUES - 1 > m_SPI_Slave.remained() + m_SPI_Slave.available() )
 		{
 			size_t CurrentQueueIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
 			memset(spi_tx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 			size_t SendBytesSize = m_Notifiee->SendBytesTransferNotification(spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES);
 			if(0 == SendBytesSize)
 			{
-				if( (N_SLAVE_QUEUES > m_SPI_Slave.remained() + m_SPI_Slave.available() - 1) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)) )
+				if((N_SLAVE_QUEUES - 1 > m_SPI_Slave.remained() + m_SPI_Slave.available() ) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
 				{
 					++m_Queued_Transactions;
 				}
@@ -168,7 +168,7 @@ void SPI_Datalink_Slave::ProcessDataRXEventQueue()
 			}
 			else
 			{
-				if( (N_SLAVE_QUEUES > m_SPI_Slave.remained() + m_SPI_Slave.available() - 1) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SendBytesSize)) )
+				if((N_SLAVE_QUEUES - 1 > m_SPI_Slave.remained() + m_SPI_Slave.available()) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SendBytesSize)))
 				{
 					++m_Queued_Transactions;
 				}

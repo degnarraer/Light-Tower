@@ -108,7 +108,7 @@ const float SILENCE_THRESHOLD = 0.01;
 const float triggerLevelGain = 1.1;
 
 //Sound Detection
-const float   SOUND_DETECT_THRESHOLD = 0.05;
+const float   SOUND_DETECT_THRESHOLD = 0.01;
 const int     lastingSilenceTImeout = 10000;
 const int     silenceIntegratorMax = 50000;
 const int     silenceDetectedThreshold = 0.1*silenceIntegratorMax;
