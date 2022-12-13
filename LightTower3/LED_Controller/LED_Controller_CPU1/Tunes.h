@@ -36,7 +36,7 @@
 //App Debugging
 #define STARTUP_DEBUG false
 #define TASK_STACK_SIZE_DEBUG false
-#define TASK_LOOP_COUNT_DEBUG true
+#define TASK_LOOP_COUNT_DEBUG false
 #define HEAP_SIZE_DEBUG false
 
 //Visualization Debug Messages
@@ -104,7 +104,7 @@ const unsigned int BAND_SAVE_LENGTH = 10;
 const unsigned int POWER_SAVE_LENGTH = 10;
 
 //Trigger Level
-const float SILENCE_THRESHOLD = 0.05;
+const float SILENCE_THRESHOLD = 0.01;
 const float triggerLevelGain = 1.1;
 
 //Sound Detection

@@ -28,7 +28,7 @@ void Bluetooth_Source::InstallDevice()
 	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth Device.", GetTitle().c_str());
 	m_BTSource.set_nvs_init(true);
 	m_BTSource.set_reset_ble(true);
-	m_BTSource.set_auto_reconnect(false);
+	m_BTSource.set_auto_reconnect(true);
 	m_BTSource.set_ssp_enabled(false);
 	xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask);
 	m_BTSource.set_local_name("LED Tower of Power");
