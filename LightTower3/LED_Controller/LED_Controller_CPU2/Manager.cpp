@@ -26,7 +26,7 @@ Manager::Manager( String Title
                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer )
                 : NamedItem(Title)
                 , m_SoundProcessor(SoundProcessor)
-                , m_SPIDataLinkMaster(SPIDataLinkMaster)
+                , m_SPIDataLinkToCPU1(SPIDataLinkMaster)
                 , m_BT_Out(BT_Out)
                 , m_I2S_In(I2S_In)
                 , m_AudioBuffer(AudioBuffer)
@@ -71,8 +71,8 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channe
 int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
-  assert(0 == ByteReceived % sizeof(Frame_t)); 
-  size_t FrameCount = ByteReceived / sizeof(Frame_t);
+  assert(0 == ByteReceived % sizeof(uint32_t)); 
+  size_t FrameCount = ByteReceived / sizeof(uint32_t);
   m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }

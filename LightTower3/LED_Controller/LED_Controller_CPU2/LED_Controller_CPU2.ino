@@ -39,20 +39,17 @@ Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source
                                             , "JBL Flip 6" );
 
-SPIDataLinkMaster m_SPIDataLinkMaster = SPIDataLinkMaster( "SPI Datalink"
-                                                         , SPI1_PIN_SCK
-                                                         , SPI1_PIN_MISO
-                                                         , SPI1_PIN_MOSI
-                                                         , SPI1_PIN_SS
-                                                         , 1 );
+SPIDataLinkToCPU1 m_SPIDataLinkToCPU1 = SPIDataLinkToCPU1();
+SPIDataLinkToCPU3 m_SPIDataLinkToCPU3 = SPIDataLinkToCPU3();
+                                                         
 
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SPIDataLinkMaster
+                                                  , m_SPIDataLinkToCPU1
                                                   , m_AudioBuffer );                                            
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
-                           , m_SPIDataLinkMaster
+                           , m_SPIDataLinkToCPU1
                            , m_BT_Out
                            , m_I2S_In
                            , m_AudioBuffer );
@@ -84,7 +81,8 @@ void setup()
   a2dp_source.set_ssid_callback(ConnectToThisSSID);
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
-  m_SPIDataLinkMaster.SetupSPIDataLink();
+  m_SPIDataLinkToCPU1.SetupSPIDataLink();
+  m_SPIDataLinkToCPU3.SetupSPIDataLink();
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 10,  &ProcessFFTTask,          0 );
@@ -144,7 +142,8 @@ void SPI_TX_TaskLoop(void * parameter)
   {
     yield();
     ++ProcessSPITXTaskLoopCount;
-    m_SPIDataLinkMaster.ProcessDataTXEventQueue();
+    m_SPIDataLinkToCPU1.ProcessDataTXEventQueue();
+    m_SPIDataLinkToCPU3.ProcessDataTXEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }

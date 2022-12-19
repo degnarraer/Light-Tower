@@ -45,7 +45,7 @@ class Sound_Processor: public NamedItem
     void SetFFTGain(float Gain){m_FFT_Gain = Gain;}
     
   private:
-    SPIDataLinkMaster &m_SPIDataLinkMaster;
+    SPIDataLinkMaster &m_SPIDataLinkToCPU1;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     
     //Memory Management

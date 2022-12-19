@@ -40,11 +40,10 @@ void Manager::Setup()
 {
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
+  m_BT_In.Setup();
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
-  m_BT_In.Setup();
   m_Mic_In.SetCallback(this);
-  //m_BT_In.ResgisterForRxCallback(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
 }
@@ -63,7 +62,6 @@ void Manager::ProcessEventQueue()
     default:
     break;
   }
-  
 
   MoveDataFromQueueToQueue( "Manager 1"
                           , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Processed_Frame")
@@ -117,6 +115,7 @@ void Manager::ProcessEventQueue()
 
 void Manager::SetInputType(InputType_t Type)
 {
+    Serial << "FOUND ME2!\n";
   m_InputType = Type;
   switch(m_InputType)
   {
@@ -144,5 +143,28 @@ void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {
-  m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+  Serial << "FOUND ME6!\n";
+  
+  switch(m_InputType)
+  {
+    case InputType_Microphone:
+    {
+      uint16_t Buffer[length];
+      for(int i = 0; i < length / sizeof(uint32_t); ++i)
+      {
+        uint32_t Value32 = ((uint32_t*)data)[i];
+        uint16_t Value16 = Value32 >> 16;
+        Buffer[i] = Value16;
+      }
+      m_I2S_Out.WriteSoundBufferData((uint8_t *)Buffer, length); 
+    }
+    break;
+    case InputType_Bluetooth:
+    {
+      m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+    }
+    break;
+    default:
+    break;
+  }
 }

@@ -47,6 +47,24 @@ class SPIDataLinkMaster: public NamedItem
     {
       TriggerEarlyDataTransmit();
     }
+    
+  private:
+    //QueueManager Interface
+    virtual size_t GetDataItemConfigCount(){ return 0; }
+    virtual DataItemConfig_t* GetDataItemConfig(){ return NULL; }
+};
+
+class SPIDataLinkToCPU1: public SPIDataLinkMaster
+{
+  public:
+    SPIDataLinkToCPU1() : SPIDataLinkMaster("SPI Datalink 1"
+                        , SPI1_PIN_SCK
+                        , SPI1_PIN_MISO
+                        , SPI1_PIN_MOSI
+                        , SPI1_PIN_SS
+                        , 1 ) {}
+    virtual ~SPIDataLinkToCPU1(){}
+
   private:
     //QueueManager Interface
     static const size_t m_SPIDatalinkConfigCount = 8;
@@ -60,8 +78,34 @@ class SPIDataLinkMaster: public NamedItem
       { "R_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   4 },
       { "L_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   4 },
     };
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }
+    
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() override { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() override { return m_SPIDatalinkConfigCount; }
+};
+
+class SPIDataLinkToCPU3: public SPIDataLinkMaster
+{
+  public:
+    SPIDataLinkToCPU3() : SPIDataLinkMaster("SPI Datalink 1"
+                        , SPI2_PIN_SCK
+                        , SPI2_PIN_MISO
+                        , SPI2_PIN_MOSI
+                        , SPI2_PIN_SS
+                        , 1 ) {}
+    virtual ~SPIDataLinkToCPU3(){}
+
+  private:
+    //QueueManager Interface
+    static const size_t m_SPIDatalinkConfigCount = 1;
+    DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
+    {
+      { "R_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
+    };
+    
+    //QueueManager Interface
+    DataItemConfig_t* GetDataItemConfig() override { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() override { return m_SPIDatalinkConfigCount; }
 };
 
 #endif

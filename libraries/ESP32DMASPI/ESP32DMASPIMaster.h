@@ -207,7 +207,6 @@ public:
         if (size % 4 != 0) {
             printf("[WARN] DMA buffer size must be multiples of 4 bytes\n");
         }
-
         addTransaction(command_bits, address_bits, flags, cmd, addr, size, tx_buf, rx_buf);
         esp_err_t e = spi_device_queue_trans(handle, (spi_transaction_t*)&transactions.back(), portMAX_DELAY);
 

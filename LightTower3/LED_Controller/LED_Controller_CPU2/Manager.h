@@ -51,7 +51,7 @@ class Manager: public NamedItem
 
   private:
     Sound_Processor &m_SoundProcessor;
-    SPIDataLinkMaster &m_SPIDataLinkMaster;
+    SPIDataLinkMaster &m_SPIDataLinkToCPU1;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     Frame_t m_FFTFrameBuffer[FFT_SIZE];

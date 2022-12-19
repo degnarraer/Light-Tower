@@ -64,11 +64,11 @@ void audio_state_changed(esp_a2d_audio_state_t state, void *ptr)
 }
 
 
-I2S_Device m_Mic_In = I2S_Device( "Microphone In"
+I2S_Device m_Mic_In = I2S_Device( "Microphone"
                                 , I2S_NUM_0                          // I2S Interface
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
                                 , I2S_SAMPLE_RATE
-                                , I2S_BITS_PER_SAMPLE_16BIT
+                                , I2S_BITS_PER_SAMPLE_32BIT
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO

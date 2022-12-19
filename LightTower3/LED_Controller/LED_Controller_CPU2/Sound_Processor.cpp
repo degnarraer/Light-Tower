@@ -22,7 +22,7 @@ Sound_Processor::Sound_Processor( String Title
                                 , SPIDataLinkMaster &SPIDataLinkMaster
                                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer)
                                 : NamedItem(Title)
-                                , m_SPIDataLinkMaster(SPIDataLinkMaster)
+                                , m_SPIDataLinkToCPU1(SPIDataLinkMaster)
                                 , m_AudioBuffer(AudioBuffer)
 {
 }
@@ -72,17 +72,17 @@ void Sound_Processor::Calculate_FFTs()
 
 void Sound_Processor::Update_Right_Bands_And_Send_Result()
 {
-  QueueHandle_t R_Bands_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_BANDS");
-  QueueHandle_t R_MaxBin_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_MAXBAND");
-  QueueHandle_t R_MajorFreq_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
+  QueueHandle_t R_Bands_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("R_BANDS");
+  QueueHandle_t R_MaxBin_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("R_MAXBAND");
+  QueueHandle_t R_MajorFreq_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
   if(NULL != R_Bands_QueueOut && NULL != R_MaxBin_QueueOut && NULL != R_MajorFreq_QueueOut )
   {
-    size_t R_Bands_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_BANDS");
-    size_t R_MaxBand_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_MAXBAND");
-    size_t R_MajorFreq_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("R_MAJOR_FREQ");
-    size_t R_Bands_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("R_BANDS");
-    size_t R_MaxBand_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("R_MAXBAND");
-    size_t R_MajorFreq_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("R_MAJOR_FREQ");
+    size_t R_Bands_DataBufferByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("R_BANDS");
+    size_t R_MaxBand_DataBufferByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("R_MAXBAND");
+    size_t R_MajorFreq_DataBufferByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("R_MAJOR_FREQ");
+    size_t R_Bands_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("R_BANDS");
+    size_t R_MaxBand_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("R_MAXBAND");
+    size_t R_MajorFreq_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("R_MAJOR_FREQ");
     
     assert(NUMBER_OF_BANDS == R_Bands_SampleCount);
     assert(1 == R_MaxBand_SampleCount);
@@ -118,22 +118,22 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result()
     PushValueToQueue(&R_MaxBandDataBuffer, R_MaxBin_QueueOut, false, "Right Max Band: R_MAXBAND", R_MaxBand_Push_Successful);
     static bool R_MajorFreq_Push_Successful = true;
     PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
-    m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
+    m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
   }
 }
 void Sound_Processor::Update_Left_Bands_And_Send_Result()
 {
-  QueueHandle_t L_Bands_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_BANDS");
-  QueueHandle_t L_MaxBin_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_MAXBAND");
-  QueueHandle_t L_MajorFreq_QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
+  QueueHandle_t L_Bands_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("L_BANDS");
+  QueueHandle_t L_MaxBin_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("L_MAXBAND");
+  QueueHandle_t L_MajorFreq_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
   if( NULL != L_Bands_QueueOut && NULL != L_MaxBin_QueueOut && NULL != L_MajorFreq_QueueOut )
   {
-    size_t L_Bands_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_BANDS");
-    size_t L_MaxBand_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_MAXBAND");
-    size_t L_MajorFreq_DataBufferByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("L_MAJOR_FREQ");
-    size_t L_Bands_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("L_BANDS");
-    size_t L_MaxBand_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("L_MAXBAND");
-    size_t L_MajorFreq_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("L_MAJOR_FREQ");
+    size_t L_Bands_DataBufferByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("L_BANDS");
+    size_t L_MaxBand_DataBufferByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("L_MAXBAND");
+    size_t L_MajorFreq_DataBufferByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("L_MAJOR_FREQ");
+    size_t L_Bands_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("L_BANDS");
+    size_t L_MaxBand_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("L_MAXBAND");
+    size_t L_MajorFreq_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("L_MAJOR_FREQ");
 
     assert(NUMBER_OF_BANDS == L_Bands_SampleCount);
     assert(1 == L_MaxBand_SampleCount);
@@ -169,16 +169,16 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
     PushValueToQueue(&L_MaxBandDataBuffer, L_MaxBin_QueueOut, false, "Left Max Band: L_MAXBAND", L_MaxBand_Push_Successful);
     static bool L_MajorFreq_Push_Successful = true;
     PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
-    m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
+    m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
   }
 }
 void Sound_Processor::Calculate_Power()
 {    
-  QueueHandle_t QueueOut = m_SPIDataLinkMaster.GetQueueHandleTXForDataItem("Processed_Frame");
+  QueueHandle_t QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("Processed_Frame");
   if(QueueOut != NULL)
   {
-    size_t PSF_ByteCount = m_SPIDataLinkMaster.GetTotalByteCountForDataItem("Processed_Frame");
-    size_t PSF_SampleCount = m_SPIDataLinkMaster.GetSampleCountForDataItem("Processed_Frame");
+    size_t PSF_ByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("Processed_Frame");
+    size_t PSF_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("Processed_Frame");
     assert(1 == PSF_SampleCount);
     assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
     
@@ -208,7 +208,7 @@ void Sound_Processor::Calculate_Power()
         PSF.Channel2 = L_PSD;
         static bool PSF_Push_Successful = true;
         PushValueToQueue(&PSF, QueueOut, false, "Processed Sound Frame: Processed_Frame", PSF_Push_Successful);
-        m_SPIDataLinkMaster.TriggerEarlyDataTransmit();
+        m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
       }
     }
   }
