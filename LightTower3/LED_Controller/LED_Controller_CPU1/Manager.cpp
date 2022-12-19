@@ -57,7 +57,29 @@ void Manager::ProcessEventQueue()
       m_I2S_Out.ProcessEventQueue();
     break;
     case InputType_Bluetooth:
+    {  
       m_I2S_Out.ProcessEventQueue();
+      
+      //Process Bluetooth Connection Status
+      if(m_BluetoothIsConnected != m_BT_In.IsConnected())
+      {
+        m_BluetoothIsConnected = m_BT_In.IsConnected();
+        if(true == m_BluetoothIsConnected)
+        {
+          ESP_LOGI("Manager", "Bluetooth Source Connected!");
+        }
+        else
+        {
+          ESP_LOGI("Manager", "Bluetooth Source Disconnected!");
+        }
+        static bool SourceIsConnectedValuePushError = false;
+        PushValueToQueue( &m_BluetoothIsConnected
+                        , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
+                        , true
+                        , "Source Is Connected"
+                        , SourceIsConnectedValuePushError );
+      }
+    }
     break;
     default:
     break;

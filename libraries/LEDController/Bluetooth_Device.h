@@ -48,7 +48,7 @@ class Bluetooth_Source: public NamedItem
 		}
 		virtual ~Bluetooth_Source(){}
 		void Setup();
-		void InstallDevice();;
+		void InstallDevice();
 		void StartDevice();
 		void StopDevice();
 		bool IsConnected();
@@ -122,6 +122,7 @@ class Bluetooth_Sink: public NamedItem
 	void Setup();
 	void StartDevice();
 	void StopDevice();
+	bool IsConnected();
 	
 	//Callbacks from BluetoothSink  
 	void data_received_callback();

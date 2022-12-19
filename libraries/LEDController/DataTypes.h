@@ -38,6 +38,7 @@ enum BitLength_t
 
 enum DataType_t
 {
+  DataType_bool,
   DataType_Int8_t,
   DataType_Int16_t,
   DataType_Int32_t,
@@ -56,6 +57,7 @@ enum DataType_t
 
 static const char* DataTypeStrings[] =
 {
+  "bool",
   "Int8_t",
   "Int16_t",
   "Int32_t",

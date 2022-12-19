@@ -1,3 +1,21 @@
+/*
+    Light Tower by Rob Shockency
+    Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "Manager.h"
 #include "Tunes.h"
 #include "esp_log.h"
@@ -50,6 +68,7 @@ Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
 Manager m_Manager = Manager("Manager"
                            , m_SoundProcessor
                            , m_SPIDataLinkToCPU1
+                           , m_SPIDataLinkToCPU3
                            , m_BT_Out
                            , m_I2S_In
                            , m_AudioBuffer );
@@ -88,7 +107,7 @@ void setup()
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 10,  &ProcessFFTTask,          0 );
   xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSoundPowerTask,   0 );
   xTaskCreatePinnedToCore( SPI_TX_TaskLoop,           "SPI TX Task Task",       2000,   NULL,   1,                          &ProcessSPITXTask,        1 );
-  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            1000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
+  xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            2000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        2000,   NULL,   configMAX_PRIORITIES - 1,   &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());

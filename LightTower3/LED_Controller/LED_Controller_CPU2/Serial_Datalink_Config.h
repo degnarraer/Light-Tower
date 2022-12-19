@@ -67,8 +67,8 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 8;
-    DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
+    static const size_t m_SPIDataLinkToCPU1ConfigCount = 8;
+    DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU1ConfigCount]
     {
       { "R_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
       { "L_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
@@ -77,11 +77,12 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
       { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
       { "R_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   4 },
       { "L_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   4 },
+      { "My SSID",          DataType_String,                 1,                  Transciever_TXRX, 1 },
     };
     
     //QueueManager Interface
     DataItemConfig_t* GetDataItemConfig() override { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() override { return m_SPIDatalinkConfigCount; }
+    size_t GetDataItemConfigCount() override { return m_SPIDataLinkToCPU1ConfigCount; }
 };
 
 class SPIDataLinkToCPU3: public SPIDataLinkMaster
@@ -97,15 +98,19 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 1;
-    DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
+    static const size_t m_SPIDataLinkToCPU3ConfigCount = 5;
+    DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
-      { "R_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
+      { "My SSID",                  DataType_String,  1,    Transciever_TXRX,   1 },
+      { "Speaker SSID",             DataType_String,  1,    Transciever_TXRX,   1 },
+      { "Available Speakers",       DataType_String,  10,   Transciever_TXRX,   1 },
+      { "Input Bluetooth Reset",    DataType_bool,    1,    Transciever_TXRX,   1 },
+      { "Output Bluetooth Reset",   DataType_bool,    1,    Transciever_TXRX,   1 },
     };
     
     //QueueManager Interface
     DataItemConfig_t* GetDataItemConfig() override { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() override { return m_SPIDatalinkConfigCount; }
+    size_t GetDataItemConfigCount() override { return m_SPIDataLinkToCPU3ConfigCount; }
 };
 
 #endif

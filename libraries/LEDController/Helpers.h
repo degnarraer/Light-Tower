@@ -34,6 +34,10 @@ class CommonUtils
 			uint32_t Result = 0;
 			switch(DataType)
 			{
+				case DataType_bool:
+					Result = sizeof(bool);
+				break;
+				
 				case DataType_Int8_t:
 					Result = sizeof(int8_t);
 				break;

@@ -35,7 +35,8 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , Sound_Processor &SoundProcessor
-           , SPIDataLinkMaster &SPIDataLinkMaster
+           , SPIDataLinkToCPU1 &SPIDataLinkToCPU1
+           , SPIDataLinkToCPU3 &SPIDataLinkToCPU3
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
@@ -51,7 +52,8 @@ class Manager: public NamedItem
 
   private:
     Sound_Processor &m_SoundProcessor;
-    SPIDataLinkMaster &m_SPIDataLinkToCPU1;
+    SPIDataLinkToCPU1 &m_SPIDataLinkToCPU1;
+    SPIDataLinkToCPU3 &m_SPIDataLinkToCPU3;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     Frame_t m_FFTFrameBuffer[FFT_SIZE];
@@ -63,6 +65,7 @@ class Manager: public NamedItem
     Bluetooth_Source &m_BT_Out;
 
     void UpdateNotificationRegistrationStatus();
+    void MoveDataBetweenCPU1AndCPU3();
 };
 
 #endif

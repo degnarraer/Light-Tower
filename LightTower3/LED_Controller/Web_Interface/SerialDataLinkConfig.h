@@ -70,10 +70,18 @@ class SPIDataLinkSlave: public NamedItem
   private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 1;
+    static const size_t m_SPIDatalinkConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "R_BANDS",          DataType_Float,                  32,  Transciever_RX,   4 },
+      { "My SSID",                  DataType_String,  1,    Transciever_TXRX,   1 },
+      { "Auto Reconnect Input",     DataType_bool,    1,    Transciever_TXRX,   1 },
+      { "Input Bluetooth Reset",    DataType_bool,    1,    Transciever_TXRX,   1 },
+      { "Source Is Connected",      DataType_bool,    1,    Transciever_RX,     1 },
+      
+      { "Speaker SSID",             DataType_String,  1,    Transciever_TXRX,   1 },
+      { "Speaker Is Connected",     DataType_bool,    1,    Transciever_TXRX,   1 },
+      { "Available Speakers SSID",  DataType_String,  10,   Transciever_TXRX,   1 },
+      { "Output Bluetooth Reset",   DataType_bool,    1,    Transciever_TXRX,   1 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

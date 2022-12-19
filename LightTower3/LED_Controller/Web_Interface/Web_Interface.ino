@@ -186,7 +186,7 @@ void InitWebServer()
 
 void InitTasks()
 {
-  //xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task",  3000,  NULL,  0,  &SPI_RX_Task, 0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task",  3000,  NULL,  0,  &SPI_RX_Task, 0 );
 }
 
 void InitLocalVariables()

@@ -72,6 +72,7 @@ class Manager: public NamedItem
 
     //Bluetooth Data
     Bluetooth_Sink &m_BT_In;
+    bool m_BluetoothIsConnected = false;
     
     //I2S Sound Data RX
     I2S_Device &m_Mic_In; 

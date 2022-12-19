@@ -69,16 +69,19 @@ class SPIDataLinkSlave: public NamedItem
   private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 8;
+    static const size_t m_SPIDatalinkConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "R_BANDS",          DataType_Float,                  32,  Transciever_RX,   4 },
-      { "L_BANDS",          DataType_Float,                  32,  Transciever_RX,   4 },
-      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,   Transciever_RX,   4 },
-      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   4 },
-      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,   Transciever_RX,   4 },
-      { "R_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   4 },
-      { "L_MAJOR_FREQ",     DataType_Float,                  1,   Transciever_RX,   4 },
+      { "R_BANDS",                  DataType_Float,                  32,  Transciever_RX,   4 },
+      { "L_BANDS",                  DataType_Float,                  32,  Transciever_RX,   4 },
+      { "Processed_Frame",          DataType_ProcessedSoundFrame_t,  1,   Transciever_RX,   4 },
+      { "R_MAXBAND",                DataType_MaxBandSoundData_t,     1,   Transciever_RX,   4 },
+      { "L_MAXBAND",                DataType_MaxBandSoundData_t,     1,   Transciever_RX,   4 },
+      { "R_MAJOR_FREQ",             DataType_Float,                  1,   Transciever_RX,   4 },
+      { "L_MAJOR_FREQ",             DataType_Float,                  1,   Transciever_RX,   4 },
+      { "My SSID",                  DataType_String,                 1,   Transciever_TXRX, 1 },
+      { "Input Bluetooth Reset",    DataType_bool,                   1,   Transciever_TXRX, 1 },
+      { "Source Is Connected",      DataType_bool,                   1,   Transciever_TX,   1 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

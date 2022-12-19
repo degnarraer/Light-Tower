@@ -193,3 +193,4 @@ void Bluetooth_Sink::StopDevice()
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
 	}
 }
+bool Bluetooth_Sink::IsConnected() {return m_BTSink.is_connected();}

@@ -20,13 +20,15 @@
 
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
-                , SPIDataLinkMaster &SPIDataLinkMaster
+                , SPIDataLinkToCPU1 &SPIDataLinkToCPU1
+                , SPIDataLinkToCPU3 &SPIDataLinkToCPU3
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In
                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer )
                 : NamedItem(Title)
                 , m_SoundProcessor(SoundProcessor)
-                , m_SPIDataLinkToCPU1(SPIDataLinkMaster)
+                , m_SPIDataLinkToCPU1(SPIDataLinkToCPU1)
+                , m_SPIDataLinkToCPU3(SPIDataLinkToCPU3)
                 , m_BT_Out(BT_Out)
                 , m_I2S_In(I2S_In)
                 , m_AudioBuffer(AudioBuffer)
@@ -49,6 +51,7 @@ void Manager::ProcessEventQueue()
 {
   UpdateNotificationRegistrationStatus();
   m_I2S_In.ProcessEventQueue();
+  MoveDataBetweenCPU1AndCPU3();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
@@ -59,6 +62,29 @@ void Manager::UpdateNotificationRegistrationStatus()
   }
   else
   {
+  }
+}
+
+void Manager::MoveDataBetweenCPU1AndCPU3()
+{
+  const uint8_t count = 2;
+  String Signals[count] = { "My SSID"
+                          , "Speaker SSID" };
+                      
+  for(int i = 0; i < count; ++i)
+  {
+    MoveDataFromQueueToQueue( "Manager: " + Signals[i]
+                            , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
+                            , false
+                            , false );
+    MoveDataFromQueueToQueue( "Manager: " + Signals[i]
+                            , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].c_str())
+                            , false
+                            , false );
   }
 }
 
