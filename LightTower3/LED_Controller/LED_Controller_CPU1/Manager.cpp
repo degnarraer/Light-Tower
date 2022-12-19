@@ -61,9 +61,10 @@ void Manager::ProcessEventQueue()
       m_I2S_Out.ProcessEventQueue();
       
       //Process Bluetooth Connection Status
-      if(m_BluetoothIsConnected != m_BT_In.IsConnected())
+      bool IsConnected = m_BT_In.IsConnected();
+      if(m_BluetoothIsConnected != IsConnected)
       {
-        m_BluetoothIsConnected = m_BT_In.IsConnected();
+        m_BluetoothIsConnected = IsConnected;
         if(true == m_BluetoothIsConnected)
         {
           ESP_LOGI("Manager", "Bluetooth Source Connected!");

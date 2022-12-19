@@ -70,14 +70,14 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
     static const size_t m_SPIDataLinkToCPU1ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU1ConfigCount]
     {
-      { "R_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
-      { "L_BANDS",          DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
-      { "Processed_Frame",  DataType_ProcessedSoundFrame_t,  1,                  Transciever_TX,   4 },
-      { "R_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
-      { "L_MAXBAND",        DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
-      { "R_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   4 },
-      { "L_MAJOR_FREQ",     DataType_Float,                  1,                  Transciever_TX,   4 },
-      { "My SSID",          DataType_String,                 1,                  Transciever_TXRX, 1 },
+      { "R_BANDS",              DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
+      { "L_BANDS",              DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
+      { "Processed_Frame",      DataType_ProcessedSoundFrame_t,  1,                  Transciever_TX,   4 },
+      { "R_MAXBAND",            DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
+      { "L_MAXBAND",            DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
+      { "R_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
+      { "L_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
+      { "Source Is Connected",  DataType_bool,                   1,                  Transciever_RX,   1 },
     };
     
     //QueueManager Interface
@@ -98,14 +98,10 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDataLinkToCPU3ConfigCount = 5;
+    static const size_t m_SPIDataLinkToCPU3ConfigCount = 1;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
-      { "My SSID",                  DataType_String,  1,    Transciever_TXRX,   1 },
-      { "Speaker SSID",             DataType_String,  1,    Transciever_TXRX,   1 },
-      { "Available Speakers",       DataType_String,  10,   Transciever_TXRX,   1 },
-      { "Input Bluetooth Reset",    DataType_bool,    1,    Transciever_TXRX,   1 },
-      { "Output Bluetooth Reset",   DataType_bool,    1,    Transciever_TXRX,   1 },
+      { "Source Is Connected",      DataType_bool,    1,    Transciever_TX,     1 },
     };
     
     //QueueManager Interface

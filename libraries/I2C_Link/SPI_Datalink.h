@@ -35,12 +35,11 @@
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
-class SPI_Slave_Notifier
+class SPI_Receive_Notifier
 {
 	public:
-		SPI_Slave_Notifier(){}
-		virtual ~SPI_Slave_Notifier(){}
-		virtual size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend) = 0;
+		SPI_Receive_Notifier(){}
+		virtual ~SPI_Receive_Notifier(){}
 		virtual size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived) = 0;
 	private:
 };
@@ -61,6 +60,7 @@ class SPI_Datalink: public DataSerializer
 					{
 					}
 		virtual ~SPI_Datalink(){}
+		void RegisterForReceivedDataTransferNotification(SPI_Receive_Notifier *Notifiee);
 		void SetSerialDataLinkDataItems(DataItem_t& DataItems, size_t Count) 
 		{ 
 			m_DataItems = &DataItems;
@@ -75,7 +75,7 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_DMA_Channel = 0;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
-	private:	
+		SPI_Receive_Notifier *m_Notifiee = NULL;
 };
 
 class SPI_Datalink_Master: public SPI_Datalink
@@ -93,19 +93,14 @@ class SPI_Datalink_Master: public SPI_Datalink
 							  Setup_SPI_Master(); 
 						   }
 		virtual ~SPI_Datalink_Master(){}
-		void ProcessDataTXEventQueue();
+		void ProcessEventQueue();
 		void TriggerEarlyDataTransmit()
 		{ 
 			m_TransmitQueuedDataFlag = true;
 		}
 	protected:
 		void Setup_SPI_Master();
-		void TransmitQueuedData()
-		{ 
-			m_SPI_Master.yield();
-			m_TransmitQueuedDataFlag = false;
-			m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
-		}
+		void TransmitQueuedData();
 		bool Begin();
 		bool End();
 	private:
@@ -135,18 +130,19 @@ class SPI_Datalink_Slave: public SPI_Datalink
 							 Setup_SPI_Slave(); 
 						  }
 		virtual ~SPI_Datalink_Slave(){}
-		void ProcessDataRXEventQueue();
-		void RegisterForDataTransferNotification(SPI_Slave_Notifier *Notifiee);
+		void ProcessEventQueue();
 	protected:
 		void Setup_SPI_Slave();
 	private:
 		uint8_t* spi_tx_buf[N_SLAVE_QUEUES];
 		uint8_t* spi_rx_buf[N_SLAVE_QUEUES];
 		String m_Title = "";
-		SPI_Slave_Notifier *m_Notifiee = NULL;
 		ESP32DMASPI::Slave m_SPI_Slave;
 		size_t m_Queued_Transactions = 0;
 		size_t m_DeQueued_Transactions = 0;
+		size_t m_TXIndex = 0;
+		size_t GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend);
+		String EncodeData(String Name, DataType_t DataType, void* Object, size_t Count);
 };
 
 #endif

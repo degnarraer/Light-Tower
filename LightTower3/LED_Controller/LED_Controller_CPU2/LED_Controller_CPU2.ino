@@ -161,8 +161,8 @@ void SPI_TX_TaskLoop(void * parameter)
   {
     yield();
     ++ProcessSPITXTaskLoopCount;
-    m_SPIDataLinkToCPU1.ProcessDataTXEventQueue();
-    m_SPIDataLinkToCPU3.ProcessDataTXEventQueue();
+    m_SPIDataLinkToCPU1.ProcessEventQueue();
+    m_SPIDataLinkToCPU3.ProcessEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }

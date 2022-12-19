@@ -23,7 +23,7 @@
 
 class SPIDataLinkSlave: public NamedItem
                       , public SPI_Datalink_Slave
-                      , public SPI_Slave_Notifier
+                      , public SPI_Receive_Notifier
                       , public QueueManager
 {
   public:
@@ -42,15 +42,11 @@ class SPIDataLinkSlave: public NamedItem
       ESP_LOGE("SPI_Datalink_Config", "%s: Setting Up", GetTitle().c_str());
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
-      RegisterForDataTransferNotification(this);
+      RegisterForReceivedDataTransferNotification(this);
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
     }
      
-    //SPI_Slave_Notifier Interface
-    size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend)
-    {
-      return 0;
-    }
+    //SPI_Receive_Notifier Interface
     size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
     {
       String ResultString;
@@ -61,8 +57,7 @@ class SPIDataLinkSlave: public NamedItem
           ResultString += ((char*)RXBuffer)[i];
         } 
         ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
-        DeSerializeJsonToMatchingDataItem(ResultString.c_str());
-        
+        DeSerializeJsonToMatchingDataItem(ResultString.c_str()); 
       }
       return ResultString.length();
     }
@@ -79,8 +74,6 @@ class SPIDataLinkSlave: public NamedItem
       { "L_MAXBAND",                DataType_MaxBandSoundData_t,     1,   Transciever_RX,   4 },
       { "R_MAJOR_FREQ",             DataType_Float,                  1,   Transciever_RX,   4 },
       { "L_MAJOR_FREQ",             DataType_Float,                  1,   Transciever_RX,   4 },
-      { "My SSID",                  DataType_String,                 1,   Transciever_TXRX, 1 },
-      { "Input Bluetooth Reset",    DataType_bool,                   1,   Transciever_TXRX, 1 },
       { "Source Is Connected",      DataType_bool,                   1,   Transciever_TX,   1 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }

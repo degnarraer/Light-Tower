@@ -34,14 +34,14 @@ uint32_t VisualizationTaskLoopCount = 0;
 TaskHandle_t TaskMonitorTask;
 uint32_t TaskMonitorTaskLoopCount = 0;
 
-TaskHandle_t SPI_RX_Task;
-uint32_t SPI_RX_TaskLoopCount = 0;
+TaskHandle_t SPI_Task;
+uint32_t SPI_TaskLoopCount = 0;
 
 void InitTasks()
 {
   xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 1,  &DataMoverTask,       0 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 1,  &TaskMonitorTask,     0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,       "SPI_RX_Task",          3000,  NULL,   0,                         &SPI_RX_Task,         0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,          "SPI_Task",             3000,  NULL,   0,                         &SPI_Task,         0 );
   xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 10, &VisualizationTask,   1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
 }
 
@@ -70,13 +70,13 @@ void VisualizationTaskLoop(void * parameter)
   }
 }
 
-void SPI_RX_TaskLoop(void * parameter)
+void SPI_TaskLoop(void * parameter)
 {
   while(true)
   {
     yield();
-    ++SPI_RX_TaskLoopCount;
-    m_SPIDataLinkSlave.ProcessDataRXEventQueue();
+    ++SPI_TaskLoopCount;
+    m_SPIDataLinkSlave.ProcessEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }  
 }
@@ -96,11 +96,11 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGE("LED_Controller1", "DataMoveTaskLoopCount: %f", (float)DataMoveTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "VisualizationTaskLoopCount: %f", (float)VisualizationTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
-      ESP_LOGE("LED_Controller1", "SPI_RX_TaskLoopCount: %f", (float)SPI_RX_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "SPI_TaskLoopCount: %f", (float)SPI_TaskLoopCount/(float)DeltaTimeSeconds);
       DataMoveTaskLoopCount = 0;
       VisualizationTaskLoopCount = 0;
       TaskMonitorTaskLoopCount = 0;
-      SPI_RX_TaskLoopCount = 0;
+      SPI_TaskLoopCount = 0;
     }
 
     size_t StackSizeThreshold = 100;
@@ -111,7 +111,7 @@ void TaskMonitorTaskLoop(void * parameter)
     {
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
       ESP_LOGE("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
-      ESP_LOGE("LED_Controller1", "SPI_RX_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_RX_Task));
+      ESP_LOGE("LED_Controller1", "SPI_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_Task));
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
     LoopCountTimer = CurrentTime;
@@ -122,7 +122,7 @@ void TaskMonitorTaskLoop(void * parameter)
 void DataMoverTaskLoop(void * parameter)
 {
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20; //delay for mS
+  const TickType_t xFrequency = 20;
   while(true)
   {
     ++DataMoveTaskLoopCount;

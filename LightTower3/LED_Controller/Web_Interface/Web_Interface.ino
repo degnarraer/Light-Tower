@@ -218,7 +218,7 @@ void SPI_RX_TaskLoop(void * parameter)
   {
     yield();
     ++SPI_RX_TaskLoopCount;
-    m_SPIDataLinkSlave.ProcessDataRXEventQueue();
+    m_SPIDataLinkSlave.ProcessEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }  
 }

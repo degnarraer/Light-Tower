@@ -67,9 +67,8 @@ void Manager::UpdateNotificationRegistrationStatus()
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
 {
-  const uint8_t count = 2;
-  String Signals[count] = { "My SSID"
-                          , "Speaker SSID" };
+  const uint8_t count = 1;
+  String Signals[count] = { "Source Is Connected" };
                       
   for(int i = 0; i < count; ++i)
   {
