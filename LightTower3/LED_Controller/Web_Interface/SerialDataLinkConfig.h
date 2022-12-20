@@ -24,7 +24,6 @@
 
 class SPIDataLinkSlave: public NamedItem
                       , public SPI_Datalink_Slave
-                      , public SPI_Slave_Notifier
                       , public QueueManager
 {
   public:
@@ -43,29 +42,7 @@ class SPIDataLinkSlave: public NamedItem
       ESP_LOGE("SPI_Datalink_Config", "%s: Setting Up", GetTitle().c_str());
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
-      RegisterForDataTransferNotification(this);
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
-    }
-     
-    //SPI_Slave_Notifier Interface
-    size_t SendBytesTransferNotification(uint8_t *TXBuffer, size_t BytesToSend)
-    {
-      return 0;
-    }
-    size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
-    {
-      String ResultString;
-      if(NULL != RXBuffer && BytesReceived > 0)
-      {
-        for (int i = 0; i < BytesReceived; i++) 
-        { 
-          ResultString += ((char*)RXBuffer)[i];
-        } 
-        ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
-        DeSerializeJsonToMatchingDataItem(ResultString.c_str());
-        
-      }
-      return ResultString.length();
     }
   private:
     

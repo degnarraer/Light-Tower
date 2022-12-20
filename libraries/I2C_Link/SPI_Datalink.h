@@ -35,15 +35,6 @@
 #define DUTY_CYCLE_POS 128
 #define CLOCK_SPEED 4000000
 
-class SPI_Receive_Notifier
-{
-	public:
-		SPI_Receive_Notifier(){}
-		virtual ~SPI_Receive_Notifier(){}
-		virtual size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived) = 0;
-	private:
-};
-
 class SPI_Datalink: public DataSerializer
 {
 	public:
@@ -60,7 +51,6 @@ class SPI_Datalink: public DataSerializer
 					{
 					}
 		virtual ~SPI_Datalink(){}
-		void RegisterForReceivedDataTransferNotification(SPI_Receive_Notifier *Notifiee);
 		void SetSerialDataLinkDataItems(DataItem_t& DataItems, size_t Count) 
 		{ 
 			m_DataItems = &DataItems;
@@ -75,10 +65,10 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_DMA_Channel = 0;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
-		SPI_Receive_Notifier *m_Notifiee = NULL;
 };
 
 class SPI_Datalink_Master: public SPI_Datalink
+					     , public NamedItem
 {
 	public:
 		SPI_Datalink_Master( String Title
@@ -87,7 +77,8 @@ class SPI_Datalink_Master: public SPI_Datalink
 						   , uint8_t MOSI
 						   , uint8_t SS
 						   , uint8_t DMA_Channel )
-						   : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
+						   : NamedItem(Title)
+						   , SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
 						   , m_Title(Title)
 						   {
 							  Setup_SPI_Master(); 
@@ -108,7 +99,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 		uint8_t *spi_rx_buf[N_MASTER_QUEUES];
 		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
-		void EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count);
+		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode);
 		size_t m_Queued_Transactions = 0;
 		size_t m_Queued_Transactions_Reset_Point = 0;
 		size_t m_DeQueued_Transactions = 0;
@@ -116,6 +107,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 };
 
 class SPI_Datalink_Slave: public SPI_Datalink
+						, public NamedItem
 {
 	public:
 		SPI_Datalink_Slave( String Title
@@ -124,7 +116,8 @@ class SPI_Datalink_Slave: public SPI_Datalink
 						  , uint8_t MOSI
 						  , uint8_t SS
 						  , uint8_t DMA_Channel )
-						  : SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
+						  : NamedItem(Title)
+						  , SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
 						  , m_Title(Title)
 						  {
 							 Setup_SPI_Slave(); 
@@ -140,9 +133,11 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		ESP32DMASPI::Slave m_SPI_Slave;
 		size_t m_Queued_Transactions = 0;
 		size_t m_DeQueued_Transactions = 0;
-		size_t m_TXIndex = 0;
+		size_t m_CurrentDataItemToTX = 0;
+		void ProcessCompletedTransactions();
+		void QueueUpNewTransactions();
 		size_t GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend);
-		String EncodeData(String Name, DataType_t DataType, void* Object, size_t Count);
+		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode);
 };
 
 #endif

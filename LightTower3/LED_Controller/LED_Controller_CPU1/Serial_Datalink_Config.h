@@ -21,9 +21,7 @@
 #define SERIAL_DATALINK_CONFIG_H
 #include "SPI_Datalink.h"
 
-class SPIDataLinkSlave: public NamedItem
-                      , public SPI_Datalink_Slave
-                      , public SPI_Receive_Notifier
+class SPIDataLinkSlave: public SPI_Datalink_Slave
                       , public QueueManager
 {
   public:
@@ -33,8 +31,7 @@ class SPIDataLinkSlave: public NamedItem
                     , uint8_t MOSI
                     , uint8_t SS
                     , uint8_t DMA_Channel )
-                    : NamedItem(Title) 
-                    , QueueManager(Title, GetDataItemConfigCount())
+                    : QueueManager(Title, GetDataItemConfigCount())
                     , SPI_Datalink_Slave(Title, SCK, MISO, MOSI, SS, DMA_Channel) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()
@@ -42,24 +39,7 @@ class SPIDataLinkSlave: public NamedItem
       ESP_LOGE("SPI_Datalink_Config", "%s: Setting Up", GetTitle().c_str());
       SetupQueueManager();
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
-      RegisterForReceivedDataTransferNotification(this);
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
-    }
-     
-    //SPI_Receive_Notifier Interface
-    size_t ReceivedBytesTransferNotification(uint8_t *RXBuffer, size_t BytesReceived)
-    {
-      String ResultString;
-      if(NULL != RXBuffer && BytesReceived > 0)
-      {
-        for (int i = 0; i < BytesReceived; i++) 
-        { 
-          ResultString += ((char*)RXBuffer)[i];
-        } 
-        ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
-        DeSerializeJsonToMatchingDataItem(ResultString.c_str()); 
-      }
-      return ResultString.length();
     }
   private:
     

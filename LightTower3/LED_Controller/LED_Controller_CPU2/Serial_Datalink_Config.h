@@ -21,8 +21,7 @@
 #include <Serial_Datalink_Core.h>
 #include "SPI_Datalink.h"
 
-class SPIDataLinkMaster: public NamedItem
-                       , public SPI_Datalink_Master
+class SPIDataLinkMaster: public SPI_Datalink_Master
                        , public QueueManager
 {
   public:
@@ -32,8 +31,7 @@ class SPIDataLinkMaster: public NamedItem
                      , uint8_t MOSI
                      , uint8_t SS
                      , uint8_t DMA_Channel)
-                     : NamedItem(Title)
-                     , QueueManager(Title, GetDataItemConfigCount())
+                     : QueueManager(Title, GetDataItemConfigCount())
                      , SPI_Datalink_Master(Title, SCK, MISO, MOSI, SS, DMA_Channel) {}
     virtual ~SPIDataLinkMaster(){}
     void SetupSPIDataLink()
@@ -57,7 +55,7 @@ class SPIDataLinkMaster: public NamedItem
 class SPIDataLinkToCPU1: public SPIDataLinkMaster
 {
   public:
-    SPIDataLinkToCPU1() : SPIDataLinkMaster("SPI Datalink 1"
+    SPIDataLinkToCPU1() : SPIDataLinkMaster("SPI Datalink to CPU 1"
                         , SPI1_PIN_SCK
                         , SPI1_PIN_MISO
                         , SPI1_PIN_MOSI
@@ -88,7 +86,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
 class SPIDataLinkToCPU3: public SPIDataLinkMaster
 {
   public:
-    SPIDataLinkToCPU3() : SPIDataLinkMaster("SPI Datalink 1"
+    SPIDataLinkToCPU3() : SPIDataLinkMaster("SPI Datalink to CPU 3"
                         , SPI2_PIN_SCK
                         , SPI2_PIN_MISO
                         , SPI2_PIN_MOSI

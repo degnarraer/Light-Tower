@@ -18,11 +18,6 @@
 #include "SPI_Datalink.h"
 #include "pthread.h"
 
-void SPI_Datalink::RegisterForReceivedDataTransferNotification(SPI_Receive_Notifier *Notifiee)
-{
-	m_Notifiee = Notifiee;
-}
-
 void SPI_Datalink_Master::Setup_SPI_Master()
 {	
     for (uint8_t i = 0; i < N_MASTER_QUEUES; ++i) 
@@ -79,7 +74,13 @@ void SPI_Datalink_Master::ProcessEventQueue()
 					{
 						if ( xQueueReceive(m_DataItems[i].QueueHandle_TX, m_DataItems[i].DataBuffer, portMAX_DELAY) == pdTRUE )
 						{
-							EncodeAndTransmitData(m_DataItems[i].Name, m_DataItems[i].DataType, m_DataItems[i].DataBuffer, m_DataItems[i].Count);
+							size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
+							memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
+							memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
+							size_t DataLength = EncodeDataToBuffer(m_DataItems[i].Name, m_DataItems[i].DataType, m_DataItems[i].DataBuffer, m_DataItems[i].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+							delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
+							m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataLength);
+							++m_Queued_Transactions;
 							--MessageCount;
 						}
 					}
@@ -91,6 +92,10 @@ void SPI_Datalink_Master::ProcessEventQueue()
 						Serial << "NEW SPI MESSAGE RECEIVED!\n";
 						--MessageCount;
 					}
+				}
+				if(m_Queued_Transactions - m_Queued_Transactions_Reset_Point >= N_MASTER_QUEUES)
+				{
+					TransmitQueuedData();
 				}
 			}
 			--MaxTransmits;
@@ -107,10 +112,9 @@ bool SPI_Datalink_Master::End()
 	return m_SPI_Master.end();
 }
 
-void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType, void* Object, size_t Count)
+size_t SPI_Datalink_Master::EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode)
 {
-	size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
-	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
+	String DataToSend = SerializeDataToJson(DataTypeName, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
 	size_t PadCount = 0;
 	if(0 != DataToSendLength % 4)
@@ -122,34 +126,29 @@ void SPI_Datalink_Master::EncodeAndTransmitData(String Name, DataType_t DataType
 		DataToSend += "\0";
 	}
 	DataToSendLength += PadCount;
-	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
-	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
-	memcpy(spi_tx_buf[CurrentIndex], DataToSend.c_str(), DataToSendLength);
-	if(m_Queued_Transactions - m_Queued_Transactions_Reset_Point >= N_MASTER_QUEUES)
-	{
-		TransmitQueuedData();
-	}
-	delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
-	m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], DataToSendLength);
-	++m_Queued_Transactions;
+	assert(DataToSendLength <= MaxBytesToEncode);
+	memcpy(Buffer, DataToSend.c_str(), DataToSendLength);
+	ESP_LOGI("SPI_Datalink", "TX: %s", DataToSend.c_str());
+	return DataToSendLength;
 }
 
 void SPI_Datalink_Master::TransmitQueuedData()
 { 
 	m_SPI_Master.yield();
 	m_TransmitQueuedDataFlag = false;
-	size_t CurrentIndex = m_DeQueued_Transactions % N_MASTER_QUEUES;
 	size_t QueueCount = m_Queued_Transactions - m_Queued_Transactions_Reset_Point;
 	for(int i = 0; i < QueueCount; ++i)
 	{
 		size_t CurrentDeQueueIndex = m_DeQueued_Transactions % N_MASTER_QUEUES;
-		if(NULL != m_Notifiee)
+		String ResultString( (char*) (spi_rx_buf[CurrentDeQueueIndex]) );
+		Serial << GetTitle() << " RX: " << ResultString << "\n";
+		if(strlen(ResultString.c_str()) > 0)
 		{
-			m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentDeQueueIndex], SPI_MAX_DATA_BYTES);
+			ESP_LOGW("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
+			DeSerializeJsonToMatchingDataItem(ResultString.c_str());
 		}
-		memset(spi_rx_buf[CurrentDeQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		++m_DeQueued_Transactions;
-	}
+	}	
 	m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
 }
 
@@ -176,28 +175,37 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 
 void SPI_Datalink_Slave::ProcessEventQueue()
 {
-	
-	
+	ProcessCompletedTransactions();
+	QueueUpNewTransactions();
+}
+
+void SPI_Datalink_Slave::ProcessCompletedTransactions()
+{
 	while(m_SPI_Slave.available())
 	{
 		size_t CurrentDeQueueIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
-		if(NULL != m_Notifiee)
+		String ResultString = String( (char*)(spi_rx_buf[CurrentDeQueueIndex]) );
+		if(ResultString.length() > 0)
 		{
-			m_Notifiee->ReceivedBytesTransferNotification(spi_rx_buf[CurrentDeQueueIndex], m_SPI_Slave.size());
+			ESP_LOGV("SPI_Datalink", "Received: %s", ResultString.c_str());
+			DeSerializeJsonToMatchingDataItem(ResultString.c_str()); 
 		}
-		memset(spi_rx_buf[CurrentDeQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		m_SPI_Slave.pop();
 		++m_DeQueued_Transactions;
 	}
-	
-	while( N_SLAVE_QUEUES - 1 > m_SPI_Slave.remained() + m_SPI_Slave.available() )
+}
+
+void SPI_Datalink_Slave::QueueUpNewTransactions()
+{
+	while( (m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1) )
 	{
 		size_t CurrentQueueIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
+		memset(spi_rx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		size_t SendBytesSize = GetNextTXStringFromDataItems(spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES);
 		if(0 == SendBytesSize)
 		{
-			if((N_SLAVE_QUEUES - 1 > m_SPI_Slave.remained() + m_SPI_Slave.available() ) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
+			if( (m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
 			{
 				++m_Queued_Transactions;
 			}
@@ -208,7 +216,7 @@ void SPI_Datalink_Slave::ProcessEventQueue()
 		}
 		else
 		{
-			if((N_SLAVE_QUEUES - 1 > m_SPI_Slave.remained() + m_SPI_Slave.available()) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SendBytesSize)))
+			if( ((m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1)) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SendBytesSize)))
 			{
 				++m_Queued_Transactions;
 			}
@@ -219,7 +227,6 @@ void SPI_Datalink_Slave::ProcessEventQueue()
 		}
 	}
 }
-
 size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend)
 {
 	size_t ResultingSize = 0;
@@ -227,20 +234,16 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 	{
 		for(int i = 0; i < m_DataItemsCount; ++i)
 		{
-			size_t index = m_TXIndex % m_DataItemsCount;
-			++m_TXIndex;
+			size_t index = m_CurrentDataItemToTX % m_DataItemsCount;
+			++m_CurrentDataItemToTX;
 			if(NULL != m_DataItems[index].QueueHandle_TX)
 			{
 				if(uxQueueMessagesWaiting(m_DataItems[index].QueueHandle_TX) > 0)
 				{
 					if ( xQueueReceive(m_DataItems[index].QueueHandle_TX, m_DataItems[index].DataBuffer, portMAX_DELAY) == pdTRUE )
 					{
-						String Result = EncodeData(m_DataItems[index].Name, m_DataItems[index].DataType, m_DataItems[index].DataBuffer, m_DataItems[index].Count);
-						ResultingSize = Result.length();
-						if(ResultingSize <= BytesToSend)
-						{
-							memcpy(TXBuffer, Result.c_str(), ResultingSize);
-						}
+						ResultingSize = EncodeDataToBuffer(m_DataItems[index].Name, m_DataItems[index].DataType, m_DataItems[index].DataBuffer,m_DataItems[index].Count, TXBuffer, BytesToSend);
+						break;
 					}
 				}
 			}
@@ -249,9 +252,9 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 	return ResultingSize;
 }
 
-String SPI_Datalink_Slave::EncodeData(String Name, DataType_t DataType, void* Object, size_t Count)
+size_t SPI_Datalink_Slave::EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode)
 {
-	String DataToSend = SerializeDataToJson(Name, DataType, Object, Count);
+	String DataToSend = SerializeDataToJson(DataTypeName, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
 	size_t PadCount = 0;
 	if(0 != DataToSendLength % 4)
@@ -263,7 +266,8 @@ String SPI_Datalink_Slave::EncodeData(String Name, DataType_t DataType, void* Ob
 		DataToSend += "\0";
 	}
 	DataToSendLength += PadCount;
+	assert(DataToSendLength <= MaxBytesToEncode);
+	memcpy(Buffer, DataToSend.c_str(), DataToSendLength);
 	ESP_LOGI("SPI_Datalink", "TX: %s", DataToSend.c_str());
-	assert(DataToSendLength < SPI_MAX_DATA_BYTES);
-	return DataToSend;
+	return DataToSendLength;
 }
