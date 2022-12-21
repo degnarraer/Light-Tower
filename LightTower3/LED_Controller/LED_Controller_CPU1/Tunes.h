@@ -19,10 +19,10 @@
 #define I2S2_SDIN_PIN             I2S_PIN_NO_CHANGE
 #define I2S2_SDOUT_PIN            14
 
-#define SPI1_PIN_SCK               15
-#define SPI1_PIN_MISO              17
-#define SPI1_PIN_MOSI              18
-#define SPI1_PIN_SS                19
+#define SPI1_PIN_SCK              18
+#define SPI1_PIN_MISO             19
+#define SPI1_PIN_MOSI             23
+#define SPI1_PIN_SS               5
 
 
 //App Tunes

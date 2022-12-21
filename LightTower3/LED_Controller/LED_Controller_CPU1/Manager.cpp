@@ -62,7 +62,9 @@ void Manager::ProcessEventQueue()
       
       //Process Bluetooth Connection Status
       bool IsConnected = m_BT_In.IsConnected();
-      if(m_BluetoothIsConnected != IsConnected)
+      static uint32_t testcounter = 0;
+      ++testcounter;
+      if(testcounter%100 == 0 || m_BluetoothIsConnected != IsConnected)
       {
         m_BluetoothIsConnected = IsConnected;
         if(true == m_BluetoothIsConnected)
