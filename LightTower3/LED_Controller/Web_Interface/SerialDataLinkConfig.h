@@ -19,11 +19,8 @@
 #ifndef SERIAL_DATALINK_CONFIG_H
 #define SERIAL_DATALINK_CONFIG_H
 #include "SPI_Datalink.h"
-#include <DataTypes.h>
-#include <Helpers.h>
 
-class SPIDataLinkSlave: public NamedItem
-                      , public SPI_Datalink_Slave
+class SPIDataLinkSlave: public SPI_Datalink_Slave
                       , public QueueManager
 {
   public:
@@ -33,8 +30,7 @@ class SPIDataLinkSlave: public NamedItem
                     , uint8_t MOSI
                     , uint8_t SS
                     , uint8_t DMA_Channel )
-                    : NamedItem(Title) 
-                    , QueueManager(Title, GetDataItemConfigCount())
+                    : QueueManager(Title, GetDataItemConfigCount())
                     , SPI_Datalink_Slave(Title, SCK, MISO, MOSI, SS, DMA_Channel) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()

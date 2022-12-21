@@ -67,7 +67,7 @@ class DataSerializer: public CommonUtils
 			return Result.c_str();
 		}
 		
-		void DeSerializeJsonToMatchingDataItem(String json)
+		void DeSerializeJsonToMatchingDataItem(String json, bool DebugMessage = false)
 		{
 			DeserializationError error = deserializeJson(doc, json.c_str());
 			// Test if parsing succeeds.
@@ -78,6 +78,10 @@ class DataSerializer: public CommonUtils
 			}
 			else
 			{
+				if(true == DebugMessage)
+				{
+					Serial << json.c_str() << "\n";
+				}
 				if(NULL != m_DataItems)
 				{
 					if(true == AllTagsExist())

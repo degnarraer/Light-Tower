@@ -51,7 +51,7 @@ void Manager::ProcessEventQueue()
 {
   UpdateNotificationRegistrationStatus();
   m_I2S_In.ProcessEventQueue();
-  MoveDataBetweenCPU1AndCPU3();
+  //MoveDataBetweenCPU1AndCPU3();
 }
 
 void Manager::UpdateNotificationRegistrationStatus()
