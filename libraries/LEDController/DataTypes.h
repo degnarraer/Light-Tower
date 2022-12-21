@@ -16,7 +16,14 @@ class NamedItem
     String m_Title;
 };
 
-enum Transciever_T
+enum SoundState_t
+{
+  LastingSilenceDetected,
+  SilenceDetected,
+  SoundDetected,
+};
+
+enum Transciever_t
 {
 	Transciever_None,
 	Transciever_TX,
@@ -52,6 +59,7 @@ enum DataType_t
   DataType_MaxBandSoundData_t,
   DataType_Frame_t,
   DataType_ProcessedSoundFrame_t,
+  DataType_SoundState_t,
   DataType_Undef,
 };
 
@@ -71,6 +79,7 @@ static const char* DataTypeStrings[] =
   "MaxBandSoundData_t",
   "Frame_t",
   "ProcessedSoundFrame_t",
+  "SoundState_t",
   "Undefined"
 };
 
@@ -79,7 +88,7 @@ struct DataItemConfig_t
   String Name;
   DataType_t DataType;
   size_t Count;
-  Transciever_T TransceiverConfig;
+  Transciever_t TransceiverConfig;
   size_t QueueCount;
 };
 
@@ -88,7 +97,7 @@ struct DataItem_t
 	String Name;
 	QueueHandle_t QueueHandle_RX = NULL;
 	QueueHandle_t QueueHandle_TX = NULL;
-	Transciever_T TransceiverConfig;
+	Transciever_t TransceiverConfig;
 	DataType_t DataType;
 	size_t Count = 0;
 	size_t TotalByteCount = 0;

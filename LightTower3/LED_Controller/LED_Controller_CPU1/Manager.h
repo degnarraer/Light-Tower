@@ -72,11 +72,16 @@ class Manager: public NamedItem
 
     //Bluetooth Data
     Bluetooth_Sink &m_BT_In;
-    bool m_BluetoothIsConnected = false;
     
     //I2S Sound Data RX
     I2S_Device &m_Mic_In; 
-    I2S_Device &m_I2S_Out;                                                                                                                    
+    I2S_Device &m_I2S_Out;
+
+    void ProcessBluetoothConnectionStatus();
+    bool m_BluetoothIsConnected = false;
+    
+    void ProcessSoundStateStatus();
+    SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
 };
 
 #endif

@@ -212,7 +212,7 @@ class StatisticalEngineModelInterface : public NamedItem
     MaxBandSoundData_t GetMaxBinLeftSoundData();
     
     //MicrophoneMeasureCalleeInterface
-    void MicrophoneStateChange(SoundState) {}
+    void MicrophoneStateChange(SoundState_t) {}
     
   private:
     StatisticalEngine &m_StatisticalEngine;

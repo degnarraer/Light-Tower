@@ -65,7 +65,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDataLinkToCPU1ConfigCount = 8;
+    static const size_t m_SPIDataLinkToCPU1ConfigCount = 9;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU1ConfigCount]
     {
       { "R_BANDS",              DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
@@ -76,6 +76,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
       { "R_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
       { "L_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
       { "Source Is Connected",  DataType_bool,                   1,                  Transciever_RX,   1 },
+      { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   1 },
     };
     
     //QueueManager Interface

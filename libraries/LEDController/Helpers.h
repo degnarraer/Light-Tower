@@ -90,6 +90,9 @@ class CommonUtils
 					Result = sizeof(ProcessedSoundFrame_t);
 				break;
 				
+				case DataType_SoundState_t:
+					Result = sizeof(SoundState_t);
+				break;
 				default:
 					Result = 0;
 				break;

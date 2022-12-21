@@ -55,31 +55,13 @@ void Manager::ProcessEventQueue()
     case InputType_Microphone:
       m_Mic_In.ProcessEventQueue();
       m_I2S_Out.ProcessEventQueue();
+      ProcessSoundStateStatus();
     break;
     case InputType_Bluetooth:
     {  
       m_I2S_Out.ProcessEventQueue();
-      
-      //Process Bluetooth Connection Status
-      bool IsConnected = m_BT_In.IsConnected();
-      if(m_BluetoothIsConnected != IsConnected)
-      {
-        m_BluetoothIsConnected = IsConnected;
-        if(true == m_BluetoothIsConnected)
-        {
-          ESP_LOGI("Manager", "Bluetooth Source Connected!");
-        }
-        else
-        {
-          ESP_LOGI("Manager", "Bluetooth Source Disconnected!");
-        }
-        static bool SourceIsConnectedValuePushError = false;
-        PushValueToQueue( &m_BluetoothIsConnected
-                        , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
-                        , true
-                        , "Source Is Connected"
-                        , SourceIsConnectedValuePushError );
-      }
+      ProcessBluetoothConnectionStatus();
+      ProcessSoundStateStatus();
     }
     break;
     default:
@@ -190,4 +172,44 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
     default:
     break;
   }
+}
+
+void Manager::ProcessBluetoothConnectionStatus()
+{
+  //Process Bluetooth Connection Status
+  bool IsConnected = m_BT_In.IsConnected();
+  if(m_BluetoothIsConnected != IsConnected)
+  {
+    m_BluetoothIsConnected = IsConnected;
+    if(true == m_BluetoothIsConnected)
+    {
+      ESP_LOGI("Manager", "Bluetooth Source Connected!");
+    }
+    else
+    {
+      ESP_LOGI("Manager", "Bluetooth Source Disconnected!");
+    }
+    static bool SourceIsConnectedValuePushError = false;
+    PushValueToQueue( &m_BluetoothIsConnected
+                    , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
+                    , true
+                    , "Source Is Connected"
+                    , SourceIsConnectedValuePushError );
+  }
+}
+
+
+void Manager::ProcessSoundStateStatus()
+{
+    SoundState_t SoundState = m_StatisticalEngine.GetSoundState();
+    if(m_SoundState != SoundState)
+    {
+      m_SoundState = SoundState;
+      static bool SoundStateValuePushError = false;
+      PushValueToQueue( &SoundState
+                      , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
+                      , true
+                      , "Sound State"
+                      , SoundStateValuePushError );
+    }
 }

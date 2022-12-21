@@ -28,13 +28,6 @@
 #include "Tunes.h"
 #include "Helpers.h"
 
-enum SoundState
-{
-  LastingSilenceDetected,
-  SilenceDetected,
-  SoundDetected,
-};
-
 enum BandDataType
 {
   INSTANT,
@@ -65,7 +58,7 @@ struct MinMaxDb
 class MicrophoneMeasureCalleeInterface
 {
 public:
-    virtual void MicrophoneStateChange(SoundState) = 0;
+    virtual void MicrophoneStateChange(SoundState_t) = 0;
 };
 
 class MicrophoneMeasureCallerInterface
@@ -105,7 +98,7 @@ class StatisticalEngine : public NamedItem
     }
     
     //SoundState
-    SoundState GetSoundState();
+    SoundState_t GetSoundState();
     
     //FFT Processing Status
     void SetProcessFFTStatus(bool value) {m_ProcessFFT = value; }
@@ -147,7 +140,7 @@ class StatisticalEngine : public NamedItem
     bool m_MemoryIsAllocated = false;
 
     //QueueManager
-    static const size_t m_StatisticalEngineConfigCount = 8;
+    static const size_t m_StatisticalEngineConfigCount = 7;
     DataItemConfig_t m_ItemConfig[m_StatisticalEngineConfigCount]
     {
       { "R_BANDS",          DataType_Float,                  32,  Transciever_RX,   4 },
@@ -234,7 +227,7 @@ class StatisticalEngine : public NamedItem
     unsigned long m_currentMicros;
     const int     m_soundAdder = soundAdder;
     const int     m_silenceSubtractor = silenceSubtractor;
-    SoundState    soundState = SoundState::SilenceDetected;
+    SoundState_t  soundState = SoundState_t::SilenceDetected;
 };
 
 #endif

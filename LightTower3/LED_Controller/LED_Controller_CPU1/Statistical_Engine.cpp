@@ -248,23 +248,23 @@ void StatisticalEngine::UpdateSoundState()
     if(m_silenceIntegrator < m_silenceIntegratorMin) m_silenceIntegrator = m_silenceIntegratorMin;
     if(m_silenceIntegrator > m_silenceIntegratorMax) m_silenceIntegrator = m_silenceIntegratorMax;
     if(true == debugSilenceIntegrator) Serial << "Power Db: " << m_PowerDb << "\tDelta Time Gain: " << deltaTimeScalar << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
-    if((soundState == SoundState::SilenceDetected || soundState == SoundState::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
+    if((soundState == SoundState_t::SilenceDetected || soundState == SoundState_t::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
     {
       ESP_LOGE("Statistical_Engine", "Sound Detected.");
-      soundState = SoundState::SoundDetected;
+      soundState = SoundState_t::SoundDetected;
       m_cb->MicrophoneStateChange(soundState);
     }
-    else if(soundState == SoundState::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
+    else if(soundState == SoundState_t::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
     {
       ESP_LOGE("Statistical_Engine", "Silence Detected.");
-      soundState = SoundState::SilenceDetected;
+      soundState = SoundState_t::SilenceDetected;
       m_silenceStartTime = millis();
       m_cb->MicrophoneStateChange(soundState);
     }
-    else if(soundState == SoundState::SilenceDetected && millis() - m_silenceStartTime >= lastingSilenceTImeout)
+    else if(soundState == SoundState_t::SilenceDetected && millis() - m_silenceStartTime >= lastingSilenceTImeout)
     {
       ESP_LOGE("Statistical_Engine", "Lasting Silence Detected.");
-      soundState = SoundState::LastingSilenceDetected;
+      soundState = SoundState_t::LastingSilenceDetected;
       m_cb->MicrophoneStateChange(soundState);
     }
     m_previousMicros = m_currentMicros;
@@ -327,7 +327,7 @@ void StatisticalEngine::UpdateRunningAverageBandArray()
   }
 }
 
-SoundState StatisticalEngine::GetSoundState()
+SoundState_t StatisticalEngine::GetSoundState()
 {
   return soundState;
 }
