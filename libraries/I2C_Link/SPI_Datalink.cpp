@@ -144,11 +144,10 @@ void SPI_Datalink_Master::TransmitQueuedData()
 		String ResultString( (char*) (spi_rx_buf[CurrentDeQueueIndex]) );
 		if(strlen(ResultString.c_str()) > 0)
 		{
-			//ESP_LOGE("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
+			ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), true);
 		}
 		++m_DeQueued_Transactions;
-		//Serial << "DeQueue Transactions1: " << m_DeQueued_Transactions << "\tCurrent Index: " << CurrentDeQueueIndex << "\n";
 	}	
 	m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
 }
@@ -218,15 +217,12 @@ void SPI_Datalink_Slave::QueueUpNewTransactions()
 		}
 		else
 		{
-			Serial << "Data TX\n"; 
 			if( ((m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1)) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
 			{
-				Serial << "Data TX2\n";
 				++m_Queued_Transactions;
 			}
 			else
 			{
-				Serial << "Data TX3\n";
 				break;
 			}
 		}
