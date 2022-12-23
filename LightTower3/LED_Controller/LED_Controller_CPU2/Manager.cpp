@@ -49,36 +49,26 @@ void Manager::Setup()
 
 void Manager::ProcessEventQueue()
 {
-  UpdateNotificationRegistrationStatus();
   m_I2S_In.ProcessEventQueue();
-  //MoveDataBetweenCPU1AndCPU3();
-}
-
-void Manager::UpdateNotificationRegistrationStatus()
-{
-  bool IsConnected = m_BT_Out.IsConnected();
-  if(true == IsConnected)
-  {
-  }
-  else
-  {
-  }
+  MoveDataBetweenCPU1AndCPU3();
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
 {
-  const uint8_t count = 1;
-  String Signals[count] = { "Source Is Connected" };
+  const uint8_t count = 2;
+  String Signals[count] = { "Source Is Connected"
+                          , "Sound State" };
+  
                       
   for(int i = 0; i < count; ++i)
   {
-    MoveDataFromQueueToQueue( "Manager: " + Signals[i]
+    MoveDataFromQueueToQueue( "Manager1: " + Signals[i]
                             , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
                             , false
-                            , false );
-    MoveDataFromQueueToQueue( "Manager: " + Signals[i]
+                            , false );                 
+    MoveDataFromQueueToQueue( "Manager2: " + Signals[i]
                             , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].c_str())

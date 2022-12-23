@@ -63,7 +63,6 @@ void SPI_Datalink_Master::ProcessEventQueue()
 			delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 			m_SPI_Master.queue(NULL, spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 			++m_Queued_Transactions;
-			//Serial << "Queue Transactions1: " << m_Queued_Transactions << "\tCurrent Index: " << CurrentIndex << "\n";
 			if(m_Queued_Transactions - m_Queued_Transactions_Reset_Point >= N_MASTER_QUEUES)
 			{
 				TransmitQueuedData();
@@ -86,9 +85,10 @@ void SPI_Datalink_Master::ProcessEventQueue()
 								memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								size_t DataLength = EncodeDataToBuffer(m_DataItems[i].Name, m_DataItems[i].DataType, m_DataItems[i].DataBuffer, m_DataItems[i].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 								delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
+								if(true == m_SpewToConsole) Serial << "TX: " << String((char*)spi_tx_buf[CurrentIndex]).c_str() << "\n";
+								ESP_LOGI("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
 								m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 								++m_Queued_Transactions;
-								//Serial << "Queue Transactions2: " << m_Queued_Transactions << "\tCurrent Index: " << CurrentIndex << "\n";
 								--MessageCount;
 							}
 						}
@@ -106,7 +106,7 @@ void SPI_Datalink_Master::ProcessEventQueue()
 
 bool SPI_Datalink_Master::Begin() 
 { 
-	return m_SPI_Master.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+	return m_SPI_Master.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
 }
 bool SPI_Datalink_Master::End()
 {
@@ -129,7 +129,6 @@ size_t SPI_Datalink_Master::EncodeDataToBuffer(String DataTypeName, DataType_t D
 	DataToSendLength += PadCount;
 	assert(DataToSendLength <= MaxBytesToEncode);
 	memcpy(Buffer, DataToSend.c_str(), DataToSendLength);
-	ESP_LOGI("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	return DataToSendLength;
 }
 
@@ -144,7 +143,8 @@ void SPI_Datalink_Master::TransmitQueuedData()
 		String ResultString( (char*) (spi_rx_buf[CurrentDeQueueIndex]) );
 		if(strlen(ResultString.c_str()) > 0)
 		{
-			ESP_LOGV("SPI_Datalink_Config", "Received: %s", ResultString.c_str());
+			if(true == m_SpewToConsole) Serial << "RX: " << ResultString.c_str() << "\n";
+			ESP_LOGV("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), true);
 		}
 		++m_DeQueued_Transactions;
@@ -169,7 +169,7 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 	m_SPI_Slave.setQueueSize(N_SLAVE_QUEUES);
 	m_SPI_Slave.setDataMode(SPI_MODE0);
 
-	m_SPI_Slave.begin(HSPI, m_SCK, m_MISO, m_MOSI, m_SS);
+	m_SPI_Slave.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
 	ESP_LOGE("SPI_Datalink", "SPI Slave Configured");
 }
 

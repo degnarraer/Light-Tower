@@ -26,13 +26,14 @@ class SPIDataLinkMaster: public SPI_Datalink_Master
 {
   public:
     SPIDataLinkMaster( String Title
+                     , uint8_t SPI_BUS
                      , uint8_t SCK
                      , uint8_t MISO
                      , uint8_t MOSI
                      , uint8_t SS
                      , uint8_t DMA_Channel)
                      : QueueManager(Title, GetDataItemConfigCount())
-                     , SPI_Datalink_Master(Title, SCK, MISO, MOSI, SS, DMA_Channel) {}
+                     , SPI_Datalink_Master(Title, SPI_BUS, SCK, MISO, MOSI, SS, DMA_Channel) {}
     virtual ~SPIDataLinkMaster(){}
     void SetupSPIDataLink()
     {
@@ -56,6 +57,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
 {
   public:
     SPIDataLinkToCPU1() : SPIDataLinkMaster("SPI Datalink to CPU 1"
+                        , HSPI
                         , SPI1_PIN_SCK
                         , SPI1_PIN_MISO
                         , SPI1_PIN_MOSI
@@ -88,19 +90,21 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
 {
   public:
     SPIDataLinkToCPU3() : SPIDataLinkMaster("SPI Datalink to CPU 3"
+                        , VSPI
                         , SPI2_PIN_SCK
                         , SPI2_PIN_MISO
                         , SPI2_PIN_MOSI
                         , SPI2_PIN_SS
-                        , 1 ) {}
+                        , 2 ) {}
     virtual ~SPIDataLinkToCPU3(){}
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDataLinkToCPU3ConfigCount = 1;
+    static const size_t m_SPIDataLinkToCPU3ConfigCount = 2;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
-      { "Source Is Connected",      DataType_bool,    1,    Transciever_TX,     1 },
+      { "Source Is Connected",  DataType_bool,          1,    Transciever_TX, 1 },
+      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX, 1 },
     };
     
     //QueueManager Interface

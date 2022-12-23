@@ -101,7 +101,7 @@ void setup()
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
   m_SPIDataLinkToCPU1.SetupSPIDataLink();
-  //m_SPIDataLinkToCPU3.SetupSPIDataLink();
+  m_SPIDataLinkToCPU3.SetupSPIDataLink();
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 10,  &ProcessFFTTask,          0 );
@@ -162,7 +162,7 @@ void SPI_TX_TaskLoop(void * parameter)
     yield();
     ++ProcessSPITXTaskLoopCount;
     m_SPIDataLinkToCPU1.ProcessEventQueue();
-    //m_SPIDataLinkToCPU3.ProcessEventQueue();
+    m_SPIDataLinkToCPU3.ProcessEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
 }

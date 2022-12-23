@@ -206,7 +206,7 @@ void Manager::ProcessSoundStateStatus()
     {
       m_SoundState = SoundState;
       static bool SoundStateValuePushError = false;
-      PushValueToQueue( &SoundState
+      PushValueToQueue( &m_SoundState
                       , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
                       , true
                       , "Sound State"

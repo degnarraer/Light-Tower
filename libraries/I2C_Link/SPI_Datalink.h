@@ -38,12 +38,14 @@
 class SPI_Datalink: public DataSerializer
 {
 	public:
-		SPI_Datalink( uint8_t SCK
+		SPI_Datalink( uint8_t SPI_BUS
+					, uint8_t SCK
 					, uint8_t MISO
 					, uint8_t MOSI
 					, uint8_t SS
 					, uint8_t DMA_Channel )
-					: m_SCK(SCK)
+					: m_SPI_BUS(SPI_BUS)
+					, m_SCK(SCK)
 					, m_MISO(MISO)
 					, m_MOSI(MOSI)
 					, m_SS(SS)
@@ -57,7 +59,9 @@ class SPI_Datalink: public DataSerializer
 			m_DataItemsCount = Count;
 			SetDataSerializerDataItems(DataItems, Count);
 		}
+		void SetSpewToConsole(bool Spew){ m_SpewToConsole = Spew; }
 	protected:
+		uint8_t m_SPI_BUS;
 		uint8_t m_SCK;
 		uint8_t m_MISO;
 		uint8_t m_MOSI;
@@ -65,6 +69,7 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_DMA_Channel = 0;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
+		bool m_SpewToConsole = false;
 };
 
 class SPI_Datalink_Master: public SPI_Datalink
@@ -72,13 +77,14 @@ class SPI_Datalink_Master: public SPI_Datalink
 {
 	public:
 		SPI_Datalink_Master( String Title
+						   , uint8_t SPI_BUS
 						   , uint8_t SCK
 						   , uint8_t MISO
 						   , uint8_t MOSI
 						   , uint8_t SS
 						   , uint8_t DMA_Channel )
 						   : NamedItem(Title)
-						   , SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
+						   , SPI_Datalink(SPI_BUS, SCK, MISO, MOSI, SS, DMA_Channel)
 						   , m_Title(Title)
 						   {
 							  Setup_SPI_Master(); 
@@ -111,13 +117,14 @@ class SPI_Datalink_Slave: public SPI_Datalink
 {
 	public:
 		SPI_Datalink_Slave( String Title
+						  , uint8_t SPI_BUS
 						  , uint8_t SCK
 						  , uint8_t MISO
 						  , uint8_t MOSI
 						  , uint8_t SS
 						  , uint8_t DMA_Channel )
 						  : NamedItem(Title)
-						  , SPI_Datalink(SCK, MISO, MOSI, SS, DMA_Channel)
+						  , SPI_Datalink(SPI_BUS, SCK, MISO, MOSI, SS, DMA_Channel)
 						  , m_Title(Title)
 						  {
 							 Setup_SPI_Slave(); 

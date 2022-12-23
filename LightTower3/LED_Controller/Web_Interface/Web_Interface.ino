@@ -33,7 +33,7 @@ SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink"
                                                       , SPI1_PIN_MISO
                                                       , SPI1_PIN_MOSI
                                                       , SPI1_PIN_SS
-                                                      , 2 );
+                                                      , 1 );
 
  
 // Replace with your network credentials
@@ -191,7 +191,8 @@ void InitTasks()
 
 void InitLocalVariables()
 {
-  m_SPIDataLinkSlave.SetupSPIDataLink(); 
+  m_SPIDataLinkSlave.SetupSPIDataLink();
+  m_SPIDataLinkSlave.SetSpewToConsole(true);
 }
 
 void setup(){

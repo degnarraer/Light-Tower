@@ -117,7 +117,14 @@ class DataSerializer: public CommonUtils
 									}
 									if(CheckSumCalc == CheckSumIn)
 									{
-										PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
+										if(NULL != m_DataItems[i].QueueHandle_RX)
+										{
+											PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
+										}
+										else
+										{
+											ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: No matching DataItem RX Handle");
+										}
 									}
 									else
 									{
