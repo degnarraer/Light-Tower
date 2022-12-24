@@ -56,6 +56,7 @@ class Manager: public NamedItem
     virtual ~Manager();
     void Setup();
     void ProcessEventQueue();
+    void UpdateSerialData();
     void SetInputType(InputType_t Type);
     
     //Bluetooth_Callback
@@ -77,10 +78,12 @@ class Manager: public NamedItem
     I2S_Device &m_Mic_In; 
     I2S_Device &m_I2S_Out;
 
-    void ProcessBluetoothConnectionStatus();
-    bool m_BluetoothIsConnected = false;
     
-    void ProcessSoundStateStatus();
+    void ProcessBluetoothConnectionStatus(bool ForceUpdate);
+    bool m_BluetoothIsConnected = false;
+
+    
+    void ProcessSoundStateStatus(bool ForceUpdate);
     SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
 };
 

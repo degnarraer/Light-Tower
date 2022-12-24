@@ -19,19 +19,21 @@
 #ifndef SERIAL_DATALINK_CONFIG_H
 #define SERIAL_DATALINK_CONFIG_H
 #include "SPI_Datalink.h"
+#include "Tunes.h"
 
 class SPIDataLinkSlave: public SPI_Datalink_Slave
                       , public QueueManager
 {
   public:
-    SPIDataLinkSlave( String Title
-                    , uint8_t SCK
-                    , uint8_t MISO
-                    , uint8_t MOSI
-                    , uint8_t SS
-                    , uint8_t DMA_Channel )
-                    : QueueManager(Title, GetDataItemConfigCount())
-                    , SPI_Datalink_Slave(Title, HSPI, SCK, MISO, MOSI, SS, DMA_Channel) {}
+    SPIDataLinkSlave( )
+                    : QueueManager("SPI Dtatlink Slave", GetDataItemConfigCount())
+                    , SPI_Datalink_Slave("SPI Dtatlink Slave"
+                    , VSPI
+                    , SPI1_PIN_SCK
+                    , SPI1_PIN_MISO
+                    , SPI1_PIN_MOSI
+                    , SPI1_PIN_SS
+                    , 1 ) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()
     {

@@ -1,29 +1,35 @@
 #ifndef TUNES_H
 #define TUNES_H
 
-//PIN Assignments
+//LED OUT PINS
 #define DATA_PIN_STRIP1_PIN       0
 #define DATA_PIN_STRIP2_PIN       2
 #define DATA_PIN_STRIP3_PIN       4
 #define DATA_PIN_STRIP4_PIN       5
 
-//I2S MIC IN PINS
+//I2S IN PINS
 #define I2S1_SCLCK_PIN            25
 #define I2S1_WD_PIN               26
-#define I2S1_SDIN_PIN             33
+#define I2S1_SDIN_PIN             27
 #define I2S1_SDOUT_PIN            I2S_PIN_NO_CHANGE
 
 //I2S OUT PINS
-#define I2S2_SCLCK_PIN            12
-#define I2S2_WD_PIN               13
+#define I2S2_SCLCK_PIN            21
+#define I2S2_WD_PIN               32
 #define I2S2_SDIN_PIN             I2S_PIN_NO_CHANGE
-#define I2S2_SDOUT_PIN            14
+#define I2S2_SDOUT_PIN            33
 
-#define SPI1_PIN_SCK              18
-#define SPI1_PIN_MISO             19
-#define SPI1_PIN_MOSI             23
-#define SPI1_PIN_SS               5
+//SPI HSPI PINS
+#define HSPI_PIN_SCK              14
+#define HSPI_PIN_MISO             12
+#define HSPI_PIN_MOSI             13
+#define HSPI_PIN_SS               15
 
+//SPI VSPI PINS
+#define VSPI_PIN_SCK              18
+#define VSPI_PIN_MISO             19
+#define VSPI_PIN_MOSI             23
+#define VSPI_PIN_SS               5
 
 //App Tunes
 #define I2S_SAMPLE_RATE 44100

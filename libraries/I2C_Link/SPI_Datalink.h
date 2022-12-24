@@ -133,6 +133,8 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		void ProcessEventQueue();
 	protected:
 		void Setup_SPI_Slave();
+		bool Begin();
+		bool End();
 	private:
 		uint8_t* spi_tx_buf[N_SLAVE_QUEUES];
 		uint8_t* spi_rx_buf[N_SLAVE_QUEUES];

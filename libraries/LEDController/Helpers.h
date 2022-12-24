@@ -109,7 +109,7 @@ class QueueController
 			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-				ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
+				//ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
 				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
 					if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
@@ -120,7 +120,7 @@ class QueueController
 							if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
 							{
 								if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": Error Setting Queue Value.\n";
-								ESP_LOGV("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
+								ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
 							}
 							else
 							{
@@ -131,13 +131,13 @@ class QueueController
 						else
 						{
 							if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": Error Receiving Queue.\n";
-							ESP_LOGV("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
+							ESP_LOGE("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
 						}
 					}
 					else
 					{
 						if(true == DebugMessage) Serial << "WARNING! " << DebugTitle + ": Queue Full.\n";
-						ESP_LOGV("Helpers", "WARNING! %s: Queue Full.", DebugTitle.c_str());
+						ESP_LOGW("Helpers", "WARNING! %s: Queue Full.", DebugTitle.c_str());
 					}
 				}
 			}

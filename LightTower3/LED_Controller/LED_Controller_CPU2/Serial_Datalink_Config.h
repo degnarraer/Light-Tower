@@ -58,10 +58,10 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
   public:
     SPIDataLinkToCPU1() : SPIDataLinkMaster("SPI Datalink to CPU 1"
                         , HSPI
-                        , SPI1_PIN_SCK
-                        , SPI1_PIN_MISO
-                        , SPI1_PIN_MOSI
-                        , SPI1_PIN_SS
+                        , HSPI_PIN_SCK
+                        , HSPI_PIN_MISO
+                        , HSPI_PIN_MOSI
+                        , HSPI_PIN_SS
                         , 1 ) {}
     virtual ~SPIDataLinkToCPU1(){}
 
@@ -91,11 +91,11 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
   public:
     SPIDataLinkToCPU3() : SPIDataLinkMaster("SPI Datalink to CPU 3"
                         , VSPI
-                        , SPI2_PIN_SCK
-                        , SPI2_PIN_MISO
-                        , SPI2_PIN_MOSI
-                        , SPI2_PIN_SS
-                        , 2 ) {}
+                        , VSPI_PIN_SCK
+                        , VSPI_PIN_MISO
+                        , VSPI_PIN_MOSI
+                        , VSPI_PIN_SS
+                        , 1 ) {}
     virtual ~SPIDataLinkToCPU3(){}
 
   private:

@@ -25,14 +25,15 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
                       , public QueueManager
 {
   public:
-    SPIDataLinkSlave( String Title
-                    , uint8_t SCK
-                    , uint8_t MISO
-                    , uint8_t MOSI
-                    , uint8_t SS
-                    , uint8_t DMA_Channel )
-                    : QueueManager(Title, GetDataItemConfigCount())
-                    , SPI_Datalink_Slave(Title, HSPI, SCK, MISO, MOSI, SS, DMA_Channel) {}
+    SPIDataLinkSlave()
+                    : QueueManager( "SPI Slave", GetDataItemConfigCount() )
+                    , SPI_Datalink_Slave( "SPI Slave"
+                                        , HSPI
+                                        , HSPI_PIN_SCK
+                                        , HSPI_PIN_MISO
+                                        , HSPI_PIN_MOSI
+                                        , HSPI_PIN_SS
+                                        , 1 ) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()
     {
@@ -44,7 +45,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
   private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 10;
+    static const size_t m_SPIDatalinkConfigCount = 9;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
       { "R_BANDS",                  DataType_Float,                  32,  Transciever_RX,   4 },

@@ -3,25 +3,23 @@
 
 
 
-//PIN ASSIGNMENTS
-#define HARDWARE_SERIAL_RX_PIN      22
-#define HARDWARE_SERIAL_TX_PIN      23
+//I2S IN PINS
+#define I2S1_SCLCK_PIN            25
+#define I2S1_WD_PIN               26
+#define I2S1_SDIN_PIN             27
+#define I2S1_SDOUT_PIN            I2S_PIN_NO_CHANGE
 
-#define I2S1_SCLCK_PIN              12
-#define I2S1_WD_PIN                 13
-#define I2S1_SDIN_PIN               14
-#define I2S1_SDOUT_PIN              I2S_PIN_NO_CHANGE
+//SPI HSPI PINS
+#define HSPI_PIN_SCK              14
+#define HSPI_PIN_MISO             12
+#define HSPI_PIN_MOSI             13
+#define HSPI_PIN_SS               15
 
-#define SPI1_PIN_SCK                18
-#define SPI1_PIN_MISO               19
-#define SPI1_PIN_MOSI               23
-#define SPI1_PIN_SS                 5
-
-
-#define SPI2_PIN_SCK                25
-#define SPI2_PIN_MISO               26
-#define SPI2_PIN_MOSI               32
-#define SPI2_PIN_SS                 33
+//SPI VSPI PINS
+#define VSPI_PIN_SCK              18
+#define VSPI_PIN_MISO             19
+#define VSPI_PIN_MOSI             23
+#define VSPI_PIN_SS               5
 
 //App Tunes
 #define I2S_SAMPLE_RATE                 44100

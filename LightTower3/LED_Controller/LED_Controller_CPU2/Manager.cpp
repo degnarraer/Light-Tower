@@ -50,7 +50,7 @@ void Manager::Setup()
 void Manager::ProcessEventQueue()
 {
   m_I2S_In.ProcessEventQueue();
-  MoveDataBetweenCPU1AndCPU3();
+  //MoveDataBetweenCPU1AndCPU3();
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()

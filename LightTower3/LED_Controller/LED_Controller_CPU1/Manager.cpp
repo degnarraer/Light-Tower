@@ -48,6 +48,24 @@ void Manager::Setup()
   //SetInputType(InputType_Microphone);
 }
 
+void Manager::UpdateSerialData()
+{
+  switch(m_InputType)
+  {
+    case InputType_Microphone:
+      ProcessSoundStateStatus(true);
+    break;
+    case InputType_Bluetooth:
+    {  
+      ProcessBluetoothConnectionStatus(true);
+      ProcessSoundStateStatus(true);
+    }
+    break;
+    default:
+    break;
+  }
+}
+
 void Manager::ProcessEventQueue()
 {
   switch(m_InputType)
@@ -55,13 +73,13 @@ void Manager::ProcessEventQueue()
     case InputType_Microphone:
       m_Mic_In.ProcessEventQueue();
       m_I2S_Out.ProcessEventQueue();
-      ProcessSoundStateStatus();
+      ProcessSoundStateStatus(false);
     break;
     case InputType_Bluetooth:
     {  
       m_I2S_Out.ProcessEventQueue();
-      ProcessBluetoothConnectionStatus();
-      ProcessSoundStateStatus();
+      ProcessBluetoothConnectionStatus(false);
+      ProcessSoundStateStatus(false);
     }
     break;
     default:
@@ -120,7 +138,6 @@ void Manager::ProcessEventQueue()
 
 void Manager::SetInputType(InputType_t Type)
 {
-    Serial << "FOUND ME2!\n";
   m_InputType = Type;
   switch(m_InputType)
   {
@@ -147,9 +164,7 @@ void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 }
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
-{
-  Serial << "FOUND ME6!\n";
-  
+{  
   switch(m_InputType)
   {
     case InputType_Microphone:
@@ -174,13 +189,15 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
   }
 }
 
-void Manager::ProcessBluetoothConnectionStatus()
+
+void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
 {
-  //Process Bluetooth Connection Status
+  bool SendUpdate = false;
   bool IsConnected = m_BT_In.IsConnected();
   if(m_BluetoothIsConnected != IsConnected)
   {
     m_BluetoothIsConnected = IsConnected;
+    SendUpdate = true;
     if(true == m_BluetoothIsConnected)
     {
       ESP_LOGI("Manager", "Bluetooth Source Connected!");
@@ -189,6 +206,9 @@ void Manager::ProcessBluetoothConnectionStatus()
     {
       ESP_LOGI("Manager", "Bluetooth Source Disconnected!");
     }
+  }
+  if(true == ForceUpdate || true == SendUpdate)
+  {
     static bool SourceIsConnectedValuePushError = false;
     PushValueToQueue( &m_BluetoothIsConnected
                     , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
@@ -199,17 +219,36 @@ void Manager::ProcessBluetoothConnectionStatus()
 }
 
 
-void Manager::ProcessSoundStateStatus()
+void Manager::ProcessSoundStateStatus(bool ForceUpdate)
 {
+    bool SendUpdate = false;
     SoundState_t SoundState = m_StatisticalEngine.GetSoundState();
     if(m_SoundState != SoundState)
     {
       m_SoundState = SoundState;
-      static bool SoundStateValuePushError = false;
-      PushValueToQueue( &m_SoundState
-                      , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
-                      , true
-                      , "Sound State"
-                      , SoundStateValuePushError );
+      SendUpdate = true;
+      switch(m_SoundState)
+      {
+        case LastingSilenceDetected:
+          ESP_LOGI("Manager", "Lasting Silence Detected");
+        break;
+        case SilenceDetected:
+          ESP_LOGI("Manager", "Silence Detected");
+        break;
+        case SoundDetected:
+          ESP_LOGI("Manager", "Sound Detected");
+        break;
+        default:
+        break;
+      }
     }
+  if(true == ForceUpdate || true == SendUpdate)
+  {
+    static bool SoundStateValuePushError = false;
+    PushValueToQueue( &m_SoundState
+                    , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
+                    , true
+                    , "Sound State"
+                    , SoundStateValuePushError );
+  }
 }

@@ -35,7 +35,7 @@ void SPI_Datalink_Master::Setup_SPI_Master()
 	m_SPI_Master.setFrequency(CLOCK_SPEED);
 	m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
 	m_SPI_Master.setQueueSize(N_MASTER_QUEUES);
-	Begin();
+	m_SPI_Master.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
 }
 
 void SPI_Datalink_Master::ProcessEventQueue()
@@ -87,7 +87,14 @@ void SPI_Datalink_Master::ProcessEventQueue()
 								delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 								if(true == m_SpewToConsole) Serial << "TX: " << String((char*)spi_tx_buf[CurrentIndex]).c_str() << "\n";
 								ESP_LOGI("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
-								m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+								if(0 == DataLength)
+								{
+									m_SPI_Master.queue(NULL, spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+								}
+								else
+								{
+									m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+								}
 								++m_Queued_Transactions;
 								--MessageCount;
 							}
@@ -141,13 +148,13 @@ void SPI_Datalink_Master::TransmitQueuedData()
 	{
 		size_t CurrentDeQueueIndex = m_DeQueued_Transactions % N_MASTER_QUEUES;
 		String ResultString( (char*) (spi_rx_buf[CurrentDeQueueIndex]) );
+		++m_DeQueued_Transactions;
 		if(strlen(ResultString.c_str()) > 0)
 		{
 			if(true == m_SpewToConsole) Serial << "RX: " << ResultString.c_str() << "\n";
 			ESP_LOGV("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), true);
 		}
-		++m_DeQueued_Transactions;
 	}	
 	m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
 }
@@ -171,6 +178,16 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 
 	m_SPI_Slave.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
 	ESP_LOGE("SPI_Datalink", "SPI Slave Configured");
+}
+
+bool SPI_Datalink_Slave::Begin() 
+{ 
+	return m_SPI_Slave.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
+}
+
+bool SPI_Datalink_Slave::End()
+{
+	return m_SPI_Slave.end();
 }
 
 void SPI_Datalink_Slave::ProcessEventQueue()
@@ -268,7 +285,6 @@ size_t SPI_Datalink_Slave::EncodeDataToBuffer(String DataTypeName, DataType_t Da
 	}
 	DataToSendLength += PadCount;
 	assert(DataToSendLength <= MaxBytesToEncode);
-	Serial << DataToSend << "\n";
 	memcpy(Buffer, DataToSend.c_str(), DataToSendLength);
 	ESP_LOGI("SPI_Datalink", "TX: %s", DataToSend.c_str());
 	return DataToSendLength;

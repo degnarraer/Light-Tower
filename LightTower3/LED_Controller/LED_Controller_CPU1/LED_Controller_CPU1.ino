@@ -37,12 +37,17 @@ uint32_t TaskMonitorTaskLoopCount = 0;
 TaskHandle_t SPI_Task;
 uint32_t SPI_TaskLoopCount = 0;
 
+TaskHandle_t UpdateSerialDataTask;
+uint32_t UpdateSerialDataTaskLoopCount = 0;
+
+
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( DataMoverTaskLoop,     "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 1,  &DataMoverTask,       0 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,   "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 1,  &TaskMonitorTask,     0 );
-  xTaskCreatePinnedToCore( SPI_TaskLoop,          "SPI_Task",             3000,  NULL,   0,                         &SPI_Task,         0 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 10, &VisualizationTask,   1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
+  xTaskCreatePinnedToCore( DataMoverTaskLoop,         "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 1,  &DataMoverTask,         0 );
+  xTaskCreatePinnedToCore( UpdateSerialDataTaskLoop,  "UpdateSerialData",     2000,  NULL,   configMAX_PRIORITIES - 1,  &UpdateSerialDataTask,  0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 1,  &TaskMonitorTask,       0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   0,                         &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 10, &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
 }
 
 void setup()
@@ -94,6 +99,7 @@ void TaskMonitorTaskLoop(void * parameter)
     {
       unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
       ESP_LOGE("LED_Controller1", "DataMoveTaskLoopCount: %f", (float)DataMoveTaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "UpdateSerialDataTaskLoopCount: %f", (float)UpdateSerialDataTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "VisualizationTaskLoopCount: %f", (float)VisualizationTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "SPI_TaskLoopCount: %f", (float)SPI_TaskLoopCount/(float)DeltaTimeSeconds);
@@ -105,12 +111,16 @@ void TaskMonitorTaskLoop(void * parameter)
 
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(DataMoverTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! DataMoverTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! UpdateSerialDataTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! TaskMonitorTask: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SPI_Task: Stack Size Low");
     
     if(true == TASK_STACK_SIZE_DEBUG)
     {
-      ESP_LOGE("LED_Controller1", "TaskMonitorTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
-      ESP_LOGE("LED_Controller1", "DataMoverTaskTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
+      ESP_LOGE("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
+      ESP_LOGE("LED_Controller1", "DataMoverTask Free Heap: %i", uxTaskGetStackHighWaterMark(DataMoverTask));
+      ESP_LOGE("LED_Controller1", "UpdateSerialDataTask Free Heap: %i", uxTaskGetStackHighWaterMark(UpdateSerialDataTask));
       ESP_LOGE("LED_Controller1", "SPI_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_Task));
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
@@ -127,6 +137,18 @@ void DataMoverTaskLoop(void * parameter)
   {
     ++DataMoveTaskLoopCount;
     m_Manager.ProcessEventQueue();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+  }
+}
+
+void UpdateSerialDataTaskLoop(void * parameter)
+{
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 5000;
+  while(true)
+  {
+    ++UpdateSerialDataTaskLoopCount;
+    m_Manager.UpdateSerialData();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

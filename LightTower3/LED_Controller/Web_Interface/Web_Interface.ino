@@ -28,12 +28,7 @@ TaskHandle_t SPI_RX_Task;
 uint32_t SPI_RX_TaskLoopCount = 0;
 
 
-SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( "SPI Datalink"
-                                                      , SPI1_PIN_SCK
-                                                      , SPI1_PIN_MISO
-                                                      , SPI1_PIN_MOSI
-                                                      , SPI1_PIN_SS
-                                                      , 1 );
+SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave();
 
  
 // Replace with your network credentials
@@ -173,8 +168,9 @@ void InitWebSocket()
 
 void InitWebServer()
 {
- // Web Server Root URL
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+  // Web Server Root URL
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+  {
     request->send(SPIFFS, "/index.html", "text/html");
   });
   
@@ -198,7 +194,6 @@ void InitLocalVariables()
 void setup(){
   // Serial port for debugging purposes
   Serial.begin(500000);
-  pinMode(ledPin, OUTPUT);
 
   InitLocalVariables();
   InitFileSystem();
