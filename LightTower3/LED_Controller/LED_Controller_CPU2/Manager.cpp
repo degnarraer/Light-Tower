@@ -50,7 +50,7 @@ void Manager::Setup()
 void Manager::ProcessEventQueue()
 {
   m_I2S_In.ProcessEventQueue();
-  //MoveDataBetweenCPU1AndCPU3();
+  MoveDataBetweenCPU1AndCPU3();
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
@@ -63,15 +63,9 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
   for(int i = 0; i < count; ++i)
   {
     MoveDataFromQueueToQueue( "Manager1: " + Signals[i]
-                            , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
-                            , false
-                            , false );                 
-    MoveDataFromQueueToQueue( "Manager2: " + Signals[i]
-                            , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
                             , false
                             , false );
   }

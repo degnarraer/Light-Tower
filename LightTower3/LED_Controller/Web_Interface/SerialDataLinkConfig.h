@@ -29,10 +29,10 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
                     : QueueManager("SPI Dtatlink Slave", GetDataItemConfigCount())
                     , SPI_Datalink_Slave("SPI Dtatlink Slave"
                     , VSPI
-                    , SPI1_PIN_SCK
-                    , SPI1_PIN_MISO
-                    , SPI1_PIN_MOSI
-                    , SPI1_PIN_SS
+                    , VSPI_PIN_SCK
+                    , VSPI_PIN_MISO
+                    , VSPI_PIN_MOSI
+                    , VSPI_PIN_SS
                     , 1 ) {}
     virtual ~SPIDataLinkSlave(){}
     void SetupSPIDataLink()

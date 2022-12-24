@@ -148,7 +148,7 @@ void UpdateSerialDataTaskLoop(void * parameter)
   while(true)
   {
     ++UpdateSerialDataTaskLoopCount;
-    m_Manager.UpdateSerialData();
+    //m_Manager.UpdateSerialData();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
