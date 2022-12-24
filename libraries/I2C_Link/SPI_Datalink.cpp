@@ -36,6 +36,7 @@ void SPI_Datalink_Master::Setup_SPI_Master()
 	m_SPI_Master.setDutyCyclePos(DUTY_CYCLE_POS);
 	m_SPI_Master.setQueueSize(N_MASTER_QUEUES);
 	m_SPI_Master.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
+	ESP_LOGE("SPI_Datalink", "SPI Master Configured");
 }
 
 void SPI_Datalink_Master::ProcessEventQueue()
@@ -168,7 +169,6 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 	m_SPI_Slave.setMaxTransferSize(SPI_MAX_DATA_BYTES);
 	m_SPI_Slave.setQueueSize(N_SLAVE_QUEUES);
 	m_SPI_Slave.setDataMode(SPI_MODE0);
-
 	m_SPI_Slave.begin(m_SPI_BUS, m_SCK, m_MISO, m_MOSI, m_SS);
 	ESP_LOGE("SPI_Datalink", "SPI Slave Configured");
 }

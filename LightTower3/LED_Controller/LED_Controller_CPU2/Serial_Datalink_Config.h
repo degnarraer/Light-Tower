@@ -77,8 +77,8 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
       { "L_MAXBAND",            DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
       { "R_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
       { "L_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
-      { "Source Is Connected",  DataType_bool,                   1,                  Transciever_RX,   1 },
-      { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   1 },
+      { "Source Is Connected",  DataType_bool,                   1,                  Transciever_RX,   4 },
+      { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   4 },
     };
     
     //QueueManager Interface
@@ -95,7 +95,7 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
                         , VSPI_PIN_MISO
                         , VSPI_PIN_MOSI
                         , VSPI_PIN_SS
-                        , 1 ) {}
+                        , 2 ) {}
     virtual ~SPIDataLinkToCPU3(){}
 
   private:
@@ -103,8 +103,8 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
     static const size_t m_SPIDataLinkToCPU3ConfigCount = 2;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
-      { "Source Is Connected",  DataType_bool,          1,    Transciever_TX, 1 },
-      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX, 1 },
+      { "Source Is Connected",  DataType_bool,          1,    Transciever_TX, 4 },
+      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX, 4 },
     };
     
     //QueueManager Interface

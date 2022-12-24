@@ -69,6 +69,7 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
                             , false
                             , false );
   }
+  m_SPIDataLinkToCPU3.TriggerEarlyDataTransmit();
 }
 
 //I2S_Device_Callback
