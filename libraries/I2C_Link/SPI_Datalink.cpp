@@ -62,7 +62,7 @@ void SPI_Datalink_Master::ProcessEventQueue()
 			memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 			memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 			delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
-			m_SPI_Master.queue(NULL, spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+			m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 			++m_Queued_Transactions;
 			if(m_Queued_Transactions - m_Queued_Transactions_Reset_Point >= N_MASTER_QUEUES)
 			{
@@ -197,6 +197,7 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 		String ResultString = String( (char*)(spi_rx_buf[CurrentDeQueueIndex]) );
 		if(ResultString.length() > 0)
 		{
+			if(true == m_SpewToConsole) Serial << "RX: " << ResultString.c_str() << "\n";
 			ESP_LOGV("SPI_Datalink", "Received: %s", ResultString.c_str());
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false); 
 		}
