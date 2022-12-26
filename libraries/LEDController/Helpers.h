@@ -109,7 +109,7 @@ class QueueController
 			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-				//ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
+				ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
 				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
 					if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
@@ -144,7 +144,7 @@ class QueueController
 		  else
 		  {
 			if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": NULL Queue.\n";
-			ESP_LOGV("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
+			ESP_LOGW("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
 		  }
 		}
 
@@ -195,7 +195,7 @@ class QueueController
 				else
 				{
 					if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": Error Receiving Queue.\n";
-					ESP_LOGE("CommonUtils", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
+					ESP_LOGW("CommonUtils", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
 		  }
@@ -245,7 +245,7 @@ class QueueController
 				if(false == DataPushHasErrored)
 				{
 					DataPushHasErrored = true;
-					ESP_LOGW("CommonUtils", "WARNING! %s: NULL Queue!", DebugTitle.c_str());
+					ESP_LOGE("CommonUtils", "Error! %s: NULL Queue!", DebugTitle.c_str());
 				}
 			}
 		}
@@ -293,11 +293,11 @@ class QueueManager: public CommonUtils
 						return m_DataItem[i].TotalByteCount;
 					}
 				}
-				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name);
+				ESP_LOGE("CommonUtils", "ERROR! %s: Data Item Not Found.", Name);
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name);
+				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name);
 			}
 			return NULL;
 		}
@@ -320,14 +320,14 @@ class QueueManager: public CommonUtils
 						}
 						else
 						{
-							if(true == DebugMessage)ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
+							ESP_LOGE("CommonUtils", "ERROR! Error Receiving Queue.");
 						}
 					}
 				}
 			}
 			else
 			{
-				if(true == DebugMessage)ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 		}
 		
@@ -342,11 +342,11 @@ class QueueManager: public CommonUtils
 						return m_DataItem[i].QueueHandle_RX;
 					}
 				}
-				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! %s: Data Item Not Found.", Name.c_str());
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
 			}
 			return NULL;
 		}
@@ -362,11 +362,11 @@ class QueueManager: public CommonUtils
 						return m_DataItem[i].QueueHandle_TX;
 					}
 				}
-				ESP_LOGW("CommonUtils", "WARNING! %s: Data Item Not Found.", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! %s: Data Item Not Found.", Name.c_str());
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! %s: NULL Data Item.", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
 			}
 			return NULL;
 		}
@@ -385,7 +385,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
 			return NULL;
 		}
@@ -404,7 +404,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
 			return NULL;
 		}
@@ -423,7 +423,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
 			return NULL;
 		}
@@ -466,7 +466,7 @@ class QueueManager: public CommonUtils
 						}
 						else
 						{
-							ESP_LOGV("CommonUtils", "Error Receiving Queue!");
+							ESP_LOGE("CommonUtils", "Error Receiving Queue!");
 						}
 					}
 				}
@@ -491,7 +491,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
 		}
 		void UnLockDataItem(String Name)
@@ -508,7 +508,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGW("CommonUtils", "WARNING! NULL Data Item.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
 		}
 		

@@ -204,7 +204,6 @@ void I2S_Device::InstallDevice()
 
 void I2S_Device::ProcessEventQueue()
 {
-    //ESP_LOGV("Function Debug", "%s, ", __func__);
 	if(NULL != m_i2s_event_queue)
 	{
 		i2s_event_t i2sEvent = {};
@@ -231,7 +230,7 @@ void I2S_Device::ProcessEventQueue()
 						}
 						break;
 					case I2S_EVENT_MAX:
-						ESP_LOGE("i2S Device", "WARNING! I2S_EVENT_MAX");
+						ESP_LOGW("i2S Device", "WARNING! I2S_EVENT_MAX");
 						break;
 				}	
 			}

@@ -147,7 +147,7 @@ void SPI_Datalink_Master::TransmitQueuedData()
 		{
 			if(true == m_SpewToConsole) Serial << "RX: " << ResultString.c_str() << "\n";
 			ESP_LOGV("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
-			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), true);
+			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false);
 		}
 	}	
 	m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
