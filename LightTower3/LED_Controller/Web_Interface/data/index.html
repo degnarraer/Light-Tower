@@ -9,34 +9,96 @@
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-    <div class="topnav">
-        <h1>Multiple Sliders</h1>
-    </div>
-    <div class="content">
-        <div class="card-grid">
-            <div class="card">
-                <p class="card-title">Fader 1</p>
-                <p class="switch">
-                    <input type="range" onchange="updateSliderPWM(this)" id="slider1" min="0" max="100" step="1" value ="0" class="slider">
-                </p>
-                <p class="state">Brightness: <span id="sliderValue1"></span> &percnt;</p>
-            </div>
-            <div class="card">
-                <p class="card-title"> Fader 2</p>
-                <p class="switch">
-                    <input type="range" onchange="updateSliderPWM(this)" id="slider2" min="0" max="100" step="1" value ="0" class="slider">
-                </p>
-                <p class="state">Brightness: <span id="sliderValue2"></span> &percnt;</p>
-            </div>
-            <div class="card">
-                <p class="card-title"> Fader 3</p>
-                <p class="switch">
-                    <input type="range" onchange="updateSliderPWM(this)" id="slider3" min="0" max="100" step="1" value ="0" class="slider">
-                </p>
-                <p class="state">Brightness: <span id="sliderValue3"></span> &percnt;</p>
-            </div>
-        </div>
-    </div>
-    <script src="script.js"></script>
+
+<!-- Tab links -->
+<div class="tab">
+  <button class="tablinks" onclick="openCity(event, 'Bluetooth Sink')">Bluetooth Sink</button>
+  <button class="tablinks" onclick="openCity(event, 'Bluetooth Source')">Bluetooth Source</button>
+  <button class="tablinks" onclick="openCity(event, 'General')">General</button>
+</div>
+
+
+<!-- Tab content -->
+<div id="Bluetooth Sink" class="tabcontent">
+	<div class="topnav">
+		<h1>Bluetooth Sink Settings</h1>
+	</div>
+</div>
+
+<!-- Tab content -->
+<div id="Bluetooth Source" class="tabcontent">
+	<div class="topnav">
+		<h1>Bluetooth Source Settings</h1>
+	</div>
+</div>
+
+<!-- Tab content -->
+<div id="General" class="tabcontent">
+	<div class="topnav">
+		<h1>General Settings</h1>
+	</div>
+		<div class="content">
+			<div class="card-grid">
+				<div class="card">
+					<table>
+						<tbody>
+							<tr>
+								<td>
+									<div class="card">
+									<p class="card-title">Red Value</p>
+									<p class="switch">
+										<input type="range" onchange="updateSliderPWM(this)" id="slider1" min="0" max="254" step="1" value ="0" class="slider">
+									</p>
+									<p class="state">R: <span id="sliderValue1"></span></p>
+									</div>
+								</td>
+								<td>
+									<div class="card">
+									<p class="card-title"> Green Value</p>
+									<p class="switch">
+										<input type="range" onchange="updateSliderPWM(this)" id="slider2" min="0" max="100" step="1" value ="0" class="slider">
+									</p>
+									<p class="state">G: <span id="sliderValue2"></span></p>
+									</div>
+								</td>
+								<td>
+									<div class="card">
+									<p class="card-title"> Blue Value</p>
+									<p class="switch">
+										<input type="range" onchange="updateSliderPWM(this)" id="slider3" min="0" max="100" step="1" value ="0" class="slider">
+									</p>
+									<p class="state">B: <span id="sliderValue3"></span> </p>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="3">
+									<div class="card">
+									<p class="card-title"> Amplitude Gain</p>
+									<p class="switch">
+										<input type="range" onchange="updateSliderPWM(this)" id="AmplitudeGainslider" min="0.1" max="5.0" step="0.1" value ="1.0" class="slider">
+									</p>
+									<p class="state">Gain: <span id="sliderValue3"></span> </p>
+									</div>
+								</td>
+							<tr>
+								<td colspan="3">
+									<div class="card">
+									<p class="card-title"> FFT Gain</p>
+									<p class="switch">
+										<input type="range" onchange="updateSliderPWM(this)" id="AmplitudeGainslider" min="0.1" max="5.0" step="0.1" value ="1.0" class="slider">
+									</p>
+									<p class="state">Gain: <span id="sliderValue3"></span> </p>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script src="script.js"></script>
 </body>
 </html>

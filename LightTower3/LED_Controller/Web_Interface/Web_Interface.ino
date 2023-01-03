@@ -23,13 +23,19 @@
 #include "SerialDataLinkConfig.h"
 #include <Arduino_JSON.h>
 #include "Tunes.h"
+#include "Manager.h"
+#include "WebServer.h"
 
 TaskHandle_t SPI_RX_Task;
 uint32_t SPI_RX_TaskLoopCount = 0;
 
+TaskHandle_t Manager_Task;
+uint32_t Manager_TaskLoopCount = 0;
 
 SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave();
 
+Manager m_Manager = Manager( "Manager"
+                           , m_SPIDataLinkSlave );
  
 // Replace with your network credentials
 const char* ssid = "LED Tower of Power";
@@ -46,7 +52,7 @@ String sliderValue2 = "0";
 String sliderValue3 = "0";
 
 //Json Variable to Hold Slider Values
-JSONVar sliderValues;
+JSONVar SettingValues;
 
 int dutyCycle1;
 int dutyCycle2;
@@ -96,19 +102,19 @@ void InitWiFiAP()
 }
 
 //Get Slider Values
-String GetSliderValues()
+String GetSettingValues()
 {
-  sliderValues["sliderValue1"] = String(sliderValue1);
-  sliderValues["sliderValue2"] = String(sliderValue2);
-  sliderValues["sliderValue3"] = String(sliderValue3);
+  SettingValues["sliderValue1"] = String(sliderValue1);
+  SettingValues["sliderValue2"] = String(sliderValue2);
+  SettingValues["sliderValue3"] = String(sliderValue3);
 
-  String jsonString = JSON.stringify(sliderValues);
+  String jsonString = JSON.stringify(SettingValues);
   return jsonString;
 }
 
-void NotifyClients(String sliderValues)
+void NotifyClients(String SettingValues)
 {
-  ws.textAll(sliderValues);
+  ws.textAll(SettingValues);
 }
 
 void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
@@ -120,25 +126,25 @@ void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       sliderValue1 = message.substring(2);
       dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
       Serial.println(dutyCycle1);
-      Serial.print(GetSliderValues());
-      NotifyClients(GetSliderValues());
+      Serial.print(GetSettingValues());
+      NotifyClients(GetSettingValues());
     }
     if (message.indexOf("2s") >= 0) {
       sliderValue2 = message.substring(2);
       dutyCycle2 = map(sliderValue2.toInt(), 0, 100, 0, 255);
       Serial.println(dutyCycle2);
-      Serial.print(GetSliderValues());
-      NotifyClients(GetSliderValues());
+      Serial.print(GetSettingValues());
+      NotifyClients(GetSettingValues());
     }    
     if (message.indexOf("3s") >= 0) {
       sliderValue3 = message.substring(2);
       dutyCycle3 = map(sliderValue3.toInt(), 0, 100, 0, 255);
       Serial.println(dutyCycle3);
-      Serial.print(GetSliderValues());
-      NotifyClients(GetSliderValues());
+      Serial.print(GetSettingValues());
+      NotifyClients(GetSettingValues());
     }
     if (strcmp((char*)data, "getValues") == 0) {
-      NotifyClients(GetSliderValues());
+      NotifyClients(GetSettingValues());
     }
   }
 }
@@ -183,6 +189,7 @@ void InitWebServer()
 void InitTasks()
 {
   xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task",  3000,  NULL,  0,  &SPI_RX_Task, 0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop, "Manager_Task",  3000,  NULL,  0,  &Manager_Task, 0 );
 }
 
 void InitLocalVariables()
@@ -215,6 +222,17 @@ void SPI_RX_TaskLoop(void * parameter)
     yield();
     ++SPI_RX_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }  
+}
+
+void Manager_TaskLoop(void * parameter)
+{
+  while(true)
+  {
+    yield();
+    ++Manager_TaskLoopCount;
+    m_Manager.ProcessEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }  
 }
