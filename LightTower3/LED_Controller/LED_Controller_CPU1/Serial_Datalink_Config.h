@@ -55,8 +55,8 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
       { "L_MAXBAND",                DataType_MaxBandSoundData_t,     1,   Transciever_RX,   4 },
       { "R_MAJOR_FREQ",             DataType_Float,                  1,   Transciever_RX,   4 },
       { "L_MAJOR_FREQ",             DataType_Float,                  1,   Transciever_RX,   4 },
-      { "Source Is Connected",      DataType_bool,                   1,   Transciever_TX,   1 },
-      { "Sound State",              DataType_SoundState_t,           1,   Transciever_TX,   1 },
+      { "Source Is Connected",      DataType_bool,                   1,   Transciever_TX,   4 },
+      { "Sound State",              DataType_SoundState_t,           1,   Transciever_TX,   4 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

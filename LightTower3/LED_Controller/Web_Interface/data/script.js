@@ -1,4 +1,4 @@
-// Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-sliders/
+// Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-Sliders/
 
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
@@ -31,11 +31,11 @@ function onClose(event) {
 }
 
 function updateSliderPWM(element) {
-    var sliderNumber = element.id.charAt(element.id.length-1);
-    var sliderValue = document.getElementById(element.id).value;
-    document.getElementById("sliderValue"+sliderNumber).innerHTML = sliderValue;
-    console.log(sliderValue);
-    websocket.send(sliderNumber+"s"+sliderValue.toString());
+    var SliderNumber = element.id.charAt(element.id.length-1);
+    var SliderValue = document.getElementById(element.id).value;
+    document.getElementById("SliderValue"+SliderNumber).innerHTML = SliderValue;
+    console.log(SliderValue);
+    websocket.send(SliderNumber+"s"+SliderValue.toString());
 }
 
 function onMessage(event) {
@@ -46,19 +46,19 @@ function onMessage(event) {
     for (var i = 0; i < keys.length; i++){
         var key = keys[i];
         document.getElementById(key).innerHTML = myObj[key];
-        document.getElementById("slider"+ (i+1).toString()).value = myObj[key];
+        document.getElementById("Slider"+ (i+1).toString()).value = myObj[key];
     }
 }
 
-function openCity(evt, cityName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
+function OpenTab(evt, cityName) {
+  var i, TabContent, Tablinks;
+  TabContent = document.getElementsByClassName("TabContent");
+  for (i = 0; i < TabContent.length; i++) {
+    TabContent[i].style.display = "none";
   }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  Tablinks = document.getElementsByClassName("Tablinks");
+  for (i = 0; i < Tablinks.length; i++) {
+    Tablinks[i].className = Tablinks[i].className.replace(" active", "");
   }
   document.getElementById(cityName).style.display = "block";
   evt.currentTarget.className += " active";
