@@ -40,20 +40,20 @@ TaskHandle_t TaskMonitorTask;
 uint32_t TaskMonitorTaskLoopCount = 0;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
-                                 , I2S_NUM_1
-                                 , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
-                                 , I2S_SAMPLE_RATE
-                                 , I2S_BITS_PER_SAMPLE_16BIT
-                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                 , I2S_CHANNEL_STEREO
-                                 , true                               // Use APLL
-                                 , I2S_BUFFER_COUNT                   // Buffer Count
-                                 , I2S_SAMPLE_COUNT                   // Buffer Size
-                                 , I2S1_SCLCK_PIN                     // Serial Clock Pin
-                                 , I2S1_WD_PIN                        // Word Selection Pin
-                                 , I2S1_SDIN_PIN                      // Serial Data In Pin
-                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
+                                , I2S_NUM_1
+                                , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
+                                , I2S_SAMPLE_RATE
+                                , I2S_BITS_PER_SAMPLE_16BIT
+                                , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                , I2S_CHANNEL_STEREO
+                                , true                               // Use APLL
+                                , I2S_BUFFER_COUNT                   // Buffer Count
+                                , I2S_SAMPLE_COUNT                   // Buffer Size
+                                , I2S1_SCLCK_PIN                     // Serial Clock Pin
+                                , I2S1_WD_PIN                        // Word Selection Pin
+                                , I2S1_SDIN_PIN                      // Serial Data In Pin
+                                , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
@@ -68,7 +68,7 @@ ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
                                                   , m_SPIDataLinkToCPU1
                                                   , m_AudioBuffer );                                            
-Manager m_Manager = Manager("Manager"
+Manager m_Manager = Manager( "Manager"
                            , m_SoundProcessor
                            , m_SPIDataLinkToCPU1
                            , m_SPIDataLinkToCPU3

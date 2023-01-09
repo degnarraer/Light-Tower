@@ -1,5 +1,3 @@
-// Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-Sliders/
-
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 window.addEventListener('load', onload);

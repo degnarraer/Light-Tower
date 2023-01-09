@@ -1,110 +1,142 @@
-/*  Complete project details: https://randomnerdtutorials.com/esp32-web-server-websocket-Sliders/  */
-
 html {
     font-family: Arial, Helvetica, sans-serif;
     display: inline-block;
     text-align: center;
-  }
+}
+
 h1 {
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     color: White;
-  }
+}
+
 p {
-    font-size: 1.4rem;
-  }
-.TopNav {
+    font-size: 1.0rem;
+}
+
+.MainScreen {
+	width: 100%;
+	height: 100%;
+}
+
+.TabMenu {
+	height: 100%;
+	width: 20%;
+	background-color: LightGray;
+}
+
+.TabMenu button {
+	float: right;
+	background-color: inherit;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	transition: 1s;
+	font-size: 10px;
+	height: 50px;
+	width: 100px;
+}
+
+.TabMenu button:hover {
+	background-color: Yellow;
+}
+
+.TabMenu button.active {
+	background-color: #ccc;
+}
+
+.TabContent {
+	width: 100%;
+	height: 100%;
+	/*border: 2px dashed red;*/
+}
+
+.TabHeader {
     overflow: hidden;
     background-color: Black;
-  }
+	/*border: 2px dashed green;*/
+}
+
 body {
     margin: 0;
-  }
+}
+
 .Content {
-    padding: 30px;
-  }
-.Card-Grid {
-    max-width: 100%;
-    margin: 0 auto;
-    display: grid;
-    grid-gap: 1rem;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  }
-.Card {
-    width: 100%;
-    background-color: White;
+    float: left;
+	/*border: 2px dashed black;*/
+}
+
+.Card-Grid-Vertical {
+    box-sizing: border-box;
+	display: grid;
+	align-content: center;
+	vertical-align: middle;
+	grid-template-rows: auto auto auto;
+	border: 2px dashed lime;
+}
+
+.Card-Grid-Horrizontal {
+	box-sizing: border-box;
+	display: grid;
+	align-content: center;
+	vertical-align: middle;
+	grid-template-columns: auto auto auto;
+	/*border: 2px dashed purple;*/
+}
+
+.Slider-Grid-Horrizontal {
+	box-sizing: border-box;
+	width: 100%;
+	display: grid;
+	align-content: center;
+	vertical-align: middle;
+	grid-template-columns: 100px minmax(10%, 100%) auto;
+	/*border: 2px dashed blue;*/
+}
+
+.SettingGroup {
+    box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	height: 50px;
+	background-color: Pink;
     box-shadow: 2px 2px 12px 1px rgba(100,100,100,.5);
-  }
-.Card-Title {
-    font-size: 1.2rem;
+	border: 2px dashed orange;
+}
+
+.SettingGroup-Title {
+    box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: right;
+    font-size: 0.8rem;
     font-weight: bold;
-    color: Black
-  }
-.State {
-    font-size: 1.2rem;
+    color: Black;
+	/*border: 2px dashed brown;*/
+}
+
+.SettingGroup-Value {
+    box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 50px;
+    font-size: 1rem;
     color:Black;
-  }
-.Slider {
-    -webkit-appearance: none;
-    margin: 0 auto;
-    width: 100%;
-    height: 15px;
-    border-radius: 10px;
-    background: #DD0000;
-    outline: none;
-  }
-.Slider::-webkit-Slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: #034078;
-    cursor: pointer;
-  }
-.Slider::-moz-range-thumb {
-    width: 30px;
-    height: 30px;
-    border-radius: 50% ;
-    background: #034078;
-    cursor: pointer;
-  }
-.switch {
-    padding-left: 5%;
-    padding-right: 5%;
-  }
+	/*border: 2px dashed aqua;*/
+}
   
-.Tab {
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;
-  width: 100%;
-  height: 100%;
+.SettingGroup-SliderContainer {
+    -webkit-appearance: none;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	background-size: 100% 100%
+    position: relative;
+	/*border: 2px dashed yellow;*/
 }
 
-/* Style the buttons inside the Tab */
-.Tab button {
-  background-color: inherit;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-  font-size: 17px;
-}
-
-/* Change background color of buttons on hover */
-.Tab button:hover {
-  background-color: #ddd;
-}
-
-/* Create an active/current Tablink class */
-.Tab button.active {
-  background-color: #ccc;
-}
-
-/* Style the Tab Content */
-.TabContent {
-  display: none;
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  border-top: none;
+.SettingGroup-Slider{
+	width: 100%;
 }

@@ -8,110 +8,106 @@
 <body>
 
 <!-- Tab links -->
-<div class="Tab">
-  <button class="Tablinks" onclick="OpenTab(event, 'Bluetooth In')">Bluetooth In</button>
-  <button class="Tablinks" onclick="OpenTab(event, 'Bluetooth Out')">Bluetooth Out</button>
-  <button class="Tablinks" onclick="OpenTab(event, 'Real Time FFT')">Real Time FFT</button>
-  <button class="Tablinks" onclick="OpenTab(event, 'Signal Gains')">Signal Gains</button>
-  <button class="Tablinks" onclick="OpenTab(event, 'Visualization')">Visualization</button>
-</div>
-
-
-<!-- Tab Content -->
-<div id="Bluetooth In" class="TabContent">
-	<div class="TopNav">
-		<h1>Bluetooth In Settings</h1>
+<div class = "MainScreen">
+	<div class="TabMenu">
+		<table>
+			<tbody>
+				<tr><td>
+					<button class="Tablinks" onclick="OpenTab(event, 'Bluetooth In')">Bluetooth In</button>
+				</tr></td>
+				<tr><td>
+					<button class="Tablinks" onclick="OpenTab(event, 'Bluetooth Out')">Bluetooth Out</button>
+				</tr></td>
+				<tr><td>
+					<button class="Tablinks" onclick="OpenTab(event, 'Real Time FFT')">Real Time FFT</button>
+				</tr></td>
+				<tr><td>
+					<button class="Tablinks" onclick="OpenTab(event, 'Gains')">Signal Gains</button>
+				</tr></td>
+				<tr><td>
+					<button class="Tablinks" onclick="OpenTab(event, 'Visualization')">Visualization</button>
+				</tr></td>
+			</tbody>
+		</table>
 	</div>
-</div>
 
-<!-- Tab Content -->
-<div id="Bluetooth Out" class="TabContent">
-	<div class="TopNav">
-		<h1>Bluetooth Out Settings</h1>
-	</div>
-</div>
-
-<!-- Tab Content -->
-<div id="Real Time FFT" class="TabContent">
-	<div class="TopNav">
-		<h1>Real Time FFT View</h1>
-	</div>
-</div>
-
-<!-- Tab Content -->
-<div id="Signal Gains" class="TabContent">
-	<div class="TopNav">
-		<h1>Signal Gain Settings</h1>
-	</div>
-	<div class="Content">
-		<div class="Card-grid">
-			<Table>
-				<tbody>
-					<tr>
-						<div class="Card">
-							<p class="Card-Title">Amplitude Gain</p>
-							<p class="switch">
-								<input type="range" onchange="updateSliderPWM(this)" id="AmplitudeGainSlider" min="0.1" max="5.0" step="0.1" value ="1.0" class="Slider">
-							</p>
-							<p class="State">Gain: <span id="SliderValue3"></span> </p>
-						</div>
-					</tr>
-					<tr>
-						<div class="Card">
-							<p class="Card-Title">FFT Gain</p>
-							<p class="switch">
-								<input type="range" onchange="updateSliderPWM(this)" id="AmplitudeGainSlider" min="0.1" max="5.0" step="0.1" value ="1.0" class="Slider">
-							</p>
-							<p class="State">Gain: <span id="SliderValue3"></span> </p>
-						</div>
-					</tr>
-				</tbody>
-			</Table>
+	<div class="TabContent" id="Bluetooth In">
+		<div class="TabHeader">
+			<h1>Bluetooth In Settings</h1>
 		</div>
 	</div>
-</div>
 
-<!-- Tab Content -->
-<div id="Visualization" class="TabContent">
-	<div class="TopNav">
-		<h1>Visualization Settings</h1>
+
+	<div class="TabContent" id="Bluetooth Out">
+		<div class="TabHeader">
+			<h1>Bluetooth Out Settings</h1>
+		</div>
 	</div>
-	<div class="Content">
-		<div class="Card-grid">
-			<div class="Card">
-				<Table>
-					<tbody>
-						<tr>
-							<td>
-								<div class="Card">
-								<p class="Card-Title">Red Value</p>
-								<p class="switch">
-									<input type="range" onchange="updateSliderPWM(this)" id="Slider1" min="0" max="254" step="1" value ="0" class="Slider">
-								</p>
-								<p class="State">R: <span id="SliderValue1"></span></p>
-								</div>
-							</td>
-							<td>
-								<div class="Card">
-								<p class="Card-Title">Green Value</p>
-								<p class="switch">
-									<input type="range" onchange="updateSliderPWM(this)" id="Slider2" min="0" max="100" step="1" value ="0" class="Slider">
-								</p>
-								<p class="State">G: <span id="SliderValue2"></span></p>
-								</div>
-							</td>
-							<td>
-								<div class="Card">
-								<p class="Card-Title">Blue Value</p>
-								<p class="switch">
-									<input type="range" onchange="updateSliderPWM(this)" id="Slider3" min="0" max="100" step="1" value ="0" class="Slider">
-								</p>
-								<p class="State">B: <span id="SliderValue3"></span> </p>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-				</Table>
+
+	<div class="TabContent" id="Real Time FFT">
+		<div class="TabHeader">
+			<h1>Real Time FFT View</h1>
+		</div>
+	</div>
+	
+	<div class="TabContent" id="Gains">
+		
+		<div class="TabHeader">
+			<h1>Gain Settings</h1>
+		</div>
+			<div class="Card-Grid-Vertical">
+				<div class="SettingGroup">
+					<div class="Slider-Grid-Horrizontal">
+						<div class="SettingGroup-Title">Amplitude Gain</div>
+						<div class="SettingGroup-SliderContainer">
+							<input type="range" onchange="updateSliderPWM(this)" id="Slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="SettingGroup-Slider">
+						</div>
+						<div class="SettingGroup-Value"><span id="SliderValue4"></span> </div>
+					</div>
+				</div>
+				<div class="SettingGroup">
+					<div class="Slider-Grid-Horrizontal">
+						<div class="SettingGroup-Title">FFT Gain</div>
+						<div class="SettingGroup-SliderContainer">
+							<input type="range" onchange="updateSliderPWM(this)" id="Slider5" min="0.1" max="5.0" step="0.1" value ="1.0" class="SettingGroup-Slider">
+						</div>
+						<div class="SettingGroup-Value"><span id="SliderValue5"></span> </div>
+					</div>
+				</div>
+			</div>	
+	</div>
+	
+	<div class="TabContent" id="Visualization">
+		<div class="TabHeader">
+			<h1>Visualization Settings</h1>
+		</div>
+		<div class="Card-Grid-Vertical">
+			<div class="SettingGroup">
+				<div class="Slider-Grid-Horrizontal">
+					<div class="SettingGroup-Title">Red Value</div>
+					<div class="SettingGroup-SliderContainer">
+						<input type="range" onchange="updateSliderPWM(this)" id="Slider1" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+					</div>
+					<div class="SettingGroup-Value"><span id="SliderValue1"></span></div>
+				</div>
+			</div>
+			<div class="SettingGroup">
+				<div class="Slider-Grid-Horrizontal">
+					<div class="SettingGroup-Title">Green Value</div>
+					<div class="SettingGroup-SliderContainer">
+						<input type="range" onchange="updateSliderPWM(this)" id="Slider2" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+					</div>
+					<div class="SettingGroup-Value"><span id="SliderValue2"></span></div>
+				</div>
+			</div>
+			<div class="SettingGroup">
+				<div class="Card-Grid-Horrizontal">
+					<div class="SettingGroup-Title">Blue Value</div>
+					<div class="SettingGroup-SliderContainer">
+						<input type="range" onchange="updateSliderPWM(this)" id="Slider3" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+					</div>
+					<div class="SettingGroup-Value"><span id="SliderValue3"></span></div>
+				</div>
 			</div>
 		</div>
 	</div>
