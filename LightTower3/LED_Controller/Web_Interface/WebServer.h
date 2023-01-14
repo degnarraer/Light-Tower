@@ -32,9 +32,9 @@ class SimpleSettingsWebServer: public NamedItem
 {
   public:
     SimpleSettingsWebServer( String Title
-                           , AsyncWebSocket aWebSocket )
+                           , AsyncWebSocket WebSocket )
                            : NamedItem(Title)
-                           , m_WebSocket(aWebSocket)
+                           , m_WebSocket(WebSocket)
     {
     
     }
@@ -71,23 +71,19 @@ class SimpleSettingsWebServer: public NamedItem
     // Replace with your network credentials
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
- 
-    // Set LED GPIO
-    const int ledPin = 2;
-    // Stores LED state
-    String ledState;
 
     String message = "";
-    String sliderValue1 = "0";
-    String sliderValue2 = "0";
-    String sliderValue3 = "0";
-
-    //Json Variable to Hold Slider Values
-    JSONVar SettingValues;
+    String Amplitude_Gain_Slider = "1.0";
+    String FFT_Gain_Slider = "1.0";
+    String Red_Value_Slider = "0";
+    String Blue_Value_Slider = "0";
+    String Green_Value_Slider = "0";
     
-    int dutyCycle1;
-    int dutyCycle2;
-    int dutyCycle3;
+    int Amplitude_Gain_Slider_DutyCycle;
+    int FFT_Gain_Slider_DutyCycle;
+    int Red_Value_Slider_DutyCycle;
+    int Blue_Value_Slider_DutyCycle;
+    int Green_Value_Slider_DutyCycle;
     
     // Initialize WiFi Client
     void InitWiFiClient()
@@ -114,14 +110,14 @@ class SimpleSettingsWebServer: public NamedItem
     }
     
     //Get Slider Values
-    String GetSettingValues()
+    String EncodeJSON(String Name, String Value)
     {
-      SettingValues["sliderValue1"] = String(sliderValue1);
-      SettingValues["sliderValue2"] = String(sliderValue2);
-      SettingValues["sliderValue3"] = String(sliderValue3);
-    
+      JSONVar SettingValues;
+      SettingValues["Name"] = Name;
+      SettingValues["Value"] = Value;
       String jsonString = JSON.stringify(SettingValues);
-      return jsonString;
+      Serial.println(jsonString);
+      return jsonString.c_str();
     }
     
     void NotifyClients(String SettingValues)
@@ -135,33 +131,63 @@ class SimpleSettingsWebServer: public NamedItem
       if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
       {
         data[len] = 0;
-        message = (char*)data;
-        if (message.indexOf("1s") >= 0) {
-          sliderValue1 = message.substring(2);
-          dutyCycle1 = map(sliderValue1.toInt(), 0, 100, 0, 255);
-          Serial.println(dutyCycle1);
-          Serial.print(GetSettingValues());
-          NotifyClients(GetSettingValues());
+        String message = String((char*)data);
+        Serial.println(message);
+        if (true == message.equals("Get All Values"))
+        {
+          Serial.println("Sending All Value");
+          NotifyClients(EncodeJSON("Amplitude_Gain_Slider", Amplitude_Gain_Slider));
+          NotifyClients(EncodeJSON("FFT_Gain_Slider", FFT_Gain_Slider));
+          NotifyClients(EncodeJSON("Red_Value_Slider", Red_Value_Slider));
+          NotifyClients(EncodeJSON("Green_Value_Slider", Green_Value_Slider));
+          NotifyClients(EncodeJSON("Blue_Value_Slider", Blue_Value_Slider));
         }
-        if (message.indexOf("2s") >= 0)
+        else
         {
-          sliderValue2 = message.substring(2);
-          dutyCycle2 = map(sliderValue2.toInt(), 0, 100, 0, 255);
-          Serial.println(dutyCycle2);
-          Serial.print(GetSettingValues());
-          NotifyClients(GetSettingValues());
-        }    
-        if (message.indexOf("3s") >= 0)
-        {
-          sliderValue3 = message.substring(2);
-          dutyCycle3 = map(sliderValue3.toInt(), 0, 100, 0, 255);
-          Serial.println(dutyCycle3);
-          Serial.print(GetSettingValues());
-          NotifyClients(GetSettingValues());
-        }
-        if (strcmp((char*)data, "getValues") == 0)
-        {
-          NotifyClients(GetSettingValues());
+          JSONVar MyObject = JSON.parse(message);
+          if (JSON.typeof(MyObject) == "undefined") {
+            Serial.println("Parsing input failed!");
+            return;
+          }
+          if (MyObject.hasOwnProperty("Name"))
+          {
+              Serial.print("MyObject[\"Name\"] = ");
+              Serial.println(MyObject["Name"]);
+              if(String((const char*) MyObject["Name"]).equals("Amplitude_Gain_Slider"))
+              {
+                Amplitude_Gain_Slider = String((const char*)(MyObject["Value"]));
+                Serial.println("Amplitude_Gain_Slider Value: " + Amplitude_Gain_Slider);
+                NotifyClients(EncodeJSON("Amplitude_Gain_Slider", Amplitude_Gain_Slider));
+              }
+              else if(String((const char*) MyObject["Name"]).equals("FFT_Gain_Slider"))
+              {
+                FFT_Gain_Slider = String((const char*)(MyObject["Value"]));
+                Serial.println("FFT_Gain_Slider Value: " + FFT_Gain_Slider);
+                NotifyClients(EncodeJSON("FFT_Gain_Slider", FFT_Gain_Slider));
+              }
+              else if(String((const char*) MyObject["Name"]).equals("Red_Value_Slider"))
+              {
+                Red_Value_Slider = String((const char*)(MyObject["Value"]));
+                Serial.println("Red_Value_Slider Value: " + Red_Value_Slider);
+                NotifyClients(EncodeJSON("Red_Value_Slider", Red_Value_Slider));
+              }
+              else if(String((const char*) MyObject["Name"]).equals("Green_Value_Slider"))
+              {
+                Green_Value_Slider = String((const char*)(MyObject["Value"]));
+                Serial.println("Green_Value_Slider Value: " + Green_Value_Slider);
+                NotifyClients(EncodeJSON("Green_Value_Slider", Green_Value_Slider));
+              }
+              else if(String((const char*) MyObject["Name"]).equals("Blue_Value_Slider"))
+              {
+                Blue_Value_Slider = String((const char*)(MyObject["Value"]));
+                Serial.println("Blue_Value_Slider Value: " + MyObject["Value"]);
+                NotifyClients(EncodeJSON("Blue_Value_Slider", Blue_Value_Slider));
+              }
+              else
+              {
+                Serial.println("Failed to Parse");
+              }
+          }
         }
       }
     }

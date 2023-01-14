@@ -7,7 +7,7 @@ function onload(event) {
 }
 
 function getValues(){
-    websocket.send("getValues");
+    websocket.send("Get All Values");
 }
 
 function initWebSocket() {
@@ -28,23 +28,27 @@ function onClose(event) {
     setTimeout(initWebSocket, 2000);
 }
 
-function updateSliderPWM(element) {
-    var SliderNumber = element.id.charAt(element.id.length-1);
-    var SliderValue = document.getElementById(element.id).value;
-    document.getElementById("SliderValue"+SliderNumber).innerHTML = SliderValue;
+function updateSliderValue(element) {
+    var SliderName = element.id;
+    var SliderValue = document.getElementById(SliderName).value;
+    var JSONObject = {};
+	JSONObject.Name = SliderName.toString();
+	JSONObject.Value = SliderValue.toString();
+	var Message = JSON.stringify(JSONObject);
+	console.log(Message);
+	document.getElementById(SliderName + "_Value").innerHTML = SliderValue;
     console.log(SliderValue);
-    websocket.send(SliderNumber+"s"+SliderValue.toString());
+    websocket.send(Message);
 }
 
 function onMessage(event) {
     console.log(event.data);
     var myObj = JSON.parse(event.data);
     var keys = Object.keys(myObj);
-
     for (var i = 0; i < keys.length; i++){
         var key = keys[i];
         document.getElementById(key).innerHTML = myObj[key];
-        document.getElementById("Slider"+ (i+1).toString()).value = myObj[key];
+        document.getElementById("Slider"+(i+1).toString()+"_Value").value = myObj[key];
     }
 }
 

@@ -30,12 +30,12 @@ TaskHandle_t Manager_Task;
 uint32_t Manager_TaskLoopCount = 0;
 
 // Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+AsyncWebServer MyWebServer(80);
+AsyncWebSocket MyWebSocket("/ws");
 
 SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave();
 SimpleSettingsWebServer m_SimpleSettingsWebServer = SimpleSettingsWebServer( "Web Server"
-                                                                           , ws );
+                                                                           , MyWebSocket );
 Manager m_Manager = Manager( "Manager"
                            , m_SPIDataLinkSlave
                            , m_SimpleSettingsWebServer );
@@ -47,22 +47,22 @@ void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void InitWebSocket()
 {
-  ws.onEvent(OnEvent);
-  server.addHandler(&ws);
+  MyWebSocket.onEvent(OnEvent);
+  MyWebServer.addHandler(&MyWebSocket);
 }
 
 void InitWebServer()
 {
   // Web Server Root URL
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+  MyWebServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
   {
     request->send(SPIFFS, "/index.html", "text/html");
   });
   
-  server.serveStatic("/", SPIFFS, "/");
+  MyWebServer.serveStatic("/", SPIFFS, "/");
 
   // Start server
-  server.begin();
+  MyWebServer.begin();
 }
 
 // Initialize SPIFFS
