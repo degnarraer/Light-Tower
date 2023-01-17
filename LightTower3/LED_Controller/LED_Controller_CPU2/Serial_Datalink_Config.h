@@ -70,14 +70,14 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
     static const size_t m_SPIDataLinkToCPU1ConfigCount = 9;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU1ConfigCount]
     {
-      { "R_BANDS",              DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
-      { "L_BANDS",              DataType_Float,                  NUMBER_OF_BANDS,    Transciever_TX,   4 },
+      { "R_BANDS",              DataType_Float_t,                NUMBER_OF_BANDS,    Transciever_TX,   4 },
+      { "L_BANDS",              DataType_Float_t,                NUMBER_OF_BANDS,    Transciever_TX,   4 },
       { "Processed_Frame",      DataType_ProcessedSoundFrame_t,  1,                  Transciever_TX,   4 },
       { "R_MAXBAND",            DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
       { "L_MAXBAND",            DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
-      { "R_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
-      { "L_MAJOR_FREQ",         DataType_Float,                  1,                  Transciever_TX,   4 },
-      { "Source Is Connected",  DataType_bool,                   1,                  Transciever_RX,   4 },
+      { "R_MAJOR_FREQ",         DataType_Float_t,                1,                  Transciever_TX,   4 },
+      { "L_MAJOR_FREQ",         DataType_Float_t,                1,                  Transciever_TX,   4 },
+      { "Source Is Connected",  DataType_bool_t,                 1,                  Transciever_RX,   4 },
       { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   4 },
     };
     
@@ -103,7 +103,7 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
     static const size_t m_SPIDataLinkToCPU3ConfigCount = 2;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
-      { "Source Is Connected",  DataType_bool,          1,    Transciever_TX, 4 },
+      { "Source Is Connected",  DataType_bool_t,        1,    Transciever_TX, 4 },
       { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX, 4 },
     };
     

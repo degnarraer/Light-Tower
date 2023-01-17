@@ -45,16 +45,16 @@ enum BitLength_t
 
 enum DataType_t
 {
-  DataType_bool,
+  DataType_bool_t,
   DataType_Int8_t,
   DataType_Int16_t,
   DataType_Int32_t,
   DataType_Uint8_t,
   DataType_Uint16_t,
   DataType_Uint32_t,
-  DataType_String,
-  DataType_Float,
-  DataType_Double,
+  DataType_String_t,
+  DataType_Float_t,
+  DataType_Double_t,
   DataType_ProcessedSoundData_t,
   DataType_MaxBandSoundData_t,
   DataType_Frame_t,
@@ -65,22 +65,22 @@ enum DataType_t
 
 static const char* DataTypeStrings[] =
 {
-  "bool",
+  "bool_t",
   "Int8_t",
   "Int16_t",
   "Int32_t",
   "Uint8_t",
   "Uint16_t",
   "Uint32_t",
-  "String",
-  "Float",
-  "Double",
+  "String_t",
+  "Float_t",
+  "Double_t",
   "ProcessedSoundData_t",
   "MaxBandSoundData_t",
   "Frame_t",
   "ProcessedSoundFrame_t",
   "SoundState_t",
-  "Undefined"
+  "Undefined_t"
 };
 
 struct DataItemConfig_t

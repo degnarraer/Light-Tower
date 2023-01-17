@@ -49,7 +49,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
     static const size_t m_SPIDatalinkConfigCount = 2;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "Source Is Connected",      DataType_bool,          1,    Transciever_RX,   4 },
+      { "Source Is Connected",      DataType_bool_t,        1,    Transciever_RX,   4 },
       { "Sound State",              DataType_SoundState_t,  1,    Transciever_RX,   4 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }

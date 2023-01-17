@@ -34,7 +34,7 @@ class CommonUtils
 			uint32_t Result = 0;
 			switch(DataType)
 			{
-				case DataType_bool:
+				case DataType_bool_t:
 					Result = sizeof(bool);
 				break;
 				
@@ -62,15 +62,15 @@ class CommonUtils
 					Result = sizeof(uint32_t);
 				break;
 				
-				case DataType_String:
+				case DataType_String_t:
 					Result = sizeof(String);
 				break;
 				
-				case DataType_Float:
+				case DataType_Float_t:
 					Result = sizeof(float);
 				break;
 				
-				case DataType_Double:
+				case DataType_Double_t:
 					Result = sizeof(double);
 				break;
 				

@@ -29,6 +29,9 @@ uint32_t SPI_RX_TaskLoopCount = 0;
 TaskHandle_t Manager_Task;
 uint32_t Manager_TaskLoopCount = 0;
 
+TaskHandle_t WebServer_Task;
+uint32_t WebServer_TaskLoopCount = 0;
+
 // Create AsyncWebServer object on port 80
 AsyncWebServer MyWebServer(80);
 
@@ -93,6 +96,7 @@ void InitTasks()
 {
   xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task",  3000,  NULL,  0,  &SPI_RX_Task, 0 );
   xTaskCreatePinnedToCore( Manager_TaskLoop, "Manager_Task",  3000,  NULL,  0,  &Manager_Task, 0 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop, "WebServer_Task",  3000,  NULL,  0,  &WebServer_Task, 0 );
 }
 
 void InitLocalVariables()
@@ -135,6 +139,17 @@ void Manager_TaskLoop(void * parameter)
     yield();
     ++Manager_TaskLoopCount;
     m_Manager.ProcessEventQueue();
+    vTaskDelay(10 / portTICK_PERIOD_MS);
+  }  
+}
+
+void WebServer_TaskLoop(void * parameter)
+{
+  while(true)
+  {
+    yield();
+    ++WebServer_TaskLoopCount;
+    m_SettingsWebServerManager.ProcessEventQueue();
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }  
 }

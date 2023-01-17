@@ -28,7 +28,7 @@
 #include <Helpers.h>
 #include "Streaming.h"
 
-class SettingsWebServerManager: public NamedItem
+class SettingsWebServerManager: public QueueManager
 {
   
   struct JSON_Data_Value
@@ -40,7 +40,7 @@ class SettingsWebServerManager: public NamedItem
   public:
     SettingsWebServerManager( String Title
                             , AsyncWebSocket &WebSocket )
-                            : NamedItem(Title)
+                            : QueueManager(Title + "Queue Manager", GetDataItemConfigCount())
                             , m_WebSocket(WebSocket)
     {
     
@@ -52,7 +52,13 @@ class SettingsWebServerManager: public NamedItem
     
     void SetupSettingsWebServerManager()
     {
+      SetupQueueManager();
       InitWiFiAP();
+    }
+    
+    void ProcessEventQueue()
+    {
+      
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -87,12 +93,24 @@ class SettingsWebServerManager: public NamedItem
     String Blue_Value_Slider = "0";
     String Green_Value_Slider = "0";
     
-    int Amplitude_Gain_Slider_DutyCycle;
+    float Amplitude_Gain;
+    float FFT_Gain;
     int FFT_Gain_Slider_DutyCycle;
     int Red_Value_Slider_DutyCycle;
     int Blue_Value_Slider_DutyCycle;
     int Green_Value_Slider_DutyCycle;
 
+    //QueueManager Interface
+    static const size_t m_WebServerConfigCount = 4;
+    DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
+    {
+      { "Source Is Connected",      DataType_bool_t,        1,    Transciever_TXRX,   20 },
+      { "Sound State",              DataType_SoundState_t,  1,    Transciever_TXRX,   20 },
+      { "Amplitude Gain",           DataType_Float_t,       1,    Transciever_TXRX,   20 },
+      { "FFT Gain",                 DataType_Float_t,       1,    Transciever_TXRX,   20 },
+    };
+    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
+    size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
     
     //Get Slider Values
     String Encode_JSON_Data_Values_To_JSON(struct JSON_Data_Value *DataValues, size_t Count)
@@ -146,19 +164,15 @@ class SettingsWebServerManager: public NamedItem
               {
                 Amplitude_Gain_Slider = String((const char*)(MyObject["Value"]));
                 Serial.println("Amplitude_Gain_Slider Value: " + Amplitude_Gain_Slider);
-                struct JSON_Data_Value Values[1] = {
-                                                     { "Amplitude_Gain_Slider", Amplitude_Gain_Slider }
-                                                   };
-                NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+                Amplitude_Gain = Amplitude_Gain_Slider.toFloat();
+                PushValueToTXQueue(&Amplitude_Gain, "Amplitude Gain", false);
               }
               else if(String((const char*) MyObject["Name"]).equals("FFT_Gain_Slider"))
               {
                 FFT_Gain_Slider = String((const char*)(MyObject["Value"]));
                 Serial.println("FFT_Gain_Slider Value: " + FFT_Gain_Slider);
-                struct JSON_Data_Value Values[1] = { 
-                                                     { "FFT_Gain_Slider", FFT_Gain_Slider }
-                                                   };
-                NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+                FFT_Gain = FFT_Gain_Slider.toFloat();
+                PushValueToTXQueue(&FFT_Gain, "FFT Gain", false);
               }
               else if(String((const char*) MyObject["Name"]).equals("Red_Value_Slider"))
               {
