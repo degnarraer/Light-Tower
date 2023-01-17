@@ -119,32 +119,27 @@ class QueueController
 						{
 							if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
 							{
-								if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": Error Setting Queue Value.\n";
 								ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
 							}
 							else
 							{
-								if(true == DebugMessage) Serial << DebugTitle + ": Added Data to Queue.\n";
-								ESP_LOGV("Helpers", "%s: Added Data to Queue", DebugTitle.c_str());
+								if(true == DebugMessage) ESP_LOGV("Helpers", "%s: Added Data to Queue", DebugTitle.c_str());
 							}
 						}
 						else
 						{
-							if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": Error Receiving Queue.\n";
 							ESP_LOGE("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
 						}
 					}
 					else
 					{
-						if(true == DebugMessage) Serial << "WARNING! " << DebugTitle + ": Queue Full.\n";
-						ESP_LOGW("Helpers", "WARNING! %s: Queue Full.", DebugTitle.c_str());
+						if(true == DebugMessage) ESP_LOGW("Helpers", "WARNING! %s: Queue Full.", DebugTitle.c_str());
 					}
 				}
 			}
 		  else
 		  {
-			if(true == DebugMessage) Serial << "ERROR! " << DebugTitle + ": NULL Queue.\n";
-			ESP_LOGW("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
+			if(true == DebugMessage) ESP_LOGW("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
 		  }
 		}
 

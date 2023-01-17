@@ -36,7 +36,6 @@ function updateSliderValue(element) {
 	JSONObject.Value = SliderValue.toString();
 	var Message = JSON.stringify(JSONObject);
 	console.log(Message);
-	document.getElementById(SliderName + "_Value").innerHTML = SliderValue;
     console.log(SliderValue);
     websocket.send(Message);
 }
@@ -51,6 +50,7 @@ function onMessage(event) {
 		var Value = myObj[keys[i]]["Value"];
 		if(Name && Value)
 		{
+			document.getElementById(Name).value = Value;
 			document.getElementById(Name + "_Value").innerHTML = Value;
 		}
 	}
