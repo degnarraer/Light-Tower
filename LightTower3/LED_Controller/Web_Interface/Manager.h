@@ -31,11 +31,9 @@ class Manager: public NamedItem
 {
   public:
     Manager( String Title
-           , SPIDataLinkSlave &SPIDataLinkSlave
-           , SimpleSettingsWebServer &SimpleSettingsWebServer )
+           , SPIDataLinkSlave &SPIDataLinkSlave )
            : NamedItem(Title)
            , m_SPIDataLinkSlave(SPIDataLinkSlave)
-           , m_SimpleSettingsWebServer(SimpleSettingsWebServer)
            {
             
            }
@@ -46,7 +44,7 @@ class Manager: public NamedItem
 
   private:
     SPIDataLinkSlave &m_SPIDataLinkSlave;
-    SimpleSettingsWebServer &m_SimpleSettingsWebServer;
+    //SimpleSettingsWebServer &m_SimpleSettingsWebServer;
 
 };
 

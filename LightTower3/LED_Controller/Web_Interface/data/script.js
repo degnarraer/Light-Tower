@@ -45,11 +45,15 @@ function onMessage(event) {
     console.log(event.data);
     var myObj = JSON.parse(event.data);
     var keys = Object.keys(myObj);
-    for (var i = 0; i < keys.length; i++){
-        var key = keys[i];
-        document.getElementById(key).innerHTML = myObj[key];
-        document.getElementById("Slider"+(i+1).toString()+"_Value").value = myObj[key];
-    }
+	for (var i = 0; i < keys.length; ++i)
+	{
+		var Name = myObj[keys[i]]["Name"];
+		var Value = myObj[keys[i]]["Value"];
+		if(Name && Value)
+		{
+			document.getElementById(Name + "_Value").innerHTML = Value;
+		}
+	}
 }
 
 function OpenTab(evt, cityName) {

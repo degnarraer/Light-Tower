@@ -117,12 +117,12 @@ class SimpleSettingsWebServer: public NamedItem
       SettingValues["Value"] = Value;
       String jsonString = JSON.stringify(SettingValues);
       Serial.println(jsonString);
-      return jsonString.c_str();
+      return jsonString;
     }
     
-    void NotifyClients(String SettingValues)
+    void NotifyClients(String TextString)
     {
-      m_WebSocket.textAll(SettingValues);
+      m_WebSocket.textAll(TextString);
     }
     
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
