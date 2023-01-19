@@ -115,7 +115,7 @@ class QueueController
 					if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
 					{
 						uint8_t DataBuffer[ByteCount];
-						if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
+						if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 						{
 							if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
 							{
@@ -153,7 +153,7 @@ class QueueController
 			for (uint8_t i = 0; i < QueueCount; ++i)
 			{
 				uint8_t DataBuffer[ByteCount];
-				if ( xQueueReceive(TakeFromQueue, DataBuffer, 0) == pdTRUE )
+				if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
 				{
 					for(int j = 0; j < GiveToQueueCount; ++j)
 					{	
@@ -309,7 +309,7 @@ class QueueManager: public CommonUtils
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, Value, 0) == pdTRUE )
+						if ( xQueueReceive(Queue, Value, portMAX_DELAY) == pdTRUE )
 						{
 							Result = true;
 						}
@@ -474,7 +474,7 @@ class QueueManager: public CommonUtils
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, Value, 0) == pdTRUE )
+						if ( xQueueReceive(Queue, Value, portMAX_DELAY) == pdTRUE )
 						{
 							result = true;
 						}
@@ -505,7 +505,7 @@ class QueueManager: public CommonUtils
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, Value, 0) == pdTRUE )
+						if ( xQueueReceive(Queue, Value, portMAX_DELAY) == pdTRUE )
 						{
 							result = true;
 						}

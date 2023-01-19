@@ -143,12 +143,12 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 void ProcessFFTTaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 100;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
     yield();
-    delay(100);
+    //delay(100);
     ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
@@ -157,8 +157,8 @@ void ProcessFFTTaskLoop(void * parameter)
 
 void ManagerTaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -170,8 +170,8 @@ void ManagerTaskLoop(void * parameter)
 
 void SPI_CPU1_TX_TaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -183,8 +183,8 @@ void SPI_CPU1_TX_TaskLoop(void * parameter)
 
 void SPI_CPU3_TX_TaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

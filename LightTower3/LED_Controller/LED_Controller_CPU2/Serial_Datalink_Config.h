@@ -77,8 +77,8 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
       { "L_MAXBAND",            DataType_MaxBandSoundData_t,     1,                  Transciever_TX,   4 },
       { "R_MAJOR_FREQ",         DataType_Float_t,                1,                  Transciever_TX,   4 },
       { "L_MAJOR_FREQ",         DataType_Float_t,                1,                  Transciever_TX,   4 },
-      { "Source Is Connected",  DataType_bool_t,                 1,                  Transciever_RX,   4 },
-      { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   4 },
+      { "Source Is Connected",  DataType_bool_t,                 1,                  Transciever_RX,   20 },
+      { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   20 },
     };
     
     //QueueManager Interface

@@ -230,13 +230,13 @@ void Manager::ProcessSoundStateStatus(bool ForceUpdate)
     switch(m_SoundState)
     {
       case LastingSilenceDetected:
-        ESP_LOGI("Manager", "Lasting Silence Detected");
+        ESP_LOGD("Manager", "Lasting Silence Detected");
       break;
       case SilenceDetected:
-        ESP_LOGI("Manager", "Silence Detected");
+        ESP_LOGD("Manager", "Silence Detected");
       break;
       case SoundDetected:
-        ESP_LOGI("Manager", "Sound Detected");
+        ESP_LOGD("Manager", "Sound Detected");
       break;
       default:
       break;

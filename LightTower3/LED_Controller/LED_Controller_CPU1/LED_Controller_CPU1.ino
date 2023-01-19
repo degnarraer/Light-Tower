@@ -78,8 +78,8 @@ void VisualizationTaskLoop(void * parameter)
 
 void SPI_TaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -135,8 +135,8 @@ void TaskMonitorTaskLoop(void * parameter)
 
 void DataMoverTaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

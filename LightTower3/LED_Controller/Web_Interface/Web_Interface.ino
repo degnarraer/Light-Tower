@@ -94,9 +94,9 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    3000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
-  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   3000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
-  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 3000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task, 0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task, 0 );
 }
 
 void InitLocalVariables()
@@ -118,13 +118,13 @@ void setup(){
 
 void loop()
 {
-   MyWebSocket.cleanupClients();
+  MyWebSocket.cleanupClients();
 }
 
 void SPI_RX_TaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -136,8 +136,8 @@ void SPI_RX_TaskLoop(void * parameter)
 
 void Manager_TaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -149,8 +149,8 @@ void Manager_TaskLoop(void * parameter)
 
 void WebServer_TaskLoop(void * parameter)
 {
-  //10 mS task rate
-  const TickType_t xFrequency = 10;
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

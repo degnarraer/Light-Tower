@@ -64,7 +64,7 @@ class Manager: public NamedItem
                                 , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Amplitude Gain")
                                 , m_SettingsWebServerManager.GetTotalByteCountForDataItem("Amplitude Gain")
                                 , false
-                                , true );
+                                , false );
         
         //FFT Gain Data Movement   
         MoveDataFromQueueToQueue( "Manager: FFT Gain From Datalink To Web Page"

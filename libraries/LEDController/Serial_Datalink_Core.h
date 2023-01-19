@@ -19,7 +19,6 @@
 #ifndef SerialDataLink_H
 #define SerialDataLink_H
 #define QUEUE_SIZE 10
-#define SERIAL_FAIL_DEBUG true
 #define SERIAL_RX_LENGTH_LIMIT 1000
 #include <HardwareSerial.h>
 #include "DataSerializer.h"

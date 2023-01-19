@@ -59,7 +59,7 @@ class SettingsWebServerManager: public QueueManager
     void ProcessEventQueue()
     {      
       //SOUND STATE TX QUEUE
-      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", sizeof(Sound_State), true, false))
+      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", sizeof(Sound_State), false, false))
       {
         Speaker_Image = String(Sound_State);
         struct JSON_Data_Value Values[1] = { 
@@ -69,7 +69,7 @@ class SettingsWebServerManager: public QueueManager
       }
       
       //Amplitude Gain TX QUEUE
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, false))
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), false, false))
       {
         Amplitude_Gain_Slider = String(Amplitude_Gain);
         struct JSON_Data_Value Values[1] = { 
@@ -79,7 +79,7 @@ class SettingsWebServerManager: public QueueManager
       }
       
       //FFT Gain TX QUEUE
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", sizeof(FFT_Gain), true, false))
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", sizeof(FFT_Gain), false, false))
       {
         FFT_Gain_Slider = String(FFT_Gain);
         struct JSON_Data_Value Values[1] = { 
@@ -205,35 +205,30 @@ class SettingsWebServerManager: public QueueManager
             if(Name.equals("Amplitude_Gain_Slider"))
             {
               Amplitude_Gain_Slider = Value;
-              Serial.println("Amplitude_Gain_Slider Value: " + Amplitude_Gain_Slider);
               Amplitude_Gain = Amplitude_Gain_Slider.toFloat();
               PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", false);
             }
             else if(Name.equals("FFT_Gain_Slider"))
             {
               FFT_Gain_Slider = Value;
-              Serial.println("FFT_Gain_Slider Value: " + FFT_Gain_Slider);
               FFT_Gain = FFT_Gain_Slider.toFloat();
               PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
             }
             else if(Name.equals("Red_Value_Slider"))
             {
               Red_Value_Slider = Value;
-              Serial.println("Red_Value_Slider Value: " + Red_Value_Slider);
               Red_Value = Red_Value_Slider.toInt();
               PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
             }
             else if(Name.equals("Green_Value_Slider"))
             {
               Green_Value_Slider = Value;
-              Serial.println("Green_Value_Slider Value: " + Green_Value_Slider);
               Green_Value = Green_Value_Slider.toInt();
               PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
             }
             else if(Name.equals("Blue_Value_Slider"))
             {
               Blue_Value_Slider = Value;
-              Serial.println("Blue_Value_Slider Value: " + Blue_Value_Slider);
               Blue_Value = Blue_Value_Slider.toInt();
               PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
             }
