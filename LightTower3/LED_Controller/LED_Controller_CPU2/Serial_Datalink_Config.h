@@ -100,11 +100,13 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDataLinkToCPU3ConfigCount = 2;
+    static const size_t m_SPIDataLinkToCPU3ConfigCount = 4;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
-      { "Source Is Connected",  DataType_bool_t,        1,    Transciever_TX, 4 },
-      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX, 4 },
+      { "Source Is Connected",  DataType_bool_t,        1,    Transciever_TX,   20 },
+      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX,   20 },
+      { "Amplitude Gain",       DataType_Float_t,       1,    Transciever_TXRX, 20 },
+      { "FFT Gain",             DataType_Float_t,       1,    Transciever_TXRX, 20 },
     };
     
     //QueueManager Interface

@@ -19,10 +19,12 @@
 #include "Sound_Processor.h"
 
 Sound_Processor::Sound_Processor( String Title
-                                , SPIDataLinkMaster &SPIDataLinkMaster
+                                , SPIDataLinkMaster &SPIDataLinkToCPU1
+                                , SPIDataLinkMaster &SPIDataLinkToCPU3
                                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer)
                                 : NamedItem(Title)
-                                , m_SPIDataLinkToCPU1(SPIDataLinkMaster)
+                                , m_SPIDataLinkToCPU1(SPIDataLinkToCPU1)
+                                , m_SPIDataLinkToCPU3(SPIDataLinkToCPU3)
                                 , m_AudioBuffer(AudioBuffer)
 {
 }

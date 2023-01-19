@@ -67,6 +67,7 @@ SPIDataLinkToCPU3 m_SPIDataLinkToCPU3 = SPIDataLinkToCPU3();
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
                                                   , m_SPIDataLinkToCPU1
+                                                  , m_SPIDataLinkToCPU3
                                                   , m_AudioBuffer );                                            
 Manager m_Manager = Manager( "Manager"
                            , m_SoundProcessor
@@ -106,13 +107,13 @@ void setup()
   m_SPIDataLinkToCPU1.SetupSPIDataLink();
   m_SPIDataLinkToCPU1.SetSpewToConsole(false);
   m_SPIDataLinkToCPU3.SetupSPIDataLink();
-  m_SPIDataLinkToCPU3.SetSpewToConsole(true);
+  m_SPIDataLinkToCPU3.SetSpewToConsole(false);
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 10,  &ProcessFFTTask,          0 );
   xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSoundPowerTask,   0 );
-  xTaskCreatePinnedToCore( SPI_CPU1_TX_TaskLoop,      "SPI CPU1 TX Task Task",  3000,   NULL,   1,                          &ProcessSPI_CPU1_TXTask,  1 );
-  xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  3000,   NULL,   1,                          &ProcessSPI_CPU3_TXTask,  1 );
+  xTaskCreatePinnedToCore( SPI_CPU1_TX_TaskLoop,      "SPI CPU1 TX Task Task",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPI_CPU1_TXTask,  1 );
+  xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPI_CPU3_TXTask,  1 );
   xTaskCreatePinnedToCore( ManagerTaskLoop,           "ManagerTask",            2000,   NULL,   configMAX_PRIORITIES - 1,   &ManagerTask,             1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        2000,   NULL,   configMAX_PRIORITIES - 1,   &TaskMonitorTask,         1 );
   
@@ -128,8 +129,9 @@ void loop()
 
 void ProcessSoundPowerTaskLoop(void * parameter)
 {
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+  //20 mS task rate
   const TickType_t xFrequency = 20; //delay for mS
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
     ++ProcessSoundPowerTaskLoopCount;
@@ -140,19 +142,24 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 
 void ProcessFFTTaskLoop(void * parameter)
 {
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
     yield();
+    delay(100);
     ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
 void ManagerTaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20; //delay for mS
   while(true)
   {
     ++ManagerTaskLoopCount;
@@ -163,30 +170,35 @@ void ManagerTaskLoop(void * parameter)
 
 void SPI_CPU1_TX_TaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    yield();
     ++ProcessSPI_CPU1_TXTaskLoopCount;
     m_SPIDataLinkToCPU1.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
 void SPI_CPU3_TX_TaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    yield();
     ++ProcessSPI_CPU3_TXTaskLoopCount;
     m_SPIDataLinkToCPU3.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
 void TaskMonitorTaskLoop(void * parameter)
 {
+  //5000 mS task rate
+  const TickType_t xFrequency = 5000;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 5000; //delay for mS
   while(true)
   {
     unsigned long CurrentTime = millis();

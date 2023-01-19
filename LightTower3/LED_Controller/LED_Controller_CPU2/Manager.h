@@ -65,6 +65,7 @@ class Manager: public NamedItem
     Bluetooth_Source &m_BT_Out;
 
     void UpdateNotificationRegistrationStatus();
+    void MoveDataFromCPU3ToUs();
     void MoveDataBetweenCPU1AndCPU3();
 };
 

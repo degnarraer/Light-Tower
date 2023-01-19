@@ -57,8 +57,36 @@ class SettingsWebServerManager: public QueueManager
     }
     
     void ProcessEventQueue()
-    {
+    {      
+      //SOUND STATE TX QUEUE
+      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", sizeof(Sound_State), true, false))
+      {
+        Speaker_Image = String(Sound_State);
+        struct JSON_Data_Value Values[1] = { 
+                                             { "Speaker_Image", Speaker_Image },
+                                           };
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+      }
       
+      //Amplitude Gain TX QUEUE
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, false))
+      {
+        Amplitude_Gain_Slider = String(Amplitude_Gain);
+        struct JSON_Data_Value Values[1] = { 
+                                             { "Amplitude_Gain_Slider", Amplitude_Gain_Slider },
+                                           };
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+      }
+      
+      //FFT Gain TX QUEUE
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", sizeof(FFT_Gain), true, false))
+      {
+        FFT_Gain_Slider = String(FFT_Gain);
+        struct JSON_Data_Value Values[1] = { 
+                                             { "FFT_Gain_Slider", FFT_Gain_Slider },
+                                           };
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+      }
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -87,25 +115,35 @@ class SettingsWebServerManager: public QueueManager
     const char* password = "LEDs Rock";
 
     String message = "";
-    String Amplitude_Gain_Slider = "1.0";
-    String FFT_Gain_Slider = "1.0";
-    String Red_Value_Slider = "0";
-    String Blue_Value_Slider = "0";
-    String Green_Value_Slider = "0";
-    
+
+    //Amplitude Gain Value and Widget Name Values
     float Amplitude_Gain;
+    String Amplitude_Gain_Slider = "1.0";
+
+    //FFT Gain Value and Widget Name Values
     float FFT_Gain;
-    int FFT_Gain_Slider_DutyCycle;
-    int Red_Value_Slider_DutyCycle;
-    int Blue_Value_Slider_DutyCycle;
-    int Green_Value_Slider_DutyCycle;
+    String FFT_Gain_Slider = "1.0";
+
+    //Sound State Value and Widget Name Values
+    SoundState_t Sound_State;
+    String Speaker_Image = "0";
+
+    uint32_t Red_Value;
+    String Red_Value_Slider = "0";
+    
+    uint32_t Blue_Value;
+    String Blue_Value_Slider = "0";
+    
+    uint32_t Green_Value;
+    String Green_Value_Slider = "0";
+  
 
     //QueueManager Interface
     static const size_t m_WebServerConfigCount = 4;
     DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
     {
-      { "Source Is Connected",      DataType_bool_t,        1,    Transciever_TXRX,   20 },
-      { "Sound State",              DataType_SoundState_t,  1,    Transciever_TXRX,   20 },
+      { "Source Is Connected",      DataType_bool_t,        1,    Transciever_TX,     20 },
+      { "Sound State",              DataType_SoundState_t,  1,    Transciever_TX,     20 },
       { "Amplitude Gain",           DataType_Float_t,       1,    Transciever_TXRX,   20 },
       { "FFT Gain",                 DataType_Float_t,       1,    Transciever_TXRX,   20 },
     };
@@ -142,12 +180,13 @@ class SettingsWebServerManager: public QueueManager
         if (true == message.equals("Get All Values"))
         {
           Serial.println("Sending All Value");
-          struct JSON_Data_Value Values[5] = { 
+          struct JSON_Data_Value Values[6] = { 
                                                { "Amplitude_Gain_Slider", Amplitude_Gain_Slider },
                                                { "FFT_Gain_Slider", FFT_Gain_Slider },
                                                { "Red_Value_Slider", Red_Value_Slider },
                                                { "Green_Value_Slider", Green_Value_Slider },
                                                { "Blue_Value_Slider", Blue_Value_Slider },
+                                               { "Sound_State", Speaker_Image },
                                              };
           NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
         }
@@ -158,53 +197,50 @@ class SettingsWebServerManager: public QueueManager
             Serial.println("Parsing input failed!");
             return;
           }
-          if (MyObject.hasOwnProperty("Name"))
+          if (MyObject.hasOwnProperty("Name") && MyObject.hasOwnProperty("Value"))
           {
-              if(String((const char*) MyObject["Name"]).equals("Amplitude_Gain_Slider"))
-              {
-                Amplitude_Gain_Slider = String((const char*)(MyObject["Value"]));
-                Serial.println("Amplitude_Gain_Slider Value: " + Amplitude_Gain_Slider);
-                Amplitude_Gain = Amplitude_Gain_Slider.toFloat();
-                PushValueToTXQueue(&Amplitude_Gain, "Amplitude Gain", false);
-              }
-              else if(String((const char*) MyObject["Name"]).equals("FFT_Gain_Slider"))
-              {
-                FFT_Gain_Slider = String((const char*)(MyObject["Value"]));
-                Serial.println("FFT_Gain_Slider Value: " + FFT_Gain_Slider);
-                FFT_Gain = FFT_Gain_Slider.toFloat();
-                PushValueToTXQueue(&FFT_Gain, "FFT Gain", false);
-              }
-              else if(String((const char*) MyObject["Name"]).equals("Red_Value_Slider"))
-              {
-                Red_Value_Slider = String((const char*)(MyObject["Value"]));
-                Serial.println("Red_Value_Slider Value: " + Red_Value_Slider);
-                struct JSON_Data_Value Values[1] = { 
-                                                     { "Red_Value_Slider", Red_Value_Slider }
-                                                   };
-                NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
-              }
-              else if(String((const char*) MyObject["Name"]).equals("Green_Value_Slider"))
-              {
-                Green_Value_Slider = String((const char*)(MyObject["Value"]));
-                Serial.println("Green_Value_Slider Value: " + Green_Value_Slider);
-                struct JSON_Data_Value Values[1] = { 
-                                                     { "Green_Value_Slider", Green_Value_Slider }
-                                                   };
-                NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
-              }
-              else if(String((const char*) MyObject["Name"]).equals("Blue_Value_Slider"))
-              {
-                Blue_Value_Slider = String((const char*)(MyObject["Value"]));
-                Serial.println("Blue_Value_Slider Value: " + MyObject["Value"]);
-                struct JSON_Data_Value Values[1] = { 
-                                                     { "Blue_Value_Slider", Blue_Value_Slider }
-                                                   };
-                NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
-              }
-              else
-              {
-                Serial.println("Failed to Parse");
-              }
+            String Name = String( (const char*)MyObject["Name"]);
+            String Value = String( (const char*)MyObject["Value"]);
+            
+            if(Name.equals("Amplitude_Gain_Slider"))
+            {
+              Amplitude_Gain_Slider = Value;
+              Serial.println("Amplitude_Gain_Slider Value: " + Amplitude_Gain_Slider);
+              Amplitude_Gain = Amplitude_Gain_Slider.toFloat();
+              PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", false);
+            }
+            else if(Name.equals("FFT_Gain_Slider"))
+            {
+              FFT_Gain_Slider = Value;
+              Serial.println("FFT_Gain_Slider Value: " + FFT_Gain_Slider);
+              FFT_Gain = FFT_Gain_Slider.toFloat();
+              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+            }
+            else if(Name.equals("Red_Value_Slider"))
+            {
+              Red_Value_Slider = Value;
+              Serial.println("Red_Value_Slider Value: " + Red_Value_Slider);
+              Red_Value = Red_Value_Slider.toInt();
+              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+            }
+            else if(Name.equals("Green_Value_Slider"))
+            {
+              Green_Value_Slider = Value;
+              Serial.println("Green_Value_Slider Value: " + Green_Value_Slider);
+              Green_Value = Green_Value_Slider.toInt();
+              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+            }
+            else if(Name.equals("Blue_Value_Slider"))
+            {
+              Blue_Value_Slider = Value;
+              Serial.println("Blue_Value_Slider Value: " + Blue_Value_Slider);
+              Blue_Value = Blue_Value_Slider.toInt();
+              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+            }
+            else
+            {
+              Serial.println("Failed to Parse " + Name);
+            }
           }
         }
       }

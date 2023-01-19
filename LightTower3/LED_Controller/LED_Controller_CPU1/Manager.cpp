@@ -212,7 +212,7 @@ void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
     static bool SourceIsConnectedValuePushError = false;
     PushValueToQueue( &m_BluetoothIsConnected
                     , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
-                    , true
+                    , false
                     , "Source Is Connected"
                     , SourceIsConnectedValuePushError );
   }
@@ -221,33 +221,33 @@ void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
 
 void Manager::ProcessSoundStateStatus(bool ForceUpdate)
 {
-    bool SendUpdate = false;
-    SoundState_t SoundState = m_StatisticalEngine.GetSoundState();
-    if(m_SoundState != SoundState)
+  bool SendUpdate = false;
+  SoundState_t SoundState = m_StatisticalEngine.GetSoundState();
+  if(m_SoundState != SoundState)
+  {
+    m_SoundState = SoundState;
+    SendUpdate = true;
+    switch(m_SoundState)
     {
-      m_SoundState = SoundState;
-      SendUpdate = true;
-      switch(m_SoundState)
-      {
-        case LastingSilenceDetected:
-          ESP_LOGI("Manager", "Lasting Silence Detected");
-        break;
-        case SilenceDetected:
-          ESP_LOGI("Manager", "Silence Detected");
-        break;
-        case SoundDetected:
-          ESP_LOGI("Manager", "Sound Detected");
-        break;
-        default:
-        break;
-      }
+      case LastingSilenceDetected:
+        ESP_LOGI("Manager", "Lasting Silence Detected");
+      break;
+      case SilenceDetected:
+        ESP_LOGI("Manager", "Silence Detected");
+      break;
+      case SoundDetected:
+        ESP_LOGI("Manager", "Sound Detected");
+      break;
+      default:
+      break;
     }
+  }
   if(true == ForceUpdate || true == SendUpdate)
   {
     static bool SoundStateValuePushError = false;
     PushValueToQueue( &m_SoundState
                     , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
-                    , true
+                    , false
                     , "Sound State"
                     , SoundStateValuePushError );
   }

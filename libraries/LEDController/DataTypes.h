@@ -18,9 +18,9 @@ class NamedItem
 
 enum SoundState_t
 {
-  LastingSilenceDetected,
-  SilenceDetected,
-  SoundDetected,
+  LastingSilenceDetected = 0,
+  SilenceDetected = 1,
+  SoundDetected = 2,
 };
 
 enum Transciever_t

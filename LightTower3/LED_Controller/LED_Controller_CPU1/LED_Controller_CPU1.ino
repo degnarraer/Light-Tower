@@ -65,8 +65,9 @@ void loop()
 
 void VisualizationTaskLoop(void * parameter)
 {
+  //20 mS task rate
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20; //delay for mS
   while(true)
   {
     ++VisualizationTaskLoopCount;
@@ -77,19 +78,22 @@ void VisualizationTaskLoop(void * parameter)
 
 void SPI_TaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    yield();
     ++SPI_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
 void TaskMonitorTaskLoop(void * parameter)
 {
+  //5000 mS task rate
+  const TickType_t xFrequency = 5000;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 5000; //delay for mS
   while(true)
   {
     unsigned long CurrentTime = millis();
@@ -131,8 +135,9 @@ void TaskMonitorTaskLoop(void * parameter)
 
 void DataMoverTaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 20;
   while(true)
   {
     ++DataMoveTaskLoopCount;
@@ -143,12 +148,13 @@ void DataMoverTaskLoop(void * parameter)
 
 void UpdateSerialDataTaskLoop(void * parameter)
 {
+  //1000 mS task rate
+  const TickType_t xFrequency = 1000;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  const TickType_t xFrequency = 5000;
   while(true)
   {
     ++UpdateSerialDataTaskLoopCount;
-    //m_Manager.UpdateSerialData();
+    m_Manager.UpdateSerialData();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

@@ -40,6 +40,25 @@ function updateSliderValue(element) {
     websocket.send(Message);
 }
 
+function setSpeakerImage(state)
+{
+	switch(state)
+	{
+		case 0:
+			document.getElementById("Speaker Image").src = "Images/Speaker - Off.jpg";
+		break;
+		case 1:
+			document.getElementById("Speaker Image").src = "Images/Speaker - On.jpg";
+		break;
+		case 2:
+			document.getElementById("Speaker Image").src = "Images/Speaker - Sounding.jpg";
+		break;
+		default:
+			document.getElementById("Speaker Image").src = "Images/Speaker - Off.jpg";
+		break;
+	}
+}
+
 function onMessage(event) {
     console.log(event.data);
     var myObj = JSON.parse(event.data);
@@ -50,8 +69,15 @@ function onMessage(event) {
 		var Value = myObj[keys[i]]["Value"];
 		if(Name && Value)
 		{
-			document.getElementById(Name).value = Value;
-			document.getElementById(Name + "_Value").innerHTML = Value;
+			if(Name == "Speaker_Image")
+			{
+				setSpeakerImage(parseInt(Value))
+			}
+			else
+			{
+				document.getElementById(Name).value = Value;
+				document.getElementById(Name + "_Value").innerHTML = Value;
+			}
 		}
 	}
 }

@@ -37,15 +37,31 @@ class Sound_Processor: public NamedItem
 {
   public:
     Sound_Processor( String Title
-                   , SPIDataLinkMaster &SPIDataLinkMaster
+                   , SPIDataLinkMaster &SPIDataLinkToCPU1
+                   , SPIDataLinkMaster &SPIDataLinkToCPU3
                    , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
-    void SetGain(float Gain){m_Gain = Gain;}
-    void SetFFTGain(float Gain){m_FFT_Gain = Gain;}
+    void SetGain(float Gain)
+    {
+      m_Gain = Gain;
+      ESP_LOGE("Sound_Processor", "Set Gain: %f", m_Gain);
+      static bool Gain_Push_Successful = true;
+      QueueHandle_t Handle = m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Amplitude Gain");
+      PushValueToQueue(&m_Gain, Handle, false, "Amplitude Gain", Gain_Push_Successful);
+    }
+    void SetFFTGain(float Gain)
+    {
+      m_FFT_Gain = Gain;
+      ESP_LOGE("Sound_Processor", "Set FFT Gain: %f", m_FFT_Gain);
+      static bool FFT_Gain_Push_Successful = true;
+      QueueHandle_t Handle = m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("FFT Gain");
+      PushValueToQueue(&m_Gain, Handle, false, "FFT Gain", FFT_Gain_Push_Successful);
+    }
     
   private:
     SPIDataLinkMaster &m_SPIDataLinkToCPU1;
+    SPIDataLinkMaster &m_SPIDataLinkToCPU3;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     
     //Memory Management

@@ -45,7 +45,7 @@ SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Man
 SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave();
 
 // Create Manager to Move Data Around
-Manager m_Manager = Manager( "Manager", m_SPIDataLinkSlave );
+Manager m_Manager = Manager( "Manager", m_SPIDataLinkSlave, m_SettingsWebServerManager );
 
 // Static Callback for Web Socket
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -94,15 +94,15 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop, "SPI_RX_Task",  3000,  NULL,  0,  &SPI_RX_Task, 0 );
-  xTaskCreatePinnedToCore( Manager_TaskLoop, "Manager_Task",  3000,  NULL,  0,  &Manager_Task, 0 );
-  xTaskCreatePinnedToCore( WebServer_TaskLoop, "WebServer_Task",  3000,  NULL,  0,  &WebServer_Task, 0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    3000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   3000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 3000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task, 0 );
 }
 
 void InitLocalVariables()
 {
   m_SPIDataLinkSlave.SetupSPIDataLink();
-  m_SPIDataLinkSlave.SetSpewToConsole(true);
+  m_SPIDataLinkSlave.SetSpewToConsole(false);
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
 
@@ -123,33 +123,39 @@ void loop()
 
 void SPI_RX_TaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    yield();
     ++SPI_RX_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
 void Manager_TaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    yield();
     ++Manager_TaskLoopCount;
     m_Manager.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
 void WebServer_TaskLoop(void * parameter)
 {
+  //10 mS task rate
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    yield();
     ++WebServer_TaskLoopCount;
     m_SettingsWebServerManager.ProcessEventQueue();
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }

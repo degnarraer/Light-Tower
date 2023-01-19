@@ -442,6 +442,56 @@ class QueueManager: public CommonUtils
 			}
 		}
 		
+		void PushValueToRXQueue(void* Value, String Name, bool WaitForOpenSlot)
+		{
+			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
+			if(NULL != Queue)
+			{
+				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+				{
+					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE)
+					{
+						ESP_LOGE("CommonUtils", "Error! Error Setting Queue.");
+					} 
+				}
+			}
+			else
+			{
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+			}
+		}
+		
+		bool GetValueFromTXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
+		{
+			bool result = false;
+			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
+			if(NULL != Queue)
+			{
+				size_t QueueCount = uxQueueMessagesWaiting(Queue);
+				ESP_LOGV("CommonUtils", "Queue Count: %i", QueueCount);
+				if(QueueCount > 0)
+				{
+					if(false == ReadUntilEmpty) QueueCount = 1;
+					for(int i = 0; i < QueueCount; ++i)
+					{
+						if ( xQueueReceive(Queue, Value, 0) == pdTRUE )
+						{
+							result = true;
+						}
+						else
+						{
+							ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+						}
+					}
+				}
+			}
+			else
+			{
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+			}
+			return result;
+		}
+		
 		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
 		{
 			bool result = false;
