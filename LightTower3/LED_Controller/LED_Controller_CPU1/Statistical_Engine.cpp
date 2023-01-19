@@ -250,11 +250,24 @@ void StatisticalEngine::UpdateSoundState()
     if(true == debugSilenceIntegrator) Serial << "Power Db: " << m_PowerDb << "\tDelta Time Gain: " << deltaTimeScalar << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << soundState << "\n";
     if((soundState == SoundState_t::SilenceDetected || soundState == SoundState_t::LastingSilenceDetected) && m_silenceIntegrator >= m_soundDetectedThreshold)
     {
-      ESP_LOGE("Statistical_Engine", "Sound Detected.");
-      soundState = SoundState_t::SoundDetected;
+      if(m_Power > 0 && m_Power <= 0.33)
+      {
+        ESP_LOGE("Statistical_Engine", "Sound Level 1 Detected.");
+        soundState = SoundState_t::Sound_Level1_Detected; 
+      }
+      else if(m_Power > 0.33 && m_Power <= 0.66)
+      {
+        ESP_LOGE("Statistical_Engine", "Sound Level 2 Detected.");
+        soundState = SoundState_t::Sound_Level2_Detected; 
+      }
+      else
+      {
+        ESP_LOGE("Statistical_Engine", "Sound Level 3 Detected.");
+        soundState = SoundState_t::Sound_Level3_Detected; 
+      }
       m_cb->MicrophoneStateChange(soundState);
     }
-    else if(soundState == SoundState_t::SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
+    else if((soundState == SoundState_t::Sound_Level1_Detected || soundState == SoundState_t::Sound_Level2_Detected || soundState == SoundState_t::Sound_Level3_Detected) && m_silenceIntegrator <= m_silenceDetectedThreshold)
     {
       ESP_LOGE("Statistical_Engine", "Silence Detected.");
       soundState = SoundState_t::SilenceDetected;
@@ -267,9 +280,28 @@ void StatisticalEngine::UpdateSoundState()
       soundState = SoundState_t::LastingSilenceDetected;
       m_cb->MicrophoneStateChange(soundState);
     }
+    else if(soundState == SoundState_t::Sound_Level1_Detected || soundState == SoundState_t::Sound_Level2_Detected || soundState == SoundState_t::Sound_Level3_Detected)
+    {
+      if(m_Power > 0 && m_Power <= 0.33)
+      {
+        ESP_LOGE("Statistical_Engine", "Sound Level 1 Detected. %f", m_Power);
+        soundState = SoundState_t::Sound_Level1_Detected; 
+      }
+      else if(m_Power > 0.33 && m_Power <= 0.66)
+      {
+        ESP_LOGE("Statistical_Engine", "Sound Level 2 Detected. %f", m_Power);
+        soundState = SoundState_t::Sound_Level2_Detected; 
+      }
+      else
+      {
+        ESP_LOGE("Statistical_Engine", "Sound Level 3 Detected. %f", m_Power);
+        soundState = SoundState_t::Sound_Level3_Detected; 
+      }
+      m_cb->MicrophoneStateChange(soundState);
+    }
     m_previousMicros = m_currentMicros;
     pthread_mutex_unlock(&m_ProcessedSoundDataLock);
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
   }
 }
 

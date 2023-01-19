@@ -45,16 +45,22 @@ function setSpeakerImage(state)
 	switch(state)
 	{
 		case 0:
-			document.getElementById("Speaker Image").src = "Images/Speaker - Off.jpg";
+			document.getElementById("Speaker Image").src = "Images/Speaker-Off.jpg";
 		break;
 		case 1:
-			document.getElementById("Speaker Image").src = "Images/Speaker - On.jpg";
+			document.getElementById("Speaker Image").src = "Images/Speaker-On.jpg";
 		break;
 		case 2:
-			document.getElementById("Speaker Image").src = "Images/Speaker - Sounding.jpg";
+			document.getElementById("Speaker Image").src = "Images/Speaker-Sounding1.jpg";
+		break;
+		case 3:
+			document.getElementById("Speaker Image").src = "Images/Speaker-Sounding2.jpg";
+		break;
+		case 4:
+			document.getElementById("Speaker Image").src = "Images/Speaker-Sounding3.jpg";
 		break;
 		default:
-			document.getElementById("Speaker Image").src = "Images/Speaker - Off.jpg";
+			document.getElementById("Speaker Image").src = "Images/Speaker-Off.jpg";
 		break;
 	}
 }

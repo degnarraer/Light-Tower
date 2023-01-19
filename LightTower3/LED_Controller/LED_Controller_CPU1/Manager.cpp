@@ -235,8 +235,14 @@ void Manager::ProcessSoundStateStatus(bool ForceUpdate)
       case SilenceDetected:
         ESP_LOGD("Manager", "Silence Detected");
       break;
-      case SoundDetected:
-        ESP_LOGD("Manager", "Sound Detected");
+      case Sound_Level1_Detected:
+        ESP_LOGD("Manager", "Sound Level 1 Detected");
+      break;
+      case Sound_Level2_Detected:
+        ESP_LOGD("Manager", "Sound Level 2 Detected");
+      break;
+      case Sound_Level3_Detected:
+        ESP_LOGD("Manager", "Sound Level 3 Detected");
       break;
       default:
       break;

@@ -20,7 +20,9 @@ enum SoundState_t
 {
   LastingSilenceDetected = 0,
   SilenceDetected = 1,
-  SoundDetected = 2,
+  Sound_Level1_Detected = 2,
+  Sound_Level2_Detected = 3,
+  Sound_Level3_Detected = 4,
 };
 
 enum Transciever_t

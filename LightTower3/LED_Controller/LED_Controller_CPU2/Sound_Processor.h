@@ -56,7 +56,7 @@ class Sound_Processor: public NamedItem
       ESP_LOGE("Sound_Processor", "Set FFT Gain: %f", m_FFT_Gain);
       static bool FFT_Gain_Push_Successful = true;
       QueueHandle_t Handle = m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("FFT Gain");
-      PushValueToQueue(&m_Gain, Handle, false, "FFT Gain", FFT_Gain_Push_Successful);
+      PushValueToQueue(&m_FFT_Gain, Handle, false, "FFT Gain", FFT_Gain_Push_Successful);
     }
     
   private:
@@ -71,7 +71,7 @@ class Sound_Processor: public NamedItem
     
     //Adjustments
     float m_Gain = 1.0;
-    float m_FFT_Gain = 10.0;
+    float m_FFT_Gain = 1.7;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA

@@ -192,12 +192,12 @@ void Sound_Processor::Calculate_Power()
       bool L_Amplitude_Calculated = false;
       ProcessedSoundData_t R_PSD;
       ProcessedSoundData_t L_PSD;
-      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1))
+      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, m_Gain))
       {
         R_Amplitude_Calculated = true;
         R_PSD = m_RightSoundData.GetProcessedSoundData();
       }
-      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2))
+      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, m_Gain))
       {
         L_Amplitude_Calculated = true;
         L_PSD = m_LeftSoundData.GetProcessedSoundData();

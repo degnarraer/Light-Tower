@@ -41,7 +41,7 @@ class Amplitude_Calculator
       assert(true == m_SolutionReady);
       return &m_ProcessedSoundDataOutput;
     }
-    ProcessedSoundFrame_t CalculateSoundData(Frame_t *Frames, uint32_t Count)
+    ProcessedSoundFrame_t CalculateSoundData(Frame_t *Frames, uint32_t Count, float Gain)
     {
       ResetData();
       m_SolutionReady = false;
@@ -65,8 +65,8 @@ class Amplitude_Calculator
           m_ProcessedSoundFrame.Channel2.Maximum = Frames[i].channel2;
         } 
       }
-      m_ProcessedSoundFrame.Channel1.NormalizedPower = (float)(m_ProcessedSoundFrame.Channel1.Maximum - m_ProcessedSoundFrame.Channel1.Minimum) / (float)GetBitMax();
-      m_ProcessedSoundFrame.Channel2.NormalizedPower = (float)(m_ProcessedSoundFrame.Channel2.Maximum - m_ProcessedSoundFrame.Channel2.Minimum) / (float)GetBitMax();
+      m_ProcessedSoundFrame.Channel1.NormalizedPower = (float)((m_ProcessedSoundFrame.Channel1.Maximum - m_ProcessedSoundFrame.Channel1.Minimum) / (float)GetBitMax() * Gain);
+      m_ProcessedSoundFrame.Channel2.NormalizedPower = (float)((m_ProcessedSoundFrame.Channel2.Maximum - m_ProcessedSoundFrame.Channel2.Minimum) / (float)GetBitMax() * Gain);
       m_ProcessedSoundFrameOutput = m_ProcessedSoundFrame;
       m_ProcessedSoundFrame.Channel1.Minimum = GetMax();
       m_ProcessedSoundFrame.Channel1.Maximum = GetMin();
@@ -75,7 +75,7 @@ class Amplitude_Calculator
       m_SolutionReady = true; 
       return m_ProcessedSoundFrame;
     }
-    bool PushValueAndCalculateSoundData(int32_t value)
+    bool PushValueAndCalculateSoundData(int32_t value, float Gain)
     {
       m_SolutionReady = false;
       if(value < m_ProcessedSoundData.Minimum)
@@ -90,7 +90,7 @@ class Amplitude_Calculator
       if(m_PushCount >= m_RequiredSampleCount)
       {
         int32_t peakToPeak = (m_ProcessedSoundData.Maximum - m_ProcessedSoundData.Minimum);
-        m_ProcessedSoundData.NormalizedPower = (float)peakToPeak / (float)GetBitMax();
+        m_ProcessedSoundData.NormalizedPower = ((float)peakToPeak / (float)GetBitMax()) * Gain;
         m_ProcessedSoundDataOutput = m_ProcessedSoundData;
         m_SolutionReady = true;
         ResetData();
