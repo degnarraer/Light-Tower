@@ -22,6 +22,7 @@
 #define STATISTICAL_ENGINE_MEMORY_DEBUG false
 #define STATISTICAL_ENGINE_DATA_DEBUG false
 
+#include <LinkedList.h>
 #include <limits.h>
 #include "TaskInterface.h"
 #include "Streaming.h"
@@ -58,17 +59,37 @@ struct MinMaxDb
 class MicrophoneMeasureCalleeInterface
 {
 public:
-    virtual void MicrophoneStateChange(SoundState_t) = 0;
+    virtual void MicrophoneStateChange(SoundState_t State) = 0;
 };
 
 class MicrophoneMeasureCallerInterface
 {
-public:
-    void ConnectMicrophoneMeasureCallerInterfaceCallback(MicrophoneMeasureCalleeInterface *cb)
+  public:
+    void RegisterForMicrophoneStateChangeNotification(MicrophoneMeasureCalleeInterface *user)
     {
-        m_cb = cb;
+      m_MyUsers.add(user);
     }
-    MicrophoneMeasureCalleeInterface *m_cb;
+    void DeRegisterForMicrophoneStateChangeNotification(MicrophoneMeasureCalleeInterface *user)
+    {
+      for (int i = 0; i < m_MyUsers.size(); ++i)
+      {
+        if (m_MyUsers.get(i) == user)
+        {
+          m_MyUsers.remove(i);
+          break;
+        }
+      }
+    }
+  protected:
+    void SendNewValueNotificationToUsers(SoundState_t State)
+    {
+      for (int i = 0; i < m_MyUsers.size(); ++i)
+      {
+        m_MyUsers.get(i)->MicrophoneStateChange(State);
+      }
+    }
+  private:
+    LinkedList<MicrophoneMeasureCalleeInterface*> m_MyUsers = LinkedList<MicrophoneMeasureCalleeInterface*>();
 };
 
 class StatisticalEngine : public NamedItem
@@ -227,7 +248,8 @@ class StatisticalEngine : public NamedItem
     unsigned long m_currentMicros;
     const int     m_soundAdder = soundAdder;
     const int     m_silenceSubtractor = silenceSubtractor;
-    SoundState_t  soundState = SoundState_t::SilenceDetected;
+    SoundState_t  m_soundState = SoundState_t::SilenceDetected;
+    bool          m_SoundDetected = false;
 };
 
 #endif

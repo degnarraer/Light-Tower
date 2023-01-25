@@ -70,9 +70,9 @@ void VisualizationTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++VisualizationTaskLoopCount;
     m_Scheduler.RunScheduler();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -83,9 +83,9 @@ void SPI_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++SPI_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
@@ -96,6 +96,7 @@ void TaskMonitorTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     unsigned long CurrentTime = millis();
     ++TaskMonitorTaskLoopCount;
 
@@ -129,7 +130,6 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
     LoopCountTimer = CurrentTime;
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -140,9 +140,9 @@ void DataMoverTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++DataMoveTaskLoopCount;
     m_Manager.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -153,8 +153,8 @@ void UpdateSerialDataTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++UpdateSerialDataTaskLoopCount;
     m_Manager.UpdateSerialData();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

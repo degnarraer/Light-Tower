@@ -43,6 +43,7 @@ enum Mute_State_t
 class Manager: public NamedItem
              , public I2S_Device_Callback
              , public Bluetooth_Sink_Callback
+             , public MicrophoneMeasureCalleeInterface
              , public CommonUtils
              , public QueueController
 {
@@ -64,6 +65,9 @@ class Manager: public NamedItem
     
     //I2S_Device_Callback
     void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
+
+    //MicrophoneMeasureCalleeInterface Callback
+    void MicrophoneStateChange(SoundState_t SoundState);
     
   private:
     StatisticalEngine &m_StatisticalEngine;
@@ -83,7 +87,7 @@ class Manager: public NamedItem
     bool m_BluetoothIsConnected = false;
 
     
-    void ProcessSoundStateStatus(bool ForceUpdate);
+    void ProcessSoundStateStatus(SoundState_t SoundState);
     SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
 };
 

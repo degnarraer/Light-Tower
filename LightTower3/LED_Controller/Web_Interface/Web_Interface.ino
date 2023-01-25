@@ -128,9 +128,9 @@ void SPI_RX_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++SPI_RX_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
@@ -141,9 +141,9 @@ void Manager_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_TaskLoopCount;
     m_Manager.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
@@ -154,8 +154,8 @@ void WebServer_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++WebServer_TaskLoopCount;
     m_SettingsWebServerManager.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }

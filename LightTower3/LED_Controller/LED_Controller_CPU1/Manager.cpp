@@ -44,6 +44,7 @@ void Manager::Setup()
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
   m_Mic_In.SetCallback(this);
+  m_StatisticalEngine.RegisterForMicrophoneStateChangeNotification(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
 }
@@ -53,17 +54,18 @@ void Manager::UpdateSerialData()
   switch(m_InputType)
   {
     case InputType_Microphone:
-      ProcessSoundStateStatus(true);
     break;
     case InputType_Bluetooth:
-    {  
       ProcessBluetoothConnectionStatus(true);
-      ProcessSoundStateStatus(true);
-    }
     break;
     default:
     break;
   }
+}
+
+void Manager::MicrophoneStateChange(SoundState_t SoundState)
+{
+  ProcessSoundStateStatus(SoundState);
 }
 
 void Manager::ProcessEventQueue()
@@ -73,13 +75,11 @@ void Manager::ProcessEventQueue()
     case InputType_Microphone:
       m_Mic_In.ProcessEventQueue();
       m_I2S_Out.ProcessEventQueue();
-      ProcessSoundStateStatus(false);
     break;
     case InputType_Bluetooth:
     {  
       m_I2S_Out.ProcessEventQueue();
       ProcessBluetoothConnectionStatus(false);
-      ProcessSoundStateStatus(false);
     }
     break;
     default:
@@ -158,10 +158,12 @@ void Manager::SetInputType(InputType_t Type)
     break;
   }
 }
+
 //Bluetooth_Callback
 void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 {
 }
+
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {  
@@ -188,7 +190,6 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
     break;
   }
 }
-
 
 void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
 {
@@ -218,43 +219,17 @@ void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
   }
 }
 
-
-void Manager::ProcessSoundStateStatus(bool ForceUpdate)
+void Manager::ProcessSoundStateStatus(SoundState_t SoundState)
 {
-  bool SendUpdate = false;
-  SoundState_t SoundState = m_StatisticalEngine.GetSoundState();
   if(m_SoundState != SoundState)
   {
-    m_SoundState = SoundState;
-    SendUpdate = true;
-    switch(m_SoundState)
-    {
-      case LastingSilenceDetected:
-        ESP_LOGD("Manager", "Lasting Silence Detected");
-      break;
-      case SilenceDetected:
-        ESP_LOGD("Manager", "Silence Detected");
-      break;
-      case Sound_Level1_Detected:
-        ESP_LOGD("Manager", "Sound Level 1 Detected");
-      break;
-      case Sound_Level2_Detected:
-        ESP_LOGD("Manager", "Sound Level 2 Detected");
-      break;
-      case Sound_Level3_Detected:
-        ESP_LOGD("Manager", "Sound Level 3 Detected");
-      break;
-      default:
-      break;
-    }
+      m_SoundState = SoundState;
+      static bool SoundStateValuePushError = false;
+      PushValueToQueue( &m_SoundState
+                      , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
+                      , false
+                      , "Sound State"
+                      , SoundStateValuePushError );
   }
-  if(true == ForceUpdate || true == SendUpdate)
-  {
-    static bool SoundStateValuePushError = false;
-    PushValueToQueue( &m_SoundState
-                    , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
-                    , false
-                    , "Sound State"
-                    , SoundStateValuePushError );
-  }
+  
 }

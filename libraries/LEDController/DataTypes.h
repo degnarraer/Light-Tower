@@ -23,6 +23,14 @@ enum SoundState_t
   Sound_Level1_Detected = 2,
   Sound_Level2_Detected = 3,
   Sound_Level3_Detected = 4,
+  Sound_Level4_Detected = 5,
+  Sound_Level5_Detected = 6,
+  Sound_Level6_Detected = 7,
+  Sound_Level7_Detected = 8,
+  Sound_Level8_Detected = 9,
+  Sound_Level9_Detected = 10,
+  Sound_Level10_Detected = 11,
+  Sound_Level11_Detected = 12,
 };
 
 enum Transciever_t

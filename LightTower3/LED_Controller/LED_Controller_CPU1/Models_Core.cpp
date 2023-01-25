@@ -92,7 +92,7 @@ bool Coordinates::operator!=(const Coordinates& a)
 //Task Interface
 void StatisticalEngineModelInterface::Setup()
 { 
-  m_StatisticalEngine.ConnectMicrophoneMeasureCallerInterfaceCallback(this);
+  m_StatisticalEngine.RegisterForMicrophoneStateChangeNotification(this);
   AddTask(m_StatisticalEngine);
 }
 bool StatisticalEngineModelInterface::CanRunMyScheduledTask()
