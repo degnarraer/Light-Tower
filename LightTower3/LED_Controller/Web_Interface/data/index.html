@@ -7,67 +7,46 @@
 </head>
 <body>
 
-<!-- Tab links -->
-<div class = "MainScreen">
-	<div class="TabMenu">
-		<table>
-			<tbody>
-				<tr><td>
-					<button class="Tablinks" onclick="OpenTab(event, 'Status')">Status</button>
-				</tr></td>
-				<tr><td>
-					<button class="Tablinks" onclick="OpenTab(event, 'Bluetooth In')">Bluetooth In</button>
-				</tr></td>
-				<tr><td>
-					<button class="Tablinks" onclick="OpenTab(event, 'Bluetooth Out')">Bluetooth Out</button>
-				</tr></td>
-				<tr><td>
-					<button class="Tablinks" onclick="OpenTab(event, 'Real Time FFT')">Real Time FFT</button>
-				</tr></td>
-				<tr><td>
-					<button class="Tablinks" onclick="OpenTab(event, 'Gains')">Signal Gains</button>
-				</tr></td>
-				<tr><td>
-					<button class="Tablinks" onclick="OpenTab(event, 'Visualization')">Visualization</button>
-				</tr></td>
-			</tbody>
-		</table>
-	</div>
-
-	<div class="TabContent" id="Status">
-		<div class="TabHeader">
-			<h1>Status</h1>
-		</div>
-		<div class="Speaker Image">
-			<img id="L Speaker Image" src="Images/L-Speaker-Off.svg" width="40%" height="60%" />
-			<img id="R Speaker Image" src="Images/R-Speaker-Off.svg" width="40%" height="60%" />
-		</div>
-	</div>
-
-	<div class="TabContent" id="Bluetooth In">
-		<div class="TabHeader">
-			<h1>Bluetooth In Settings</h1>
-		</div>
-	</div>
-
-
-	<div class="TabContent" id="Bluetooth Out">
-		<div class="TabHeader">
-			<h1>Bluetooth Out Settings</h1>
-		</div>
-	</div>
-
-	<div class="TabContent" id="Real Time FFT">
-		<div class="TabHeader">
-			<h1>Real Time FFT View</h1>
-		</div>
-	</div>
 	
-	<div class="TabContent" id="Gains">
-		
+<!-- Tab links -->
+<div id= "MainScreen" class = "MainScreen">
+	<div id="LeftSideNavigationMenu" class="LeftSideNavigationMenu">
+		<a href="javascript:void(0)"  class="CloseButton" onclick="closeNav()">&times;</a>
+		<button class="Tablinks" onclick="openTab(event, 'Speaker Status')">Speaker Status</button>
+		<button class="Tablinks" onclick="openTab(event, 'Bluetooth In')">Bluetooth In</button>
+		<button class="Tablinks" onclick="openTab(event, 'Bluetooth Out')">Bluetooth Out</button>
+		<button class="Tablinks" onclick="openTab(event, 'Real Time FFT')">Real Time FFT</button>
+		<button class="Tablinks" onclick="openTab(event, 'Gains')">Signal Gains</button>
+		<button class="Tablinks" onclick="openTab(event, 'Visualization')">Visualization</button>
+	</div>
+	<div id="ContentArea" class="ContentArea">
 		<div class="TabHeader">
-			<h1>Gain Settings</h1>
+			<button id="OpenButton" onclick="openNav()">
+				<img id="MenuButtonImage" src="Images/Menu2.png">
+			</button>
+			<h1 id="TabHeader_Heading">Speaker Status</h1>
 		</div>
+		<div class="TabContent" id="Speaker Status">
+			<div class="Speaker Image">
+				<img id="L Speaker Image" src="Images/L-Speaker-Off.svg" width="40%" height="60%" />
+				<img id="R Speaker Image" src="Images/R-Speaker-Off.svg" width="40%" height="60%" />
+			</div>
+		</div>
+
+		<div class="TabContent" id="Bluetooth In">
+
+		</div>
+
+
+		<div class="TabContent" id="Bluetooth Out">
+
+		</div>
+
+		<div class="TabContent" id="Real Time FFT">
+
+		</div>
+		
+		<div class="TabContent" id="Gains">			
 			<div class="Card-Grid-Vertical">
 				<div class="SettingGroup">
 					<div class="Slider-Grid-Horrizontal">
@@ -88,38 +67,36 @@
 					</div>
 				</div>
 			</div>	
-	</div>
-	
-	<div class="TabContent" id="Visualization">
-		<div class="TabHeader">
-			<h1>Visualization Settings</h1>
 		</div>
-		<div class="Card-Grid-Vertical">
-			<div class="SettingGroup">
-				<div class="Slider-Grid-Horrizontal">
-					<div class="SettingGroup-Title">Red Value</div>
-					<div class="SettingGroup-SliderContainer">
-						<input type="range" oninput="updateSliderValue(this)" id="Red_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+		
+		<div class="TabContent" id="Visualization">
+			<div class="Card-Grid-Vertical">
+				<div class="SettingGroup">
+					<div class="Slider-Grid-Horrizontal">
+						<div class="SettingGroup-Title">Red Value</div>
+						<div class="SettingGroup-SliderContainer">
+							<input type="range" oninput="updateSliderValue(this)" id="Red_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+						</div>
+						<div class="SettingGroup-Value"><span id="Red_Value_Slider_Value"></span></div>
 					</div>
-					<div class="SettingGroup-Value"><span id="Red_Value_Slider_Value"></span></div>
 				</div>
-			</div>
-			<div class="SettingGroup">
-				<div class="Slider-Grid-Horrizontal">
-					<div class="SettingGroup-Title">Green Value</div>
-					<div class="SettingGroup-SliderContainer">
-						<input type="range" oninput="updateSliderValue(this)" id="Green_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+				<div class="SettingGroup">
+					<div class="Slider-Grid-Horrizontal">
+						<div class="SettingGroup-Title">Green Value</div>
+						<div class="SettingGroup-SliderContainer">
+							<input type="range" oninput="updateSliderValue(this)" id="Green_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+						</div>
+						<div class="SettingGroup-Value"><span id="Green_Value_Slider_Value"></span></div>
 					</div>
-					<div class="SettingGroup-Value"><span id="Green_Value_Slider_Value"></span></div>
 				</div>
-			</div>
-			<div class="SettingGroup">
-				<div class="Card-Grid-Horrizontal">
-					<div class="SettingGroup-Title">Blue Value</div>
-					<div class="SettingGroup-SliderContainer">
-						<input type="range" oninput="updateSliderValue(this)" id="Blue_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+				<div class="SettingGroup">
+					<div class="Card-Grid-Horrizontal">
+						<div class="SettingGroup-Title">Blue Value</div>
+						<div class="SettingGroup-SliderContainer">
+							<input type="range" oninput="updateSliderValue(this)" id="Blue_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+						</div>
+						<div class="SettingGroup-Value"><span id="Blue_Value_Slider_Value"></span></div>
 					</div>
-					<div class="SettingGroup-Value"><span id="Blue_Value_Slider_Value"></span></div>
 				</div>
 			</div>
 		</div>

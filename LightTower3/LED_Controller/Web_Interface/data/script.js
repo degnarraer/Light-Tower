@@ -108,10 +108,6 @@ function setupSpeakerImage()
 	speakerImages[24].src = "Images/L-Speaker-11.svg"
 	speakerImages[25] = new Image();
 	speakerImages[25].src = "Images/R-Speaker-11.svg"
-	
-	
-	
-	
 }   
     
 function setSpeakerImage(state)
@@ -176,6 +172,17 @@ function setSpeakerImage(state)
 	}
 }
 
+function openNav() {
+  document.getElementById("LeftSideNavigationMenu").style.width = "200px";
+  document.getElementById("ContentArea").style.marginLeft = "200px";
+}
+
+/* Set the width of the side navigation to 0 */
+function closeNav() {
+  document.getElementById("LeftSideNavigationMenu").style.width = "0";
+  document.getElementById("ContentArea").style.marginLeft = "0";
+}
+
 function onMessage(event) {
     console.log(event.data);
     var myObj = JSON.parse(event.data);
@@ -199,7 +206,7 @@ function onMessage(event) {
 	}
 }
 
-function OpenTab(evt, cityName) {
+function openTab(evt, TabTitle) {
   var i, TabContent, Tablinks;
   TabContent = document.getElementsByClassName("TabContent");
   for (i = 0; i < TabContent.length; i++) {
@@ -209,6 +216,7 @@ function OpenTab(evt, cityName) {
   for (i = 0; i < Tablinks.length; i++) {
     Tablinks[i].className = Tablinks[i].className.replace(" active", "");
   }
-  document.getElementById(cityName).style.display = "block";
+  document.getElementById(TabTitle).style.display = "block";
   evt.currentTarget.className += " active";
+  document.getElementById("TabHeader_Heading").innerHTML = TabTitle;
 }
