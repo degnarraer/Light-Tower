@@ -59,7 +59,7 @@ class SettingsWebServerManager: public QueueManager
     void ProcessEventQueue()
     {      
       //SOUND STATE TX QUEUE
-      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", sizeof(Sound_State), false, false))
+      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", sizeof(Sound_State),true, 0, false))
       {
         Speaker_Image = String(Sound_State);
         struct JSON_Data_Value Values[1] = { 
@@ -69,7 +69,7 @@ class SettingsWebServerManager: public QueueManager
       }
       
       //Amplitude Gain TX QUEUE
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), false, false))
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, 0, false))
       {
         Amplitude_Gain_Slider = String(Amplitude_Gain);
         struct JSON_Data_Value Values[1] = { 
@@ -79,7 +79,7 @@ class SettingsWebServerManager: public QueueManager
       }
       
       //FFT Gain TX QUEUE
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", sizeof(FFT_Gain), false, false))
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", sizeof(FFT_Gain), true, 0, false))
       {
         FFT_Gain_Slider = String(FFT_Gain);
         struct JSON_Data_Value Values[1] = { 
@@ -161,7 +161,9 @@ class SettingsWebServerManager: public QueueManager
           SettingValues["Value"] = DataValues[i].Value;
           JSONVars["DataValue" + String(i)] = SettingValues;
       }
-      return JSON.stringify(JSONVars);
+      String Result = JSON.stringify(JSONVars);
+      Serial.println(Result);
+      return Result;
     }
     
     void NotifyClients(String TextString)
@@ -197,40 +199,45 @@ class SettingsWebServerManager: public QueueManager
             Serial.println("Parsing input failed!");
             return;
           }
-          if (MyObject.hasOwnProperty("Name") && MyObject.hasOwnProperty("Value"))
+          if( true == MyObject.hasOwnProperty("Name") )
           {
             String Name = String( (const char*)MyObject["Name"]);
             String Value = String( (const char*)MyObject["Value"]);
-            
+            Serial << "Name: " << Name << "\tValue: " << Value << "\n";
             if(Name.equals("Amplitude_Gain_Slider"))
             {
               Amplitude_Gain_Slider = Value;
               Amplitude_Gain = Amplitude_Gain_Slider.toFloat();
+              Serial << "Socket RX: Amplitude_Gain = " << Amplitude_Gain << "\n";
               PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", false);
             }
             else if(Name.equals("FFT_Gain_Slider"))
             {
               FFT_Gain_Slider = Value;
               FFT_Gain = FFT_Gain_Slider.toFloat();
+              Serial << "Socket RX: FFT_Gain = " << FFT_Gain << "\n";
               PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
             }
             else if(Name.equals("Red_Value_Slider"))
             {
               Red_Value_Slider = Value;
               Red_Value = Red_Value_Slider.toInt();
-              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+              Serial << "Socket RX: Red_Value = " << Red_Value << "\n";
+              PushValueToRXQueue(&Red_Value, "Red_Value", false);
             }
             else if(Name.equals("Green_Value_Slider"))
             {
               Green_Value_Slider = Value;
               Green_Value = Green_Value_Slider.toInt();
-              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+              Serial << "Socket RX: Green_Value = " << Green_Value << "\n";
+              PushValueToRXQueue(&Green_Value, "Green_Value", false);
             }
             else if(Name.equals("Blue_Value_Slider"))
             {
               Blue_Value_Slider = Value;
               Blue_Value = Blue_Value_Slider.toInt();
-              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+              Serial << "Socket RX: Green_Value = " << Blue_Value << "\n";
+              PushValueToRXQueue(&Blue_Value, "Blue_Value", false);
             }
             else
             {

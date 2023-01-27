@@ -78,14 +78,14 @@ void Manager::MoveDataFromCPU3ToUs()
 {
   //Set Amplitude Gain from Amplitude Gain RX QUEUE
   float Amplitude_Gain = 1.0;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, false))
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, 0, false))
   {
     m_SoundProcessor.SetGain(Amplitude_Gain);
   }
   
   //Set FFT Gain from FFT Gain RX QUEUE
   float FFT_Gain = 1.0;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&FFT_Gain, "FFT Gain", sizeof(FFT_Gain), true, false))
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&FFT_Gain, "FFT Gain", sizeof(FFT_Gain), true, 0, false))
   {
     m_SoundProcessor.SetFFTGain(FFT_Gain);
   }

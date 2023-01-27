@@ -112,64 +112,8 @@ function setupSpeakerImage()
     
 function setSpeakerImage(state)
 {   
-	switch(state)
-	{
-		case 0:
-			document.getElementById("L Speaker Image").src = speakerImages[0].src;
-			document.getElementById("R Speaker Image").src = speakerImages[1].src;
-		break;
-		case 1:
-			document.getElementById("L Speaker Image").src = speakerImages[2].src;
-			document.getElementById("R Speaker Image").src = speakerImages[3].src;
-		break;
-		case 2:
-			document.getElementById("L Speaker Image").src = speakerImages[4].src;
-			document.getElementById("R Speaker Image").src = speakerImages[5].src;
-		break;
-		case 3:
-			document.getElementById("L Speaker Image").src = speakerImages[6].src;
-			document.getElementById("R Speaker Image").src = speakerImages[7].src;
-		break;
-		case 4:
-			document.getElementById("L Speaker Image").src = speakerImages[8].src;
-			document.getElementById("R Speaker Image").src = speakerImages[9].src;
-		break;
-		case 5:
-			document.getElementById("L Speaker Image").src = speakerImages[10].src;
-			document.getElementById("R Speaker Image").src = speakerImages[11].src;
-		break;
-		case 6:
-			document.getElementById("L Speaker Image").src = speakerImages[12].src;
-			document.getElementById("R Speaker Image").src = speakerImages[13].src;
-		break;
-		case 7:
-			document.getElementById("L Speaker Image").src = speakerImages[14].src;
-			document.getElementById("R Speaker Image").src = speakerImages[15].src;
-		break;
-		case 8:
-			document.getElementById("L Speaker Image").src = speakerImages[16].src;
-			document.getElementById("R Speaker Image").src = speakerImages[17].src;
-		break;
-		case 9:
-			document.getElementById("L Speaker Image").src = speakerImages[18].src;
-			document.getElementById("R Speaker Image").src = speakerImages[19].src;
-		break;
-		case 10:
-			document.getElementById("L Speaker Image").src = speakerImages[20].src;
-			document.getElementById("R Speaker Image").src = speakerImages[21].src;
-		break;
-		case 11:
-			document.getElementById("L Speaker Image").src = speakerImages[22].src;
-			document.getElementById("R Speaker Image").src = speakerImages[23].src;
-		case 12:
-			document.getElementById("L Speaker Image").src = speakerImages[24].src;
-			document.getElementById("R Speaker Image").src = speakerImages[25].src;
-		break;
-		default:
-			document.getElementById("L Speaker Image").src = speakerImages[0].src;
-			document.getElementById("R Speaker Image").src = speakerImages[0].src;
-		break;
-	}
+	document.getElementById("L Speaker Image").src = speakerImages[2*state].src;
+	document.getElementById("R Speaker Image").src = speakerImages[2*state+1].src;
 }
 
 function openNav() {

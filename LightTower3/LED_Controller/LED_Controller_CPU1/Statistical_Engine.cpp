@@ -317,7 +317,7 @@ void StatisticalEngine::UpdateSoundState()
     }
     m_previousMicros = m_currentMicros;
     pthread_mutex_unlock(&m_ProcessedSoundDataLock);
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 

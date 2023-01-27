@@ -104,7 +104,7 @@ class CommonUtils
 class QueueController
 {
 	public:
-		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, bool WaitForOpenSlot, bool DebugMessage)
+		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, TickType_t TicksToWait, bool DebugMessage)
 		{
 			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
@@ -112,28 +112,21 @@ class QueueController
 				ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
 				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
-					if(uxQueueSpacesAvailable(GiveToQueue) > 0 || true == WaitForOpenSlot)
+					uint8_t DataBuffer[ByteCount];
+					if ( xQueueReceive(TakeFromQueue, DataBuffer, TicksToWait) == pdTRUE )
 					{
-						uint8_t DataBuffer[ByteCount];
-						if ( xQueueReceive(TakeFromQueue, DataBuffer, portMAX_DELAY) == pdTRUE )
+						if(xQueueSend(GiveToQueue, DataBuffer, TicksToWait) != pdTRUE)
 						{
-							if(xQueueSend(GiveToQueue, DataBuffer, portMAX_DELAY) != pdTRUE)
-							{
-								ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
-							}
-							else
-							{
-								if(true == DebugMessage) ESP_LOGV("Helpers", "%s: Added Data to Queue", DebugTitle.c_str());
-							}
+							ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
 						}
 						else
 						{
-							ESP_LOGE("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
+							if(true == DebugMessage) ESP_LOGV("Helpers", "%s: Added Data to Queue", DebugTitle.c_str());
 						}
 					}
 					else
 					{
-						if(true == DebugMessage) ESP_LOGW("Helpers", "WARNING! %s: Queue Full.", DebugTitle.c_str());
+						ESP_LOGE("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
 					}
 				}
 			}
@@ -423,18 +416,15 @@ class QueueManager: public CommonUtils
 			return NULL;
 		}
 		
-		void PushValueToTXQueue(void* Value, String Name, bool WaitForOpenSlot)
+		void PushValueToTXQueue(void* Value, String Name, TickType_t TicksToWait)
 		{
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
-				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+				if(xQueueSend(Queue, Value, TicksToWait) != pdTRUE)
 				{
-					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE)
-					{
-						ESP_LOGE("CommonUtils", "Error! Error Setting Queue.");
-					} 
-				}
+					ESP_LOGE("CommonUtils", "Error! Error Setting Queue.");
+				} 
 			}
 			else
 			{
@@ -442,18 +432,15 @@ class QueueManager: public CommonUtils
 			}
 		}
 		
-		void PushValueToRXQueue(void* Value, String Name, bool WaitForOpenSlot)
+		void PushValueToRXQueue(void* Value, String Name, TickType_t TicksToWait)
 		{
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
 			{
-				if(uxQueueSpacesAvailable(Queue) > 0 || true == WaitForOpenSlot)
+				if(xQueueSend(Queue, Value, TicksToWait) != pdTRUE)
 				{
-					if(xQueueSend(Queue, Value, portMAX_DELAY) != pdTRUE)
-					{
-						ESP_LOGE("CommonUtils", "Error! Error Setting Queue.");
-					} 
-				}
+					ESP_LOGE("CommonUtils", "Error! Error Setting Queue.");
+				} 
 			}
 			else
 			{
@@ -461,7 +448,7 @@ class QueueManager: public CommonUtils
 			}
 		}
 		
-		bool GetValueFromTXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
+		bool GetValueFromTXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, TickType_t TicksToWait, bool DebugMessage)
 		{
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
@@ -474,7 +461,7 @@ class QueueManager: public CommonUtils
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, Value, portMAX_DELAY) == pdTRUE )
+						if ( xQueueReceive(Queue, Value, TicksToWait) == pdTRUE )
 						{
 							result = true;
 						}
@@ -492,7 +479,7 @@ class QueueManager: public CommonUtils
 			return result;
 		}
 		
-		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, bool DebugMessage)
+		bool GetValueFromRXQueue(void* Value, String Name, size_t ByteCount, bool ReadUntilEmpty, TickType_t TicksToWait, bool DebugMessage)
 		{
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
@@ -505,7 +492,7 @@ class QueueManager: public CommonUtils
 					if(false == ReadUntilEmpty) QueueCount = 1;
 					for(int i = 0; i < QueueCount; ++i)
 					{
-						if ( xQueueReceive(Queue, Value, portMAX_DELAY) == pdTRUE )
+						if ( xQueueReceive(Queue, Value, TicksToWait) == pdTRUE )
 						{
 							result = true;
 						}
