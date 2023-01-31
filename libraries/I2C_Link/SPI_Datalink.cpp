@@ -47,23 +47,29 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 		{
 			TransmitQueuedData();
 		}
-		size_t MessageCount = 0;
+		size_t MaxMessageCount = 0;
+		size_t TotalMessageCount = 0;
 		for(int i = 0; i < m_DataItemsCount; ++i)
 		{
 			if(NULL != m_DataItems[i].QueueHandle_TX)
 			{
-				MessageCount += uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX);
+				size_t MessageCount = uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX);
+				TotalMessageCount += MessageCount;
+				if(MessageCount > MaxMessageCount)
+				{
+					MaxMessageCount = MessageCount;
+				}
 			}
 		}
-		if(m_MessageCountOld != MessageCount)
+		if(m_MessageCountOld != TotalMessageCount)
 		{
-			m_MessageCountOld = MessageCount;
-			if(true == Debug && 0 < MessageCount)
+			m_MessageCountOld = TotalMessageCount;
+			if(true == Debug && 0 < TotalMessageCount)
 			{
-				Serial << "Message Count: " << MessageCount << "\n";
+				Serial << "TX Message Count: " << TotalMessageCount << "\n";
 			}
 		}
-		if(0 == MessageCount)
+		if(0 == TotalMessageCount)
 		{
 			size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
 			memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
@@ -75,20 +81,20 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 		}
 		else
 		{
-			while(MessageCount > 0)
+			for(int i = 0; i < MaxMessageCount; ++i)
 			{
-				for(int i = 0; i < m_DataItemsCount; ++i)
+				for(int j = 0; j < m_DataItemsCount; ++j)
 				{
-					if(NULL != m_DataItems[i].QueueHandle_TX)
+					if(NULL != m_DataItems[j].QueueHandle_TX)
 					{
-						if(uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX) > 0)
+						if(uxQueueMessagesWaiting(m_DataItems[j].QueueHandle_TX) > 0)
 						{
-							if ( xQueueReceive(m_DataItems[i].QueueHandle_TX, m_DataItems[i].DataBuffer, portMAX_DELAY) == pdTRUE )
+							if ( xQueueReceive(m_DataItems[j].QueueHandle_TX, m_DataItems[j].DataBuffer, 0) == pdTRUE )
 							{
 								size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
 								memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
-								size_t DataLength = EncodeDataToBuffer(m_DataItems[i].Name, m_DataItems[i].DataType, m_DataItems[i].DataBuffer, m_DataItems[i].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+								size_t DataLength = EncodeDataToBuffer(m_DataItems[j].Name, m_DataItems[j].DataType, m_DataItems[j].DataBuffer, m_DataItems[j].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 								delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 								if(true == m_SpewToConsole)
 								{
@@ -96,7 +102,6 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 								}
 								m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 								++m_Queued_Transactions;
-								--MessageCount;
 							}
 						}
 					}
@@ -106,6 +111,7 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 					}
 				}
 			}
+			TransmitQueuedData();
 		}
 	}
 }
@@ -198,21 +204,15 @@ void SPI_Datalink_Slave::ProcessEventQueue(bool Debug)
 
 void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
 {
-	size_t MessageCount = m_SPI_Slave.available();
-	if(m_MessageCountOld != MessageCount && 0 < MessageCount)
-	{
-		m_MessageCountOld = MessageCount;
-		if(true == Debug)
-		{
-			Serial << "RX Message Count: " << MessageCount << "\n";
-		}
-	}
-	for(int i = 0; i < MessageCount; ++i)
+	size_t SPIMessageCount = m_SPI_Slave.available();
+	size_t ReceivedMessageCount = 0;
+	for(int i = 0; i < SPIMessageCount; ++i)
 	{
 		size_t CurrentDeQueueIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 		String ResultString = String( (char*)(spi_rx_buf[CurrentDeQueueIndex]) );
 		if(ResultString.length() > 0)
 		{
+			++ReceivedMessageCount;
 			if(true == m_SpewToConsole)
 			{
 				ESP_LOGV("SPI_Datalink", "Received: %s", ResultString.c_str());
@@ -221,6 +221,14 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
 		}
 		m_SPI_Slave.pop();
 		++m_DeQueued_Transactions;
+	}
+	if(m_MessageCountOld != ReceivedMessageCount)
+	{
+		m_MessageCountOld = ReceivedMessageCount;
+		if(true == Debug && 0 < ReceivedMessageCount)
+		{
+			Serial << "RX Message Count: " << ReceivedMessageCount << "\n";
+		}
 	}
 }
 
