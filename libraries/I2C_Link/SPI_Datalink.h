@@ -33,7 +33,7 @@
 #define N_SLAVE_QUEUES 20
 #define N_MASTER_QUEUES 20
 #define DUTY_CYCLE_POS 128
-#define CLOCK_SPEED 4000000
+#define CLOCK_SPEED 8000000
 
 class SPI_Datalink: public DataSerializer
 {
