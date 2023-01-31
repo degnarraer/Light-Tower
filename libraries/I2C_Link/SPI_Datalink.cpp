@@ -74,10 +74,11 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 			size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
 			memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 			memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
-			delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
-			m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-			++m_Queued_Transactions;
-			TransmitQueuedData();
+			if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
+			{
+				++m_Queued_Transactions;
+				TransmitQueuedData();
+			}
 		}
 		else
 		{
@@ -89,19 +90,21 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 					{
 						if(uxQueueMessagesWaiting(m_DataItems[j].QueueHandle_TX) > 0)
 						{
-							if ( xQueueReceive(m_DataItems[j].QueueHandle_TX, m_DataItems[j].DataBuffer, 0) == pdTRUE )
+							if ( xQueuePeek(m_DataItems[j].QueueHandle_TX, m_DataItems[j].DataBuffer, 0) == pdTRUE )
 							{
 								size_t CurrentIndex = m_Queued_Transactions % N_MASTER_QUEUES;
 								memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								size_t DataLength = EncodeDataToBuffer(m_DataItems[j].Name, m_DataItems[j].DataType, m_DataItems[j].DataBuffer, m_DataItems[j].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-								delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 								if(true == m_SpewToConsole)
 								{
 									ESP_LOGV("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
 								}
-								m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-								++m_Queued_Transactions;
+								if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
+								{
+									++m_Queued_Transactions;
+									xQueueReceive(m_DataItems[j].QueueHandle_TX, m_DataItems[j].DataBuffer, 0);
+								}
 							}
 						}
 					}
@@ -240,21 +243,17 @@ void SPI_Datalink_Slave::QueueUpNewTransactions(bool Debug)
 		size_t CurrentQueueIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
 		memset(spi_rx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
-		delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
-		size_t SendBytesSize = GetNextTXStringFromDataItems(spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES);
+		size_t ResultSize = GetNextTXStringFromDataItems(spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES);
 		
 		if( ((m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1)) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
 		{
-			if(true == Debug && 0 < SendBytesSize)
+			++m_Queued_Transactions;
+			if(true == Debug && 0 < ResultSize)
 			{
 				Serial << "TX Message Queued\n";
 			}
-			++m_Queued_Transactions;
 		}
-		else
-		{
-			break;
-		}
+		
 	}
 }
 size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend)
