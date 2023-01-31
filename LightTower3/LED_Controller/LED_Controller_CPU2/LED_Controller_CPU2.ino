@@ -159,9 +159,10 @@ void ManagerTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     ++ManagerTaskLoopCount;
     m_Manager.ProcessEventQueue();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -172,9 +173,10 @@ void SPI_CPU1_TX_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     ++ProcessSPI_CPU1_TXTaskLoopCount;
-    m_SPIDataLinkToCPU1.ProcessEventQueue();
+    m_SPIDataLinkToCPU1.ProcessEventQueue(false);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -185,9 +187,10 @@ void SPI_CPU3_TX_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     ++ProcessSPI_CPU3_TXTaskLoopCount;
-    m_SPIDataLinkToCPU3.ProcessEventQueue();
+    m_SPIDataLinkToCPU3.ProcessEventQueue(true);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -198,7 +201,7 @@ void TaskMonitorTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     unsigned long CurrentTime = millis();
     ++TaskMonitorTaskLoopCount;
     if(true == TASK_LOOP_COUNT_DEBUG)
@@ -236,5 +239,6 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGE("LED_Controller2", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
     }
     LoopCountTimer = CurrentTime;
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

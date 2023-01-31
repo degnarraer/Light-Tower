@@ -39,7 +39,7 @@ void SPI_Datalink_Master::Setup_SPI_Master()
 	ESP_LOGE("SPI_Datalink", "SPI Master Configured");
 }
 
-void SPI_Datalink_Master::ProcessEventQueue()
+void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 {
 	if(NULL != m_DataItems)
 	{
@@ -48,12 +48,19 @@ void SPI_Datalink_Master::ProcessEventQueue()
 			TransmitQueuedData();
 		}
 		size_t MessageCount = 0;
-		size_t MaxTransmits = 5;
 		for(int i = 0; i < m_DataItemsCount; ++i)
 		{
 			if(NULL != m_DataItems[i].QueueHandle_TX)
 			{
 				MessageCount += uxQueueMessagesWaiting(m_DataItems[i].QueueHandle_TX);
+			}
+		}
+		if(m_MessageCountOld != MessageCount)
+		{
+			m_MessageCountOld = MessageCount;
+			if(true == Debug && 0 < MessageCount)
+			{
+				Serial << "Message Count: " << MessageCount << "\n";
 			}
 		}
 		if(0 == MessageCount)
@@ -64,14 +71,11 @@ void SPI_Datalink_Master::ProcessEventQueue()
 			delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 			m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 			++m_Queued_Transactions;
-			if(m_Queued_Transactions - m_Queued_Transactions_Reset_Point >= N_MASTER_QUEUES)
-			{
-				TransmitQueuedData();
-			}
+			TransmitQueuedData();
 		}
 		else
 		{
-			while(MessageCount > 0 && MaxTransmits > 0)
+			while(MessageCount > 0)
 			{
 				for(int i = 0; i < m_DataItemsCount; ++i)
 				{
@@ -86,8 +90,10 @@ void SPI_Datalink_Master::ProcessEventQueue()
 								memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								size_t DataLength = EncodeDataToBuffer(m_DataItems[i].Name, m_DataItems[i].DataType, m_DataItems[i].DataBuffer, m_DataItems[i].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 								delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
-								if(true == m_SpewToConsole) Serial << "TX: " << String((char*)spi_tx_buf[CurrentIndex]).c_str() << "\n";
-								ESP_LOGV("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
+								if(true == m_SpewToConsole)
+								{
+									ESP_LOGV("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
+								}
 								m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
 								++m_Queued_Transactions;
 								--MessageCount;
@@ -100,7 +106,6 @@ void SPI_Datalink_Master::ProcessEventQueue()
 					}
 				}
 			}
-			--MaxTransmits;
 		}
 	}
 }
@@ -145,8 +150,10 @@ void SPI_Datalink_Master::TransmitQueuedData()
 		++m_DeQueued_Transactions;
 		if(strlen(ResultString.c_str()) > 0)
 		{
-			if(true == m_SpewToConsole) Serial << "RX: " << ResultString.c_str() << "\n";
-			ESP_LOGV("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
+			if(true == m_SpewToConsole)
+			{
+				ESP_LOGV("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
+			}
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false);
 		}
 	}	
@@ -183,22 +190,33 @@ bool SPI_Datalink_Slave::End()
 	return m_SPI_Slave.end();
 }
 
-void SPI_Datalink_Slave::ProcessEventQueue()
+void SPI_Datalink_Slave::ProcessEventQueue(bool Debug)
 {
-	ProcessCompletedTransactions();
-	QueueUpNewTransactions();
+	ProcessCompletedTransactions(Debug);
+	QueueUpNewTransactions(Debug);
 }
 
-void SPI_Datalink_Slave::ProcessCompletedTransactions()
+void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
 {
-	while(m_SPI_Slave.available())
+	size_t MessageCount = m_SPI_Slave.available();
+	if(m_MessageCountOld != MessageCount && 0 < MessageCount)
+	{
+		m_MessageCountOld = MessageCount;
+		if(true == Debug)
+		{
+			Serial << "RX Message Count: " << MessageCount << "\n";
+		}
+	}
+	for(int i = 0; i < MessageCount; ++i)
 	{
 		size_t CurrentDeQueueIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 		String ResultString = String( (char*)(spi_rx_buf[CurrentDeQueueIndex]) );
 		if(ResultString.length() > 0)
 		{
-			if(true == m_SpewToConsole) Serial << "RX: " << ResultString.c_str() << "\n";
-			ESP_LOGV("SPI_Datalink", "Received: %s", ResultString.c_str());
+			if(true == m_SpewToConsole)
+			{
+				ESP_LOGV("SPI_Datalink", "Received: %s", ResultString.c_str());
+			}
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false); 
 		}
 		m_SPI_Slave.pop();
@@ -206,17 +224,23 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 	}
 }
 
-void SPI_Datalink_Slave::QueueUpNewTransactions()
+void SPI_Datalink_Slave::QueueUpNewTransactions(bool Debug)
 {
-	while( (m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1) )
+	size_t ItemsToQueue = (m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1);
+	for( int i = 0; i < ItemsToQueue; ++i )
 	{
 		size_t CurrentQueueIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
 		memset(spi_rx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		delay(10); //WITHOUT THIS WE SEND GARBAGE DATA
 		size_t SendBytesSize = GetNextTXStringFromDataItems(spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES);
+		
 		if( ((m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1)) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
 		{
+			if(true == Debug && 0 < SendBytesSize)
+			{
+				Serial << "TX Message Queued\n";
+			}
 			++m_Queued_Transactions;
 		}
 		else

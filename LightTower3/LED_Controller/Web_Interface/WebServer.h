@@ -59,31 +59,34 @@ class SettingsWebServerManager: public QueueManager
     void ProcessEventQueue()
     {      
       //SOUND STATE TX QUEUE
-      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", sizeof(Sound_State),true, 0, false))
+      static bool SoundStatePullErrorHasOccured = false;
+      if(true == GetValueFromTXQueue(&Sound_State, "Sound State",false, 0, SoundStatePullErrorHasOccured))
       {
-        Speaker_Image = String(Sound_State);
+        //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
         struct JSON_Data_Value Values[1] = { 
-                                             { "Speaker_Image", Speaker_Image },
+                                             { "Speaker_Image", String(Sound_State) },
                                            };
         NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
       }
       
       //Amplitude Gain TX QUEUE
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, 0, false))
+      static bool AmplitudeGainPullErrorHasOccured = false;
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
       {
-        Amplitude_Gain_Slider = String(Amplitude_Gain);
+        Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
         struct JSON_Data_Value Values[1] = { 
-                                             { "Amplitude_Gain_Slider", Amplitude_Gain_Slider },
+                                             { "Amplitude_Gain_Slider", String(Amplitude_Gain) },
                                            };
         NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
       }
       
       //FFT Gain TX QUEUE
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", sizeof(FFT_Gain), true, 0, false))
+      static bool FFTGainPullErrorHasOccured = false;
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
       {
-        FFT_Gain_Slider = String(FFT_Gain);
+        //Serial << "FFT Gain\n";
         struct JSON_Data_Value Values[1] = { 
-                                             { "FFT_Gain_Slider", FFT_Gain_Slider },
+                                             { "FFT_Gain_Slider", String(FFT_Gain) },
                                            };
         NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
       }
@@ -117,25 +120,17 @@ class SettingsWebServerManager: public QueueManager
     String message = "";
 
     //Amplitude Gain Value and Widget Name Values
-    float Amplitude_Gain;
-    String Amplitude_Gain_Slider = "1.0";
+    float Amplitude_Gain = 1.0;
 
     //FFT Gain Value and Widget Name Values
     float FFT_Gain;
-    String FFT_Gain_Slider = "1.0";
 
     //Sound State Value and Widget Name Values
     SoundState_t Sound_State;
-    String Speaker_Image = "0";
 
     uint32_t Red_Value;
-    String Red_Value_Slider = "0";
-    
     uint32_t Blue_Value;
-    String Blue_Value_Slider = "0";
-    
     uint32_t Green_Value;
-    String Green_Value_Slider = "0";
   
 
     //QueueManager Interface
@@ -162,7 +157,6 @@ class SettingsWebServerManager: public QueueManager
           JSONVars["DataValue" + String(i)] = SettingValues;
       }
       String Result = JSON.stringify(JSONVars);
-      Serial.println(Result);
       return Result;
     }
     
@@ -178,17 +172,18 @@ class SettingsWebServerManager: public QueueManager
       {
         data[len] = 0;
         String message = String((char*)data);
-        Serial.println(message);
+        Serial << "Message from Client: " << message << "\n";
+        
         if (true == message.equals("Get All Values"))
         {
           Serial.println("Sending All Value");
           struct JSON_Data_Value Values[6] = { 
-                                               { "Amplitude_Gain_Slider", Amplitude_Gain_Slider },
-                                               { "FFT_Gain_Slider", FFT_Gain_Slider },
-                                               { "Red_Value_Slider", Red_Value_Slider },
-                                               { "Green_Value_Slider", Green_Value_Slider },
-                                               { "Blue_Value_Slider", Blue_Value_Slider },
-                                               { "Sound_State", Speaker_Image },
+                                               { "Amplitude_Gain_Slider", String(Amplitude_Gain) },
+                                               { "FFT_Gain_Slider", String(FFT_Gain) },
+                                               { "Red_Value_Slider", String(Red_Value) },
+                                               { "Green_Value_Slider", String(Green_Value) },
+                                               { "Blue_Value_Slider", String(Blue_Value) },
+                                               { "Sound_State", String(Sound_State) },
                                              };
           NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
         }
@@ -199,45 +194,45 @@ class SettingsWebServerManager: public QueueManager
             Serial.println("Parsing input failed!");
             return;
           }
-          if( true == MyObject.hasOwnProperty("Name") )
+          if( true == MyObject.hasOwnProperty("Name") && true == MyObject.hasOwnProperty("Value") )
           {
             String Name = String( (const char*)MyObject["Name"]);
             String Value = String( (const char*)MyObject["Value"]);
             Serial << "Name: " << Name << "\tValue: " << Value << "\n";
             if(Name.equals("Amplitude_Gain_Slider"))
             {
-              Amplitude_Gain_Slider = Value;
-              Amplitude_Gain = Amplitude_Gain_Slider.toFloat();
+              Amplitude_Gain = Value.toFloat();
               Serial << "Socket RX: Amplitude_Gain = " << Amplitude_Gain << "\n";
-              PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", false);
+              static bool AmplitudeGainPushErrorhasOccured = false;
+              PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", 0, AmplitudeGainPushErrorhasOccured);
             }
             else if(Name.equals("FFT_Gain_Slider"))
             {
-              FFT_Gain_Slider = Value;
-              FFT_Gain = FFT_Gain_Slider.toFloat();
+              FFT_Gain = Value.toFloat();
               Serial << "Socket RX: FFT_Gain = " << FFT_Gain << "\n";
-              PushValueToRXQueue(&FFT_Gain, "FFT Gain", false);
+              static bool FFTGainPushErrorhasOccured = false;
+              PushValueToRXQueue(&FFT_Gain, "FFT Gain", 0, FFTGainPushErrorhasOccured);
             }
             else if(Name.equals("Red_Value_Slider"))
             {
-              Red_Value_Slider = Value;
-              Red_Value = Red_Value_Slider.toInt();
+              Red_Value = Value.toInt();
               Serial << "Socket RX: Red_Value = " << Red_Value << "\n";
-              PushValueToRXQueue(&Red_Value, "Red_Value", false);
+              static bool RedValuePushErrorhasOccured = false;
+              PushValueToRXQueue(&Red_Value, "Red_Value", 0, RedValuePushErrorhasOccured);
             }
             else if(Name.equals("Green_Value_Slider"))
             {
-              Green_Value_Slider = Value;
-              Green_Value = Green_Value_Slider.toInt();
+              Green_Value = Value.toInt();
               Serial << "Socket RX: Green_Value = " << Green_Value << "\n";
-              PushValueToRXQueue(&Green_Value, "Green_Value", false);
+              static bool GreenValuePushErrorhasOccured = false;
+              PushValueToRXQueue(&Green_Value, "Green_Value", 0, GreenValuePushErrorhasOccured);
             }
             else if(Name.equals("Blue_Value_Slider"))
             {
-              Blue_Value_Slider = Value;
-              Blue_Value = Blue_Value_Slider.toInt();
-              Serial << "Socket RX: Green_Value = " << Blue_Value << "\n";
-              PushValueToRXQueue(&Blue_Value, "Blue_Value", false);
+              Blue_Value = Value.toInt();
+              Serial << "Socket RX: Blue_Value = " << Blue_Value << "\n";
+              static bool BlueValuePushErrorhasOccured = false;
+              PushValueToRXQueue(&Blue_Value, "Blue_Value", 0, BlueValuePushErrorhasOccured);
             }
             else
             {

@@ -42,44 +42,7 @@ class Manager: public NamedItem
     virtual ~Manager(){}
 
     void Setup(){}
-    void ProcessEventQueue()
-    {
-        //Sound State Data Movement
-        MoveDataFromQueueToQueue( "Manager: Sound State From Datalink To Web Page"
-                                , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Sound State")
-                                , m_SettingsWebServerManager.GetQueueHandleTXForDataItem("Sound State")
-                                , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Sound State")
-                                , false
-                                , false );
-        
-        //Amplitude Gain Data Movement                      
-        MoveDataFromQueueToQueue( "Manager: Amplitude Gain From Datalink To Web Page"
-                                , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Amplitude Gain")
-                                , m_SettingsWebServerManager.GetQueueHandleTXForDataItem("Amplitude Gain")
-                                , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Amplitude Gain")
-                                , false
-                                , false );
-        MoveDataFromQueueToQueue( "Manager: Amplitude Gain from Web Page To Datalink"
-                                , m_SettingsWebServerManager.GetQueueHandleRXForDataItem("Amplitude Gain")
-                                , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Amplitude Gain")
-                                , m_SettingsWebServerManager.GetTotalByteCountForDataItem("Amplitude Gain")
-                                , false
-                                , false );
-        
-        //FFT Gain Data Movement   
-        MoveDataFromQueueToQueue( "Manager: FFT Gain From Datalink To Web Page"
-                                , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("FFT Gain")
-                                , m_SettingsWebServerManager.GetQueueHandleTXForDataItem("FFT Gain")
-                                , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("FFT Gain")
-                                , false
-                                , false );
-        MoveDataFromQueueToQueue( "Manager: FFT Gain from Web Page To Datalink"
-                                , m_SettingsWebServerManager.GetQueueHandleRXForDataItem("FFT Gain")
-                                , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("FFT Gain")
-                                , m_SettingsWebServerManager.GetTotalByteCountForDataItem("FFT Gain")
-                                , false
-                                , false );
-    }
+    void ProcessEventQueue();
 
   private:
     SPIDataLinkSlave &m_SPIDataLinkSlave;

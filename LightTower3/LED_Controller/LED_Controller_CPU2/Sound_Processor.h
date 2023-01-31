@@ -47,16 +47,14 @@ class Sound_Processor: public NamedItem
       m_Gain = Gain;
       ESP_LOGE("Sound_Processor", "Set Gain: %f", m_Gain);
       static bool Gain_Push_Successful = true;
-      QueueHandle_t Handle = m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Amplitude Gain");
-      PushValueToQueue(&m_Gain, Handle, false, "Amplitude Gain", Gain_Push_Successful);
+      m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_Gain, "Amplitude Gain", 0, Gain_Push_Successful);
     }
     void SetFFTGain(float Gain)
     {
       m_FFT_Gain = Gain;
       ESP_LOGE("Sound_Processor", "Set FFT Gain: %f", m_FFT_Gain);
       static bool FFT_Gain_Push_Successful = true;
-      QueueHandle_t Handle = m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("FFT Gain");
-      PushValueToQueue(&m_FFT_Gain, Handle, false, "FFT Gain", FFT_Gain_Push_Successful);
+      m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_FFT_Gain, "FFT Gain", 0, FFT_Gain_Push_Successful);
     }
     
   private:

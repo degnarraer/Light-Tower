@@ -95,7 +95,7 @@ static uint32_t _closed_index = []() {
 
 static inline bool _init_async_event_queue(){
     if(!_async_queue){
-        _async_queue = xQueueCreate(32, sizeof(lwip_event_packet_t *));
+        _async_queue = xQueueCreate(1024, sizeof(lwip_event_packet_t *));
         if(!_async_queue){
             return false;
         }
@@ -231,42 +231,42 @@ static bool _start_async_task(){
  * */
 
 static int8_t _tcp_clear_events(void * arg) {
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->event = LWIP_TCP_CLEAR;
     e->arg = arg;
     if (!_prepend_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
     return ERR_OK;
 }
 
 static int8_t _tcp_connected(void * arg, tcp_pcb * pcb, int8_t err) {
     //ets_printf("+C: 0x%08x\n", pcb);
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->event = LWIP_TCP_CONNECTED;
     e->arg = arg;
     e->connected.pcb = pcb;
     e->connected.err = err;
     if (!_prepend_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
     return ERR_OK;
 }
 
 static int8_t _tcp_poll(void * arg, struct tcp_pcb * pcb) {
     //ets_printf("+P: 0x%08x\n", pcb);
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->event = LWIP_TCP_POLL;
     e->arg = arg;
     e->poll.pcb = pcb;
     if (!_send_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
     return ERR_OK;
 }
 
 static int8_t _tcp_recv(void * arg, struct tcp_pcb * pcb, struct pbuf *pb, int8_t err) {
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->arg = arg;
     if(pb){
         //ets_printf("+R: 0x%08x\n", pcb);
@@ -283,37 +283,37 @@ static int8_t _tcp_recv(void * arg, struct tcp_pcb * pcb, struct pbuf *pb, int8_
         AsyncClient::_s_lwip_fin(e->arg, e->fin.pcb, e->fin.err);
     }
     if (!_send_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
     return ERR_OK;
 }
 
 static int8_t _tcp_sent(void * arg, struct tcp_pcb * pcb, uint16_t len) {
     //ets_printf("+S: 0x%08x\n", pcb);
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->event = LWIP_TCP_SENT;
     e->arg = arg;
     e->sent.pcb = pcb;
     e->sent.len = len;
     if (!_send_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
     return ERR_OK;
 }
 
 static void _tcp_error(void * arg, int8_t err) {
     //ets_printf("+E: 0x%08x\n", arg);
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->event = LWIP_TCP_ERROR;
     e->arg = arg;
     e->error.err = err;
     if (!_send_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
 }
 
 static void _tcp_dns_found(const char * name, struct ip_addr * ipaddr, void * arg) {
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     //ets_printf("+DNS: name=%s ipaddr=0x%08x arg=%x\n", name, ipaddr, arg);
     e->event = LWIP_TCP_DNS;
     e->arg = arg;
@@ -324,18 +324,18 @@ static void _tcp_dns_found(const char * name, struct ip_addr * ipaddr, void * ar
         memset(&e->dns.addr, 0, sizeof(e->dns.addr));
     }
     if (!_send_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
 }
 
 //Used to switch out from LwIP thread
 static int8_t _tcp_accept(void * arg, AsyncClient * client) {
-    lwip_event_packet_t * e = (lwip_event_packet_t *)malloc(sizeof(lwip_event_packet_t));
+    lwip_event_packet_t * e = (lwip_event_packet_t *)heap_caps_malloc(sizeof(lwip_event_packet_t), MALLOC_CAP_SPIRAM);
     e->event = LWIP_TCP_ACCEPT;
     e->arg = arg;
     e->accept.client = client;
     if (!_prepend_async_event(&e)) {
-        free((void*)(e));
+        heap_caps_free((void*)(e));
     }
     return ERR_OK;
 }

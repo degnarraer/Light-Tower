@@ -84,6 +84,14 @@ void InitFileSystem()
   if (SPIFFS.begin())
   {
     Serial.println("SPIFFS mounted successfully");
+    File root = SPIFFS.open("/");
+    File file = root.openNextFile();
+    while(file)
+    {
+        Serial.print("FILE: ");
+        Serial.println(file.name());
+        file = root.openNextFile();
+    }
   }
   else
   {
@@ -108,17 +116,16 @@ void InitLocalVariables()
 
 void setup(){
   Serial.begin(500000);
-  InitFileSystem();
   InitLocalVariables();
-  InitWebSocket();
+  InitFileSystem();
   InitWebServer();
+  InitWebSocket();
   InitTasks();
   StartWebServer();
 }
 
 void loop()
 {
-  MyWebSocket.cleanupClients();
 }
 
 void SPI_RX_TaskLoop(void * parameter)
@@ -128,22 +135,23 @@ void SPI_RX_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     ++SPI_RX_TaskLoopCount;
-    m_SPIDataLinkSlave.ProcessEventQueue();
+    m_SPIDataLinkSlave.ProcessEventQueue(true);
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
 void Manager_TaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 20;\
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     ++Manager_TaskLoopCount;
     m_Manager.ProcessEventQueue();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
@@ -154,8 +162,9 @@ void WebServer_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     ++WebServer_TaskLoopCount;
     m_SettingsWebServerManager.ProcessEventQueue();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }

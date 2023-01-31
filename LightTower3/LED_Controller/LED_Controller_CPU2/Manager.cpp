@@ -67,7 +67,7 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
                             , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
-                            , false
+                            , 0
                             , false );
   }
   m_SPIDataLinkToCPU3.TriggerEarlyDataTransmit();
@@ -77,15 +77,17 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
 void Manager::MoveDataFromCPU3ToUs()
 {
   //Set Amplitude Gain from Amplitude Gain RX QUEUE
-  float Amplitude_Gain = 1.0;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Amplitude_Gain, "Amplitude Gain", sizeof(Amplitude_Gain), true, 0, false))
+  float Amplitude_Gain;
+  static bool AmplitudeGainPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Amplitude_Gain, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
   {
     m_SoundProcessor.SetGain(Amplitude_Gain);
   }
   
   //Set FFT Gain from FFT Gain RX QUEUE
-  float FFT_Gain = 1.0;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&FFT_Gain, "FFT Gain", sizeof(FFT_Gain), true, 0, false))
+  float FFT_Gain;
+  static bool FFTGainPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&FFT_Gain, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
   {
     m_SoundProcessor.SetFFTGain(FFT_Gain);
   }

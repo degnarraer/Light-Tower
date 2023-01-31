@@ -70,6 +70,7 @@ class SPI_Datalink: public DataSerializer
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		bool m_SpewToConsole = false;
+		size_t m_MessageCountOld = 0;
 };
 
 class SPI_Datalink_Master: public SPI_Datalink
@@ -90,7 +91,7 @@ class SPI_Datalink_Master: public SPI_Datalink
 							  Setup_SPI_Master(); 
 						   }
 		virtual ~SPI_Datalink_Master(){}
-		void ProcessEventQueue();
+		void ProcessEventQueue(bool Debug);
 		void TriggerEarlyDataTransmit()
 		{ 
 			m_TransmitQueuedDataFlag = true;
@@ -130,7 +131,7 @@ class SPI_Datalink_Slave: public SPI_Datalink
 							 Setup_SPI_Slave(); 
 						  }
 		virtual ~SPI_Datalink_Slave(){}
-		void ProcessEventQueue();
+		void ProcessEventQueue(bool Debug);
 	protected:
 		void Setup_SPI_Slave();
 		bool Begin();
@@ -143,8 +144,8 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		size_t m_Queued_Transactions = 0;
 		size_t m_DeQueued_Transactions = 0;
 		size_t m_CurrentDataItemToTX = 0;
-		void ProcessCompletedTransactions();
-		void QueueUpNewTransactions();
+		void ProcessCompletedTransactions(bool Debug);
+		void QueueUpNewTransactions(bool Debug);
 		size_t GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend);
 		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode);
 };
