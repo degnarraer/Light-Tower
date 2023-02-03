@@ -47,6 +47,7 @@ void Manager::Setup()
   m_StatisticalEngine.RegisterForMicrophoneStateChangeNotification(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
+  m_Preferences.begin("My Settings", false); 
 }
 
 void Manager::UpdateSerialData()

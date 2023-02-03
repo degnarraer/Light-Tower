@@ -26,6 +26,7 @@
 #include "Sound_Processor.h"
 #include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
+#include <Preferences.h>
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -51,6 +52,7 @@ class Manager: public NamedItem
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
 
   private:
+    Preferences m_Preferences;
     Sound_Processor &m_SoundProcessor;
     SPIDataLinkToCPU1 &m_SPIDataLinkToCPU1;
     SPIDataLinkToCPU3 &m_SPIDataLinkToCPU3;

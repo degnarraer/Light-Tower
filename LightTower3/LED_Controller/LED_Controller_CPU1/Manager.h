@@ -26,6 +26,7 @@
 #include "Statistical_Engine.h"
 #include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
+#include <Preferences.h>
 
 enum InputType_t
 {
@@ -70,6 +71,7 @@ class Manager: public NamedItem
     void MicrophoneStateChange(SoundState_t SoundState);
     
   private:
+    Preferences m_Preferences;
     StatisticalEngine &m_StatisticalEngine;
     SPIDataLinkSlave &m_SPIDataLinkSlave;
     InputType_t m_InputType;

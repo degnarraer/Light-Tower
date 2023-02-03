@@ -5,6 +5,7 @@ window.addEventListener('load', onload);
 
 function onload(event) {
     initWebSocket();
+	openTab(event, 'Speaker Status')
 }
 
 function getValues(){

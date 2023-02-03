@@ -57,8 +57,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
-                                            , a2dp_source
-                                            , "JBL Flip 6" );
+                                            , a2dp_source );
 
 SPIDataLinkToCPU1 m_SPIDataLinkToCPU1 = SPIDataLinkToCPU1();
 SPIDataLinkToCPU3 m_SPIDataLinkToCPU3 = SPIDataLinkToCPU3();
@@ -189,7 +188,7 @@ void SPI_CPU3_TX_TaskLoop(void * parameter)
   {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     ++ProcessSPI_CPU3_TXTaskLoopCount;
-    m_SPIDataLinkToCPU3.ProcessEventQueue(true);
+    m_SPIDataLinkToCPU3.ProcessEventQueue(false);
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

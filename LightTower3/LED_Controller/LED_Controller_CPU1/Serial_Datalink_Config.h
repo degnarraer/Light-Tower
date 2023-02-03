@@ -45,7 +45,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
   private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 9;
+    static const size_t m_SPIDatalinkConfigCount = 12;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
       { "R_BANDS",                  DataType_Float_t,                32,  Transciever_RX,   4 },
@@ -57,6 +57,9 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
       { "L_MAJOR_FREQ",             DataType_Float_t,                1,   Transciever_RX,   4 },
       { "Source Is Connected",      DataType_bool_t,                 1,   Transciever_TX,   20 },
       { "Sound State",              DataType_SoundState_t,           1,   Transciever_TX,   20 },
+      { "Bluetooth Speakers",       DataType_String_t,               1,   Transciever_TXRX, 2  },
+      { "Speaker to Connect",       DataType_String_t,               1,   Transciever_TXRX, 2  },
+      { "My Bluetooth ID",          DataType_String_t,               1,   Transciever_TXRX, 2  },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

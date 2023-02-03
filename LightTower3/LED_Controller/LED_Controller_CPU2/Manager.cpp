@@ -40,11 +40,16 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
+  m_Preferences.begin("My Settings", false); 
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
-  m_BT_Out.StartDevice();
+  m_Preferences.clear();
+  m_BT_Out.StartDevice( m_Preferences.getString("Bluetooth Name", "JBL Flip 6").c_str()
+                      , m_Preferences.getBool("Reset Bluetooth", true)
+                      , m_Preferences.getBool("Auto ReConnect", true) 
+                      , m_Preferences.getBool("SSP Enabled", false) );
 }
 
 void Manager::ProcessEventQueue()

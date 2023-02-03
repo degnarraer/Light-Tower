@@ -39,17 +39,21 @@ class Bluetooth_Source: public NamedItem
 	
 	public:
 		Bluetooth_Source( String Title
-						, BluetoothA2DPSource& BTSource
-						, const char *SourceName )
+						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
 						, m_BTSource(BTSource)
-						, mp_SourceName(SourceName)
 		{
 		}
 		virtual ~Bluetooth_Source(){}
 		void Setup();
-		void InstallDevice();
-		void StartDevice();
+		void InstallDevice(bool ResetBLE
+						  , bool AutoReConnect
+						  , bool SSPEnabled );
+		void StartDevice( const char *SourceName
+						, bool ResetBLE
+						, bool AutoReConnect
+						, bool SSPEnabled );
+			
 		void StopDevice();
 		bool IsConnected();
 		void SetMusicDataCallback(music_data_cb_t callback);
@@ -60,7 +64,12 @@ class Bluetooth_Source: public NamedItem
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		const char *mp_SourceName;
+		const char *mp_SSID;
+		bool m_ResetBLE = false;
+		bool m_AutoReConnect = true;
+		bool m_SSPEnabled = false;
+		
+		
 		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
 		TaskHandle_t CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
