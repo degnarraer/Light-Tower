@@ -64,7 +64,7 @@ class Bluetooth_Source: public NamedItem
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		const char *mp_SSID;
+		String m_SSID;
 		bool m_ResetBLE = false;
 		bool m_AutoReConnect = true;
 		bool m_SSPEnabled = false;

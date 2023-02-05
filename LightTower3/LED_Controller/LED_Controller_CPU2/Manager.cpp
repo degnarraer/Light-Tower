@@ -40,23 +40,33 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  m_Preferences.begin("My Settings", false); 
+  m_Preferences.begin("My Settings", false);
+  m_Preferences.clear();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
-  m_Preferences.clear();
-  m_BT_Out.StartDevice( m_Preferences.getString("Bluetooth Name", "JBL Flip 6").c_str()
-                      , m_Preferences.getBool("Reset Bluetooth", true)
-                      , m_Preferences.getBool("Auto ReConnect", true) 
+
+  m_Preferences.putString("Target Speaker SSID", "JBL Flip 6");
+  m_Preferences.putBool("Reset Bluetooth", true);
+  m_Preferences.putBool("Auto ReConnect", false);
+  m_Preferences.putBool("SSP Enabled", false);
+  
+  m_BT_Out.StartDevice( m_Preferences.getString("Target Speaker SSID", "JBL Flip 6").c_str()
+                      , m_Preferences.getBool("Reset Bluetooth", false)
+                      , m_Preferences.getBool("Auto ReConnect", false)
                       , m_Preferences.getBool("SSP Enabled", false) );
 }
 
 void Manager::ProcessEventQueue()
 {
   m_I2S_In.ProcessEventQueue();
-  MoveDataFromCPU3ToUs();
   MoveDataBetweenCPU1AndCPU3();
+  ProcessAmplitudeGain();
+  ProcessFFTGain();
+  ProcessResetBluetooth();
+  ProcessAutoReConnect();
+  ProcessSpeakerSSID();
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
@@ -78,26 +88,6 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
   m_SPIDataLinkToCPU3.TriggerEarlyDataTransmit();
 }
 
-
-void Manager::MoveDataFromCPU3ToUs()
-{
-  //Set Amplitude Gain from Amplitude Gain RX QUEUE
-  float Amplitude_Gain;
-  static bool AmplitudeGainPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Amplitude_Gain, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
-  {
-    m_SoundProcessor.SetGain(Amplitude_Gain);
-  }
-  
-  //Set FFT Gain from FFT Gain RX QUEUE
-  float FFT_Gain;
-  static bool FFTGainPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&FFT_Gain, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
-  {
-    m_SoundProcessor.SetFFTGain(FFT_Gain);
-  }
-}
-
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len)
 {
@@ -111,4 +101,76 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   size_t FrameCount = ByteReceived / sizeof(uint32_t);
   m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
   return ByteReceived;
+}
+
+void Manager::ProcessAmplitudeGain()
+{
+  //Set Amplitude Gain from Amplitude Gain RX QUEUE
+  float Value;
+  static bool AmplitudeGainPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
+  {
+    m_SoundProcessor.SetGain(Value);
+  }
+  Value = m_SoundProcessor.GetGain();
+  static bool Gain_Push_Successful = true;
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "Amplitude Gain", 0, Gain_Push_Successful);
+  
+}
+
+void Manager::ProcessFFTGain()
+{
+  //Set FFT Gain from FFT Gain RX QUEUE
+  float Value;
+  static bool FFTGainPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
+  {
+    m_SoundProcessor.SetFFTGain(Value);
+  }
+  Value = m_SoundProcessor.GetFFTGain();
+  static bool FFT_Gain_Push_Successful = true;
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFT_Gain_Push_Successful);
+}
+
+void Manager::ProcessResetBluetooth()
+{
+  bool NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
+  bool DatalinkValue;
+  static bool ResetBluetoothPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Reset Bluetooth", false, 0, ResetBluetoothPullErrorHasOccured))
+  {
+    if(NVMValue != DatalinkValue)
+    {
+      Serial << "Reset Bluetooth Value Changed\n";
+      m_Preferences.putBool("Reset Bluetooth", DatalinkValue);
+      
+      NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
+      static bool ResetBluetooth_Push_Successful = true;
+      m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Reset Bluetooth", 0, ResetBluetooth_Push_Successful);
+    }
+  }
+}
+
+void Manager::ProcessAutoReConnect()
+{
+  bool NVMValue = m_Preferences.getBool("Auto ReConnect", true);
+  bool DatalinkValue;
+  static bool AutoReConnectPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Auto ReConnect", false, 0, AutoReConnectPullErrorHasOccured))
+  {
+    if(NVMValue != DatalinkValue)
+    {
+      Serial << "Auto ReConnect Value Changed\n";
+      m_Preferences.putBool("Auto ReConnect", DatalinkValue);
+      
+      NVMValue = m_Preferences.getBool("Auto ReConnect", true);
+      static bool AutoReConnect_Push_Successful = true;
+      m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Auto ReConnect", 0, AutoReConnect_Push_Successful);
+    }
+  }
+}
+
+void Manager::ProcessSpeakerSSID()
+{
+
 }

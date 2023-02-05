@@ -6,13 +6,6 @@
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version of the License, or
     (at your option) any later version. 3
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
@@ -46,13 +39,16 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
   private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 4;
+    static const size_t m_SPIDatalinkConfigCount = 7;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
       { "Source Is Connected",      DataType_bool_t,        1,    Transciever_RX,     20 },
       { "Sound State",              DataType_SoundState_t,  1,    Transciever_RX,     20 },
       { "Amplitude Gain",           DataType_Float_t,       1,    Transciever_TXRX,   20 },
       { "FFT Gain",                 DataType_Float_t,       1,    Transciever_TXRX,   20 },
+      { "Found Speaker SSIDS",      DataType_String_t,      1,    Transciever_TXRX,   2  },
+      { "Target Speaker SSID",      DataType_String_t,      1,    Transciever_TXRX,   2  },
+      { "My SSID",                  DataType_String_t,      1,    Transciever_TXRX,   2  },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

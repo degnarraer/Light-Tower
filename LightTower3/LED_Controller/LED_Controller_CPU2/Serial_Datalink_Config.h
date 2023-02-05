@@ -67,7 +67,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDataLinkToCPU1ConfigCount = 12;
+    static const size_t m_SPIDataLinkToCPU1ConfigCount = 10;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU1ConfigCount]
     {
       { "R_BANDS",              DataType_Float_t,                NUMBER_OF_BANDS,    Transciever_TX,   4  },
@@ -79,9 +79,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
       { "L_MAJOR_FREQ",         DataType_Float_t,                1,                  Transciever_TX,   4  },
       { "Source Is Connected",  DataType_bool_t,                 1,                  Transciever_RX,   20 },
       { "Sound State",          DataType_SoundState_t,           1,                  Transciever_RX,   20 },
-      { "Bluetooth Speakers",   DataType_String_t,               1,                  Transciever_TXRX, 2  },
-      { "Speaker to Connect",   DataType_String_t,               1,                  Transciever_TXRX, 2  },
-      { "My Bluetooth ID",      DataType_String_t,               1,                  Transciever_TXRX, 2  },
+      { "My SSID",              DataType_String_t,               1,                  Transciever_TXRX, 2  },
     };
     
     //QueueManager Interface
@@ -103,13 +101,17 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
 
   private:
     //QueueManager Interface
-    static const size_t m_SPIDataLinkToCPU3ConfigCount = 4;
+    static const size_t m_SPIDataLinkToCPU3ConfigCount = 8;
     DataItemConfig_t m_ItemConfig[m_SPIDataLinkToCPU3ConfigCount]
     {
       { "Source Is Connected",  DataType_bool_t,        1,    Transciever_TX,   20 },
       { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX,   20 },
       { "Amplitude Gain",       DataType_Float_t,       1,    Transciever_TXRX, 20 },
       { "FFT Gain",             DataType_Float_t,       1,    Transciever_TXRX, 20 },
+      { "Found Speaker SSIDS",  DataType_String_t,      1,    Transciever_TXRX, 2  },
+      { "Target Speaker SSID",  DataType_String_t,      1,    Transciever_TXRX, 2  },
+      { "Reset Bluetooth",      DataType_bool_t,        1,    Transciever_TXRX, 20 },
+      { "Auto ReConnect",       DataType_bool_t,        1,    Transciever_TXRX, 20 },
     };
     
     //QueueManager Interface

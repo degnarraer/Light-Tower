@@ -458,7 +458,6 @@ class QueueManager: public CommonUtils
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
-				if(true == Name.equals("Amplitude Gain"))  Serial << "Push TX\n";
 				if(xQueueSend(Queue, Value, TicksToWait) != pdTRUE)
 				{
 					if(false == DataPushHasErrored)

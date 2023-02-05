@@ -38,6 +38,7 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
+  m_Preferences.begin("My Settings", false); 
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
@@ -47,7 +48,6 @@ void Manager::Setup()
   m_StatisticalEngine.RegisterForMicrophoneStateChangeNotification(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
-  m_Preferences.begin("My Settings", false); 
 }
 
 void Manager::UpdateSerialData()

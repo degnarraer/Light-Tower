@@ -26,27 +26,55 @@
 			</button>
 			<h1 id="TabHeader_Heading">Speaker Status</h1>
 		</div>
-		<div class="TabContent" id="Speaker Status">
+		
+		<div class="TabContent" id="Speaker Status">	
 			<div class="Speaker Image">
 				<img id="L Speaker Image" src="Images/L-Speaker-Off.svg" width="40%" height="60%" />
 				<img id="R Speaker Image" src="Images/R-Speaker-Off.svg" width="40%" height="60%" />
-				<div class="SettingGroup">
-					<div class="Slider-Grid-Horrizontal">
-						<div class="SettingGroup-Title">Amplitude Gain</div>
-						<div class="SettingGroup-SliderContainer">
-							<input type="range" oninput="updateSliderValue(this)" id="Amplitude_Gain_Slider" min="0.1" max="20.0" step="0.1" value ="1.0" class="SettingGroup-Slider">
-						</div>
-						<div class="SettingGroup-Value"><span id="Amplitude_Gain_Slider_Value"></span> </div>
+			</div>
+			<div class="SettingGroup">
+				<div class="SettingGroup_Horrizontal_Grid_Slider">
+					<div class="SettingGroup-Title">
+						Amplitude Gain
+					</div>
+					<div class="SettingGroup-Widget">
+						<input type="range" oninput="updateSliderValue(this)" id="Amplitude_Gain_Slider" min="0.1" max="20.0" step="0.1" value ="1.0" class="Widget_Slider">
+					</div>
+					<div class="SettingGroup-Value">
+						<span id="Amplitude_Gain_Slider_Value"></span>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<div class="TabContent" id="Bluetooth In">
-
+			<div class="SettingGroup">
+				<div class="SettingGroup_Horrizontal_Grid_Toggle">
+					<div class="SettingGroup-Title">
+						Reset Bluetooth
+					</div>
+					<div class="SettingGroup-Widget">
+						<label class="Widget_Toggle_Switch">
+						  <input type="checkbox" id="Reset Bluetooth Toggle">
+						  <span class="Slider Round"></span>
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="SettingGroup">
+				<div class="SettingGroup_Horrizontal_Grid_Toggle">
+					<div class="SettingGroup-Title">
+						Bluetooth Auto ReConnect
+					</div>
+					<div class="SettingGroup-Widget">
+						<label class="Widget_Toggle_Switch">
+						  <input type="checkbox" id="Reset Bluetooth Toggle">
+						  <span class="Slider Round"></span>
+						</label>
+					</div>
+				</div>
+			</div>
 		</div>
-
-
 		<div class="TabContent" id="Bluetooth Out">
 
 		</div>
@@ -55,25 +83,23 @@
 
 		</div>
 		
-		<div class="TabContent" id="Gains">			
-			<div class="Card-Grid-Vertical">
-				<div class="SettingGroup">
-					<div class="Slider-Grid-Horrizontal">
-						<div class="SettingGroup-Title">Amplitude Gain</div>
-						<div class="SettingGroup-SliderContainer">
-							<input type="range" oninput="updateSliderValue(this)" id="Amplitude_Gain_Slider" min="0.1" max="20.0" step="0.1" value ="1.0" class="SettingGroup-Slider">
-						</div>
-						<div class="SettingGroup-Value"><span id="Amplitude_Gain_Slider_Value"></span> </div>
+		<div class="TabContent" id="Gains">
+			<div class="SettingGroup">
+				<div class="SettingGroup_Horrizontal_Grid_Slider">
+					<div class="SettingGroup-Title">Amplitude Gain</div>
+					<div class="SettingGroup-Widget">
+						<input type="range" oninput="updateSliderValue(this)" id="Amplitude_Gain_Slider" min="0.1" max="20.0" step="0.1" value ="1.0" class="Widget_Slider">
 					</div>
+					<div class="SettingGroup-Value"><span id="Amplitude_Gain_Slider_Value"></span> </div>
 				</div>
-				<div class="SettingGroup">
-					<div class="Slider-Grid-Horrizontal">
-						<div class="SettingGroup-Title">FFT Gain</div>
-						<div class="SettingGroup-SliderContainer">
-							<input type="range" oninput="updateSliderValue(this)" id="FFT_Gain_Slider" min="0.1" max="5.0" step="0.1" value ="1.0" class="SettingGroup-Slider">
-						</div>
-						<div class="SettingGroup-Value"><span id="FFT_Gain_Slider_Value"></span> </div>
+			</div>
+			<div class="SettingGroup">
+				<div class="SettingGroup_Horrizontal_Grid_Slider">
+					<div class="SettingGroup-Title">FFT Gain</div>
+					<div class="SettingGroup-Widget">
+						<input type="range" oninput="updateSliderValue(this)" id="FFT_Gain_Slider" min="0.1" max="5.0" step="0.1" value ="1.0" class="Widget_Slider">
 					</div>
+					<div class="SettingGroup-Value"><span id="FFT_Gain_Slider_Value"></span> </div>
 				</div>
 			</div>	
 		</div>
@@ -81,28 +107,28 @@
 		<div class="TabContent" id="Visualization">
 			<div class="Card-Grid-Vertical">
 				<div class="SettingGroup">
-					<div class="Slider-Grid-Horrizontal">
+					<div class="SettingGroup_Horrizontal_Grid_Slider">
 						<div class="SettingGroup-Title">Red Value</div>
-						<div class="SettingGroup-SliderContainer">
-							<input type="range" oninput="updateSliderValue(this)" id="Red_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+						<div class="SettingGroup-Widget">
+							<input type="range" oninput="updateSliderValue(this)" id="Red_Value_Slider" min="0" max="254" step="1" value ="0" class="Widget_Slider">
 						</div>
 						<div class="SettingGroup-Value"><span id="Red_Value_Slider_Value"></span></div>
 					</div>
 				</div>
 				<div class="SettingGroup">
-					<div class="Slider-Grid-Horrizontal">
+					<div class="SettingGroup_Horrizontal_Grid_Slider">
 						<div class="SettingGroup-Title">Green Value</div>
-						<div class="SettingGroup-SliderContainer">
-							<input type="range" oninput="updateSliderValue(this)" id="Green_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+						<div class="SettingGroup-Widget">
+							<input type="range" oninput="updateSliderValue(this)" id="Green_Value_Slider" min="0" max="254" step="1" value ="0" class="Widget_Slider">
 						</div>
 						<div class="SettingGroup-Value"><span id="Green_Value_Slider_Value"></span></div>
 					</div>
 				</div>
 				<div class="SettingGroup">
-					<div class="Card-Grid-Horrizontal">
+					<div class="SettingGroup_Horrizontal_Grid_Slider">
 						<div class="SettingGroup-Title">Blue Value</div>
-						<div class="SettingGroup-SliderContainer">
-							<input type="range" oninput="updateSliderValue(this)" id="Blue_Value_Slider" min="0" max="254" step="1" value ="0" class="SettingGroup-Slider">
+						<div class="SettingGroup-Widget">
+							<input type="range" oninput="updateSliderValue(this)" id="Blue_Value_Slider" min="0" max="254" step="1" value ="0" class="Widget_Slider">
 						</div>
 						<div class="SettingGroup-Value"><span id="Blue_Value_Slider_Value"></span></div>
 					</div>

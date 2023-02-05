@@ -121,34 +121,6 @@ body {
 	/*border: 2px dashed black;*/
 }
 
-.Card-Grid-Vertical {
-    box-sizing: border-box;
-	display: grid;
-	align-content: center;
-	vertical-align: middle;
-	grid-template-rows: auto auto auto;
-	border: 2px dashed lime;
-}
-
-.Card-Grid-Horrizontal {
-	box-sizing: border-box;
-	display: grid;
-	align-content: center;
-	vertical-align: middle;
-	grid-template-columns: auto auto auto;
-	/*border: 2px dashed purple;*/
-}
-
-.Slider-Grid-Horrizontal {
-	box-sizing: border-box;
-	width: 100%;
-	display: grid;
-	align-content: center;
-	vertical-align: middle;
-	grid-template-columns: 100px minmax(10%, 100%) auto;
-	/*border: 2px dashed blue;*/
-}
-
 .SettingGroup {
     box-sizing: border-box;
 	display: flex;
@@ -157,6 +129,25 @@ body {
 	background-color: Pink;
     box-shadow: 2px 2px 12px 1px rgba(100,100,100,.5);
 	border: 2px dashed orange;
+}
+
+.SettingGroup_Horrizontal_Grid_Slider {
+	box-sizing: border-box;
+	width: 100%;
+	align-content: center;
+	vertical-align: middle;
+	display: grid;
+	grid-template-columns: 100px minmax(10%, 90%) auto;
+}
+
+.SettingGroup_Horrizontal_Grid_Toggle {
+	box-sizing: border-box;
+	width: 100%;
+	align-content: center;
+	vertical-align: middle;
+	display: grid;
+	grid-template-columns: auto 100px;
+	/*border: 2px dashed blue;*/
 }
 
 .SettingGroup-Title {
@@ -169,21 +160,9 @@ body {
     color: Black;
 	/*border: 2px dashed brown;*/
 }
-
-.SettingGroup-Value {
-    box-sizing: border-box;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 50px;
-    font-size: 1rem;
-    color:Black;
-	/*border: 2px dashed aqua;*/
-}
   
-.SettingGroup-SliderContainer {
-    -webkit-appearance: none;
-	box-sizing: border-box;
+.SettingGroup-Widget {
+    box-sizing: border-box;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -193,6 +172,77 @@ body {
 	/*border: 2px dashed yellow;*/
 }
 
-.SettingGroup-Slider{
+.SettingGroup-Value {
+    box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	width: 50px;
+    font-size: 1rem;
+    color:Black;
+	/*border: 2px dashed aqua;*/
+}
+
+.Widget_Slider{
+	box-sizing: border-box;
 	width: 100%;
+}
+
+.Widget_Toggle_Switch {
+	box-sizing: border-box;
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+}
+
+.Widget_Toggle_Switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.Slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.Slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .Slider {
+  background-color: #2196F3;
+}
+
+input:focus + .Slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .Slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+.Slider.Round {
+  border-radius: 34px;
+}
+
+.Slider.Round:before {
+  border-radius: 50%;
 }

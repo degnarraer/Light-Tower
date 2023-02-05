@@ -5,7 +5,7 @@ window.addEventListener('load', onload);
 
 function onload(event) {
     initWebSocket();
-	openTab(event, 'Speaker Status')
+	openTab(event, 'Bluetooth In')
 }
 
 function getValues(){
@@ -187,3 +187,8 @@ function openTab(evt, TabTitle) {
   evt.currentTarget.className += " active";
   document.getElementById("TabHeader_Heading").innerHTML = TabTitle;
 }
+
+const toggleBtn = document.getElementById("togBtn");
+toggleBtn.addEventListener("click", function() {
+  console.log(`Toggle switch is now ${toggleBtn.checked}`);
+});
