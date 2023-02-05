@@ -5,7 +5,7 @@ window.addEventListener('load', onload);
 
 function onload(event) {
     initWebSocket();
-	openTab(event, 'Bluetooth In')
+	openTab(event, 'Speaker Status')
 }
 
 function getValues(){
@@ -164,9 +164,16 @@ function onMessage(event) {
 			{
 				setSpeakerImage(parseInt(Value))
 			}
+			else if(Name == "Amplitude_Gain_Slider1" || 
+					Name == "Amplitude_Gain_Slider2" || 
+					Name == "FFT_Gain_Slider1" ||
+					Name == "FFT_Gain_Slider2" )
+			{
+				document.getElementById(Name + "_Value").innerHTML = Value;
+			}
 			else
 			{
-				document.getElementById(Name).value = Value;
+				document.getElementById(Name).Value = Value;
 				document.getElementById(Name + "_Value").innerHTML = Value;
 			}
 		}

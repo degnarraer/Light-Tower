@@ -76,7 +76,7 @@ p {
 }
 
 .LeftSideNavigationMenu button.active {
-	background-color: Green;
+	background-color: #2196F3;
 	color: white;
 }
 
@@ -137,7 +137,7 @@ body {
 	align-content: center;
 	vertical-align: middle;
 	display: grid;
-	grid-template-columns: 100px minmax(10%, 90%) auto;
+	grid-template-columns: 200px minmax(20%, 80%) auto;
 }
 
 .SettingGroup_Horrizontal_Grid_Toggle {
@@ -150,36 +150,33 @@ body {
 	/*border: 2px dashed blue;*/
 }
 
-.SettingGroup-Title {
+.SettingGroup_Title {
     box-sizing: border-box;
 	display: flex;
-	align-items: center;
 	justify-content: right;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: Black;
-	/*border: 2px dashed brown;*/
+	align-items: center;
+    font-size: 1.5rem;
+	border: 2px dashed black;
 }
   
-.SettingGroup-Widget {
+.SettingGroup_Widget {
     box-sizing: border-box;
 	display: flex;
-	align-items: center;
 	justify-content: center;
-	width: 100%;
-	background-size: 100% 100%
-    position: relative;
-	/*border: 2px dashed yellow;*/
+	align-items: center;
+	border: 2px dashed yellow;
 }
 
-.SettingGroup-Value {
+.SettingGroup_Value {
     box-sizing: border-box;
+	display: flex;
+	justify-content: left;
 	align-items: center;
-	justify-content: center;
-	width: 50px;
-    font-size: 1rem;
-    color:Black;
-	/*border: 2px dashed aqua;*/
+	border: 2px dashed black;
+    font-size: 2rem;
+    font-weight: bold;
+    color: Black;
+	border: 2px dashed aqua;
 }
 
 .Widget_Slider{

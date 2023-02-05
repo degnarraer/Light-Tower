@@ -230,7 +230,7 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
 		m_MessageCountOld = ReceivedMessageCount;
 		if(true == Debug && 0 < ReceivedMessageCount)
 		{
-			Serial << "RX Message Count: " << ReceivedMessageCount << "\n";
+			//Serial << "RX Message Count: " << ReceivedMessageCount << "\n";
 		}
 	}
 }

@@ -74,8 +74,9 @@ class SettingsWebServerManager: public QueueManager
       if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
       {
         Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
-        struct JSON_Data_Value Values[1] = { 
-                                             { "Amplitude_Gain_Slider", String(Amplitude_Gain) },
+        struct JSON_Data_Value Values[2] = { 
+                                             { "Amplitude_Gain_Slider1", String(Amplitude_Gain) },
+                                             { "Amplitude_Gain_Slider2", String(Amplitude_Gain) },
                                            };
         NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
       }
@@ -85,8 +86,9 @@ class SettingsWebServerManager: public QueueManager
       if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
       {
         //Serial << "FFT Gain\n";
-        struct JSON_Data_Value Values[1] = { 
-                                             { "FFT_Gain_Slider", String(FFT_Gain) },
+        struct JSON_Data_Value Values[2] = { 
+                                             { "FFT_Gain_Slider1", String(FFT_Gain) },
+                                             { "FFT_Gain_Slider2", String(FFT_Gain) },
                                            };
         NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
       }
@@ -177,9 +179,11 @@ class SettingsWebServerManager: public QueueManager
         if (true == message.equals("Get All Values"))
         {
           Serial.println("Sending All Value");
-          struct JSON_Data_Value Values[6] = { 
-                                               { "Amplitude_Gain_Slider", String(Amplitude_Gain) },
-                                               { "FFT_Gain_Slider", String(FFT_Gain) },
+          struct JSON_Data_Value Values[8] = { 
+                                               { "Amplitude_Gain_Slider1", String(Amplitude_Gain) },
+                                               { "Amplitude_Gain_Slider2", String(Amplitude_Gain) },
+                                               { "FFT_Gain_Slider1", String(FFT_Gain) },
+                                               { "FFT_Gain_Slider2", String(FFT_Gain) },
                                                { "Red_Value_Slider", String(Red_Value) },
                                                { "Green_Value_Slider", String(Green_Value) },
                                                { "Blue_Value_Slider", String(Blue_Value) },
@@ -199,14 +203,14 @@ class SettingsWebServerManager: public QueueManager
             String Name = String( (const char*)MyObject["Name"]);
             String Value = String( (const char*)MyObject["Value"]);
             Serial << "Name: " << Name << "\tValue: " << Value << "\n";
-            if(Name.equals("Amplitude_Gain_Slider"))
+            if(Name.equals("Amplitude_Gain_Slider1") || Name.equals("Amplitude_Gain_Slider2"))
             {
               Amplitude_Gain = Value.toFloat();
               Serial << "Socket RX: Amplitude_Gain = " << Amplitude_Gain << "\n";
               static bool AmplitudeGainPushErrorhasOccured = false;
               PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", 0, AmplitudeGainPushErrorhasOccured);
             }
-            else if(Name.equals("FFT_Gain_Slider"))
+            else if(Name.equals("FFT_Gain_Slider1") || Name.equals("FFT_Gain_Slider2") )
             {
               FFT_Gain = Value.toFloat();
               Serial << "Socket RX: FFT_Gain = " << FFT_Gain << "\n";

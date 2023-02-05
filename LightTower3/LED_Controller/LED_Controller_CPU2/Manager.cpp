@@ -49,7 +49,7 @@ void Manager::Setup()
 
   m_Preferences.putString("Target Speaker SSID", "JBL Flip 6");
   m_Preferences.putBool("Reset Bluetooth", true);
-  m_Preferences.putBool("Auto ReConnect", false);
+  m_Preferences.putBool("Auto ReConnect", true);
   m_Preferences.putBool("SSP Enabled", false);
   
   m_BT_Out.StartDevice( m_Preferences.getString("Target Speaker SSID", "JBL Flip 6").c_str()
@@ -111,10 +111,10 @@ void Manager::ProcessAmplitudeGain()
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
   {
     m_SoundProcessor.SetGain(Value);
+    Value = m_SoundProcessor.GetGain();
+    static bool Gain_Push_Successful = true;
+    m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "Amplitude Gain", 0, Gain_Push_Successful);
   }
-  Value = m_SoundProcessor.GetGain();
-  static bool Gain_Push_Successful = true;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "Amplitude Gain", 0, Gain_Push_Successful);
   
 }
 
@@ -126,10 +126,10 @@ void Manager::ProcessFFTGain()
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
   {
     m_SoundProcessor.SetFFTGain(Value);
+    Value = m_SoundProcessor.GetFFTGain();
+    static bool FFT_Gain_Push_Successful = true;
+    m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFT_Gain_Push_Successful);
   }
-  Value = m_SoundProcessor.GetFFTGain();
-  static bool FFT_Gain_Push_Successful = true;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFT_Gain_Push_Successful);
 }
 
 void Manager::ProcessResetBluetooth()
