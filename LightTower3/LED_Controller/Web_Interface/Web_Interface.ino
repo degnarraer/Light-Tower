@@ -102,15 +102,15 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
-  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    5000,   NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   2000,   NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
   xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task, 0 );
 }
 
 void InitLocalVariables()
 {
+  m_Manager.Setup();
   m_SPIDataLinkSlave.SetupSPIDataLink();
-  m_SPIDataLinkSlave.SetSpewToConsole(false);
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
 
@@ -131,27 +131,26 @@ void loop()
 void SPI_RX_TaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 200;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
-    ++SPI_RX_TaskLoopCount;
-    m_SPIDataLinkSlave.ProcessEventQueue(true);
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    ++SPI_RX_TaskLoopCount;
+    m_SPIDataLinkSlave.ProcessEventQueue();
   }  
 }
 
 void Manager_TaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;\
+  const TickType_t xFrequency = 20;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_TaskLoopCount;
     m_Manager.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
@@ -162,9 +161,8 @@ void WebServer_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++WebServer_TaskLoopCount;
     m_SettingsWebServerManager.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }

@@ -378,7 +378,7 @@ class QueueManager: public CommonUtils
 		}
 		
 		//Queues
-		bool GetValueFromRXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool DebugMessage){
+		bool GetValueFromRXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
@@ -395,8 +395,12 @@ class QueueManager: public CommonUtils
 							result = true;
 						}
 						else
-						{
-							ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+						{	
+							if(false == DataPullHasErrored)
+							{
+								DataPullHasErrored = true;
+								ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+							}
 						}
 					}
 				}
@@ -407,8 +411,8 @@ class QueueManager: public CommonUtils
 			}
 			return result;
 		}
-		bool GetValueFromTXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool DebugMessage){
-			bool result = false;
+		bool GetValueFromTXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
+			bool Result = false;
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
@@ -421,11 +425,15 @@ class QueueManager: public CommonUtils
 					{
 						if ( xQueueReceive(Queue, Value, TicksToWait) == pdTRUE )
 						{
-							result = true;
+							Result = true;
 						}
 						else
 						{
-							ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+							if(false == DataPullHasErrored)
+							{
+								DataPullHasErrored = true;
+								ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+							}
 						}
 					}
 				}
@@ -434,6 +442,7 @@ class QueueManager: public CommonUtils
 			{
 				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
+			return Result;
 		}
 		void PushValueToRXQueue(void* Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);

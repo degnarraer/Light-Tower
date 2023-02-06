@@ -158,22 +158,18 @@ function onMessage(event) {
 	{
 		var Name = myObj[keys[i]]["Name"];
 		var Value = myObj[keys[i]]["Value"];
-		if(Name && Value)
+		if(null != Name && null != Value)
 		{
 			if(Name == "Speaker_Image")
 			{
 				setSpeakerImage(parseInt(Value))
 			}
-			else if(Name == "Amplitude_Gain_Slider1" || 
-					Name == "Amplitude_Gain_Slider2" || 
-					Name == "FFT_Gain_Slider1" ||
-					Name == "FFT_Gain_Slider2" )
+			else if( Name == "Amplitude_Gain_Slider1" || 
+					 Name == "Amplitude_Gain_Slider2" || 
+					 Name == "FFT_Gain_Slider1" ||
+					 Name == "FFT_Gain_Slider2" )
 			{
-				document.getElementById(Name + "_Value").innerHTML = Value;
-			}
-			else
-			{
-				document.getElementById(Name).Value = Value;
+				document.getElementById(Name).value = Value;
 				document.getElementById(Name + "_Value").innerHTML = Value;
 			}
 		}

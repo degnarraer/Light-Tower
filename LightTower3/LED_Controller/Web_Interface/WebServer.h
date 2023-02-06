@@ -19,6 +19,7 @@
 #define WEBSERVER_H
 
 #include "Arduino.h"
+#include <LinkedList.h>
 #include "HTTP_Method.h"
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
@@ -28,22 +29,24 @@
 #include <Helpers.h>
 #include "Streaming.h"
 
+
 class SettingsWebServerManager: public QueueManager
 {
   
-  struct JSON_Data_Value
+  struct KeyValuePair
   {
-    String Name;
+    String Key;
     String Value;
   };
-
+  typedef KeyValuePair KVP;
+  
   public:
     SettingsWebServerManager( String Title
                             , AsyncWebSocket &WebSocket )
                             : QueueManager(Title + "Queue Manager", GetDataItemConfigCount())
                             , m_WebSocket(WebSocket)
     {
-    
+      
     }
     virtual ~SettingsWebServerManager()
     {
@@ -57,40 +60,36 @@ class SettingsWebServerManager: public QueueManager
     }
     
     void ProcessEventQueue()
-    {      
+    {
+      LinkedList<KVP> KeyValuePairs;
       //SOUND STATE TX QUEUE
       static bool SoundStatePullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&Sound_State, "Sound State",false, 0, SoundStatePullErrorHasOccured))
+      if(true == GetValueFromTXQueue(&Sound_State, "Sound State",true, 0, SoundStatePullErrorHasOccured))
       {
-        //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
-        struct JSON_Data_Value Values[1] = { 
-                                             { "Speaker_Image", String(Sound_State) },
-                                           };
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+        Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
+        KeyValuePairs.add({ "Speaker_Image", String(Sound_State).c_str() });
       }
       
       //Amplitude Gain TX QUEUE
       static bool AmplitudeGainPullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
+      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", true, 0, AmplitudeGainPullErrorHasOccured))
       {
         Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
-        struct JSON_Data_Value Values[2] = { 
-                                             { "Amplitude_Gain_Slider1", String(Amplitude_Gain) },
-                                             { "Amplitude_Gain_Slider2", String(Amplitude_Gain) },
-                                           };
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+        KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
+        KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
       }
       
       //FFT Gain TX QUEUE
       static bool FFTGainPullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
+      if(true == GetValueFromTXQueue(&FFT_Gain, "FFT Gain", true, 0, FFTGainPullErrorHasOccured))
       {
-        //Serial << "FFT Gain\n";
-        struct JSON_Data_Value Values[2] = { 
-                                             { "FFT_Gain_Slider1", String(FFT_Gain) },
-                                             { "FFT_Gain_Slider2", String(FFT_Gain) },
-                                           };
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+        Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
+        KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
+        KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
+      }
+      if(KeyValuePairs.size() > 0)
+      {
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
       }
     }
     
@@ -113,8 +112,7 @@ class SettingsWebServerManager: public QueueManager
     }
     
   private:
-    AsyncWebSocket &m_WebSocket; 
-    
+    AsyncWebSocket &m_WebSocket;
     // Replace with your network credentials
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
@@ -125,7 +123,7 @@ class SettingsWebServerManager: public QueueManager
     float Amplitude_Gain = 1.0;
 
     //FFT Gain Value and Widget Name Values
-    float FFT_Gain;
+    float FFT_Gain = 1.0;
 
     //Sound State Value and Widget Name Values
     SoundState_t Sound_State;
@@ -148,14 +146,14 @@ class SettingsWebServerManager: public QueueManager
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
     
     //Get Slider Values
-    String Encode_JSON_Data_Values_To_JSON(struct JSON_Data_Value *DataValues, size_t Count)
+    String Encode_JSON_Data_Values_To_JSON(LinkedList<KVP> &KeyValuePairs)
     {
       JSONVar JSONVars;
-      for(int i = 0; i < Count; ++i)
+      for(int i = 0; i < KeyValuePairs.size(); ++i)
       {
           JSONVar SettingValues;
-          SettingValues["Name"] = DataValues[i].Name;
-          SettingValues["Value"] = DataValues[i].Value;
+          SettingValues["Name"] = KeyValuePairs.get(i).Key.c_str();
+          SettingValues["Value"] = KeyValuePairs.get(i).Value.c_str();
           JSONVars["DataValue" + String(i)] = SettingValues;
       }
       String Result = JSON.stringify(JSONVars);
@@ -164,6 +162,7 @@ class SettingsWebServerManager: public QueueManager
     
     void NotifyClients(String TextString)
     {
+      Serial << "Text All\n";
       m_WebSocket.textAll(TextString);
     }
     
@@ -179,17 +178,16 @@ class SettingsWebServerManager: public QueueManager
         if (true == message.equals("Get All Values"))
         {
           Serial.println("Sending All Value");
-          struct JSON_Data_Value Values[8] = { 
-                                               { "Amplitude_Gain_Slider1", String(Amplitude_Gain) },
-                                               { "Amplitude_Gain_Slider2", String(Amplitude_Gain) },
-                                               { "FFT_Gain_Slider1", String(FFT_Gain) },
-                                               { "FFT_Gain_Slider2", String(FFT_Gain) },
-                                               { "Red_Value_Slider", String(Red_Value) },
-                                               { "Green_Value_Slider", String(Green_Value) },
-                                               { "Blue_Value_Slider", String(Blue_Value) },
-                                               { "Sound_State", String(Sound_State) },
-                                             };
-          NotifyClients(Encode_JSON_Data_Values_To_JSON(Values, sizeof(Values)/sizeof(Values[0])));
+          LinkedList<KVP> KeyValuePairs;
+          KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
+          KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
+          KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
+          KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
+          KeyValuePairs.add({ "Red_Value_Slider", String(Red_Value).c_str() });
+          KeyValuePairs.add({ "Green_Value_Slider", String(Green_Value).c_str() });
+          KeyValuePairs.add({ "Blue_Value_Slider", String(Blue_Value).c_str() });
+          KeyValuePairs.add({ "Sound_State", String(Sound_State).c_str() });
+          NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
         }
         else
         {

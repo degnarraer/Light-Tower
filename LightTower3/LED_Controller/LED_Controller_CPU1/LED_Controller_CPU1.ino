@@ -86,7 +86,7 @@ void SPI_TaskLoop(void * parameter)
   {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     ++SPI_TaskLoopCount;
-    m_SPIDataLinkSlave.ProcessEventQueue(false);
+    m_SPIDataLinkSlave.ProcessEventQueue();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }

@@ -43,7 +43,8 @@ class Manager: public NamedItem
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Manager();
     void Setup();
-    void ProcessEventQueue();
+    void ProcessEventQueue20mS();
+    void ProcessEventQueue1000mS();
 
     //Bluetooth Set Data Callback
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
@@ -65,14 +66,29 @@ class Manager: public NamedItem
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
-
+    const float Epsilon = 0.01;
+    bool AreEqual(float A, float B)
+    {
+      return abs(A - B) < Epsilon;
+    }
+    
     void UpdateNotificationRegistrationStatus();
     void MoveDataBetweenCPU1AndCPU3();
-    void ProcessAmplitudeGain();
-    void ProcessFFTGain();
-    void ProcessResetBluetooth();
-    void ProcessAutoReConnect();
-    void ProcessSpeakerSSID();
+    
+    void AmplitudeGain_RX();
+    void AmplitudeGain_TX();
+    
+    void FFTGain_RX();
+    void FFTGain_TX();
+    
+    void ResetBluetooth_RX();
+    void ResetBluetooth_TX();
+    
+    void AutoReConnect_RX();
+    void AutoReConnect_TX();
+    
+    void SpeakerSSID_RX();
+    void SpeakerSSID_TX();
     
 };
 

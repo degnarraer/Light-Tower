@@ -58,15 +58,24 @@ void Manager::Setup()
                       , m_Preferences.getBool("SSP Enabled", false) );
 }
 
-void Manager::ProcessEventQueue()
+void Manager::ProcessEventQueue20mS()
 {
   m_I2S_In.ProcessEventQueue();
   MoveDataBetweenCPU1AndCPU3();
-  ProcessAmplitudeGain();
-  ProcessFFTGain();
-  ProcessResetBluetooth();
-  ProcessAutoReConnect();
-  ProcessSpeakerSSID();
+  AmplitudeGain_RX();
+  FFTGain_RX();
+  ResetBluetooth_RX();
+  AutoReConnect_RX();
+  SpeakerSSID_RX();
+}
+
+void Manager::ProcessEventQueue1000mS()
+{
+  AmplitudeGain_TX();
+  FFTGain_TX();
+  ResetBluetooth_TX();
+  AutoReConnect_TX();
+  SpeakerSSID_TX();
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
@@ -103,36 +112,50 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   return ByteReceived;
 }
 
-void Manager::ProcessAmplitudeGain()
+void Manager::AmplitudeGain_RX()
 {
   //Set Amplitude Gain from Amplitude Gain RX QUEUE
   float Value;
   static bool AmplitudeGainPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
   {
-    m_SoundProcessor.SetGain(Value);
-    Value = m_SoundProcessor.GetGain();
-    static bool Gain_Push_Successful = true;
-    m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "Amplitude Gain", 0, Gain_Push_Successful);
+    if(false == AreEqual(Value, m_SoundProcessor.GetGain()))
+    {
+      m_SoundProcessor.SetGain(Value);
+      AmplitudeGain_TX();
+    }
   }
-  
+}
+void Manager::AmplitudeGain_TX()
+{
+  float Value = m_SoundProcessor.GetGain();
+  static bool AmplitudeGainPushErrorHasOccured = false;
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "Amplitude Gain", 0, AmplitudeGainPushErrorHasOccured);
 }
 
-void Manager::ProcessFFTGain()
+void Manager::FFTGain_RX()
 {
   //Set FFT Gain from FFT Gain RX QUEUE
   float Value;
   static bool FFTGainPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
   {
-    m_SoundProcessor.SetFFTGain(Value);
-    Value = m_SoundProcessor.GetFFTGain();
-    static bool FFT_Gain_Push_Successful = true;
-    m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFT_Gain_Push_Successful);
+    if(false == AreEqual(Value, m_SoundProcessor.GetFFTGain()))
+    {
+      m_SoundProcessor.SetFFTGain(Value);
+      FFTGain_TX();
+    }
   }
 }
+void Manager::FFTGain_TX()
+{
+  Serial << "FFT Gain\n";
+  float Value = m_SoundProcessor.GetFFTGain();
+  static bool FFTGainPushErrorHasOccured = false;
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFTGainPushErrorHasOccured);
+}
 
-void Manager::ProcessResetBluetooth()
+void Manager::ResetBluetooth_RX()
 {
   bool NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
   bool DatalinkValue;
@@ -143,15 +166,18 @@ void Manager::ProcessResetBluetooth()
     {
       Serial << "Reset Bluetooth Value Changed\n";
       m_Preferences.putBool("Reset Bluetooth", DatalinkValue);
-      
-      NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
-      static bool ResetBluetooth_Push_Successful = true;
-      m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Reset Bluetooth", 0, ResetBluetooth_Push_Successful);
+      ResetBluetooth_TX();
     }
   }
 }
+void Manager::ResetBluetooth_TX()
+{
+  bool NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
+  static bool ResetBluetoothPushErrorHasOccured = false;
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Reset Bluetooth", 0, ResetBluetoothPushErrorHasOccured);
+}
 
-void Manager::ProcessAutoReConnect()
+void Manager::AutoReConnect_RX()
 {
   bool NVMValue = m_Preferences.getBool("Auto ReConnect", true);
   bool DatalinkValue;
@@ -162,15 +188,22 @@ void Manager::ProcessAutoReConnect()
     {
       Serial << "Auto ReConnect Value Changed\n";
       m_Preferences.putBool("Auto ReConnect", DatalinkValue);
-      
-      NVMValue = m_Preferences.getBool("Auto ReConnect", true);
-      static bool AutoReConnect_Push_Successful = true;
-      m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Auto ReConnect", 0, AutoReConnect_Push_Successful);
+      AutoReConnect_TX();
     }
   }
 }
+void Manager::AutoReConnect_TX()
+{
+  bool NVMValue = m_Preferences.getBool("Auto ReConnect", true);
+  static bool AutoReConnectPushErrorHasOccured = false;
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Auto ReConnect", 0, AutoReConnectPushErrorHasOccured);
+}
 
-void Manager::ProcessSpeakerSSID()
+void Manager::SpeakerSSID_RX()
 {
 
+}
+void Manager::SpeakerSSID_TX()
+{
+  
 }

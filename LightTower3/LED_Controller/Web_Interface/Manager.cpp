@@ -18,7 +18,10 @@
 
 #include "Manager.h"
 
-
+void Manager::Setup()
+{
+  m_SPIDataLinkSlave.SetSpewToConsole(false);
+}
 void Manager::ProcessEventQueue()
 {
     //Sound State Data Movement

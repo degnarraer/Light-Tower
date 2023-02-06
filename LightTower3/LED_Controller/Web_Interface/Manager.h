@@ -41,7 +41,7 @@ class Manager: public NamedItem
            }
     virtual ~Manager(){}
 
-    void Setup(){}
+    void Setup();
     void ProcessEventQueue();
 
   private:

@@ -24,6 +24,8 @@ void SPI_Datalink_Master::Setup_SPI_Master()
 	{
 		spi_rx_buf[i] = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
 		spi_tx_buf[i] = m_SPI_Master.allocDMABuffer(SPI_MAX_DATA_BYTES);
+		memset(spi_rx_buf[i], 0, SPI_MAX_DATA_BYTES);
+		memset(spi_tx_buf[i], 0, SPI_MAX_DATA_BYTES);
 		if(NULL == spi_rx_buf[i] || NULL == spi_tx_buf[i])
 		{
 			ESP_LOGE("SPI_Datalink", "Error Creating DMA Buffers!");
@@ -39,7 +41,7 @@ void SPI_Datalink_Master::Setup_SPI_Master()
 	ESP_LOGE("SPI_Datalink", "SPI Master Configured");
 }
 
-void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
+void SPI_Datalink_Master::ProcessEventQueue()
 {
 	if(NULL != m_DataItems)
 	{
@@ -64,7 +66,7 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 		if(m_MessageCountOld != TotalMessageCount)
 		{
 			m_MessageCountOld = TotalMessageCount;
-			if(true == Debug && 0 < TotalMessageCount)
+			if(true == m_SpewToConsole && 0 < TotalMessageCount)
 			{
 				Serial << "TX Message Count: " << TotalMessageCount << "\n";
 			}
@@ -96,9 +98,9 @@ void SPI_Datalink_Master::ProcessEventQueue(bool Debug)
 								memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								size_t DataLength = EncodeDataToBuffer(m_DataItems[j].Name, m_DataItems[j].DataType, m_DataItems[j].DataBuffer, m_DataItems[j].Count, spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-								if(true == m_SpewToConsole)
+								if(true == m_SpewToConsole && 0 < DataLength)
 								{
-									ESP_LOGV("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
+									ESP_LOGE("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
 								}
 								if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
 								{
@@ -161,7 +163,7 @@ void SPI_Datalink_Master::TransmitQueuedData()
 		{
 			if(true == m_SpewToConsole)
 			{
-				ESP_LOGV("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
+				ESP_LOGE("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
 			}
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false);
 		}
@@ -176,6 +178,8 @@ void SPI_Datalink_Slave::Setup_SPI_Slave()
 	{
 		spi_rx_buf[i] = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
 		spi_tx_buf[i] = m_SPI_Slave.allocDMABuffer(SPI_MAX_DATA_BYTES);
+		memset(spi_rx_buf[i], 0, SPI_MAX_DATA_BYTES);
+		memset(spi_tx_buf[i], 0, SPI_MAX_DATA_BYTES);
 		if(NULL == spi_rx_buf[i] || NULL == spi_tx_buf[i])
 		{
 			ESP_LOGE("SPI_Datalink", "Error Creating DMA Buffers!");
@@ -199,13 +203,13 @@ bool SPI_Datalink_Slave::End()
 	return m_SPI_Slave.end();
 }
 
-void SPI_Datalink_Slave::ProcessEventQueue(bool Debug)
+void SPI_Datalink_Slave::ProcessEventQueue()
 {
-	ProcessCompletedTransactions(Debug);
-	QueueUpNewTransactions(Debug);
+	ProcessCompletedTransactions();
+	QueueUpNewTransactions();
 }
 
-void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
+void SPI_Datalink_Slave::ProcessCompletedTransactions()
 {
 	size_t SPIMessageCount = m_SPI_Slave.available();
 	size_t ReceivedMessageCount = 0;
@@ -218,7 +222,7 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
 			++ReceivedMessageCount;
 			if(true == m_SpewToConsole)
 			{
-				ESP_LOGV("SPI_Datalink", "Received: %s", ResultString.c_str());
+				ESP_LOGE("SPI_Datalink", "RX: %s", ResultString.c_str());
 			}
 			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false); 
 		}
@@ -228,29 +232,32 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions(bool Debug)
 	if(m_MessageCountOld != ReceivedMessageCount)
 	{
 		m_MessageCountOld = ReceivedMessageCount;
-		if(true == Debug && 0 < ReceivedMessageCount)
+		if(true == m_SpewToConsole)
 		{
-			//Serial << "RX Message Count: " << ReceivedMessageCount << "\n";
+			ESP_LOGE("SPI_Datalink_Config", "RX Message Count: %i", ReceivedMessageCount);
 		}
 	}
 }
 
-void SPI_Datalink_Slave::QueueUpNewTransactions(bool Debug)
+void SPI_Datalink_Slave::QueueUpNewTransactions()
 {
-	size_t ItemsToQueue = (m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1);
+	size_t ItemsToQueue = N_SLAVE_QUEUES - (m_SPI_Slave.remained() + m_SPI_Slave.available()) - 1;
 	for( int i = 0; i < ItemsToQueue; ++i )
 	{
 		size_t CurrentQueueIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
 		memset(spi_rx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		memset(spi_tx_buf[CurrentQueueIndex], 0, SPI_MAX_DATA_BYTES);
 		size_t ResultSize = GetNextTXStringFromDataItems(spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES);
-		
-		if( ((m_SPI_Slave.remained() + m_SPI_Slave.available() <= N_SLAVE_QUEUES - 1)) && (true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES)))
+		String ResultString = String((char*)(spi_tx_buf[CurrentQueueIndex]));
+		if(true == m_SPI_Slave.queue(spi_rx_buf[CurrentQueueIndex], spi_tx_buf[CurrentQueueIndex], SPI_MAX_DATA_BYTES))
 		{
 			++m_Queued_Transactions;
-			if(true == Debug && 0 < ResultSize)
+			if(true == m_SpewToConsole)
 			{
-				Serial << "TX Message Queued\n";
+				if(0 < ResultSize)
+				{
+					ESP_LOGE("SPI_Datalink_Config", "TX: %s", ResultString.c_str());
+				}
 			}
 		}
 		
@@ -269,7 +276,7 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 			{
 				if(uxQueueMessagesWaiting(m_DataItems[index].QueueHandle_TX) > 0)
 				{
-					if ( xQueueReceive(m_DataItems[index].QueueHandle_TX, m_DataItems[index].DataBuffer, portMAX_DELAY) == pdTRUE )
+					if ( xQueueReceive(m_DataItems[index].QueueHandle_TX, m_DataItems[index].DataBuffer, 0) == pdTRUE )
 					{
 						ResultingSize = EncodeDataToBuffer(m_DataItems[index].Name, m_DataItems[index].DataType, m_DataItems[index].DataBuffer, m_DataItems[index].Count, TXBuffer, BytesToSend);
 						break;

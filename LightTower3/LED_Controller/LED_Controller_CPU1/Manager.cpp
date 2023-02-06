@@ -214,7 +214,7 @@ void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
     static bool SourceIsConnectedValuePushError = false;
     PushValueToQueue( &m_BluetoothIsConnected
                     , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
-                    , false
+                    , 0
                     , "Source Is Connected"
                     , SourceIsConnectedValuePushError );
   }
@@ -228,7 +228,7 @@ void Manager::ProcessSoundStateStatus(SoundState_t SoundState)
       static bool SoundStateValuePushError = false;
       PushValueToQueue( &m_SoundState
                       , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
-                      , false
+                      , 0
                       , "Sound State"
                       , SoundStateValuePushError );
   }
