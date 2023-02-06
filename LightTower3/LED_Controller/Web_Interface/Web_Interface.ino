@@ -131,7 +131,7 @@ void loop()
 void SPI_RX_TaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 200;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -156,8 +156,8 @@ void Manager_TaskLoop(void * parameter)
 
 void WebServer_TaskLoop(void * parameter)
 {
-  //20 mS task rate
-  const TickType_t xFrequency = 20;
+  //100 mS task rate
+  const TickType_t xFrequency = 50;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
