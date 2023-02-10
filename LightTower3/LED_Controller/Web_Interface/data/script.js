@@ -1,6 +1,8 @@
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 var speakerImages = new Array();
+var SliderTouched = false;
+var SliderTimeoutHandle;
 window.addEventListener('load', onload);
 
 function onload(event) {
@@ -31,7 +33,9 @@ function onClose(event) {
 }
 
 function updateSliderValue(element) {
-    var SliderName = element.id;
+	clearTimeout(SliderTimeoutHandle);
+    SliderTouched = true;
+	var SliderName = element.id;
     var SliderValue = document.getElementById(SliderName).value;
     var JSONObject = {};
 	JSONObject.Name = SliderName.toString();
@@ -40,8 +44,13 @@ function updateSliderValue(element) {
 	console.log(Message);
     console.log(SliderValue);
     websocket.send(Message);
+	SliderTimeoutHandle = setTimeout(SliderNotTouched, 5000);
 }
 
+function SliderNotTouched()
+{
+    SliderTouched = false;
+}
  
 function setSpeakerImage(state)
 {   
@@ -169,7 +178,10 @@ function onMessage(event) {
 					 Name == "FFT_Gain_Slider1" ||
 					 Name == "FFT_Gain_Slider2" )
 			{
-				document.getElementById(Name).value = Value;
+				if(false == SliderTouched)
+				{
+					document.getElementById(Name).value = Value;
+				}
 				document.getElementById(Name + "_Value").innerHTML = Value;
 			}
 		}

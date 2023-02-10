@@ -66,7 +66,7 @@ class SettingsWebServerManager: public QueueManager
       static bool SoundStatePullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&Sound_State, "Sound State",true, 0, SoundStatePullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
+        //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
         KeyValuePairs.add({ "Speaker_Image", String(Sound_State).c_str() });
       }
       
@@ -74,7 +74,7 @@ class SettingsWebServerManager: public QueueManager
       static bool AmplitudeGainPullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", true, 0, AmplitudeGainPullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
+        //Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
         KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
         KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
       }
@@ -83,7 +83,7 @@ class SettingsWebServerManager: public QueueManager
       static bool FFTGainPullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&FFT_Gain, "FFT Gain", true, 0, FFTGainPullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
+        //Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
         KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
         KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
       }
@@ -162,7 +162,6 @@ class SettingsWebServerManager: public QueueManager
     
     void NotifyClients(String TextString)
     {
-      Serial << "Text All\n";
       m_WebSocket.textAll(TextString);
     }
     
@@ -200,39 +199,33 @@ class SettingsWebServerManager: public QueueManager
           {
             String Name = String( (const char*)MyObject["Name"]);
             String Value = String( (const char*)MyObject["Value"]);
-            Serial << "Name: " << Name << "\tValue: " << Value << "\n";
             if(Name.equals("Amplitude_Gain_Slider1") || Name.equals("Amplitude_Gain_Slider2"))
             {
               Amplitude_Gain = Value.toFloat();
-              Serial << "Socket RX: Amplitude_Gain = " << Amplitude_Gain << "\n";
               static bool AmplitudeGainPushErrorhasOccured = false;
               PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", 0, AmplitudeGainPushErrorhasOccured);
             }
             else if(Name.equals("FFT_Gain_Slider1") || Name.equals("FFT_Gain_Slider2") )
             {
               FFT_Gain = Value.toFloat();
-              Serial << "Socket RX: FFT_Gain = " << FFT_Gain << "\n";
               static bool FFTGainPushErrorhasOccured = false;
               PushValueToRXQueue(&FFT_Gain, "FFT Gain", 0, FFTGainPushErrorhasOccured);
             }
             else if(Name.equals("Red_Value_Slider"))
             {
               Red_Value = Value.toInt();
-              Serial << "Socket RX: Red_Value = " << Red_Value << "\n";
               static bool RedValuePushErrorhasOccured = false;
               PushValueToRXQueue(&Red_Value, "Red_Value", 0, RedValuePushErrorhasOccured);
             }
             else if(Name.equals("Green_Value_Slider"))
             {
               Green_Value = Value.toInt();
-              Serial << "Socket RX: Green_Value = " << Green_Value << "\n";
               static bool GreenValuePushErrorhasOccured = false;
               PushValueToRXQueue(&Green_Value, "Green_Value", 0, GreenValuePushErrorhasOccured);
             }
             else if(Name.equals("Blue_Value_Slider"))
             {
               Blue_Value = Value.toInt();
-              Serial << "Socket RX: Blue_Value = " << Blue_Value << "\n";
               static bool BlueValuePushErrorhasOccured = false;
               PushValueToRXQueue(&Blue_Value, "Blue_Value", 0, BlueValuePushErrorhasOccured);
             }

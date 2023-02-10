@@ -69,11 +69,13 @@ class DataSerializer: public CommonUtils
 		
 		void DeSerializeJsonToMatchingDataItem(String json, bool DebugMessage = false)
 		{
+			++m_TotalCount;
 			DeserializationError error = deserializeJson(doc, json.c_str());
 			// Test if parsing succeeds.
 			if (error)
 			{
-				ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: %s.", error.c_str());
+				++m_FailCount;
+				ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: %s.", error.c_str());
 				return;
 			}
 			else
@@ -123,17 +125,20 @@ class DataSerializer: public CommonUtils
 										}
 										else
 										{
-											ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: No matching DataItem RX Handle");
+											++m_FailCount;
+											ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: No matching DataItem RX Handle");
 										}
 									}
 									else
 									{
-										ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
+										++m_FailCount;
+										ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
 									}
 								}
 								else
 								{
-									ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
+									++m_FailCount;
+									ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
 								}
 								return;
 							}
@@ -141,7 +146,16 @@ class DataSerializer: public CommonUtils
 					}
 					else
 					{
-						ESP_LOGW("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags.");
+						++m_FailCount;
+						ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags.");
+					}
+					m_CurrentTime = millis();
+					if(m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
+					{
+						m_FailCountTimer = m_CurrentTime;
+						ESP_LOGE("Serial_Datalink", "Deserialization Failure Percentage: %f", 100.0 * (float)m_FailCount / (float)m_TotalCount);
+						m_FailCount = 0;
+						m_TotalCount = 0;
 					}
 				}
 			}
@@ -163,6 +177,12 @@ class DataSerializer: public CommonUtils
 			return result;
 		}
 	private:
+		size_t m_TotalCount = 0;
+		size_t m_FailCount = 0;
+		uint64_t m_CurrentTime;
+		uint64_t m_FailCountTimer = millis();
+		uint64_t m_FailCountDuration = 5000;
+		
 		StaticJsonDocument<10000> doc;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;

@@ -114,13 +114,13 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 
 void Manager::AmplitudeGain_RX()
 {
-  //Set Amplitude Gain from Amplitude Gain RX QUEUE
   float Value;
   static bool AmplitudeGainPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
   {
     if(false == AreEqual(Value, m_SoundProcessor.GetGain()))
     {
+      Serial << "Amplitude Gain Value Value Changed: " << Value << "\n";
       m_SoundProcessor.SetGain(Value);
       AmplitudeGain_TX();
     }
@@ -135,13 +135,13 @@ void Manager::AmplitudeGain_TX()
 
 void Manager::FFTGain_RX()
 {
-  //Set FFT Gain from FFT Gain RX QUEUE
   float Value;
   static bool FFTGainPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
   {
     if(false == AreEqual(Value, m_SoundProcessor.GetFFTGain()))
     {
+      Serial << "FFT Gain Value Value Changed: " << Value << "\n";
       m_SoundProcessor.SetFFTGain(Value);
       FFTGain_TX();
     }
@@ -149,7 +149,6 @@ void Manager::FFTGain_RX()
 }
 void Manager::FFTGain_TX()
 {
-  Serial << "FFT Gain\n";
   float Value = m_SoundProcessor.GetFFTGain();
   static bool FFTGainPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFTGainPushErrorHasOccured);

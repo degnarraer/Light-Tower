@@ -157,7 +157,7 @@ void Manager_TaskLoop(void * parameter)
 void WebServer_TaskLoop(void * parameter)
 {
   //100 mS task rate
-  const TickType_t xFrequency = 50;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

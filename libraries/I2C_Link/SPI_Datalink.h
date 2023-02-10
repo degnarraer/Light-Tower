@@ -33,7 +33,7 @@
 #define N_SLAVE_QUEUES 20
 #define N_MASTER_QUEUES 20
 #define DUTY_CYCLE_POS 128
-#define CLOCK_SPEED 8000000
+#define CLOCK_SPEED 4000000
 
 class SPI_Datalink: public DataSerializer
 {
@@ -70,7 +70,6 @@ class SPI_Datalink: public DataSerializer
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		bool m_SpewToConsole = false;
-		size_t m_MessageCountOld = 0;
 };
 
 class SPI_Datalink_Master: public SPI_Datalink
