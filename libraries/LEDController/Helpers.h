@@ -359,23 +359,7 @@ class QueueManager: public CommonUtils
 			}
 			return NULL;
 		}
-		void* GetDataBufferForDataItem(String Name){
-			if(NULL != m_DataItem)
-			{
-				for(int i = 0; i < m_DataItemCount; ++i)
-				{
-					if(true == Name.equals(m_DataItem[i].Name))
-					{
-						return m_DataItem[i].DataBuffer;
-					}
-				}
-			}
-			else
-			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
-			}
-			return NULL;
-		}
+	
 		
 		//Queues
 		bool GetValueFromRXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
@@ -482,39 +466,6 @@ class QueueManager: public CommonUtils
 			}
 		}
 		
-		void LockDataItem(String Name){
-			if(NULL != m_DataItem)
-			{
-				for(int i = 0; i < m_DataItemCount; ++i)
-				{
-					if(true == Name.equals(m_DataItem[i].Name))
-					{
-						pthread_mutex_lock(&m_DataItem[i].Lock);
-					}
-				}
-			}
-			else
-			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
-			}
-		}
-		void UnLockDataItem(String Name){
-			if(NULL != m_DataItem)
-			{
-				for(int i = 0; i < m_DataItemCount; ++i)
-				{
-					if(true == Name.equals(m_DataItem[i].Name))
-					{
-						pthread_mutex_unlock(&m_DataItem[i].Lock);
-					}
-				}
-			}
-			else
-			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
-			}
-		}
-		
 	private:
 		DataItem_t* m_DataItem;
 		size_t m_DataItemCount;
@@ -534,11 +485,8 @@ class QueueManager: public CommonUtils
 			assert(m_DataItem != NULL);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{
-				void* DataBuffer;
 				size_t bytes = 0;
-				
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
-				DataBuffer = heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM);
 				switch(ConfigFile[i].TransceiverConfig)
 				{
 					case Transciever_None:
@@ -560,20 +508,12 @@ class QueueManager: public CommonUtils
 				m_DataItem[i].Count = ConfigFile[i].Count;
 				m_DataItem[i].TotalByteCount = bytes;
 				m_DataItem[i].TransceiverConfig = ConfigFile[i].TransceiverConfig;
-				m_DataItem[i].DataBuffer = DataBuffer; pthread_mutexattr_t Attr;
-				pthread_mutexattr_init(&Attr);
-				pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
-				if(0 != pthread_mutex_init(&m_DataItem[i].Lock, &Attr))
-				{
-				 ESP_LOGE("CommonUtils", "Failed to Create Lock");
-				}
 			}
 			m_MemoryAllocated = true;
 		}
 		void FreeMemory(){
 			for(int i = 0; i < m_DataItemCount; ++i)
-			{
-				heap_caps_free(m_DataItem[i].DataBuffer);			
+			{		
 				switch(m_DataItem[i].TransceiverConfig)
 				{
 					case Transciever_None:

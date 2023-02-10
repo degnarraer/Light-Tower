@@ -61,9 +61,10 @@ class SerialDataLinkCore: public DataSerializer
 		size_t MessageCount = uxQueueMessagesWaiting(DataItem.QueueHandle_TX);
 		if(MessageCount > 0)
 		{
-			if ( xQueueReceive(DataItem.QueueHandle_TX, DataItem.DataBuffer, 0) == pdTRUE )
+			byte Buffer[GetSizeOfDataType(DataItem.DataType) * DataItem.Count];
+			if ( xQueueReceive(DataItem.QueueHandle_TX, Buffer, 0) == pdTRUE )
 			{
-				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, DataItem.DataBuffer, DataItem.Count);
+				EncodeAndTransmitData(DataItem.Name, DataItem.DataType, Buffer, DataItem.Count);
 			}
 		}
 	}

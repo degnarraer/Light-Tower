@@ -112,8 +112,6 @@ struct DataItem_t
 	size_t Count = 0;
 	size_t TotalByteCount = 0;
 	bool DataPushHasErrored = false;
-	void* DataBuffer;
-	pthread_mutex_t Lock;
 };
 
 struct ProcessedSoundData_t
