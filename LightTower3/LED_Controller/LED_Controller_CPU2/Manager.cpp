@@ -56,6 +56,8 @@ void Manager::Setup()
                       , m_Preferences.getBool("Reset Bluetooth", false)
                       , m_Preferences.getBool("Auto ReConnect", false)
                       , m_Preferences.getBool("SSP Enabled", false) );
+
+  LoadFromNVM();
 }
 
 void Manager::ProcessEventQueue20mS()
@@ -76,6 +78,24 @@ void Manager::ProcessEventQueue1000mS()
   ResetBluetooth_TX();
   AutoReConnect_TX();
   SpeakerSSID_TX();
+}
+
+void Manager::ProcessEventQueue300000mS()
+{
+  ESP_LOGI("Manager", "Saving Settigns to NVM");
+  SaveToNVM();
+}
+
+void Manager::SaveToNVM()
+{
+  m_Preferences.putFloat("Amplitude Gain", m_SoundProcessor.GetGain());
+  m_Preferences.putFloat("FFT Gain", m_SoundProcessor.GetFFTGain());
+}
+
+void Manager::LoadFromNVM()
+{
+  m_SoundProcessor.SetGain(m_Preferences.getFloat("Amplitude Gain", 1.0));
+  m_SoundProcessor.SetFFTGain(m_Preferences.getFloat("FFT Gain", 1.0));
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()

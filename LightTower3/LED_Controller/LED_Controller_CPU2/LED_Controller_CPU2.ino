@@ -27,6 +27,9 @@ uint32_t Manager_20mS_TaskLoopCount = 0;
 TaskHandle_t Manager_1000mS_Task;
 uint32_t Manager_1000mS_TaskLoopCount = 0;
 
+TaskHandle_t Manager_300000mS_Task;
+uint32_t Manager_300000mS_TaskLoopCount = 0;
+
 TaskHandle_t ProcessSoundPowerTask;
 uint32_t ProcessSoundPowerTaskLoopCount = 0;
 
@@ -118,6 +121,7 @@ void setup()
   xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSPI_CPU3_TXTask,  1 );
   xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      2000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_20mS_Task,       1 );
   xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    2000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_1000mS_Task,     1 );
+  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  2000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_300000mS_Task,   1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        2000,   NULL,   configMAX_PRIORITIES - 10,  &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
@@ -177,6 +181,19 @@ void Manager_1000mS_TaskLoop(void * parameter)
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_1000mS_TaskLoopCount;
     m_Manager.ProcessEventQueue1000mS();
+  }
+}
+
+void Manager_300000mS_TaskLoop(void * parameter)
+{
+  //5 Minute task rate
+  const TickType_t xFrequency = 300000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    ++Manager_300000mS_TaskLoopCount;
+    m_Manager.ProcessEventQueue300000mS();
   }
 }
 

@@ -45,6 +45,9 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
+    void ProcessEventQueue300000mS();
+    void SaveToNVM();
+    void LoadFromNVM();
 
     //Bluetooth Set Data Callback
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
