@@ -33,7 +33,8 @@
 #define N_SLAVE_QUEUES 20
 #define N_MASTER_QUEUES 20
 #define DUTY_CYCLE_POS 128
-#define CLOCK_SPEED 4000000
+#define SPI_MODE SPI_MODE0
+#define CLOCK_SPEED 10000000
 
 class SPI_Datalink: public DataSerializer
 {
@@ -105,10 +106,10 @@ class SPI_Datalink_Master: public SPI_Datalink
 		uint8_t *spi_rx_buf[N_MASTER_QUEUES];
 		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
-		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode);
-		size_t m_Queued_Transactions = 0;
-		size_t m_Queued_Transactions_Reset_Point = 0;
-		size_t m_DeQueued_Transactions = 0;
+		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
+		uint32_t m_Queued_Transactions = 0;
+		uint32_t m_Queued_Transactions_Reset_Point = 0;
+		uint32_t m_DeQueued_Transactions = 0;
 		bool m_TransmitQueuedDataFlag = false;
 };
 
@@ -140,13 +141,13 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		uint8_t* spi_rx_buf[N_SLAVE_QUEUES];
 		String m_Title = "";
 		ESP32DMASPI::Slave m_SPI_Slave;
-		size_t m_Queued_Transactions = 0;
-		size_t m_DeQueued_Transactions = 0;
-		size_t m_CurrentDataItemToTX = 0;
+		uint32_t m_Queued_Transactions = 0;
+		uint32_t m_DeQueued_Transactions = 0;
+		uint32_t m_CurrentDataItemToTX = 0;
 		void ProcessCompletedTransactions();
 		void QueueUpNewTransactions();
 		size_t GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend);
-		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, uint8_t *Buffer, size_t MaxBytesToEncode);
+		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 };
 
 #endif

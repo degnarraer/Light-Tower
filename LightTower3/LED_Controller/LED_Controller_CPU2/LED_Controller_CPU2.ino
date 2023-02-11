@@ -2,7 +2,7 @@
     Light Tower by Rob Shockency
     Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
 
-    This program is free software: you can redistribute it and/or modify
+    This program is free software: you can redistribute it and/or modifyVision8_LTT
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version of the License, or
     (at your option) any later version. 3
@@ -150,7 +150,7 @@ void ProcessFFTTaskLoop(void * parameter)
   {
     ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(20 / portTICK_PERIOD_MS);
+    vTaskDelay(25 / portTICK_PERIOD_MS);
   }
 }
 

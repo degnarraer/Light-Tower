@@ -47,6 +47,24 @@ class FFT_Calculator
         break;
       }
     }
+    /*
+    FFT_Calculator& operator=(const FFT_Calculator& other)
+    {
+      m_CurrentIndex = other.m_CurrentIndex;
+      m_FFT_Size = other.m_FFT_Size;
+      m_FFT_SampleRate = other.m_FFT_SampleRate;
+      *mp_RealBuffer = *(other.mp_RealBuffer);
+      *mp_ImaginaryBuffer = *(other.mp_ImaginaryBuffer);
+      m_Gain = other.m_Gain;
+      m_MaxFFTBinValue = other.m_MaxFFTBinValue;
+      m_MaxFFTBinIndex = other.m_MaxFFTBinIndex;
+      m_MajorPeak = other.m_MajorPeak;
+      m_SolutionReady = other.m_SolutionReady;
+      m_BitLengthMaxValue = other.m_BitLengthMaxValue;
+      *m_MyFFT = *(other.m_MyFFT);
+      return *this;  
+    }
+    */
     virtual ~FFT_Calculator()
     {
       free(mp_RealBuffer);

@@ -69,6 +69,7 @@ class DataSerializer: public CommonUtils
 		
 		void DeSerializeJsonToMatchingDataItem(String json, bool DebugMessage = false)
 		{
+			m_CurrentTime = millis();
 			++m_TotalCount;
 			DeserializationError error = deserializeJson(doc, json.c_str());
 			// Test if parsing succeeds.
@@ -149,15 +150,14 @@ class DataSerializer: public CommonUtils
 						++m_FailCount;
 						ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags.");
 					}
-					m_CurrentTime = millis();
-					if(m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
-					{
-						m_FailCountTimer = m_CurrentTime;
-						ESP_LOGE("Serial_Datalink", "Deserialization Failure Percentage: %f", 100.0 * (float)m_FailCount / (float)m_TotalCount);
-						m_FailCount = 0;
-						m_TotalCount = 0;
-					}
 				}
+			}
+			if(m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
+			{
+				m_FailCountTimer = m_CurrentTime;
+				ESP_LOGE("Serial_Datalink", "Deserialization Failure Percentage: %f", 100.0 * (float)m_FailCount / (float)m_TotalCount);
+				m_FailCount = 0;
+				m_TotalCount = 0;
 			}
 		}
 		bool AllTagsExist()
@@ -179,8 +179,8 @@ class DataSerializer: public CommonUtils
 	private:
 		size_t m_TotalCount = 0;
 		size_t m_FailCount = 0;
-		uint64_t m_CurrentTime;
-		uint64_t m_FailCountTimer = millis();
+		uint64_t m_CurrentTime = 0;
+		uint64_t m_FailCountTimer = 0;
 		uint64_t m_FailCountDuration = 5000;
 		
 		StaticJsonDocument<10000> doc;

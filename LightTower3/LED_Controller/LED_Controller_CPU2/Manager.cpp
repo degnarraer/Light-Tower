@@ -41,7 +41,6 @@ Manager::~Manager()
 void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
-  m_Preferences.clear();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
@@ -51,6 +50,7 @@ void Manager::Setup()
   m_Preferences.putBool("Reset Bluetooth", true);
   m_Preferences.putBool("Auto ReConnect", true);
   m_Preferences.putBool("SSP Enabled", false);
+
   
   m_BT_Out.StartDevice( m_Preferences.getString("Target Speaker SSID", "JBL Flip 6").c_str()
                       , m_Preferences.getBool("Reset Bluetooth", false)

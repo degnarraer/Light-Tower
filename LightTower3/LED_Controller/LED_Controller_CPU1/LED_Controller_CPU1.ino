@@ -45,9 +45,9 @@ void InitTasks()
 {
   xTaskCreatePinnedToCore( DataMoverTaskLoop,         "DataMoverTask",        2000,  NULL,   configMAX_PRIORITIES - 1,  &DataMoverTask,         0 );
   xTaskCreatePinnedToCore( UpdateSerialDataTaskLoop,  "UpdateSerialData",     2000,  NULL,   configMAX_PRIORITIES - 1,  &UpdateSerialDataTask,  0 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",  2000,  NULL,   configMAX_PRIORITIES - 1,  &TaskMonitorTask,       0 );
-  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   0,                         &SPI_Task,              0 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 10, &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",  2000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
 }
 
 void setup()
@@ -57,6 +57,7 @@ void setup()
   InitLocalVariables();
   InitTasks();
   PrintFreeHeap();
+  m_SPIDataLinkSlave.SetSpewToConsole(false);
 }
 
 void loop()
