@@ -45,7 +45,7 @@ void Manager::Setup()
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
   m_Mic_In.SetCallback(this);
-  m_StatisticalEngine.RegisterForMicrophoneStateChangeNotification(this);
+  m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
 }
@@ -64,9 +64,9 @@ void Manager::UpdateSerialData()
   }
 }
 
-void Manager::MicrophoneStateChange(SoundState_t SoundState)
+void Manager::SoundStateChange(SoundState_t SoundState)
 {
-  ProcessSoundStateStatus(SoundState);
+  SoundState_TX(SoundState);
 }
 
 void Manager::ProcessEventQueue()
@@ -220,7 +220,7 @@ void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
   }
 }
 
-void Manager::ProcessSoundStateStatus(SoundState_t SoundState)
+void Manager::SoundState_TX(SoundState_t SoundState)
 {
   if(m_SoundState != SoundState)
   {

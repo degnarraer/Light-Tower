@@ -189,7 +189,7 @@ class StatisticalEngineModelInterfaceUserTracker
 class StatisticalEngineModelInterface : public NamedItem
                                       , public Task
                                       , public StatisticalEngineModelInterfaceUserTracker
-                                      , MicrophoneMeasureCalleeInterface
+                                      , SoundMeasureCalleeInterface
 {
   public:
     StatisticalEngineModelInterface(StatisticalEngine &StatisticalEngine) : NamedItem("StatisticalEngineModelInterface")
@@ -211,8 +211,8 @@ class StatisticalEngineModelInterface : public NamedItem
     MaxBandSoundData_t GetMaxBinRightSoundData();
     MaxBandSoundData_t GetMaxBinLeftSoundData();
     
-    //MicrophoneMeasureCalleeInterface
-    void MicrophoneStateChange(SoundState_t) {}
+    //SoundMeasureCalleeInterface
+    void SoundStateChange(SoundState_t) {}
     
   private:
     StatisticalEngine &m_StatisticalEngine;

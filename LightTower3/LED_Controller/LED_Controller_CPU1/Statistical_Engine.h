@@ -56,20 +56,20 @@ struct MinMaxDb
   db max = 0.0;
 };
 
-class MicrophoneMeasureCalleeInterface
+class SoundMeasureCalleeInterface
 {
 public:
-    virtual void MicrophoneStateChange(SoundState_t State) = 0;
+    virtual void SoundStateChange(SoundState_t State) = 0;
 };
 
-class MicrophoneMeasureCallerInterface
+class SoundMeasureCallerInterface
 {
   public:
-    void RegisterForMicrophoneStateChangeNotification(MicrophoneMeasureCalleeInterface *user)
+    void RegisterForSoundStateChangeNotification(SoundMeasureCalleeInterface *user)
     {
       m_MyUsers.add(user);
     }
-    void DeRegisterForMicrophoneStateChangeNotification(MicrophoneMeasureCalleeInterface *user)
+    void DeRegisterForSoundStateChangeNotification(SoundMeasureCalleeInterface *user)
     {
       for (int i = 0; i < m_MyUsers.size(); ++i)
       {
@@ -85,16 +85,16 @@ class MicrophoneMeasureCallerInterface
     {
       for (int i = 0; i < m_MyUsers.size(); ++i)
       {
-        m_MyUsers.get(i)->MicrophoneStateChange(State);
+        m_MyUsers.get(i)->SoundStateChange(State);
       }
     }
   private:
-    LinkedList<MicrophoneMeasureCalleeInterface*> m_MyUsers = LinkedList<MicrophoneMeasureCalleeInterface*>();
+    LinkedList<SoundMeasureCalleeInterface*> m_MyUsers = LinkedList<SoundMeasureCalleeInterface*>();
 };
 
 class StatisticalEngine : public NamedItem
                         , public Task
-                        , public MicrophoneMeasureCallerInterface
+                        , public SoundMeasureCallerInterface
                         , public CommonUtils
                         , public QueueManager
 {
