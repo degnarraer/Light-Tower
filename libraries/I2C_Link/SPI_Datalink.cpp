@@ -71,6 +71,7 @@ void SPI_Datalink_Master::ProcessEventQueue()
 			if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
 			{
 				++m_Queued_Transactions;
+				delay(1); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
 				TransmitQueuedData();
 			}
 		}
@@ -101,8 +102,8 @@ void SPI_Datalink_Master::ProcessEventQueue()
 								}
 								if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
 								{
-									delay(10); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
 									++m_Queued_Transactions;
+									delay(1); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
 									xQueueReceive(m_DataItems[j].QueueHandle_TX, DataBuffer, 0);
 								}
 							}
