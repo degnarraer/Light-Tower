@@ -2,11 +2,9 @@
 #ifndef LED_Controller_Helpers_H
 #define LED_Controller_Helpers_H
 
-
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , m_BTSink
-                                       , "LED Tower of Power"
                                        , I2S_NUM_1                          // I2S Interface
                                        , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                                        , I2S_SAMPLE_RATE

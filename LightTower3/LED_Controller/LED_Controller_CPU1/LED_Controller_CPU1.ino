@@ -15,7 +15,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include "Manager.h"
 #include "Tunes.h"
 #include "VisualizationPlayer.h"
@@ -111,6 +110,7 @@ void TaskMonitorTaskLoop(void * parameter)
     {
       unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
       ESP_LOGE("LED_Controller1", "Manager_20mS_TaskLoopCount: %f", (float)Manager_20mS_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "Manager_1000mS_TaskLoopCount: %f", (float)Manager_1000mS_TaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "UpdateSerialDataTaskLoopCount: %f", (float)UpdateSerialDataTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "VisualizationTaskLoopCount: %f", (float)VisualizationTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
@@ -123,6 +123,7 @@ void TaskMonitorTaskLoop(void * parameter)
 
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(Manager_20mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_20mS_Task: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(Manager_1000mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_1000mS_Task: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! UpdateSerialDataTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! TaskMonitorTask: Stack Size Low");
@@ -132,6 +133,7 @@ void TaskMonitorTaskLoop(void * parameter)
     {
       ESP_LOGE("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
       ESP_LOGE("LED_Controller1", "Manager_20mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_20mS_Task));
+      ESP_LOGE("LED_Controller1", "Manager_1000mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_1000mS_Task));
       ESP_LOGE("LED_Controller1", "UpdateSerialDataTask Free Heap: %i", uxTaskGetStackHighWaterMark(UpdateSerialDataTask));
       ESP_LOGE("LED_Controller1", "SPI_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_Task));
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
@@ -150,14 +152,23 @@ void Manager_20mS_TaskLoop(void * parameter)
   {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     ++Manager_20mS_TaskLoopCount;
-    m_Manager.ProcessEventQueue();
+    m_Manager.ProcessEventQueue20mS();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
 void Manager_1000mS_TaskLoop(void * parameter)
 {
-
+  //1000 mS task rate
+  const TickType_t xFrequency = 1000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    ++Manager_1000mS_TaskLoopCount;
+    m_Manager.ProcessEventQueue1000mS();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+  }
 }
 
 void UpdateSerialDataTaskLoop(void * parameter)

@@ -66,10 +66,11 @@ void Manager::UpdateSerialData()
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-  SoundState_TX(SoundState);
+  m_SoundState = SoundState;
+  SoundState_TX(m_SoundState);
 }
 
-void Manager::ProcessEventQueue()
+void Manager::ProcessEventQueue20mS()
 {
   switch(m_InputType)
   {
@@ -137,6 +138,11 @@ void Manager::ProcessEventQueue()
                           , false );
 }
 
+void Manager::ProcessEventQueue1000mS()
+{
+  SoundState_TX(m_SoundState);
+}
+
 void Manager::SetInputType(InputType_t Type)
 {
   m_InputType = Type;
@@ -148,7 +154,7 @@ void Manager::SetInputType(InputType_t Type)
       m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
-      m_BT_In.StartDevice();
+      m_BT_In.StartDevice((char*)m_Preferences.getString("My SSID", "LED Tower of Power").c_str());
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
     break;

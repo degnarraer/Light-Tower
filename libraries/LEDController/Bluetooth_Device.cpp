@@ -180,16 +180,18 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
-void Bluetooth_Sink::StartDevice()
+void Bluetooth_Sink::StartDevice(char *SinkName)
 {
-	if(false == m_Is_Running)
+	mp_SinkName = SinkName;
+	if(true == m_Is_Running)
 	{
-		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
-		InstallDevice();
-		m_BTSink.start(mp_SinkName);
-		m_Is_Running = true;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
+		StopDevice();
 	}
+	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
+	InstallDevice();
+	m_BTSink.start(mp_SinkName);
+	m_Is_Running = true;
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
 }
 void Bluetooth_Sink::StopDevice()
 {

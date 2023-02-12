@@ -95,7 +95,6 @@ class Bluetooth_Sink: public NamedItem
   public:
     Bluetooth_Sink( String Title
 				  , BluetoothA2DPSink& BTSink
-				  , const char *SinkName
 				  , i2s_port_t i2S_PORT
 				  , i2s_mode_t Mode
 				  , int SampleRate
@@ -112,7 +111,6 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataOutPin )
 				  : NamedItem(Title)
 				  , m_BTSink(BTSink)
-				  , mp_SinkName(SinkName)
 				  , m_I2S_PORT(i2S_PORT)
 				  , m_i2s_Mode(Mode)
 				  , m_SampleRate(SampleRate)
@@ -129,7 +127,7 @@ class Bluetooth_Sink: public NamedItem
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
     virtual ~Bluetooth_Sink(){};
 	void Setup();
-	void StartDevice();
+	void StartDevice(char *SinkName);
 	void StopDevice();
 	bool IsConnected();
 	
@@ -160,7 +158,7 @@ class Bluetooth_Sink: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
 	bool m_Is_Running = false;
-	const char *mp_SinkName;
+	char *mp_SinkName;
 	void InstallDevice();
 
 };

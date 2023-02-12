@@ -57,7 +57,8 @@ class Manager: public NamedItem
            , I2S_Device &I2S_Out );
     virtual ~Manager();
     void Setup();
-    void ProcessEventQueue();
+    void ProcessEventQueue20mS();
+    void ProcessEventQueue1000mS();
     void UpdateSerialData();
     void SetInputType(InputType_t Type);
     
