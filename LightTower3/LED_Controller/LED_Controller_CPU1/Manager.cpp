@@ -38,7 +38,8 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  m_Preferences.begin("My Settings", false); 
+  m_Preferences.begin("My Settings", false);
+  InitializeNVM(true); //m_Preferences.getBool("NVM Reset", false));
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
@@ -50,17 +51,21 @@ void Manager::Setup()
   //SetInputType(InputType_Microphone);
 }
 
-void Manager::UpdateSerialData()
+void Manager::InitializeNVM(bool Reset)
 {
-  switch(m_InputType)
+  if(true == Reset || false == m_Preferences.getBool("NVM Initialized", false))
   {
-    case InputType_Microphone:
-    break;
-    case InputType_Bluetooth:
-      ProcessBluetoothConnectionStatus(true);
-    break;
-    default:
-    break;
+    Serial << "Initializing NVM\n";
+    if(true == Reset)
+    {
+      m_Preferences.clear();
+      Serial << "NVM Cleared\n";
+    }
+    m_Preferences.putString("Sink SSID", "LED Tower of Power");
+    m_Preferences.putBool("Sink BT Reset", true);
+    m_Preferences.putBool("Sink ReConnect", true);
+    m_Preferences.putBool("NVM Initialized", true);
+    m_Preferences.putBool("NVM Reset", false);
   }
 }
 
@@ -87,60 +92,15 @@ void Manager::ProcessEventQueue20mS()
     default:
     break;
   }
-
-  MoveDataFromQueueToQueue( "Manager 1"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Processed_Frame")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("Processed_Frame")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Processed_Frame")
-                          , 0
-                          , false );
-                          
-  MoveDataFromQueueToQueue( "Manager 2"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_BANDS")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_BANDS")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_BANDS")
-                          , 0
-                          , false );
-                          
-  MoveDataFromQueueToQueue( "Manager 3"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_BANDS")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_BANDS")
-                          , 0
-                          , false );
-                          
-  MoveDataFromQueueToQueue( "Manager 4"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAXBAND")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAXBAND")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAXBAND")
-                          , 0
-                          , false );
-                          
-  MoveDataFromQueueToQueue( "Manager 5"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAXBAND")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAXBAND")
-                          , 0
-                          , false );
-                          
-  MoveDataFromQueueToQueue( "Manager 6"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("R_MAJOR_FREQ")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("R_MAJOR_FREQ")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("R_MAJOR_FREQ")
-                          , 0
-                          , false );
-                          
-  MoveDataFromQueueToQueue( "Manager 7"
-                          , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("L_MAJOR_FREQ")
-                          , m_StatisticalEngine.GetQueueHandleRXForDataItem("L_MAJOR_FREQ")
-                          , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("L_MAJOR_FREQ")
-                          , 0
-                          , false );
+  MoveDataToStatisticalEngine();
+  SinkSSID_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
 {
+  ProcessBluetoothConnectionStatus(true);
   SoundState_TX(m_SoundState);
+  SinkSSID_TX();
 }
 
 void Manager::SetInputType(InputType_t Type)
@@ -154,7 +114,7 @@ void Manager::SetInputType(InputType_t Type)
       m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
-      m_BT_In.StartDevice((char*)m_Preferences.getString("My SSID", "LED Tower of Power").c_str());
+      m_BT_In.StartDevice(m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str());
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
     break;
@@ -198,31 +158,55 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
   }
 }
 
+void Manager::MoveDataToStatisticalEngine()
+{
+  const uint8_t count = 6;
+  String Signals[count] = { "Processed_Frame"
+                          , "R_BANDS"
+                          , "L_BANDS"
+                          , "R_MAXBAND"
+                          , "L_MAXBAND"
+                          , "L_MAJOR_FREQ" };
+                                      
+  for(int i = 0; i < count; ++i)
+  {
+    MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i]
+                            , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].c_str())
+                            , m_StatisticalEngine.GetQueueHandleTXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].c_str())
+                            , 0
+                            , false );
+  }
+}
+
 void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
 {
-  bool SendUpdate = false;
-  bool IsConnected = m_BT_In.IsConnected();
-  if(m_BluetoothIsConnected != IsConnected)
+  if(InputType_Bluetooth == m_InputType)
   {
-    m_BluetoothIsConnected = IsConnected;
-    SendUpdate = true;
-    if(true == m_BluetoothIsConnected)
+    bool SendUpdate = false;
+    bool IsConnected = m_BT_In.IsConnected();
+    if(m_BluetoothIsConnected != IsConnected)
     {
-      ESP_LOGI("Manager", "Bluetooth Source Connected!");
+      m_BluetoothIsConnected = IsConnected;
+      SendUpdate = true;
+      if(true == m_BluetoothIsConnected)
+      {
+        ESP_LOGI("Manager", "BT Sink Connected!");
+      }
+      else
+      {
+        ESP_LOGI("Manager", "BT Sink Disconnected!");
+      }
     }
-    else
+    if(true == ForceUpdate || true == SendUpdate)
     {
-      ESP_LOGI("Manager", "Bluetooth Source Disconnected!");
+      static bool SinkIsConnectedValuePushError = false;
+      PushValueToQueue( &m_BluetoothIsConnected
+                      , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connected")
+                      , 0
+                      , "Sink Is Connected"
+                      , SinkIsConnectedValuePushError );
     }
-  }
-  if(true == ForceUpdate || true == SendUpdate)
-  {
-    static bool SourceIsConnectedValuePushError = false;
-    PushValueToQueue( &m_BluetoothIsConnected
-                    , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Source Is Connected")
-                    , 0
-                    , "Source Is Connected"
-                    , SourceIsConnectedValuePushError );
   }
 }
 
@@ -239,4 +223,77 @@ void Manager::SoundState_TX(SoundState_t SoundState)
                       , SoundStateValuePushError );
   }
   
+}
+
+void Manager::SinkSSID_RX()
+{
+  String DatalinkValue;
+  static bool MySSIDPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, MySSIDPullErrorHasOccured))
+  {
+    String NVMValue = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
+    Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
+    Serial << "RX NVMValue Value: " << NVMValue.c_str() << "\n";
+    if(!NVMValue.equals(DatalinkValue))
+    {
+      Serial << "Sink SSID Value Changed\n";
+      m_Preferences.putString("Sink SSID", DatalinkValue);
+      m_BT_In.StartDevice(m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str());
+      SinkSSID_TX();
+    }
+  }
+}
+
+void Manager::SinkSSID_TX()
+{
+  String *NVMValuePointer = new String();
+  *NVMValuePointer = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
+  static bool SinkSSIDPushErrorHasOccured = false;
+  m_SPIDataLinkSlave.PushValueToTXQueue(*NVMValuePointer, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
+}
+
+
+void Manager::SinkBluetoothReset_RX()
+{
+  bool DatalinkValue;
+  static bool SinkBluetoothResetPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink BT Reset", false, 0, SinkBluetoothResetPullErrorHasOccured))
+  {
+    bool NVMValue = m_Preferences.getBool("Sink BT Reset", true);
+    if(NVMValue != DatalinkValue)
+    {
+      Serial << "Sink BT Reset Value Changed\n";
+      m_Preferences.putBool("Sink BT Reset", DatalinkValue);
+      SinkBluetoothReset_TX();
+    }
+  }
+}
+void Manager::SinkBluetoothReset_TX()
+{
+  bool NVMValue = m_Preferences.getBool("Sink BT Reset", true);
+  static bool SinkBluetoothResetPushErrorHasOccured = false;
+  m_SPIDataLinkSlave.PushValueToTXQueue(&NVMValue, "Sink BT Reset", 0, SinkBluetoothResetPushErrorHasOccured);
+}
+
+void Manager::SinkAutoReConnect_RX()
+{
+  bool DatalinkValue;
+  static bool SinkAutoReConnectPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink ReConnect", false, 0, SinkAutoReConnectPullErrorHasOccured))
+  {
+    bool NVMValue = m_Preferences.getBool("Sink ReConnect", true);
+    if(NVMValue != DatalinkValue)
+    {
+      Serial << "Sink ReConnect Value Changed\n";
+      m_Preferences.putBool("Sink ReConnect", DatalinkValue);
+      SinkAutoReConnect_TX();
+    }
+  }
+}
+
+void Manager::SinkAutoReConnect_TX()
+{
+  bool NVMValue = m_Preferences.getBool("Sink ReConnect", true);
+  static bool SinkAutoReConnectPushErrorHasOccured = false;
+  m_SPIDataLinkSlave.PushValueToTXQueue(&NVMValue, "Sink ReConnect", 0, SinkAutoReConnectPushErrorHasOccured);
 }

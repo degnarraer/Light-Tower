@@ -391,7 +391,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
 			}
 			return result;
 		}
@@ -424,7 +424,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
 			}
 			return Result;
 		}
@@ -444,7 +444,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
 			}
 		}
 		void PushValueToTXQueue(void* Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
@@ -465,6 +465,24 @@ class QueueManager: public CommonUtils
 				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 		}
+		void PushValueToTXQueue(String &Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
+			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
+			if(NULL != Queue)
+			{
+				if(xQueueSend(Queue, &Value, TicksToWait) != pdTRUE)
+				{
+					if(false == DataPushHasErrored)
+					{
+						DataPushHasErrored = true;
+						ESP_LOGE("CommonUtils", "ERROR! $s: Error Setting Queue.", Name.c_str());
+					}
+				} 
+			}
+			else
+			{
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
+			}
+		}
 		
 	private:
 		DataItem_t* m_DataItem;
@@ -481,7 +499,6 @@ class QueueManager: public CommonUtils
 			void *DataItem_t_raw = heap_caps_malloc(sizeof(DataItem_t) * m_DataItemCount, MALLOC_CAP_SPIRAM);
 			m_DataItem = new(DataItem_t_raw) DataItem_t[m_DataItemCount];
 
-			//m_DataItem = new DataItem_t[m_DataItemCount];
 			assert(m_DataItem != NULL);
 			for(int i = 0; i < m_DataItemCount; ++i)
 			{

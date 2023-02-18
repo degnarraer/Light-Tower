@@ -41,43 +41,51 @@ Manager::~Manager()
 void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
+  InitializeNVM(m_Preferences.getBool("NVM Reset", false));
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
-
-  m_Preferences.putString("Target Speaker SSID", "JBL Flip 6");
-  m_Preferences.putBool("Reset Bluetooth", true);
-  m_Preferences.putBool("Auto ReConnect", true);
-  m_Preferences.putBool("SSP Enabled", false);
-
-  
-  m_BT_Out.StartDevice( m_Preferences.getString("Target Speaker SSID", "JBL Flip 6").c_str()
-                      , m_Preferences.getBool("Reset Bluetooth", false)
-                      , m_Preferences.getBool("Auto ReConnect", false)
+  m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
+                      , m_Preferences.getBool("Source BT Reset", false)
+                      , m_Preferences.getBool("Source ReConnect", false)
                       , m_Preferences.getBool("SSP Enabled", false) );
-
   LoadFromNVM();
+}
+
+void Manager::InitializeNVM(bool Reset)
+{
+  if(true == Reset || false == m_Preferences.getBool("NVM Initialized", false))
+  {
+    if(true == Reset) m_Preferences.clear();   
+    m_Preferences.putString("Source SSID", "JBL Flip 6");
+    m_Preferences.putBool("Source BT Reset", true);
+    m_Preferences.putBool("Source ReConnect", true);
+    m_Preferences.putBool("SSP Enabled", false);
+    m_Preferences.putBool("NVM Initialized", true);
+    m_Preferences.putBool("NVM Reset", false);
+  }
 }
 
 void Manager::ProcessEventQueue20mS()
 {
   m_I2S_In.ProcessEventQueue();
   MoveDataBetweenCPU1AndCPU3();
+  MoveDataBetweenCPU3AndCPU1();
   AmplitudeGain_RX();
   FFTGain_RX();
-  ResetBluetooth_RX();
-  AutoReConnect_RX();
-  SpeakerSSID_RX();
+  SourceBluetoothReset_RX();
+  SourceAutoReConnect_RX();
+  SourceSSID_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
 {
   AmplitudeGain_TX();
   FFTGain_TX();
-  ResetBluetooth_TX();
-  AutoReConnect_TX();
-  SpeakerSSID_TX();
+  SourceBluetoothReset_TX();
+  SourceAutoReConnect_TX();
+  SourceSSID_TX();
 }
 
 void Manager::ProcessEventQueue300000mS()
@@ -100,14 +108,17 @@ void Manager::LoadFromNVM()
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
 {
-  const uint8_t count = 2;
-  String Signals[count] = { "Source Is Connected"
-                          , "Sound State" };
+  const uint8_t count = 5;
+  String Signals[count] = { "Sound State"
+                          , "Sink Connected"
+                          , "Sink ReConnect"
+                          , "Sink BT Reset"
+                          , "Sink SSID" };
   
                       
   for(int i = 0; i < count; ++i)
   {
-    MoveDataFromQueueToQueue( "Manager1: " + Signals[i]
+    MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i]
                             , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
@@ -115,6 +126,26 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
                             , false );
   }
   m_SPIDataLinkToCPU3.TriggerEarlyDataTransmit();
+}
+
+void Manager::MoveDataBetweenCPU3AndCPU1()
+{
+  const uint8_t count = 3;
+  String Signals[count] = { "Sink ReConnect"
+                          , "Sink BT Reset"
+                          , "Sink SSID" };
+  
+                      
+  for(int i = 0; i < count; ++i)
+  {
+    MoveDataFromQueueToQueue( "MoveDataBetweenCPU3AndCPU1: " + Signals[i]
+                            , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].c_str())
+                            , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].c_str())
+                            , 0
+                            , false );
+  }
+  m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
 }
 
 //I2S_Device_Callback
@@ -174,55 +205,56 @@ void Manager::FFTGain_TX()
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFTGainPushErrorHasOccured);
 }
 
-void Manager::ResetBluetooth_RX()
+void Manager::SourceBluetoothReset_RX()
 {
-  bool NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
+  bool NVMValue = m_Preferences.getBool("Source BT Reset", true);
   bool DatalinkValue;
   static bool ResetBluetoothPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Reset Bluetooth", false, 0, ResetBluetoothPullErrorHasOccured))
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Source BT Reset", false, 0, ResetBluetoothPullErrorHasOccured))
   {
     if(NVMValue != DatalinkValue)
     {
-      Serial << "Reset Bluetooth Value Changed\n";
-      m_Preferences.putBool("Reset Bluetooth", DatalinkValue);
-      ResetBluetooth_TX();
+      Serial << "Source BT Reset Value Changed\n";
+      m_Preferences.putBool("Source BT Reset", DatalinkValue);
+      SourceBluetoothReset_TX();
     }
   }
 }
-void Manager::ResetBluetooth_TX()
+void Manager::SourceBluetoothReset_TX()
 {
-  bool NVMValue = m_Preferences.getBool("Reset Bluetooth", true);
+  bool NVMValue = m_Preferences.getBool("Source BT Reset", true);
   static bool ResetBluetoothPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Reset Bluetooth", 0, ResetBluetoothPushErrorHasOccured);
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Source BT Reset", 0, ResetBluetoothPushErrorHasOccured);
 }
 
-void Manager::AutoReConnect_RX()
+void Manager::SourceAutoReConnect_RX()
 {
-  bool NVMValue = m_Preferences.getBool("Auto ReConnect", true);
+  bool NVMValue = m_Preferences.getBool("Source ReConnect", true);
   bool DatalinkValue;
   static bool AutoReConnectPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Auto ReConnect", false, 0, AutoReConnectPullErrorHasOccured))
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Source ReConnect", false, 0, AutoReConnectPullErrorHasOccured))
   {
     if(NVMValue != DatalinkValue)
     {
-      Serial << "Auto ReConnect Value Changed\n";
-      m_Preferences.putBool("Auto ReConnect", DatalinkValue);
-      AutoReConnect_TX();
+      Serial << "Source ReConnect Value Changed\n";
+      m_Preferences.putBool("Source ReConnect", DatalinkValue);
+      SourceAutoReConnect_TX();
     }
   }
 }
-void Manager::AutoReConnect_TX()
+
+void Manager::SourceAutoReConnect_TX()
 {
-  bool NVMValue = m_Preferences.getBool("Auto ReConnect", true);
+  bool NVMValue = m_Preferences.getBool("Source ReConnect", true);
   static bool AutoReConnectPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Auto ReConnect", 0, AutoReConnectPushErrorHasOccured);
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&NVMValue, "Source ReConnect", 0, AutoReConnectPushErrorHasOccured);
 }
 
-void Manager::SpeakerSSID_RX()
+void Manager::SourceSSID_RX()
 {
 
 }
-void Manager::SpeakerSSID_TX()
+void Manager::SourceSSID_TX()
 {
   
 }

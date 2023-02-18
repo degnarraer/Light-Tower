@@ -39,15 +39,11 @@ uint32_t TaskMonitorTaskLoopCount = 0;
 TaskHandle_t SPI_Task;
 uint32_t SPI_TaskLoopCount = 0;
 
-TaskHandle_t UpdateSerialDataTask;
-uint32_t UpdateSerialDataTaskLoopCount = 0;
-
 
 void InitTasks()
 {
   xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",    2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
   xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask", 2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( UpdateSerialDataTaskLoop,  "UpdateSerialData",     2000,  NULL,   configMAX_PRIORITIES - 1,  &UpdateSerialDataTask,  0 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",  2000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
   xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
   xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
@@ -111,7 +107,6 @@ void TaskMonitorTaskLoop(void * parameter)
       unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
       ESP_LOGE("LED_Controller1", "Manager_20mS_TaskLoopCount: %f", (float)Manager_20mS_TaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "Manager_1000mS_TaskLoopCount: %f", (float)Manager_1000mS_TaskLoopCount/(float)DeltaTimeSeconds);
-      ESP_LOGE("LED_Controller1", "UpdateSerialDataTaskLoopCount: %f", (float)UpdateSerialDataTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "VisualizationTaskLoopCount: %f", (float)VisualizationTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "SPI_TaskLoopCount: %f", (float)SPI_TaskLoopCount/(float)DeltaTimeSeconds);
@@ -124,7 +119,6 @@ void TaskMonitorTaskLoop(void * parameter)
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(Manager_20mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_20mS_Task: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(Manager_1000mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_1000mS_Task: Stack Size Low");
-    if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! UpdateSerialDataTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! TaskMonitorTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SPI_Task: Stack Size Low");
@@ -134,7 +128,6 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGE("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
       ESP_LOGE("LED_Controller1", "Manager_20mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_20mS_Task));
       ESP_LOGE("LED_Controller1", "Manager_1000mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_1000mS_Task));
-      ESP_LOGE("LED_Controller1", "UpdateSerialDataTask Free Heap: %i", uxTaskGetStackHighWaterMark(UpdateSerialDataTask));
       ESP_LOGE("LED_Controller1", "SPI_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_Task));
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
@@ -168,18 +161,5 @@ void Manager_1000mS_TaskLoop(void * parameter)
     ++Manager_1000mS_TaskLoopCount;
     m_Manager.ProcessEventQueue1000mS();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
-}
-
-void UpdateSerialDataTaskLoop(void * parameter)
-{
-  //1000 mS task rate
-  const TickType_t xFrequency = 1000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    ++UpdateSerialDataTaskLoopCount;
-    m_Manager.UpdateSerialData();
   }
 }

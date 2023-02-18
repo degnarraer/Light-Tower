@@ -11,7 +11,11 @@ function onload(event) {
 }
 
 function getValues(){
-    websocket.send("Get All Values");
+    var Root = {};
+	Root.Message = "Get All Values";
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+    websocket.send(Message);
 }
 
 function initWebSocket() {
@@ -37,10 +41,11 @@ function updateSliderValue(element) {
     SliderTouched = true;
 	var SliderName = element.id;
     var SliderValue = document.getElementById(SliderName).value;
-    var JSONObject = {};
-	JSONObject.Name = SliderName.toString();
-	JSONObject.Value = SliderValue.toString();
-	var Message = JSON.stringify(JSONObject);
+    var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Widget = SliderName.toString();
+	Root["WidgetValue"].Value = SliderValue.toString();
+	var Message = JSON.stringify(Root);
 	console.log(Message);
     console.log(SliderValue);
     websocket.send(Message);

@@ -59,7 +59,6 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
-    void UpdateSerialData();
     void SetInputType(InputType_t Type);
     
     //Bluetooth_Callback
@@ -72,7 +71,6 @@ class Manager: public NamedItem
     void SoundStateChange(SoundState_t SoundState);
     
   private:
-    Preferences m_Preferences;
     StatisticalEngine &m_StatisticalEngine;
     SPIDataLinkSlave &m_SPIDataLinkSlave;
     InputType_t m_InputType;
@@ -86,6 +84,11 @@ class Manager: public NamedItem
     I2S_Device &m_I2S_Out;
 
     
+    Preferences m_Preferences;
+    void InitializeNVM(bool Reset);
+
+    void MoveDataToStatisticalEngine();
+    
     void ProcessBluetoothConnectionStatus(bool ForceUpdate);
     bool m_BluetoothIsConnected = false;
 
@@ -93,8 +96,16 @@ class Manager: public NamedItem
     void SoundState_TX(SoundState_t SoundState);
     SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
 
-    void ProcessMySSID();
-    String m_MySSID;
+    
+    void SinkBluetoothReset_RX();
+    void SinkBluetoothReset_TX();
+    
+    void SinkAutoReConnect_RX();
+    void SinkAutoReConnect_TX();
+    
+    void SinkSSID_TX();
+    void SinkSSID_RX();
+    String m_SinkSSID;
 };
 
 #endif

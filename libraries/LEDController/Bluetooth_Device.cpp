@@ -180,9 +180,9 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
-void Bluetooth_Sink::StartDevice(char *SinkName)
+void Bluetooth_Sink::StartDevice(const char *SinkName)
 {
-	mp_SinkName = SinkName;
+	mp_SinkName = (char*)SinkName;
 	if(true == m_Is_Running)
 	{
 		StopDevice();

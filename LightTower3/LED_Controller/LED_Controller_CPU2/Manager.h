@@ -56,7 +56,6 @@ class Manager: public NamedItem
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
 
   private:
-    Preferences m_Preferences;
     Sound_Processor &m_SoundProcessor;
     SPIDataLinkToCPU1 &m_SPIDataLinkToCPU1;
     SPIDataLinkToCPU3 &m_SPIDataLinkToCPU3;
@@ -77,21 +76,24 @@ class Manager: public NamedItem
     
     void UpdateNotificationRegistrationStatus();
     void MoveDataBetweenCPU1AndCPU3();
+    void MoveDataBetweenCPU3AndCPU1();
     
+    Preferences m_Preferences;
+    void InitializeNVM(bool Reset);
     void AmplitudeGain_RX();
     void AmplitudeGain_TX();
     
     void FFTGain_RX();
     void FFTGain_TX();
     
-    void ResetBluetooth_RX();
-    void ResetBluetooth_TX();
+    void SourceBluetoothReset_RX();
+    void SourceBluetoothReset_TX();
     
-    void AutoReConnect_RX();
-    void AutoReConnect_TX();
+    void SourceAutoReConnect_RX();
+    void SourceAutoReConnect_TX();
     
-    void SpeakerSSID_RX();
-    void SpeakerSSID_TX();
+    void SourceSSID_RX();
+    void SourceSSID_TX();
     
 };
 

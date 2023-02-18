@@ -127,7 +127,7 @@ class Bluetooth_Sink: public NamedItem
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
     virtual ~Bluetooth_Sink(){};
 	void Setup();
-	void StartDevice(char *SinkName);
+	void StartDevice(const char *SinkName);
 	void StopDevice();
 	bool IsConnected();
 	

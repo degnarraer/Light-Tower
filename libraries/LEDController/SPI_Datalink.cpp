@@ -95,8 +95,25 @@ void SPI_Datalink_Master::ProcessEventQueue()
 								uint32_t CurrentIndex = m_Queued_Transactions  % N_MASTER_QUEUES;
 								memset(spi_rx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
 								memset(spi_tx_buf[CurrentIndex], 0, SPI_MAX_DATA_BYTES);
-								size_t DataLength = EncodeDataToBuffer(m_DataItems[j].Name, m_DataItems[j].DataType, DataBuffer, m_DataItems[j].Count, (char*)spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
-								if(true == m_SpewToConsole && 0 < DataLength)
+								size_t DataLength = 0;
+								switch(m_DataItems[j].DataType)
+								{
+									case DataType_String_t:
+										String *StringsPointer;
+										StringsPointer = (String*)DataBuffer;
+										DataLength = EncodeStringsToBuffer(m_DataItems[j].Name, StringsPointer, m_DataItems[j].Count, (char*)spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+										for(int k = 0; k < m_DataItems[j].Count; ++k)
+										{
+											String *aString;
+											aString = &StringsPointer[j];
+											//delete aString;
+										}
+									break;
+									default:
+										DataLength = EncodeDataToBuffer(m_DataItems[j].Name, m_DataItems[j].DataType, DataBuffer, m_DataItems[j].Count, (char*)spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES);
+									break;
+								}
+								if(true == m_SpewTXToConsole && 0 < DataLength)
 								{
 									ESP_LOGE("SPI_Datalink", "TX: %s", String((char*)spi_tx_buf[CurrentIndex]).c_str());
 								}
@@ -129,9 +146,29 @@ bool SPI_Datalink_Master::End()
 	return m_SPI_Master.end();
 }
 
-size_t SPI_Datalink_Master::EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode)
+size_t SPI_Datalink_Master::EncodeStringsToBuffer(String DataItemName, String *Strings, size_t Count, char *Buffer, size_t MaxBytesToEncode)
 {
-	String DataToSend = SerializeDataToJson(DataTypeName, DataType, Object, Count).c_str();
+	String DataToSend = SerializeStringsToJson(DataItemName, Strings, Count);
+	size_t DataToSendLength = strlen(DataToSend.c_str());
+	size_t PadCount = 0;
+	if(0 != DataToSendLength % 4)
+	{
+		PadCount = 4 - DataToSendLength % 4;
+	}
+	for(int i = 0; i < PadCount; ++i)
+	{
+		DataToSend += "\0";
+	}
+	DataToSendLength += PadCount;
+	assert(DataToSendLength <= MaxBytesToEncode);
+	memcpy(Buffer, DataToSend.c_str(), DataToSendLength);
+	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
+	return DataToSendLength;
+}
+
+size_t SPI_Datalink_Master::EncodeDataToBuffer(String DataItemName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode)
+{
+	String DataToSend = SerializeDataToJson(DataItemName, DataType, Object, Count).c_str();
 	size_t DataToSendLength = DataToSend.length();
 	size_t PadCount = 0;
 	if(0 != DataToSendLength % 4)
@@ -160,11 +197,11 @@ void SPI_Datalink_Master::TransmitQueuedData()
 		++m_DeQueued_Transactions;
 		if(strlen(ResultString.c_str()) > 0)
 		{
-			if(true == m_SpewToConsole)
+			if(true == m_SpewRXToConsole)
 			{
 				ESP_LOGE("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
 			}
-			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false);
+			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), m_SpewRXToConsole);
 		}
 	}	
 	m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
@@ -219,11 +256,11 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 		++m_DeQueued_Transactions;
 		if(ResultString.length() > 0)
 		{
-			if(true == m_SpewToConsole)
+			if(true == m_SpewRXToConsole)
 			{
 				ESP_LOGE("SPI_Datalink", "RX: %s", ResultString.c_str());
 			}
-			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), false); 
+			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), m_SpewRXToConsole); 
 		}
 	}
 }
@@ -241,7 +278,7 @@ void SPI_Datalink_Slave::QueueUpNewTransactions()
 		if(true == m_SPI_Slave.queue(spi_rx_buf[CurrentIndex], spi_tx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
 		{
 			++m_Queued_Transactions;
-			if(true == m_SpewToConsole)
+			if(true == m_SpewTXToConsole)
 			{
 				if(0 < ResultSize)
 				{
@@ -270,7 +307,19 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 					byte Buffer[GetSizeOfDataType(m_DataItems[m_CurrentDataItemToTX].DataType) * m_DataItems[m_CurrentDataItemToTX].Count];
 					if ( xQueueReceive(m_DataItems[m_CurrentDataItemToTX].QueueHandle_TX, Buffer, 0) == pdTRUE )
 					{
-						ResultingSize = EncodeDataToBuffer(m_DataItems[m_CurrentDataItemToTX].Name, m_DataItems[m_CurrentDataItemToTX].DataType, Buffer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
+						switch(m_DataItems[m_CurrentDataItemToTX].DataType)
+						{
+							case DataType_String_t:
+							{	
+								String *StringsPointer;
+								StringsPointer = (String*)Buffer;
+								ResultingSize = EncodeStringsToBuffer(m_DataItems[m_CurrentDataItemToTX].Name, StringsPointer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
+							}
+							break;
+							default:
+								ResultingSize = EncodeDataToBuffer(m_DataItems[m_CurrentDataItemToTX].Name, m_DataItems[m_CurrentDataItemToTX].DataType, Buffer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
+							break;
+						}
 						break;
 					}
 					else
@@ -285,9 +334,29 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 	return ResultingSize;
 }
 
-size_t SPI_Datalink_Slave::EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode)
+size_t SPI_Datalink_Slave::EncodeStringsToBuffer(String DataItemName, String *Strings, size_t Count, char *Buffer, size_t MaxBytesToEncode)
 {
-	String DataToSend = SerializeDataToJson(DataTypeName, DataType, Object, Count);
+	String DataToSend = SerializeStringsToJson(DataItemName, Strings, Count);
+	size_t DataToSendLength = strlen(DataToSend.c_str());
+	size_t PadCount = 0;
+	if(0 != DataToSendLength % 4)
+	{
+		PadCount = 4 - DataToSendLength % 4;
+	}
+	for(int i = 0; i < PadCount; ++i)
+	{
+		DataToSend += "\0";
+	}
+	DataToSendLength += PadCount;
+	assert(DataToSendLength <= MaxBytesToEncode);
+	memcpy(Buffer, DataToSend.c_str(), DataToSendLength);
+	ESP_LOGV("SPI_Datalink", "TX: %s", DataToSend.c_str());
+	return DataToSendLength;
+}
+
+size_t SPI_Datalink_Slave::EncodeDataToBuffer(String DataItemName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode)
+{
+	String DataToSend = SerializeDataToJson(DataItemName, DataType, Object, Count);
 	size_t DataToSendLength = strlen(DataToSend.c_str());
 	size_t PadCount = 0;
 	if(0 != DataToSendLength % 4)

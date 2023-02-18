@@ -60,7 +60,11 @@ class SPI_Datalink: public DataSerializer
 			m_DataItemsCount = Count;
 			SetDataSerializerDataItems(DataItems, Count);
 		}
-		void SetSpewToConsole(bool Spew){ m_SpewToConsole = Spew; }
+		void SetSpewToConsole(bool RXSpew, bool TXSpew)
+		{ 
+			m_SpewRXToConsole = RXSpew; 
+			m_SpewTXToConsole = TXSpew; 
+		}
 	protected:
 		uint8_t m_SPI_BUS;
 		uint8_t m_SCK;
@@ -70,7 +74,8 @@ class SPI_Datalink: public DataSerializer
 		uint8_t m_DMA_Channel = 0;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
-		bool m_SpewToConsole = false;
+		bool m_SpewRXToConsole = false;
+		bool m_SpewTXToConsole = false;
 };
 
 class SPI_Datalink_Master: public SPI_Datalink
@@ -106,7 +111,8 @@ class SPI_Datalink_Master: public SPI_Datalink
 		uint8_t *spi_rx_buf[N_MASTER_QUEUES];
 		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
-		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
+		size_t EncodeStringsToBuffer(String Name, String *Strings, size_t Count, char *Buffer, size_t MaxBytesToEncode);
+		size_t EncodeDataToBuffer(String DataItemName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 		uint32_t m_Queued_Transactions = 0;
 		uint32_t m_Queued_Transactions_Reset_Point = 0;
 		uint32_t m_DeQueued_Transactions = 0;
@@ -147,6 +153,7 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		void ProcessCompletedTransactions();
 		void QueueUpNewTransactions();
 		size_t GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend);
+		size_t EncodeStringsToBuffer(String DataTypeName, String *Strings, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 };
 
