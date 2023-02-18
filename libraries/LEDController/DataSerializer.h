@@ -120,17 +120,20 @@ class DataSerializer: public CommonUtils
 							{
 								size_t ObjectByteCount = GetSizeOfDataType(DataType);
 								size_t CountIn = doc[m_CountTag];
-								uint8_t Buffer[ObjectByteCount * CountIn];
 								size_t TotalLength = 0;
+								char *CharBuffer;
 								for(int j = 0; j < CountIn; ++j)
 								{
 									String BytesString = doc[m_DataTag][j];
 									size_t Length = BytesString.length();
 									TotalLength += Length;
-									char *CharBuffer = new char[Length];
+									CharBuffer = new char[Length];
 									memcpy(CharBuffer, BytesString.c_str(), Length);
-									Buffer[i] = (uint8_t &)CharBuffer;
-								}		
+								}
+								if(NULL != m_DataItems[i].QueueHandle_RX)
+								{
+									PushValueToQueue(CharBuffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
+								}
 							}
 							else
 							{

@@ -56,7 +56,7 @@ void setup()
   InitLocalVariables();
   InitTasks();
   PrintFreeHeap();
-  m_SPIDataLinkSlave.SetSpewToConsole(false);
+  m_SPIDataLinkSlave.SetSpewToConsole(false, false);
 }
 
 void loop()

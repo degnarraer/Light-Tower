@@ -7,7 +7,7 @@ window.addEventListener('load', onload);
 
 function onload(event) {
     initWebSocket();
-	openTab(event, 'Speaker Status')
+	openTab(event, 'Bluetooth In')
 }
 
 function getValues(){
@@ -188,6 +188,10 @@ function onMessage(event) {
 					document.getElementById(Name).value = Value;
 				}
 				document.getElementById(Name + "_Value").innerHTML = Value;
+			}
+			else if( Name == "Sink_SSID" )
+			{
+				document.getElementByName("Sink SSID").value = Value;
 			}
 		}
 	}

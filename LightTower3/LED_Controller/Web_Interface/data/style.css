@@ -131,6 +131,15 @@ body {
 	border: 2px dashed orange;
 }
 
+.SettingGroup_Horrizontal_Grid_TextInput{
+	box-sizing: border-box;
+	width: 100%;
+	align-content: center;
+	vertical-align: middle;
+	display: grid;
+	grid-template-columns: minmax(20%, 40%) minmax(30%, 60%) 100px;
+	border: 2px dashed blue;
+}
 .SettingGroup_Horrizontal_Grid_Slider {
 	box-sizing: border-box;
 	width: 100%;
@@ -138,6 +147,7 @@ body {
 	vertical-align: middle;
 	display: grid;
 	grid-template-columns: 200px minmax(20%, 80%) auto;
+	border: 2px dashed blue;
 }
 
 .SettingGroup_Horrizontal_Grid_Toggle {
@@ -147,7 +157,17 @@ body {
 	vertical-align: middle;
 	display: grid;
 	grid-template-columns: auto 100px;
-	/*border: 2px dashed blue;*/
+	border: 2px dashed blue;
+}
+
+.SettingGroup_Horrizontal_Grid_Status {
+	box-sizing: border-box;
+	width: 100%;
+	align-content: center;
+	vertical-align: middle;
+	display: grid;
+	grid-template-columns: auto 100px;
+	border: 2px dashed blue;
 }
 
 .SettingGroup_Title {
@@ -167,13 +187,54 @@ body {
 	border: 2px dashed yellow;
 }
 
+.SettingGroup_Textbox {
+    width: 100%; /* make the text box fill the width of its container */
+	box-sizing: border-box; /* include the padding and border in the element's total width */
+	padding: 10px; /* add some padding to the text box */
+	border: 1px solid #ccc; /* add a border to the text box */
+	border-radius: 4px; /* add some border-radius to the text box */
+}
+
+#userInput {
+	width: 100%; /* make the text box fill the width of its container */
+	box-sizing: border-box; /* include the padding and border in the element's total width */
+	padding: 5px; /* add some padding to the text box */
+	border: 1px solid #ccc; /* add a border to the text box */
+	border-radius: 4px; /* add some border-radius to the text box */
+	text-align: right;
+}
+#submitBtn {
+	background-color: #ccc; /* set the background color of the button */
+	color: black; /* set the color of the button text to white */
+	width: 60px;
+	height: 34px;
+	text-align: center; /* center the button text */
+	text-decoration: none; /* remove the underline from the button text */
+	display: inline-block; /* set the button to display as an inline block */
+	font-size: auto; /* set the font size of the button text */
+	margin: 0px 0px; /* add some margin to the button */
+	cursor: pointer; /* set the cursor to a pointer when hovering over the button */
+	transition-duration: 0.4s; /* add a transition effect to the button */
+	box-shadow: 2px 2px 2px 2px  #666; /* add a box-shadow to the button when pressed */
+	border-radius: 34px;
+}
+
+#submitBtn:hover {
+	background-color: yellow; /* set the background color of the button when hovering */
+}
+
+#submitBtn:active {
+	background-color: #2196F3; /* set the background color of the button when pressed */
+	transform: scale(0.98);
+	box-shadow: 0 0px #666; /* add a box-shadow to the button when pressed */
+}		
 .SettingGroup_Value {
     box-sizing: border-box;
 	display: flex;
 	justify-content: left;
 	align-items: center;
 	border: 2px dashed black;
-    font-size: 2rem;
+    font-size: 1rem;
     font-weight: bold;
     color: Black;
 	border: 2px dashed aqua;

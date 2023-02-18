@@ -110,7 +110,8 @@ void setup()
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
   m_SPIDataLinkToCPU1.SetupSPIDataLink();
-  m_SPIDataLinkToCPU1.SetSpewToConsole(false, false);
+  m_SPIDataLinkToCPU1.SetSpewToConsole(false
+  , false);
   m_SPIDataLinkToCPU3.SetupSPIDataLink();
   m_SPIDataLinkToCPU3.SetSpewToConsole(false, false);
   m_Manager.Setup();

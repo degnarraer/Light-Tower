@@ -20,7 +20,7 @@
 
 void Manager::Setup()
 {
-  m_SPIDataLinkSlave.SetSpewToConsole(false);
+  m_SPIDataLinkSlave.SetSpewToConsole(false, false);
 }
 void Manager::ProcessEventQueue()
 {

@@ -411,6 +411,7 @@ class SettingsWebServerManager: public QueueManager
               KeyValuePairs.add({ "Green_Value_Slider", String(Green_Value).c_str() });
               KeyValuePairs.add({ "Blue_Value_Slider", String(Blue_Value).c_str() });
               KeyValuePairs.add({ "Sound_State", String(Sound_State).c_str() });
+              KeyValuePairs.add({ "Sink_SSID", String(SinkSSID).c_str() });
               NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
           }
           else

@@ -69,6 +69,22 @@ void Manager::InitializeNVM(bool Reset)
   }
 }
 
+void Manager::SaveToNVM()
+{
+    m_Preferences.putString("Sink SSID", m_SinkSSID);
+    m_Preferences.putBool("Sink BT Reset", m_SinkReset);
+    m_Preferences.putBool("Sink ReConnect", m_SinkReConnect);
+    m_Preferences.putBool("NVM Initialized", true);
+    m_Preferences.putBool("NVM Reset", false);
+}
+
+void Manager::LoadFromNVM()
+{
+  m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power");
+  m_SinkReset = m_Preferences.getBool("Sink Reset", true);
+  m_SinkReConnect = m_Preferences.getBool("Sink ReConnect", true);
+}
+
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
   m_SoundState = SoundState;
@@ -77,21 +93,7 @@ void Manager::SoundStateChange(SoundState_t SoundState)
 
 void Manager::ProcessEventQueue20mS()
 {
-  switch(m_InputType)
-  {
-    case InputType_Microphone:
-      m_Mic_In.ProcessEventQueue();
-      m_I2S_Out.ProcessEventQueue();
-    break;
-    case InputType_Bluetooth:
-    {  
-      m_I2S_Out.ProcessEventQueue();
-      ProcessBluetoothConnectionStatus(false);
-    }
-    break;
-    default:
-    break;
-  }
+  ProcessI2S_And_BT();
   MoveDataToStatisticalEngine();
   SinkSSID_RX();
 }
@@ -122,6 +124,24 @@ void Manager::SetInputType(InputType_t Type)
       m_BT_In.StopDevice();
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
+    break;
+  }
+}
+void Manager::ProcessI2S_And_BT()
+{    
+  switch(m_InputType)
+  {
+    case InputType_Microphone:
+      m_Mic_In.ProcessEventQueue();
+      m_I2S_Out.ProcessEventQueue();
+    break;
+    case InputType_Bluetooth:
+    {  
+      m_I2S_Out.ProcessEventQueue();
+      ProcessBluetoothConnectionStatus(false);
+    }
+    break;
+    default:
     break;
   }
 }

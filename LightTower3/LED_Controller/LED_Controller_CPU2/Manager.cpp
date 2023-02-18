@@ -67,6 +67,24 @@ void Manager::InitializeNVM(bool Reset)
   }
 }
 
+void Manager::SaveToNVM()
+{
+  m_Preferences.putFloat("Amplitude Gain", m_AmplitudeGain);
+  m_Preferences.putFloat("FFT Gain", m_FFTGain);
+  m_Preferences.putBool("Source BT Reset", m_SourceBTReset);
+  m_Preferences.putBool("Source ReConnect", m_SourceReConnect);
+  m_Preferences.putBool("SSP Enabled", false);
+}
+
+void Manager::LoadFromNVM()
+{
+  m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
+  m_SoundProcessor.SetGain(m_AmplitudeGain);
+  m_FFTGain = m_Preferences.getFloat("FFT Gain", 1.0);
+  m_SoundProcessor.SetFFTGain(m_FFTGain);
+  m_SourceBTReset = m_Preferences.getBool("Source BT Reset", m_SourceBTReset);
+  m_Preferences.putBool("Source ReConnect", m_SourceReConnect);
+}
 void Manager::ProcessEventQueue20mS()
 {
   m_I2S_In.ProcessEventQueue();
@@ -92,18 +110,6 @@ void Manager::ProcessEventQueue300000mS()
 {
   ESP_LOGI("Manager", "Saving Settigns to NVM");
   SaveToNVM();
-}
-
-void Manager::SaveToNVM()
-{
-  m_Preferences.putFloat("Amplitude Gain", m_SoundProcessor.GetGain());
-  m_Preferences.putFloat("FFT Gain", m_SoundProcessor.GetFFTGain());
-}
-
-void Manager::LoadFromNVM()
-{
-  m_SoundProcessor.SetGain(m_Preferences.getFloat("Amplitude Gain", 1.0));
-  m_SoundProcessor.SetFFTGain(m_Preferences.getFloat("FFT Gain", 1.0));
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
@@ -165,44 +171,46 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 
 void Manager::AmplitudeGain_RX()
 {
-  float Value;
+  float DatalinkValue;
   static bool AmplitudeGainPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
   {
-    if(false == AreEqual(Value, m_SoundProcessor.GetGain()))
+    if(false == AreEqual(DatalinkValue, m_SoundProcessor.GetGain()))
     {
-      Serial << "Amplitude Gain Value Value Changed: " << Value << "\n";
-      m_SoundProcessor.SetGain(Value);
+      m_AmplitudeGain = DatalinkValue;
+      Serial << "Amplitude Gain Value Value Changed: " << m_AmplitudeGain << "\n";
+      m_SoundProcessor.SetGain(m_AmplitudeGain);
       AmplitudeGain_TX();
     }
   }
 }
 void Manager::AmplitudeGain_TX()
 {
-  float Value = m_SoundProcessor.GetGain();
+  m_AmplitudeGain = m_SoundProcessor.GetGain();
   static bool AmplitudeGainPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "Amplitude Gain", 0, AmplitudeGainPushErrorHasOccured);
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_AmplitudeGain, "Amplitude Gain", 0, AmplitudeGainPushErrorHasOccured);
 }
 
 void Manager::FFTGain_RX()
 {
-  float Value;
+  float DatalinkValue;
   static bool FFTGainPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&Value, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
   {
-    if(false == AreEqual(Value, m_SoundProcessor.GetFFTGain()))
+    if(false == AreEqual(DatalinkValue, m_SoundProcessor.GetFFTGain()))
     {
-      Serial << "FFT Gain Value Value Changed: " << Value << "\n";
-      m_SoundProcessor.SetFFTGain(Value);
+      m_FFTGain = DatalinkValue;
+      Serial << "FFT Gain Value Value Changed: " << m_FFTGain << "\n";
+      m_SoundProcessor.SetFFTGain(m_FFTGain);
       FFTGain_TX();
     }
   }
 }
 void Manager::FFTGain_TX()
 {
-  float Value = m_SoundProcessor.GetFFTGain();
+  m_FFTGain = m_SoundProcessor.GetFFTGain();
   static bool FFTGainPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&Value, "FFT Gain", 0, FFTGainPushErrorHasOccured);
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_FFTGain, "FFT Gain", 0, FFTGainPushErrorHasOccured);
 }
 
 void Manager::SourceBluetoothReset_RX()

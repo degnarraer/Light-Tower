@@ -80,18 +80,24 @@ class Manager: public NamedItem
     
     Preferences m_Preferences;
     void InitializeNVM(bool Reset);
+
+    float m_AmplitudeGain;
     void AmplitudeGain_RX();
     void AmplitudeGain_TX();
-    
+
+    float m_FFTGain;
     void FFTGain_RX();
     void FFTGain_TX();
-    
+
+    bool m_SourceBTReset;
     void SourceBluetoothReset_RX();
     void SourceBluetoothReset_TX();
     
+    bool m_SourceReConnect;
     void SourceAutoReConnect_RX();
     void SourceAutoReConnect_TX();
-    
+
+    String m_SourceSSID;
     void SourceSSID_RX();
     void SourceSSID_TX();
     

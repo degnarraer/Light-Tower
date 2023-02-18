@@ -60,7 +60,7 @@ class Manager: public NamedItem
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
     void SetInputType(InputType_t Type);
-    
+    void ProcessI2S_And_BT();
     //Bluetooth_Callback
     void BTDataReceived(uint8_t *data, uint32_t length);
     
@@ -86,26 +86,30 @@ class Manager: public NamedItem
     
     Preferences m_Preferences;
     void InitializeNVM(bool Reset);
+    void SaveToNVM();
+    void LoadFromNVM();
 
     void MoveDataToStatisticalEngine();
     
-    void ProcessBluetoothConnectionStatus(bool ForceUpdate);
     bool m_BluetoothIsConnected = false;
+    void ProcessBluetoothConnectionStatus(bool ForceUpdate);
 
     
-    void SoundState_TX(SoundState_t SoundState);
     SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
+    void SoundState_TX(SoundState_t SoundState);
 
     
+    bool m_SinkReset;
     void SinkBluetoothReset_RX();
     void SinkBluetoothReset_TX();
-    
+
+    bool m_SinkReConnect;
     void SinkAutoReConnect_RX();
     void SinkAutoReConnect_TX();
     
+    String m_SinkSSID;
     void SinkSSID_TX();
     void SinkSSID_RX();
-    String m_SinkSSID;
 };
 
 #endif
