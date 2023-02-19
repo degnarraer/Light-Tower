@@ -81,7 +81,7 @@ class SPIDataLinkToCPU1: public SPIDataLinkMaster
       { "Sink Connected",   DataType_bool_t,                1,                  Transciever_RX,   4   },
       { "Sink ReConnect",   DataType_bool_t,                1,                  Transciever_TXRX, 4   },
       { "Sink BT Reset",    DataType_bool_t,                1,                  Transciever_TXRX, 4   },
-      { "Sink SSID",        DataType_String_t,              1,                  Transciever_TXRX, 4   },
+      { "Sink SSID",        DataType_Wifi_Info_t,           1,                  Transciever_TXRX, 4   },
     };
     
     //QueueManager Interface
@@ -109,11 +109,11 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
       { "Source Connected",       DataType_bool_t,        1,    Transciever_TX,   4   },
       { "Source ReConnect",       DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Source BT Reset",        DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Source SSID",            DataType_String_t,      1,    Transciever_TXRX, 4   },
+      { "Source SSID",            DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
       { "Sink Connected",         DataType_bool_t,        1,    Transciever_TX,   4   },
       { "Sink ReConnect",         DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Sink BT Reset",          DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Sink SSID",              DataType_String_t,      1,    Transciever_TXRX, 4   },
+      { "Sink SSID",              DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
       { "Sound State",            DataType_SoundState_t,  1,    Transciever_TX,   10  },
       { "Amplitude Gain",         DataType_Float_t,       1,    Transciever_TXRX, 20  },
       { "FFT Gain",               DataType_Float_t,       1,    Transciever_TXRX, 20  },

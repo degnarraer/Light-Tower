@@ -66,6 +66,10 @@ class CommonUtils
 					Result = sizeof(String);
 				break;
 				
+				case DataType_Wifi_Info_t:
+					Result = sizeof(Wifi_Info_t);
+				break;
+				
 				case DataType_Float_t:
 					Result = sizeof(float);
 				break;

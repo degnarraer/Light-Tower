@@ -16,6 +16,19 @@ class NamedItem
     String m_Title;
 };
 
+struct Wifi_Info
+{
+	Wifi_Info(String SSID_In, int32_t RSSI_In = 0)
+	{
+		assert(32 >= SSID_In.length());
+		strncpy(SSID, SSID_In.c_str(), sizeof(SSID));
+		RSSI = RSSI_In;
+	}
+	char SSID[33];
+	int32_t RSSI = 0;
+};
+typedef Wifi_Info Wifi_Info_t;
+
 enum SoundState_t
 {
   LastingSilenceDetected = 0,
@@ -63,6 +76,7 @@ enum DataType_t
   DataType_Uint16_t,
   DataType_Uint32_t,
   DataType_String_t,
+  DataType_Wifi_Info_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -83,6 +97,7 @@ static const char* DataTypeStrings[] =
   "Uint16_t",
   "Uint32_t",
   "String_t",
+  "Wifi_Info_t",
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",
@@ -133,5 +148,6 @@ struct MaxBandSoundData_t
 	int16_t MaxBandIndex;
 	int16_t TotalBands;
 };
+
 
 #endif

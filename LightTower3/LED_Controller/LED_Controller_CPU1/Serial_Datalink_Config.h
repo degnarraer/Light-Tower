@@ -59,7 +59,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
       { "Sink Connected",       DataType_bool_t,                1,  Transciever_TX,   4   },
       { "Sink ReConnect",       DataType_bool_t,                1,  Transciever_TXRX, 4   },
       { "Sink BT Reset",        DataType_bool_t,                1,  Transciever_TXRX, 4   },
-      { "Sink SSID",            DataType_String_t,              1,  Transciever_TXRX, 4   },
+      { "Sink SSID",            DataType_Wifi_Info_t,           1,  Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

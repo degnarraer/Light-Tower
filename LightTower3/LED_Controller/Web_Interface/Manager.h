@@ -43,6 +43,7 @@ class Manager: public NamedItem
 
     void Setup();
     void ProcessEventQueue();
+    void MoveDataBetweenSerialAndWebPage();
 
   private:
     SPIDataLinkSlave &m_SPIDataLinkSlave;

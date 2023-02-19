@@ -36,28 +36,6 @@ class DataSerializer: public CommonUtils
 			m_DataItems = &DataItem;
 			m_DataItemsCount = DataItemCount;
 		}
-		
-		String SerializeStringsToJson(String Name, String *Strings, size_t Count)
-		{
-			size_t TotalStringLength = 0;
-			doc.clear();
-			doc[m_NameTag] = Name.c_str();
-			doc[m_CountTag] = Count;
-			doc[m_DataTypeTag] = DataTypeStrings[DataType_String_t];
-			JsonArray data = doc.createNestedArray(m_DataTag);
-			for(int i = 0; i < Count; ++i)
-			{
-				String Value = Strings[i];
-				ESP_LOGV("Serial_Datalink",  "Serialize: %s", Value.c_str());
-				data.add(Value);
-				TotalStringLength += Value.length();
-			}
-			doc[m_TotalStringLengthTag] = TotalStringLength;
-			String Result;
-			serializeJson(doc, Result);
-			return Result;
-		}
-		
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
@@ -108,90 +86,67 @@ class DataSerializer: public CommonUtils
 				}
 				if(NULL != m_DataItems)
 				{
-					
 					for(int i = 0; i < m_DataItemsCount; ++i)
 					{
-						const String ItemName = (m_DataItems[i]).Name;
-						const String DocName = doc[m_NameTag];
-						if(true == ItemName.equals(DocName))
+						if(AllTagsExist())
 						{
-							DataType_t DataType = GetDataTypeFromString(doc[m_DataTypeTag]);
-							if(DataType_String_t == DataType)
+							const String ItemName = (m_DataItems[i]).Name;
+							const String DocName = doc[m_NameTag];
+							if(true == ItemName.equals(DocName))
 							{
-								size_t ObjectByteCount = GetSizeOfDataType(DataType);
+								size_t CheckSumCalc = 0;
+								size_t CheckSumIn = doc[m_CheckSumTag];
 								size_t CountIn = doc[m_CountTag];
-								size_t TotalLength = 0;
-								char *CharBuffer;
-								for(int j = 0; j < CountIn; ++j)
+								size_t ByteCountIn = doc[m_TotalByteCountTag];
+								size_t ActualDataCount = doc[m_DataTag].size();
+								DataType_t DataType = GetDataTypeFromString(doc[m_DataTypeTag]);
+								size_t ObjectByteCount = GetSizeOfDataType(DataType);
+								uint8_t Buffer[ByteCountIn];							
+								if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
 								{
-									String BytesString = doc[m_DataTag][j];
-									size_t Length = BytesString.length();
-									TotalLength += Length;
-									CharBuffer = new char[Length];
-									memcpy(CharBuffer, BytesString.c_str(), Length);
-								}
-								if(NULL != m_DataItems[i].QueueHandle_RX)
-								{
-									PushValueToQueue(CharBuffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
-								}
-							}
-							else
-							{
-								if(AllTagsExist())
-								{
-									size_t CheckSumCalc = 0;
-									size_t CheckSumIn = doc[m_CheckSumTag];
-									size_t CountIn = doc[m_CountTag];
-									size_t ByteCountIn = doc[m_TotalByteCountTag];
-									size_t ActualDataCount = doc[m_DataTag].size();
-									size_t ObjectByteCount = GetSizeOfDataType(DataType);
-									uint8_t Buffer[ByteCountIn];									
-									if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
+									for(int j = 0; j < CountIn; ++j)
 									{
-										for(int j = 0; j < CountIn; ++j)
+										String BytesString = doc[m_DataTag][j];
+										for(int k = 0; k < ObjectByteCount; ++k)
 										{
-											String BytesString = doc[m_DataTag][j];
-											for(int k = 0; k < ObjectByteCount; ++k)
-											{
-												size_t startIndex = 2*k;
-												char hexArray[2];
-												strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
-												long decValue = strtol(String(hexArray).c_str(), NULL, 16);
-												CheckSumCalc += decValue;
-												Buffer[j * ObjectByteCount + k] = decValue;
-											}
+											size_t startIndex = 2*k;
+											char hexArray[2];
+											strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
+											long decValue = strtol(String(hexArray).c_str(), NULL, 16);
+											CheckSumCalc += decValue;
+											Buffer[j * ObjectByteCount + k] = decValue;
 										}
 									}
-									else
-									{
-										++m_FailCount;
-										ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
-									}
-									
-									if(CheckSumCalc == CheckSumIn)
-									{
-										if(NULL != m_DataItems[i].QueueHandle_RX)
-										{
-											PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
-										}
-										else
-										{
-											++m_FailCount;
-											ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: No matching DataItem RX Handle");
-										}
-									}
-									else
-									{
-										++m_FailCount;
-										ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
-									}
-									FailPercentage();
-									return;
 								}
 								else
 								{
-									ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags");
+									++m_FailCount;
+									ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
 								}
+								
+								if(CheckSumCalc == CheckSumIn)
+								{
+									if(NULL != m_DataItems[i].QueueHandle_RX)
+									{
+										PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
+									}
+									else
+									{
+										++m_FailCount;
+										ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: No matching DataItem RX Handle");
+									}
+								}
+								else
+								{
+									++m_FailCount;
+									ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
+								}
+								FailPercentage();
+								return;
+							}
+							else
+							{
+								ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags");
 							}
 						}
 					}

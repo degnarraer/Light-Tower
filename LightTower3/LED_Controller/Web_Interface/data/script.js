@@ -57,10 +57,11 @@ function SliderNotTouched()
     SliderTouched = false;
 }
  
-function setSpeakerImage(state)
+function setSpeakerImage(value)
 {   
 	var Image1Source;
 	var Image2Source;
+	var state = parseInt(value);
 	const imageOneElement = document.getElementById("L Speaker Image");
 	const imageTwoElement = document.getElementById("R Speaker Image");
 	var imageOne = new Image;
@@ -170,32 +171,28 @@ function onMessage(event) {
     var keys = Object.keys(myObj);
 	for (var i = 0; i < keys.length; ++i)
 	{
-		var Name = myObj[keys[i]]["Name"];
+		var Id = myObj[keys[i]]["Id"];
 		var Value = myObj[keys[i]]["Value"];
-		if(null != Name && null != Value)
+		if(null != Id && null != Value)
 		{
-			if(Name == "Speaker_Image")
+			if(Id == "Speaker_Image")
 			{
-				setSpeakerImage(parseInt(Value))
+				setSpeakerImage(Value)
 			}
-			else if( Name == "Amplitude_Gain_Slider1" || 
-					 Name == "Amplitude_Gain_Slider2" || 
-					 Name == "FFT_Gain_Slider1" ||
-					 Name == "FFT_Gain_Slider2" )
+			else if( Id == "Amplitude_Gain_Slider1" || 
+					 Id == "Amplitude_Gain_Slider2" || 
+					 Id == "FFT_Gain_Slider1" ||
+					 Id == "FFT_Gain_Slider2" )
 			{
 				if(false == SliderTouched)
 				{
-					document.getElementById(Name).value = Value;
+					document.getElementById(Id).value = Value;
 				}
-				document.getElementById(Name + "_Value").innerHTML = Value;
+				document.getElementById(Id + "_Value").innerHTML = Value;
 			}
-			else if( Name == "Sink_SSID" )
+			else if( Id == "Sink_SSID" )
 			{
-				const collection = document.getElementsByName("Sink SSID");
-				for (let j = 0; j < collection.length; j++)
-				{
-				  collection[j].value == Value;
-				}
+				document.getElementById(Id).value = Value;
 			}
 		}
 	}

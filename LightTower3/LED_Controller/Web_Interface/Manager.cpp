@@ -24,39 +24,44 @@ void Manager::Setup()
 }
 void Manager::ProcessEventQueue()
 {
-    //Sound State Data Movement
-    MoveDataFromQueueToQueue( "Manager: Sound State From Datalink To Web Page"
-                            , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Sound State")
-                            , m_SettingsWebServerManager.GetQueueHandleTXForDataItem("Sound State")
-                            , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Sound State")
-                            , 0
-                            , false );
-    
-    //Amplitude Gain Data Movement                      
-    MoveDataFromQueueToQueue( "Manager: Amplitude Gain From Datalink To Web Page"
-                            , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("Amplitude Gain")
-                            , m_SettingsWebServerManager.GetQueueHandleTXForDataItem("Amplitude Gain")
-                            , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("Amplitude Gain")
-                            , 0
-                            , false );
-    MoveDataFromQueueToQueue( "Manager: Amplitude Gain from Web Page To Datalink"
-                            , m_SettingsWebServerManager.GetQueueHandleRXForDataItem("Amplitude Gain")
-                            , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Amplitude Gain")
-                            , m_SettingsWebServerManager.GetTotalByteCountForDataItem("Amplitude Gain")
-                            , 0
-                            , false );
-    
-    //FFT Gain Data Movement   
-    MoveDataFromQueueToQueue( "Manager: FFT Gain From Datalink To Web Page"
-                            , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem("FFT Gain")
-                            , m_SettingsWebServerManager.GetQueueHandleTXForDataItem("FFT Gain")
-                            , m_SPIDataLinkSlave.GetTotalByteCountForDataItem("FFT Gain")
-                            , 0
-                            , false );
-    MoveDataFromQueueToQueue( "Manager: FFT Gain from Web Page To Datalink"
-                            , m_SettingsWebServerManager.GetQueueHandleRXForDataItem("FFT Gain")
-                            , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("FFT Gain")
-                            , m_SettingsWebServerManager.GetTotalByteCountForDataItem("FFT Gain")
-                            , 0
-                            , false );
+    MoveDataBetweenSerialAndWebPage();
+}
+
+
+void Manager::MoveDataBetweenSerialAndWebPage()
+{
+  struct Signal
+  {
+    String Name;
+    bool A_To_B;
+    bool B_To_A;
+  };
+  const uint8_t count = 5;
+  Signal Signals[count] = { { "Sound State", true, false }
+                          , { "Amplitude Gain", true, true }
+                          , { "FFT Gain", true, true }
+                          , { "Sink SSID", true, true }
+                          , { "Source SSID", true, true } };
+                                      
+  for(int i = 0; i < count; ++i)
+  {
+    if(Signals[i].A_To_B)
+    {
+      MoveDataFromQueueToQueue( "Manager: Move Data from Datalink to Web Page: " + Signals[i].Name
+                              , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
+                              , m_SettingsWebServerManager.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+                              , 0
+                              , false );
+    }
+    if(Signals[i].B_To_A)
+    {
+      MoveDataFromQueueToQueue( "Manager: Move Data from Web Page to Datalink"
+                              , m_SettingsWebServerManager.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
+                              , m_SettingsWebServerManager.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+                              , 0
+                              , false );
+    }
+  }
 }

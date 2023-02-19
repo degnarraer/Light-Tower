@@ -218,11 +218,15 @@ class SettingsWebServerManager: public QueueManager
       }
       
       //Sink SSID TX QUEUE
-      static bool SinkSSIDPullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&SinkSSID, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
-        KeyValuePairs.add({ "Sink SSID", SinkSSID });
+        static bool SinkSSIDPullErrorHasOccured = false;
+        char Buffer[GetQueueByteCountForDataItem("Sink SSID")];
+        if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
+        {
+          SinkSSID = String(Buffer);
+          Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
+          KeyValuePairs.add({ "Sink_SSID", SinkSSID });
+        }
       }
       
       //Source SSID TX QUEUE
@@ -296,6 +300,16 @@ class SettingsWebServerManager: public QueueManager
 
     //Sink SSID Value and Widget Name Values
     String SinkSSID = "";
+    static void StaticHandleSinkSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
+    {
+      WebServerManager->HandleRedValueReceive(Value);
+    }
+    void HandleSinkSSIDValueReceive(const String &Value)
+    {
+      SinkSSID = Value;
+      static bool SinkSSIDValuePushErrorhasOccured = false;
+      PushValueToRXQueue(&SinkSSID, "Sink SSID", 0, SinkSSIDValuePushErrorhasOccured);
+    }
     
     //Source SSID Value and Widget Name Values
     String SourceSSID = "";
@@ -347,16 +361,16 @@ class SettingsWebServerManager: public QueueManager
       { "Source Connected",     DataType_bool_t,        1,    Transciever_RX,   10  },
       { "Source ReConnect",     DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Source BT Reset",      DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Source SSID",          DataType_String_t,      1,    Transciever_TXRX, 4   },
+      { "Source SSID",          DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
       { "Sink Connected",       DataType_bool_t,        1,    Transciever_RX,   4   },
       { "Sink ReConnect",       DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Sink BT Reset",        DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Sink SSID",            DataType_String_t,      1,    Transciever_TXRX, 4   },
+      { "Sink SSID",            DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
       { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX,   10  },
       { "Amplitude Gain",       DataType_Float_t,       1,    Transciever_TXRX, 10  },
       { "FFT Gain",             DataType_Float_t,       1,    Transciever_TXRX, 10  },
-      { "Found Speaker SSIDS",  DataType_String_t,      1,    Transciever_TXRX, 4   },
-      { "Target Speaker SSID",  DataType_String_t,      1,    Transciever_TXRX, 4   },
+      { "Found Speaker SSIDS",  DataType_Wifi_Info_t,   10,   Transciever_TXRX, 4   },
+      { "Target Speaker SSID",  DataType_Wifi_Info_t,   10,   Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
@@ -368,7 +382,7 @@ class SettingsWebServerManager: public QueueManager
       for(int i = 0; i < KeyValuePairs.size(); ++i)
       {
           JSONVar SettingValues;
-          SettingValues["Name"] = KeyValuePairs.get(i).Key.c_str();
+          SettingValues["Id"] = KeyValuePairs.get(i).Key.c_str();
           SettingValues["Value"] = KeyValuePairs.get(i).Value.c_str();
           JSONVars["DataValue" + String(i)] = SettingValues;
       }

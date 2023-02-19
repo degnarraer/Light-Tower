@@ -111,7 +111,6 @@ class SPI_Datalink_Master: public SPI_Datalink
 		uint8_t *spi_rx_buf[N_MASTER_QUEUES];
 		String m_Title = "";
 		ESP32DMASPI::Master m_SPI_Master;
-		size_t EncodeStringsToBuffer(String Name, String *Strings, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 		size_t EncodeDataToBuffer(String DataItemName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 		uint32_t m_Queued_Transactions = 0;
 		uint32_t m_Queued_Transactions_Reset_Point = 0;
@@ -153,7 +152,6 @@ class SPI_Datalink_Slave: public SPI_Datalink
 		void ProcessCompletedTransactions();
 		void QueueUpNewTransactions();
 		size_t GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_t BytesToSend);
-		size_t EncodeStringsToBuffer(String DataTypeName, String *Strings, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 		size_t EncodeDataToBuffer(String DataTypeName, DataType_t DataType, void* Object, size_t Count, char *Buffer, size_t MaxBytesToEncode);
 };
 
