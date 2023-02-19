@@ -268,6 +268,7 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 void SPI_Datalink_Slave::QueueUpNewTransactions()
 {
 	size_t ItemsToQueue = N_SLAVE_QUEUES - (m_SPI_Slave.remained() + m_SPI_Slave.available());
+	Serial << "Items to queue: " << ItemsToQueue << "\n";
 	for( int i = 0; i < ItemsToQueue; ++i )
 	{
 		uint32_t CurrentIndex = m_Queued_Transactions % N_SLAVE_QUEUES;
@@ -304,6 +305,8 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 			{
 				if(uxQueueMessagesWaiting(m_DataItems[m_CurrentDataItemToTX].QueueHandle_TX) > 0)
 				{
+					String Name = m_DataItems[m_CurrentDataItemToTX].Name;
+					Serial << "Name: " << Name << "\n";
 					byte Buffer[GetSizeOfDataType(m_DataItems[m_CurrentDataItemToTX].DataType) * m_DataItems[m_CurrentDataItemToTX].Count];
 					if ( xQueueReceive(m_DataItems[m_CurrentDataItemToTX].QueueHandle_TX, Buffer, 0) == pdTRUE )
 					{
@@ -313,7 +316,7 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 							{	
 								String *StringsPointer;
 								StringsPointer = (String*)Buffer;
-								ResultingSize = EncodeStringsToBuffer(m_DataItems[m_CurrentDataItemToTX].Name, StringsPointer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
+								ResultingSize = EncodeStringsToBuffer(Name, StringsPointer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
 							}
 							break;
 							default:

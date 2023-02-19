@@ -191,7 +191,11 @@ function onMessage(event) {
 			}
 			else if( Name == "Sink_SSID" )
 			{
-				document.getElementByName("Sink SSID").value = Value;
+				const collection = document.getElementsByName("Sink SSID");
+				for (let j = 0; j < collection.length; j++)
+				{
+				  collection[j].value == Value;
+				}
 			}
 		}
 	}

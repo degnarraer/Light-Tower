@@ -190,7 +190,7 @@ void Manager::MoveDataToStatisticalEngine()
                                       
   for(int i = 0; i < count; ++i)
   {
-    MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i]
+    MoveDataFromQueueToQueue( "Move Data Between CPU1 And Statistical Engine: " + Signals[i]
                             , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_StatisticalEngine.GetQueueHandleTXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].c_str())
@@ -251,14 +251,15 @@ void Manager::SinkSSID_RX()
   static bool MySSIDPullErrorHasOccured = false;
   if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, MySSIDPullErrorHasOccured))
   {
-    String NVMValue = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
+    m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
     Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
-    Serial << "RX NVMValue Value: " << NVMValue.c_str() << "\n";
-    if(!NVMValue.equals(DatalinkValue))
+    Serial << "RX NVMValue Value: " << m_SinkSSID.c_str() << "\n";
+    if(!m_SinkSSID.equals(DatalinkValue))
     {
       Serial << "Sink SSID Value Changed\n";
-      m_Preferences.putString("Sink SSID", DatalinkValue);
-      m_BT_In.StartDevice(m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str());
+      m_SinkSSID = DatalinkValue;
+      m_Preferences.putString("Sink SSID", m_SinkSSID);
+      m_BT_In.StartDevice(m_SinkSSID.c_str());
       SinkSSID_TX();
     }
   }
@@ -266,10 +267,10 @@ void Manager::SinkSSID_RX()
 
 void Manager::SinkSSID_TX()
 {
-  String *NVMValuePointer = new String();
-  *NVMValuePointer = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
+  m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
   static bool SinkSSIDPushErrorHasOccured = false;
-  m_SPIDataLinkSlave.PushValueToTXQueue(*NVMValuePointer, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
+  Serial << m_SinkSSID << "\n";
+  m_SPIDataLinkSlave.PushValueToTXQueue(m_SinkSSID, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
 }
 
 

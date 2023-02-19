@@ -56,7 +56,7 @@ void setup()
   InitLocalVariables();
   InitTasks();
   PrintFreeHeap();
-  m_SPIDataLinkSlave.SetSpewToConsole(false, false);
+  m_SPIDataLinkSlave.SetSpewToConsole(false, true);
 }
 
 void loop()
@@ -70,10 +70,9 @@ void VisualizationTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++VisualizationTaskLoopCount;
     m_Scheduler.RunScheduler();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -84,10 +83,9 @@ void SPI_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++SPI_TaskLoopCount;
     m_SPIDataLinkSlave.ProcessEventQueue();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }  
 }
 
@@ -98,7 +96,7 @@ void TaskMonitorTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     unsigned long CurrentTime = millis();
     ++TaskMonitorTaskLoopCount;
 
@@ -132,7 +130,6 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
     LoopCountTimer = CurrentTime;
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -143,10 +140,9 @@ void Manager_20mS_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_20mS_TaskLoopCount;
     m_Manager.ProcessEventQueue20mS();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 
@@ -157,9 +153,8 @@ void Manager_1000mS_TaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    TickType_t xLastWakeTime = xTaskGetTickCount();
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_1000mS_TaskLoopCount;
     m_Manager.ProcessEventQueue1000mS();
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }

@@ -456,7 +456,7 @@ class QueueManager: public CommonUtils
 					if(false == DataPushHasErrored)
 					{
 						DataPushHasErrored = true;
-						ESP_LOGE("CommonUtils", "ERROR! $s: Error Setting Queue.", Name.c_str());
+						ESP_LOGE("CommonUtils", "ERROR! %s: Error Setting Queue.", Name.c_str());
 					}
 				} 
 			}
@@ -474,7 +474,7 @@ class QueueManager: public CommonUtils
 					if(false == DataPushHasErrored)
 					{
 						DataPushHasErrored = true;
-						ESP_LOGE("CommonUtils", "ERROR! $s: Error Setting Queue.", Name.c_str());
+						ESP_LOGE("CommonUtils", "ERROR! %s: Error Setting Queue.", Name.c_str());
 					}
 				} 
 			}
