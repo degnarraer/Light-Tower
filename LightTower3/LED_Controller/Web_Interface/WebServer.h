@@ -230,16 +230,20 @@ class SettingsWebServerManager: public QueueManager
       }
       
       //Source SSID TX QUEUE
-      static bool SourceSSIDPullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&SourceSSID, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
-        KeyValuePairs.add({ "Source_SSID", SourceSSID });
-      }
-      
-      if(KeyValuePairs.size() > 0)
-      {
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+        static bool SourceSSIDPullErrorHasOccured = false;
+        char Buffer[GetQueueByteCountForDataItem("Source SSID")];
+        if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
+        {
+          SourceSSID = String(Buffer);
+          Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
+          KeyValuePairs.add({ "Source_SSID", SourceSSID });
+        }
+        
+        if(KeyValuePairs.size() > 0)
+        {
+          NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+        }
       }
     }
     

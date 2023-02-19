@@ -53,8 +53,6 @@ class Bluetooth_Source: public NamedItem
 						, bool ResetBLE
 						, bool AutoReConnect
 						, bool SSPEnabled );
-			
-		void StopDevice();
 		bool IsConnected();
 		void SetMusicDataCallback(music_data_cb_t callback);
 		

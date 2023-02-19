@@ -260,9 +260,33 @@ void Manager::SourceAutoReConnect_TX()
 
 void Manager::SourceSSID_RX()
 {
-
+  String DatalinkValue;
+  static bool MySSIDPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, MySSIDPullErrorHasOccured))
+  {
+    m_SourceSSID = m_Preferences.getString("Source SSID", "LED Tower of Power").c_str();
+    Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
+    Serial << "RX NVMValue Value: " << m_SourceSSID.c_str() << "\n";
+    if(!m_SourceSSID.equals(DatalinkValue))
+    {
+      Serial << "Source SSID Value Changed\n";
+      m_SourceSSID = DatalinkValue;
+      m_Preferences.putString("Source SSID", m_SourceSSID);
+      m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
+                          , m_Preferences.getBool("Source BT Reset", false)
+                          , m_Preferences.getBool("Source ReConnect", false)
+                          , m_Preferences.getBool("SSP Enabled", false) );
+      SourceSSID_TX();
+    }
+  }
 }
+
 void Manager::SourceSSID_TX()
 {
+  m_SourceSSID = m_Preferences.getString("Source SSID", "").c_str();
+  Wifi_Info_t WifiInfo = Wifi_Info_t(m_SourceSSID);
+  static bool SourceSSIDPushErrorHasOccured = false;
+  Serial << String(WifiInfo.SSID) << "\n";
+  m_SPIDataLinkToCPU3.PushValueToTXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDPushErrorHasOccured );
   
 }

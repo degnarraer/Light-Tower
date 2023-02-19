@@ -39,7 +39,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
-  InitializeNVM(true); //m_Preferences.getBool("NVM Reset", false));
+  InitializeNVM(m_Preferences.getBool("NVM Reset", false));
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();

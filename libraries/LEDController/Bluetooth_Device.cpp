@@ -50,20 +50,13 @@ void Bluetooth_Source::StartDevice( const char *SSID
 								  , bool SSPEnabled )
 {
 	m_SSID = String(SSID);
-	if(false == m_Is_Running)
-	{
-		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
-		InstallDevice(ResetBLE, AutoReConnect, SSPEnabled);
-		m_BTSource.start_raw(m_MusicDataCallback);
-		m_Is_Running = true;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tSSID: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_SSID.c_str(), ResetBLE, AutoReConnect, SSPEnabled);
-	}
+	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
+	InstallDevice(ResetBLE, AutoReConnect, SSPEnabled);
+	m_BTSource.start_raw(m_MusicDataCallback);
+	m_Is_Running = true;
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tSSID: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_SSID.c_str(), ResetBLE, AutoReConnect, SSPEnabled);
 }
 
-void Bluetooth_Source::StopDevice()
-{
-
-}
 bool Bluetooth_Source::IsConnected() {return m_BTSource.is_connected();}
 
 //Callback from BT Source for compatible devices to connect to

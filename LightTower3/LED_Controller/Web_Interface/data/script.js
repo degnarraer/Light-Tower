@@ -47,12 +47,24 @@ function updateSliderValue(element) {
 	Root["WidgetValue"].Value = SliderValue.toString();
 	var Message = JSON.stringify(Root);
 	console.log(Message);
-    console.log(SliderValue);
     websocket.send(Message);
-	SliderTimeoutHandle = setTimeout(SliderNotTouched, 5000);
+	SliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 }
 
-function SliderNotTouched()
+function() submit_New_Sink_SSID(element)
+{
+	var TextBoxName = element.id;
+    var TextBoxValue = document.getElementById(SliderName).value;
+    var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Widget = TextBoxName.toString();
+	Root["WidgetValue"].Value = TextBoxValue.toString();
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+    websocket.send(Message);
+}
+
+function sliderNotTouched()
 {
     SliderTouched = false;
 }
@@ -155,17 +167,20 @@ function setSpeakerImage(value)
 	});
 }
 
-function openNav() {
+function openNav() 
+{
   document.getElementById("LeftSideNavigationMenu").style.width = "200px";
   document.getElementById("ContentArea").style.marginLeft = "200px";
 }
 
-function closeNav() {
+function closeNav()
+{
   document.getElementById("LeftSideNavigationMenu").style.width = "0";
   document.getElementById("ContentArea").style.marginLeft = "0";
 }
 
-function onMessage(event) {
+function onMessage(event)
+{
     console.log(event.data);
     var myObj = JSON.parse(event.data);
     var keys = Object.keys(myObj);
