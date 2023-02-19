@@ -194,8 +194,15 @@ body {
 	border: 1px solid #ccc; /* add a border to the text box */
 	border-radius: 4px; /* add some border-radius to the text box */
 }
-
-#userInput {
+#Source_SSID {
+	width: 100%; /* make the text box fill the width of its container */
+	box-sizing: border-box; /* include the padding and border in the element's total width */
+	padding: 5px; /* add some padding to the text box */
+	border: 1px solid #ccc; /* add a border to the text box */
+	border-radius: 4px; /* add some border-radius to the text box */
+	text-align: right;
+}
+#Sink_SSID {
 	width: 100%; /* make the text box fill the width of its container */
 	box-sizing: border-box; /* include the padding and border in the element's total width */
 	padding: 5px; /* add some padding to the text box */

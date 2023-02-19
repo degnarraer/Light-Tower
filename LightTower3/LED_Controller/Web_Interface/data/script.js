@@ -194,6 +194,10 @@ function onMessage(event) {
 			{
 				document.getElementById(Id).value = Value;
 			}
+			else if( Id == "Source_SSID" )
+			{
+				document.getElementById(Id).value = Value;
+			}
 		}
 	}
 }

@@ -234,7 +234,7 @@ class SettingsWebServerManager: public QueueManager
       if(true == GetValueFromTXQueue(&SourceSSID, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
       {
         Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
-        KeyValuePairs.add({ "Source SSID", SourceSSID });
+        KeyValuePairs.add({ "Source_SSID", SourceSSID });
       }
       
       if(KeyValuePairs.size() > 0)
