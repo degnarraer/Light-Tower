@@ -161,7 +161,7 @@ class StatisticalEngine : public NamedItem
     bool m_MemoryIsAllocated = false;
 
     //QueueManager
-    static const size_t m_StatisticalEngineConfigCount = 11;
+    static const size_t m_StatisticalEngineConfigCount = 7;
     DataItemConfig_t m_ItemConfig[m_StatisticalEngineConfigCount]
     {
       { "R_BANDS",          DataType_Float_t,                 32, Transciever_RX,   4 },
@@ -171,10 +171,6 @@ class StatisticalEngine : public NamedItem
       { "L_MAXBAND",        DataType_MaxBandSoundData_t,      1,  Transciever_RX,   4 },
       { "R_MAJOR_FREQ",     DataType_Float_t,                 1,  Transciever_RX,   4 },
       { "L_MAJOR_FREQ",     DataType_Float_t,                 1,  Transciever_RX,   4 },
-      { "Sink Connected",   DataType_bool_t,                  1,  Transciever_TX,   4 },
-      { "Sink ReConnect",   DataType_bool_t,                  1,  Transciever_TXRX, 4 },
-      { "Sink BT Reset",    DataType_bool_t,                  1,  Transciever_TXRX, 4 },
-      { "Sink SSID",        DataType_String_t,                1,  Transciever_TXRX, 4 },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_StatisticalEngineConfigCount; }

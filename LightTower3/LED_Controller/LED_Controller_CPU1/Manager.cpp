@@ -270,7 +270,6 @@ void Manager::SinkSSID_TX()
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
   Wifi_Info_t WifiInfo = Wifi_Info_t(m_SinkSSID);
   static bool SinkSSIDPushErrorHasOccured = false;
-  Serial << String(WifiInfo.SSID) << "\n";
   m_SPIDataLinkSlave.PushValueToTXQueue(&WifiInfo, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
 }
 
@@ -284,7 +283,7 @@ void Manager::SinkBluetoothReset_RX()
     bool NVMValue = m_Preferences.getBool("Sink BT Reset", true);
     if(NVMValue != DatalinkValue)
     {
-      Serial << "Sink BT Reset Value Changed\n";
+      Serial << "Sink Bluetooth Reset Value Changed\n";
       m_Preferences.putBool("Sink BT Reset", DatalinkValue);
       SinkBluetoothReset_TX();
     }
@@ -306,7 +305,7 @@ void Manager::SinkAutoReConnect_RX()
     bool NVMValue = m_Preferences.getBool("Sink ReConnect", true);
     if(NVMValue != DatalinkValue)
     {
-      Serial << "Sink ReConnect Value Changed\n";
+      Serial << "Sink Auto ReConnect Value Changed\n";
       m_Preferences.putBool("Sink ReConnect", DatalinkValue);
       SinkAutoReConnect_TX();
     }

@@ -42,10 +42,6 @@ class SPIDataLinkMaster: public SPI_Datalink_Master
       SetSerialDataLinkDataItems(GetQueueManagerDataItems(), GetQueueManagerDataItemCount());
       ESP_LOGE("SPI_Datalink_Config", "%s: Setup Complete", GetTitle().c_str());
     }
-    void TransmitQueuedData()
-    {
-      TriggerEarlyDataTransmit();
-    }
     
   private:
     //QueueManager Interface

@@ -120,7 +120,6 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result()
     PushValueToQueue(&R_MaxBandDataBuffer, R_MaxBin_QueueOut, false, "Right Max Band: R_MAXBAND", R_MaxBand_Push_Successful);
     static bool R_MajorFreq_Push_Successful = true;
     PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
-    m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
   }
 }
 void Sound_Processor::Update_Left_Bands_And_Send_Result()
@@ -171,7 +170,6 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
     PushValueToQueue(&L_MaxBandDataBuffer, L_MaxBin_QueueOut, false, "Left Max Band: L_MAXBAND", L_MaxBand_Push_Successful);
     static bool L_MajorFreq_Push_Successful = true;
     PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
-    m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
   }
 }
 void Sound_Processor::Calculate_Power()
@@ -210,7 +208,6 @@ void Sound_Processor::Calculate_Power()
         PSF.Channel2 = L_PSD;
         static bool PSF_Push_Successful = true;
         PushValueToQueue(&PSF, QueueOut, false, "Processed Sound Frame: Processed_Frame", PSF_Push_Successful);
-        m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
       }
     }
   }

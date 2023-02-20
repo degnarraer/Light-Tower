@@ -29,7 +29,7 @@ void StatisticalEngine::Setup()
   m_NewBandDataCurrentTime = currentTime;
   m_NewMaxBandSoundDataCurrentTime = currentTime;
   m_NewSoundDataCurrentTime = currentTime;
-  xTaskCreate( StaticUpdateSoundState,   "StaticUpdateSoundStateTask",  2000,  this,   configMAX_PRIORITIES - 3,   &m_SoundDetectionTask);
+  xTaskCreatePinnedToCore( StaticUpdateSoundState,   "StaticUpdateSoundStateTask",  2000,  this,   configMAX_PRIORITIES - 3,   &m_SoundDetectionTask, 0);
 }
 
 bool StatisticalEngine::NewSoundDataReady()
@@ -221,11 +221,14 @@ void StatisticalEngine::StaticUpdateSoundState(void * Parameters)
 }
 
 void StatisticalEngine::UpdateSoundState()
-{
+{  
+  //100 mS task rate
+  const TickType_t xFrequency = 100;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     pthread_mutex_lock(&m_ProcessedSoundDataLock);
-
     m_currentMicros = micros();
     unsigned long deltaTime = m_currentMicros - m_previousMicros;
     float deltaTimeScalar = (float)deltaTime / (float)1000000;
@@ -322,7 +325,6 @@ void StatisticalEngine::UpdateSoundState()
     }
     m_previousMicros = m_currentMicros;
     pthread_mutex_unlock(&m_ProcessedSoundDataLock);
-    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 

@@ -89,7 +89,6 @@ void Manager::ProcessEventQueue20mS()
 {
   m_I2S_In.ProcessEventQueue();
   MoveDataBetweenCPU1AndCPU3();
-  MoveDataBetweenCPU3AndCPU1();
   AmplitudeGain_RX();
   FFTGain_RX();
   SourceBluetoothReset_RX();
@@ -114,44 +113,39 @@ void Manager::ProcessEventQueue300000mS()
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
 {
+  struct Signal
+  {
+    String Name;
+    bool A_To_B;
+    bool B_To_A;
+  };
   const uint8_t count = 5;
-  String Signals[count] = { "Sound State"
-                          , "Sink Connected"
-                          , "Sink ReConnect"
-                          , "Sink BT Reset"
-                          , "Sink SSID" };
-  
-                      
+  Signal Signals[count] = { { "Sound State", true, false }
+                          , { "Sink Connected", true, false } 
+                          , { "Sink ReConnect", true, true } 
+                          , { "Sink BT Reset", true, true } 
+                          , { "Sink SSID", true, true }  };     
   for(int i = 0; i < count; ++i)
   {
-    MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i]
-                            , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].c_str())
-                            , 0
-                            , false );
+    if(Signals[i].A_To_B)
+    {
+      MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i].Name
+                              , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+                              , 0
+                              , false );
+    }
+    if(Signals[i].B_To_A)
+    {
+      MoveDataFromQueueToQueue( "MoveDataBetweenCPU3AndCPU1: " + Signals[i].Name
+                              , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+                              , 0
+                              , false ); 
+    }
   }
-  m_SPIDataLinkToCPU3.TriggerEarlyDataTransmit();
-}
-
-void Manager::MoveDataBetweenCPU3AndCPU1()
-{
-  const uint8_t count = 3;
-  String Signals[count] = { "Sink ReConnect"
-                          , "Sink BT Reset"
-                          , "Sink SSID" };
-  
-                      
-  for(int i = 0; i < count; ++i)
-  {
-    MoveDataFromQueueToQueue( "MoveDataBetweenCPU3AndCPU1: " + Signals[i]
-                            , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].c_str())
-                            , 0
-                            , false );
-  }
-  m_SPIDataLinkToCPU1.TriggerEarlyDataTransmit();
 }
 
 //I2S_Device_Callback
@@ -286,7 +280,6 @@ void Manager::SourceSSID_TX()
   m_SourceSSID = m_Preferences.getString("Source SSID", "").c_str();
   Wifi_Info_t WifiInfo = Wifi_Info_t(m_SourceSSID);
   static bool SourceSSIDPushErrorHasOccured = false;
-  Serial << String(WifiInfo.SSID) << "\n";
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDPushErrorHasOccured );
   
 }

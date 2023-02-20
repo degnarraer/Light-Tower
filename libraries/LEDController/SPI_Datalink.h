@@ -97,10 +97,6 @@ class SPI_Datalink_Master: public SPI_Datalink
 						   }
 		virtual ~SPI_Datalink_Master(){}
 		void ProcessEventQueue();
-		void TriggerEarlyDataTransmit()
-		{ 
-			m_TransmitQueuedDataFlag = true;
-		}
 	protected:
 		void Setup_SPI_Master();
 		void TransmitQueuedData();
@@ -115,7 +111,6 @@ class SPI_Datalink_Master: public SPI_Datalink
 		uint32_t m_Queued_Transactions = 0;
 		uint32_t m_Queued_Transactions_Reset_Point = 0;
 		uint32_t m_DeQueued_Transactions = 0;
-		bool m_TransmitQueuedDataFlag = false;
 };
 
 class SPI_Datalink_Slave: public SPI_Datalink

@@ -144,10 +144,10 @@ class DataSerializer: public CommonUtils
 								FailPercentage();
 								return;
 							}
-							else
-							{
-								ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags");
-							}
+						}
+						else
+						{
+							ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags");
 						}
 					}
 					

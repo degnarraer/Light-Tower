@@ -3,14 +3,59 @@ var websocket;
 var speakerImages = new Array();
 var SliderTouched = false;
 var SliderTimeoutHandle;
-window.addEventListener('load', onload);
 
-function onload(event) {
+//Window and Web Socket Functions
+window.addEventListener('load', onload);
+function onload(event)
+{
     initWebSocket();
 	openTab(event, 'Bluetooth In')
 }
+function initWebSocket()
+{
+    console.log('Trying to open a WebSocket connection…');
+    websocket = new WebSocket(gateway);
+    websocket.onopen = onOpen;
+    websocket.onclose = onClose;
+    websocket.onmessage = onMessage;
+}
+function onOpen(event)
+{
+    console.log('Connection opened');
+    getValues();
+}
+function onClose(event)
+{
+    console.log('Connection closed');
+    setTimeout(initWebSocket, 2000);
+}
 
-function getValues(){
+
+// Toggle Switch Handlers
+const sink_BT_Reset_toggle_Button = document.getElementById("Sink_BT_Reset");
+sink_BT_Reset_toggle_Button.addEventListener("click", function()
+{
+  console.log(`Sink Bluetooth Reset Toggle switch is now ${sink_BT_Reset_toggle_Button.checked}`);
+});
+const sink_BT_Auto_ReConnect_toggle_Button = document.getElementById("Sink_BT_Auto_ReConnect");
+sink_BT_Auto_ReConnect_toggle_Button.addEventListener("click", function()
+{
+  console.log(`Sink Auto ReConnectToggle switch is now ${sink_BT_Auto_ReConnect_toggle_Button.checked}`);
+});
+const source_BT_Reset_toggle_Button = document.getElementById("Source_BT_Reset");
+source_BT_Reset_toggle_Button.addEventListener("click", function()
+{
+  console.log(`Source Bluetooth Reset Toggle switch is now ${source_BT_Reset_toggle_Button.checked}`);
+});
+const source_BT_ReConnect_toggle_Button = document.getElementById("Source_BT_Auto_ReConnect");
+source_BT_ReConnect_toggle_Button.addEventListener("click", function()
+{
+  console.log(`Source Auto ReConnect Toggle switch is now ${source_BT_ReConnect_toggle_Button.checked}`);
+});
+
+// Get All Values
+function getValues()
+{
     var Root = {};
 	Root.Message = "Get All Values";
 	var Message = JSON.stringify(Root);
@@ -18,25 +63,23 @@ function getValues(){
     websocket.send(Message);
 }
 
-function initWebSocket() {
-    console.log('Trying to open a WebSocket connection…');
-    websocket = new WebSocket(gateway);
-    websocket.onopen = onOpen;
-    websocket.onclose = onClose;
-    websocket.onmessage = onMessage;
+// Menu Functions
+function openNav() 
+{
+  document.getElementById("LeftSideNavigationMenu").style.width = "200px";
+  document.getElementById("ContentArea").style.marginLeft = "200px";
 }
 
-function onOpen(event) {
-    console.log('Connection opened');
-    getValues();
+function closeNav()
+{
+  document.getElementById("LeftSideNavigationMenu").style.width = "0";
+  document.getElementById("ContentArea").style.marginLeft = "0";
 }
 
-function onClose(event) {
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 2000);
-}
 
-function updateSliderValue(element) {
+// Slider Functions
+function updateSliderValue(element)
+{
 	clearTimeout(SliderTimeoutHandle);
     SliderTouched = true;
 	var SliderName = element.id;
@@ -51,7 +94,12 @@ function updateSliderValue(element) {
 	SliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 }
 
-function() submit_New_Sink_SSID(element)
+function sliderNotTouched()
+{
+    SliderTouched = false;
+}
+
+function submit_New_Sink_SSID(element)
 {
 	var TextBoxName = element.id;
     var TextBoxValue = document.getElementById(SliderName).value;
@@ -64,10 +112,6 @@ function() submit_New_Sink_SSID(element)
     websocket.send(Message);
 }
 
-function sliderNotTouched()
-{
-    SliderTouched = false;
-}
  
 function setSpeakerImage(value)
 {   
@@ -167,18 +211,6 @@ function setSpeakerImage(value)
 	});
 }
 
-function openNav() 
-{
-  document.getElementById("LeftSideNavigationMenu").style.width = "200px";
-  document.getElementById("ContentArea").style.marginLeft = "200px";
-}
-
-function closeNav()
-{
-  document.getElementById("LeftSideNavigationMenu").style.width = "0";
-  document.getElementById("ContentArea").style.marginLeft = "0";
-}
-
 function onMessage(event)
 {
     console.log(event.data);
@@ -231,8 +263,3 @@ function openTab(evt, TabTitle) {
   evt.currentTarget.className += " active";
   document.getElementById("TabHeader_Heading").innerHTML = TabTitle;
 }
-
-const toggleBtn = document.getElementById("togBtn");
-toggleBtn.addEventListener("click", function() {
-  console.log(`Toggle switch is now ${toggleBtn.checked}`);
-});

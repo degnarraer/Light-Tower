@@ -45,10 +45,6 @@ void SPI_Datalink_Master::ProcessEventQueue()
 {
 	if(NULL != m_DataItems)
 	{
-		if(true == m_TransmitQueuedDataFlag)
-		{
-			TransmitQueuedData();
-		}
 		size_t MaxMessageCount = 0;
 		size_t TotalMessageCount = 0;
 		for(int i = 0; i < m_DataItemsCount; ++i)
@@ -152,7 +148,6 @@ size_t SPI_Datalink_Master::EncodeDataToBuffer(String DataItemName, DataType_t D
 void SPI_Datalink_Master::TransmitQueuedData()
 { 
 	m_SPI_Master.yield();
-	m_TransmitQueuedDataFlag = false;
 	uint32_t QueueCount = m_Queued_Transactions - m_Queued_Transactions_Reset_Point;
 	for(int i = 0; i < QueueCount; ++i)
 	{ 
@@ -269,7 +264,6 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 				if(uxQueueMessagesWaiting(m_DataItems[m_CurrentDataItemToTX].QueueHandle_TX) > 0)
 				{
 					String Name = m_DataItems[m_CurrentDataItemToTX].Name;
-					Serial << "Name: " << Name << "\n";
 					byte Buffer[GetSizeOfDataType(m_DataItems[m_CurrentDataItemToTX].DataType) * m_DataItems[m_CurrentDataItemToTX].Count];
 					if ( xQueueReceive(m_DataItems[m_CurrentDataItemToTX].QueueHandle_TX, Buffer, 0) == pdTRUE )
 					{

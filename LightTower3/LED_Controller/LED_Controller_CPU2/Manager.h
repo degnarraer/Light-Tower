@@ -76,7 +76,6 @@ class Manager: public NamedItem
     
     void UpdateNotificationRegistrationStatus();
     void MoveDataBetweenCPU1AndCPU3();
-    void MoveDataBetweenCPU3AndCPU1();
     
     Preferences m_Preferences;
     void InitializeNVM(bool Reset);
