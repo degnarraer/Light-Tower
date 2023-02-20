@@ -47,8 +47,8 @@ void Manager::Setup()
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
   m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
-                      , m_Preferences.getBool("Source BT Reset", false)
-                      , m_Preferences.getBool("Source ReConnect", false)
+                      , m_Preferences.getBool("Source BT Reset", true)
+                      , m_Preferences.getBool("Source ReConnect", true)
                       , m_Preferences.getBool("SSP Enabled", false) );
   LoadFromNVM();
 }
@@ -255,9 +255,11 @@ void Manager::SourceAutoReConnect_TX()
 void Manager::SourceSSID_RX()
 {
   String DatalinkValue;
-  static bool MySSIDPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, MySSIDPullErrorHasOccured))
+  char Buffer[m_SPIDataLinkToCPU3.GetQueueByteCountForDataItem("Sink SSID")];
+  static bool SourceSSIDPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, SourceSSIDPullErrorHasOccured))
   {
+    DatalinkValue = String(Buffer);
     m_SourceSSID = m_Preferences.getString("Source SSID", "LED Tower of Power").c_str();
     Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
     Serial << "RX NVMValue Value: " << m_SourceSSID.c_str() << "\n";

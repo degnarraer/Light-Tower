@@ -170,6 +170,14 @@ class SettingsWebServerManager: public QueueManager
       aReceiveHandler.Widget = "FFT_Gain_Slider2";
       aReceiveHandler.CallBack = StaticHandleFFTGainReceive;
       RegisterForWebSocketReceiveData(aReceiveHandler);
+
+      aReceiveHandler.Widget = "Sink_SSID_Text_Box";
+      aReceiveHandler.CallBack = StaticHandleSinkSSIDValueReceive;
+      RegisterForWebSocketReceiveData(aReceiveHandler);
+
+      aReceiveHandler.Widget = "Source_SSID_Text_Box";
+      aReceiveHandler.CallBack = StaticHandleSourceSSIDValueReceive;
+      RegisterForWebSocketReceiveData(aReceiveHandler);
       
       aReceiveHandler.Widget = "Red_Value_Slider";
       aReceiveHandler.CallBack = StaticHandleRedValueReceive;
@@ -191,7 +199,7 @@ class SettingsWebServerManager: public QueueManager
       static bool SoundStatePullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&Sound_State, "Sound State", true, 0, SoundStatePullErrorHasOccured))
       {
-        //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
+        Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
         KeyValuePairs.add({ "Speaker_Image", String(Sound_State).c_str() });
       }
       
@@ -199,7 +207,7 @@ class SettingsWebServerManager: public QueueManager
       static bool AmplitudeGainPullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", true, 0, AmplitudeGainPullErrorHasOccured))
       {
-        //Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
+        Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
         KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
         KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
       }
@@ -208,7 +216,7 @@ class SettingsWebServerManager: public QueueManager
       static bool FFTGainPullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&FFT_Gain, "FFT Gain", true, 0, FFTGainPullErrorHasOccured))
       {
-        //Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
+        Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
         KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
         KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
       }
@@ -224,8 +232,8 @@ class SettingsWebServerManager: public QueueManager
         if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
         {
           SinkSSID = String(Buffer);
-          //Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
-          KeyValuePairs.add({ "Sink_SSID", SinkSSID });
+          Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
+          KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
         }
       }
       
@@ -236,8 +244,8 @@ class SettingsWebServerManager: public QueueManager
         if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
         {
           SourceSSID = String(Buffer);
-          //Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
-          KeyValuePairs.add({ "Source_SSID", SourceSSID });
+          Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
+          KeyValuePairs.add({ "Source_SSID_Text_Box", SourceSSID });
         }
         
         if(KeyValuePairs.size() > 0)
@@ -296,7 +304,7 @@ class SettingsWebServerManager: public QueueManager
     {
       FFT_Gain = Value.toFloat();
       static bool FFTGainPushErrorhasOccured = false;
-      PushValueToRXQueue(&Amplitude_Gain, "FFT Gain", 0, FFTGainPushErrorhasOccured);
+      PushValueToRXQueue(&FFT_Gain, "FFT Gain", 0, FFTGainPushErrorhasOccured);
     }
 
     //Sound State Value and Widget Name Values
@@ -306,7 +314,7 @@ class SettingsWebServerManager: public QueueManager
     String SinkSSID = "";
     static void StaticHandleSinkSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
     {
-      WebServerManager->HandleRedValueReceive(Value);
+      WebServerManager->HandleSinkSSIDValueReceive(Value);
     }
     void HandleSinkSSIDValueReceive(const String &Value)
     {
@@ -317,6 +325,16 @@ class SettingsWebServerManager: public QueueManager
     
     //Source SSID Value and Widget Name Values
     String SourceSSID = "";
+    static void StaticHandleSourceSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
+    {
+      WebServerManager->HandleSourceSSIDValueReceive(Value);
+    }
+    void HandleSourceSSIDValueReceive(const String &Value)
+    {
+      SourceSSID = Value;
+      static bool SourceSSIDValuePushErrorhasOccured = false;
+      PushValueToRXQueue(&SourceSSID, "Source SSID", 0, SourceSSIDValuePushErrorhasOccured);
+    }
 
     //Red Value and Widget Name Values
     uint32_t Red_Value;
@@ -331,7 +349,6 @@ class SettingsWebServerManager: public QueueManager
       PushValueToRXQueue(&Red_Value, "Red_Value", 0, RedValuePushErrorhasOccured);
     }
 
-    
     //Blue Value and Widget Name Values
     uint32_t Blue_Value;
     static void StaticHandleBlueValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
@@ -385,13 +402,28 @@ class SettingsWebServerManager: public QueueManager
       JSONVar JSONVars;
       for(int i = 0; i < KeyValuePairs.size(); ++i)
       {
-          JSONVar SettingValues;
-          SettingValues["Id"] = KeyValuePairs.get(i).Key.c_str();
-          SettingValues["Value"] = KeyValuePairs.get(i).Value.c_str();
-          JSONVars["DataValue" + String(i)] = SettingValues;
+          if( true == isAsciiString(KeyValuePairs.get(i).Key.c_str()) && true == isAsciiString(KeyValuePairs.get(i).Value.c_str()) )
+          {
+            JSONVar SettingValues;
+            SettingValues["Id"] = KeyValuePairs.get(i).Key.c_str();
+            SettingValues["Value"] = KeyValuePairs.get(i).Value.c_str();
+            JSONVars["DataValue" + String(i)] = SettingValues;
+          }
       }
       String Result = JSON.stringify(JSONVars);
       return Result;
+    }
+    
+    bool isAsciiString(const char* str)
+    {
+      for (size_t i = 0; str[i] != '\0'; i++) {
+        if (str[i] < 0 || str[i] > 127) {
+          // Character is not ASCII
+          return false;
+        }
+      }
+      // All characters are ASCII
+      return true;
     }
     
     void NotifyClients(String TextString)
@@ -429,7 +461,7 @@ class SettingsWebServerManager: public QueueManager
               KeyValuePairs.add({ "Green_Value_Slider", String(Green_Value).c_str() });
               KeyValuePairs.add({ "Blue_Value_Slider", String(Blue_Value).c_str() });
               KeyValuePairs.add({ "Sound_State", String(Sound_State).c_str() });
-              KeyValuePairs.add({ "Sink_SSID", String(SinkSSID).c_str() });
+              KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
               NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
           }
           else

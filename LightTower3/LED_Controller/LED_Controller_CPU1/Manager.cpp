@@ -87,7 +87,6 @@ void Manager::LoadFromNVM()
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-  Serial << "Sound State: " << SoundState << "\n";
   SoundState_RX(SoundState);
 }
 
@@ -221,7 +220,6 @@ void Manager::BluetoothConnection_TX()
 
 void Manager::SoundState_RX(SoundState_t SoundState)
 {
-  Serial << "SS: " << SoundState << "\n";
   if(m_SoundState != SoundState)
   {
       m_SoundState = SoundState;
@@ -242,9 +240,11 @@ void Manager::SoundState_TX()
 void Manager::SinkSSID_RX()
 {
   String DatalinkValue;
-  static bool MySSIDPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, MySSIDPullErrorHasOccured))
+  char Buffer[m_SPIDataLinkSlave.GetQueueByteCountForDataItem("Sink SSID")];
+  static bool SinkSSIDPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&Buffer, "Sink SSID", false, 0, SinkSSIDPullErrorHasOccured))
   {
+    DatalinkValue = String(Buffer);
     m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
     Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
     Serial << "RX NVMValue Value: " << m_SinkSSID.c_str() << "\n";

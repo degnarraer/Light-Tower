@@ -3,13 +3,16 @@ var websocket;
 var speakerImages = new Array();
 var SliderTouched = false;
 var SliderTimeoutHandle;
+var Sink_SSID_Value_Changed = false;
+var Sink_SSID_Changed_TimeoutHandle;
+var Source_SSID_Value_Changed = false;
+var Source_SSID_Changed_TimeoutHandle;
 
 //Window and Web Socket Functions
 window.addEventListener('load', onload);
 function onload(event)
 {
     initWebSocket();
-	openTab(event, 'Bluetooth In')
 }
 function initWebSocket()
 {
@@ -76,6 +79,63 @@ function closeNav()
   document.getElementById("ContentArea").style.marginLeft = "0";
 }
 
+//Text Box
+function textBoxValueChanged(element)
+{
+	if(element.id == "Sink_SSID_Text_Box")
+	{
+		clearTimeout(Sink_SSID_Changed_TimeoutHandle);
+		Sink_SSID_Value_Changed = true;
+		Sink_SSID_Changed_TimeoutHandle = setTimeout(Sink_SSID_Changed_Timeout, 60000);
+	}
+	else if(element.id == "Source_SSID_Text_Box")
+	{
+		clearTimeout(Source_SSID_Changed_TimeoutHandle);
+		Source_SSID_Value_Changed = true;
+		Source_SSID_Changed_TimeoutHandle = setTimeout(Source_SSID_Changed_Timeout, 60000);
+	}
+}
+
+function Sink_SSID_Changed_Timeout()
+{
+	Sink_SSID_Value_Changed = false;
+}
+
+function Source_SSID_Changed_Timeout()
+{
+	Source_SSID_Value_Changed = false;
+}
+
+function submit_New_SSID(element)
+{
+	var ButtonId = element.id;
+    if(ButtonId == "Sink_SSID_Submit_Button")
+	{
+		var Root = {};
+		var TextboxElement;
+		TextboxElement = document.getElementById("Sink_SSID_Text_Box");
+		Sink_SSID_Value_Changed = false;
+		Root.WidgetValue = {};
+		Root["WidgetValue"].Widget = TextboxElement.id;
+		Root["WidgetValue"].Value = TextboxElement.value;
+		var Message = JSON.stringify(Root);
+		console.log(Message);
+		websocket.send(Message);
+	}
+	else if(ButtonId == "Source_SSID_Submit_Button")
+	{
+		var Root = {};
+		var TextboxElement;
+		TextboxElement = document.getElementById("Source_SSID_Text_Box");
+		Source_SSID_Value_Changed = false;
+		Root.WidgetValue = {};
+		Root["WidgetValue"].Widget = TextboxElement.id;
+		Root["WidgetValue"].Value = TextboxElement.value;
+		var Message = JSON.stringify(Root);
+		console.log(Message);
+		websocket.send(Message);
+	}
+}
 
 // Slider Functions
 function updateSliderValue(element)
@@ -98,20 +158,6 @@ function sliderNotTouched()
 {
     SliderTouched = false;
 }
-
-function submit_New_Sink_SSID(element)
-{
-	var TextBoxName = element.id;
-    var TextBoxValue = document.getElementById(SliderName).value;
-    var Root = {};
-	Root.WidgetValue = {};
-	Root["WidgetValue"].Widget = TextBoxName.toString();
-	Root["WidgetValue"].Value = TextBoxValue.toString();
-	var Message = JSON.stringify(Root);
-	console.log(Message);
-    websocket.send(Message);
-}
-
  
 function setSpeakerImage(value)
 {   
@@ -224,7 +270,7 @@ function onMessage(event)
 		{
 			if(Id == "Speaker_Image")
 			{
-				setSpeakerImage(Value)
+				setSpeakerImage(Value);
 			}
 			else if( Id == "Amplitude_Gain_Slider1" || 
 					 Id == "Amplitude_Gain_Slider2" || 
@@ -237,11 +283,11 @@ function onMessage(event)
 				}
 				document.getElementById(Id + "_Value").innerHTML = Value;
 			}
-			else if( Id == "Sink_SSID" )
+			else if( Id == "Sink_SSID_Text_Box" && false == Sink_SSID_Value_Changed)
 			{
 				document.getElementById(Id).value = Value;
 			}
-			else if( Id == "Source_SSID" )
+			else if( Id == "Source_SSID_Text_Box" && false == Source_SSID_Value_Changed)
 			{
 				document.getElementById(Id).value = Value;
 			}
@@ -249,14 +295,17 @@ function onMessage(event)
 	}
 }
 
-function openTab(evt, TabTitle) {
+function openTab(evt, TabTitle) 
+{
   var i, TabContent, Tablinks;
   TabContent = document.getElementsByClassName("TabContent");
-  for (i = 0; i < TabContent.length; i++) {
+  for (i = 0; i < TabContent.length; i++) 
+  {
     TabContent[i].style.display = "none";
   }
   Tablinks = document.getElementsByClassName("Tablinks");
-  for (i = 0; i < Tablinks.length; i++) {
+  for (i = 0; i < Tablinks.length; i++) 
+  {
     Tablinks[i].className = Tablinks[i].className.replace(" active", "");
   }
   document.getElementById(TabTitle).style.display = "block";

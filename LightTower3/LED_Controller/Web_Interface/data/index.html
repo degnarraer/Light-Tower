@@ -50,10 +50,10 @@
 						Bluetooth Bridge SSID
 					</div>
 					<div class="SettingGroup_Textbox">
-						<input type="text" id="Sink_SSID" value="Enter SSID">
+						<input type="text" id="Sink_SSID_Text_Box" oninput="textBoxValueChanged(this)" value="Enter SSID">
 					</div>
 					<div class="SettingGroup_Widget">
-						<button id="submitBtn" onclick="submitInput()">Submit</button>
+						<button id="Sink_SSID_Submit_Button" onclick="submit_New_SSID(this)">Submit</button>
 					</div>
 				</div>
 			</div>
@@ -101,10 +101,10 @@
 						Bluetooth Speaker SSID
 					</div>
 					<div class="SettingGroup_Textbox">
-						<input type="text" id="Source_SSID" value="Enter SSID">
+						<input type="text" id="Source_SSID_Text_Box" value="Enter SSID">
 					</div>
 					<div class="SettingGroup_Widget">
-						<button id="Sink_SSID_Submit_Button" onclick="submit_New_SSID(this)">Submit</button>
+						<button id="Source_SSID_Submit_Button" onclick="submit_New_SSID(this)">Submit</button>
 					</div>
 				</div>
 			</div>
