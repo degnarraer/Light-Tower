@@ -113,8 +113,9 @@ function submit_New_SSID(element)
 	{
 		var Root = {};
 		var TextboxElement;
+		clearTimeout(Sink_SSID_Changed_TimeoutHandle);
 		TextboxElement = document.getElementById("Sink_SSID_Text_Box");
-		Sink_SSID_Value_Changed = false;
+		Sink_SSID_Changed_TimeoutHandle = setTimeout(Sink_SSID_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
 		Root["WidgetValue"].Widget = TextboxElement.id;
 		Root["WidgetValue"].Value = TextboxElement.value;
@@ -126,8 +127,9 @@ function submit_New_SSID(element)
 	{
 		var Root = {};
 		var TextboxElement;
+		clearTimeout(Source_SSID_Changed_TimeoutHandle);
 		TextboxElement = document.getElementById("Source_SSID_Text_Box");
-		Source_SSID_Value_Changed = false;
+		Source_SSID_Changed_TimeoutHandle = setTimeout(Source_SSID_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
 		Root["WidgetValue"].Widget = TextboxElement.id;
 		Root["WidgetValue"].Value = TextboxElement.value;

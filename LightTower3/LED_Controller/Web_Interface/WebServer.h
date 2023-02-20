@@ -199,7 +199,7 @@ class SettingsWebServerManager: public QueueManager
       static bool SoundStatePullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&Sound_State, "Sound State", true, 0, SoundStatePullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
+        //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
         KeyValuePairs.add({ "Speaker_Image", String(Sound_State).c_str() });
       }
       
@@ -207,7 +207,7 @@ class SettingsWebServerManager: public QueueManager
       static bool AmplitudeGainPullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", true, 0, AmplitudeGainPullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
+        //Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
         KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
         KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
       }
@@ -216,7 +216,7 @@ class SettingsWebServerManager: public QueueManager
       static bool FFTGainPullErrorHasOccured = false;
       if(true == GetValueFromTXQueue(&FFT_Gain, "FFT Gain", true, 0, FFTGainPullErrorHasOccured))
       {
-        Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
+        //Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
         KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
         KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
       }
@@ -232,7 +232,7 @@ class SettingsWebServerManager: public QueueManager
         if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
         {
           SinkSSID = String(Buffer);
-          Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
+          //Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
           KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
         }
       }
@@ -244,7 +244,7 @@ class SettingsWebServerManager: public QueueManager
         if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
         {
           SourceSSID = String(Buffer);
-          Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
+          //Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
           KeyValuePairs.add({ "Source_SSID_Text_Box", SourceSSID });
         }
         
@@ -319,8 +319,9 @@ class SettingsWebServerManager: public QueueManager
     void HandleSinkSSIDValueReceive(const String &Value)
     {
       SinkSSID = Value;
+      Wifi_Info_t WifiInfo = Wifi_Info_t(SinkSSID);
       static bool SinkSSIDValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&SinkSSID, "Sink SSID", 0, SinkSSIDValuePushErrorhasOccured);
+      PushValueToRXQueue(&WifiInfo, "Sink SSID", 0, SinkSSIDValuePushErrorhasOccured);
     }
     
     //Source SSID Value and Widget Name Values
@@ -332,8 +333,9 @@ class SettingsWebServerManager: public QueueManager
     void HandleSourceSSIDValueReceive(const String &Value)
     {
       SourceSSID = Value;
+      Wifi_Info_t WifiInfo = Wifi_Info_t(SourceSSID);
       static bool SourceSSIDValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&SourceSSID, "Source SSID", 0, SourceSSIDValuePushErrorhasOccured);
+      PushValueToRXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDValuePushErrorhasOccured);
     }
 
     //Red Value and Widget Name Values
