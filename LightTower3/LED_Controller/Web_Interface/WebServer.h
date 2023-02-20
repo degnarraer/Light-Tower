@@ -189,7 +189,7 @@ class SettingsWebServerManager: public QueueManager
       LinkedList<KVP> KeyValuePairs;
       //SOUND STATE TX QUEUE
       static bool SoundStatePullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&Sound_State, "Sound State",true, 0, SoundStatePullErrorHasOccured))
+      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", true, 0, SoundStatePullErrorHasOccured))
       {
         //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
         KeyValuePairs.add({ "Speaker_Image", String(Sound_State).c_str() });
@@ -224,7 +224,7 @@ class SettingsWebServerManager: public QueueManager
         if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
         {
           SinkSSID = String(Buffer);
-          Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
+          //Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
           KeyValuePairs.add({ "Sink_SSID", SinkSSID });
         }
       }
@@ -236,7 +236,7 @@ class SettingsWebServerManager: public QueueManager
         if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
         {
           SourceSSID = String(Buffer);
-          Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
+          //Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
           KeyValuePairs.add({ "Source_SSID", SourceSSID });
         }
         
@@ -362,6 +362,7 @@ class SettingsWebServerManager: public QueueManager
     static const size_t m_WebServerConfigCount = 13;
     DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
     {
+      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX,   10  },
       { "Source Connected",     DataType_bool_t,        1,    Transciever_RX,   10  },
       { "Source ReConnect",     DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Source BT Reset",      DataType_bool_t,        1,    Transciever_TXRX, 4   },
@@ -370,7 +371,6 @@ class SettingsWebServerManager: public QueueManager
       { "Sink ReConnect",       DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Sink BT Reset",        DataType_bool_t,        1,    Transciever_TXRX, 4   },
       { "Sink SSID",            DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
-      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX,   10  },
       { "Amplitude Gain",       DataType_Float_t,       1,    Transciever_TXRX, 10  },
       { "FFT Gain",             DataType_Float_t,       1,    Transciever_TXRX, 10  },
       { "Found Speaker SSIDS",  DataType_Wifi_Info_t,   10,   Transciever_TXRX, 4   },

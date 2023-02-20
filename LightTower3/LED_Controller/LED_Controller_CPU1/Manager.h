@@ -59,8 +59,9 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
+    void Process_I2S_EventQueue();
+    
     void SetInputType(InputType_t Type);
-    void ProcessI2S_And_BT();
     //Bluetooth_Callback
     void BTDataReceived(uint8_t *data, uint32_t length);
     
@@ -92,11 +93,13 @@ class Manager: public NamedItem
     void MoveDataToStatisticalEngine();
     
     bool m_BluetoothIsConnected = false;
-    void ProcessBluetoothConnectionStatus(bool ForceUpdate);
+    void BluetoothConnection_RX();
+    void BluetoothConnection_TX();
 
     
     SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
-    void SoundState_TX(SoundState_t SoundState);
+    void SoundState_RX(SoundState_t SoundState);
+    void SoundState_TX();
 
     
     bool m_SinkReset;

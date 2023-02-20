@@ -134,7 +134,7 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
                               , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
                               , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
                               , 0
-                              , false );
+                              , true );
     }
     if(Signals[i].B_To_A)
     {
@@ -281,5 +281,4 @@ void Manager::SourceSSID_TX()
   Wifi_Info_t WifiInfo = Wifi_Info_t(m_SourceSSID);
   static bool SourceSSIDPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDPushErrorHasOccured );
-  
 }

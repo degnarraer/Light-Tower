@@ -87,21 +87,22 @@ void Manager::LoadFromNVM()
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-  m_SoundState = SoundState;
-  SoundState_TX(m_SoundState);
+  Serial << "Sound State: " << SoundState << "\n";
+  SoundState_RX(SoundState);
 }
 
 void Manager::ProcessEventQueue20mS()
 {
-  ProcessI2S_And_BT();
+  Process_I2S_EventQueue();
   MoveDataToStatisticalEngine();
+  BluetoothConnection_RX();
   SinkSSID_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
 {
-  ProcessBluetoothConnectionStatus(true);
-  SoundState_TX(m_SoundState);
+  BluetoothConnection_TX();
+  SoundState_TX();
   SinkSSID_TX();
 }
 
@@ -127,23 +128,13 @@ void Manager::SetInputType(InputType_t Type)
     break;
   }
 }
-void Manager::ProcessI2S_And_BT()
+void Manager::Process_I2S_EventQueue()
 {    
-  switch(m_InputType)
+  if(m_InputType == InputType_Microphone)
   {
-    case InputType_Microphone:
-      m_Mic_In.ProcessEventQueue();
-      m_I2S_Out.ProcessEventQueue();
-    break;
-    case InputType_Bluetooth:
-    {  
-      m_I2S_Out.ProcessEventQueue();
-      ProcessBluetoothConnectionStatus(false);
-    }
-    break;
-    default:
-    break;
+    m_Mic_In.ProcessEventQueue();
   }
+  m_I2S_Out.ProcessEventQueue();
 }
 
 //Bluetooth_Callback
@@ -192,23 +183,20 @@ void Manager::MoveDataToStatisticalEngine()
   {
     MoveDataFromQueueToQueue( "Move Data Between CPU1 And Statistical Engine: " + Signals[i]
                             , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_StatisticalEngine.GetQueueHandleTXForDataItem(Signals[i].c_str())
+                            , m_StatisticalEngine.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].c_str())
                             , 0
                             , false );
   }
 }
 
-void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
+void Manager::BluetoothConnection_RX()
 {
-  if(InputType_Bluetooth == m_InputType)
+  if( m_InputType == InputType_Bluetooth)
   {
-    bool SendUpdate = false;
-    bool IsConnected = m_BT_In.IsConnected();
-    if(m_BluetoothIsConnected != IsConnected)
-    {
-      m_BluetoothIsConnected = IsConnected;
-      SendUpdate = true;
+    if(m_BluetoothIsConnected != m_BT_In.IsConnected())
+    { 
+      m_BluetoothIsConnected = m_BT_In.IsConnected();
       if(true == m_BluetoothIsConnected)
       {
         ESP_LOGI("Manager", "BT Sink Connected!");
@@ -218,31 +206,37 @@ void Manager::ProcessBluetoothConnectionStatus(bool ForceUpdate)
         ESP_LOGI("Manager", "BT Sink Disconnected!");
       }
     }
-    if(true == ForceUpdate || true == SendUpdate)
-    {
-      static bool SinkIsConnectedValuePushError = false;
-      PushValueToQueue( &m_BluetoothIsConnected
-                      , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connected")
-                      , 0
-                      , "Sink Is Connected"
-                      , SinkIsConnectedValuePushError );
-    }
   }
 }
 
-void Manager::SoundState_TX(SoundState_t SoundState)
+void Manager::BluetoothConnection_TX()
 {
+  static bool SinkIsConnectedValuePushError = false;
+  PushValueToQueue( &m_BluetoothIsConnected
+                  , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connected")
+                  , 0
+                  , "Sink Is Connected"
+                  , SinkIsConnectedValuePushError ); 
+}
+
+void Manager::SoundState_RX(SoundState_t SoundState)
+{
+  Serial << "SS: " << SoundState << "\n";
   if(m_SoundState != SoundState)
   {
       m_SoundState = SoundState;
-      static bool SoundStateValuePushError = false;
-      PushValueToQueue( &m_SoundState
-                      , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
-                      , 0
-                      , "Sound State"
-                      , SoundStateValuePushError );
+      SoundState_TX();
   }
   
+}
+void Manager::SoundState_TX()
+{
+  static bool SoundStateValuePushError = false;
+  PushValueToQueue( &m_SoundState
+                  , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
+                  , 0
+                  , "Sound State"
+                  , SoundStateValuePushError );
 }
 
 void Manager::SinkSSID_RX()

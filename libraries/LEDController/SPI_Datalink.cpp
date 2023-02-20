@@ -67,7 +67,7 @@ void SPI_Datalink_Master::ProcessEventQueue()
 			if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
 			{
 				++m_Queued_Transactions;
-				delay(1); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
+				delay(2); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
 				TransmitQueuedData();
 			}
 		}

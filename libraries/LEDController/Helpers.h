@@ -176,7 +176,7 @@ class QueueController
 					{
 						if(xQueueSend(GiveToQueue, DataBuffer, TicksToWait) != pdTRUE)
 						{
-							if(true == DebugMessage) ESP_LOGD("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
+							if(true == DebugMessage) ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
 						}
 						else
 						{
@@ -185,13 +185,13 @@ class QueueController
 					}
 					else
 					{
-						if(true == DebugMessage) ESP_LOGD("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
+						ESP_LOGD("Helpers", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
 					}
 				}
 			}
 		  else
 		  {
-			if(true == DebugMessage) ESP_LOGW("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
+			ESP_LOGE("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
 		  }
 		}
 		void MoveDataFromQueueToQueues(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, TickType_t TicksToWait,  bool DebugMessage){
@@ -229,13 +229,13 @@ class QueueController
 				}
 				else
 				{
-					if(true == DebugMessage) ESP_LOGD("CommonUtils", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
+					ESP_LOGD("CommonUtils", "ERROR! %s: Error Receiving Queue.", DebugTitle.c_str());
 				}
 			}
 		  }
 		  else
 		  {
-			if(true == DebugMessage) ESP_LOGE("CommonUtils", "ERROR! %s: NULL Queue.", DebugTitle);
+			ESP_LOGE("CommonUtils", "ERROR! %s: NULL Queue.", DebugTitle);
 		  }
 		}
 };
