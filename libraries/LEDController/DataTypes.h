@@ -16,6 +16,13 @@ class NamedItem
     String m_Title;
 };
 
+struct KeyValuePair
+{
+  String Key;
+  String Value;
+};
+typedef KeyValuePair KVP;
+
 struct Wifi_Info
 {
 	Wifi_Info(String SSID_In, int32_t RSSI_In = 0)

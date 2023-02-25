@@ -194,7 +194,7 @@ body {
 	border: 1px solid #ccc; /* add a border to the text box */
 	border-radius: 4px; /* add some border-radius to the text box */
 }
-#Source_SSID {
+#Source_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
 	box-sizing: border-box; /* include the padding and border in the element's total width */
 	padding: 5px; /* add some padding to the text box */
@@ -202,7 +202,7 @@ body {
 	border-radius: 4px; /* add some border-radius to the text box */
 	text-align: right;
 }
-#Sink_SSID {
+#Sink_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
 	box-sizing: border-box; /* include the padding and border in the element's total width */
 	padding: 5px; /* add some padding to the text box */
@@ -210,7 +210,8 @@ body {
 	border-radius: 4px; /* add some border-radius to the text box */
 	text-align: right;
 }
-#submitBtn {
+
+#Sink_SSID_Submit_Button {
 	background-color: #ccc; /* set the background color of the button */
 	color: black; /* set the color of the button text to white */
 	width: 60px;
@@ -226,11 +227,37 @@ body {
 	border-radius: 34px;
 }
 
-#submitBtn:hover {
+#Sink_SSID_Submit_Button:hover {
 	background-color: yellow; /* set the background color of the button when hovering */
 }
 
-#submitBtn:active {
+#Sink_SSID_Submit_Button:active {
+	background-color: #2196F3; /* set the background color of the button when pressed */
+	transform: scale(0.98);
+	box-shadow: 0 0px #666; /* add a box-shadow to the button when pressed */
+}	
+
+#Source_SSID_Submit_Button {
+	background-color: #ccc; /* set the background color of the button */
+	color: black; /* set the color of the button text to white */
+	width: 60px;
+	height: 34px;
+	text-align: center; /* center the button text */
+	text-decoration: none; /* remove the underline from the button text */
+	display: inline-block; /* set the button to display as an inline block */
+	font-size: auto; /* set the font size of the button text */
+	margin: 0px 0px; /* add some margin to the button */
+	cursor: pointer; /* set the cursor to a pointer when hovering over the button */
+	transition-duration: 0.4s; /* add a transition effect to the button */
+	box-shadow: 2px 2px 2px 2px  #666; /* add a box-shadow to the button when pressed */
+	border-radius: 34px;
+}
+
+#Source_SSID_Submit_Button:hover {
+	background-color: yellow; /* set the background color of the button when hovering */
+}
+
+#Source_SSID_Submit_Button:active {
 	background-color: #2196F3; /* set the background color of the button when pressed */
 	transform: scale(0.98);
 	box-shadow: 0 0px #666; /* add a box-shadow to the button when pressed */

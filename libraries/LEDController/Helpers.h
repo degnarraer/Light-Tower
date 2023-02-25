@@ -128,8 +128,8 @@ class QueueController
 					ESP_LOGD("CommonUtils", "Error! %s: NULL Queue!", DebugTitle.c_str());
 				}
 			}
-		}		
-		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, String DebugTitle, size_t ByteCount, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
+		}	
+		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, String DebugTitle, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
 			bool Result = false;
 			if(NULL != Queue)
 			{
@@ -366,7 +366,7 @@ class QueueManager: public CommonUtils
 	
 		
 		//Queues
-		bool GetValueFromRXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
+		bool GetValueFromRXQueue(void* Value, const String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)

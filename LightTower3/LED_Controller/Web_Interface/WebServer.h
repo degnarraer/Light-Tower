@@ -18,7 +18,9 @@
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
 
+
 #include "Arduino.h"
+#include <freertos/portmacro.h>
 #include <LinkedList.h>
 #include "HTTP_Method.h"
 #include "WiFi.h"
@@ -28,113 +30,101 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "Streaming.h"
+#include <typeinfo>
+
 
 class SettingsWebServerManager;
 
-struct ReceiverHandler {
-  String Widget = "";
-  void (*CallBack)(SettingsWebServerManager*, const String&);
-
-  bool operator==(const ReceiverHandler& rhs) const {
-      bool a = Widget.equals(rhs.Widget);
-      return a;
-  }
-};
-
-struct SenderHandler{
-  String Widget = "";
-  void (*CallBack)(SettingsWebServerManager*, const String&);
-
-  bool operator==(const SenderHandler& rhs) const {
-      bool a = Widget.equals(rhs.Widget);
-      return a;
-  }
-};
-
-class WebSocketDataHandler
+template<typename T>
+class WebSocketDataHandler: public QueueController
 {
   public:
-  void RegisterForWebSocketReceiveData(ReceiverHandler aReceiveHandler)
-  {
-    if(-1 == ReceiverFoundIndex(aReceiveHandler))
+    WebSocketDataHandler( const String DataItemName
+                        , const String WidgetId
+                        , T &Value
+                        , QueueHandle_t QueueHandle
+                        , size_t QueueTotalByteCount
+                        , bool ReadUntilEmpty
+                        , TickType_t TicksToWait
+                        , LinkedList<KVP> &KeyValuePairs
+                        , UBaseType_t TaskPriority
+                        , uint8_t CoreId  )
+                        : m_DataItemName(DataItemName) 
+                        , m_WidgetId(WidgetId)
+                        , m_Value(Value)
+                        , m_QueueHandle(QueueHandle)
+                        , m_QueueTotalByteCount(QueueTotalByteCount)
+                        , m_ReadUntilEmpty(ReadUntilEmpty)
+                        , m_TicksToWait(TicksToWait)
+                        , m_KeyValuePairs(KeyValuePairs)
     {
-      Serial << "Added Web Socket Receive Handler: " << aReceiveHandler.Widget << "\n";
-      m_WidgetDataReceivers.add(aReceiveHandler);
+      size_t TotalSize = sizeof(m_DataItemName) + sizeof(m_WidgetId) + sizeof(m_Value) + sizeof(m_ReadUntilEmpty) + sizeof(m_TicksToWait) + sizeof(m_KeyValuePairs); 
+      xTaskCreatePinnedToCore( Static_WebSocketDataHandler_CheckForValue, "Web Socket Data Handler", TotalSize, this, TaskPriority, &m_Task_Handle, CoreId );
     }
-  }
-  void DeRegisterForWebSocketReceiveData(ReceiverHandler aReceiveHandler)
-  {
-    int32_t FoundIndex = ReceiverFoundIndex(aReceiveHandler);
-    if(0 < FoundIndex)
-    {
-      Serial << "Removed Web Socket Receive Handler: : " << aReceiveHandler.Widget << "\n";
-      m_WidgetDataReceivers.remove(FoundIndex);
-    }
-  }
-  virtual void RegisterForWebSocketSendData(SenderHandler aSenderHandler)
-  {
-    int32_t FoundIndex = SenderFoundIndex(aSenderHandler);
-    if(-1 == FoundIndex)
-    {
-      Serial << "Added Web Socket Sender Handler: " << aSenderHandler.Widget << "\n";
-      m_DataSenders.add(aSenderHandler);
-    }
-  }
-  virtual void DeRegisterForWebSocketSendData(SenderHandler aSenderHandler)
-  {
-    int32_t FoundIndex = SenderFoundIndex(aSenderHandler);
-    if(0 < FoundIndex)
-    {
-      Serial << "Removed Web Socket Sender Handler: " << aSenderHandler.Widget << "\n";
-      m_DataSenders.remove(FoundIndex);
-    }
-  }
-  String Name = "";
-
+    virtual ~WebSocketDataHandler(){}
+    
   protected:
-  LinkedList<ReceiverHandler> m_WidgetDataReceivers = LinkedList<ReceiverHandler>();
-  LinkedList<SenderHandler> m_DataSenders = LinkedList<SenderHandler>();
+    const String m_DataItemName;
+    const String m_WidgetId;
+    T &m_Value;
+    QueueHandle_t m_QueueHandle;
+    size_t m_QueueTotalByteCount;
+    bool m_ReadUntilEmpty;
+    TickType_t m_TicksToWait;
+    LinkedList<KVP> &m_KeyValuePairs;
+    TaskHandle_t m_Task_Handle;
+    bool m_PushError;
+    
+    void ProcessEventQueue()
+    {
+    }
+    static void Static_WebSocketDataHandler_CheckForValue(void * parameter)
+    {
+      ((WebSocketDataHandler*)parameter)->CheckForValue();
+    }
+    virtual void CheckForValue()
+    {
+      if(true == GetValueFromQueue(&m_Value, m_QueueHandle, m_DataItemName, m_ReadUntilEmpty, m_TicksToWait, m_PushError))
+      {
+        Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItemName.c_str() << "\n";
+        m_KeyValuePairs.add({ m_WidgetId.c_str(), String(m_Value).c_str() });
+      }
+    }
+};
 
-  private:
-  int32_t ReceiverFoundIndex(ReceiverHandler aReceiverHandler)
-  {
-    int32_t FoundIndex = -1;
-    for(int i = 0; i < m_WidgetDataReceivers.size(); ++i)
+class WebSocketStringDataHandler: public WebSocketDataHandler<String>
+{
+  public:
+    WebSocketStringDataHandler( const String DataItemName
+                              , const String WidgetId
+                              , String &Value
+                              , QueueHandle_t QueueHandle
+                              , size_t ByteCount
+                              , bool ReadUntilEmpty
+                              , TickType_t TicksToWait
+                              , LinkedList<KVP> &KeyValuePairs
+                              , UBaseType_t TaskPriority
+                              , uint8_t CoreId  )
+                              : WebSocketDataHandler<String>(DataItemName, WidgetId, Value, QueueHandle, ByteCount, ReadUntilEmpty, TicksToWait, KeyValuePairs, TaskPriority, CoreId)
     {
-      if(m_WidgetDataReceivers[i] == aReceiverHandler)
+    }
+    virtual ~WebSocketStringDataHandler(){}
+    void CheckForValue() override
+    {
+      char Buffer[m_QueueTotalByteCount];
+      if(true == GetValueFromQueue(&Buffer, m_QueueHandle, m_WidgetId.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PushError))
       {
-        FoundIndex = i;
-        exit;
+        m_Value = String(Buffer);
+        Serial << "Received Value: " << m_Value << " to Send to Clients for Data Item: " << m_DataItemName.c_str() << "\n";
+        m_KeyValuePairs.add({ m_WidgetId.c_str(), m_Value });
       }
     }
-    return FoundIndex;
-  }
-  int32_t SenderFoundIndex(SenderHandler aSenderHandler)
-  {
-    int32_t FoundIndex = -1;
-    for(int i = 0; i < m_DataSenders.size(); ++i)
-    {
-      if(m_DataSenders[i] == aSenderHandler)
-      {
-        FoundIndex = i;
-        exit;
-      }
-    }
-    return FoundIndex;
-  }
+  protected:
+  
 };
 
 class SettingsWebServerManager: public QueueManager
-                              , public WebSocketDataHandler
-{
-  
-  struct KeyValuePair
-  {
-    String Key;
-    String Value;
-  };
-  typedef KeyValuePair KVP;
-  
+{  
   public:
     SettingsWebServerManager( String Title
                             , AsyncWebSocket &WebSocket )
@@ -148,110 +138,19 @@ class SettingsWebServerManager: public QueueManager
     
     }
     
-    
     void SetupSettingsWebServerManager()
     {
       SetupQueueManager();
-      InitWiFiAP();
-      
-      ReceiverHandler aReceiveHandler;
-      aReceiveHandler.Widget = "Amplitude_Gain_Slider1";
-      aReceiveHandler.CallBack = StaticHandleAmplitudeGainReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-      
-      aReceiveHandler.Widget = "Amplitude_Gain_Slider2";
-      aReceiveHandler.CallBack = StaticHandleAmplitudeGainReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-      
-      aReceiveHandler.Widget = "FFT_Gain_Slider1";
-      aReceiveHandler.CallBack = StaticHandleFFTGainReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-     
-      aReceiveHandler.Widget = "FFT_Gain_Slider2";
-      aReceiveHandler.CallBack = StaticHandleFFTGainReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-
-      aReceiveHandler.Widget = "Sink_SSID_Text_Box";
-      aReceiveHandler.CallBack = StaticHandleSinkSSIDValueReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-
-      aReceiveHandler.Widget = "Source_SSID_Text_Box";
-      aReceiveHandler.CallBack = StaticHandleSourceSSIDValueReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-      
-      aReceiveHandler.Widget = "Red_Value_Slider";
-      aReceiveHandler.CallBack = StaticHandleRedValueReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-      
-      aReceiveHandler.Widget = "Blue_Value_Slider";
-      aReceiveHandler.CallBack = StaticHandleBlueValueReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
-      
-      aReceiveHandler.Widget = "Green_Value_Slider";
-      aReceiveHandler.CallBack = StaticHandleGreenValueReceive;
-      RegisterForWebSocketReceiveData(aReceiveHandler);
+      InitWiFiAP();  
     }
     
     void ProcessEventQueue()
     {
       LinkedList<KVP> KeyValuePairs;
-      //SOUND STATE TX QUEUE
-      static bool SoundStatePullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&Sound_State, "Sound State", true, 0, SoundStatePullErrorHasOccured))
-      {
-        //Serial << "Received Value to Send to Clients: Sound State: "<< Sound_State << "\n";
-        KeyValuePairs.add({ "Speaker_Image", String(Sound_State).c_str() });
-      }
-      
-      //Amplitude Gain TX QUEUE
-      static bool AmplitudeGainPullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&Amplitude_Gain, "Amplitude Gain", true, 0, AmplitudeGainPullErrorHasOccured))
-      {
-        //Serial << "Received Value to Send to Clients: Amplitude Gain: "<< Amplitude_Gain << "\n";
-        KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
-        KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
-      }
-      
-      //FFT Gain TX QUEUE
-      static bool FFTGainPullErrorHasOccured = false;
-      if(true == GetValueFromTXQueue(&FFT_Gain, "FFT Gain", true, 0, FFTGainPullErrorHasOccured))
-      {
-        //Serial << "Received Value to Send to Clients: FFT Gain: "<< FFT_Gain << "\n";
-        KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
-        KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
-      }
+
       if(KeyValuePairs.size() > 0)
       {
         NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
-      }
-      
-      //Sink SSID TX QUEUE
-      {
-        static bool SinkSSIDPullErrorHasOccured = false;
-        char Buffer[GetQueueByteCountForDataItem("Sink SSID")];
-        if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
-        {
-          SinkSSID = String(Buffer);
-          //Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
-          KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
-        }
-      }
-      
-      //Source SSID TX QUEUE
-      {
-        static bool SourceSSIDPullErrorHasOccured = false;
-        char Buffer[GetQueueByteCountForDataItem("Source SSID")];
-        if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
-        {
-          SourceSSID = String(Buffer);
-          //Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
-          KeyValuePairs.add({ "Source_SSID_Text_Box", SourceSSID });
-        }
-        
-        if(KeyValuePairs.size() > 0)
-        {
-          NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
-        }
       }
     }
     
@@ -275,43 +174,139 @@ class SettingsWebServerManager: public QueueManager
     
   private:
     AsyncWebSocket &m_WebSocket;
-    // Replace with your network credentials
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
 
     String message = "";
 
-    //Amplitude Gain Value and Widget Name Values
-    float Amplitude_Gain = 1.0;
-    static void StaticHandleAmplitudeGainReceive(SettingsWebServerManager *WebServerManager, const String &Value)
-    {
-      WebServerManager->HandleAmplitudeGainReceive(Value);
-    }
-    void HandleAmplitudeGainReceive(const String &Value)
-    {
-      Amplitude_Gain = Value.toFloat();
-      static bool AmplitudeGainPushErrorhasOccured = false;
-      PushValueToRXQueue(&Amplitude_Gain, "Amplitude Gain", 0, AmplitudeGainPushErrorhasOccured);
-    }
 
-    //FFT Gain Value and Widget Name Values
-    float FFT_Gain = 1.0;
-    static void StaticHandleFFTGainReceive(SettingsWebServerManager *WebServerManager, const String &Value)
-    {
-      WebServerManager->HandleFFTGainReceive(Value);
-    }
-    void HandleFFTGainReceive(const String &Value)
-    {
-      FFT_Gain = Value.toFloat();
-      static bool FFTGainPushErrorhasOccured = false;
-      PushValueToRXQueue(&FFT_Gain, "FFT Gain", 0, FFTGainPushErrorhasOccured);
-    }
-
+    LinkedList<KVP> m_DataQueue = LinkedList<KVP>();
+    
     //Sound State Value and Widget Name Values
     SoundState_t Sound_State;
+    WebSocketDataHandler<SoundState_t> Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( "Sound State"
+                                                                                                   , "Sound_State"
+                                                                                                   , Sound_State
+                                                                                                   , GetQueueHandleRXForDataItem("Sound State")
+                                                                                                   , GetQueueByteCountForDataItem("Sound State")
+                                                                                                   , true
+                                                                                                   , 0
+                                                                                                   , m_DataQueue
+                                                                                                   , configMAX_PRIORITIES - 1
+                                                                                                   , 0 );
+                                                                                                   
+    //Amplitude Gain Value and Widget Name Values
+    float Amplitude_Gain = 1.0;
+    WebSocketDataHandler<float> Amplitude_Gain1_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain"
+                                                                                         , "Amplitude_Gain_Slider1"
+                                                                                         , Amplitude_Gain
+                                                                                         , GetQueueHandleRXForDataItem("Amplitude Gain")
+                                                                                         , GetQueueByteCountForDataItem("Amplitude Gain")
+                                                                                         , true
+                                                                                         , 0
+                                                                                         , m_DataQueue
+                                                                                         , configMAX_PRIORITIES - 1
+                                                                                         , 0 );
+                                                                                         
+    WebSocketDataHandler<float> Amplitude_Gain2_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain"
+                                                                                         , "Amplitude_Gain_Slider2"
+                                                                                         , Amplitude_Gain
+                                                                                         , GetQueueHandleRXForDataItem("Amplitude Gain")
+                                                                                         , GetQueueByteCountForDataItem("Amplitude Gain")
+                                                                                         , true
+                                                                                         , 0
+                                                                                         , m_DataQueue
+                                                                                         , configMAX_PRIORITIES - 1
+                                                                                         , 0 );
+    //FFT Gain Value and Widget Name Values
+    float FFT_Gain = 1.0;
+    WebSocketDataHandler<float> FFT_Gain1_DataHandler = WebSocketDataHandler<float>( "FFT Gain"
+                                                                                   , "FFT_Gain_Slider1"
+                                                                                   , Amplitude_Gain
+                                                                                   , GetQueueHandleRXForDataItem("FFT Gain")
+                                                                                   , GetQueueByteCountForDataItem("FFT Gain")
+                                                                                   , true
+                                                                                   , 0
+                                                                                   , m_DataQueue
+                                                                                   , configMAX_PRIORITIES - 1
+                                                                                   , 0 );
+                                                                                   
+    WebSocketDataHandler<float> FFT_Gain2_DataHandler = WebSocketDataHandler<float>( "FFT Gain"
+                                                                                   , "FFT_Gain_Slider2"
+                                                                                   , Amplitude_Gain
+                                                                                   , GetQueueHandleRXForDataItem("FFT Gain")
+                                                                                   , GetQueueByteCountForDataItem("FFT Gain")
+                                                                                   , true
+                                                                                   , 0
+                                                                                   , m_DataQueue
+                                                                                   , configMAX_PRIORITIES - 1
+                                                                                   , 0 );
+                                                                                   
 
     //Sink SSID Value and Widget Name Values
     String SinkSSID = "";
+    WebSocketStringDataHandler SinkSSID_DataHandler = WebSocketStringDataHandler( "Sink SSID"
+                                                                                , "Sink_SSID_Text_Box"
+                                                                                , SinkSSID
+                                                                                , GetQueueHandleRXForDataItem("Sink SSID")
+                                                                                , GetQueueByteCountForDataItem("Sink SSID")
+                                                                                , true
+                                                                                , 0
+                                                                                , m_DataQueue
+                                                                                , configMAX_PRIORITIES - 1
+                                                                                , 0 );
+    
+    //Source SSID Value and Widget Name Values
+    String SourceSSID = "";
+    WebSocketStringDataHandler SourceSSID_DataHandler = WebSocketStringDataHandler( "Source SSID"
+                                                                                  , "Source_SSID_Text_Box"
+                                                                                  , SourceSSID
+                                                                                  , GetQueueHandleRXForDataItem("Source SSID")
+                                                                                  , GetQueueByteCountForDataItem("Source SSID")
+                                                                                  , true
+                                                                                  , 0
+                                                                                  , m_DataQueue
+                                                                                  , configMAX_PRIORITIES - 1
+                                                                                  , 0 );
+
+    //Red Value and Widget Name Values
+    int8_t Red_Value;
+    WebSocketDataHandler<int8_t> Red_Value_DataHandler = WebSocketDataHandler<int8_t> ( "Red Value"
+                                                                                      , "Red_Value_Slider"
+                                                                                      , Red_Value
+                                                                                      , GetQueueHandleRXForDataItem("Red Value")
+                                                                                      , GetQueueByteCountForDataItem("Red Value")
+                                                                                      , true
+                                                                                      , 0
+                                                                                      , m_DataQueue
+                                                                                      , configMAX_PRIORITIES - 1
+                                                                                      , 0 );
+    //Blue Value and Widget Name Values
+    int8_t Blue_Value;
+    WebSocketDataHandler<int8_t> Blue_Value_DataHandler = WebSocketDataHandler<int8_t> ( "Blue Value"
+                                                                                       , "Blue_Value_Slider"
+                                                                                       , Blue_Value
+                                                                                       , GetQueueHandleRXForDataItem("Blue Value")
+                                                                                       , GetQueueByteCountForDataItem("Blue Value")
+                                                                                       , true
+                                                                                       , 0
+                                                                                       , m_DataQueue
+                                                                                       , configMAX_PRIORITIES - 1
+                                                                                       , 0 );
+    //Red Value and Widget Name Values
+    int8_t Green_Value;
+    WebSocketDataHandler<int8_t> Green_Value_DataHandler = WebSocketDataHandler<int8_t> ( "Green Value"
+                                                                                        , "Green_Value_Slider"
+                                                                                        , Green_Value
+                                                                                        , GetQueueHandleRXForDataItem("Green Value")
+                                                                                        , GetQueueByteCountForDataItem("Green Value")
+                                                                                        , true
+                                                                                        , 0
+                                                                                        , m_DataQueue
+                                                                                        , configMAX_PRIORITIES - 1
+                                                                                        , 0 );
+
+    /*
     static void StaticHandleSinkSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
     {
       WebServerManager->HandleSinkSSIDValueReceive(Value);
@@ -323,9 +318,22 @@ class SettingsWebServerManager: public QueueManager
       static bool SinkSSIDValuePushErrorhasOccured = false;
       PushValueToRXQueue(&WifiInfo, "Sink SSID", 0, SinkSSIDValuePushErrorhasOccured);
     }
+    static void StaticHandleSinkSSIDValueSend(SettingsWebServerManager *WebServerManager, String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
+    {
+      WebServerManager->HandleSinkSSIDValueSend(DataItemName, WidgetId, Value, KeyValuePairs);
+    }
+    void HandleSinkSSIDValueSend(String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
+    {
+      static bool SinkSSIDPullErrorHasOccured = false;
+      char Buffer[GetQueueByteCountForDataItem("Sink SSID")];
+      if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
+      {
+        SinkSSID = String(Buffer);
+        //Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
+        KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
+      }
+    }
     
-    //Source SSID Value and Widget Name Values
-    String SourceSSID = "";
     static void StaticHandleSourceSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
     {
       WebServerManager->HandleSourceSSIDValueReceive(Value);
@@ -337,45 +345,22 @@ class SettingsWebServerManager: public QueueManager
       static bool SourceSSIDValuePushErrorhasOccured = false;
       PushValueToRXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDValuePushErrorhasOccured);
     }
-
-    //Red Value and Widget Name Values
-    uint32_t Red_Value;
-    static void StaticHandleRedValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
+    static void StaticHandleSourceSSIDValueSend(SettingsWebServerManager *WebServerManager, String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
     {
-      WebServerManager->HandleRedValueReceive(Value);
+      WebServerManager->HandleSourceSSIDValueSend(DataItemName, WidgetId, Value, KeyValuePairs);
     }
-    void HandleRedValueReceive(const String &Value)
+    void HandleSourceSSIDValueSend(String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
     {
-      Red_Value = Value.toInt();
-      static bool RedValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&Red_Value, "Red_Value", 0, RedValuePushErrorhasOccured);
+      static bool SourceSSIDPullErrorHasOccured = false;
+      char Buffer[GetQueueByteCountForDataItem("Source SSID")];
+      if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
+      {
+        SourceSSID = String(Buffer);
+        //Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
+        KeyValuePairs.add({ "Source_SSID_Text_Box", SourceSSID });
+      }
     }
-
-    //Blue Value and Widget Name Values
-    uint32_t Blue_Value;
-    static void StaticHandleBlueValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
-    {
-      WebServerManager->HandleBlueValueReceive(Value);
-    }
-    void HandleBlueValueReceive(const String &Value)
-    {
-      Blue_Value = Value.toInt();
-      static bool BlueValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&Blue_Value, "Blue_Value", 0, BlueValuePushErrorhasOccured);
-    }
-    
-    //Green Value and Widget Name Values
-    uint32_t Green_Value;
-    static void StaticHandleGreenValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
-    {
-      WebServerManager->HandleGreenValueReceive(Value);
-    }
-    void HandleGreenValueReceive(const String &Value)
-    {
-      Green_Value = Value.toInt();
-      static bool GreenValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&Green_Value, "Green_Value", 0, GreenValuePushErrorhasOccured);
-    }
+    */
 
     //QueueManager Interface
     static const size_t m_WebServerConfigCount = 13;
@@ -455,15 +440,15 @@ class SettingsWebServerManager: public QueueManager
           {
               Serial.println("Sending All Values");
               LinkedList<KVP> KeyValuePairs;
-              KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
-              KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
-              KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
-              KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
-              KeyValuePairs.add({ "Red_Value_Slider", String(Red_Value).c_str() });
-              KeyValuePairs.add({ "Green_Value_Slider", String(Green_Value).c_str() });
-              KeyValuePairs.add({ "Blue_Value_Slider", String(Blue_Value).c_str() });
               KeyValuePairs.add({ "Sound_State", String(Sound_State).c_str() });
-              KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
+              //KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
+              //KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
+              //KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
+              //KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
+              //KeyValuePairs.add({ "Red_Value_Slider", String(Red_Value).c_str() });
+              //KeyValuePairs.add({ "Green_Value_Slider", String(Green_Value).c_str() });
+              //KeyValuePairs.add({ "Blue_Value_Slider", String(Blue_Value).c_str() });
+              //KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
               NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
           }
           else
@@ -476,21 +461,23 @@ class SettingsWebServerManager: public QueueManager
           if( true == MyDataObject["WidgetValue"].hasOwnProperty("Widget") && 
               true == MyDataObject["WidgetValue"].hasOwnProperty("Value") )
           {
-            const String Widget = String( (const char*)MyDataObject["WidgetValue"]["Widget"]);
+            const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Widget"]);
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
             bool WidgetFound = false;
+            /*
             for(int i = 0; i < m_WidgetDataReceivers.size(); ++i)
             {
-              if(m_WidgetDataReceivers.get(i).Widget.equals(Widget))
+              if(m_WidgetDataReceivers.get(i).WidgetId.equals(WidgetId))
               {
-                Serial.println("Widget: " + Widget + "  Value Received: " + Value);
+                Serial.println("Widget: " + WidgetId + "  Value Received: " + Value);
                 WidgetFound = true;
                 m_WidgetDataReceivers[i].CallBack(this, Value);
               }
             }
+            */
             if(!WidgetFound)
             {
-              Serial.println("Unknown Known Widget: " + Widget);
+              Serial.println("Unknown Known Widget: " + WidgetId);
             }
           }
           else
