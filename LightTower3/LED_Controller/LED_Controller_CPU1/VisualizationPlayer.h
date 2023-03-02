@@ -53,8 +53,8 @@ class VisualizationPlayer : public Task
     Visualization *m_CurrentVisualization;
     Visualization *m_PreviousVisualization;
     typedef Visualization* (* GetInstanceFunctionPointer)(StatisticalEngineModelInterface &, LEDController &);
-    LinkedList<GetInstanceFunctionPointer> m_MyVisiualizationInstantiations = LinkedList<GetInstanceFunctionPointer>();
-    LinkedList<Visualization*> m_MyQueue = LinkedList<Visualization*>();
+    std::vector<GetInstanceFunctionPointer> m_MyVisiualizationInstantiations = std::vector<GetInstanceFunctionPointer>();
+    std::vector<Visualization*> m_MyQueue = std::vector<Visualization*>();
     bool m_TestVisualization = false;
 };
 

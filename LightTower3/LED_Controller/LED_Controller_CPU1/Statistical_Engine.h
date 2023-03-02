@@ -22,7 +22,6 @@
 #define STATISTICAL_ENGINE_MEMORY_DEBUG false
 #define STATISTICAL_ENGINE_DATA_DEBUG false
 
-#include <LinkedList.h>
 #include <limits.h>
 #include "TaskInterface.h"
 #include "Streaming.h"
@@ -67,15 +66,15 @@ class SoundMeasureCallerInterface
   public:
     void RegisterForSoundStateChangeNotification(SoundMeasureCalleeInterface *user)
     {
-      m_MyUsers.add(user);
+      m_MyUsers.push_back(user);
     }
     void DeRegisterForSoundStateChangeNotification(SoundMeasureCalleeInterface *user)
     {
       for (int i = 0; i < m_MyUsers.size(); ++i)
       {
-        if (m_MyUsers.get(i) == user)
+        if (m_MyUsers[i] == user)
         {
-          m_MyUsers.remove(i);
+          m_MyUsers.erase(m_MyUsers.begin() + i);
           break;
         }
       }
@@ -85,11 +84,11 @@ class SoundMeasureCallerInterface
     {
       for (int i = 0; i < m_MyUsers.size(); ++i)
       {
-        m_MyUsers.get(i)->SoundStateChange(State);
+        m_MyUsers[i]->SoundStateChange(State);
       }
     }
   private:
-    LinkedList<SoundMeasureCalleeInterface*> m_MyUsers = LinkedList<SoundMeasureCalleeInterface*>();
+    std::vector<SoundMeasureCalleeInterface*> m_MyUsers = std::vector<SoundMeasureCalleeInterface*>();
 };
 
 class StatisticalEngine : public NamedItem

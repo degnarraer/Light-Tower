@@ -128,7 +128,7 @@ class DataSerializer: public CommonUtils
 								{
 									if(NULL != m_DataItems[i].QueueHandle_RX)
 									{
-										PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, false, ItemName.c_str(), m_DataItems[i].DataPushHasErrored);
+										PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, ItemName.c_str(), 0, m_DataItems[i].DataPushHasErrored);
 									}
 									else
 									{

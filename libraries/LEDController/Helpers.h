@@ -103,12 +103,72 @@ class CommonUtils
 			}
 			return Result;
 		}
+		bool ConvertStringToDataBufferFromDataType(void *Buffer, String Value, DataType_t DataType)
+		{
+			bool Result = true;
+			switch(DataType)
+			{
+				case DataType_bool_t:
+				{
+					if(Value.equals("1"))
+					{
+						*((bool*)Buffer) = true;
+					}
+					else
+					{
+						*((bool*)Buffer) = false;
+					}
+				}
+				break;
+				
+				case DataType_Int8_t:
+					*(int8_t*)Buffer = Value.toInt();
+				break;
+				case DataType_Int16_t:
+					*(int16_t*)Buffer = Value.toInt();
+				break;
+				case DataType_Int32_t:
+					*(int32_t*)Buffer = Value.toInt();
+				break;
+				
+				case DataType_Uint8_t:
+				case DataType_Uint16_t:
+				case DataType_Uint32_t:
+					Value.getBytes((byte*)Buffer, Value.length());
+				break;
+				
+				case DataType_Float_t:
+					Serial << "DataType_Float_t\n";
+					*(float*)Buffer = Value.toFloat();
+				break;
+				
+				case DataType_Double_t:
+					Serial << "DataType_Double_t\n";
+					*(double*)Buffer = Value.toDouble();
+				break;
+				
+				case DataType_String_t:
+				case DataType_Wifi_Info_t:
+				case DataType_ProcessedSoundData_t:				
+				case DataType_MaxBandSoundData_t:				
+				case DataType_Frame_t:				
+				case DataType_ProcessedSoundFrame_t:				
+				case DataType_SoundState_t:
+					Result = false;
+				break;
+				
+				default:
+					Result = false;
+				break;
+			}
+			return Result;
+		}
 };
 class QueueController
 {
 	public:
 		
-		void PushValueToQueue(void* Value, QueueHandle_t Queue, TickType_t TicksToWait, const String &DebugTitle, bool &DataPushHasErrored){
+		void PushValueToQueue(void* Value, QueueHandle_t Queue, const String &DebugTitle, TickType_t TicksToWait, bool &DataPushHasErrored){
 			if(NULL != Queue)
 			{
 				if(xQueueSend(Queue, Value, TicksToWait) != pdTRUE)
@@ -274,6 +334,25 @@ class QueueManager: public CommonUtils
 			}
 		}
 		//Data Items
+		DataItem_t *GetPointerToDataItemWithName(String Name)
+		{
+			if(NULL != m_DataItem)
+			{
+				for(int i = 0; i < m_DataItemCount; ++i)
+				{
+					if(true == Name.equals(m_DataItem[i].Name))
+					{
+						return &(m_DataItem[i]);
+					}
+				}
+				ESP_LOGE("CommonUtils", "ERROR! %s: Data Item Not Found.", Name.c_str());
+			}
+			else
+			{
+				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
+			}
+			return NULL;
+		}
 		QueueHandle_t GetQueueHandleRXForDataItem(String Name){
 			if(NULL != m_DataItem)
 			{

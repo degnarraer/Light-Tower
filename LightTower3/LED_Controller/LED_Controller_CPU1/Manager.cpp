@@ -213,8 +213,8 @@ void Manager::BluetoothConnection_TX()
   static bool SinkIsConnectedValuePushError = false;
   PushValueToQueue( &m_BluetoothIsConnected
                   , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connected")
-                  , 0
                   , "Sink Is Connected"
+                  , 0
                   , SinkIsConnectedValuePushError ); 
 }
 
@@ -232,8 +232,8 @@ void Manager::SoundState_TX()
   static bool SoundStateValuePushError = false;
   PushValueToQueue( &m_SoundState
                   , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
-                  , 0
                   , "Sound State"
+                  , 0
                   , SoundStateValuePushError );
 }
 

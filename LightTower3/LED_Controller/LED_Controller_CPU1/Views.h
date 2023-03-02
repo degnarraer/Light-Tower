@@ -24,7 +24,6 @@
 #include "Streaming.h"
 #include "Tunes.h"
 #include "Models.h"
-#include <LinkedList.h>
 
 enum MergeType
 {
@@ -104,7 +103,7 @@ class View: public Task
       size W_To_Clear = 0;
       size H_To_Clear = 0;
     };
-    LinkedList<SubViewWithProperties_t> m_SubViewWithProperties  = LinkedList<SubViewWithProperties_t>();
+    std::vector<SubViewWithProperties_t> m_SubViewWithProperties  = std::vector<SubViewWithProperties_t>();
     void MergeSubViews();
     CRGB DimColor(CRGB color, float scalar)
     {

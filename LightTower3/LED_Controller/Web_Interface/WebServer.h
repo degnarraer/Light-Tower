@@ -21,7 +21,6 @@
 
 #include "Arduino.h"
 #include <freertos/portmacro.h>
-#include <LinkedList.h>
 #include "HTTP_Method.h"
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
@@ -30,97 +29,181 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "Streaming.h"
-#include <typeinfo>
 
 
 class SettingsWebServerManager;
 
-template<typename T>
-class WebSocketDataHandler: public QueueController
+class WebSocketDataHandlerSender
 {
   public:
-    WebSocketDataHandler( const String DataItemName
-                        , const String WidgetId
-                        , T &Value
-                        , QueueHandle_t QueueHandle
-                        , size_t QueueTotalByteCount
+    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) = 0;
+};
+
+class WebSocketDataHandlerReceiver
+{
+  public:
+    virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) = 0;
+};
+
+template<typename T>
+class WebSocketDataHandler: public QueueController
+                          , public CommonUtils
+                          , public WebSocketDataHandlerReceiver
+                          , public WebSocketDataHandlerSender
+{
+  public:
+    WebSocketDataHandler(){}
+    WebSocketDataHandler(const WebSocketDataHandler &t)
+    {
+      m_DataItem = t.m_DataItem;
+      m_WidgetId = t.m_WidgetId;
+      m_Value = t.m_Value;
+      m_ReadUntilEmpty = t.m_ReadUntilEmpty;
+      m_TicksToWait = t.m_TicksToWait;
+      m_KeyValuePairs = t.m_KeyValuePairs;
+    }
+    WebSocketDataHandler( DataItem_t *DataItem
+                        , String *WidgetId
+                        , const size_t NumberOfWidgets
                         , bool ReadUntilEmpty
-                        , TickType_t TicksToWait
-                        , LinkedList<KVP> &KeyValuePairs
-                        , UBaseType_t TaskPriority
-                        , uint8_t CoreId  )
-                        : m_DataItemName(DataItemName) 
+                        , TickType_t TicksToWait  )
+                        : m_DataItem(DataItem) 
                         , m_WidgetId(WidgetId)
-                        , m_Value(Value)
-                        , m_QueueHandle(QueueHandle)
-                        , m_QueueTotalByteCount(QueueTotalByteCount)
+                        , m_NumberOfWidgets(NumberOfWidgets)
                         , m_ReadUntilEmpty(ReadUntilEmpty)
                         , m_TicksToWait(TicksToWait)
-                        , m_KeyValuePairs(KeyValuePairs)
     {
-      size_t TotalSize = sizeof(m_DataItemName) + sizeof(m_WidgetId) + sizeof(m_Value) + sizeof(m_ReadUntilEmpty) + sizeof(m_TicksToWait) + sizeof(m_KeyValuePairs); 
-      xTaskCreatePinnedToCore( Static_WebSocketDataHandler_CheckForValue, "Web Socket Data Handler", TotalSize, this, TaskPriority, &m_Task_Handle, CoreId );
     }
-    virtual ~WebSocketDataHandler(){}
+    virtual ~WebSocketDataHandler()
+    {
+    }
+    
+    void SetValue(T Value)
+    {
+      m_Value = Value;
+    }
+    
+    T GetValue()
+    {
+      return m_Value;
+    }
     
   protected:
-    const String m_DataItemName;
-    const String m_WidgetId;
-    T &m_Value;
-    QueueHandle_t m_QueueHandle;
-    size_t m_QueueTotalByteCount;
+    DataItem_t *m_DataItem = NULL;
+    String *m_WidgetId = NULL;
+    size_t m_NumberOfWidgets = 0;
+    T m_Value;
     bool m_ReadUntilEmpty;
     TickType_t m_TicksToWait;
-    LinkedList<KVP> &m_KeyValuePairs;
-    TaskHandle_t m_Task_Handle;
-    bool m_PushError;
+    std::vector<KVP> *m_KeyValuePairs;
+    UBaseType_t m_TaskPriority;
+    uint8_t m_CoreId;
+    bool m_PushError = false;
+    bool m_PullError = false;
     
     void ProcessEventQueue()
     {
     }
-    static void Static_WebSocketDataHandler_CheckForValue(void * parameter)
+    
+    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      ((WebSocketDataHandler*)parameter)->CheckForValue();
-    }
-    virtual void CheckForValue()
-    {
-      if(true == GetValueFromQueue(&m_Value, m_QueueHandle, m_DataItemName, m_ReadUntilEmpty, m_TicksToWait, m_PushError))
+      if(null != m_DataItem)
       {
-        Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItemName.c_str() << "\n";
-        m_KeyValuePairs.add({ m_WidgetId.c_str(), String(m_Value).c_str() });
+        if(true == GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
+        {
+          //Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
+          for (size_t i = 0; i < m_NumberOfWidgets; i++)
+          {
+            KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(m_Value).c_str() });
+          }
+        }
       }
+    }
+    
+    virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value)
+    {
+      bool Found = false;
+      String InputId = WidgetId;
+      if(null != m_DataItem)
+      {
+        for (size_t i = 0; i < m_NumberOfWidgets; i++)
+        {
+          Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
+          if( m_WidgetId[i].equals(InputId) )
+          {
+            Serial << "Found\n";
+            if( true == ConvertStringToDataBufferFromDataType(&m_Value, Value, m_DataItem->DataType))
+            {
+              Found = true;
+              Serial << "Send Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
+              PushValueToQueue(&m_Value, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
+            }
+            return Found;
+          }
+        }
+      }
+      return Found;
     }
 };
 
-class WebSocketStringDataHandler: public WebSocketDataHandler<String>
+class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
 {
   public:
-    WebSocketStringDataHandler( const String DataItemName
-                              , const String WidgetId
-                              , String &Value
-                              , QueueHandle_t QueueHandle
-                              , size_t ByteCount
+    WebSocketSSIDDataHandler(){}
+    WebSocketSSIDDataHandler( DataItem_t *DataItem
+                              , String *WidgetIds
+                              , const size_t NumberOfWidgets
                               , bool ReadUntilEmpty
-                              , TickType_t TicksToWait
-                              , LinkedList<KVP> &KeyValuePairs
-                              , UBaseType_t TaskPriority
-                              , uint8_t CoreId  )
-                              : WebSocketDataHandler<String>(DataItemName, WidgetId, Value, QueueHandle, ByteCount, ReadUntilEmpty, TicksToWait, KeyValuePairs, TaskPriority, CoreId)
+                              , TickType_t TicksToWait )
+                              : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait)
     {
     }
-    virtual ~WebSocketStringDataHandler(){}
-    void CheckForValue() override
+    
+    virtual ~WebSocketSSIDDataHandler()
     {
-      char Buffer[m_QueueTotalByteCount];
-      if(true == GetValueFromQueue(&Buffer, m_QueueHandle, m_WidgetId.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PushError))
+    }
+    
+  protected:
+    void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
+    {
+      if(null != m_DataItem)
       {
-        m_Value = String(Buffer);
-        Serial << "Received Value: " << m_Value << " to Send to Clients for Data Item: " << m_DataItemName.c_str() << "\n";
-        m_KeyValuePairs.add({ m_WidgetId.c_str(), m_Value });
+        char Buffer[m_DataItem->TotalByteCount];
+        if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
+        {
+          m_Value = String(Buffer);
+          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
+          for (size_t i = 0; i < m_NumberOfWidgets; i++)
+          {
+            KeyValuePairs.push_back({ m_WidgetId[i].c_str(), m_Value.c_str() });
+          }
+        }
       }
     }
-  protected:
-  
+    
+    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
+    {
+      bool Found = false;
+      String InputId = WidgetId;
+      if(null != m_DataItem)
+      {
+        m_Value = Value;
+        Wifi_Info_t WifiInfo = Wifi_Info_t(m_Value);
+        for (size_t i = 0; i < m_NumberOfWidgets; i++)
+        {
+          Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
+          m_WidgetId[i].trim();
+          InputId.trim();
+          if( m_WidgetId[i].equals(InputId) )
+          {
+            Found = true;
+            Serial << "Send Value: " << m_Value.c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
+            PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
+          }
+        }
+      }
+      return Found;
+    }
 };
 
 class SettingsWebServerManager: public QueueManager
@@ -133,6 +216,7 @@ class SettingsWebServerManager: public QueueManager
     {
       
     }
+    
     virtual ~SettingsWebServerManager()
     {
     
@@ -141,17 +225,47 @@ class SettingsWebServerManager: public QueueManager
     void SetupSettingsWebServerManager()
     {
       SetupQueueManager();
-      InitWiFiAP();  
+      InitWiFiAP();
+      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, true, 0 );
+      RegisterAsWebSocketDataSender(&Sound_State_DataHandler);
+      
+      Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Amplitude_Gain_DataHandler);
+      RegisterAsWebSocketDataSender(&Amplitude_Gain_DataHandler);
+      
+      FFT_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("FFT Gain"), new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}, 2, true, 0 );
+      RegisterAsWebSocketDataReceiver(&FFT_Gain_DataHandler);
+      RegisterAsWebSocketDataSender(&FFT_Gain_DataHandler);
+      
+      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&SinkSSID_DataHandler);
+      RegisterAsWebSocketDataSender(&SinkSSID_DataHandler);
+    
+      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&SourceSSID_DataHandler);
+      RegisterAsWebSocketDataSender(&SourceSSID_DataHandler);
+
+      Red_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Red Value"), new String[1]{"Red_Value_Slider"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Red_Value_DataHandler);
+      RegisterAsWebSocketDataSender(&Red_Value_DataHandler);
+
+      Blue_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Blue Value"), new String[1]{"Blue_Value_Slider"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Blue_Value_DataHandler);
+      RegisterAsWebSocketDataSender(&Blue_Value_DataHandler);
+
+      Green_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Green Value"), new String[1]{"Green_Value_Slider"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Green_Value_DataHandler);
+      RegisterAsWebSocketDataSender(&Green_Value_DataHandler);
     }
     
     void ProcessEventQueue()
     {
-      LinkedList<KVP> KeyValuePairs;
-
-      if(KeyValuePairs.size() > 0)
+      std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+      for(int i = 0; i < m_MySenders.size(); ++i)
       {
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+        m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
       }
+      NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -171,196 +285,88 @@ class SettingsWebServerManager: public QueueManager
           break;
       }
     }
+
+    void RegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
+    {
+      for(int i = 0; i < m_MyReceivers.size(); ++i)
+      {
+        if(m_MyReceivers[i] == aReceiver)
+        {
+          return;
+        }
+      }
+      m_MyReceivers.push_back(aReceiver);
+    }
+
+    void DeRegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
+    {
+      for(int i = 0; i < m_MyReceivers.size(); ++i)
+      {
+        if(m_MyReceivers[i] == aReceiver)
+        {
+          m_MyReceivers.erase(m_MyReceivers.begin() + i);
+          return;
+        }
+      }
+    }
+    
+    void RegisterAsWebSocketDataSender(WebSocketDataHandlerSender *aSender)
+    {
+      for(int i = 0; i < m_MySenders.size(); ++i)
+      {
+        if(m_MySenders[i] == aSender)
+        {
+          return;
+        }
+      }
+      m_MySenders.push_back(aSender);
+    }
+    
+    void DeRegisterAsWebSocketDataSender(WebSocketDataHandlerSender *aSender)
+    {
+      for(int i = 0; i < m_MySenders.size(); ++i)
+      {
+        if(m_MySenders[i] == aSender)
+        {
+          m_MySenders.erase(m_MySenders.begin() + i);
+          return;
+        }
+      }
+    }
     
   private:
     AsyncWebSocket &m_WebSocket;
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
-
     String message = "";
 
+    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers;
+    std::vector<WebSocketDataHandlerSender*> m_MySenders;
 
-    LinkedList<KVP> m_DataQueue = LinkedList<KVP>();
-    
     //Sound State Value and Widget Name Values
     SoundState_t Sound_State;
-    WebSocketDataHandler<SoundState_t> Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( "Sound State"
-                                                                                                   , "Sound_State"
-                                                                                                   , Sound_State
-                                                                                                   , GetQueueHandleRXForDataItem("Sound State")
-                                                                                                   , GetQueueByteCountForDataItem("Sound State")
-                                                                                                   , true
-                                                                                                   , 0
-                                                                                                   , m_DataQueue
-                                                                                                   , configMAX_PRIORITIES - 1
-                                                                                                   , 0 );
-                                                                                                   
+    WebSocketDataHandler<SoundState_t> Sound_State_DataHandler;
+
     //Amplitude Gain Value and Widget Name Values
-    float Amplitude_Gain = 1.0;
-    WebSocketDataHandler<float> Amplitude_Gain1_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain"
-                                                                                         , "Amplitude_Gain_Slider1"
-                                                                                         , Amplitude_Gain
-                                                                                         , GetQueueHandleRXForDataItem("Amplitude Gain")
-                                                                                         , GetQueueByteCountForDataItem("Amplitude Gain")
-                                                                                         , true
-                                                                                         , 0
-                                                                                         , m_DataQueue
-                                                                                         , configMAX_PRIORITIES - 1
-                                                                                         , 0 );
-                                                                                         
-    WebSocketDataHandler<float> Amplitude_Gain2_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain"
-                                                                                         , "Amplitude_Gain_Slider2"
-                                                                                         , Amplitude_Gain
-                                                                                         , GetQueueHandleRXForDataItem("Amplitude Gain")
-                                                                                         , GetQueueByteCountForDataItem("Amplitude Gain")
-                                                                                         , true
-                                                                                         , 0
-                                                                                         , m_DataQueue
-                                                                                         , configMAX_PRIORITIES - 1
-                                                                                         , 0 );
+    WebSocketDataHandler<float> Amplitude_Gain_DataHandler;
+    
     //FFT Gain Value and Widget Name Values
-    float FFT_Gain = 1.0;
-    WebSocketDataHandler<float> FFT_Gain1_DataHandler = WebSocketDataHandler<float>( "FFT Gain"
-                                                                                   , "FFT_Gain_Slider1"
-                                                                                   , Amplitude_Gain
-                                                                                   , GetQueueHandleRXForDataItem("FFT Gain")
-                                                                                   , GetQueueByteCountForDataItem("FFT Gain")
-                                                                                   , true
-                                                                                   , 0
-                                                                                   , m_DataQueue
-                                                                                   , configMAX_PRIORITIES - 1
-                                                                                   , 0 );
-                                                                                   
-    WebSocketDataHandler<float> FFT_Gain2_DataHandler = WebSocketDataHandler<float>( "FFT Gain"
-                                                                                   , "FFT_Gain_Slider2"
-                                                                                   , Amplitude_Gain
-                                                                                   , GetQueueHandleRXForDataItem("FFT Gain")
-                                                                                   , GetQueueByteCountForDataItem("FFT Gain")
-                                                                                   , true
-                                                                                   , 0
-                                                                                   , m_DataQueue
-                                                                                   , configMAX_PRIORITIES - 1
-                                                                                   , 0 );
-                                                                                   
+    WebSocketDataHandler<float> FFT_Gain_DataHandler;
 
     //Sink SSID Value and Widget Name Values
-    String SinkSSID = "";
-    WebSocketStringDataHandler SinkSSID_DataHandler = WebSocketStringDataHandler( "Sink SSID"
-                                                                                , "Sink_SSID_Text_Box"
-                                                                                , SinkSSID
-                                                                                , GetQueueHandleRXForDataItem("Sink SSID")
-                                                                                , GetQueueByteCountForDataItem("Sink SSID")
-                                                                                , true
-                                                                                , 0
-                                                                                , m_DataQueue
-                                                                                , configMAX_PRIORITIES - 1
-                                                                                , 0 );
+    WebSocketSSIDDataHandler SinkSSID_DataHandler;
     
     //Source SSID Value and Widget Name Values
-    String SourceSSID = "";
-    WebSocketStringDataHandler SourceSSID_DataHandler = WebSocketStringDataHandler( "Source SSID"
-                                                                                  , "Source_SSID_Text_Box"
-                                                                                  , SourceSSID
-                                                                                  , GetQueueHandleRXForDataItem("Source SSID")
-                                                                                  , GetQueueByteCountForDataItem("Source SSID")
-                                                                                  , true
-                                                                                  , 0
-                                                                                  , m_DataQueue
-                                                                                  , configMAX_PRIORITIES - 1
-                                                                                  , 0 );
+    WebSocketSSIDDataHandler SourceSSID_DataHandler;
 
     //Red Value and Widget Name Values
-    int8_t Red_Value;
-    WebSocketDataHandler<int8_t> Red_Value_DataHandler = WebSocketDataHandler<int8_t> ( "Red Value"
-                                                                                      , "Red_Value_Slider"
-                                                                                      , Red_Value
-                                                                                      , GetQueueHandleRXForDataItem("Red Value")
-                                                                                      , GetQueueByteCountForDataItem("Red Value")
-                                                                                      , true
-                                                                                      , 0
-                                                                                      , m_DataQueue
-                                                                                      , configMAX_PRIORITIES - 1
-                                                                                      , 0 );
-    //Blue Value and Widget Name Values
-    int8_t Blue_Value;
-    WebSocketDataHandler<int8_t> Blue_Value_DataHandler = WebSocketDataHandler<int8_t> ( "Blue Value"
-                                                                                       , "Blue_Value_Slider"
-                                                                                       , Blue_Value
-                                                                                       , GetQueueHandleRXForDataItem("Blue Value")
-                                                                                       , GetQueueByteCountForDataItem("Blue Value")
-                                                                                       , true
-                                                                                       , 0
-                                                                                       , m_DataQueue
-                                                                                       , configMAX_PRIORITIES - 1
-                                                                                       , 0 );
-    //Red Value and Widget Name Values
-    int8_t Green_Value;
-    WebSocketDataHandler<int8_t> Green_Value_DataHandler = WebSocketDataHandler<int8_t> ( "Green Value"
-                                                                                        , "Green_Value_Slider"
-                                                                                        , Green_Value
-                                                                                        , GetQueueHandleRXForDataItem("Green Value")
-                                                                                        , GetQueueByteCountForDataItem("Green Value")
-                                                                                        , true
-                                                                                        , 0
-                                                                                        , m_DataQueue
-                                                                                        , configMAX_PRIORITIES - 1
-                                                                                        , 0 );
-
-    /*
-    static void StaticHandleSinkSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
-    {
-      WebServerManager->HandleSinkSSIDValueReceive(Value);
-    }
-    void HandleSinkSSIDValueReceive(const String &Value)
-    {
-      SinkSSID = Value;
-      Wifi_Info_t WifiInfo = Wifi_Info_t(SinkSSID);
-      static bool SinkSSIDValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&WifiInfo, "Sink SSID", 0, SinkSSIDValuePushErrorhasOccured);
-    }
-    static void StaticHandleSinkSSIDValueSend(SettingsWebServerManager *WebServerManager, String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
-    {
-      WebServerManager->HandleSinkSSIDValueSend(DataItemName, WidgetId, Value, KeyValuePairs);
-    }
-    void HandleSinkSSIDValueSend(String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
-    {
-      static bool SinkSSIDPullErrorHasOccured = false;
-      char Buffer[GetQueueByteCountForDataItem("Sink SSID")];
-      if(true == GetValueFromTXQueue(&Buffer, "Sink SSID", true, 0, SinkSSIDPullErrorHasOccured))
-      {
-        SinkSSID = String(Buffer);
-        //Serial << "Received Value to Send to Clients: Sink SSID: "<< SinkSSID << "\n";
-        KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
-      }
-    }
+    WebSocketDataHandler<uint8_t> Red_Value_DataHandler;
     
-    static void StaticHandleSourceSSIDValueReceive(SettingsWebServerManager *WebServerManager, const String &Value)
-    {
-      WebServerManager->HandleSourceSSIDValueReceive(Value);
-    }
-    void HandleSourceSSIDValueReceive(const String &Value)
-    {
-      SourceSSID = Value;
-      Wifi_Info_t WifiInfo = Wifi_Info_t(SourceSSID);
-      static bool SourceSSIDValuePushErrorhasOccured = false;
-      PushValueToRXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDValuePushErrorhasOccured);
-    }
-    static void StaticHandleSourceSSIDValueSend(SettingsWebServerManager *WebServerManager, String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
-    {
-      WebServerManager->HandleSourceSSIDValueSend(DataItemName, WidgetId, Value, KeyValuePairs);
-    }
-    void HandleSourceSSIDValueSend(String &DataItemName, String &WidgetId, String &Value, LinkedList<KVP> &KeyValuePairs)
-    {
-      static bool SourceSSIDPullErrorHasOccured = false;
-      char Buffer[GetQueueByteCountForDataItem("Source SSID")];
-      if(true == GetValueFromTXQueue(&Buffer, "Source SSID", true, 0, SourceSSIDPullErrorHasOccured))
-      {
-        SourceSSID = String(Buffer);
-        //Serial << "Received Value to Send to Clients: Source SSID: "<< SourceSSID << "\n";
-        KeyValuePairs.add({ "Source_SSID_Text_Box", SourceSSID });
-      }
-    }
-    */
+    //Blue Value and Widget Name Values
+    WebSocketDataHandler<uint8_t> Blue_Value_DataHandler;
+    
+    //Red Value and Widget Name Values
+    WebSocketDataHandler<uint8_t> Green_Value_DataHandler;
 
     //QueueManager Interface
     static const size_t m_WebServerConfigCount = 13;
@@ -384,16 +390,16 @@ class SettingsWebServerManager: public QueueManager
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
     
     //Get Slider Values
-    String Encode_JSON_Data_Values_To_JSON(LinkedList<KVP> &KeyValuePairs)
+    String Encode_JSON_Data_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
     {
       JSONVar JSONVars;
       for(int i = 0; i < KeyValuePairs.size(); ++i)
       {
-          if( true == isAsciiString(KeyValuePairs.get(i).Key.c_str()) && true == isAsciiString(KeyValuePairs.get(i).Value.c_str()) )
+          if( true == isAsciiString(KeyValuePairs[i].Key.c_str()) && true == isAsciiString(KeyValuePairs[i].Value.c_str()) )
           {
             JSONVar SettingValues;
-            SettingValues["Id"] = KeyValuePairs.get(i).Key.c_str();
-            SettingValues["Value"] = KeyValuePairs.get(i).Value.c_str();
+            SettingValues["Id"] = KeyValuePairs[i].Key.c_str();
+            SettingValues["Value"] = KeyValuePairs[i].Value.c_str();
             JSONVars["DataValue" + String(i)] = SettingValues;
           }
       }
@@ -439,16 +445,17 @@ class SettingsWebServerManager: public QueueManager
           if (Message.equals("Get All Values"))
           {
               Serial.println("Sending All Values");
-              LinkedList<KVP> KeyValuePairs;
-              KeyValuePairs.add({ "Sound_State", String(Sound_State).c_str() });
-              //KeyValuePairs.add({ "Amplitude_Gain_Slider1", String(Amplitude_Gain).c_str() });
-              //KeyValuePairs.add({ "Amplitude_Gain_Slider2", String(Amplitude_Gain).c_str() });
-              //KeyValuePairs.add({ "FFT_Gain_Slider1", String(FFT_Gain).c_str() });
-              //KeyValuePairs.add({ "FFT_Gain_Slider2", String(FFT_Gain).c_str() });
-              //KeyValuePairs.add({ "Red_Value_Slider", String(Red_Value).c_str() });
-              //KeyValuePairs.add({ "Green_Value_Slider", String(Green_Value).c_str() });
-              //KeyValuePairs.add({ "Blue_Value_Slider", String(Blue_Value).c_str() });
-              //KeyValuePairs.add({ "Sink_SSID_Text_Box", SinkSSID });
+              std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+              KeyValuePairs.push_back({ "Sound_State", String(Sound_State).c_str() });
+              KeyValuePairs.push_back({ "Amplitude_Gain_Slider1", String(Amplitude_Gain_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "Amplitude_Gain_Slider2", String(Amplitude_Gain_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "FFT_Gain_Slider1", String(FFT_Gain_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "FFT_Gain_Slider2", String(FFT_Gain_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "Red_Value_Slider", String(Red_Value_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "Green_Value_Slider", String(Green_Value_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "Blue_Value_Slider", String(Blue_Value_DataHandler.GetValue()).c_str() });
+              KeyValuePairs.push_back({ "Sink_SSID_Text_Box", SinkSSID_DataHandler.GetValue() });
+              KeyValuePairs.push_back({ "Source_SSID_Text_Box", SourceSSID_DataHandler.GetValue() });
               NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
           }
           else
@@ -458,23 +465,21 @@ class SettingsWebServerManager: public QueueManager
         }
         else if( true == MyDataObject.hasOwnProperty("WidgetValue") )
         {
-          if( true == MyDataObject["WidgetValue"].hasOwnProperty("Widget") && 
+          if( true == MyDataObject["WidgetValue"].hasOwnProperty("Id") && 
               true == MyDataObject["WidgetValue"].hasOwnProperty("Value") )
           {
-            const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Widget"]);
+            const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
             bool WidgetFound = false;
-            /*
-            for(int i = 0; i < m_WidgetDataReceivers.size(); ++i)
+            
+            for(int i = 0; i < m_MyReceivers.size(); ++i)
             {
-              if(m_WidgetDataReceivers.get(i).WidgetId.equals(WidgetId))
+              if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId.c_str(), Value.c_str()))
               {
-                Serial.println("Widget: " + WidgetId + "  Value Received: " + Value);
+                Serial.println("Widget Id: " + WidgetId + "  Value Received: " + Value);
                 WidgetFound = true;
-                m_WidgetDataReceivers[i].CallBack(this, Value);
               }
             }
-            */
             if(!WidgetFound)
             {
               Serial.println("Unknown Known Widget: " + WidgetId);

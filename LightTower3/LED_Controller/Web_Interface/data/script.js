@@ -117,7 +117,7 @@ function submit_New_SSID(element)
 		TextboxElement = document.getElementById("Sink_SSID_Text_Box");
 		Sink_SSID_Changed_TimeoutHandle = setTimeout(Sink_SSID_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
-		Root["WidgetValue"].Widget = TextboxElement.id;
+		Root["WidgetValue"].Id = TextboxElement.id;
 		Root["WidgetValue"].Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
 		console.log(Message);
@@ -131,7 +131,7 @@ function submit_New_SSID(element)
 		TextboxElement = document.getElementById("Source_SSID_Text_Box");
 		Source_SSID_Changed_TimeoutHandle = setTimeout(Source_SSID_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
-		Root["WidgetValue"].Widget = TextboxElement.id;
+		Root["WidgetValue"].Id = TextboxElement.id;
 		Root["WidgetValue"].Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
 		console.log(Message);
@@ -148,7 +148,7 @@ function updateSliderValue(element)
     var SliderValue = document.getElementById(SliderName).value;
     var Root = {};
 	Root.WidgetValue = {};
-	Root["WidgetValue"].Widget = SliderName.toString();
+	Root["WidgetValue"].Id = SliderName.toString();
 	Root["WidgetValue"].Value = SliderValue.toString();
 	var Message = JSON.stringify(Root);
 	console.log(Message);
@@ -293,7 +293,6 @@ function onMessage(event)
 			{
 				document.getElementById(Id).value = Value;
 			}
-			else if( Id == "
 		}
 	}
 }

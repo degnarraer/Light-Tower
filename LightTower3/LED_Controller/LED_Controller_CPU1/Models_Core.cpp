@@ -147,16 +147,16 @@ MaxBandSoundData_t StatisticalEngineModelInterface::GetMaxBinLeftSoundData()
 
 void StatisticalEngineModelInterfaceUserTracker::RegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
 {
-  m_MyUsers.add(&user);
+  m_MyUsers.push_back(&user);
 }
 
 void StatisticalEngineModelInterfaceUserTracker::DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user)
 {
   for (int i = 0; i < m_MyUsers.size(); ++i)
   {
-    if (m_MyUsers.get(i) == &user)
+    if (m_MyUsers[i] == &user)
     {
-      m_MyUsers.remove(i);
+      m_MyUsers.erase(m_MyUsers.begin() + i);
       break;
     }
   }
@@ -167,7 +167,7 @@ bool StatisticalEngineModelInterfaceUserTracker::UsersRequireFFT()
   bool result = false;
   for (int u = 0; u < m_MyUsers.size(); ++u)
   {
-    if (true == m_MyUsers.get(u)->RequiresFFT())
+    if (true == m_MyUsers[u]->RequiresFFT())
     {
       result = true;
       break;

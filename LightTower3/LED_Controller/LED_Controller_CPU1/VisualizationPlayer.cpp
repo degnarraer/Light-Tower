@@ -20,22 +20,22 @@
 
 void VisualizationPlayer::Setup()
 {
-  //m_MyVisiualizationInstantiations.add(VUMeter::GetInstance);
-  //m_MyVisiualizationInstantiations.add(VUMeter3Band::GetInstance);
-  //m_MyVisiualizationInstantiations.add(VUMeter8Band::GetInstance);
-  //m_MyVisiualizationInstantiations.add(Waterfall::GetInstance);
-  //m_MyVisiualizationInstantiations.add(Fire::GetInstance);
-  //m_MyVisiualizationInstantiations.add(WaterFireFromCenter::GetInstance);
-  //m_MyVisiualizationInstantiations.add(WaterFireFromEdge::GetInstance);
-  m_MyVisiualizationInstantiations.add(VerticalBandTower::GetInstance);
-  //m_MyVisiualizationInstantiations.add(ScrollingBands::GetInstance);
-  m_MyVisiualizationInstantiations.add(ScrollingMaxBand::GetInstance);
-  //m_MyVisiualizationInstantiations.add(RotatingSprites::GetInstance);
-  //m_MyVisiualizationInstantiations.add(BallShooter::GetInstance);
-  m_MyVisiualizationInstantiations.add(SolidColorTower::GetInstance);
-  //m_MyVisiualizationInstantiations.add(VerticalBassSpriteTower::GetInstance);
-  //m_MyVisiualizationInstantiations.add(PowerPerBinTower::GetInstance);
-  //m_MyVisiualizationInstantiations.add(Rotating4Sprites::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(VUMeter::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(VUMeter3Band::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(VUMeter8Band::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(Waterfall::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(Fire::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(WaterFireFromCenter::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(WaterFireFromEdge::GetInstance);
+  m_MyVisiualizationInstantiations.push_back(VerticalBandTower::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(ScrollingBands::GetInstance);
+  m_MyVisiualizationInstantiations.push_back(ScrollingMaxBand::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(RotatingSprites::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(BallShooter::GetInstance);
+  m_MyVisiualizationInstantiations.push_back(SolidColorTower::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(VerticalBassSpriteTower::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(PowerPerBinTower::GetInstance);
+  //m_MyVisiualizationInstantiations.push_back(Rotating4Sprites::GetInstance);
 
   if(true == m_TestVisualization)
   {
@@ -69,7 +69,7 @@ void VisualizationPlayer::GetNextVisualization()
   m_Duration = random(1000,120000);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
-  GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
+  GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations[ random(0, m_MyVisiualizationInstantiations.size()) ];
   m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
   AddTask(*m_CurrentVisualization);
   m_StartTime = millis();
@@ -80,7 +80,7 @@ void VisualizationPlayer::GetRandomVisualization()
   m_Duration = random(1000,120000);
   RemoveTask(*m_CurrentVisualization);
   delete m_CurrentVisualization;
-  GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations.get( random(0, m_MyVisiualizationInstantiations.size()));
+  GetInstanceFunctionPointer GetInstanceFunctionPointer = m_MyVisiualizationInstantiations[ random(0, m_MyVisiualizationInstantiations.size()) ];
   m_CurrentVisualization = GetInstanceFunctionPointer(m_StatisticalEngineModelInterface, m_LEDController);
   AddTask(*m_CurrentVisualization);
   m_StartTime = millis();

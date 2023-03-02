@@ -7,7 +7,6 @@
 #include "Models.h"
 #include "TaskInterface.h"
 #include "LEDControllerInterface.h"
-#include <LinkedList.h>
 
 class VisualizationEventNotificationCallerInterface;
 
@@ -36,8 +35,8 @@ class VisualizationEventNotificationCallerInterface
     void SendVisualizationCompleteNotificationToCalleesFrom(VisualizationEventNotificationCallerInterface &source);
   private:
     
-    LinkedList<VisualizationEventNotificationCalleeInterface*> myCallees = LinkedList<VisualizationEventNotificationCalleeInterface*>();
-    LinkedList<CallerInterfaceData> myCalleesWithContext = LinkedList<CallerInterfaceData>();
+    std::vector<VisualizationEventNotificationCalleeInterface*> myCallees = std::vector<VisualizationEventNotificationCalleeInterface*>();
+    std::vector<CallerInterfaceData> myCalleesWithContext = std::vector<CallerInterfaceData>();
 };
 
 class Visualization: public View
@@ -79,9 +78,9 @@ class Visualization: public View
     void AddNewedModel(Model &model);
     void DeleteAllNewedObjects();
   private:
-    LinkedList<Model*> m_MyModels = LinkedList<Model*>();
-    LinkedList<View*> m_MyNewedViews = LinkedList<View*>();
-    LinkedList<Model*> m_MyNewedModels = LinkedList<Model*>();
+    std::vector<Model*> m_MyModels = std::vector<Model*>();
+    std::vector<View*> m_MyNewedViews = std::vector<View*>();
+    std::vector<Model*> m_MyNewedModels = std::vector<Model*>();
 };
 
 #endif

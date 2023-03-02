@@ -20,7 +20,6 @@
 #define TaskInterface_H
 
 #include <Arduino.h>
-#include <LinkedList.h>
 #include "Streaming.h"
 #include "Tunes.h"
 
@@ -31,11 +30,11 @@ class TaskScheduler
     TaskScheduler(){}
     void RunScheduler();
     void AddTask(Task &task);
-    void AddTasks(LinkedList<Task*> &tasks);
+    void AddTasks(std::vector<Task*> &tasks);
     bool RemoveTask(Task &task);
     unsigned int GetTaskCount(){return m_MyTasks.size();}
   private:
-    LinkedList<Task*> m_MyTasks = LinkedList<Task*>();
+    std::vector<Task*> m_MyTasks = std::vector<Task*>();
 };
 class Task
 {
@@ -46,7 +45,7 @@ class Task
     bool GetIsSetup() { return m_IsSetup; }
     bool SetIsSetup(bool IsSetup) { m_IsSetup = IsSetup; }
     void AddTask(Task &task);
-    void AddTasks(LinkedList<Task*> &tasks);
+    void AddTasks(std::vector<Task*> &tasks);
     unsigned int GetTaskCount(){return m_Scheduler.GetTaskCount();}
     bool RemoveTask(Task &task);
     void RunScheduler();

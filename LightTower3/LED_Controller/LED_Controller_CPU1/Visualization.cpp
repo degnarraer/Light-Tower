@@ -22,22 +22,22 @@
 void VisualizationEventNotificationCallerInterface::RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
 {
   if(true == debugModelNotifications) Serial << "VisualizationEventNotificationCallerInterface: Add: ";        
-  myCallees.add(&callee);
+  myCallees.push_back(&callee);
 }
 void VisualizationEventNotificationCallerInterface::RegisterForNotification(VisualizationEventNotificationCalleeInterface &callee, String context)
 {
   CallerInterfaceData cid;
   cid.Callee = &callee;
   cid.Context = context;
-  myCalleesWithContext.add(cid);
+  myCalleesWithContext.push_back(cid);
 }
 void VisualizationEventNotificationCallerInterface::DeRegisterForNotification(VisualizationEventNotificationCalleeInterface &callee)
 {
   for(int i = 0; i < myCallees.size(); ++i)
   {
-    if(myCallees.get(i) == &callee)
+    if(myCallees[i] == &callee)
     {
-      myCallees.remove(i);
+      myCallees.erase(myCallees.begin() + i);
       break;
     }
   }
@@ -49,9 +49,9 @@ void VisualizationEventNotificationCallerInterface::DeRegisterForNotification(Vi
   cid.Context = context;
   for(int i = 0; i < myCalleesWithContext.size(); ++i)
   {
-    if(myCalleesWithContext.get(i) == cid)
+    if(myCalleesWithContext[i] == cid)
     {
-      myCalleesWithContext.remove(i);
+      myCalleesWithContext.erase(myCalleesWithContext.begin() + i);
       break;
     }
   }
@@ -60,7 +60,7 @@ void VisualizationEventNotificationCallerInterface::SendVisualizationCompleteNot
 {
   for(int i = 0; i < myCallees.size(); ++i)
   {
-    myCallees.get(i)->VisualizationCompleteNotificationFrom(source);
+    myCallees[i]->VisualizationCompleteNotificationFrom(source);
   }
 }
 
@@ -89,35 +89,35 @@ void Visualization::AddView(View &view, bool clearViewBeforeMerge)
 }
 void Visualization::AddModel(Model &model)
 { 
-  m_MyModels.add(&model);
+  m_MyModels.push_back(&model);
   AddTask(model);
 }
 void Visualization::AddNewedModel(Model &model)
 {
-  m_MyNewedModels.add(&model);
-  m_MyModels.add(&model);
+  m_MyNewedModels.push_back(&model);
+  m_MyModels.push_back(&model);
   AddTask(model);
 }
 void Visualization::AddNewedView(View &view)
 {
   AddSubView(view, true);
-  m_MyNewedViews.add(0, &view);
+  m_MyNewedViews.insert(m_MyNewedViews.begin(), &view);
 }
 void Visualization::AddNewedView(View &view, bool clearViewBeforeMerge)
 {
   AddSubView(view, clearViewBeforeMerge);
-  m_MyNewedViews.add(0, &view);
+  m_MyNewedViews.insert(m_MyNewedViews.begin(), &view);
 }
 void Visualization::DeleteAllNewedObjects()
 {
   for(int m = 0; m < m_MyNewedViews.size(); ++m)
   {
-    View *view = m_MyNewedViews.get(m);
+    View *view = m_MyNewedViews[m];
     delete view;
   }
   for(int m = 0; m < m_MyNewedModels.size(); ++m)
   {
-    Model *model = m_MyNewedModels.get(m);
+    Model *model = m_MyNewedModels[m];
     delete model;
   }
 }

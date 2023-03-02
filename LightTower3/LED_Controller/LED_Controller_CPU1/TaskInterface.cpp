@@ -23,7 +23,7 @@ void Task::AddTask(Task &task)
 {
   m_Scheduler.AddTask(task);
 }
-void Task::AddTasks(LinkedList<Task*> &tasks)
+void Task::AddTasks(std::vector<Task*> &tasks)
 {
   m_Scheduler.AddTasks(tasks);
 }
@@ -41,7 +41,7 @@ void TaskScheduler::RunScheduler()
   if(true == debugTasks && m_MyTasks.size() > 0) Serial << "TaskScheduler Trying to Run " << m_MyTasks.size() << " Task(s)\n";
   for(int t = 0; t < m_MyTasks.size(); ++t)
   {
-    Task *aTask = m_MyTasks.get(t);
+    Task *aTask = m_MyTasks[t];
     aTask->RunMyPreTask();
     aTask->RunScheduler();
     if(true==aTask->CanRunMyScheduledTask())
@@ -59,7 +59,7 @@ void TaskScheduler::RunScheduler()
 void TaskScheduler::AddTask(Task &task)
 {
   if(true == debugTasks) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
-  m_MyTasks.add(&task);
+  m_MyTasks.push_back(&task);
   if(false == task.GetIsSetup())
   {
     if(true == debugTasks) Serial << "TaskScheduler Setting Up Task: " << task.GetTaskTitle() << "\n";
@@ -67,11 +67,11 @@ void TaskScheduler::AddTask(Task &task)
     task.SetIsSetup(true);
   }
 }
-void TaskScheduler::AddTasks(LinkedList<Task*> &tasks)
+void TaskScheduler::AddTasks(std::vector<Task*> &tasks)
 {
   for(int t = 0; t < tasks.size(); ++t)
   {
-    m_MyTasks.add(tasks.get(t));
+    m_MyTasks.push_back(tasks[t]);
   }
 }
 bool TaskScheduler::RemoveTask(Task &task)
@@ -79,10 +79,10 @@ bool TaskScheduler::RemoveTask(Task &task)
   bool taskFound = false;
   for(int i = 0; i < m_MyTasks.size(); ++i)
   {
-    if(m_MyTasks.get(i) == &task)
+    if(m_MyTasks[i] == &task)
     {
       taskFound = true;
-      m_MyTasks.remove(i);
+      m_MyTasks.erase(m_MyTasks.begin() + i);
       break;
     }
   }

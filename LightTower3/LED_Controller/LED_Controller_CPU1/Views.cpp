@@ -13,7 +13,7 @@ void View::AddSubView(View &subView)
 { 
   SubViewWithProperties_t sVWP;
   sVWP.SubView = &subView;
-  m_SubViewWithProperties.add(0, sVWP);
+  m_SubViewWithProperties.insert(m_SubViewWithProperties.begin(), sVWP);
   AddTask(subView);
 }
 void View::AddSubView(View &subView, bool clearViewBeforeMerge)
@@ -21,7 +21,7 @@ void View::AddSubView(View &subView, bool clearViewBeforeMerge)
   SubViewWithProperties_t sVWP;
   sVWP.SubView = &subView;
   sVWP.ClearViewBeforeMerge = clearViewBeforeMerge;
-  m_SubViewWithProperties.add(0, sVWP);
+  m_SubViewWithProperties.insert(m_SubViewWithProperties.begin(), sVWP);
   AddTask(subView);
 }
 void View::AddSubView(View &subView, bool clearViewBeforeMerge, position x, position y, size width, size height )
@@ -34,7 +34,7 @@ void View::AddSubView(View &subView, bool clearViewBeforeMerge, position x, posi
   sVWP.Y_To_Clear = y;
   sVWP.W_To_Clear = width;
   sVWP.H_To_Clear = height;
-  m_SubViewWithProperties.add(0, sVWP);
+  m_SubViewWithProperties.insert(m_SubViewWithProperties.begin(), sVWP);
   AddTask(subView);
 }
 CRGB View::GetPixel(int x, int y)
@@ -46,10 +46,10 @@ bool View::RemoveSubView(View &subView)
   bool viewFound = false;
   for(int i = 0; i < m_SubViewWithProperties.size(); ++i)
   {
-    if(m_SubViewWithProperties.get(i).SubView == &subView)
+    if(m_SubViewWithProperties[i].SubView == &subView)
     {
       viewFound = true;
-      m_SubViewWithProperties.remove(i);
+      m_SubViewWithProperties.erase(m_SubViewWithProperties.begin() + i);
       break;
     }
   }
@@ -102,7 +102,7 @@ void View::MergeSubViews()
   //Z Order is 1st subview added on top, last subview added on bottom
   for(int v = 0; v < m_SubViewWithProperties.size(); ++v)
   {
-    View *subView = m_SubViewWithProperties.get(v).SubView;
+    View *subView = m_SubViewWithProperties[v].SubView;
     position sub_X = subView->GetPixelArray()->GetX();
     position sub_Y = subView->GetPixelArray()->GetY();
     size sub_Width = subView->GetPixelArray()->GetWidth();
@@ -111,7 +111,7 @@ void View::MergeSubViews()
     {
       for(int y = sub_Y; y < sub_Y+sub_Height; ++y)
       {
-        SubViewWithProperties_t sVWP = m_SubViewWithProperties.get(v);
+        SubViewWithProperties_t sVWP = m_SubViewWithProperties[v];
         if( true == sVWP.ClearViewBeforeMerge )
         {
           if( false == sVWP.SpecifiedClearArea )

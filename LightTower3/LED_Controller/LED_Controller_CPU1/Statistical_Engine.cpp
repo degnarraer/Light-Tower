@@ -134,7 +134,7 @@ void StatisticalEngine::RunMyScheduledTask()
     {
       ProcessedSoundFrame_t PSF;
       static bool ProcessedFramePullErrorHasOccured = false;
-      if(true == GetValueFromQueue(&PSF, GetQueueHandleRXForDataItem("Processed_Frame"), "Processed_Frame", GetTotalByteCountForDataItem("Processed_Frame"), false, 0, ProcessedFramePullErrorHasOccured))
+      if(true == GetValueFromQueue(&PSF, GetQueueHandleRXForDataItem("Processed_Frame"), "Processed_Frame", false, 0, ProcessedFramePullErrorHasOccured))
       {
         m_Right_Channel_Processed_Sound_Data = PSF.Channel1;
         m_Left_Channel_Processed_Sound_Data = PSF.Channel2;
@@ -173,9 +173,9 @@ void StatisticalEngine::RunMyScheduledTask()
     else
     {
       static bool R_BandsPullErrorHasOccured = false;
-      GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), "R_BANDS", GetTotalByteCountForDataItem("R_BANDS"), false, 0, R_BandsPullErrorHasOccured);
+      GetValueFromQueue(m_Right_Band_Values, GetQueueHandleRXForDataItem("R_BANDS"), "R_BANDS", false, 0, R_BandsPullErrorHasOccured);
       static bool L_BandsPullErrorHasOccured = false;
-      GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), "L_BANDS", GetTotalByteCountForDataItem("L_BANDS"), false, 0, L_BandsPullErrorHasOccured);
+      GetValueFromQueue(m_Left_Band_Values, GetQueueHandleRXForDataItem("L_BANDS"), "L_BANDS", false, 0, L_BandsPullErrorHasOccured);
       UpdateBandArray();
     }       
     pthread_mutex_unlock(&m_BandValuesLock);
@@ -194,9 +194,9 @@ void StatisticalEngine::RunMyScheduledTask()
     else
     {
       static bool R_MaxBandPullErrorHasOccured = false;
-      GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), "R_MAXBAND", GetTotalByteCountForDataItem("R_MAXBAND"), false, 0, R_MaxBandPullErrorHasOccured);
+      GetValueFromQueue(&m_Right_MaxBandSoundData, GetQueueHandleRXForDataItem("R_MAXBAND"), "R_MAXBAND", false, 0, R_MaxBandPullErrorHasOccured);
       static bool L_MaxBandPullErrorHasOccured = false;
-      GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), "L_MAXBAND", GetTotalByteCountForDataItem("L_MAXBAND"), false, 0, L_MaxBandPullErrorHasOccured);
+      GetValueFromQueue(&m_Left_MaxBandSoundData, GetQueueHandleRXForDataItem("L_MAXBAND"), "L_MAXBAND", false, 0, L_MaxBandPullErrorHasOccured);
     }
     pthread_mutex_unlock(&m_MaxBinSoundDataLock);
   }

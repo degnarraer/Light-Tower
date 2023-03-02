@@ -20,7 +20,6 @@
 #define Models_Core_H
 
 #include "TaskInterface.h"
-#include <LinkedList.h>
 #include "Streaming.h"
 #include "Tunes.h"
 #include "Statistical_Engine.h"
@@ -125,7 +124,7 @@ class ModelEventNotificationCaller
       cid.Callee = &callee;
       cid.Context = context;
       if (true == debugModelNotifications) Serial << "ModelEventNotificationCaller: Added\n";
-      m_MyCalleesWithContext.add(cid);
+      m_MyCalleesWithContext.push_back(cid);
       callee.NewValueNotification(GetCurrentValue(), context);
     }
     void DeRegisterForNotification(ModelEventNotificationCallee<T> &callee, String context)
@@ -135,7 +134,7 @@ class ModelEventNotificationCaller
       cid.Context = context;
       for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if (m_MyCalleesWithContext.get(i) == cid)
+        if (m_MyCalleesWithContext[i] == cid)
         {
           m_MyCalleesWithContext.remove(i);
           break;
@@ -150,8 +149,8 @@ class ModelEventNotificationCaller
     {
       for (int i = 0; i < m_MyCalleesWithContext.size(); ++i)
       {
-        if (true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification Context: " << m_MyCalleesWithContext.get(i).Context << "\t" << "Value: " << value << "\n";
-        m_MyCalleesWithContext.get(i).Callee->NewValueNotification(value, m_MyCalleesWithContext.get(i).Context);
+        if (true == debugModelNewValueProcessor) Serial << "ModelEventNotificationCaller: Sending Notification Context: " << m_MyCalleesWithContext[i].Context << "\t" << "Value: " << value << "\n";
+        m_MyCalleesWithContext[i].Callee->NewValueNotification(value, m_MyCalleesWithContext[i].Context);
       }
     }
     virtual void UpdateValue() = 0;
@@ -167,7 +166,7 @@ class ModelEventNotificationCaller
         return (true == ((cid.Callee == Callee) && (cid.Context == Context))) ? true : false;
       }
     };
-    LinkedList<CallerInterfaceData<T>> m_MyCalleesWithContext = LinkedList<CallerInterfaceData<T>>();
+    std::vector<CallerInterfaceData<T>> m_MyCalleesWithContext = std::vector<CallerInterfaceData<T>>();
 };
 
 class StatisticalEngineModelInterfaceUsers
@@ -183,7 +182,7 @@ class StatisticalEngineModelInterfaceUserTracker
     void DeRegisterAsUser(StatisticalEngineModelInterfaceUsers &user);
     bool UsersRequireFFT();
   private:
-    LinkedList<StatisticalEngineModelInterfaceUsers*> m_MyUsers = LinkedList<StatisticalEngineModelInterfaceUsers*>();
+    std::vector<StatisticalEngineModelInterfaceUsers*> m_MyUsers = std::vector<StatisticalEngineModelInterfaceUsers*>();
 };
 
 class StatisticalEngineModelInterface : public NamedItem
