@@ -101,10 +101,6 @@ class WebSocketDataHandler: public QueueController
     bool m_PushError = false;
     bool m_PullError = false;
     
-    void ProcessEventQueue()
-    {
-    }
-    
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
       if(null != m_DataItem)
@@ -128,14 +124,12 @@ class WebSocketDataHandler: public QueueController
       {
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-          Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
           if( m_WidgetId[i].equals(InputId) )
           {
-            Serial << "Found\n";
             if( true == ConvertStringToDataBufferFromDataType(&m_Value, Value, m_DataItem->DataType))
             {
               Found = true;
-              Serial << "Send Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
+              Serial << "Web Socket Data Received: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
               PushValueToQueue(&m_Value, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
             }
             return Found;
@@ -172,7 +166,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
         if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
           m_Value = String(Buffer);
-          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
+          //Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), m_Value.c_str() });
@@ -191,7 +185,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
         Wifi_Info_t WifiInfo = Wifi_Info_t(m_Value);
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-          Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
+         // Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
           m_WidgetId[i].trim();
           InputId.trim();
           if( m_WidgetId[i].equals(InputId) )
@@ -265,7 +259,10 @@ class SettingsWebServerManager: public QueueManager
       {
         m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
       }
-      NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+      if(KeyValuePairs.size() > 0)
+      {
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+      }
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)

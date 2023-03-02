@@ -115,11 +115,11 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result()
     R_MaxBandDataBuffer.TotalBands = R_Bands_SampleCount;
 
     static bool R_Bands_Push_Successful = true;
-    PushValueToQueue(R_Bands_DataBuffer, R_Bands_QueueOut, false, "Right Bands: R_BANDS", R_Bands_Push_Successful);
+    PushValueToQueue(R_Bands_DataBuffer, R_Bands_QueueOut, "Right Bands: R_BANDS", 0, R_Bands_Push_Successful);
     static bool R_MaxBand_Push_Successful = true;
-    PushValueToQueue(&R_MaxBandDataBuffer, R_MaxBin_QueueOut, false, "Right Max Band: R_MAXBAND", R_MaxBand_Push_Successful);
+    PushValueToQueue(&R_MaxBandDataBuffer, R_MaxBin_QueueOut, "Right Max Band: R_MAXBAND", 0, R_MaxBand_Push_Successful);
     static bool R_MajorFreq_Push_Successful = true;
-    PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, false, "Right Major Frequency: R_MAJOR_FREQ", R_MajorFreq_Push_Successful);
+    PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, "Right Major Frequency: R_MAJOR_FREQ", 0, R_MajorFreq_Push_Successful);
   }
 }
 void Sound_Processor::Update_Left_Bands_And_Send_Result()
@@ -165,11 +165,11 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
     L_MaxBandDataBuffer.TotalBands = L_Bands_SampleCount;
 
     static bool L_Bands_Push_Successful = true;
-    PushValueToQueue(L_Bands_DataBuffer, L_Bands_QueueOut, false, "Left Bands: L_BANDS", L_Bands_Push_Successful);
+    PushValueToQueue(L_Bands_DataBuffer, L_Bands_QueueOut, "Left Bands: L_BANDS", 0, L_Bands_Push_Successful);
     static bool L_MaxBand_Push_Successful = true;
-    PushValueToQueue(&L_MaxBandDataBuffer, L_MaxBin_QueueOut, false, "Left Max Band: L_MAXBAND", L_MaxBand_Push_Successful);
+    PushValueToQueue(&L_MaxBandDataBuffer, L_MaxBin_QueueOut, "Left Max Band: L_MAXBAND", 0, L_MaxBand_Push_Successful);
     static bool L_MajorFreq_Push_Successful = true;
-    PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, false, "Left Major Frequency: L_MAJOR_FREQ", L_MajorFreq_Push_Successful);
+    PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, "Left Major Frequency: L_MAJOR_FREQ", 0, L_MajorFreq_Push_Successful);
   }
 }
 void Sound_Processor::Calculate_Power()
@@ -207,7 +207,7 @@ void Sound_Processor::Calculate_Power()
         PSF.Channel1 = R_PSD;
         PSF.Channel2 = L_PSD;
         static bool PSF_Push_Successful = true;
-        PushValueToQueue(&PSF, QueueOut, false, "Processed Sound Frame: Processed_Frame", PSF_Push_Successful);
+        PushValueToQueue(&PSF, QueueOut, "Processed Sound Frame: Processed_Frame", 0, PSF_Push_Successful);
       }
     }
   }

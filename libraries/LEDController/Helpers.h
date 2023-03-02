@@ -138,12 +138,10 @@ class CommonUtils
 				break;
 				
 				case DataType_Float_t:
-					Serial << "DataType_Float_t\n";
 					*(float*)Buffer = Value.toFloat();
 				break;
 				
 				case DataType_Double_t:
-					Serial << "DataType_Double_t\n";
 					*(double*)Buffer = Value.toDouble();
 				break;
 				

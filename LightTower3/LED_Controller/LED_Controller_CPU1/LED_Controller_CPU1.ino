@@ -25,7 +25,7 @@
 
 unsigned long LoopCountTimer = 0;
 TaskHandle_t Manager_20mS_Task;
-uint32_t Manager_20mS_TaskLoopCount = 0;
+uint32_t Manager_10mS_TaskLoopCount = 0;
 
 TaskHandle_t Manager_1000mS_Task;
 uint32_t Manager_1000mS_TaskLoopCount = 0;
@@ -42,9 +42,9 @@ uint32_t SPI_TaskLoopCount = 0;
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",    2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask", 2000,  NULL,   configMAX_PRIORITIES - 2,  &Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   configMAX_PRIORITIES - 2,  &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask", 2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_20mS_Task",    2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",  2000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
   xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
 }
@@ -66,7 +66,7 @@ void loop()
 void VisualizationTaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -79,7 +79,7 @@ void VisualizationTaskLoop(void * parameter)
 void SPI_TaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -103,12 +103,12 @@ void TaskMonitorTaskLoop(void * parameter)
     if(true == TASK_LOOP_COUNT_DEBUG)
     {
       unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
-      ESP_LOGE("LED_Controller1", "Manager_20mS_TaskLoopCount: %f", (float)Manager_20mS_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "Manager_10mS_TaskLoopCount: %f", (float)Manager_10mS_TaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "Manager_1000mS_TaskLoopCount: %f", (float)Manager_1000mS_TaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "VisualizationTaskLoopCount: %f", (float)VisualizationTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "SPI_TaskLoopCount: %f", (float)SPI_TaskLoopCount/(float)DeltaTimeSeconds);
-      Manager_20mS_TaskLoopCount = 0;
+      Manager_10mS_TaskLoopCount = 0;
       VisualizationTaskLoopCount = 0;
       TaskMonitorTaskLoopCount = 0;
       SPI_TaskLoopCount = 0;
@@ -133,15 +133,15 @@ void TaskMonitorTaskLoop(void * parameter)
   }
 }
 
-void Manager_20mS_TaskLoop(void * parameter)
+void Manager_10mS_TaskLoop(void * parameter)
 {
   //20 mS task rate
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    ++Manager_20mS_TaskLoopCount;
+    ++Manager_10mS_TaskLoopCount;
     m_Manager.ProcessEventQueue20mS();
   }
 }
