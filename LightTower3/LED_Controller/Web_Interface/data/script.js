@@ -8,6 +8,15 @@ var Sink_SSID_Changed_TimeoutHandle;
 var Source_SSID_Value_Changed = false;
 var Source_SSID_Changed_TimeoutHandle;
 
+const ConnectionStatus = 
+{
+	Disconnected: 0,
+	Waiting: 1,
+	Searching: 2,
+	Pairing: 3,
+	Paired: 4
+}
+
 //Window and Web Socket Functions
 window.addEventListener('load', onload);
 function onload(event)
@@ -35,25 +44,53 @@ function onClose(event)
 
 
 // Toggle Switch Handlers
-const sink_BT_Reset_toggle_Button = document.getElementById("Sink_BT_Reset");
-sink_BT_Reset_toggle_Button.addEventListener("click", function()
+const sink_BT_Reset_Toggle_Button = document.getElementById("Sink_BT_Reset_Toggle_Button");
+sink_BT_Reset_Toggle_Button.addEventListener("click", function()
 {
-  console.log(`Sink Bluetooth Reset Toggle switch is now ${sink_BT_Reset_toggle_Button.checked}`);
+	var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Id = "Sink_BT_Reset_Toggle_Button";
+	Root["WidgetValue"].Value = !sink_BT_Reset_Toggle_Button.checked
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+	websocket.send(Message);
+	console.log(`Sink Bluetooth Reset Toggle switch is now ${sink_BT_Reset_Toggle_Button.checked}`);
 });
-const sink_BT_Auto_ReConnect_toggle_Button = document.getElementById("Sink_BT_Auto_ReConnect");
-sink_BT_Auto_ReConnect_toggle_Button.addEventListener("click", function()
+const sink_BT_ReConnect_Toggle_Button = document.getElementById("Sink_BT_ReConnect_Toggle_Button");
+sink_BT_ReConnect_Toggle_Button.addEventListener("click", function()
 {
-  console.log(`Sink Auto ReConnectToggle switch is now ${sink_BT_Auto_ReConnect_toggle_Button.checked}`);
+	var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Id = "Sink_BT_Auto_ReConnect_Toggle_Button";
+	Root["WidgetValue"].Value = !sink_BT_ReConnect_Toggle_Button.checked
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+	websocket.send(Message);
+	console.log(`Sink Auto ReConnectToggle switch is now ${sink_BT_ReConnect_Toggle_Button.checked}`);
 });
-const source_BT_Reset_toggle_Button = document.getElementById("Source_BT_Reset");
-source_BT_Reset_toggle_Button.addEventListener("click", function()
+const source_BT_Reset_Toggle_Button = document.getElementById("Source_BT_Reset_Toggle_Button");
+source_BT_Reset_Toggle_Button.addEventListener("click", function()
 {
-  console.log(`Source Bluetooth Reset Toggle switch is now ${source_BT_Reset_toggle_Button.checked}`);
+	var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Id = "Source_BT_Reset_Toggle_Button";
+	Root["WidgetValue"].Value = !source_BT_Reset_Toggle_Button.checked
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+	websocket.send(Message);
+	console.log(`Source Bluetooth Reset Toggle switch is now ${source_BT_Reset_Toggle_Button.checked}`);
 });
-const source_BT_ReConnect_toggle_Button = document.getElementById("Source_BT_Auto_ReConnect");
-source_BT_ReConnect_toggle_Button.addEventListener("click", function()
+const source_BT_ReConnect_Toggle_Button = document.getElementById("Source_BT_ReConnect_Toggle_Button");
+source_BT_ReConnect_Toggle_Button.addEventListener("click", function()
 {
-  console.log(`Source Auto ReConnect Toggle switch is now ${source_BT_ReConnect_toggle_Button.checked}`);
+	var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Id = "Source_BT_ReConnect_Toggle_Button";
+	Root["WidgetValue"].Value = !source_BT_ReConnect_Toggle_Button.checked
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+	websocket.send(Message);
+	console.log(`Source Auto ReConnect Toggle switch is now ${source_BT_ReConnect_Toggle_Button.checked}`);
 });
 
 // Get All Values
@@ -261,7 +298,7 @@ function setSpeakerImage(value)
 
 function onMessage(event)
 {
-    console.log(event.data);
+    //console.log(event.data);
     var myObj = JSON.parse(event.data);
     var keys = Object.keys(myObj);
 	for (var i = 0; i < keys.length; ++i)
@@ -292,6 +329,68 @@ function onMessage(event)
 			else if( Id == "Source_SSID_Text_Box" && false == Source_SSID_Value_Changed)
 			{
 				document.getElementById(Id).value = Value;
+			}
+			else if(Id == "Source_Connection_Status")
+			{
+				var element = document.getElementById("Source_Connection_Status");
+				switch(Value)
+				{
+					case ConnectionStatus.Waiting:
+						element.innerHTML = "Waiting";
+					break;
+					case ConnectionStatus.Searching:
+						element.innerHTML = "Searching";
+					break;
+					case ConnectionStatus.Pairing:
+						element.innerHTML = "Pairing";
+					break;
+					case ConnectionStatus.Paired:
+						element.innerHTML = "Paired";
+					break;
+					case ConnectionStatus.Disconnected:
+					default:
+						element.innerHTML = "Disconnected";
+					break;
+				}
+			}
+			else if(Id == "Source_BT_Reset_Toggle_Button" && null != source_BT_Reset_Toggle_Button)
+			{
+				source_BT_Reset_Toggle_Button.checked = Value;
+			}
+			else if(Id == "Source_BT_ReConnect_Toggle_Button" && null != source_BT_ReConnect_Toggle_Button)
+			{
+				source_BT_ReConnect_Toggle_Button.checked = Value;
+			}
+			else if(Id == "Sink_Connection_Status")
+			{
+				var element = document.getElementById("Sink_Connection_Status");
+				switch(Value)
+				{
+					case ConnectionStatus.Waiting:
+						element.innerHTML = "Waiting";
+					break;
+					case ConnectionStatus.Searching:
+						element.innerHTML = "Searching";
+					break;
+					case ConnectionStatus.Pairing:
+						element.innerHTML = "Pairing";
+					break;
+					case ConnectionStatus.Paired:
+						element.innerHTML = "Paired";
+					break;
+					case ConnectionStatus.Disconnected:
+					default:
+						element.innerHTML = "Disconnected";
+					break;
+				}
+			}
+			else if(Id == "Sink_BT_Reset_Toggle_Button" && null != sink_BT_Reset_Toggle_Button)
+			{
+				sink_BT_Reset_Toggle_Button.checked = Value;
+			}
+			else if(Id == "Sink_BT_Auto_ReConnect_Toggle_Button" && null != sink_BT_ReConnect_Toggle_Button)
+			{
+				sink_BT_ReConnect_Toggle_Button.checked = Value;
 			}
 		}
 	}

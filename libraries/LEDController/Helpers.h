@@ -97,6 +97,9 @@ class CommonUtils
 				case DataType_SoundState_t:
 					Result = sizeof(SoundState_t);
 				break;
+				case DataType_ConnectionStatus_t:
+					Result = sizeof(ConnectionStatus_t);
+				break;
 				default:
 					Result = 0;
 				break;
@@ -110,7 +113,8 @@ class CommonUtils
 			{
 				case DataType_bool_t:
 				{
-					if(Value.equals("1"))
+					Serial << "Bool Received: " << Value << "\n";
+					if(Value.equals("true"))
 					{
 						*((bool*)Buffer) = true;
 					}
@@ -152,6 +156,7 @@ class CommonUtils
 				case DataType_Frame_t:				
 				case DataType_ProcessedSoundFrame_t:				
 				case DataType_SoundState_t:
+				case DataType_ConnectionStatus_t:
 					Result = false;
 				break;
 				
@@ -226,7 +231,10 @@ class QueueController
 			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
-				if(true == DebugMessage && QueueCount > 0) ESP_LOGV("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
+				if(true == DebugMessage && QueueCount > 0)
+				{
+					ESP_LOGE("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
+				}
 				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
 					uint8_t DataBuffer[ByteCount];

@@ -43,6 +43,7 @@ void Manager::Setup()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
+  m_BT_In.RegisterForConnectionStatusChangedCallBack(this);
   m_Mic_In.Setup();
   m_I2S_Out.Setup();
   m_Mic_In.SetCallback(this);
@@ -94,13 +95,12 @@ void Manager::ProcessEventQueue20mS()
 {
   Process_I2S_EventQueue();
   MoveDataToStatisticalEngine();
-  BluetoothConnection_RX();
   SinkSSID_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
 {
-  BluetoothConnection_TX();
+  BluetoothConnectionStatus_TX();
   SoundState_TX();
   SinkSSID_TX();
 }
@@ -189,33 +189,21 @@ void Manager::MoveDataToStatisticalEngine()
   }
 }
 
-void Manager::BluetoothConnection_RX()
-{
-  if( m_InputType == InputType_Bluetooth)
-  {
-    if(m_BluetoothIsConnected != m_BT_In.IsConnected())
-    { 
-      m_BluetoothIsConnected = m_BT_In.IsConnected();
-      if(true == m_BluetoothIsConnected)
-      {
-        ESP_LOGI("Manager", "BT Sink Connected!");
-      }
-      else
-      {
-        ESP_LOGI("Manager", "BT Sink Disconnected!");
-      }
-    }
-  }
-}
-
-void Manager::BluetoothConnection_TX()
+void Manager::BluetoothConnectionStatus_TX()
 {
   static bool SinkIsConnectedValuePushError = false;
-  PushValueToQueue( &m_BluetoothIsConnected
+  PushValueToQueue( &m_BluetoothConnectionStatus
                   , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connected")
-                  , "Sink Is Connected"
+                  , "Sink Connected"
                   , 0
                   , SinkIsConnectedValuePushError ); 
+}
+
+//BluetoothConnectionStateCallee Callback
+void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
+{
+  m_BluetoothConnectionStatus = ConnectionStatus;
+  BluetoothConnectionStatus_TX();
 }
 
 void Manager::SoundState_RX(SoundState_t SoundState)

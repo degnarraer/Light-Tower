@@ -30,6 +30,7 @@
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
+             , public BluetoothConnectionStatusCallee
              , public CommonUtils
              , public QueueController
 {
@@ -54,6 +55,9 @@ class Manager: public NamedItem
     
     //I2S_Device_Callback
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
+
+    //BluetoothConnectionStatusCallee Callback 
+    void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
 
   private:
     Sound_Processor &m_SoundProcessor;
@@ -91,6 +95,9 @@ class Manager: public NamedItem
     bool m_SourceBTReset;
     void SourceBluetoothReset_RX();
     void SourceBluetoothReset_TX();
+    
+    ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
+    void BluetoothConnectionStatus_TX();
     
     bool m_SourceReConnect;
     void SourceAutoReConnect_RX();

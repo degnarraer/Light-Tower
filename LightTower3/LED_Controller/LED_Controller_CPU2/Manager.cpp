@@ -46,6 +46,7 @@ void Manager::Setup()
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
+  m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
                       , m_Preferences.getBool("Source BT Reset", true)
                       , m_Preferences.getBool("Source ReConnect", true)
@@ -120,11 +121,11 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
     bool B_To_A;
   };
   const uint8_t count = 5;
-  Signal Signals[count] = { { "Sound State", true, false }
+  Signal Signals[count] = { { "Sound State",    true, false }
                           , { "Sink Connected", true, false } 
                           , { "Sink ReConnect", true, true } 
-                          , { "Sink BT Reset", true, true } 
-                          , { "Sink SSID", true, true }  };     
+                          , { "Sink BT Reset",  true, true } 
+                          , { "Sink SSID",      true, true }  };     
   for(int i = 0; i < count; ++i)
   {
     if(Signals[i].A_To_B)
@@ -134,7 +135,7 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
                               , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
                               , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
                               , 0
-                              , true );
+                              , false );
     }
     if(Signals[i].B_To_A)
     {
@@ -147,6 +148,7 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
     }
   }
 }
+
 
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len)
@@ -163,6 +165,25 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   return ByteReceived;
 }
 
+void Manager::BluetoothConnectionStateChanged(ConnectionStatus_t ConnectionStatus)
+
+void Manager::BluetoothConnectionStatus_TX()
+{
+  static bool SourceIsConnectedValuePushError = false;
+  PushValueToQueue( &m_BluetoothConnectionStatus
+                 , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Sink Connected")
+                  , "Source Connected"
+                  , 0
+                  , SourceIsConnectedValuePushError );
+}
+
+void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
+{
+  m_BluetoothConnectionStatus = ConnectionStatus;
+  BluetoothConnectionStatus_TX();
+}
+
+
 void Manager::AmplitudeGain_RX()
 {
   float DatalinkValue;
@@ -178,6 +199,7 @@ void Manager::AmplitudeGain_RX()
     }
   }
 }
+
 void Manager::AmplitudeGain_TX()
 {
   m_AmplitudeGain = m_SoundProcessor.GetGain();
@@ -200,6 +222,7 @@ void Manager::FFTGain_RX()
     }
   }
 }
+
 void Manager::FFTGain_TX()
 {
   m_FFTGain = m_SoundProcessor.GetFFTGain();

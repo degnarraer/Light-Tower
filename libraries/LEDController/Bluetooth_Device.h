@@ -25,8 +25,104 @@
 #include <Helpers.h>
 #include <BluetoothA2DPSink.h>
 #include <BluetoothA2DPSource.h>
+class BluetoothConnectionStatusCallee
+{
+	public:
+		BluetoothConnectionStatusCallee(){};
+		virtual void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus) = 0;
+};
+
+class BluetoothConnectionStatusCaller
+{
+	public:
+		BluetoothConnectionStatusCaller()
+		{
+			xTaskCreate( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 1000,  this,   configMAX_PRIORITIES - 10,  &m_Handle );
+		};
+		virtual ~BluetoothConnectionStatusCaller()
+		{
+			vTaskDelete(m_Handle);
+		};	
+		void RegisterForConnectionStatusChangedCallBack(BluetoothConnectionStatusCallee *Callee)
+		{
+			m_ConnectionStatusCallee = Callee;
+		}
+		void SetWaiting(){ m_ConnectionStatus = ConnectionStatus_t::Waiting; };
+		void SetSearching(){ m_ConnectionStatus = ConnectionStatus_t::Searching; };
+		void SetPairing(){ m_ConnectionStatus = ConnectionStatus_t::Pairing; };
+		bool IsConnected()
+		{
+			return (m_ConnectionStatus == ConnectionStatus_t::Paired);
+		}
+	
+	protected:
+		virtual bool GetConnectionStatus() = 0;
+		BluetoothConnectionStatusCallee *m_ConnectionStatusCallee = NULL;
+	
+	private:
+		ConnectionStatus_t m_ConnectionStatus = ConnectionStatus_t::Disconnected;
+		TaskHandle_t m_Handle;
+		static void StaticCheckBluetoothConnection(void *parameter)
+		{
+		  const TickType_t xFrequency = 100;
+		  TickType_t xLastWakeTime = xTaskGetTickCount();
+		  while(true)
+		  {
+			vTaskDelayUntil( &xLastWakeTime, xFrequency );
+			((BluetoothConnectionStatusCaller*)parameter)->UpdateConnectionStatus();
+		  }
+		}
+		void UpdateConnectionStatus()
+		{
+			switch(m_ConnectionStatus)
+			{
+				case ConnectionStatus_t::Disconnected:
+					if(true == GetConnectionStatus())
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Paired;
+						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+					}
+					else
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Disconnected;
+					}
+				case ConnectionStatus_t::Searching:
+					if(true == GetConnectionStatus())
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Paired;
+						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+					}
+					else
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Searching;
+					}
+				case ConnectionStatus_t::Waiting:
+					if(true == GetConnectionStatus())
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Paired;
+						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+					}
+					else
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Waiting;
+					}
+				case ConnectionStatus_t::Pairing:
+					if(true == GetConnectionStatus())
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Paired;
+						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+					}
+					else
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Pairing;
+					}
+				break;
+			}
+		}
+};
 
 class Bluetooth_Source: public NamedItem
+					  , public BluetoothConnectionStatusCaller
 					  , public CommonUtils
 					  , public QueueController
 {
@@ -53,11 +149,12 @@ class Bluetooth_Source: public NamedItem
 						, bool ResetBLE
 						, bool AutoReConnect
 						, bool SSPEnabled );
-		bool IsConnected();
 		void SetMusicDataCallback(music_data_cb_t callback);
 		
 		//Callback from BT Source for compatible devices to connect to
 		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi);
+	protected:
+		bool GetConnectionStatus(){ return m_BTSource.is_connected(); }
 	private:
 	
 		BluetoothA2DPSource& m_BTSource;
@@ -72,7 +169,7 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
-		void compatible_device_found(const char* ssid, int32_t rssi);
+		bool compatible_device_found(const char* ssid, int32_t rssi);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
 };
@@ -89,6 +186,7 @@ class Bluetooth_Sink_Callback
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
 				    , public QueueController
+					, public BluetoothConnectionStatusCaller
 {
   public:
     Bluetooth_Sink( String Title
@@ -123,42 +221,42 @@ class Bluetooth_Sink: public NamedItem
 				  , m_WordSelectPin(WordSelectPin)
 				  , m_SerialDataInPin(SerialDataInPin)
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
-    virtual ~Bluetooth_Sink(){};
+	virtual ~Bluetooth_Sink(){};
 	void Setup();
 	void StartDevice(const char *SinkName);
 	void StopDevice();
-	bool IsConnected();
-	
+
 	//Callbacks from BluetoothSink  
 	void data_received_callback();
 	void read_data_stream(const uint8_t *data, uint32_t length);
-	
-	//Callback Registrtion to this class
-	void ResgisterForRxCallback(Bluetooth_Sink_Callback* callee);
-    
-  private:
-	Bluetooth_Sink_Callback* m_Callee = NULL;
-	A2DPDefaultVolumeControl m_VolumeControl;
-	BluetoothA2DPSink& m_BTSink;
-	i2s_port_t m_I2S_PORT;
-    
-    const int m_SampleRate;
-    const i2s_mode_t m_i2s_Mode;
-    const i2s_bits_per_sample_t m_BitsPerSample;
-    const i2s_comm_format_t m_CommFormat;
-    const i2s_channel_fmt_t m_Channel_Fmt;
-    const i2s_channel_t m_i2s_channel;
-	const bool m_Use_APLL;
-    const size_t m_BufferCount;
-    const size_t m_BufferSize;
-    const int m_SerialClockPin;
-    const int m_WordSelectPin;
-    const int m_SerialDataInPin;
-    const int m_SerialDataOutPin;
-	bool m_Is_Running = false;
-	char *mp_SinkName;
-	void InstallDevice();
 
+	//Callback Registrtion to this class
+	void ResgisterForRxCallback(Bluetooth_Sink_Callback *callee);
+   
+	protected:
+		bool GetConnectionStatus(){ return m_BTSink.is_connected(); } 
+	private:
+		Bluetooth_Sink_Callback* m_Callee = NULL;
+		A2DPDefaultVolumeControl m_VolumeControl;
+		BluetoothA2DPSink& m_BTSink;
+		i2s_port_t m_I2S_PORT;
+
+		const int m_SampleRate;
+		const i2s_mode_t m_i2s_Mode;
+		const i2s_bits_per_sample_t m_BitsPerSample;
+		const i2s_comm_format_t m_CommFormat;
+		const i2s_channel_fmt_t m_Channel_Fmt;
+		const i2s_channel_t m_i2s_channel;
+		const bool m_Use_APLL;
+		const size_t m_BufferCount;
+		const size_t m_BufferSize;
+		const int m_SerialClockPin;
+		const int m_WordSelectPin;
+		const int m_SerialDataInPin;
+		const int m_SerialDataOutPin;
+		bool m_Is_Running = false;
+		char *mp_SinkName;
+		void InstallDevice();
 };
 
 

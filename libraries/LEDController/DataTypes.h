@@ -91,6 +91,7 @@ enum DataType_t
   DataType_Frame_t,
   DataType_ProcessedSoundFrame_t,
   DataType_SoundState_t,
+  DataType_ConnectionStatus_t,
   DataType_Undef,
 };
 
@@ -112,6 +113,7 @@ static const char* DataTypeStrings[] =
   "Frame_t",
   "ProcessedSoundFrame_t",
   "SoundState_t",
+  "ConnectionStatus_t",
   "Undefined_t"
 };
 
@@ -122,6 +124,15 @@ struct DataItemConfig_t
   size_t Count;
   Transciever_t TransceiverConfig;
   size_t QueueCount;
+};
+
+enum ConnectionStatus_t
+{
+	Disconnected = 0,
+	Waiting = 1,
+	Searching = 2,
+	Pairing = 3,
+	Paired = 4
 };
 
 struct DataItem_t

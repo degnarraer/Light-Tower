@@ -27,7 +27,6 @@ void Manager::ProcessEventQueue()
     MoveDataBetweenSerialAndWebPage();
 }
 
-
 void Manager::MoveDataBetweenSerialAndWebPage()
 {
   struct Signal
@@ -36,12 +35,18 @@ void Manager::MoveDataBetweenSerialAndWebPage()
     bool A_To_B;
     bool B_To_A;
   };
-  const uint8_t count = 5;
-  Signal Signals[count] = { { "Sound State", true, false }
-                          , { "Amplitude Gain", true, true }
-                          , { "FFT Gain", true, true }
-                          , { "Sink SSID", true, true }
-                          , { "Source SSID", true, true } };
+  const uint8_t count = 11;
+  Signal Signals[count] = { { "Sound State",      true, false }
+                          , { "Amplitude Gain",   true, true }
+                          , { "FFT Gain",         true, true }
+                          , { "Sink SSID",        true, true }
+                          , { "Source SSID",      true, true }
+                          , { "Source Connected", true, false }
+                          , { "Sink Connected",   true, false }
+                          , { "Sink ReConnect",   true, true }
+                          , { "Sink BT Reset",    true, true }
+                          , { "Source ReConnect", true, true }
+                          , { "Source BT Reset",  true, true } };
                                       
   for(int i = 0; i < count; ++i)
   {

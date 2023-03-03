@@ -56,7 +56,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
       { "R_MAJOR_FREQ",         DataType_Float_t,               1,  Transciever_RX,   4   },
       { "L_MAJOR_FREQ",         DataType_Float_t,               1,  Transciever_RX,   4   },
       { "Sound State",          DataType_SoundState_t,          1,  Transciever_TX,   10  },
-      { "Sink Connected",       DataType_bool_t,                1,  Transciever_TX,   4   },
+      { "Sink Connected",       DataType_ConnectionStatus_t,    1,  Transciever_TX,   4   },
       { "Sink ReConnect",       DataType_bool_t,                1,  Transciever_TXRX, 4   },
       { "Sink BT Reset",        DataType_bool_t,                1,  Transciever_TXRX, 4   },
       { "Sink SSID",            DataType_Wifi_Info_t,           1,  Transciever_TXRX, 4   },

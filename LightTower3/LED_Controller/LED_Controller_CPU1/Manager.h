@@ -45,6 +45,7 @@ class Manager: public NamedItem
              , public I2S_Device_Callback
              , public Bluetooth_Sink_Callback
              , public SoundMeasureCalleeInterface
+             , public BluetoothConnectionStatusCallee
              , public CommonUtils
              , public QueueController
 {
@@ -70,6 +71,9 @@ class Manager: public NamedItem
 
     //SoundMeasureCalleeInterface Callback
     void SoundStateChange(SoundState_t SoundState);
+
+    //BluetoothConnectionStatusCallee Callback
+    void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
     
   private:
     StatisticalEngine &m_StatisticalEngine;
@@ -92,9 +96,8 @@ class Manager: public NamedItem
 
     void MoveDataToStatisticalEngine();
     
-    bool m_BluetoothIsConnected = false;
-    void BluetoothConnection_RX();
-    void BluetoothConnection_TX();
+    ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
+    void BluetoothConnectionStatus_TX();
 
     
     SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;

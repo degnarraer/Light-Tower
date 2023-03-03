@@ -107,7 +107,7 @@ class WebSocketDataHandler: public QueueController
       {
         if(true == GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
-          //Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
+          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(m_Value).c_str() });
@@ -238,6 +238,28 @@ class SettingsWebServerManager: public QueueManager
       SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0 );
       RegisterAsWebSocketDataReceiver(&SourceSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SourceSSID_DataHandler);
+      
+      Source_Connected_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source Connected"), new String[1]{"Source_Connection_Status"}, 1, true, 0 );
+      RegisterAsWebSocketDataSender(&Source_Connected_DataHandler);
+      
+      Source_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Source_BT_Reset_DataHandler);
+      RegisterAsWebSocketDataSender(&Source_BT_Reset_DataHandler);
+      
+      Source_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Source_BT_ReConnect_DataHandler);
+      RegisterAsWebSocketDataSender(&Source_BT_ReConnect_DataHandler);
+      
+      Sink_Connected_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Connected"), new String[1]{"Sink_Connection_Status"}, 1, true, 0 );
+      RegisterAsWebSocketDataSender(&Sink_Connected_DataHandler);
+      
+      Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Sink_BT_Reset_DataHandler);
+      RegisterAsWebSocketDataSender(&Sink_BT_Reset_DataHandler);
+      
+      Sink_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0 );
+      RegisterAsWebSocketDataReceiver(&Sink_BT_ReConnect_DataHandler);
+      RegisterAsWebSocketDataSender(&Sink_BT_ReConnect_DataHandler);
 
       Red_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Red Value"), new String[1]{"Red_Value_Slider"}, 1, true, 0 );
       RegisterAsWebSocketDataReceiver(&Red_Value_DataHandler);
@@ -356,6 +378,14 @@ class SettingsWebServerManager: public QueueManager
     //Source SSID Value and Widget Name Values
     WebSocketSSIDDataHandler SourceSSID_DataHandler;
 
+    WebSocketDataHandler<bool> Source_Connected_DataHandler;
+    WebSocketDataHandler<bool> Source_BT_Reset_DataHandler;
+    WebSocketDataHandler<bool> Source_BT_ReConnect_DataHandler;
+    
+    WebSocketDataHandler<bool> Sink_Connected_DataHandler;
+    WebSocketDataHandler<bool> Sink_BT_Reset_DataHandler;
+    WebSocketDataHandler<bool> Sink_BT_ReConnect_DataHandler;
+
     //Red Value and Widget Name Values
     WebSocketDataHandler<uint8_t> Red_Value_DataHandler;
     
@@ -369,19 +399,19 @@ class SettingsWebServerManager: public QueueManager
     static const size_t m_WebServerConfigCount = 13;
     DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
     {
-      { "Sound State",          DataType_SoundState_t,  1,    Transciever_TX,   10  },
-      { "Source Connected",     DataType_bool_t,        1,    Transciever_RX,   10  },
-      { "Source ReConnect",     DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Source BT Reset",      DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Source SSID",          DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
-      { "Sink Connected",       DataType_bool_t,        1,    Transciever_RX,   4   },
-      { "Sink ReConnect",       DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Sink BT Reset",        DataType_bool_t,        1,    Transciever_TXRX, 4   },
-      { "Sink SSID",            DataType_Wifi_Info_t,   1,    Transciever_TXRX, 4   },
-      { "Amplitude Gain",       DataType_Float_t,       1,    Transciever_TXRX, 10  },
-      { "FFT Gain",             DataType_Float_t,       1,    Transciever_TXRX, 10  },
-      { "Found Speaker SSIDS",  DataType_Wifi_Info_t,   10,   Transciever_TXRX, 4   },
-      { "Target Speaker SSID",  DataType_Wifi_Info_t,   10,   Transciever_TXRX, 4   },
+      { "Sound State",          DataType_SoundState_t,        1,    Transciever_TX,   10  },
+      { "Source Connected",     DataType_ConnectionStatus_t,  1,    Transciever_TX,   4  },
+      { "Source ReConnect",     DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Source BT Reset",      DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Source SSID",          DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
+      { "Sink Connected",       DataType_ConnectionStatus_t,  1,    Transciever_TX,   4   },
+      { "Sink ReConnect",       DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Sink BT Reset",        DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Sink SSID",            DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
+      { "Amplitude Gain",       DataType_Float_t,             1,    Transciever_TXRX, 10  },
+      { "FFT Gain",             DataType_Float_t,             1,    Transciever_TXRX, 10  },
+      { "Found Speaker SSIDS",  DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
+      { "Target Speaker SSID",  DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
