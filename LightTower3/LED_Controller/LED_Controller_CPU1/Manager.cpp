@@ -193,8 +193,8 @@ void Manager::BluetoothConnectionStatus_TX()
 {
   static bool SinkIsConnectedValuePushError = false;
   PushValueToQueue( &m_BluetoothConnectionStatus
-                  , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connected")
-                  , "Sink Connected"
+                  , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connection Status")
+                  , "Sink Connection Status"
                   , 0
                   , SinkIsConnectedValuePushError ); 
 }

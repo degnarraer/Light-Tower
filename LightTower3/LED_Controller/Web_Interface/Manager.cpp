@@ -36,17 +36,17 @@ void Manager::MoveDataBetweenSerialAndWebPage()
     bool B_To_A;
   };
   const uint8_t count = 11;
-  Signal Signals[count] = { { "Sound State",      true, false }
-                          , { "Amplitude Gain",   true, true }
-                          , { "FFT Gain",         true, true }
-                          , { "Sink SSID",        true, true }
-                          , { "Source SSID",      true, true }
-                          , { "Source Connected", true, false }
-                          , { "Sink Connected",   true, false }
-                          , { "Sink ReConnect",   true, true }
-                          , { "Sink BT Reset",    true, true }
-                          , { "Source ReConnect", true, true }
-                          , { "Source BT Reset",  true, true } };
+  Signal Signals[count] = { { "Sound State",              true, false }
+                          , { "Amplitude Gain",           true, true }
+                          , { "FFT Gain",                 true, true }
+                          , { "Sink SSID",                true, true }
+                          , { "Source SSID",              true, true }
+                          , { "Source Connection Status", true, false }
+                          , { "Sink Connection Status",   true, false }
+                          , { "Sink ReConnect",           true, true }
+                          , { "Sink BT Reset",            true, true }
+                          , { "Source ReConnect",         true, true }
+                          , { "Source BT Reset",          true, true } };
                                       
   for(int i = 0; i < count; ++i)
   {

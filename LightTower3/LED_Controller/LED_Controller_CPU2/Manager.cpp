@@ -101,6 +101,7 @@ void Manager::ProcessEventQueue1000mS()
 {
   AmplitudeGain_TX();
   FFTGain_TX();
+  BluetoothConnectionStatus_TX();
   SourceBluetoothReset_TX();
   SourceAutoReConnect_TX();
   SourceSSID_TX();
@@ -122,10 +123,10 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
   };
   const uint8_t count = 5;
   Signal Signals[count] = { { "Sound State",    true, false }
-                          , { "Sink Connected", true, false } 
+                          , { "Sink Connection Status", true, false } 
                           , { "Sink ReConnect", true, true } 
                           , { "Sink BT Reset",  true, true } 
-                          , { "Sink SSID",      true, true }  };     
+                          , { "Sink SSID",      true, true } };
   for(int i = 0; i < count; ++i)
   {
     if(Signals[i].A_To_B)
@@ -165,14 +166,12 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   return ByteReceived;
 }
 
-void Manager::BluetoothConnectionStateChanged(ConnectionStatus_t ConnectionStatus)
-
 void Manager::BluetoothConnectionStatus_TX()
 {
   static bool SourceIsConnectedValuePushError = false;
   PushValueToQueue( &m_BluetoothConnectionStatus
-                 , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Sink Connected")
-                  , "Source Connected"
+                 , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Sink Connection Status")
+                  , "Source Connection Status"
                   , 0
                   , SourceIsConnectedValuePushError );
 }

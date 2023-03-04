@@ -18,187 +18,13 @@
 #ifndef WEBSERVER_H
 #define WEBSERVER_H
 
-
-#include "Arduino.h"
-#include <freertos/portmacro.h>
+#include "WebSocketDataHandler.h"
 #include "HTTP_Method.h"
 #include "WiFi.h"
 #include "ESPAsyncWebServer.h"
 #include "AsyncTCP.h"
 #include <Arduino_JSON.h>
-#include <DataTypes.h>
-#include <Helpers.h>
-#include "Streaming.h"
 
-
-class SettingsWebServerManager;
-
-class WebSocketDataHandlerSender
-{
-  public:
-    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) = 0;
-};
-
-class WebSocketDataHandlerReceiver
-{
-  public:
-    virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) = 0;
-};
-
-template<typename T>
-class WebSocketDataHandler: public QueueController
-                          , public CommonUtils
-                          , public WebSocketDataHandlerReceiver
-                          , public WebSocketDataHandlerSender
-{
-  public:
-    WebSocketDataHandler(){}
-    WebSocketDataHandler(const WebSocketDataHandler &t)
-    {
-      m_DataItem = t.m_DataItem;
-      m_WidgetId = t.m_WidgetId;
-      m_Value = t.m_Value;
-      m_ReadUntilEmpty = t.m_ReadUntilEmpty;
-      m_TicksToWait = t.m_TicksToWait;
-      m_KeyValuePairs = t.m_KeyValuePairs;
-    }
-    WebSocketDataHandler( DataItem_t *DataItem
-                        , String *WidgetId
-                        , const size_t NumberOfWidgets
-                        , bool ReadUntilEmpty
-                        , TickType_t TicksToWait  )
-                        : m_DataItem(DataItem) 
-                        , m_WidgetId(WidgetId)
-                        , m_NumberOfWidgets(NumberOfWidgets)
-                        , m_ReadUntilEmpty(ReadUntilEmpty)
-                        , m_TicksToWait(TicksToWait)
-    {
-    }
-    virtual ~WebSocketDataHandler()
-    {
-    }
-    
-    void SetValue(T Value)
-    {
-      m_Value = Value;
-    }
-    
-    T GetValue()
-    {
-      return m_Value;
-    }
-    
-  protected:
-    DataItem_t *m_DataItem = NULL;
-    String *m_WidgetId = NULL;
-    size_t m_NumberOfWidgets = 0;
-    T m_Value;
-    bool m_ReadUntilEmpty;
-    TickType_t m_TicksToWait;
-    std::vector<KVP> *m_KeyValuePairs;
-    UBaseType_t m_TaskPriority;
-    uint8_t m_CoreId;
-    bool m_PushError = false;
-    bool m_PullError = false;
-    
-    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
-    {
-      if(null != m_DataItem)
-      {
-        if(true == GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
-        {
-          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
-          for (size_t i = 0; i < m_NumberOfWidgets; i++)
-          {
-            KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(m_Value).c_str() });
-          }
-        }
-      }
-    }
-    
-    virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value)
-    {
-      bool Found = false;
-      String InputId = WidgetId;
-      if(null != m_DataItem)
-      {
-        for (size_t i = 0; i < m_NumberOfWidgets; i++)
-        {
-          if( m_WidgetId[i].equals(InputId) )
-          {
-            if( true == ConvertStringToDataBufferFromDataType(&m_Value, Value, m_DataItem->DataType))
-            {
-              Found = true;
-              Serial << "Web Socket Data Received: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
-              PushValueToQueue(&m_Value, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
-            }
-            return Found;
-          }
-        }
-      }
-      return Found;
-    }
-};
-
-class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
-{
-  public:
-    WebSocketSSIDDataHandler(){}
-    WebSocketSSIDDataHandler( DataItem_t *DataItem
-                              , String *WidgetIds
-                              , const size_t NumberOfWidgets
-                              , bool ReadUntilEmpty
-                              , TickType_t TicksToWait )
-                              : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait)
-    {
-    }
-    
-    virtual ~WebSocketSSIDDataHandler()
-    {
-    }
-    
-  protected:
-    void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
-    {
-      if(null != m_DataItem)
-      {
-        char Buffer[m_DataItem->TotalByteCount];
-        if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
-        {
-          m_Value = String(Buffer);
-          //Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
-          for (size_t i = 0; i < m_NumberOfWidgets; i++)
-          {
-            KeyValuePairs.push_back({ m_WidgetId[i].c_str(), m_Value.c_str() });
-          }
-        }
-      }
-    }
-    
-    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
-    {
-      bool Found = false;
-      String InputId = WidgetId;
-      if(null != m_DataItem)
-      {
-        m_Value = Value;
-        Wifi_Info_t WifiInfo = Wifi_Info_t(m_Value);
-        for (size_t i = 0; i < m_NumberOfWidgets; i++)
-        {
-         // Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
-          m_WidgetId[i].trim();
-          InputId.trim();
-          if( m_WidgetId[i].equals(InputId) )
-          {
-            Found = true;
-            Serial << "Send Value: " << m_Value.c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
-            PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
-          }
-        }
-      }
-      return Found;
-    }
-};
 
 class SettingsWebServerManager: public QueueManager
 {  
@@ -239,8 +65,8 @@ class SettingsWebServerManager: public QueueManager
       RegisterAsWebSocketDataReceiver(&SourceSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SourceSSID_DataHandler);
       
-      Source_Connected_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source Connected"), new String[1]{"Source_Connection_Status"}, 1, true, 0 );
-      RegisterAsWebSocketDataSender(&Source_Connected_DataHandler);
+      Source_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source Connection Status"), new String[1]{"Source_Connection_Status"}, 1, true, 0 );
+      RegisterAsWebSocketDataSender(&Source_Connection_Status_DataHandler);
       
       Source_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0 );
       RegisterAsWebSocketDataReceiver(&Source_BT_Reset_DataHandler);
@@ -250,8 +76,8 @@ class SettingsWebServerManager: public QueueManager
       RegisterAsWebSocketDataReceiver(&Source_BT_ReConnect_DataHandler);
       RegisterAsWebSocketDataSender(&Source_BT_ReConnect_DataHandler);
       
-      Sink_Connected_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Connected"), new String[1]{"Sink_Connection_Status"}, 1, true, 0 );
-      RegisterAsWebSocketDataSender(&Sink_Connected_DataHandler);
+      Sink_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0 );
+      RegisterAsWebSocketDataSender(&Sink_Connection_Status_DataHandler);
       
       Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0 );
       RegisterAsWebSocketDataReceiver(&Sink_BT_Reset_DataHandler);
@@ -378,11 +204,11 @@ class SettingsWebServerManager: public QueueManager
     //Source SSID Value and Widget Name Values
     WebSocketSSIDDataHandler SourceSSID_DataHandler;
 
-    WebSocketDataHandler<bool> Source_Connected_DataHandler;
+    WebSocketDataHandler<bool> Source_Connection_Status_DataHandler;
     WebSocketDataHandler<bool> Source_BT_Reset_DataHandler;
     WebSocketDataHandler<bool> Source_BT_ReConnect_DataHandler;
     
-    WebSocketDataHandler<bool> Sink_Connected_DataHandler;
+    WebSocketDataHandler<bool> Sink_Connection_Status_DataHandler;
     WebSocketDataHandler<bool> Sink_BT_Reset_DataHandler;
     WebSocketDataHandler<bool> Sink_BT_ReConnect_DataHandler;
 
@@ -399,19 +225,19 @@ class SettingsWebServerManager: public QueueManager
     static const size_t m_WebServerConfigCount = 13;
     DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
     {
-      { "Sound State",          DataType_SoundState_t,        1,    Transciever_TX,   10  },
-      { "Source Connected",     DataType_ConnectionStatus_t,  1,    Transciever_TX,   4  },
-      { "Source ReConnect",     DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Source BT Reset",      DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Source SSID",          DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
-      { "Sink Connected",       DataType_ConnectionStatus_t,  1,    Transciever_TX,   4   },
-      { "Sink ReConnect",       DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Sink BT Reset",        DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Sink SSID",            DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
-      { "Amplitude Gain",       DataType_Float_t,             1,    Transciever_TXRX, 10  },
-      { "FFT Gain",             DataType_Float_t,             1,    Transciever_TXRX, 10  },
-      { "Found Speaker SSIDS",  DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
-      { "Target Speaker SSID",  DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
+      { "Sound State",              DataType_SoundState_t,        1,    Transciever_TX,   10  },
+      { "Source Connection Status", DataType_ConnectionStatus_t,  1,    Transciever_TX,   4  },
+      { "Source ReConnect",         DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Source BT Reset",          DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Source SSID",              DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
+      { "Sink Connection Status",   DataType_ConnectionStatus_t,  1,    Transciever_TX,   4   },
+      { "Sink ReConnect",           DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Sink BT Reset",            DataType_bool_t,              1,    Transciever_TXRX, 4   },
+      { "Sink SSID",                DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
+      { "Amplitude Gain",           DataType_Float_t,             1,    Transciever_TXRX, 10  },
+      { "FFT Gain",                 DataType_Float_t,             1,    Transciever_TXRX, 10  },
+      { "Found Speaker SSIDS",      DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
+      { "Target Speaker SSID",      DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
@@ -465,32 +291,7 @@ class SettingsWebServerManager: public QueueManager
           Serial.println("Parsing Web Socket Data failed!");
           return;
         }
-        if( true == MyDataObject.hasOwnProperty("Message") )
-        {
-          const String Message = String( (const char*)MyDataObject["Message"]);
-          Serial.println("Message: " + Message);
-          if (Message.equals("Get All Values"))
-          {
-              Serial.println("Sending All Values");
-              std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-              KeyValuePairs.push_back({ "Sound_State", String(Sound_State).c_str() });
-              KeyValuePairs.push_back({ "Amplitude_Gain_Slider1", String(Amplitude_Gain_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "Amplitude_Gain_Slider2", String(Amplitude_Gain_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "FFT_Gain_Slider1", String(FFT_Gain_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "FFT_Gain_Slider2", String(FFT_Gain_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "Red_Value_Slider", String(Red_Value_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "Green_Value_Slider", String(Green_Value_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "Blue_Value_Slider", String(Blue_Value_DataHandler.GetValue()).c_str() });
-              KeyValuePairs.push_back({ "Sink_SSID_Text_Box", SinkSSID_DataHandler.GetValue() });
-              KeyValuePairs.push_back({ "Source_SSID_Text_Box", SourceSSID_DataHandler.GetValue() });
-              NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
-          }
-          else
-          {
-            Serial.println("Unsupported Message: " + Message);
-          }
-        }
-        else if( true == MyDataObject.hasOwnProperty("WidgetValue") )
+        if( true == MyDataObject.hasOwnProperty("WidgetValue") )
         {
           if( true == MyDataObject["WidgetValue"].hasOwnProperty("Id") && 
               true == MyDataObject["WidgetValue"].hasOwnProperty("Value") )

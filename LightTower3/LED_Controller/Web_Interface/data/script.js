@@ -34,7 +34,6 @@ function initWebSocket()
 function onOpen(event)
 {
     console.log('Connection opened');
-    getValues();
 }
 function onClose(event)
 {
@@ -50,7 +49,7 @@ sink_BT_Reset_Toggle_Button.addEventListener("click", function()
 	var Root = {};
 	Root.WidgetValue = {};
 	Root["WidgetValue"].Id = "Sink_BT_Reset_Toggle_Button";
-	Root["WidgetValue"].Value = !sink_BT_Reset_Toggle_Button.checked
+	Root["WidgetValue"].Value = String(sink_BT_Reset_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
@@ -62,7 +61,7 @@ sink_BT_ReConnect_Toggle_Button.addEventListener("click", function()
 	var Root = {};
 	Root.WidgetValue = {};
 	Root["WidgetValue"].Id = "Sink_BT_Auto_ReConnect_Toggle_Button";
-	Root["WidgetValue"].Value = !sink_BT_ReConnect_Toggle_Button.checked
+	Root["WidgetValue"].Value = String(sink_BT_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
@@ -74,7 +73,7 @@ source_BT_Reset_Toggle_Button.addEventListener("click", function()
 	var Root = {};
 	Root.WidgetValue = {};
 	Root["WidgetValue"].Id = "Source_BT_Reset_Toggle_Button";
-	Root["WidgetValue"].Value = !source_BT_Reset_Toggle_Button.checked
+	Root["WidgetValue"].Value = String(source_BT_Reset_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
@@ -86,22 +85,12 @@ source_BT_ReConnect_Toggle_Button.addEventListener("click", function()
 	var Root = {};
 	Root.WidgetValue = {};
 	Root["WidgetValue"].Id = "Source_BT_ReConnect_Toggle_Button";
-	Root["WidgetValue"].Value = !source_BT_ReConnect_Toggle_Button.checked
+	Root["WidgetValue"].Value = String(source_BT_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
 	console.log(`Source Auto ReConnect Toggle switch is now ${source_BT_ReConnect_Toggle_Button.checked}`);
 });
-
-// Get All Values
-function getValues()
-{
-    var Root = {};
-	Root.Message = "Get All Values";
-	var Message = JSON.stringify(Root);
-	console.log(Message);
-    websocket.send(Message);
-}
 
 // Menu Functions
 function openNav() 
@@ -298,9 +287,9 @@ function setSpeakerImage(value)
 
 function onMessage(event)
 {
-    //console.log(event.data);
-    var myObj = JSON.parse(event.data);
-    var keys = Object.keys(myObj);
+    console.log(event.data);
+	var myObj = JSON.parse(event.data);
+	var keys = Object.keys(myObj);
 	for (var i = 0; i < keys.length; ++i)
 	{
 		var Id = myObj[keys[i]]["Id"];
@@ -333,7 +322,7 @@ function onMessage(event)
 			else if(Id == "Source_Connection_Status")
 			{
 				var element = document.getElementById("Source_Connection_Status");
-				switch(Value)
+				switch(parseInt(Value))
 				{
 					case ConnectionStatus.Waiting:
 						element.innerHTML = "Waiting";
@@ -348,8 +337,10 @@ function onMessage(event)
 						element.innerHTML = "Paired";
 					break;
 					case ConnectionStatus.Disconnected:
-					default:
 						element.innerHTML = "Disconnected";
+					break;
+					default:
+						element.innerHTML = "Error";
 					break;
 				}
 			}
@@ -364,7 +355,7 @@ function onMessage(event)
 			else if(Id == "Sink_Connection_Status")
 			{
 				var element = document.getElementById("Sink_Connection_Status");
-				switch(Value)
+				switch(parseInt(Value))
 				{
 					case ConnectionStatus.Waiting:
 						element.innerHTML = "Waiting";
@@ -379,8 +370,10 @@ function onMessage(event)
 						element.innerHTML = "Paired";
 					break;
 					case ConnectionStatus.Disconnected:
-					default:
 						element.innerHTML = "Disconnected";
+					break;
+					default:
+						element.innerHTML = "Error";
 					break;
 				}
 			}
