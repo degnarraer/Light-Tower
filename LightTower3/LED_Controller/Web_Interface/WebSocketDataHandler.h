@@ -55,7 +55,7 @@ class WebSocketDataHandler: public QueueController
       m_Value = t.m_Value;
       m_ReadUntilEmpty = t.m_ReadUntilEmpty;
       m_TicksToWait = t.m_TicksToWait;
-      m_KeyValuePairs = t.m_KeyValuePairs;
+      mySemaphore = t.mySemaphore;
     }
     WebSocketDataHandler( DataItem_t *DataItem
                         , String *WidgetId
@@ -94,7 +94,6 @@ class WebSocketDataHandler: public QueueController
     T m_Value;
     bool m_ReadUntilEmpty;
     TickType_t m_TicksToWait;
-    std::vector<KVP> *m_KeyValuePairs;
     UBaseType_t m_TaskPriority;
     uint8_t m_CoreId;
     bool m_PushError = false;
@@ -103,12 +102,11 @@ class WebSocketDataHandler: public QueueController
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      if(NULL != m_DataItem)
+      if(NULL != m_DataItem && NULL != m_WidgetId)
       {
         xSemaphoreTake(mySemaphore, portMAX_DELAY);
         if(true == GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
-          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(m_Value).c_str() });
@@ -122,7 +120,7 @@ class WebSocketDataHandler: public QueueController
     {
       bool Found = false;
       String InputId = WidgetId;
-      if(NULL != m_DataItem)
+      if(NULL != m_DataItem && NULL != m_WidgetId)
       {
         xSemaphoreTake(mySemaphore, portMAX_DELAY);
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
@@ -132,7 +130,6 @@ class WebSocketDataHandler: public QueueController
             if( true == ConvertStringToDataBufferFromDataType(&m_Value, Value, m_DataItem->DataType))
             {
               Found = true;
-              Serial << "Web Socket Data Received: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
               PushValueToQueue(&m_Value, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
             }
             xSemaphoreGive(mySemaphore);
@@ -165,14 +162,13 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
   protected:
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
-      if(NULL != m_DataItem)
+      if(NULL != m_DataItem && NULL != m_WidgetId)
       {
         xSemaphoreTake(mySemaphore, portMAX_DELAY);
         char Buffer[m_DataItem->TotalByteCount];
         if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
           m_Value = String(Buffer);
-          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), m_Value.c_str() });
@@ -186,20 +182,18 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
     {
       bool Found = false;
       String InputId = WidgetId;
-      if(NULL != m_DataItem)
+      if(NULL != m_DataItem && NULL != m_WidgetId)
       {
         xSemaphoreTake(mySemaphore, portMAX_DELAY);
         m_Value = Value;
         Wifi_Info_t WifiInfo = Wifi_Info_t(m_Value);
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-          Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
           m_WidgetId[i].trim();
           InputId.trim();
           if( m_WidgetId[i].equals(InputId) )
           {
             Found = true;
-            Serial << "Send Value: " << m_Value.c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
             PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
           }
         }

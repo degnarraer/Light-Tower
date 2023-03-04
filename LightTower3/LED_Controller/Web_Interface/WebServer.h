@@ -185,8 +185,8 @@ class SettingsWebServerManager: public QueueManager
     const char* password = "LEDs Rock";
     String message = "";
 
-    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers;
-    std::vector<WebSocketDataHandlerSender*> m_MySenders;
+    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
+    std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
 
     //Sound State Value and Widget Name Values
     SoundState_t Sound_State;
