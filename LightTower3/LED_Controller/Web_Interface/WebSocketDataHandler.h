@@ -45,7 +45,9 @@ class WebSocketDataHandler: public QueueController
                           , public WebSocketDataHandlerSender
 {
   public:
-    WebSocketDataHandler(){}
+    WebSocketDataHandler()
+    {
+    }
     WebSocketDataHandler(const WebSocketDataHandler &t)
     {
       m_DataItem = t.m_DataItem;
@@ -66,6 +68,8 @@ class WebSocketDataHandler: public QueueController
                         , m_ReadUntilEmpty(ReadUntilEmpty)
                         , m_TicksToWait(TicksToWait)
     {
+      mySemaphore = xSemaphoreCreateBinary();
+      xSemaphoreGive(mySemaphore);
     }
     virtual ~WebSocketDataHandler()
     {
@@ -73,7 +77,9 @@ class WebSocketDataHandler: public QueueController
     
     void SetValue(T Value)
     {
+      xSemaphoreTake(mySemaphore, portMAX_DELAY);
       m_Value = Value;
+      xSemaphoreGive(mySemaphore);
     }
     
     T GetValue()
@@ -93,19 +99,22 @@ class WebSocketDataHandler: public QueueController
     uint8_t m_CoreId;
     bool m_PushError = false;
     bool m_PullError = false;
+    SemaphoreHandle_t mySemaphore;
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
       if(NULL != m_DataItem)
       {
+        xSemaphoreTake(mySemaphore, portMAX_DELAY);
         if(true == GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
-          //Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
+          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(m_Value).c_str() });
           }
         }
+        xSemaphoreGive(mySemaphore);
       }
     }
     
@@ -115,6 +124,7 @@ class WebSocketDataHandler: public QueueController
       String InputId = WidgetId;
       if(NULL != m_DataItem)
       {
+        xSemaphoreTake(mySemaphore, portMAX_DELAY);
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
           if( m_WidgetId[i].equals(InputId) )
@@ -125,9 +135,11 @@ class WebSocketDataHandler: public QueueController
               Serial << "Web Socket Data Received: " << String(m_Value).c_str() << " to Send to Clients for Data Item: "<< m_DataItem->Name.c_str() << "\n";
               PushValueToQueue(&m_Value, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
             }
+            xSemaphoreGive(mySemaphore);
             return Found;
           }
         }
+        xSemaphoreGive(mySemaphore);
       }
       return Found;
     }
@@ -155,16 +167,18 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
     {
       if(NULL != m_DataItem)
       {
+        xSemaphoreTake(mySemaphore, portMAX_DELAY);
         char Buffer[m_DataItem->TotalByteCount];
         if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
           m_Value = String(Buffer);
-          //Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
+          Serial << "Received Value: " << String(m_Value).c_str() << " to Send to Clients for Data Item: " << m_DataItem->Name.c_str() << "\n";
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), m_Value.c_str() });
           }
         }
+        xSemaphoreGive(mySemaphore);
       }
     }
     
@@ -174,11 +188,12 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
       String InputId = WidgetId;
       if(NULL != m_DataItem)
       {
+        xSemaphoreTake(mySemaphore, portMAX_DELAY);
         m_Value = Value;
         Wifi_Info_t WifiInfo = Wifi_Info_t(m_Value);
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-         // Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
+          Serial << m_WidgetId[i] << " | " << WidgetId << " | " << Value << "\n";
           m_WidgetId[i].trim();
           InputId.trim();
           if( m_WidgetId[i].equals(InputId) )
@@ -188,6 +203,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
             PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
           }
         }
+        xSemaphoreGive(mySemaphore);
       }
       return Found;
     }

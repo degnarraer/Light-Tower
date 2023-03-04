@@ -61,7 +61,7 @@ void Manager::MoveDataBetweenSerialAndWebPage()
     }
     if(Signals[i].B_To_A)
     {
-      MoveDataFromQueueToQueue( "Manager: Move Data from Web Page to Datalink"
+      MoveDataFromQueueToQueue( "Manager: Move Data from Web Page to Datalink: " + Signals[i].Name
                               , m_SettingsWebServerManager.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
                               , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
                               , m_SettingsWebServerManager.GetTotalByteCountForDataItem(Signals[i].Name.c_str())

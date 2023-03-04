@@ -101,9 +101,9 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task, 0 );
-  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 10,  &WebServer_Task, 0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   10000,  NULL,  configMAX_PRIORITIES - 10,  &Manager_Task,   1 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    10000,  NULL,  configMAX_PRIORITIES - 10,  &SPI_RX_Task,    1 );
 }
 
 void InitLocalVariables()
@@ -153,7 +153,7 @@ void Manager_TaskLoop(void * parameter)
 
 void WebServer_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
