@@ -46,7 +46,7 @@ class SettingsWebServerManager: public QueueManager
     {
       SetupQueueManager();
       InitWiFiAP();
-      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, true, 0, false );
+      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, false, 0, true );
       RegisterAsWebSocketDataSender(&Sound_State_DataHandler);
       
       Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0, false );
@@ -57,11 +57,11 @@ class SettingsWebServerManager: public QueueManager
       RegisterAsWebSocketDataReceiver(&FFT_Gain_DataHandler);
       RegisterAsWebSocketDataSender(&FFT_Gain_DataHandler);
       
-      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, false );
+      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, true );
       RegisterAsWebSocketDataReceiver(&SinkSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SinkSSID_DataHandler);
     
-      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, false );
+      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, true );
       RegisterAsWebSocketDataReceiver(&SourceSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SourceSSID_DataHandler);
       
@@ -121,6 +121,7 @@ class SettingsWebServerManager: public QueueManager
           break;
         case WS_EVT_DISCONNECT:
           Serial.printf("WebSocket client #%u disconnected\n", client->id());
+          m_WebSocket.cleanupClients(client->id());
           break;
         case WS_EVT_DATA:
           HandleWebSocketMessage(arg, data, len);
@@ -274,7 +275,17 @@ class SettingsWebServerManager: public QueueManager
     
     void NotifyClients(String TextString)
     {
-      m_WebSocket.textAll(TextString);
+      Serial << "Try Notify Clients\n";
+      for(int i = 0; i < DEFAULT_MAX_WS_CLIENTS; ++i)
+      {
+        if( true == m_WebSocket.hasClient(i) && 
+            true == m_WebSocket.availableForWrite(i) && 
+            true == isAsciiString(TextString.c_str()) )
+        {
+          Serial << "Notified Client: " << i << "\n";
+          m_WebSocket.text(i, TextString);
+        }
+      }
     }
     
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)

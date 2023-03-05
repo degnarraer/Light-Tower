@@ -67,7 +67,7 @@ void InitWebServer()
   {
     request->send(SPIFFS, "/index.html", "text/html");
   });
-  MyWebServer.serveStatic("/", SPIFFS, "/").setCacheControl("max-age31536000");;
+  MyWebServer.serveStatic("/", SPIFFS, "/").setCacheControl("max-age = 300");
 }
 
 // Start the web server
@@ -125,7 +125,6 @@ void setup(){
 
 void loop()
 {
-  //MyWebSocket.cleanupClients();
 }
 
 void SPI_RX_TaskLoop(void * parameter)

@@ -45,12 +45,12 @@ uint32_t SPI_TaskLoopCount = 0;
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_20mS_Task",      2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  2000,   NULL,   configMAX_PRIORITIES - 1, &Manager_300000mS_Task, 0 );
-  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",               3000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      4000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
+  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
+  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
+  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_300000mS_Task, 0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",               5000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    5000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
 }
 
 void setup()

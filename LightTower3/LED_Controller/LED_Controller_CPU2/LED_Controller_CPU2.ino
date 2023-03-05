@@ -115,14 +115,14 @@ void setup()
   m_SPIDataLinkToCPU3.SetSpewToConsole(false, false);
   m_Manager.Setup();
 
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  3000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSoundPowerTask,   0 );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  5000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessSoundPowerTask,   0 );
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   tskIDLE_PRIORITY,           &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  2000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_300000mS_Task,   1 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    2000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_1000mS_Task,     1 );
-  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_10mS_Task",      2000,   NULL,   configMAX_PRIORITIES - 2,   &Manager_10mS_Task,       1 );
-  xTaskCreatePinnedToCore( SPI_CPU1_TX_TaskLoop,      "SPI CPU1 TX Task Task",  3000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU1_TXTask,  1 );
-  xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  3000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU3_TXTask,  1 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        2000,   NULL,   tskIDLE_PRIORITY,           &TaskMonitorTask,         1 );
+  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_300000mS_Task,   1 );
+  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_1000mS_Task,     1 );
+  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_10mS_Task",      5000,   NULL,   configMAX_PRIORITIES - 2,   &Manager_10mS_Task,       1 );
+  xTaskCreatePinnedToCore( SPI_CPU1_TX_TaskLoop,      "SPI CPU1 TX Task Task",  5000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU1_TXTask,  1 );
+  xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  5000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU3_TXTask,  1 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        5000,   NULL,   tskIDLE_PRIORITY,           &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());

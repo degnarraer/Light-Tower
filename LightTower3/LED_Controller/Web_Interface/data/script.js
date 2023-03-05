@@ -283,13 +283,13 @@ function setSpeakerImage(value)
 
 function onMessage(event)
 {
-    console.log(event.data);
 	var myObj = JSON.parse(event.data);
 	var keys = Object.keys(myObj);
 	for (var i = 0; i < keys.length; ++i)
 	{
 		var Id = myObj[keys[i]]["Id"];
 		var Value = myObj[keys[i]]["Value"];
+		console.log("WIDGET: " + Id + " = " + Value);
 		if(null != Id && null != Value)
 		{
 			if(Id == "Speaker_Image")

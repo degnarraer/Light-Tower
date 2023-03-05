@@ -201,7 +201,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
           if( m_WidgetId[i].equals(InputId) )
           {
             Found = true;
-            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << m_Value << " to Datalink\n";
+            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << m_Value << " to Web Socket\n";
             PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
           }
         }
