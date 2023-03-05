@@ -354,7 +354,6 @@ function onMessage(event)
 			}
 			else if(Id == "Source_BT_Auto_ReConnect_Toggle_Button")
 			{
-				console.log("Source_BT_Auto_ReConnect_Toggle_Button Pressed Value = " + Value);
 				if(Value == "1")
 				{
 					source_BT_Auto_ReConnect_Toggle_Button.checked = true;
@@ -366,7 +365,6 @@ function onMessage(event)
 			}
 			else if(Id == "Sink_Connection_Status")
 			{
-				var element = document.getElementById("Sink_Connection_Status");
 				switch(parseInt(Value))
 				{
 					case ConnectionStatus.Waiting:
@@ -391,7 +389,6 @@ function onMessage(event)
 			}
 			else if(Id == "Sink_BT_Reset_Toggle_Button")
 			{
-				console.log("Sink_BT_Reset_Toggle_Button Pressed Value = " + Value);
 				if(Value == "1")
 				{
 					sink_BT_Reset_Toggle_Button.checked = true;
@@ -403,7 +400,6 @@ function onMessage(event)
 			}
 			else if(Id == "Sink_BT_Auto_ReConnect_Toggle_Button")
 			{
-				console.log("Sink_BT_Auto_ReConnect_Toggle_Button Pressed Value = " + Value);
 				if(Value == "1")
 				{
 					sink_BT_Auto_ReConnect_Toggle_Button.checked = true;

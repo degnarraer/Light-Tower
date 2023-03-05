@@ -68,22 +68,22 @@ class SettingsWebServerManager: public QueueManager
       Source_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source Connection Status"), new String[1]{"Source_Connection_Status"}, 1, true, 0, false );
       RegisterAsWebSocketDataSender(&Source_Connection_Status_DataHandler);
       
-      Source_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0, true );
+      Source_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Source_BT_Reset_DataHandler);
       RegisterAsWebSocketDataSender(&Source_BT_Reset_DataHandler);
       
-      Source_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, true );
+      Source_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Source_BT_ReConnect_DataHandler);
       RegisterAsWebSocketDataSender(&Source_BT_ReConnect_DataHandler);
       
       Sink_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0, false );
       RegisterAsWebSocketDataSender(&Sink_Connection_Status_DataHandler);
       
-      Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0, true );
+      Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Sink_BT_Reset_DataHandler);
       RegisterAsWebSocketDataSender(&Sink_BT_Reset_DataHandler);
       
-      Sink_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, true );
+      Sink_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Sink_BT_ReConnect_DataHandler);
       RegisterAsWebSocketDataSender(&Sink_BT_ReConnect_DataHandler);
 
