@@ -342,7 +342,6 @@ function onMessage(event)
 			}
 			else if(Id == "Source_BT_Reset_Toggle_Button")
 			{
-				console.log("Source_BT_Reset_Toggle_Button Pressed Value = " + Value);
 				if(Value == "1")
 				{
 					source_BT_Reset_Toggle_Button.checked = true;
