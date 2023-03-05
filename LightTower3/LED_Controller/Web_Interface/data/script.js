@@ -364,6 +364,7 @@ function onMessage(event)
 			}
 			else if(Id == "Sink_Connection_Status")
 			{
+				var element = document.getElementById("Sink_Connection_Status");
 				switch(parseInt(Value))
 				{
 					case ConnectionStatus.Waiting:

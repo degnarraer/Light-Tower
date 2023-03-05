@@ -41,7 +41,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
-  InitializeNVM(true); //m_Preferences.getBool("NVM Reset", false));
+  InitializeNVM(m_Preferences.getBool("NVM Reset", false));
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
@@ -83,10 +83,11 @@ void Manager::SaveToNVM()
 void Manager::LoadFromNVM()
 {
   //Get NVM Values
+  m_SourceSSID = m_Preferences.getString("Source SSID", "");
   m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
   m_FFTGain = m_Preferences.getFloat("FFT Gain", 1.0);
-  m_SourceBTReset = m_Preferences.getBool("Source BT Reset", m_SourceBTReset);
-  m_SourceBTReConnect = m_Preferences.getBool("Source ReConnect", m_SourceBTReConnect);
+  m_SourceBTReset = m_Preferences.getBool("Source BT Reset", true);
+  m_SourceBTReConnect = m_Preferences.getBool("Source ReConnect", true);
 
   //Reload NVM Values
   m_SoundProcessor.SetGain(m_AmplitudeGain);
