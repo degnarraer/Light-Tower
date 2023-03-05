@@ -30,6 +30,9 @@ uint32_t Manager_10mS_TaskLoopCount = 0;
 TaskHandle_t Manager_1000mS_Task;
 uint32_t Manager_1000mS_TaskLoopCount = 0;
 
+TaskHandle_t Manager_300000mS_Task;
+uint32_t Manager_300000mS_TaskLoopCount = 0;
+
 TaskHandle_t VisualizationTask;
 uint32_t VisualizationTaskLoopCount = 0;
 
@@ -42,11 +45,12 @@ uint32_t SPI_TaskLoopCount = 0;
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask", 2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",             3000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
-  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_20mS_Task",    2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",  2000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",    4000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
+  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_20mS_Task",      2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
+  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   2000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
+  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  2000,   NULL,   configMAX_PRIORITIES - 1, &Manager_300000mS_Task, 0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",               3000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    2000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      4000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
 }
 
 void setup()
@@ -135,7 +139,6 @@ void TaskMonitorTaskLoop(void * parameter)
 
 void Manager_10mS_TaskLoop(void * parameter)
 {
-  //20 mS task rate
   const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
@@ -148,7 +151,6 @@ void Manager_10mS_TaskLoop(void * parameter)
 
 void Manager_1000mS_TaskLoop(void * parameter)
 {
-  //1000 mS task rate
   const TickType_t xFrequency = 1000;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
@@ -156,5 +158,18 @@ void Manager_1000mS_TaskLoop(void * parameter)
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_1000mS_TaskLoopCount;
     m_Manager.ProcessEventQueue1000mS();
+  }
+}
+
+void Manager_300000mS_TaskLoop(void * parameter)
+{
+  //5 Minute task rate
+  const TickType_t xFrequency = 300000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    ++Manager_300000mS_TaskLoopCount;
+    m_Manager.ProcessEventQueue300000mS();
   }
 }

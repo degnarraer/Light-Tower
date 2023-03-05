@@ -84,6 +84,9 @@ class Manager: public NamedItem
     Preferences m_Preferences;
     void InitializeNVM(bool Reset);
 
+    ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
+    void BluetoothConnectionStatus_TX();
+    
     float m_AmplitudeGain;
     void AmplitudeGain_RX();
     void AmplitudeGain_TX();
@@ -96,10 +99,8 @@ class Manager: public NamedItem
     void SourceBluetoothReset_RX();
     void SourceBluetoothReset_TX();
     
-    ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
-    void BluetoothConnectionStatus_TX();
     
-    bool m_SourceReConnect;
+    bool m_SourceBTReConnect;
     void SourceAutoReConnect_RX();
     void SourceAutoReConnect_TX();
 

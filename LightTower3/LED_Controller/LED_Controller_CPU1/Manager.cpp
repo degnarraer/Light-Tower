@@ -39,7 +39,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
-  InitializeNVM(m_Preferences.getBool("NVM Reset", false));
+  InitializeNVM(true); //m_Preferences.getBool("NVM Reset", false));
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
@@ -50,6 +50,7 @@ void Manager::Setup()
   m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
+  LoadFromNVM();
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -65,6 +66,8 @@ void Manager::InitializeNVM(bool Reset)
     m_Preferences.putString("Sink SSID", "LED Tower of Power");
     m_Preferences.putBool("Sink BT Reset", true);
     m_Preferences.putBool("Sink ReConnect", true);
+
+    //Close Initialization
     m_Preferences.putBool("NVM Initialized", true);
     m_Preferences.putBool("NVM Reset", false);
   }
@@ -75,8 +78,6 @@ void Manager::SaveToNVM()
     m_Preferences.putString("Sink SSID", m_SinkSSID);
     m_Preferences.putBool("Sink BT Reset", m_SinkReset);
     m_Preferences.putBool("Sink ReConnect", m_SinkReConnect);
-    m_Preferences.putBool("NVM Initialized", true);
-    m_Preferences.putBool("NVM Reset", false);
 }
 
 void Manager::LoadFromNVM()
@@ -96,6 +97,8 @@ void Manager::ProcessEventQueue20mS()
   Process_I2S_EventQueue();
   MoveDataToStatisticalEngine();
   SinkSSID_RX();
+  SinkBluetoothReset_RX();
+  SinkAutoReConnect_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
@@ -103,6 +106,14 @@ void Manager::ProcessEventQueue1000mS()
   BluetoothConnectionStatus_TX();
   SoundState_TX();
   SinkSSID_TX();
+  SinkBluetoothReset_TX();
+  SinkReConnect_TX();
+}
+
+void Manager::ProcessEventQueue300000mS()
+{
+  ESP_LOGI("Manager", "Saving Settigns to NVM");
+  SaveToNVM();
 }
 
 void Manager::SetInputType(InputType_t Type)
@@ -262,20 +273,18 @@ void Manager::SinkBluetoothReset_RX()
   static bool SinkBluetoothResetPullErrorHasOccured = false;
   if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink BT Reset", false, 0, SinkBluetoothResetPullErrorHasOccured))
   {
-    bool NVMValue = m_Preferences.getBool("Sink BT Reset", true);
-    if(NVMValue != DatalinkValue)
+    if(m_SinkReset != DatalinkValue)
     {
       Serial << "Sink Bluetooth Reset Value Changed\n";
-      m_Preferences.putBool("Sink BT Reset", DatalinkValue);
+      m_SinkReset = DatalinkValue;
       SinkBluetoothReset_TX();
     }
   }
 }
 void Manager::SinkBluetoothReset_TX()
 {
-  bool NVMValue = m_Preferences.getBool("Sink BT Reset", true);
   static bool SinkBluetoothResetPushErrorHasOccured = false;
-  m_SPIDataLinkSlave.PushValueToTXQueue(&NVMValue, "Sink BT Reset", 0, SinkBluetoothResetPushErrorHasOccured);
+  m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkReset, "Sink BT Reset", 0, SinkBluetoothResetPushErrorHasOccured);
 }
 
 void Manager::SinkAutoReConnect_RX()
@@ -284,19 +293,17 @@ void Manager::SinkAutoReConnect_RX()
   static bool SinkAutoReConnectPullErrorHasOccured = false;
   if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink ReConnect", false, 0, SinkAutoReConnectPullErrorHasOccured))
   {
-    bool NVMValue = m_Preferences.getBool("Sink ReConnect", true);
-    if(NVMValue != DatalinkValue)
+    if(m_SinkReConnect != DatalinkValue)
     {
-      Serial << "Sink Auto ReConnect Value Changed\n";
-      m_Preferences.putBool("Sink ReConnect", DatalinkValue);
-      SinkAutoReConnect_TX();
+      Serial << "Sink ReConnect Value Changed\n";
+      m_SinkReConnect = DatalinkValue;
+      SinkReConnect_TX();
     }
   }
 }
 
-void Manager::SinkAutoReConnect_TX()
+void Manager::SinkReConnect_TX()
 {
-  bool NVMValue = m_Preferences.getBool("Sink ReConnect", true);
   static bool SinkAutoReConnectPushErrorHasOccured = false;
-  m_SPIDataLinkSlave.PushValueToTXQueue(&NVMValue, "Sink ReConnect", 0, SinkAutoReConnectPushErrorHasOccured);
+  m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkReConnect, "Sink ReConnect", 0, SinkAutoReConnectPushErrorHasOccured);
 }

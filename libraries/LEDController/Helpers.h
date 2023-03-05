@@ -192,7 +192,8 @@ class QueueController
 				}
 			}
 		}	
-		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, String DebugTitle, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
+		bool GetValueFromQueue(void* Value, QueueHandle_t Queue, String DebugTitle, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored)
+		{
 			bool Result = false;
 			if(NULL != Queue)
 			{
@@ -227,7 +228,8 @@ class QueueController
 			}
 			return Result;
 		}	
-		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, TickType_t TicksToWait, bool DebugMessage){
+		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, TickType_t TicksToWait, bool DebugMessage)
+		{
 			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
@@ -260,7 +262,8 @@ class QueueController
 			ESP_LOGE("CommonUtils", "%s: ERROR! NULL Queue.", DebugTitle.c_str());
 		  }
 		}
-		void MoveDataFromQueueToQueues(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, TickType_t TicksToWait,  bool DebugMessage){
+		void MoveDataFromQueueToQueues(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t* GiveToQueues, size_t GiveToQueueCount, size_t ByteCount, TickType_t TicksToWait,  bool DebugMessage)
+		{
 		  if(NULL != TakeFromQueue)
 		  {
 			size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);

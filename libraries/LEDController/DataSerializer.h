@@ -160,7 +160,7 @@ class DataSerializer: public CommonUtils
 			if(m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
 			{
 				m_FailCountTimer = m_CurrentTime;
-				ESP_LOGE("Serial_Datalink", "Deserialization Failure Percentage: %f", 100.0 * (float)m_FailCount / (float)m_TotalCount);
+				ESP_LOGD("Serial_Datalink", "Deserialization Failure Percentage: %f", 100.0 * (float)m_FailCount / (float)m_TotalCount);
 				m_FailCount = 0;
 				m_TotalCount = 0;
 			}	

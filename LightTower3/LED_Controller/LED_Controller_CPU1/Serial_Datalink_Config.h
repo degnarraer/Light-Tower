@@ -48,18 +48,18 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
     static const size_t m_SPIDatalinkConfigCount = 12;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "R_BANDS",              DataType_Float_t,               32, Transciever_RX,   4   },
-      { "L_BANDS",              DataType_Float_t,               32, Transciever_RX,   4   },
-      { "Processed_Frame",      DataType_ProcessedSoundFrame_t, 1,  Transciever_RX,   4   },
-      { "R_MAXBAND",            DataType_MaxBandSoundData_t,    1,  Transciever_RX,   4   },
-      { "L_MAXBAND",            DataType_MaxBandSoundData_t,    1,  Transciever_RX,   4   },
-      { "R_MAJOR_FREQ",         DataType_Float_t,               1,  Transciever_RX,   4   },
-      { "L_MAJOR_FREQ",         DataType_Float_t,               1,  Transciever_RX,   4   },
-      { "Sound State",          DataType_SoundState_t,          1,  Transciever_TX,   10  },
-      { "Sink Connection Status",       DataType_ConnectionStatus_t,    1,  Transciever_TX,   4   },
-      { "Sink ReConnect",       DataType_bool_t,                1,  Transciever_TXRX, 4   },
-      { "Sink BT Reset",        DataType_bool_t,                1,  Transciever_TXRX, 4   },
-      { "Sink SSID",            DataType_Wifi_Info_t,           1,  Transciever_TXRX, 4   },
+      { "R_BANDS",                DataType_Float_t,               32, Transciever_RX,   4   },
+      { "L_BANDS",                DataType_Float_t,               32, Transciever_RX,   4   },
+      { "Processed_Frame",        DataType_ProcessedSoundFrame_t, 1,  Transciever_RX,   4   },
+      { "R_MAXBAND",              DataType_MaxBandSoundData_t,    1,  Transciever_RX,   4   },
+      { "L_MAXBAND",              DataType_MaxBandSoundData_t,    1,  Transciever_RX,   4   },
+      { "R_MAJOR_FREQ",           DataType_Float_t,               1,  Transciever_RX,   4   },
+      { "L_MAJOR_FREQ",           DataType_Float_t,               1,  Transciever_RX,   4   },
+      { "Sound State",            DataType_SoundState_t,          1,  Transciever_TX,   10  },
+      { "Sink Connection Status", DataType_ConnectionStatus_t,    1,  Transciever_TX,   4   },
+      { "Sink ReConnect",         DataType_bool_t,                1,  Transciever_TXRX, 4   },
+      { "Sink BT Reset",          DataType_bool_t,                1,  Transciever_TXRX, 4   },
+      { "Sink SSID",              DataType_Wifi_Info_t,           1,  Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

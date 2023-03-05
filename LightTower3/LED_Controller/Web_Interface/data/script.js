@@ -53,19 +53,17 @@ sink_BT_Reset_Toggle_Button.addEventListener("click", function()
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
-	console.log(`Sink Bluetooth Reset Toggle switch is now ${sink_BT_Reset_Toggle_Button.checked}`);
 });
-const sink_BT_ReConnect_Toggle_Button = document.getElementById("Sink_BT_ReConnect_Toggle_Button");
-sink_BT_ReConnect_Toggle_Button.addEventListener("click", function()
+const sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById("Sink_BT_Auto_ReConnect_Toggle_Button");
+sink_BT_Auto_ReConnect_Toggle_Button.addEventListener("click", function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
 	Root["WidgetValue"].Id = "Sink_BT_Auto_ReConnect_Toggle_Button";
-	Root["WidgetValue"].Value = String(sink_BT_ReConnect_Toggle_Button.checked);
+	Root["WidgetValue"].Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
-	console.log(`Sink Auto ReConnectToggle switch is now ${sink_BT_ReConnect_Toggle_Button.checked}`);
 });
 const source_BT_Reset_Toggle_Button = document.getElementById("Source_BT_Reset_Toggle_Button");
 source_BT_Reset_Toggle_Button.addEventListener("click", function()
@@ -77,19 +75,17 @@ source_BT_Reset_Toggle_Button.addEventListener("click", function()
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
-	console.log(`Source Bluetooth Reset Toggle switch is now ${source_BT_Reset_Toggle_Button.checked}`);
 });
-const source_BT_ReConnect_Toggle_Button = document.getElementById("Source_BT_ReConnect_Toggle_Button");
-source_BT_ReConnect_Toggle_Button.addEventListener("click", function()
+const source_BT_Auto_ReConnect_Toggle_Button = document.getElementById("Source_BT_Auto_ReConnect_Toggle_Button");
+Source_BT_Auto_ReConnect_Toggle_Button.addEventListener("click", function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root["WidgetValue"].Id = "Source_BT_ReConnect_Toggle_Button";
-	Root["WidgetValue"].Value = String(source_BT_ReConnect_Toggle_Button.checked);
+	Root["WidgetValue"].Id = "Source_BT_Auto_ReConnect_Toggle_Button";
+	Root["WidgetValue"].Value = String(Source_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
-	console.log(`Source Auto ReConnect Toggle switch is now ${source_BT_ReConnect_Toggle_Button.checked}`);
 });
 
 // Menu Functions
@@ -344,13 +340,29 @@ function onMessage(event)
 					break;
 				}
 			}
-			else if(Id == "Source_BT_Reset_Toggle_Button" && null != source_BT_Reset_Toggle_Button)
+			else if(Id == "Source_BT_Reset_Toggle_Button")
 			{
-				source_BT_Reset_Toggle_Button.checked = Value;
+				console.log("Source_BT_Reset_Toggle_Button Pressed Value = " + Value);
+				if(Value == "1")
+				{
+					source_BT_Reset_Toggle_Button.checked = true;
+				}
+				else
+				{
+					source_BT_Reset_Toggle_Button.checked = false;
+				}
 			}
-			else if(Id == "Source_BT_ReConnect_Toggle_Button" && null != source_BT_ReConnect_Toggle_Button)
+			else if(Id == "Source_BT_Auto_ReConnect_Toggle_Button")
 			{
-				source_BT_ReConnect_Toggle_Button.checked = Value;
+				console.log("Source_BT_Auto_ReConnect_Toggle_Button Pressed Value = " + Value);
+				if(Value == "1")
+				{
+					source_BT_Auto_ReConnect_Toggle_Button.checked = true;
+				}
+				else
+				{
+					source_BT_Auto_ReConnect_Toggle_Button.checked = false;
+				}
 			}
 			else if(Id == "Sink_Connection_Status")
 			{
@@ -377,13 +389,29 @@ function onMessage(event)
 					break;
 				}
 			}
-			else if(Id == "Sink_BT_Reset_Toggle_Button" && null != sink_BT_Reset_Toggle_Button)
+			else if(Id == "Sink_BT_Reset_Toggle_Button")
 			{
-				sink_BT_Reset_Toggle_Button.checked = Value;
+				console.log("Sink_BT_Reset_Toggle_Button Pressed Value = " + Value);
+				if(Value == "1")
+				{
+					sink_BT_Reset_Toggle_Button.checked = true;
+				}
+				else
+				{
+					sink_BT_Reset_Toggle_Button.checked = false;
+				}
 			}
-			else if(Id == "Sink_BT_Auto_ReConnect_Toggle_Button" && null != sink_BT_ReConnect_Toggle_Button)
+			else if(Id == "Sink_BT_Auto_ReConnect_Toggle_Button")
 			{
-				sink_BT_ReConnect_Toggle_Button.checked = Value;
+				console.log("Sink_BT_Auto_ReConnect_Toggle_Button Pressed Value = " + Value);
+				if(Value == "1")
+				{
+					sink_BT_Auto_ReConnect_Toggle_Button.checked = true;
+				}
+				else
+				{
+					sink_BT_Auto_ReConnect_Toggle_Button.checked = false;
+				}
 			}
 		}
 	}

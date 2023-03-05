@@ -61,12 +61,14 @@ class WebSocketDataHandler: public QueueController
                         , String *WidgetId
                         , const size_t NumberOfWidgets
                         , bool ReadUntilEmpty
-                        , TickType_t TicksToWait  )
+                        , TickType_t TicksToWait
+                        , bool Debug )
                         : m_DataItem(DataItem) 
                         , m_WidgetId(WidgetId)
                         , m_NumberOfWidgets(NumberOfWidgets)
                         , m_ReadUntilEmpty(ReadUntilEmpty)
                         , m_TicksToWait(TicksToWait)
+                        , m_Debug(Debug)
     {
       mySemaphore = xSemaphoreCreateBinary();
       xSemaphoreGive(mySemaphore);
@@ -98,6 +100,7 @@ class WebSocketDataHandler: public QueueController
     uint8_t m_CoreId;
     bool m_PushError = false;
     bool m_PullError = false;
+    bool m_Debug = false;
     SemaphoreHandle_t mySemaphore;
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
@@ -109,6 +112,7 @@ class WebSocketDataHandler: public QueueController
         {
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
+            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << String(m_Value) << " to Web Socket\n";
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(m_Value).c_str() });
           }
         }
@@ -130,6 +134,7 @@ class WebSocketDataHandler: public QueueController
             if( true == ConvertStringToDataBufferFromDataType(&m_Value, Value, m_DataItem->DataType))
             {
               Found = true;
+              if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << String(m_Value) << " to Datalink\n";
               PushValueToQueue(&m_Value, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
             }
             xSemaphoreGive(mySemaphore);
@@ -150,8 +155,9 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
                               , String *WidgetIds
                               , const size_t NumberOfWidgets
                               , bool ReadUntilEmpty
-                              , TickType_t TicksToWait )
-                              : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait)
+                              , TickType_t TicksToWait
+                              , bool Debug )
+                              : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait, Debug)
     {
     }
     
@@ -171,6 +177,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
           m_Value = String(Buffer);
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
+            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << m_Value << " to Web Socket\n";
             KeyValuePairs.push_back({ m_WidgetId[i].c_str(), m_Value.c_str() });
           }
         }
@@ -194,6 +201,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
           if( m_WidgetId[i].equals(InputId) )
           {
             Found = true;
+            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << m_Value << " to Datalink\n";
             PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
           }
         }

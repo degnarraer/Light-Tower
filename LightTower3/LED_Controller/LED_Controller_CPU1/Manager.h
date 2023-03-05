@@ -60,6 +60,7 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
+    void ProcessEventQueue300000mS();
     void Process_I2S_EventQueue();
     
     void SetInputType(InputType_t Type);
@@ -111,7 +112,7 @@ class Manager: public NamedItem
 
     bool m_SinkReConnect;
     void SinkAutoReConnect_RX();
-    void SinkAutoReConnect_TX();
+    void SinkReConnect_TX();
     
     String m_SinkSSID;
     void SinkSSID_TX();

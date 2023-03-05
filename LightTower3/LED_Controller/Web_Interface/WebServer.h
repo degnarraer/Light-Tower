@@ -46,56 +46,56 @@ class SettingsWebServerManager: public QueueManager
     {
       SetupQueueManager();
       InitWiFiAP();
-      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, true, 0 );
+      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, true, 0, false );
       RegisterAsWebSocketDataSender(&Sound_State_DataHandler);
       
-      Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0 );
+      Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Amplitude_Gain_DataHandler);
       RegisterAsWebSocketDataSender(&Amplitude_Gain_DataHandler);
       
-      FFT_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("FFT Gain"), new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}, 2, true, 0 );
+      FFT_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("FFT Gain"), new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}, 2, true, 0, false );
       RegisterAsWebSocketDataReceiver(&FFT_Gain_DataHandler);
       RegisterAsWebSocketDataSender(&FFT_Gain_DataHandler);
       
-      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0 );
+      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&SinkSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SinkSSID_DataHandler);
     
-      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0 );
+      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&SourceSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SourceSSID_DataHandler);
       
-      Source_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source Connection Status"), new String[1]{"Source_Connection_Status"}, 1, true, 0 );
+      Source_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source Connection Status"), new String[1]{"Source_Connection_Status"}, 1, true, 0, false );
       RegisterAsWebSocketDataSender(&Source_Connection_Status_DataHandler);
       
-      Source_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0 );
+      Source_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0, true );
       RegisterAsWebSocketDataReceiver(&Source_BT_Reset_DataHandler);
       RegisterAsWebSocketDataSender(&Source_BT_Reset_DataHandler);
       
-      Source_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0 );
+      Source_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, true );
       RegisterAsWebSocketDataReceiver(&Source_BT_ReConnect_DataHandler);
       RegisterAsWebSocketDataSender(&Source_BT_ReConnect_DataHandler);
       
-      Sink_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0 );
+      Sink_Connection_Status_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0, false );
       RegisterAsWebSocketDataSender(&Sink_Connection_Status_DataHandler);
       
-      Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0 );
+      Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0, true );
       RegisterAsWebSocketDataReceiver(&Sink_BT_Reset_DataHandler);
       RegisterAsWebSocketDataSender(&Sink_BT_Reset_DataHandler);
       
-      Sink_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0 );
+      Sink_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, true );
       RegisterAsWebSocketDataReceiver(&Sink_BT_ReConnect_DataHandler);
       RegisterAsWebSocketDataSender(&Sink_BT_ReConnect_DataHandler);
 
-      Red_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Red Value"), new String[1]{"Red_Value_Slider"}, 1, true, 0 );
+      Red_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Red Value"), new String[1]{"Red_Value_Slider"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Red_Value_DataHandler);
       RegisterAsWebSocketDataSender(&Red_Value_DataHandler);
 
-      Blue_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Blue Value"), new String[1]{"Blue_Value_Slider"}, 1, true, 0 );
+      Blue_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Blue Value"), new String[1]{"Blue_Value_Slider"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Blue_Value_DataHandler);
       RegisterAsWebSocketDataSender(&Blue_Value_DataHandler);
 
-      Green_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Green Value"), new String[1]{"Green_Value_Slider"}, 1, true, 0 );
+      Green_Value_DataHandler = WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Green Value"), new String[1]{"Green_Value_Slider"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Green_Value_DataHandler);
       RegisterAsWebSocketDataSender(&Green_Value_DataHandler);
     }
@@ -304,7 +304,6 @@ class SettingsWebServerManager: public QueueManager
             {
               if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId.c_str(), Value.c_str()))
               {
-                Serial.println("Widget Id: " + WidgetId + "  Value Received: " + Value);
                 WidgetFound = true;
               }
             }

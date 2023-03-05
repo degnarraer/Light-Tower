@@ -37,7 +37,7 @@ class BluetoothConnectionStatusCaller
 	public:
 		BluetoothConnectionStatusCaller()
 		{
-			xTaskCreate( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 1000,  this,   configMAX_PRIORITIES - 10,  &m_Handle );
+			xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 1000,  this,   configMAX_PRIORITIES - 2,  &m_Handle, 1 );
 		};
 		virtual ~BluetoothConnectionStatusCaller()
 		{
@@ -47,9 +47,7 @@ class BluetoothConnectionStatusCaller
 		{
 			m_ConnectionStatusCallee = Callee;
 		}
-		void SetWaiting(){ m_ConnectionStatus = ConnectionStatus_t::Waiting; };
-		void SetSearching(){ m_ConnectionStatus = ConnectionStatus_t::Searching; };
-		void SetPairing(){ m_ConnectionStatus = ConnectionStatus_t::Pairing; };
+		
 		bool IsConnected()
 		{
 			return (m_ConnectionStatus == ConnectionStatus_t::Paired);
@@ -58,6 +56,9 @@ class BluetoothConnectionStatusCaller
 	protected:
 		virtual bool GetConnectionStatus() = 0;
 		BluetoothConnectionStatusCallee *m_ConnectionStatusCallee = NULL;
+		void SetWaiting(){ m_ConnectionStatus = ConnectionStatus_t::Waiting; };
+		void SetSearching(){ m_ConnectionStatus = ConnectionStatus_t::Searching; };
+		void SetPairing(){ m_ConnectionStatus = ConnectionStatus_t::Pairing; };
 	
 	private:
 		ConnectionStatus_t m_ConnectionStatus = ConnectionStatus_t::Disconnected;
