@@ -118,10 +118,11 @@ class SettingsWebServerManager: public QueueManager
       switch (type) {
         case WS_EVT_CONNECT:
           Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+          client->keepAlivePeriod(1);
           break;
         case WS_EVT_DISCONNECT:
           Serial.printf("WebSocket client #%u disconnected\n", client->id());
-          m_WebSocket.cleanupClients(client->id());
+          m_WebSocket.close(client->id());
           break;
         case WS_EVT_DATA:
           HandleWebSocketMessage(arg, data, len);
@@ -282,8 +283,9 @@ class SettingsWebServerManager: public QueueManager
             true == m_WebSocket.availableForWrite(i) && 
             true == isAsciiString(TextString.c_str()) )
         {
-          Serial << "Notified Client: " << i << "\n";
+          Serial << "Can Notified Client: " << i << "\n";
           m_WebSocket.text(i, TextString);
+          Serial << "Notified Client: " << i << "\n";
         }
       }
     }

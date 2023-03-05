@@ -103,7 +103,7 @@ void InitTasks()
 {
   xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   1 );
   xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    1 );
-  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task, 1 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 2,  &WebServer_Task, 1 );
 }
 
 void InitLocalVariables()
