@@ -46,7 +46,7 @@ class SettingsWebServerManager: public QueueManager
     {
       SetupQueueManager();
       InitWiFiAP();
-      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, false, 0, true );
+      Sound_State_DataHandler = WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, false, 0, false );
       RegisterAsWebSocketDataSender(&Sound_State_DataHandler);
       
       Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0, false );
@@ -57,11 +57,11 @@ class SettingsWebServerManager: public QueueManager
       RegisterAsWebSocketDataReceiver(&FFT_Gain_DataHandler);
       RegisterAsWebSocketDataSender(&FFT_Gain_DataHandler);
       
-      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, true );
+      SinkSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&SinkSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SinkSSID_DataHandler);
     
-      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, true );
+      SourceSSID_DataHandler = WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&SourceSSID_DataHandler);
       RegisterAsWebSocketDataSender(&SourceSSID_DataHandler);
       

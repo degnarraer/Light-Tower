@@ -141,6 +141,7 @@ void ProcessSoundPowerTaskLoop(void * parameter)
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    delay(1); //allow idle task to run for Watchdog
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++ProcessSoundPowerTaskLoopCount;
     m_SoundProcessor.ProcessSoundPower();
@@ -150,11 +151,14 @@ void ProcessSoundPowerTaskLoop(void * parameter)
 void ProcessFFTTaskLoop(void * parameter)
 {
   //20 mS task rate
+  const TickType_t xFrequency = 20; //delay for mS
+  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    delay(1); //allow idle task to run for Watchdog
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
-    vTaskDelay(25 / portTICK_PERIOD_MS);
   }
 }
 

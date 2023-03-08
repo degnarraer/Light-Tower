@@ -1,8 +1,8 @@
-[submodule "libraries/ESPAsyncWebServer"]
-	path = libraries/ESPAsyncWebServer
-	url = https://github.com/me-no-dev/ESPAsyncWebServer.git
-	branch = master
 [submodule "libraries/ESP32-A2DP"]
 	path = libraries/ESP32-A2DP
 	url = https://github.com/degnarraer/ESP32-A2DP.git
 	branch = main
+[submodule "libraries/ESPAsyncWebServer"]
+	path = libraries/ESPAsyncWebServer
+	url = https://github.com/yubox-node-org/ESPAsyncWebServer.git
+	branch = yuboxfixes-0xFEEDC0DE64-cleanup

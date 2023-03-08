@@ -30,7 +30,7 @@ function initWebSocket()
     websocket.onopen = onOpen;
     websocket.onclose = onClose;
     websocket.onmessage = onMessage;
-	websocket.fail = onFail;
+	websocket.error = onError;
 }
 function onOpen(event)
 {
@@ -39,12 +39,12 @@ function onOpen(event)
 function onClose(event)
 {
     console.log('Connection closed');
-    setTimeout(initWebSocket, 100);
+    setTimeout(initWebSocket, 2000);
 }
-function onFail(event)
+function onError(event)
 {
-    console.log('Connection failed');
-    setTimeout(initWebSocket, 100);
+    console.log('Connection Error');
+    setTimeout(initWebSocket, 2000);
 }
 
 
