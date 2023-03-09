@@ -75,13 +75,13 @@ class BluetoothConnectionStatusCaller
 		}
 		void UpdateConnectionStatus()
 		{
+			ConnectionStatus_t StartingStatus = m_ConnectionStatus;
 			switch(m_ConnectionStatus)
 			{
 				case ConnectionStatus_t::Disconnected:
 					if(true == GetConnectionStatus())
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Paired;
-						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
 					}
 					else
 					{
@@ -91,7 +91,6 @@ class BluetoothConnectionStatusCaller
 					if(true == GetConnectionStatus())
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Paired;
-						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
 					}
 					else
 					{
@@ -101,7 +100,6 @@ class BluetoothConnectionStatusCaller
 					if(true == GetConnectionStatus())
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Paired;
-						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
 					}
 					else
 					{
@@ -111,13 +109,25 @@ class BluetoothConnectionStatusCaller
 					if(true == GetConnectionStatus())
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Paired;
-						m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
 					}
 					else
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Pairing;
 					}
+				case ConnectionStatus_t::Paired:
+					if(true == GetConnectionStatus())
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Paired;
+					}
+					else
+					{
+						m_ConnectionStatus = ConnectionStatus_t::Disconnected;
+					}
 				break;
+			}
+			if(StartingStatus != m_ConnectionStatus)
+			{
+				m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
 			}
 		}
 };

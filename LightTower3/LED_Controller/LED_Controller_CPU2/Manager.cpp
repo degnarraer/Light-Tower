@@ -185,7 +185,6 @@ void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStat
 
 void Manager::BluetoothConnectionStatus_TX()
 {
-  Serial << "Bluetooth Connection Status: " << m_BluetoothConnectionStatus << "\n";
   static bool SourceIsConnectedValuePushError = false;
   PushValueToQueue( &m_BluetoothConnectionStatus
                  , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Source Connection Status")
