@@ -73,13 +73,6 @@ void Manager::InitializeNVM(bool Reset)
   }
 }
 
-void Manager::SaveToNVM()
-{
-    m_Preferences.putString("Sink SSID", m_SinkSSID);
-    m_Preferences.putBool("Sink BT Reset", m_SinkReset);
-    m_Preferences.putBool("Sink ReConnect", m_SinkReConnect);
-}
-
 void Manager::LoadFromNVM()
 {
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power");
@@ -112,8 +105,6 @@ void Manager::ProcessEventQueue1000mS()
 
 void Manager::ProcessEventQueue300000mS()
 {
-  ESP_LOGI("Manager", "Saving Settigns to NVM");
-  SaveToNVM();
 }
 
 void Manager::SetInputType(InputType_t Type)
@@ -200,6 +191,34 @@ void Manager::MoveDataToStatisticalEngine()
   }
 }
 
+//BluetoothConnectionStateCallee Callback
+void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
+{
+  if(m_BluetoothConnectionStatus != ConnectionStatus)
+  {
+    m_BluetoothConnectionStatus = ConnectionStatus;
+    switch(m_BluetoothConnectionStatus)
+    {
+      case ConnectionStatus_t::Disconnected:
+        Serial << "Bluetooth Connection Status: Disconnected\n";
+      break;
+      case ConnectionStatus_t::Searching:
+        Serial << "Bluetooth Connection Status: Searching\n";
+      break;
+      case ConnectionStatus_t::Waiting:
+         Serial << "Bluetooth Connection Status: Waiting\n";
+      break;
+      case ConnectionStatus_t::Pairing:
+         Serial << "Bluetooth Connection Status: Pairing\n";
+      break;
+      case ConnectionStatus_t::Paired:
+         Serial << "Bluetooth Connection Status: Paired\n";
+      break;
+    }
+    BluetoothConnectionStatus_TX();
+  }
+}
+
 void Manager::BluetoothConnectionStatus_TX()
 {
   static bool SinkIsConnectedValuePushError = false;
@@ -208,13 +227,6 @@ void Manager::BluetoothConnectionStatus_TX()
                   , "Sink Connection Status"
                   , 0
                   , SinkIsConnectedValuePushError ); 
-}
-
-//BluetoothConnectionStateCallee Callback
-void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
-{
-  m_BluetoothConnectionStatus = ConnectionStatus;
-  BluetoothConnectionStatus_TX();
 }
 
 void Manager::SoundState_RX(SoundState_t SoundState)
@@ -277,6 +289,7 @@ void Manager::SinkBluetoothReset_RX()
     {
       Serial << "Sink Bluetooth Reset Value Changed\n";
       m_SinkReset = DatalinkValue;
+      m_Preferences.putBool("Sink Reset", m_SinkReset);
       SinkBluetoothReset_TX();
     }
   }
@@ -297,6 +310,7 @@ void Manager::SinkAutoReConnect_RX()
     {
       Serial << "Sink ReConnect Value Changed\n";
       m_SinkReConnect = DatalinkValue;
+      m_Preferences.putBool("Sink ReConnect", m_SinkReConnect);
       SinkReConnect_TX();
     }
   }

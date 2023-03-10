@@ -56,9 +56,21 @@ class BluetoothConnectionStatusCaller
 	protected:
 		virtual bool GetConnectionStatus() = 0;
 		BluetoothConnectionStatusCallee *m_ConnectionStatusCallee = NULL;
-		void SetWaiting(){ m_ConnectionStatus = ConnectionStatus_t::Waiting; };
-		void SetSearching(){ m_ConnectionStatus = ConnectionStatus_t::Searching; };
-		void SetPairing(){ m_ConnectionStatus = ConnectionStatus_t::Pairing; };
+		void SetWaiting()
+		{ 
+			m_ConnectionStatus = ConnectionStatus_t::Waiting;
+			m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+		}
+		void SetSearching()
+		{ 
+			m_ConnectionStatus = ConnectionStatus_t::Searching;
+			m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+		}
+		void SetPairing()
+		{
+			m_ConnectionStatus = ConnectionStatus_t::Pairing;
+			m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
+		}
 	
 	private:
 		ConnectionStatus_t m_ConnectionStatus = ConnectionStatus_t::Disconnected;
@@ -87,6 +99,7 @@ class BluetoothConnectionStatusCaller
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Disconnected;
 					}
+				break;
 				case ConnectionStatus_t::Searching:
 					if(true == GetConnectionStatus())
 					{
@@ -96,6 +109,7 @@ class BluetoothConnectionStatusCaller
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Searching;
 					}
+				break;
 				case ConnectionStatus_t::Waiting:
 					if(true == GetConnectionStatus())
 					{
@@ -105,6 +119,7 @@ class BluetoothConnectionStatusCaller
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Waiting;
 					}
+				break;
 				case ConnectionStatus_t::Pairing:
 					if(true == GetConnectionStatus())
 					{
@@ -114,6 +129,7 @@ class BluetoothConnectionStatusCaller
 					{
 						m_ConnectionStatus = ConnectionStatus_t::Pairing;
 					}
+				break;
 				case ConnectionStatus_t::Paired:
 					if(true == GetConnectionStatus())
 					{

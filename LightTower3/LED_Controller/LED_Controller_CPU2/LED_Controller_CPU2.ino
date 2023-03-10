@@ -153,10 +153,9 @@ void ProcessFFTTaskLoop(void * parameter)
 {
   while(true)
   {
-    delay(1); //allow idle task to run for Watchdog
     ++ProcessFFTTaskLoopCount;
     m_SoundProcessor.ProcessFFT();
-    delay(1); //allow idle task to run for Watchdog
+    vTaskDelay(20/portTICK_PERIOD_MS);
   }
 }
 

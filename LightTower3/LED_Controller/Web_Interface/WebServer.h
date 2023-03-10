@@ -120,15 +120,18 @@ class SettingsWebServerManager: public QueueManager
           Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
           client->keepAlivePeriod(1);
           break;
-        case WS_EVT_DISCONNECT:
-          Serial.printf("WebSocket client #%u disconnected\n", client->id());
-          m_WebSocket.close(client->id());
+        case WS_EVT_PONG:
           break;
         case WS_EVT_DATA:
           HandleWebSocketMessage(arg, data, len);
           break;
-        case WS_EVT_PONG:
         case WS_EVT_ERROR:
+          Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
+          m_WebSocket.close(client->id());
+          break;
+        case WS_EVT_DISCONNECT:
+          Serial.printf("WebSocket client #%u disconnected. Closing Connection.\n", client->id());
+          m_WebSocket.close(client->id());
           break;
       }
     }
@@ -276,18 +279,7 @@ class SettingsWebServerManager: public QueueManager
     
     void NotifyClients(String TextString)
     {
-      Serial << "Try Notify Clients\n";
-      for(int i = 0; i < DEFAULT_MAX_WS_CLIENTS; ++i)
-      {
-        if( true == m_WebSocket.hasClient(i) && 
-            true == m_WebSocket.availableForWrite(i) && 
-            true == isAsciiString(TextString.c_str()) )
-        {
-          Serial << "Can Notified Client: " << i << "\n";
-          m_WebSocket.text(i, TextString);
-          Serial << "Notified Client: " << i << "\n";
-        }
-      }
+      m_WebSocket.textAll(TextString.c_str());
     }
     
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
