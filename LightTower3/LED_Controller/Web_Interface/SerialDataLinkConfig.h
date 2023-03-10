@@ -39,7 +39,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
   private:
     
     //QueueManager Interface
-    static const size_t m_SPIDatalinkConfigCount = 13;
+    static const size_t m_SPIDatalinkConfigCount = 14;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
       { "Sound State",              DataType_SoundState_t,        1,    Transciever_RX,   10  },
@@ -47,6 +47,7 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
       { "Source ReConnect",         DataType_bool_t,              1,    Transciever_TXRX, 4   },
       { "Source BT Reset",          DataType_bool_t,              1,    Transciever_TXRX, 4   },
       { "Source SSID",              DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
+      { "Sink Enable",              DataType_bool_t,              1,    Transciever_TXRX, 4   },
       { "Sink Connection Status",   DataType_ConnectionStatus_t,  1,    Transciever_RX,   4   },
       { "Sink ReConnect",           DataType_bool_t,              1,    Transciever_TXRX, 4   },
       { "Sink BT Reset",            DataType_bool_t,              1,    Transciever_TXRX, 4   },

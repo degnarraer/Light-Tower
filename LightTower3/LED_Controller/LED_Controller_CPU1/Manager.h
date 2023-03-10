@@ -105,6 +105,9 @@ class Manager: public NamedItem
     void SoundState_RX(SoundState_t SoundState);
     void SoundState_TX();
 
+    String m_SinkSSID;
+    void SinkSSID_TX();
+    void SinkSSID_RX();
     
     bool m_SinkReset;
     void SinkBluetoothReset_RX();
@@ -114,9 +117,10 @@ class Manager: public NamedItem
     void SinkAutoReConnect_RX();
     void SinkReConnect_TX();
     
-    String m_SinkSSID;
-    void SinkSSID_TX();
-    void SinkSSID_RX();
+    bool m_SinkEnable;
+    void SinkEnable_RX();
+    void SinkEnable_TX();
+    
 };
 
 #endif

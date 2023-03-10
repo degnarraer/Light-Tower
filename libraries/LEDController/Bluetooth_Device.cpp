@@ -178,17 +178,25 @@ void Bluetooth_Sink::InstallDevice()
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 void Bluetooth_Sink::StartDevice(const char *SinkName)
-{
+{	
 	mp_SinkName = (char*)SinkName;
-	if(true == m_Is_Running)
+	if( true == m_Is_Running && false == String(mp_SinkName).equals(String(SinkName)) )
 	{
+		ESP_LOGI("Bluetooth_Device", "ReStarting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
+		m_Is_Running = true;
 		StopDevice();
+		m_BTSink.start(mp_SinkName);
+		SetWaiting();
+		ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
 	}
-	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
-	m_BTSink.start(mp_SinkName);
-	m_Is_Running = true;
-	SetWaiting();
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
+	else if(false == m_Is_Running)
+	{
+		m_Is_Running = true;
+		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
+		m_BTSink.start(mp_SinkName);
+		SetWaiting();
+		ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
+	}
 }
 void Bluetooth_Sink::StopDevice()
 {

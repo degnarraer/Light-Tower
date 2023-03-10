@@ -66,6 +66,7 @@ void Manager::InitializeNVM(bool Reset)
     m_Preferences.putString("Sink SSID", "LED Tower of Power");
     m_Preferences.putBool("Sink BT Reset", true);
     m_Preferences.putBool("Sink ReConnect", true);
+    m_Preferences.putBool("Sink Enable", true);
 
     //Close Initialization
     m_Preferences.putBool("NVM Initialized", true);
@@ -78,6 +79,7 @@ void Manager::LoadFromNVM()
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power");
   m_SinkReset = m_Preferences.getBool("Sink Reset", true);
   m_SinkReConnect = m_Preferences.getBool("Sink ReConnect", true);
+  m_SinkEnable = m_Preferences.getBool("Sink Enable", true);
 }
 
 void Manager::SoundStateChange(SoundState_t SoundState)
@@ -92,6 +94,7 @@ void Manager::ProcessEventQueue20mS()
   SinkSSID_RX();
   SinkBluetoothReset_RX();
   SinkAutoReConnect_RX();
+  SinkEnable_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
@@ -101,6 +104,7 @@ void Manager::ProcessEventQueue1000mS()
   SinkSSID_TX();
   SinkBluetoothReset_TX();
   SinkReConnect_TX();
+  SinkEnable_TX();
 }
 
 void Manager::ProcessEventQueue300000mS()
@@ -287,8 +291,8 @@ void Manager::SinkBluetoothReset_RX()
   {
     if(m_SinkReset != DatalinkValue)
     {
-      Serial << "Sink Bluetooth Reset Value Changed\n";
       m_SinkReset = DatalinkValue;
+      Serial << "Sink Bluetooth Reset Value Changed: " << m_SinkReset << "\n";
       m_Preferences.putBool("Sink Reset", m_SinkReset);
       SinkBluetoothReset_TX();
     }
@@ -308,8 +312,8 @@ void Manager::SinkAutoReConnect_RX()
   {
     if(m_SinkReConnect != DatalinkValue)
     {
-      Serial << "Sink ReConnect Value Changed\n";
       m_SinkReConnect = DatalinkValue;
+      Serial << "Sink ReConnect Value Changed: " << m_SinkReConnect << "\n";
       m_Preferences.putBool("Sink ReConnect", m_SinkReConnect);
       SinkReConnect_TX();
     }
@@ -321,3 +325,35 @@ void Manager::SinkReConnect_TX()
   static bool SinkAutoReConnectPushErrorHasOccured = false;
   m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkReConnect, "Sink ReConnect", 0, SinkAutoReConnectPushErrorHasOccured);
 }
+
+void Manager::SinkEnable_RX()
+{
+  bool DatalinkValue;
+  static bool SinkEnablePullErrorHasOccured = false;
+  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink Enable", false, 0, SinkEnablePullErrorHasOccured))
+  {
+    if(m_SinkEnable != DatalinkValue)
+    {
+      m_SinkEnable = DatalinkValue;
+      Serial << "Sink ReConnect Value Changed: " << m_SinkEnable << "\n";
+      m_Preferences.putBool("Sink Enable", m_SinkEnable);
+      if(true == m_SinkEnable)
+      {
+        m_BT_In.StartDevice(m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str());
+      }
+      else
+      {
+        m_BT_In.StopDevice();
+      }
+      SinkEnable_TX();
+    }
+  }
+}
+
+void Manager::SinkEnable_TX()
+{
+  static bool SinkEnablePushErrorHasOccured = false;
+  m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkEnable, "Sink Enable", 0, SinkEnablePushErrorHasOccured);
+
+}
+    

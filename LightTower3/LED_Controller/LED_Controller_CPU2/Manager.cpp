@@ -128,12 +128,13 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
     bool A_To_B;
     bool B_To_A;
   };
-  const uint8_t count = 5;
-  Signal Signals[count] = { { "Sound State",    true, false }
+  const uint8_t count = 6;
+  Signal Signals[count] = { { "Sound State",            true, false }
+                          , { "Sink Enable",            true, true } 
                           , { "Sink Connection Status", true, false } 
-                          , { "Sink ReConnect", true, true } 
-                          , { "Sink BT Reset",  true, true } 
-                          , { "Sink SSID",      true, true } };
+                          , { "Sink ReConnect",         true, true } 
+                          , { "Sink BT Reset",          true, true } 
+                          , { "Sink SSID",              true, true } };
   for(int i = 0; i < count; ++i)
   {
     if(Signals[i].A_To_B)

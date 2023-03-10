@@ -35,13 +35,14 @@ void Manager::MoveDataBetweenSerialAndWebPage()
     bool A_To_B;
     bool B_To_A;
   };
-  const uint8_t count = 11;
+  const uint8_t count = 12;
   Signal Signals[count] = { { "Sound State",              true, false }
                           , { "Source SSID",              true, true }
                           , { "Source Connection Status", true, false }
                           , { "Source BT Reset",          true, true }
                           , { "Source ReConnect",         true, true }
                           , { "Sink SSID",                true, true }
+                          , { "Sink Enable",              true, true }
                           , { "Sink Connection Status",   true, false }
                           , { "Sink BT Reset",            true, true }
                           , { "Sink ReConnect",           true, true }

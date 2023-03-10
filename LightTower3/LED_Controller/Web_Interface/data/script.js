@@ -49,6 +49,17 @@ function onError(event)
 
 
 // Toggle Switch Handlers
+const sink_BT_Enable_Toggle_Button = document.getElementById("Sink_BT_Enable_Toggle_Button");
+sink_BT_Enable_Toggle_Button.addEventListener("click", function()
+{
+	var Root = {};
+	Root.WidgetValue = {};
+	Root["WidgetValue"].Id = "Sink_BT_Enable_Toggle_Button";
+	Root["WidgetValue"].Value = String(sink_BT_Enable_Toggle_Button.checked);
+	var Message = JSON.stringify(Root);
+	console.log(Message);
+	websocket.send(Message);
+});
 const sink_BT_Reset_Toggle_Button = document.getElementById("Sink_BT_Reset_Toggle_Button");
 sink_BT_Reset_Toggle_Button.addEventListener("click", function()
 {
@@ -88,7 +99,7 @@ Source_BT_Auto_ReConnect_Toggle_Button.addEventListener("click", function()
 	var Root = {};
 	Root.WidgetValue = {};
 	Root["WidgetValue"].Id = "Source_BT_Auto_ReConnect_Toggle_Button";
-	Root["WidgetValue"].Value = String(Source_BT_Auto_ReConnect_Toggle_Button.checked);
+	Root["WidgetValue"].Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
 	websocket.send(Message);
@@ -413,6 +424,17 @@ function onMessage(event)
 				else
 				{
 					sink_BT_Auto_ReConnect_Toggle_Button.checked = false;
+				}
+			}
+			else if(Id == "Sink_Enable_Toggle_Button")
+			{
+				if(Value == "1")
+				{
+					sink_BT_Enable_Toggle_Button.checked = true;
+				}
+				else
+				{
+					sink_BT_Enable_Toggle_Button.checked = false;
 				}
 			}
 		}
