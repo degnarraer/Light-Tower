@@ -18,3 +18,7 @@
 	path = libraries/CircularBuffer
 	url = https://github.com/rlogiacco/CircularBuffer.git
 	branch = master
+[submodule "libraries/ESP32_I2C_Slave"]
+	path = libraries/ESP32_I2C_Slave
+	url = https://github.com/degnarraer/ESP32_I2C_Slave.git
+	branch = master
