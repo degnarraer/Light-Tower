@@ -2,23 +2,23 @@
 	path = libraries/ESP32-A2DP
 	url = https://github.com/degnarraer/ESP32-A2DP.git
 	branch = main
-[submodule "libraries/ESPAsyncWebServer"]
-	path = libraries/ESPAsyncWebServer
-	url = https://github.com/esphome/ESPAsyncWebServer.git
-	branch = master
-[submodule "libraries/AsyncTCP"]
-	path = libraries/AsyncTCP
-	url = https://github.com/me-no-dev/AsyncTCP.git
-	branch = master
-[submodule "libraries/circle_buf"]
-	path = libraries/circle_buf
-	url = https://github.com/bolderflight/circle_buf.git
-	branch = main
-[submodule "libraries/CircularBuffer"]
-	path = libraries/CircularBuffer
-	url = https://github.com/rlogiacco/CircularBuffer.git
-	branch = master
 [submodule "libraries/ESP32_I2C_Slave"]
 	path = libraries/ESP32_I2C_Slave
 	url = https://github.com/degnarraer/ESP32_I2C_Slave.git
 	branch = master
+[submodule "libraries/AsyncTCP"]
+	path = libraries/AsyncTCP
+	url = https://github.com/degnarraer/AsyncTCP.git
+	branch = master
+[submodule "libraries/CircularBuffer"]
+	path = libraries/CircularBuffer
+	url = https://github.com/degnarraer/CircularBuffer.git
+	branch = master
+[submodule "ESPAsyncWebServer"]
+	path = ESPAsyncWebServer
+	url = https://github.com/degnarraer/ESPAsyncWebServer.git
+	branch = master
+[submodule "libraries/circle_buf"]
+	path = libraries/circle_buf
+	url = https://github.com/degnarraer/circle_buf.git
+	branch = main
