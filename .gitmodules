@@ -10,3 +10,7 @@
 	path = libraries/AsyncTCP
 	url = https://github.com/me-no-dev/AsyncTCP.git
 	branch = master
+[submodule "libraries/circle_buf"]
+	path = libraries/circle_buf
+	url = https://github.com/bolderflight/circle_buf.git
+	branch = main
