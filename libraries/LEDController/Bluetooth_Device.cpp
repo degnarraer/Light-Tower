@@ -127,7 +127,6 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 void Bluetooth_Sink::Setup()
 {
 	ESP_LOGI("Bluetooth_Device", "%s: Setup", GetTitle().c_str());
-	InstallDevice();
 }
 void Bluetooth_Sink::ResgisterForRxCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
 
@@ -192,6 +191,7 @@ void Bluetooth_Sink::StartDevice(const char *SinkName)
 	else if(false == m_Is_Running)
 	{
 		m_Is_Running = true;
+		InstallDevice();
 		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
 		m_BTSink.start(mp_SinkName);
 		SetWaiting();
@@ -203,7 +203,7 @@ void Bluetooth_Sink::StopDevice()
 	if(true == m_Is_Running)
 	{
 		ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth");
-		m_BTSink.end();
+		m_BTSink.end(true);
 		m_Is_Running = false;
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
 	}

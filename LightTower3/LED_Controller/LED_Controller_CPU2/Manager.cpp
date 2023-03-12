@@ -49,7 +49,7 @@ void Manager::Setup()
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
                       , m_Preferences.getBool("Source BT Reset", true)
-                      , m_Preferences.getBool("Source ReConnect", true)
+                      , m_Preferences.getBool("Src ReConnect", true)
                       , m_Preferences.getBool("SSP Enabled", false) );
   LoadFromNVM();
 }
@@ -63,21 +63,11 @@ void Manager::InitializeNVM(bool Reset)
     m_Preferences.putFloat("Amplitude Gain", 1.0);
     m_Preferences.putFloat("FFT Gain", 1.0);
     m_Preferences.putBool("Source BT Reset", true);
-    m_Preferences.putBool("Source ReConnect", true);
+    m_Preferences.putBool("Src ReConnect", true);
     m_Preferences.putBool("SSP Enabled", false);
     m_Preferences.putBool("NVM Initialized", true);
     m_Preferences.putBool("NVM Reset", false);
   }
-}
-
-void Manager::SaveToNVM()
-{
-  m_Preferences.putString("Source SSID", m_SourceSSID);
-  m_Preferences.putFloat("Amplitude Gain", m_AmplitudeGain);
-  m_Preferences.putFloat("FFT Gain", m_FFTGain);
-  m_Preferences.putBool("Source BT Reset", m_SourceBTReset);
-  m_Preferences.putBool("Source ReConnect", m_SourceBTReConnect);
-  m_Preferences.putBool("SSP Enabled", false);
 }
 
 void Manager::LoadFromNVM()
@@ -87,7 +77,7 @@ void Manager::LoadFromNVM()
   m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
   m_FFTGain = m_Preferences.getFloat("FFT Gain", 1.0);
   m_SourceBTReset = m_Preferences.getBool("Source BT Reset", true);
-  m_SourceBTReConnect = m_Preferences.getBool("Source ReConnect", true);
+  m_SourceBTReConnect = m_Preferences.getBool("Src ReConnect", true);
 
   //Reload NVM Values
   m_SoundProcessor.SetGain(m_AmplitudeGain);
@@ -116,8 +106,6 @@ void Manager::ProcessEventQueue1000mS()
 
 void Manager::ProcessEventQueue300000mS()
 {
-  ESP_LOGI("Manager", "Saving Settigns to NVM");
-  SaveToNVM();
 }
 
 void Manager::MoveDataBetweenCPU1AndCPU3()
@@ -250,6 +238,7 @@ void Manager::SourceBluetoothReset_RX()
     {
       Serial << "Source BT Reset Value Changed\n";
       m_SourceBTReset = DatalinkValue;
+      m_Preferences.putBool("Source BT Reset", m_SourceBTReset);
       SourceBluetoothReset_TX();
     }
   }
@@ -271,6 +260,7 @@ void Manager::SourceAutoReConnect_RX()
     {
       Serial << "Source ReConnect Value Changed\n";
       m_SourceBTReConnect = DatalinkValue;
+      m_Preferences.putBool("Src ReConnect", m_SourceBTReConnect);
       SourceAutoReConnect_TX();
     }
   }
@@ -300,7 +290,7 @@ void Manager::SourceSSID_RX()
       m_Preferences.putString("Source SSID", m_SourceSSID);
       m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
                           , m_Preferences.getBool("Source BT Reset", false)
-                          , m_Preferences.getBool("Source ReConnect", false)
+                          , m_Preferences.getBool("Src ReConnect", false)
                           , m_Preferences.getBool("SSP Enabled", false) );
       SourceSSID_TX();
     }

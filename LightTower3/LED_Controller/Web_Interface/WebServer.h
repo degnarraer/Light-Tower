@@ -113,7 +113,7 @@ class SettingsWebServerManager: public QueueManager
       }
       if(KeyValuePairs.size() > 0)
       {
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs).c_str());
       }
     }
     
@@ -264,7 +264,7 @@ class SettingsWebServerManager: public QueueManager
             JSONVar SettingValues;
             SettingValues["Id"] = KeyValuePairs[i].Key.c_str();
             SettingValues["Value"] = KeyValuePairs[i].Value.c_str();
-            JSONVars["DataValue" + String(i)] = SettingValues;
+            JSONVars["WidgetValue" + String(i)] = SettingValues;
           }
       }
       String Result = JSON.stringify(JSONVars);
@@ -285,7 +285,10 @@ class SettingsWebServerManager: public QueueManager
     
     void NotifyClients(String TextString)
     {
-      m_WebSocket.textAll(TextString.c_str());
+      if(0 < TextString.length())
+      {
+        m_WebSocket.textAll(TextString.c_str());
+      }
     }
     
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)

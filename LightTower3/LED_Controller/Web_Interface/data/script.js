@@ -300,6 +300,7 @@ function setSpeakerImage(value)
 
 function onMessage(event)
 {
+	console.log(event.data);
 	var myObj = JSON.parse(event.data);
 	var keys = Object.keys(myObj);
 	for (var i = 0; i < keys.length; ++i)

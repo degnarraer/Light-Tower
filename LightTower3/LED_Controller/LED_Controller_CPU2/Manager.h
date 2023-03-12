@@ -47,7 +47,6 @@ class Manager: public NamedItem
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
     void ProcessEventQueue300000mS();
-    void SaveToNVM();
     void LoadFromNVM();
 
     //Bluetooth Set Data Callback
