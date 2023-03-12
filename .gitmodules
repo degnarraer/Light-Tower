@@ -14,3 +14,7 @@
 	path = libraries/circle_buf
 	url = https://github.com/bolderflight/circle_buf.git
 	branch = main
+[submodule "libraries/CircularBuffer"]
+	path = libraries/CircularBuffer
+	url = https://github.com/rlogiacco/CircularBuffer.git
+	branch = master
