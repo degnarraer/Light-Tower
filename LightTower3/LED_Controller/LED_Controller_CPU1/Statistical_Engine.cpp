@@ -15,10 +15,20 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
- 
-#include <arm_common_tables.h>
 #include <Arduino.h>
 #include "Statistical_Engine.h"
+
+
+#define FFT_BIN(num, fs, size)                                                 \
+  (num *                                                                       \
+   ((float)fs / (float)size)) ///< return the center frequency of FFT bin 'num'
+                              ///< based on the sample rate and FFT stize
+#define FFT_INDEX(freq, fs, size)                                              \
+  ((int)((float)freq /                                                         \
+         ((float)fs /                                                          \
+          (float)size))) ///< return the bin index where the specified frequency
+                         ///< 'freq' can be found based on the passed sample
+                         ///< rate and FFT size
 
 
 void StatisticalEngine::Setup()
