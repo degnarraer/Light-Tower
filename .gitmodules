@@ -26,3 +26,15 @@
 	path = libraries/ESPAsyncWebServer
 	url = https://github.com/degnarraer/ESPAsyncWebServer.git
 	branch = master
+[submodule "libraries/LinkedList"]
+	path = libraries/LinkedList
+	url = https://github.com/ivanseidel/LinkedList.git
+	branch = master
+[submodule "libraries/Streaming"]
+	path = libraries/Streaming
+	url = https://github.com/janelia-arduino/Streaming
+	branch = master
+[submodule "libraries/WiFi"]
+	path = libraries/WiFi
+	url = https://github.com/arduino-libraries/WiFi.git
+	branch = master
