@@ -22,10 +22,6 @@
 	path = libraries/ESP32-A2DP
 	url = https://github.com/degnarraer/ESP32-A2DP.git
 	branch = main
-[submodule "libraries/ESPAsyncWebServer"]
-	path = libraries/ESPAsyncWebServer
-	url = https://github.com/degnarraer/ESPAsyncWebServer.git
-	branch = master
 [submodule "libraries/WiFi"]
 	path = libraries/WiFi
 	url = https://github.com/degnarraer/WiFi.git
@@ -37,4 +33,8 @@
 [submodule "libraries/Streaming"]
 	path = libraries/Streaming
 	url = https://github.com/degnarraer/Streaming.git
+	branch = master
+[submodule "libraries/ESPAsyncWebServer"]
+	path = libraries/ESPAsyncWebServer
+	url = https://github.com/me-no-dev/ESPAsyncWebServer.git
 	branch = master

@@ -28,46 +28,28 @@ void Manager::ProcessEventQueue()
 }
 
 void Manager::MoveDataBetweenSerialAndWebPage()
-{
-  struct Signal
+{                                      
+  for(int i = 0; i < m_SignalCount; ++i)
   {
-    String Name;
-    bool A_To_B;
-    bool B_To_A;
-  };
-  const uint8_t count = 12;
-  Signal Signals[count] = { { "Sound State",              true, false }
-                          , { "Source SSID",              true, true }
-                          , { "Source Connection Status", true, false }
-                          , { "Source BT Reset",          true, true }
-                          , { "Source ReConnect",         true, true }
-                          , { "Sink SSID",                true, true }
-                          , { "Sink Enable",              true, true }
-                          , { "Sink Connection Status",   true, false }
-                          , { "Sink BT Reset",            true, true }
-                          , { "Sink ReConnect",           true, true }
-                          , { "Amplitude Gain",           true, true }
-                          , { "FFT Gain",                 true, true } };
-                                      
-  for(int i = 0; i < count; ++i)
-  {
-    if(Signals[i].A_To_B)
+    if(m_Signals[i].A_To_B)
     {
-      MoveDataFromQueueToQueue( "Manager: Move Data from Datalink to Web Page: " + Signals[i].Name
-                              , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
-                              , m_SettingsWebServerManager.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+      String Message = "Manager: Move Data from Web Page to Datalink: " + m_Signals[i].Name;
+      MoveDataFromQueueToQueue( Message.c_str()
+                              , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(m_Signals[i].Name.c_str())
+                              , m_SettingsWebServerManager.GetQueueHandleTXForDataItem(m_Signals[i].Name.c_str())
+                              , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(m_Signals[i].Name.c_str())
                               , 0
-                              , false );
+                              , true );
     }
-    if(Signals[i].B_To_A)
+    if(m_Signals[i].B_To_A)
     {
-      MoveDataFromQueueToQueue( "Manager: Move Data from Web Page to Datalink: " + Signals[i].Name
-                              , m_SettingsWebServerManager.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
-                              , m_SettingsWebServerManager.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+      String Message = "Manager: Move Data from Web Page to Datalink: " + m_Signals[i].Name;
+      MoveDataFromQueueToQueue( Message.c_str()
+                              , m_SettingsWebServerManager.GetQueueHandleRXForDataItem(m_Signals[i].Name.c_str())
+                              , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem(m_Signals[i].Name.c_str())
+                              , m_SettingsWebServerManager.GetTotalByteCountForDataItem(m_Signals[i].Name.c_str())
                               , 0
-                              , false );
+                              , true );
     }
   }
 }

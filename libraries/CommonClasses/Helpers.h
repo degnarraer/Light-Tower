@@ -304,7 +304,7 @@ class QueueController
 		  }
 		  else
 		  {
-			ESP_LOGE("CommonUtils", "ERROR! %s: NULL Queue.", DebugTitle);
+			ESP_LOGE("CommonUtils", "ERROR! %s: NULL Queue.", DebugTitle.c_str());
 		  }
 		}
 };
@@ -408,11 +408,11 @@ class QueueManager: public CommonUtils
 						return m_DataItem[i].TotalByteCount;
 					}
 				}
-				ESP_LOGE("CommonUtils", "ERROR! %s: Data Item Not Found.", Name);
+				ESP_LOGE("CommonUtils", "ERROR! %s: Data Item Not Found.", Name.c_str());
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name);
+				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
 			}
 			return NULL;
 		}
@@ -643,7 +643,7 @@ class QueueManager: public CommonUtils
 			m_MemoryAllocated = false;
 		}		
 		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage){
-			ESP_LOGV("Helpers", "Creating %i Queue(s), Named: %s of size: %i for a total of %i", QueueCount, Name, ByteCount, ByteCount*QueueCount);
+			ESP_LOGV("Helpers", "Creating %i Queue(s), Named: %s of size: %i for a total of %i", QueueCount, Name.c_str(), ByteCount, ByteCount*QueueCount);
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL)
 			{

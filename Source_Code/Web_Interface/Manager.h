@@ -44,10 +44,30 @@ class Manager: public NamedItem
     void Setup();
     void ProcessEventQueue();
     void MoveDataBetweenSerialAndWebPage();
+    struct Signal
+    {
+      String Name;
+      bool A_To_B;
+      bool B_To_A;
+    };
 
   private:
     SPIDataLinkSlave &m_SPIDataLinkSlave;
     SettingsWebServerManager &m_SettingsWebServerManager;
+    
+    static const uint8_t m_SignalCount = 12;
+    Signal m_Signals[m_SignalCount] = { { "Sound State",              true, false }
+                                      , { "Source SSID",              true, true }
+                                      , { "Source Connection Status", true, false }
+                                      , { "Source BT Reset",          true, true }
+                                      , { "Source ReConnect",         true, true }
+                                      , { "Sink SSID",                true, true }
+                                      , { "Sink Enable",              true, true }
+                                      , { "Sink Connection Status",   true, false }
+                                      , { "Sink BT Reset",            true, true }
+                                      , { "Sink ReConnect",           true, true }
+                                      , { "Amplitude Gain",           true, true }
+                                      , { "FFT Gain",                 true, true } };
 };
 
 #endif
