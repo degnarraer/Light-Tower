@@ -19,7 +19,7 @@
 #include "SerialDataLinkConfig.h"
 #include "Tunes.h"
 #include "Manager.h"
-#include "WebServer.h"
+#include "SettingsWebServer.h"
 #include "SPIFFS.h"
 
 TaskHandle_t SPI_RX_Task;

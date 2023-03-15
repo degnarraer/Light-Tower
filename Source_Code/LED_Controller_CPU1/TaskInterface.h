@@ -20,6 +20,7 @@
 #define TaskInterface_H
 
 #include <Arduino.h>
+#include <vector>
 #include "Streaming.h"
 #include "Tunes.h"
 

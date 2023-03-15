@@ -15,13 +15,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef WEBSERVER_H
-#define WEBSERVER_H
+#ifndef SETTINGS_WEB_SERVER_H
+#define SETTINGS_WEB_SERVER_H
 
-#include "ESPAsyncWebServer.h"
 #include "WebSocketDataHandler.h"
-#include <Arduino_JSON.h>
-
 
 class SettingsWebServerManager: public QueueManager
 {  

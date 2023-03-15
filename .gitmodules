@@ -32,5 +32,5 @@
 	branch = master
 [submodule "libraries/ESPAsyncWebServer"]
 	path = libraries/ESPAsyncWebServer
-	url = https://github.com/me-no-dev/ESPAsyncWebServer.git
+	url = https://github.com/degnarraer/ESPAsyncWebServer.git
 	branch = master
