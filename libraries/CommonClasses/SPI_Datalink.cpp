@@ -211,9 +211,8 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 	{
 		uint32_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 		String ResultString = String((char*)(spi_rx_buf[CurrentIndex]));
-		if(0 < m_SPI_Slave.size())
+		if(true == m_SPI_Slave.pop())
 		{
-			m_SPI_Slave.pop();
 			++m_DeQueued_Transactions;
 			if(ResultString.length() > 0)
 			{

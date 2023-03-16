@@ -30,3 +30,7 @@
 	path = libraries/Streaming
 	url = https://github.com/degnarraer/Streaming.git
 	branch = master
+[submodule "libraries/ESP32DMASPI"]
+	path = libraries/ESP32DMASPI
+	url = https://github.com/degnarraer/ESP32DMASPI.git
+	branch = master
