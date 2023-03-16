@@ -18,6 +18,10 @@
 	path = libraries/CircularBuffer
 	url = https://github.com/degnarraer/CircularBuffer.git
 	branch = master
+[submodule "libraries/LinkedList"]
+	path = libraries/LinkedList
+	url = https://github.com/degnarraer/LinkedList.git
+	branch = master
 [submodule "libraries/circle_buf"]
 	path = libraries/circle_buf
 	url = https://github.com/degnarraer/circle_buf.git
