@@ -100,7 +100,7 @@ void SPI_Datalink_Master::ProcessEventQueue()
 								if(true == m_SPI_Master.queue(spi_tx_buf[CurrentIndex], spi_rx_buf[CurrentIndex], SPI_MAX_DATA_BYTES))
 								{
 									++m_Queued_Transactions;
-									delay(1); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
+									delay(2); // NEED THIS FOR SOME REASON ELSE DATA GETS CORRUPTED
 									xQueueReceive(m_DataItems[j].QueueHandle_TX, DataBuffer, 0);
 								}
 							}
@@ -211,15 +211,18 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 	{
 		uint32_t CurrentIndex = m_DeQueued_Transactions % N_SLAVE_QUEUES;
 		String ResultString = String((char*)(spi_rx_buf[CurrentIndex]));
-		m_SPI_Slave.pop();
-		++m_DeQueued_Transactions;
-		if(ResultString.length() > 0)
+		if(0 < m_SPI_Slave.size())
 		{
-			if(true == m_SpewRXToConsole)
+			m_SPI_Slave.pop();
+			++m_DeQueued_Transactions;
+			if(ResultString.length() > 0)
 			{
-				ESP_LOGE("SPI_Datalink", "RX: %s", ResultString.c_str());
+				if(true == m_SpewRXToConsole)
+				{
+					ESP_LOGE("SPI_Datalink", "RX: %s", ResultString.c_str());
+				}
+				DeSerializeJsonToMatchingDataItem(ResultString.c_str(), m_SpewRXToConsole); 
 			}
-			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), m_SpewRXToConsole); 
 		}
 	}
 }
