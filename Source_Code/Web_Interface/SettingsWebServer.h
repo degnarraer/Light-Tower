@@ -19,6 +19,8 @@
 #define SETTINGS_WEB_SERVER_H
 
 #include "WebSocketDataHandler.h"
+#include "AsyncTCP.h"
+#include "ESPAsyncWebServer.h"
 
 class SettingsWebServerManager: public QueueManager
 {  

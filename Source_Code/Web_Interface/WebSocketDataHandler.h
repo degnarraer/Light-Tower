@@ -19,14 +19,11 @@
 #define WEB_SOCKET_DATA_HANDLER_H
 
 #include "Arduino.h"
-#include "HTTP_Method.h"
-#include "AsyncTCP.h"
-#include "ESPAsyncWebServer.h"
 #include <freertos/portmacro.h>
 #include <Streaming.h>
 #include <Helpers.h>
 #include <DataTypes.h>
-#include <Arduino_JSON.h> 
+#include <Arduino_JSON.h>
 
 class SettingsWebServerManager;
 

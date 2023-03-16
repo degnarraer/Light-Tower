@@ -22,6 +22,7 @@
 #include <DataTypes.h>
 #include <Helpers.h>
 #include "SerialDatalinkConfig.h"
+#include "SettingsWebServer.h"
 
 
 class Manager: public NamedItem
