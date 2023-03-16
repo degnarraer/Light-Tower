@@ -41,7 +41,7 @@
 
 //App Debugging
 #define STARTUP_DEBUG false
-#define TASK_STACK_SIZE_DEBUG false
+#define TASK_STACK_SIZE_DEBUG true
 #define TASK_LOOP_COUNT_DEBUG false
 #define HEAP_SIZE_DEBUG false
 

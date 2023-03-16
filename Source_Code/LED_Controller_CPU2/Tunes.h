@@ -32,7 +32,7 @@
 #define AUDIO_BUFFER_SIZE               2048
 
 
-#define TASK_STACK_SIZE_DEBUG           false
+#define TASK_STACK_SIZE_DEBUG           true
 #define TASK_LOOP_COUNT_DEBUG           false
 
 #endif TUNES_H

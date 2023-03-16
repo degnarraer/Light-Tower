@@ -269,7 +269,7 @@ size_t SPI_Datalink_Slave::GetNextTXStringFromDataItems(uint8_t *TXBuffer, size_
 					byte Buffer[GetSizeOfDataType(m_DataItems[m_CurrentDataItemToTX].DataType) * m_DataItems[m_CurrentDataItemToTX].Count];
 					if ( xQueueReceive(m_DataItems[m_CurrentDataItemToTX].QueueHandle_TX, Buffer, 0) == pdTRUE )
 					{
-						ResultingSize = EncodeDataToBuffer(m_DataItems[m_CurrentDataItemToTX].Name, m_DataItems[m_CurrentDataItemToTX].DataType, Buffer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
+						ResultingSize = EncodeDataToBuffer(m_DataItems[m_CurrentDataItemToTX].Name.c_str(), m_DataItems[m_CurrentDataItemToTX].DataType, Buffer, m_DataItems[m_CurrentDataItemToTX].Count, (char*)TXBuffer, BytesToSend);
 						break;
 					}
 					else

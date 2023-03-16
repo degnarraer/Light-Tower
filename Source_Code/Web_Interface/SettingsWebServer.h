@@ -264,7 +264,7 @@ class SettingsWebServerManager: public QueueManager
           }
       }
       String Result = JSON.stringify(JSONVars);
-      return Result;
+      return Result.c_str();
     }
     
     bool isAsciiString(const char* str)

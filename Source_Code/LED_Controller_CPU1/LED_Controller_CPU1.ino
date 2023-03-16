@@ -25,7 +25,7 @@
 
 unsigned long LoopCountTimer = 0;
 TaskHandle_t Manager_20mS_Task;
-uint32_t Manager_10mS_TaskLoopCount = 0;
+uint32_t Manager_20mS_TaskLoopCount = 0;
 
 TaskHandle_t Manager_1000mS_Task;
 uint32_t Manager_1000mS_TaskLoopCount = 0;
@@ -45,7 +45,7 @@ uint32_t SPI_TaskLoopCount = 0;
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_10mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
+  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
   xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   0 );
   xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_300000mS_Task, 0 );
   xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",               5000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              0 );
@@ -69,8 +69,7 @@ void loop()
 
 void VisualizationTaskLoop(void * parameter)
 {
-  //20 mS task rate
-  const TickType_t xFrequency = 10;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -82,8 +81,7 @@ void VisualizationTaskLoop(void * parameter)
 
 void SPI_TaskLoop(void * parameter)
 {
-  //20 mS task rate
-  const TickType_t xFrequency = 10;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -95,7 +93,6 @@ void SPI_TaskLoop(void * parameter)
 
 void TaskMonitorTaskLoop(void * parameter)
 {
-  //5000 mS task rate
   const TickType_t xFrequency = 5000;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
@@ -107,12 +104,12 @@ void TaskMonitorTaskLoop(void * parameter)
     if(true == TASK_LOOP_COUNT_DEBUG)
     {
       unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
-      ESP_LOGE("LED_Controller1", "Manager_10mS_TaskLoopCount: %f", (float)Manager_10mS_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "Manager_20mS_TaskLoopCount: %f", (float)Manager_20mS_TaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "Manager_1000mS_TaskLoopCount: %f", (float)Manager_1000mS_TaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "VisualizationTaskLoopCount: %f", (float)VisualizationTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "TaskMonitorTaskLoopCount: %f", (float)TaskMonitorTaskLoopCount/(float)DeltaTimeSeconds);
       ESP_LOGE("LED_Controller1", "SPI_TaskLoopCount: %f", (float)SPI_TaskLoopCount/(float)DeltaTimeSeconds);
-      Manager_10mS_TaskLoopCount = 0;
+      Manager_20mS_TaskLoopCount = 0;
       VisualizationTaskLoopCount = 0;
       TaskMonitorTaskLoopCount = 0;
       SPI_TaskLoopCount = 0;
@@ -121,6 +118,7 @@ void TaskMonitorTaskLoop(void * parameter)
     size_t StackSizeThreshold = 100;
     if( uxTaskGetStackHighWaterMark(Manager_20mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_20mS_Task: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(Manager_1000mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_1000mS_Task: Stack Size Low");
+    if( uxTaskGetStackHighWaterMark(Manager_300000mS_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! Manager_300000mS_Task: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! VisualizationTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! TaskMonitorTask: Stack Size Low");
     if( uxTaskGetStackHighWaterMark(VisualizationTask) < StackSizeThreshold )ESP_LOGW("LED_Controller1", "WARNING! SPI_Task: Stack Size Low");
@@ -130,6 +128,7 @@ void TaskMonitorTaskLoop(void * parameter)
       ESP_LOGE("LED_Controller1", "TaskMonitorTask Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitorTask));
       ESP_LOGE("LED_Controller1", "Manager_20mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_20mS_Task));
       ESP_LOGE("LED_Controller1", "Manager_1000mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_1000mS_Task));
+      ESP_LOGE("LED_Controller1", "Manager_300000mS_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_300000mS_Task));
       ESP_LOGE("LED_Controller1", "SPI_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_Task));
       ESP_LOGE("LED_Controller1", "VisualizationTask Free Heap: %i", uxTaskGetStackHighWaterMark(VisualizationTask));
     }
@@ -137,14 +136,14 @@ void TaskMonitorTaskLoop(void * parameter)
   }
 }
 
-void Manager_10mS_TaskLoop(void * parameter)
+void Manager_20mS_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 10;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    ++Manager_10mS_TaskLoopCount;
+    ++Manager_20mS_TaskLoopCount;
     m_Manager.ProcessEventQueue20mS();
   }
 }
@@ -163,7 +162,6 @@ void Manager_1000mS_TaskLoop(void * parameter)
 
 void Manager_300000mS_TaskLoop(void * parameter)
 {
-  //5 Minute task rate
   const TickType_t xFrequency = 300000;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
