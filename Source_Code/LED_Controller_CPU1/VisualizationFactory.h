@@ -83,8 +83,8 @@ class SolidColorTower: public Visualization
     void RunVisualization() {}
   private:
     MaximumBandModel m_MaximumBandPowerModel = MaximumBandModel("Maximum Band Model 0", 1, m_StatisticalEngineModelInterface);
-    ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 100, 10);
-    ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Red, MergeType_Layer);
+    ColorFadingModel m_ColorFadingModel0 = ColorFadingModel("ColorFadingModel", 100, 100);
+    ColorSpriteView m_ColorView0 = ColorSpriteView("ColorView", 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, CRGB::Black, MergeType_Layer);
 };
 
 //********* Vertical Bass Sprite Tower *********

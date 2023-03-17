@@ -109,7 +109,7 @@ class SettingsWebServerManager: public QueueManager
       }
       if(KeyValuePairs.size() > 0)
       {
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs).c_str());
+        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
       }
     }
     
@@ -258,13 +258,13 @@ class SettingsWebServerManager: public QueueManager
           if( true == isAsciiString(KeyValuePairs[i].Key.c_str()) && true == isAsciiString(KeyValuePairs[i].Value.c_str()) )
           {
             JSONVar SettingValues;
-            SettingValues["Id"] = KeyValuePairs[i].Key.c_str();
-            SettingValues["Value"] = KeyValuePairs[i].Value.c_str();
+            SettingValues["Id"] = KeyValuePairs[i].Key;
+            SettingValues["Value"] = KeyValuePairs[i].Value;
             JSONVars["WidgetValue" + String(i)] = SettingValues;
           }
       }
       String Result = JSON.stringify(JSONVars);
-      return Result.c_str();
+      return Result;
     }
     
     bool isAsciiString(const char* str)
@@ -283,7 +283,7 @@ class SettingsWebServerManager: public QueueManager
     {
       if(0 < TextString.length())
       {
-        m_WebSocket.textAll(TextString.c_str());
+        m_WebSocket.textAll(TextString);
       }
     }
     
@@ -312,7 +312,7 @@ class SettingsWebServerManager: public QueueManager
             
             for(int i = 0; i < m_MyReceivers.size(); ++i)
             {
-              if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId.c_str(), Value.c_str()))
+              if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
               {
                 WidgetFound = true;
               }

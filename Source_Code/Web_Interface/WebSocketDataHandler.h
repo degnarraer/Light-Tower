@@ -109,7 +109,7 @@ class WebSocketDataHandler: public QueueController
       if(NULL != m_DataItem && NULL != m_WidgetId)
       {
         xSemaphoreTake(mySemaphore, portMAX_DELAY);
-        bool ValueReceived = GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError);
+        bool ValueReceived = GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name, m_ReadUntilEmpty, m_TicksToWait, m_PullError);
         T ValueCopy = m_Value;
         xSemaphoreGive(mySemaphore);
         
@@ -117,8 +117,8 @@ class WebSocketDataHandler: public QueueController
         {
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
-            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << String(ValueCopy).c_str() << " to Web Socket\n";
-            KeyValuePairs.push_back({ m_WidgetId[i].c_str(), String(ValueCopy).c_str() });
+            if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << String(ValueCopy) << " to Web Socket\n";
+            KeyValuePairs.push_back({ m_WidgetId[i], String(ValueCopy) });
           }
         }
       }
@@ -142,8 +142,8 @@ class WebSocketDataHandler: public QueueController
             if( m_WidgetId[i].equals(InputId) )
             {
                 Found = true;
-                if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << String(ValueCopy).c_str() << " to Datalink\n";
-                PushValueToQueue(&ValueCopy, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
+                if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << String(ValueCopy) << " to Datalink\n";
+                PushValueToQueue(&ValueCopy, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
             }
           }
         }
@@ -177,7 +177,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
       char Buffer[m_DataItem->TotalByteCount];
       if(NULL != m_DataItem && NULL != m_WidgetId)
       {
-        if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name.c_str(), m_ReadUntilEmpty, m_TicksToWait, m_PullError))
+        if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name, m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
           xSemaphoreTake(mySemaphore, portMAX_DELAY);
           m_Value = String(Buffer);
@@ -185,8 +185,8 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
           xSemaphoreGive(mySemaphore);
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
-            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << ValueCopy.c_str() << " to Web Socket\n";
-            KeyValuePairs.push_back({ m_WidgetId[i].c_str(), ValueCopy.c_str() });
+            if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
+            KeyValuePairs.push_back({ m_WidgetId[i], ValueCopy });
           }
         }
       }
@@ -211,8 +211,8 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
           if( m_WidgetId[i].equals(InputId) )
           {
             Found = true;
-            if(true == m_Debug) Serial << m_DataItem->Name.c_str() << " Sending " << ValueCopy.c_str() << " to Web Socket\n";
-            PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name.c_str(), 0, m_PushError);
+            if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
+            PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
           }
         }
       }

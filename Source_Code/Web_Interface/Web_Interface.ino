@@ -22,14 +22,21 @@
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
 
-TaskHandle_t SPI_RX_Task;
-uint32_t SPI_RX_TaskLoopCount = 0;
+#define TASK_LOOP_COUNT_DEBUG false
+#define TASK_STACK_SIZE_DEBUG false
 
+unsigned long LoopCountTimer = 0;
 TaskHandle_t Manager_Task;
 uint32_t Manager_TaskLoopCount = 0;
 
+TaskHandle_t SPI_RX_Task;
+uint32_t SPI_RX_TaskLoopCount = 0;
+
 TaskHandle_t WebServer_Task;
 uint32_t WebServer_TaskLoopCount = 0;
+
+TaskHandle_t TaskMonitor_Task;
+uint32_t TaskMonitor_TaskLoopCount = 0;
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer MyWebServer(80);
@@ -101,9 +108,10 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,   0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",    10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,    0 );
-  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task", 10000,  NULL,  configMAX_PRIORITIES - 2,  &WebServer_Task, 0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",     10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,    0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",      10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,     0 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task",   10000,  NULL,  configMAX_PRIORITIES - 2,  &WebServer_Task,  0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitor_Task",  5000,   NULL,  configMAX_PRIORITIES - 4,  &TaskMonitor_Task, 0 );
 }
 
 void InitLocalVariables()
@@ -161,4 +169,42 @@ void WebServer_TaskLoop(void * parameter)
     ++WebServer_TaskLoopCount;
     m_SettingsWebServerManager.ProcessEventQueue();
   }  
+}
+
+
+void TaskMonitorTaskLoop(void * parameter)
+{
+  const TickType_t xFrequency = 5000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    unsigned long CurrentTime = millis();
+    ++TaskMonitor_TaskLoopCount;
+    if(true == TASK_LOOP_COUNT_DEBUG)
+    {
+      unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
+      ESP_LOGE("LED_Controller1", "Manager_TaskLoopCount: %f", (float)Manager_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "SPI_RX_TaskLoopCount: %f", (float)SPI_RX_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "WebServer_TaskLoopCount: %f", (float)WebServer_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("LED_Controller1", "TaskMonitor_TaskLoopCount: %f", (float)TaskMonitor_TaskLoopCount/(float)DeltaTimeSeconds);
+      
+      Manager_TaskLoopCount = 0;
+      SPI_RX_TaskLoopCount = 0;
+      WebServer_TaskLoopCount = 0;
+      TaskMonitor_TaskLoopCount = 0;
+    }
+
+    size_t StackSizeThreshold = 100;
+    if( uxTaskGetStackHighWaterMark(Manager_Task) < StackSizeThreshold )ESP_LOGW("LED_Controller2", "WARNING! Manager_Task: Stack Size Low");
+    
+    if(true == TASK_STACK_SIZE_DEBUG)
+    {
+      ESP_LOGE("Settings_Web_Server", "Manager_Task Free Heap: %i", uxTaskGetStackHighWaterMark(Manager_Task));
+      ESP_LOGE("Settings_Web_Server", "SPI_RX_Task Free Heap: %i", uxTaskGetStackHighWaterMark(SPI_RX_Task));
+      ESP_LOGE("Settings_Web_Server", "SPI_RX_Task Free Heap: %i", uxTaskGetStackHighWaterMark(WebServer_Task));
+      ESP_LOGE("Settings_Web_Server", "TaskMonitor_Task Free Heap: %i", uxTaskGetStackHighWaterMark(TaskMonitor_Task));
+    }
+    LoopCountTimer = CurrentTime;
+  }
 }
