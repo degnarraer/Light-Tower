@@ -118,7 +118,6 @@ class SettingsWebServerManager: public QueueManager
       switch (type) {
         case WS_EVT_CONNECT:
           Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-          //client->keepAlivePeriod(1);
           break;
         case WS_EVT_PONG:
           break;
@@ -127,11 +126,9 @@ class SettingsWebServerManager: public QueueManager
           break;
         case WS_EVT_ERROR:
           Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
-          //m_WebSocket.close(client->id());
           break;
         case WS_EVT_DISCONNECT:
           Serial.printf("WebSocket client #%u disconnected. Closing Connection.\n", client->id());
-          //m_WebSocket.close(client->id());
           break;
       }
     }
