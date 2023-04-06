@@ -30,3 +30,7 @@
 	path = libraries/ESP32DMASPI
 	url = https://github.com/degnarraer/ESP32DMASPI.git
 	branch = master
+[submodule "libraries/ESPAsyncWebServer"]
+	path = libraries/ESPAsyncWebServer
+	url = https://github.com/degnarraer/ESPAsyncWebServer.git
+	branch = Merge_Fixes

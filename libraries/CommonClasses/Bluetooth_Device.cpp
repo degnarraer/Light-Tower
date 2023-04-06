@@ -169,6 +169,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_pin_config(my_pin_config);
 	m_BTSink.set_i2s_config(i2s_config);
 	m_BTSink.set_i2s_port(m_I2S_PORT);
+	m_BTSink.set_auto_reconnect(m_AutoReConnect);
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_core(1);
 	m_BTSink.set_task_priority(configMAX_PRIORITIES-1);
@@ -176,9 +177,10 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
-void Bluetooth_Sink::StartDevice(const char *SinkName)
+void Bluetooth_Sink::StartDevice(const char *SinkName, bool reconnect)
 {	
 	mp_SinkName = (char*)SinkName;
+	m_AutoReConnect = reconnect;
 	if( true == m_Is_Running && false == String(mp_SinkName).equals(String(SinkName)) )
 	{
 		ESP_LOGI("Bluetooth_Device", "ReStarting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());

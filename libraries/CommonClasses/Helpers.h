@@ -106,7 +106,7 @@ class CommonUtils
 			}
 			return Result;
 		}
-		bool ConvertStringToDataBufferFromDataType(void *Buffer, String Value, DataType_t DataType)
+		bool SetDataItemValueFromValueString(void *Buffer, String Value, DataType_t DataType)
 		{
 			bool Result = true;
 			switch(DataType)
@@ -126,26 +126,32 @@ class CommonUtils
 				break;
 				
 				case DataType_Int8_t:
+					Serial << "Int8_t Received: " << Value << "\n";
 					*(int8_t*)Buffer = Value.toInt();
 				break;
 				case DataType_Int16_t:
+					Serial << "Int16_t Received: " << Value << "\n";
 					*(int16_t*)Buffer = Value.toInt();
 				break;
 				case DataType_Int32_t:
+					Serial << "Int32_t Received: " << Value << "\n";
 					*(int32_t*)Buffer = Value.toInt();
 				break;
 				
 				case DataType_Uint8_t:
 				case DataType_Uint16_t:
 				case DataType_Uint32_t:
+					Serial << "UInt Received: " << Value << "\n";
 					Value.getBytes((byte*)Buffer, Value.length());
 				break;
 				
 				case DataType_Float_t:
+					Serial << "Float_t Received: " << Value << "\n";
 					*(float*)Buffer = Value.toFloat();
 				break;
 				
 				case DataType_Double_t:
+					Serial << "Double_t Received: " << Value << "\n";
 					*(double*)Buffer = Value.toDouble();
 				break;
 				
@@ -228,18 +234,25 @@ class QueueController
 			}
 			return Result;
 		}	
-		void MoveDataFromQueueToQueue(String DebugTitle, QueueHandle_t TakeFromQueue, QueueHandle_t GiveToQueue, size_t ByteCount, TickType_t TicksToWait, bool DebugMessage)
+		void MoveDataFromQueueToQueue( String DebugTitle
+									 , QueueHandle_t TakeFromQueue
+									 , size_t TakeFromQueueByteCount
+									 , QueueHandle_t GiveToQueue
+									 , size_t GiveToQueueByteCount
+									 , TickType_t TicksToWait
+									 , bool DebugMessage )
 		{
+			assert(TakeFromQueueByteCount == GiveToQueueByteCount);
 			if(NULL != TakeFromQueue && NULL != GiveToQueue)
 			{
 				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 				if(true == DebugMessage && QueueCount > 0)
 				{
-					ESP_LOGE("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, ByteCount);
+					ESP_LOGE("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, TakeFromQueueByteCount);
 				}
 				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
-					uint8_t DataBuffer[ByteCount];
+					uint8_t DataBuffer[TakeFromQueueByteCount];
 					if ( xQueueReceive(TakeFromQueue, DataBuffer, TicksToWait) == pdTRUE )
 					{
 						if(xQueueSend(GiveToQueue, DataBuffer, TicksToWait) != pdTRUE)
@@ -377,8 +390,8 @@ class QueueManager: public CommonUtils
 			else
 			{
 				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
+				return NULL;
 			}
-			return NULL;
 		}
 		QueueHandle_t GetQueueHandleTXForDataItem(String Name){
 			if(NULL != m_DataItem)

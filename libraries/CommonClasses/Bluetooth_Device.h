@@ -250,8 +250,13 @@ class Bluetooth_Sink: public NamedItem
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
 	virtual ~Bluetooth_Sink(){};
 	void Setup();
-	void StartDevice(const char *SinkName);
+	void StartDevice(const char *SinkName, bool reconnect);
 	void StopDevice();
+	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
+	{
+		m_AutoReConnect = reconnect;
+        m_BTSink.set_auto_reconnect(m_AutoReConnect);
+    }
 
 	//Callbacks from BluetoothSink  
 	void data_received_callback();
@@ -282,6 +287,7 @@ class Bluetooth_Sink: public NamedItem
 		const int m_SerialDataInPin;
 		const int m_SerialDataOutPin;
 		bool m_Is_Running = false;
+		bool m_AutoReConnect = false;
 		char *mp_SinkName;
 		void InstallDevice();
 };
