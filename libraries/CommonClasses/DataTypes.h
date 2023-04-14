@@ -25,17 +25,32 @@ typedef KeyValuePair KVP;
 
 struct Wifi_Info
 {
-	Wifi_Info(String SSID_In, int32_t RSSI_In = 0)
-	{
-		assert(32 >= SSID_In.length());
-		strncpy(SSID, SSID_In.c_str(), sizeof(SSID));
-		RSSI = RSSI_In;
-	}
-	char SSID[33];
-	int32_t RSSI = 0;
+	public:
+		Wifi_Info(){}
+		Wifi_Info(String SSID_In, int32_t RSSI_In = 0)
+		{
+			assert(32 >= SSID_In.length());
+			snprintf(SSID, 33, "%s", SSID_In.c_str());
+			RSSI = RSSI_In;
+		}
+		char SSID[33] = "\0";
+		int32_t RSSI = 0;
+		Wifi_Info& operator=(const String &a)
+		{
+			assert(32 >= a.length());
+			snprintf(SSID, 33, "%s", a.c_str());
+			return *this;
+		}
 };
 typedef Wifi_Info Wifi_Info_t;
 
+struct ActiveCompatibleDevices_t
+{
+	std::string SSID;
+	int32_t RSSI;
+	unsigned long LastUpdateTime;
+};
+	
 enum SoundState_t
 {
   LastingSilenceDetected = 0,

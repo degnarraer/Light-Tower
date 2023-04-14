@@ -45,12 +45,12 @@ uint32_t SPI_TaskLoopCount = 0;
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     1 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_1000mS_Task,   1 );
-  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_300000mS_Task, 1 );
-  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",               5000,  NULL,   configMAX_PRIORITIES - 1,  &SPI_Task,              1 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    5000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       1 );
-  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     0 ); //This has to be core 1 for some reason else bluetooth interfeeres with LEDs and makes them flicker
+  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
+  xTaskCreatePinnedToCore( SPI_TaskLoop,              "SPI_Task",               5000,  NULL,   configMAX_PRIORITIES - 2,  &SPI_Task,              0 );
+  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 3,  &Manager_1000mS_Task,   0 );
+  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 3,  &Manager_300000mS_Task, 0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTaskTask",    5000,  NULL,   tskIDLE_PRIORITY,          &TaskMonitorTask,       0 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 );
 }
 
 void setup()
@@ -138,7 +138,7 @@ void TaskMonitorTaskLoop(void * parameter)
 
 void Manager_20mS_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

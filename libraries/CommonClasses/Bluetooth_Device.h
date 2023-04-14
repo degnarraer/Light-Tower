@@ -38,11 +38,11 @@ class BluetoothConnectionStatusCaller
 		BluetoothConnectionStatusCaller()
 		{
 			xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 1000,  this,   configMAX_PRIORITIES - 2,  &m_Handle, 1 );
-		};
+		}
 		virtual ~BluetoothConnectionStatusCaller()
 		{
 			vTaskDelete(m_Handle);
-		};	
+		}
 		void RegisterForConnectionStatusChangedCallBack(BluetoothConnectionStatusCallee *Callee)
 		{
 			m_ConnectionStatusCallee = Callee;
@@ -148,18 +148,36 @@ class BluetoothConnectionStatusCaller
 		}
 };
 
+class BluetoothActiveDeviceUpdatee
+{
+	public:
+		BluetoothActiveDeviceUpdatee(){};
+		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevices_t> &Devices) = 0;
+};
+
+class BluetoothActiveDeviceUpdater
+{
+	public:
+		BluetoothActiveDeviceUpdater()
+		{
+		}
+		virtual ~BluetoothActiveDeviceUpdater()
+		{
+		}
+		void RegisterForActiveDeviceUpdate(BluetoothActiveDeviceUpdatee *Callee)
+		{
+			m_BluetoothActiveDeviceUpdatee = Callee;
+		}
+	protected:
+		BluetoothActiveDeviceUpdatee *m_BluetoothActiveDeviceUpdatee = NULL;
+};
+
 class Bluetooth_Source: public NamedItem
 					  , public BluetoothConnectionStatusCaller
+					  , public BluetoothActiveDeviceUpdater
 					  , public CommonUtils
 					  , public QueueController
-{
-	struct ActiveCompatibleDevices_t
-	{
-		std::string Name;
-		int32_t Rssi;
-		unsigned long LastUpdateTime;
-	};
-	
+{	
 	public:
 		Bluetooth_Source( String Title
 						, BluetoothA2DPSource& BTSource)
@@ -180,6 +198,12 @@ class Bluetooth_Source: public NamedItem
 		
 		//Callback from BT Source for compatible devices to connect to
 		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi);
+		
+		void Set_NVS_Init(bool doInit) { m_BTSource.set_nvs_init(doInit); }
+		void Set_Reset_BLE(bool doInit) { m_BTSource.set_reset_ble(doInit); }
+		void Set_Auto_Reconnect(bool active) { m_BTSource.set_auto_reconnect(active); }
+		
+		
 	protected:
 		bool GetConnectionStatus(){ return m_BTSource.is_connected(); }
 	private:
@@ -250,7 +274,7 @@ class Bluetooth_Sink: public NamedItem
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
 	virtual ~Bluetooth_Sink(){};
 	void Setup();
-	void StartDevice(const char *SinkName, bool reconnect);
+	void StartDevice(String SinkName, bool reconnect);
 	void StopDevice();
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
@@ -288,7 +312,7 @@ class Bluetooth_Sink: public NamedItem
 		const int m_SerialDataOutPin;
 		bool m_Is_Running = false;
 		bool m_AutoReConnect = false;
-		char *mp_SinkName;
+		String m_SinkName;
 		void InstallDevice();
 };
 

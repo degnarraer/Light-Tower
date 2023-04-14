@@ -15,6 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+
 #include "Streaming.h"
 #include "SerialDataLinkConfig.h"
 #include "Tunes.h"
@@ -24,7 +25,6 @@
 
 #define TASK_LOOP_COUNT_DEBUG false
 #define TASK_STACK_SIZE_DEBUG false
-
 unsigned long LoopCountTimer = 0;
 TaskHandle_t Manager_Task;
 uint32_t Manager_TaskLoopCount = 0;
@@ -108,10 +108,10 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",     10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,    0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",      10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,     0 );
-  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task",   10000,  NULL,  configMAX_PRIORITIES - 2,  &WebServer_Task,  0 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitor_Task",  5000,   NULL,  configMAX_PRIORITIES - 4,  &TaskMonitor_Task, 0 );
+  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task,    0 );
+  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",     10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,      0 );
+  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",      10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,       0 );
+  xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitor_Task", 5000,   NULL,  configMAX_PRIORITIES - 4,  &TaskMonitor_Task,  0 );
 }
 
 void InitLocalVariables()
@@ -134,10 +134,10 @@ void setup(){
 void loop()
 {
 }
-
+#pragma GCC diagnostic pop
 void SPI_RX_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 10;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -149,7 +149,7 @@ void SPI_RX_TaskLoop(void * parameter)
 
 void Manager_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 10;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
@@ -161,7 +161,7 @@ void Manager_TaskLoop(void * parameter)
 
 void WebServer_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 100;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

@@ -40,6 +40,7 @@ void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
   InitializeNVM(m_Preferences.getBool("NVM Reset", false));
+  LoadFromNVM();
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
@@ -50,7 +51,6 @@ void Manager::Setup()
   m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
   SetInputType(InputType_Bluetooth);
   //SetInputType(InputType_Microphone);
-  LoadFromNVM();
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -64,7 +64,6 @@ void Manager::InitializeNVM(bool Reset)
       Serial << "NVM Cleared\n";
     }
     m_Preferences.putString("Sink SSID", "LED Tower of Power");
-    m_Preferences.putBool("Sink BT Reset", true);
     m_Preferences.putBool("Sink ReConnect", true);
     m_Preferences.putBool("Sink Enable", true);
 
@@ -77,7 +76,6 @@ void Manager::InitializeNVM(bool Reset)
 void Manager::LoadFromNVM()
 {
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power");
-  m_SinkReset = m_Preferences.getBool("Sink Reset", true);
   m_SinkReConnect = m_Preferences.getBool("Sink ReConnect", true);
   m_SinkEnable = m_Preferences.getBool("Sink Enable", true);
 }
@@ -92,7 +90,6 @@ void Manager::ProcessEventQueue20mS()
   Process_I2S_EventQueue();
   MoveDataToStatisticalEngine();
   SinkSSID_RX();
-  SinkBluetoothReset_RX();
   SinkAutoReConnect_RX();
   SinkEnable_RX();
 }
@@ -102,7 +99,6 @@ void Manager::ProcessEventQueue1000mS()
   BluetoothConnectionStatus_TX();
   SoundState_TX();
   SinkSSID_TX();
-  SinkBluetoothReset_TX();
   SinkReConnect_TX();
   SinkEnable_TX();
 }
@@ -122,7 +118,7 @@ void Manager::SetInputType(InputType_t Type)
       m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
-      m_BT_In.StartDevice(m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str());
+      m_BT_In.StartDevice(m_SinkSSID.c_str(), m_SinkReConnect);
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
     break;
@@ -188,8 +184,9 @@ void Manager::MoveDataToStatisticalEngine()
   {
     MoveDataFromQueueToQueue( "Move Data Between CPU1 And Statistical Engine: " + Signals[i]
                             , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_StatisticalEngine.GetQueueHandleRXForDataItem(Signals[i].c_str())
                             , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].c_str())
+                            , m_StatisticalEngine.GetQueueHandleRXForDataItem(Signals[i].c_str())
+                            , m_StatisticalEngine.GetTotalByteCountForDataItem(Signals[i].c_str())
                             , 0
                             , false );
   }
@@ -268,7 +265,7 @@ void Manager::SinkSSID_RX()
       Serial << "Sink SSID Value Changed\n";
       m_SinkSSID = DatalinkValue;
       m_Preferences.putString("Sink SSID", m_SinkSSID);
-      m_BT_In.StartDevice(m_SinkSSID.c_str());
+      m_BT_In.StartDevice(m_SinkSSID.c_str(), m_SinkReConnect);
       SinkSSID_TX();
     }
   }
@@ -282,28 +279,6 @@ void Manager::SinkSSID_TX()
   m_SPIDataLinkSlave.PushValueToTXQueue(&WifiInfo, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
 }
 
-
-void Manager::SinkBluetoothReset_RX()
-{
-  bool DatalinkValue;
-  static bool SinkBluetoothResetPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink BT Reset", false, 0, SinkBluetoothResetPullErrorHasOccured))
-  {
-    if(m_SinkReset != DatalinkValue)
-    {
-      m_SinkReset = DatalinkValue;
-      Serial << "Sink Bluetooth Reset Value Changed: " << m_SinkReset << "\n";
-      m_Preferences.putBool("Sink Reset", m_SinkReset);
-      SinkBluetoothReset_TX();
-    }
-  }
-}
-void Manager::SinkBluetoothReset_TX()
-{
-  static bool SinkBluetoothResetPushErrorHasOccured = false;
-  m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkReset, "Sink BT Reset", 0, SinkBluetoothResetPushErrorHasOccured);
-}
-
 void Manager::SinkAutoReConnect_RX()
 {
   bool DatalinkValue;
@@ -315,6 +290,7 @@ void Manager::SinkAutoReConnect_RX()
       m_SinkReConnect = DatalinkValue;
       Serial << "Sink ReConnect Value Changed: " << m_SinkReConnect << "\n";
       m_Preferences.putBool("Sink ReConnect", m_SinkReConnect);
+      m_BT_In.Set_Auto_Reconnect(m_SinkReConnect);
       SinkReConnect_TX();
     }
   }
@@ -339,7 +315,7 @@ void Manager::SinkEnable_RX()
       m_Preferences.putBool("Sink Enable", m_SinkEnable);
       if(true == m_SinkEnable)
       {
-        m_BT_In.StartDevice(m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str());
+        m_BT_In.StartDevice(m_SinkSSID.c_str(), m_SinkReConnect);
       }
       else
       {

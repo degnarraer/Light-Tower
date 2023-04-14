@@ -52,7 +52,7 @@ void Bluetooth_Source::StartDevice( const char *SSID
 	m_SSID = String(SSID);
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
 	InstallDevice(ResetBLE, AutoReConnect, SSPEnabled);
-	m_BTSource.start_raw(m_MusicDataCallback);
+	m_BTSource.start_raw();
 	m_Is_Running = true;
 	SetSearching();
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tSSID: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_SSID.c_str(), ResetBLE, AutoReConnect, SSPEnabled);
@@ -74,23 +74,22 @@ bool Bluetooth_Source::compatible_device_found(const char* ssid, int32_t rssi)
 	String SSID = String(ssid);
 	for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 	{
-		if(0 == m_ActiveCompatibleDevices[i].Name.compare(SSID.c_str()))
+		if(0 == m_ActiveCompatibleDevices[i].SSID.compare(SSID.c_str()))
 		{
 			Found = true;
-			ESP_LOGI("Bluetooth_Device", "Target SSID Found: %s", String(ssid).c_str() );
 			m_ActiveCompatibleDevices[i].LastUpdateTime = millis();
-			m_ActiveCompatibleDevices[i].Rssi = rssi;
+			m_ActiveCompatibleDevices[i].RSSI = rssi;
 			break;
 		}
 	}
 	if(false == Found)
 	{
 		ActiveCompatibleDevices_t NewDevice;
-		NewDevice.Name = SSID.c_str();
-		NewDevice.Rssi = rssi;
+		NewDevice.SSID = SSID.c_str();
+		NewDevice.RSSI = rssi;
 		NewDevice.LastUpdateTime = millis();
 		m_ActiveCompatibleDevices.push_back(NewDevice);
-		ESP_LOGI("Bluetooth_Device", "SSID Found: %s", NewDevice.Name.c_str() );
+		ESP_LOGI("Bluetooth_Device", "SSID Found: %s", NewDevice.SSID.c_str() );
 	}	
 	return Found;
 }
@@ -116,8 +115,9 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 		{
-			ESP_LOGI("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].Name.c_str(), m_ActiveCompatibleDevices[i].Rssi);
+			ESP_LOGI("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].SSID.c_str(), m_ActiveCompatibleDevices[i].RSSI);
 		}
+		if(NULL != m_BluetoothActiveDeviceUpdatee) m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
 		vTaskDelay(500 / portTICK_PERIOD_MS);
 	}
 }
@@ -177,27 +177,27 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
-void Bluetooth_Sink::StartDevice(const char *SinkName, bool reconnect)
+void Bluetooth_Sink::StartDevice(String SinkName, bool reconnect)
 {	
-	mp_SinkName = (char*)SinkName;
+	m_SinkName = SinkName;
 	m_AutoReConnect = reconnect;
-	if( true == m_Is_Running && false == String(mp_SinkName).equals(String(SinkName)) )
+	if( true == m_Is_Running && false == m_SinkName.equals(SinkName) )
 	{
-		ESP_LOGI("Bluetooth_Device", "ReStarting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
+		ESP_LOGI("Bluetooth_Device", "ReStarting Bluetooth Sink with SSID: %s", m_SinkName.c_str());
 		m_Is_Running = true;
 		StopDevice();
-		m_BTSink.start(mp_SinkName);
+		m_BTSink.start(m_SinkName.c_str());
 		SetWaiting();
-		ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
+		ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With SSID: %s Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 	}
 	else if(false == m_Is_Running)
 	{
 		m_Is_Running = true;
 		InstallDevice();
-		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with SSID: %s", String(mp_SinkName).c_str());
-		m_BTSink.start(mp_SinkName);
+		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with SSID: %s", m_SinkName.c_str());
+		m_BTSink.start(m_SinkName.c_str());
 		SetWaiting();
-		ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
+		ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With SSID: %s Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 	}
 }
 void Bluetooth_Sink::StopDevice()

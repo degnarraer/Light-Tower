@@ -31,6 +31,7 @@
 class Manager: public NamedItem
              , public I2S_Device_Callback
              , public BluetoothConnectionStatusCallee
+             , public BluetoothActiveDeviceUpdatee
              , public CommonUtils
              , public QueueController
 {
@@ -57,6 +58,9 @@ class Manager: public NamedItem
 
     //BluetoothConnectionStatusCallee Callback 
     void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
+    
+    //BluetoothActiveDeviceUpdatee Callback 
+    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevices_t> &Devices);
 
   private:
     Sound_Processor &m_SoundProcessor;

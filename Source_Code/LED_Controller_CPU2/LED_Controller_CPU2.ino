@@ -115,13 +115,13 @@ void setup()
   m_SPIDataLinkToCPU3.SetSpewToConsole(false, false);
   m_Manager.Setup();
 
-  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 10,  &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_300000mS_Task,   1 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_1000mS_Task,     1 );
-  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,   NULL,   configMAX_PRIORITIES - 2,   &Manager_20mS_Task,       1 );
+  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_20mS_Task,       1 );
   xTaskCreatePinnedToCore( SPI_CPU1_TX_TaskLoop,      "SPI CPU1 TX Task Task",  5000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU1_TXTask,  1 );
   xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  5000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU3_TXTask,  1 );
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  5000,   NULL,   configMAX_PRIORITIES - 3,   &ProcessSoundPowerTask,   1 );
+  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_1000mS_Task,     1 );
+  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_300000mS_Task,   1 );
+  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  5000,   NULL,   configMAX_PRIORITIES - 4,   &ProcessSoundPowerTask,   1 );
   xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        5000,   NULL,   configMAX_PRIORITIES - 4,   &TaskMonitorTask,         1 );
   
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
@@ -160,7 +160,7 @@ void ProcessFFTTaskLoop(void * parameter)
 
 void Manager_20mS_TaskLoop(void * parameter)
 {
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

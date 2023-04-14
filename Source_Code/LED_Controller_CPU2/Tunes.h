@@ -24,13 +24,12 @@
 //App Tunes
 #define I2S_SAMPLE_RATE                 44100
 #define MAX_VISUALIZATION_FREQUENCY     4000.0
-#define I2S_BUFFER_COUNT                20
-#define I2S_SAMPLE_COUNT                256
+#define I2S_BUFFER_COUNT                80
+#define I2S_SAMPLE_COUNT                30
 #define NUMBER_OF_BANDS                 32
 #define FFT_SIZE                        512
 #define AMPLITUDE_BUFFER_FRAME_COUNT    100
 #define AUDIO_BUFFER_SIZE               2048
-
 
 #define TASK_STACK_SIZE_DEBUG           false
 #define TASK_LOOP_COUNT_DEBUG           false

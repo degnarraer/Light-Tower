@@ -30,7 +30,10 @@ class SettingsWebServerManager: public QueueManager
                             : QueueManager(Title + "Queue Manager", GetDataItemConfigCount())
                             , m_WebSocket(WebSocket)
     {
-      
+      mySenderSemaphore = xSemaphoreCreateRecursiveMutex();
+      myReceiverSemaphore = xSemaphoreCreateRecursiveMutex();
+      xSemaphoreGive(mySenderSemaphore);
+      xSemaphoreGive(myReceiverSemaphore);
     }
     
     virtual ~SettingsWebServerManager()
@@ -79,10 +82,6 @@ class SettingsWebServerManager: public QueueManager
       Sink_Connection_Status_DataHandler = WebSocketDataHandler<ConnectionStatus_t>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0, false );
       RegisterAsWebSocketDataSender(&Sink_Connection_Status_DataHandler);
       
-      Sink_BT_Reset_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink BT Reset"), new String[1]{"Sink_BT_Reset_Toggle_Button"}, 1, true, 0, false );
-      RegisterAsWebSocketDataReceiver(&Sink_BT_Reset_DataHandler);
-      RegisterAsWebSocketDataSender(&Sink_BT_Reset_DataHandler);
-      
       Sink_BT_ReConnect_DataHandler = WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
       RegisterAsWebSocketDataReceiver(&Sink_BT_ReConnect_DataHandler);
       RegisterAsWebSocketDataSender(&Sink_BT_ReConnect_DataHandler);
@@ -102,14 +101,18 @@ class SettingsWebServerManager: public QueueManager
     
     void ProcessEventQueue()
     {
-      std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-      for(int i = 0; i < m_MySenders.size(); ++i)
+      if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
       {
-        m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
-      }
-      if(KeyValuePairs.size() > 0)
-      {
-        NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+        std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+        for(int i = 0; i < m_MySenders.size(); ++i)
+        {
+          m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
+        }
+        xSemaphoreGive(mySenderSemaphore);
+        if(KeyValuePairs.size() > 0)
+        {
+          NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+        }
       }
     }
     
@@ -135,53 +138,75 @@ class SettingsWebServerManager: public QueueManager
 
     void RegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
     {
-      for(int i = 0; i < m_MyReceivers.size(); ++i)
+      if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
       {
-        if(m_MyReceivers[i] == aReceiver)
+        for(int i = 0; i < m_MyReceivers.size(); ++i)
         {
-          return;
+          if(m_MyReceivers[i] == aReceiver)
+          {
+            xSemaphoreGive(myReceiverSemaphore);
+            return;
+          }
         }
+        m_MyReceivers.push_back(aReceiver);
+        xSemaphoreGive(myReceiverSemaphore);
       }
-      m_MyReceivers.push_back(aReceiver);
     }
 
     void DeRegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
     {
-      for(int i = 0; i < m_MyReceivers.size(); ++i)
+      if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
       {
-        if(m_MyReceivers[i] == aReceiver)
+        for(int i = 0; i < m_MyReceivers.size(); ++i)
         {
-          m_MyReceivers.erase(m_MyReceivers.begin() + i);
-          return;
+          if(m_MyReceivers[i] == aReceiver)
+          {
+            m_MyReceivers.erase(m_MyReceivers.begin() + i);
+            xSemaphoreGive(myReceiverSemaphore);
+            return;
+          }
         }
+        xSemaphoreGive(myReceiverSemaphore);
       }
     }
     
     void RegisterAsWebSocketDataSender(WebSocketDataHandlerSender *aSender)
     {
-      for(int i = 0; i < m_MySenders.size(); ++i)
+      if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
       {
-        if(m_MySenders[i] == aSender)
+        for(int i = 0; i < m_MySenders.size(); ++i)
         {
-          return;
+          if(m_MySenders[i] == aSender)
+          {
+            xSemaphoreGive(mySenderSemaphore);
+            return;
+          }
         }
+        m_MySenders.push_back(aSender);
+        xSemaphoreGive(mySenderSemaphore);
       }
-      m_MySenders.push_back(aSender);
     }
     
     void DeRegisterAsWebSocketDataSender(WebSocketDataHandlerSender *aSender)
     {
-      for(int i = 0; i < m_MySenders.size(); ++i)
+      if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
       {
-        if(m_MySenders[i] == aSender)
+        for(int i = 0; i < m_MySenders.size(); ++i)
         {
-          m_MySenders.erase(m_MySenders.begin() + i);
-          return;
+          if(m_MySenders[i] == aSender)
+          {
+            m_MySenders.erase(m_MySenders.begin() + i);
+            xSemaphoreGive(mySenderSemaphore);
+            return;
+          }
         }
+        xSemaphoreGive(mySenderSemaphore);
       }
     }
     
   private:
+    SemaphoreHandle_t mySenderSemaphore;
+    SemaphoreHandle_t myReceiverSemaphore;
     AsyncWebSocket &m_WebSocket;
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
@@ -212,7 +237,6 @@ class SettingsWebServerManager: public QueueManager
     
     WebSocketDataHandler<bool> Sink_Connection_Enable_DataHandler;
     WebSocketDataHandler<ConnectionStatus_t> Sink_Connection_Status_DataHandler;
-    WebSocketDataHandler<bool> Sink_BT_Reset_DataHandler;
     WebSocketDataHandler<bool> Sink_BT_ReConnect_DataHandler;
 
     //Red Value and Widget Name Values
@@ -225,23 +249,22 @@ class SettingsWebServerManager: public QueueManager
     WebSocketDataHandler<uint8_t> Green_Value_DataHandler;
 
     //QueueManager Interface
-    static const size_t m_WebServerConfigCount = 14;
+    static const size_t m_WebServerConfigCount = 13;
     DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
     {
-      { "Sound State",              DataType_SoundState_t,        1,    Transciever_TX,   10  },
-      { "Source SSID",              DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
-      { "Source Connection Status", DataType_ConnectionStatus_t,  1,    Transciever_TX,   4  },
-      { "Source ReConnect",         DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Source BT Reset",          DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Sink SSID",                DataType_Wifi_Info_t,         1,    Transciever_TXRX, 4   },
-      { "Sink Enable",              DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Sink Connection Status",   DataType_ConnectionStatus_t,  1,    Transciever_TX,   4   },
-      { "Sink ReConnect",           DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Sink BT Reset",            DataType_bool_t,              1,    Transciever_TXRX, 4   },
-      { "Amplitude Gain",           DataType_Float_t,             1,    Transciever_TXRX, 10  },
-      { "FFT Gain",                 DataType_Float_t,             1,    Transciever_TXRX, 10  },
-      { "Found Speaker SSIDS",      DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
-      { "Target Speaker SSID",      DataType_Wifi_Info_t,         10,   Transciever_TXRX, 4   },
+      { "Sound State",              DataType_SoundState_t,        1,  Transciever_TX,   10  },
+      { "Source SSID",              DataType_Wifi_Info_t,         1,  Transciever_TXRX, 4   },
+      { "Source Connection Status", DataType_ConnectionStatus_t,  1,  Transciever_TX,   4  },
+      { "Source ReConnect",         DataType_bool_t,              1,  Transciever_TXRX, 4   },
+      { "Source BT Reset",          DataType_bool_t,              1,  Transciever_TXRX, 4   },
+      { "Sink SSID",                DataType_Wifi_Info_t,         1,  Transciever_TXRX, 4   },
+      { "Sink Enable",              DataType_bool_t,              1,  Transciever_TXRX, 4   },
+      { "Sink Connection Status",   DataType_ConnectionStatus_t,  1,  Transciever_TX,   4   },
+      { "Sink ReConnect",           DataType_bool_t,              1,  Transciever_TXRX, 4   },
+      { "Amplitude Gain",           DataType_Float_t,             1,  Transciever_TXRX, 10  },
+      { "FFT Gain",                 DataType_Float_t,             1,  Transciever_TXRX, 10  },
+      { "Found Speaker SSIDS",      DataType_Wifi_Info_t,         1,  Transciever_TXRX, 40  },
+      { "Target Speaker SSID",      DataType_Wifi_Info_t,         1,  Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
@@ -280,7 +303,7 @@ class SettingsWebServerManager: public QueueManager
     {
       if(0 < TextString.length())
       {
-        m_WebSocket.textAll(TextString);
+        m_WebSocket.textAll(TextString.c_str(), TextString.length());
       }
     }
     
@@ -306,17 +329,21 @@ class SettingsWebServerManager: public QueueManager
             const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
             bool WidgetFound = false;
-            
-            for(int i = 0; i < m_MyReceivers.size(); ++i)
+            if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
             {
-              if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
+              for(int i = 0; i < m_MyReceivers.size(); ++i)
               {
-                WidgetFound = true;
+                if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
+                {
+                  WidgetFound = true;
+                }
               }
+              xSemaphoreGive(myReceiverSemaphore);
             }
+            
             if(!WidgetFound)
             {
-              Serial.println("Unknown Known Widget: " + WidgetId);
+              Serial.println("Unknown Widget: " + WidgetId);
             }
           }
           else

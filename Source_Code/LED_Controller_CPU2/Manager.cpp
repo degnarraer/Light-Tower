@@ -42,16 +42,18 @@ void Manager::Setup()
 {
   m_Preferences.begin("My Settings", false);
   InitializeNVM(m_Preferences.getBool("NVM Reset", false));
+  LoadFromNVM();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
-  m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
-                      , m_Preferences.getBool("Source BT Reset", true)
-                      , m_Preferences.getBool("Src ReConnect", true)
+  m_BT_Out.RegisterForActiveDeviceUpdate(this);
+  m_BT_Out.StartDevice( m_SourceSSID.c_str()
+                      , m_SourceBTReset
+                      , m_SourceBTReConnect
                       , m_Preferences.getBool("SSP Enabled", false) );
-  LoadFromNVM();
+  
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -116,12 +118,11 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
     bool A_To_B;
     bool B_To_A;
   };
-  const uint8_t count = 6;
+  const uint8_t count = 5;
   Signal Signals[count] = { { "Sound State",            true, false }
                           , { "Sink Enable",            true, true } 
                           , { "Sink Connection Status", true, false } 
-                          , { "Sink ReConnect",         true, true } 
-                          , { "Sink BT Reset",          true, true } 
+                          , { "Sink ReConnect",         true, true }
                           , { "Sink SSID",              true, true } };
   for(int i = 0; i < count; ++i)
   {
@@ -129,8 +130,9 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
     {
       MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i].Name
                               , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
                               , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
                               , 0
                               , false );
     }
@@ -138,8 +140,9 @@ void Manager::MoveDataBetweenCPU1AndCPU3()
     {
       MoveDataFromQueueToQueue( "MoveDataBetweenCPU3AndCPU1: " + Signals[i].Name
                               , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
                               , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
+                              , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
                               , 0
                               , false ); 
     }
@@ -162,6 +165,7 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   return ByteReceived;
 }
 
+//BluetoothConnectionStatusCallee Callback 
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
   if(m_BluetoothConnectionStatus != ConnectionStatus)
@@ -169,6 +173,22 @@ void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStat
     m_BluetoothConnectionStatus = ConnectionStatus;
     Serial << "Bluetooth Status Changed: " << m_BluetoothConnectionStatus << "\n";
     BluetoothConnectionStatus_TX();
+  }
+}
+
+//BluetoothActiveDeviceUpdatee Callback 
+void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevices_t> &Devices)
+{
+  for(int i = 0; i < Devices.size(); ++i)
+  {  
+    Wifi_Info_t WifiDevice = Wifi_Info_t(Devices[i].SSID.c_str(), Devices[i].RSSI);
+    Serial << WifiDevice.SSID << " | " << WifiDevice.RSSI << "\n";
+    static bool FoundSpeakerSSIDSValuePushError = false;
+    PushValueToQueue( &WifiDevice
+                    , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Found Speaker SSIDS")
+                    , "Found Speaker SSIDS"
+                    , 0
+                    , FoundSpeakerSSIDSValuePushError );
   }
 }
 
@@ -238,6 +258,7 @@ void Manager::SourceBluetoothReset_RX()
     {
       Serial << "Source BT Reset Value Changed\n";
       m_SourceBTReset = DatalinkValue;
+      m_BT_Out.Set_Reset_BLE(m_SourceBTReset);
       m_Preferences.putBool("Source BT Reset", m_SourceBTReset);
       SourceBluetoothReset_TX();
     }
@@ -260,6 +281,7 @@ void Manager::SourceAutoReConnect_RX()
     {
       Serial << "Source ReConnect Value Changed\n";
       m_SourceBTReConnect = DatalinkValue;
+      m_BT_Out.Set_Auto_Reconnect(m_SourceBTReConnect);
       m_Preferences.putBool("Src ReConnect", m_SourceBTReConnect);
       SourceAutoReConnect_TX();
     }

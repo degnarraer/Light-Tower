@@ -108,10 +108,6 @@ class Manager: public NamedItem
     String m_SinkSSID;
     void SinkSSID_TX();
     void SinkSSID_RX();
-    
-    bool m_SinkReset;
-    void SinkBluetoothReset_RX();
-    void SinkBluetoothReset_TX();
 
     bool m_SinkReConnect;
     void SinkAutoReConnect_RX();
