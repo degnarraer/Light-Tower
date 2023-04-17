@@ -66,8 +66,12 @@ class CommonUtils
 					Result = sizeof(String);
 				break;
 				
-				case DataType_Wifi_Info_t:
-					Result = sizeof(Wifi_Info_t);
+				case DataType_SSID_Info_t:
+					Result = sizeof(SSID_Info_t);
+				break;
+				
+				case DataType_SSID_Info_With_LastUpdateTime_t:
+					Result = sizeof(SSID_Info_With_LastUpdateTime_t);
 				break;
 				
 				case DataType_Float_t:
@@ -97,9 +101,11 @@ class CommonUtils
 				case DataType_SoundState_t:
 					Result = sizeof(SoundState_t);
 				break;
+				
 				case DataType_ConnectionStatus_t:
 					Result = sizeof(ConnectionStatus_t);
 				break;
+				
 				default:
 					Result = 0;
 				break;
@@ -156,7 +162,8 @@ class CommonUtils
 				break;
 				
 				case DataType_String_t:
-				case DataType_Wifi_Info_t:
+				case DataType_SSID_Info_t:
+				case DataType_SSID_Info_With_LastUpdateTime_t:
 				case DataType_ProcessedSoundData_t:				
 				case DataType_MaxBandSoundData_t:				
 				case DataType_Frame_t:				

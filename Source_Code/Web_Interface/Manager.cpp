@@ -25,6 +25,7 @@ void Manager::Setup()
 void Manager::ProcessEventQueue()
 {
     MoveDataBetweenSerialAndWebPage();
+    Process_SSIDs();
 }
 
 void Manager::MoveDataBetweenSerialAndWebPage()
@@ -53,5 +54,43 @@ void Manager::MoveDataBetweenSerialAndWebPage()
                               , 0
                               , false );
     }
+  }
+}
+
+void Manager::Process_SSIDs()
+{
+  SSID_Info_With_LastUpdateTime_t Received_SSID;
+  static bool FoundSpeakerSSIDSPullErrorHasOccured = false;
+  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&Received_SSID, "Found Speaker SSIDS", false, 0, FoundSpeakerSSIDSPullErrorHasOccured))
+  {
+    Serial << Received_SSID.SSID << " | " << Received_SSID.TimeSinceUdpate << " | " << Received_SSID.RSSI << "\n";
+  }
+}
+
+
+void Manager::StaticActiveSSIDTrackerTaskLoop(void * Parameters)
+{
+  Manager* aManager = (Manager*)Parameters;
+  aManager->ActiveSSIDTrackerTaskLoop();
+}
+
+void Manager::ActiveSSIDTrackerTaskLoop()
+{
+  while(true)
+  {
+    unsigned long CurrentTime = millis();
+    for(int i = 0; i < m_ActiveSSIDs.size(); ++i)
+    {
+      if(m_ActiveSSIDs[i].TimeSinceUdpate >= ACTIVE_SSID_TIMEOUT)
+      {
+        m_ActiveSSIDs.erase(m_ActiveSSIDs.begin()+i);
+        break;
+      }
+    }
+    for(int i = 0; i < m_ActiveSSIDs.size(); ++i)
+    {
+      ESP_LOGI("Manager", "Active SSID: %s \tRSSI: %i", m_ActiveSSIDs[i].SSID.c_str(), m_ActiveSSIDs[i].RSSI);
+    }
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }

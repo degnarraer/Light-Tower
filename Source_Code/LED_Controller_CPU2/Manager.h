@@ -60,7 +60,7 @@ class Manager: public NamedItem
     void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
     
     //BluetoothActiveDeviceUpdatee Callback 
-    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevices_t> &Devices);
+    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
     Sound_Processor &m_SoundProcessor;

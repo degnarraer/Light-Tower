@@ -37,13 +37,17 @@ class Manager: public NamedItem
            , m_SPIDataLinkSlave(SPIDataLinkSlave)
            , m_SettingsWebServerManager(SettingsWebServerManager)
            {
-            
+              xTaskCreate( StaticActiveSSIDTrackerTaskLoop,   "StaticActiveSSIDTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &ActiveSSIDTrackerTask);
            }
-    virtual ~Manager(){}
+    virtual ~Manager()
+    {
+      vTaskDelete(ActiveSSIDTrackerTask);
+    }
 
     void Setup();
     void ProcessEventQueue();
     void MoveDataBetweenSerialAndWebPage();
+    void Process_SSIDs();
     struct Signal
     {
       String Name;
@@ -54,7 +58,6 @@ class Manager: public NamedItem
   private:
     SPIDataLinkSlave &m_SPIDataLinkSlave;
     SettingsWebServerManager &m_SettingsWebServerManager;
-    
     static const uint8_t m_SignalCount = 11;
     Signal m_Signals[m_SignalCount] = { { "Sound State",              true, false }
                                       , { "Source SSID",              true, true }
@@ -67,6 +70,13 @@ class Manager: public NamedItem
                                       , { "Sink ReConnect",           true, true }
                                       , { "Amplitude Gain",           true, true }
                                       , { "FFT Gain",                 true, true } };
+
+
+    //Active SSID Tracking
+    TaskHandle_t ActiveSSIDTrackerTask;
+    std::vector<SSID_Info_With_LastUpdateTime_t> m_ActiveSSIDs;
+    static void StaticActiveSSIDTrackerTaskLoop(void * Parameters);
+    void ActiveSSIDTrackerTaskLoop();
 };
 
 #endif

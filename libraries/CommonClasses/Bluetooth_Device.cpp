@@ -84,7 +84,7 @@ bool Bluetooth_Source::compatible_device_found(const char* ssid, int32_t rssi)
 	}
 	if(false == Found)
 	{
-		ActiveCompatibleDevices_t NewDevice;
+		ActiveCompatibleDevice_t NewDevice;
 		NewDevice.SSID = SSID.c_str();
 		NewDevice.RSSI = rssi;
 		NewDevice.LastUpdateTime = millis();
@@ -115,7 +115,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 		{
-			ESP_LOGI("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].SSID.c_str(), m_ActiveCompatibleDevices[i].RSSI);
+			ESP_LOGI("Bluetooth_Device", "Scanned Device SSID: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].SSID.c_str(), m_ActiveCompatibleDevices[i].RSSI);
 		}
 		if(NULL != m_BluetoothActiveDeviceUpdatee) m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
 		vTaskDelay(500 / portTICK_PERIOD_MS);

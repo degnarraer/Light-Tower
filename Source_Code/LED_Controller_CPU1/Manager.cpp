@@ -274,9 +274,9 @@ void Manager::SinkSSID_RX()
 void Manager::SinkSSID_TX()
 {
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
-  Wifi_Info_t WifiInfo = Wifi_Info_t(m_SinkSSID);
+  SSID_Info_t SSIDInfo = SSID_Info_t(m_SinkSSID);
   static bool SinkSSIDPushErrorHasOccured = false;
-  m_SPIDataLinkSlave.PushValueToTXQueue(&WifiInfo, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
+  m_SPIDataLinkSlave.PushValueToTXQueue(&SSIDInfo, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
 }
 
 void Manager::SinkAutoReConnect_RX()

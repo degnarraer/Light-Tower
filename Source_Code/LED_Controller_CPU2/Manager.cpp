@@ -177,14 +177,14 @@ void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStat
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
-void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevices_t> &Devices)
+void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
 {
   for(int i = 0; i < Devices.size(); ++i)
   {  
-    Wifi_Info_t WifiDevice = Wifi_Info_t(Devices[i].SSID.c_str(), Devices[i].RSSI);
-    Serial << WifiDevice.SSID << " | " << WifiDevice.RSSI << "\n";
+    SSID_Info_With_LastUpdateTime_t SSID_Info = SSID_Info_With_LastUpdateTime_t(Devices[i].SSID.c_str(), millis()-Devices[i].LastUpdateTime, Devices[i].RSSI);
+    Serial << SSID_Info.SSID << " | " << SSID_Info.TimeSinceUdpate << " | " << SSID_Info.RSSI << "\n";
     static bool FoundSpeakerSSIDSValuePushError = false;
-    PushValueToQueue( &WifiDevice
+    PushValueToQueue( &SSID_Info
                     , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Found Speaker SSIDS")
                     , "Found Speaker SSIDS"
                     , 0
@@ -322,7 +322,7 @@ void Manager::SourceSSID_RX()
 void Manager::SourceSSID_TX()
 {
   m_SourceSSID = m_Preferences.getString("Source SSID", "").c_str();
-  Wifi_Info_t WifiInfo = Wifi_Info_t(m_SourceSSID);
+  SSID_Info_t WifiInfo = SSID_Info_t(m_SourceSSID);
   static bool SourceSSIDPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDPushErrorHasOccured );
 }

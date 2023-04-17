@@ -42,19 +42,19 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
     static const size_t m_SPIDatalinkConfigCount = 13;
     DataItemConfig_t m_ItemConfig[m_SPIDatalinkConfigCount]
     {
-      { "Sound State",              DataType_SoundState_t,        1,  Transciever_RX,   10  },
-      { "Source Connection Status", DataType_ConnectionStatus_t,  1,  Transciever_RX,   10  },
-      { "Source ReConnect",         DataType_bool_t,              1,  Transciever_TXRX, 4   },
-      { "Source BT Reset",          DataType_bool_t,              1,  Transciever_TXRX, 4   },
-      { "Source SSID",              DataType_Wifi_Info_t,         1,  Transciever_TXRX, 4   },
-      { "Sink Enable",              DataType_bool_t,              1,  Transciever_TXRX, 4   },
-      { "Sink Connection Status",   DataType_ConnectionStatus_t,  1,  Transciever_RX,   4   },
-      { "Sink ReConnect",           DataType_bool_t,              1,  Transciever_TXRX, 4   },
-      { "Sink SSID",                DataType_Wifi_Info_t,         1,  Transciever_TXRX, 4   },
-      { "Amplitude Gain",           DataType_Float_t,             1,  Transciever_TXRX, 10  },
-      { "FFT Gain",                 DataType_Float_t,             1,  Transciever_TXRX, 10  },
-      { "Found Speaker SSIDS",      DataType_Wifi_Info_t,         1,  Transciever_TXRX, 40  },
-      { "Target Speaker SSID",      DataType_Wifi_Info_t,         10, Transciever_TXRX, 4   },
+      { "Sound State",              DataType_SoundState_t,                    1,  Transciever_RX,   10  },
+      { "Source Connection Status", DataType_ConnectionStatus_t,              1,  Transciever_RX,   10  },
+      { "Source ReConnect",         DataType_bool_t,                          1,  Transciever_TXRX, 4   },
+      { "Source BT Reset",          DataType_bool_t,                          1,  Transciever_TXRX, 4   },
+      { "Source SSID",              DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
+      { "Sink Enable",              DataType_bool_t,                          1,  Transciever_TXRX, 4   },
+      { "Sink Connection Status",   DataType_ConnectionStatus_t,              1,  Transciever_RX,   4   },
+      { "Sink ReConnect",           DataType_bool_t,                          1,  Transciever_TXRX, 4   },
+      { "Sink SSID",                DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
+      { "Amplitude Gain",           DataType_Float_t,                         1,  Transciever_TXRX, 4  },
+      { "FFT Gain",                 DataType_Float_t,                         1,  Transciever_TXRX, 4  },
+      { "Found Speaker SSIDS",      DataType_SSID_Info_With_LastUpdateTime_t, 1,  Transciever_TXRX, 4  },
+      { "Target Speaker SSID",      DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_SPIDatalinkConfigCount; }

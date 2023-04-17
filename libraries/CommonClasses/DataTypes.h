@@ -2,6 +2,7 @@
 #define DataTypes_H
 
 #include "Arduino.h"
+#include "Streaming.h"
 
 class NamedItem
 {
@@ -23,28 +24,68 @@ struct KeyValuePair
 };
 typedef KeyValuePair KVP;
 
-struct Wifi_Info
+struct SSID_Info
 {
 	public:
-		Wifi_Info(){}
-		Wifi_Info(String SSID_In, int32_t RSSI_In = 0)
+		SSID_Info(){}
+		SSID_Info(String SSID_In, int32_t RSSI_In = 0)
 		{
-			assert(32 >= SSID_In.length());
-			snprintf(SSID, 33, "%s", SSID_In.c_str());
+			if(248 < SSID_In.length())
+			{
+				Serial << "Bad SSID: " << SSID_In.c_str() << " | " << SSID_In.length() << "\n";
+				assert(248 >= SSID_In.length());
+			}
+			snprintf(SSID, 248, "%s", SSID_In.c_str());
 			RSSI = RSSI_In;
 		}
-		char SSID[33] = "\0";
+		char SSID[248] = "\0";
 		int32_t RSSI = 0;
-		Wifi_Info& operator=(const String &a)
+		SSID_Info& operator=(const String &a)
 		{
-			assert(32 >= a.length());
-			snprintf(SSID, 33, "%s", a.c_str());
+			if(248 < a.length())
+			{
+				Serial << "Bad SSID: " << a.c_str() << " | " << a.length() << "\n";
+				assert(248 >= a.length());
+			}
+			snprintf(SSID, 248, "%s", a.c_str());
 			return *this;
 		}
 };
-typedef Wifi_Info Wifi_Info_t;
+typedef SSID_Info SSID_Info_t;
 
-struct ActiveCompatibleDevices_t
+struct SSID_Info_With_LastUpdateTime
+{
+	public:
+		SSID_Info_With_LastUpdateTime(){}
+		SSID_Info_With_LastUpdateTime(String SSID_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
+		{
+			if(248 < SSID_In.length())
+			{
+				Serial << "Bad SSID: " << SSID_In.c_str() << " | " << SSID_In.length() << "\n";
+				assert(248 >= SSID_In.length());
+			}
+			snprintf(SSID, 248, "%s", SSID_In.c_str());
+			TimeSinceUdpate = TimeSinceUdpate_in;
+			RSSI = RSSI_In;
+		}
+		char SSID[248] = "\0";
+		uint32_t TimeSinceUdpate = 0;
+		int32_t RSSI = 0;
+		SSID_Info_With_LastUpdateTime& operator=(const String &a)
+		{
+			if(248 < a.length())
+			{
+				Serial << "Bad SSID: " << a.c_str() << " | " << a.length() << "\n";
+				assert(248 >= a.length());
+			}
+			snprintf(SSID, 248, "%s", a.c_str());
+			return *this;
+		}
+};
+typedef SSID_Info_With_LastUpdateTime SSID_Info_With_LastUpdateTime_t;
+
+
+struct ActiveCompatibleDevice_t
 {
 	std::string SSID;
 	int32_t RSSI;
@@ -98,7 +139,8 @@ enum DataType_t
   DataType_Uint16_t,
   DataType_Uint32_t,
   DataType_String_t,
-  DataType_Wifi_Info_t,
+  DataType_SSID_Info_t,
+  DataType_SSID_Info_With_LastUpdateTime_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -120,7 +162,8 @@ static const char* DataTypeStrings[] =
   "Uint16_t",
   "Uint32_t",
   "String_t",
-  "Wifi_Info_t",
+  "SSID_Info_t",
+  "SSID_Info_With_LastUpdateTime_t"
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",

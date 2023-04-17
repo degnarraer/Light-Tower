@@ -74,6 +74,7 @@ Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
                                                   , m_SPIDataLinkToCPU1
                                                   , m_SPIDataLinkToCPU3
                                                   , m_AudioBuffer );                                            
+
 Manager m_Manager = Manager( "Manager"
                            , m_SoundProcessor
                            , m_SPIDataLinkToCPU1

@@ -29,9 +29,9 @@
 #include <ESP32DMASPISlave.h>
 #include "DataSerializer.h"
 
-#define SPI_MAX_DATA_BYTES 600
-#define N_SLAVE_QUEUES 20
-#define N_MASTER_QUEUES 20
+#define SPI_MAX_DATA_BYTES 1024
+#define N_SLAVE_QUEUES 10
+#define N_MASTER_QUEUES 10
 #define DUTY_CYCLE_POS 128
 #define SPI_MODE SPI_MODE0
 #define CLOCK_SPEED 10000000

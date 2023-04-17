@@ -210,7 +210,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
         xSemaphoreGive(mySemaphore);
         if(NULL != m_DataItem && NULL != m_WidgetId)
         {
-          Wifi_Info_t WifiInfo = Wifi_Info_t(ValueCopy);
+          SSID_Info_t SSID_Info = SSID_Info_t(ValueCopy);
           for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
             m_WidgetId[i].trim();
@@ -219,7 +219,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
             {
               Found = true;
               if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              PushValueToQueue(&WifiInfo, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
+              PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
             }
           }
         }

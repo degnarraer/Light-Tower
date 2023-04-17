@@ -18,7 +18,7 @@
 
 #ifndef Bluetooth_Device_H
 #define Bluetooth_Device_H 
-#define BT_COMPATIBLE_DEVICE_TIMEOUT 5000
+#define BT_COMPATIBLE_DEVICE_TIMEOUT 30000
 
 #include <vector> 
 #include <Arduino.h>
@@ -41,7 +41,7 @@ class BluetoothConnectionStatusCaller
 		}
 		virtual ~BluetoothConnectionStatusCaller()
 		{
-			vTaskDelete(m_Handle);
+			//vTaskDelete(m_Handle);
 		}
 		void RegisterForConnectionStatusChangedCallBack(BluetoothConnectionStatusCallee *Callee)
 		{
@@ -152,7 +152,7 @@ class BluetoothActiveDeviceUpdatee
 {
 	public:
 		BluetoothActiveDeviceUpdatee(){};
-		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevices_t> &Devices) = 0;
+		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices) = 0;
 };
 
 class BluetoothActiveDeviceUpdater
@@ -185,7 +185,10 @@ class Bluetooth_Source: public NamedItem
 						, m_BTSource(BTSource)
 		{
 		}
-		virtual ~Bluetooth_Source(){}
+		virtual ~Bluetooth_Source()
+		{
+			vTaskDelete(CompatibleDeviceTrackerTask);
+		}
 		void Setup();
 		void InstallDevice(bool ResetBLE
 						  , bool AutoReConnect
@@ -216,7 +219,7 @@ class Bluetooth_Source: public NamedItem
 		bool m_SSPEnabled = false;
 		
 		
-		std::vector<ActiveCompatibleDevices_t> m_ActiveCompatibleDevices;
+		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
 		TaskHandle_t CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
