@@ -89,6 +89,9 @@ class Manager: public NamedItem
 
     ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
     void BluetoothConnectionStatus_TX();
+
+    bool m_SSP_Enabled = false;
+    bool m_NVSInit = true;
     
     float m_AmplitudeGain;
     void AmplitudeGain_RX();
@@ -98,12 +101,12 @@ class Manager: public NamedItem
     void FFTGain_RX();
     void FFTGain_TX();
 
-    bool m_SourceBTReset;
+    bool m_SourceBTReset = true;
     void SourceBluetoothReset_RX();
     void SourceBluetoothReset_TX();
     
     
-    bool m_SourceBTReConnect;
+    bool m_SourceBTReConnect = false;
     void SourceAutoReConnect_RX();
     void SourceAutoReConnect_TX();
 

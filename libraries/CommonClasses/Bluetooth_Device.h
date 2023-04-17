@@ -190,22 +190,32 @@ class Bluetooth_Source: public NamedItem
 			vTaskDelete(CompatibleDeviceTrackerTask);
 		}
 		void Setup();
-		void InstallDevice(bool ResetBLE
-						  , bool AutoReConnect
-						  , bool SSPEnabled );
-		void StartDevice( const char *SourceName
-						, bool ResetBLE
-						, bool AutoReConnect
-						, bool SSPEnabled );
+		void InstallDevice();
+		void StartDevice( const char *SourceName );
 		void SetMusicDataCallback(music_data_cb_t callback);
 		
 		//Callback from BT Source for compatible devices to connect to
 		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi);
-		
-		void Set_NVS_Init(bool doInit) { m_BTSource.set_nvs_init(doInit); }
-		void Set_Reset_BLE(bool doInit) { m_BTSource.set_reset_ble(doInit); }
-		void Set_Auto_Reconnect(bool active) { m_BTSource.set_auto_reconnect(active); }
-		
+		void Set_NVS_Init(bool ResetNVS)
+		{ 
+			m_ResetNVS = ResetNVS;
+			m_BTSource.set_nvs_init(m_ResetNVS);
+		}
+		void Set_Reset_BLE(bool ResetBLE)
+		{
+			m_ResetBLE = ResetBLE;
+			m_BTSource.set_reset_ble(m_ResetBLE);
+		}
+		void Set_Auto_Reconnect(bool AutoReConnect)
+		{
+			m_AutoReConnect = AutoReConnect;
+			m_BTSource.set_auto_reconnect(m_AutoReConnect);
+		}
+		void Set_SSP_Enabled(bool SSPEnabled)
+		{
+			m_SSPEnabled = SSPEnabled;
+			m_BTSource.set_ssp_enabled(m_SSPEnabled);
+		}		
 		
 	protected:
 		bool GetConnectionStatus(){ return m_BTSource.is_connected(); }
@@ -214,6 +224,7 @@ class Bluetooth_Source: public NamedItem
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
 		String m_SSID;
+		bool m_ResetNVS = false;
 		bool m_ResetBLE = false;
 		bool m_AutoReConnect = true;
 		bool m_SSPEnabled = false;

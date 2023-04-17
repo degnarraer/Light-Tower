@@ -44,11 +44,11 @@ AsyncWebServer MyWebServer(80);
 // Create WebSocket
 AsyncWebSocket MyWebSocket("/ws");
 
-// Create Settings Web Server that uses the Socket 
-SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager", MyWebSocket );
-
 // Create SPI Datalink to Get Data from CPU2
 SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave();
+
+// Create Settings Web Server that uses the Socket 
+SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager", MyWebSocket, m_SPIDataLinkSlave );
 
 // Create Manager to Move Data Around
 Manager m_Manager = Manager( "Manager", m_SPIDataLinkSlave, m_SettingsWebServerManager );
@@ -129,12 +129,22 @@ void setup(){
   InitWebSocket();
   InitTasks();
   StartWebServer();
+  PrintMemory();
 }
 
 void loop()
 {
 }
 #pragma GCC diagnostic pop
+
+void PrintMemory()
+{
+  ESP_LOGE("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGE("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGE("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGE("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
+}
+
 void SPI_RX_TaskLoop(void * parameter)
 {
   const TickType_t xFrequency = 20;
@@ -184,10 +194,10 @@ void TaskMonitorTaskLoop(void * parameter)
     if(true == TASK_LOOP_COUNT_DEBUG)
     {
       unsigned long DeltaTimeSeconds = (CurrentTime - LoopCountTimer) / 1000;
-      ESP_LOGE("LED_Controller1", "Manager_TaskLoopCount: %f", (float)Manager_TaskLoopCount/(float)DeltaTimeSeconds);
-      ESP_LOGE("LED_Controller1", "SPI_RX_TaskLoopCount: %f", (float)SPI_RX_TaskLoopCount/(float)DeltaTimeSeconds);
-      ESP_LOGE("LED_Controller1", "WebServer_TaskLoopCount: %f", (float)WebServer_TaskLoopCount/(float)DeltaTimeSeconds);
-      ESP_LOGE("LED_Controller1", "TaskMonitor_TaskLoopCount: %f", (float)TaskMonitor_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("Settings_Web_Server", "Manager_TaskLoopCount: %f", (float)Manager_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("Settings_Web_Server", "SPI_RX_TaskLoopCount: %f", (float)SPI_RX_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("Settings_Web_Server", "WebServer_TaskLoopCount: %f", (float)WebServer_TaskLoopCount/(float)DeltaTimeSeconds);
+      ESP_LOGE("Settings_Web_Server", "TaskMonitor_TaskLoopCount: %f", (float)TaskMonitor_TaskLoopCount/(float)DeltaTimeSeconds);
       
       Manager_TaskLoopCount = 0;
       SPI_RX_TaskLoopCount = 0;

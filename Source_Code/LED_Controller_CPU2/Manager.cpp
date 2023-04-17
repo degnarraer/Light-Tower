@@ -49,10 +49,7 @@ void Manager::Setup()
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  m_BT_Out.StartDevice( m_SourceSSID.c_str()
-                      , m_SourceBTReset
-                      , m_SourceBTReConnect
-                      , m_Preferences.getBool("SSP Enabled", false) );
+  m_BT_Out.StartDevice( m_SourceSSID.c_str() );
   
 }
 
@@ -65,7 +62,8 @@ void Manager::InitializeNVM(bool Reset)
     m_Preferences.putFloat("Amplitude Gain", 1.0);
     m_Preferences.putFloat("FFT Gain", 1.0);
     m_Preferences.putBool("Source BT Reset", true);
-    m_Preferences.putBool("Src ReConnect", true);
+    m_Preferences.putBool("BT NVS Init", true);
+    m_Preferences.putBool("Src ReConnect", false);
     m_Preferences.putBool("SSP Enabled", false);
     m_Preferences.putBool("NVM Initialized", true);
     m_Preferences.putBool("NVM Reset", false);
@@ -74,16 +72,26 @@ void Manager::InitializeNVM(bool Reset)
 
 void Manager::LoadFromNVM()
 {
-  //Get NVM Values
-  m_SourceSSID = m_Preferences.getString("Source SSID", "");
-  m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
-  m_FFTGain = m_Preferences.getFloat("FFT Gain", 1.0);
-  m_SourceBTReset = m_Preferences.getBool("Source BT Reset", true);
-  m_SourceBTReConnect = m_Preferences.getBool("Src ReConnect", true);
-
   //Reload NVM Values
+  m_SourceSSID = m_Preferences.getString("Source SSID", "");
+  
+  m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
   m_SoundProcessor.SetGain(m_AmplitudeGain);
+  
+  m_FFTGain = m_Preferences.getFloat("FFT Gain", 1.0);
   m_SoundProcessor.SetFFTGain(m_FFTGain);
+  
+  m_SourceBTReset = m_Preferences.getBool("Source BT Reset", true);
+  m_BT_Out.Set_Reset_BLE(m_SourceBTReset);
+  
+  m_NVSInit = m_Preferences.getBool("BT NVS Init", false);
+  m_BT_Out.Set_NVS_Init(m_NVSInit);
+  
+  m_SourceBTReConnect = m_Preferences.getBool("Src ReConnect", true);
+  m_BT_Out.Set_Auto_Reconnect(m_SourceBTReConnect);
+  
+  m_SSP_Enabled = m_Preferences.getBool("SSP Enabled", false);
+  m_BT_Out.Set_SSP_Enabled(m_SSP_Enabled);
 }
 void Manager::ProcessEventQueue20mS()
 {
@@ -310,10 +318,7 @@ void Manager::SourceSSID_RX()
       Serial << "Source SSID Value Changed\n";
       m_SourceSSID = DatalinkValue;
       m_Preferences.putString("Source SSID", m_SourceSSID);
-      m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str()
-                          , m_Preferences.getBool("Source BT Reset", false)
-                          , m_Preferences.getBool("Src ReConnect", false)
-                          , m_Preferences.getBool("SSP Enabled", false) );
+      m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str() );
       SourceSSID_TX();
     }
   }

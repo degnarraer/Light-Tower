@@ -23,18 +23,16 @@ void Bluetooth_Source::Setup()
 	ESP_LOGI("Bluetooth_Device", "%s: Setup", GetTitle().c_str());
 }
 
-void Bluetooth_Source::InstallDevice( bool ResetBLE
-									, bool AutoReConnect
-									, bool SSPEnabled )
+void Bluetooth_Source::InstallDevice()
 {
 	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth Device.", GetTitle().c_str());
-	m_BTSource.set_nvs_init(true);
-	m_BTSource.set_reset_ble(ResetBLE);
-	m_BTSource.set_auto_reconnect(AutoReConnect);
-	m_BTSource.set_ssp_enabled(SSPEnabled);
-	xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask);
+	m_BTSource.set_nvs_init(m_ResetNVS);
+	m_BTSource.set_reset_ble(m_ResetBLE);
+	m_BTSource.set_auto_reconnect(m_AutoReConnect);
+	m_BTSource.set_ssp_enabled(m_SSPEnabled);
+	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask, 1);
 	m_BTSource.set_local_name(m_SSID.c_str());
-	m_BTSource.set_task_core(0);
+	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(configMAX_PRIORITIES-1);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
@@ -44,18 +42,15 @@ void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 	m_MusicDataCallback = callback;
 }
 
-void Bluetooth_Source::StartDevice( const char *SSID
-								  , bool ResetBLE
-								  , bool AutoReConnect
-								  , bool SSPEnabled )
+void Bluetooth_Source::StartDevice( const char *SSID )
 {
 	m_SSID = String(SSID);
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
-	InstallDevice(ResetBLE, AutoReConnect, SSPEnabled);
-	m_BTSource.start_raw();
+	InstallDevice();
+	m_BTSource.start_raw(m_MusicDataCallback);
 	m_Is_Running = true;
 	SetSearching();
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tSSID: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_SSID.c_str(), ResetBLE, AutoReConnect, SSPEnabled);
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tSSID: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_SSID.c_str(), m_ResetBLE, m_AutoReConnect, m_SSPEnabled);
 }
 
 //Callback from BT Source for compatible devices to connect to

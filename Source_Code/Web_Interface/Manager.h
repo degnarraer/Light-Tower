@@ -37,11 +37,9 @@ class Manager: public NamedItem
            , m_SPIDataLinkSlave(SPIDataLinkSlave)
            , m_SettingsWebServerManager(SettingsWebServerManager)
            {
-              xTaskCreate( StaticActiveSSIDTrackerTaskLoop,   "StaticActiveSSIDTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &ActiveSSIDTrackerTask);
            }
     virtual ~Manager()
     {
-      vTaskDelete(ActiveSSIDTrackerTask);
     }
 
     void Setup();
@@ -60,23 +58,18 @@ class Manager: public NamedItem
     SettingsWebServerManager &m_SettingsWebServerManager;
     static const uint8_t m_SignalCount = 11;
     Signal m_Signals[m_SignalCount] = { { "Sound State",              true, false }
-                                      , { "Source SSID",              true, true }
+                                      , { "Source SSID",              true, true  }
                                       , { "Source Connection Status", true, false }
-                                      , { "Source BT Reset",          true, true }
-                                      , { "Source ReConnect",         true, true }
-                                      , { "Sink SSID",                true, true }
-                                      , { "Sink Enable",              true, true }
+                                      , { "Source BT Reset",          true, true  }
+                                      , { "Source ReConnect",         true, true  }
+                                      , { "Sink SSID",                true, true  }
+                                      , { "Sink Enable",              true, true  }
                                       , { "Sink Connection Status",   true, false }
-                                      , { "Sink ReConnect",           true, true }
-                                      , { "Amplitude Gain",           true, true }
-                                      , { "FFT Gain",                 true, true } };
+                                      , { "Sink ReConnect",           true, true  }
+                                      , { "Amplitude Gain",           true, true  }
+                                      , { "FFT Gain",                 true, true  } };
 
 
-    //Active SSID Tracking
-    TaskHandle_t ActiveSSIDTrackerTask;
-    std::vector<SSID_Info_With_LastUpdateTime_t> m_ActiveSSIDs;
-    static void StaticActiveSSIDTrackerTaskLoop(void * Parameters);
-    void ActiveSSIDTrackerTaskLoop();
 };
 
 #endif
