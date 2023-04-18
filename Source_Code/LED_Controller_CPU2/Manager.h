@@ -27,6 +27,7 @@
 #include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
 #include <Preferences.h>
+#include <Ticker.h>
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -50,6 +51,30 @@ class Manager: public NamedItem
     void ProcessEventQueue300000mS();
     void LoadFromNVM();
 
+    //Delayed Amplitude Gain Save to NVM
+    float GetAmplitudeGain() { return m_AmplitudeGain; }
+    static void Static_Amplitude_Gain_Save(Manager *Manager_In)
+    {
+      Manager_In->Amplitude_Gain_Save(Manager_In);
+    }
+    void Amplitude_Gain_Save(Manager *Manager_In)
+    {
+      Serial << "Saving Amplitude Gain to NVM\n";
+      m_Preferences.putFloat("Amplitude Gain", Manager_In->GetAmplitudeGain());
+    }
+    
+    //Delayed FFT Gain Save to NVM
+    float GetFFTGain() { return m_FFTGain; }
+    static void Static_FFT_Gain_Save(Manager *Manager_In)
+    {
+      Manager_In->FFT_Gain_Save(Manager_In);
+    }
+    void FFT_Gain_Save(Manager *Manager_In)
+    {
+      Serial << "Saving FFT Gain to NVM\n";
+      m_Preferences.putFloat("FFT Gain", Manager_In->GetFFTGain());
+    }
+   
     //Bluetooth Set Data Callback
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
@@ -69,6 +94,9 @@ class Manager: public NamedItem
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     Frame_t m_FFTFrameBuffer[FFT_SIZE];
+
+    Ticker m_Aplitude_Gain_NVM_Save_Ticker;
+    Ticker m_FFT_Gain_NVM_Save_Ticker;
     
     //I2S Sound Data
     I2S_Device &m_I2S_In;

@@ -50,7 +50,6 @@ void Manager::Setup()
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
   m_BT_Out.StartDevice( m_SourceSSID.c_str() );
-  
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -221,6 +220,7 @@ void Manager::AmplitudeGain_RX()
       m_AmplitudeGain = DatalinkValue;
       Serial << "Amplitude Gain Value Value Changed: " << m_AmplitudeGain << "\n";
       m_SoundProcessor.SetGain(m_AmplitudeGain);
+      m_Aplitude_Gain_NVM_Save_Ticker.once(10, Static_Amplitude_Gain_Save, this);
       AmplitudeGain_TX();
     }
   }
@@ -244,6 +244,7 @@ void Manager::FFTGain_RX()
       m_FFTGain = DatalinkValue;
       Serial << "FFT Gain Value Value Changed: " << m_FFTGain << "\n";
       m_SoundProcessor.SetFFTGain(m_FFTGain);
+      m_FFT_Gain_NVM_Save_Ticker.once(10, Static_FFT_Gain_Save, this);
       FFTGain_TX();
     }
   }
