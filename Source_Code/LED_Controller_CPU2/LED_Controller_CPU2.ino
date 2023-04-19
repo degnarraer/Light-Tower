@@ -47,7 +47,7 @@ uint32_t TaskMonitorTaskLoopCount = 0;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S_NUM_1
-                                , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
+                                , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
                                 , I2S_SAMPLE_RATE
                                 , I2S_BITS_PER_SAMPLE_16BIT
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
