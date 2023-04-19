@@ -61,7 +61,6 @@ class Manager: public NamedItem
     void ProcessEventQueue20mS();
     void ProcessEventQueue1000mS();
     void ProcessEventQueue300000mS();
-    void Process_I2S_EventQueue();
     
     void SetInputType(InputType_t Type);
     //Bluetooth_Callback

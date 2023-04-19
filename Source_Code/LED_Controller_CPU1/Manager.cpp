@@ -87,7 +87,6 @@ void Manager::SoundStateChange(SoundState_t SoundState)
 
 void Manager::ProcessEventQueue20mS()
 {
-  Process_I2S_EventQueue();
   MoveDataToStatisticalEngine();
   SinkSSID_RX();
   SinkAutoReConnect_RX();
@@ -128,14 +127,6 @@ void Manager::SetInputType(InputType_t Type)
       m_I2S_Out.StopDevice();
     break;
   }
-}
-void Manager::Process_I2S_EventQueue()
-{    
-  if(m_InputType == InputType_Microphone)
-  {
-    m_Mic_In.ProcessEventQueue();
-  }
-  m_I2S_Out.ProcessEventQueue();
 }
 
 //Bluetooth_Callback
