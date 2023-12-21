@@ -139,6 +139,7 @@ class Manager: public NamedItem
     void SourceAutoReConnect_TX();
 
     String m_SourceSSID;
+    String m_SourceADDRESS;
     void SourceSSID_RX();
     void SourceSSID_TX();
     

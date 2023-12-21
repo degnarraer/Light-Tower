@@ -49,7 +49,7 @@ void Manager::Setup()
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  m_BT_Out.StartDevice( m_SourceSSID.c_str() );
+  m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -57,7 +57,8 @@ void Manager::InitializeNVM(bool Reset)
   if(true == Reset || false == m_Preferences.getBool("NVM Initialized", false))
   {
     if(true == Reset) m_Preferences.clear();
-    m_Preferences.putString("Source SSID", "JBL Flip 6");
+    m_Preferences.putString("Source SSID", "");
+    m_Preferences.putString("Source ADDRESS", "");
     m_Preferences.putFloat("Amplitude Gain", 1.0);
     m_Preferences.putFloat("FFT Gain", 1.0);
     m_Preferences.putBool("Source BT Reset", true);
@@ -73,6 +74,7 @@ void Manager::LoadFromNVM()
 {
   //Reload NVM Values
   m_SourceSSID = m_Preferences.getString("Source SSID", "");
+  m_SourceADDRESS = m_Preferences.getString("Source ADDRESS", "");
   
   m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
   m_SoundProcessor.SetGain(m_AmplitudeGain);
@@ -188,7 +190,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
 {
   for(int i = 0; i < Devices.size(); ++i)
   {  
-    SSID_Info_With_LastUpdateTime_t SSID_Info = SSID_Info_With_LastUpdateTime_t(Devices[i].SSID.c_str(), millis()-Devices[i].LastUpdateTime, Devices[i].RSSI);
+    SSID_Info_With_LastUpdateTime_t SSID_Info = SSID_Info_With_LastUpdateTime_t(Devices[i].SSID.c_str(), Devices[i].ADDRESS.c_str(), millis()-Devices[i].LastUpdateTime, Devices[i].RSSI);
     Serial << SSID_Info.SSID << " | " << SSID_Info.TimeSinceUdpate << " | " << SSID_Info.RSSI << "\n";
     static bool FoundSpeakerSSIDSValuePushError = false;
     PushValueToQueue( &SSID_Info
@@ -305,21 +307,22 @@ void Manager::SourceAutoReConnect_TX()
 
 void Manager::SourceSSID_RX()
 {
-  String DatalinkValue;
-  char Buffer[m_SPIDataLinkToCPU3.GetQueueByteCountForDataItem("Sink SSID")];
+  SSID_Info_t DatalinkValue;
   static bool SourceSSIDPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, SourceSSIDPullErrorHasOccured))
   {
-    DatalinkValue = String(Buffer);
-    m_SourceSSID = m_Preferences.getString("Source SSID", "LED Tower of Power").c_str();
-    Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
+    Serial << "RX Datalink SSID Value: " << String(DatalinkValue.SSID) << "\n";
     Serial << "RX NVMValue Value: " << m_SourceSSID.c_str() << "\n";
-    if(!m_SourceSSID.equals(DatalinkValue))
+    Serial << "RX Datalink SSID Value: " << String(DatalinkValue.ADDRESS) << "\n";
+    Serial << "RX NVMValue Value: " << m_SourceADDRESS << "\n";
+    if(!m_SourceSSID.equals(String(DatalinkValue.SSID)) || !m_SourceADDRESS.equals(String(DatalinkValue.ADDRESS)) )
     {
       Serial << "Source SSID Value Changed\n";
-      m_SourceSSID = DatalinkValue;
+      m_SourceSSID = String(DatalinkValue.SSID);
+      m_SourceADDRESS = String(DatalinkValue.ADDRESS);
       m_Preferences.putString("Source SSID", m_SourceSSID);
-      m_BT_Out.StartDevice( m_Preferences.getString("Source SSID", "JBL Flip 6").c_str() );
+      m_Preferences.putString("Source ADDRESS", m_SourceADDRESS);
+      m_BT_Out.SetSSIDToConnect( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
       SourceSSID_TX();
     }
   }

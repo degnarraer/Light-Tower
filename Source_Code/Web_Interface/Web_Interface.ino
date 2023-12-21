@@ -22,6 +22,8 @@
 #include "Manager.h"
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
+#include "HardwareSerial.h"
+#include "DataItem.h"
 
 #define TASK_LOOP_COUNT_DEBUG false
 #define TASK_STACK_SIZE_DEBUG false
@@ -48,11 +50,14 @@ AsyncWebSocket MyWebSocket("/ws");
 SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave();
 
 // Create Settings Web Server that uses the Socket 
-SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager", MyWebSocket, m_SPIDataLinkSlave );
+SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager", MyWebSocket );
 
 // Create Manager to Move Data Around
 Manager m_Manager = Manager( "Manager", m_SPIDataLinkSlave, m_SettingsWebServerManager );
 
+SerialPortMessageManager CPU1SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial1);
+SerialPortMessageManager CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2);
+  
 // Static Callback for Web Socket
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
@@ -108,10 +113,10 @@ void InitFileSystem()
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,  &WebServer_Task,    0 );
-  xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",     10000,  NULL,  configMAX_PRIORITIES - 1,  &Manager_Task,      0 );
-  xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",      10000,  NULL,  configMAX_PRIORITIES - 1,  &SPI_RX_Task,       0 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitor_Task", 5000,   NULL,  configMAX_PRIORITIES - 4,  &TaskMonitor_Task,  0 );
+  //xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,    &WebServer_Task,    0 );
+  //xTaskCreatePinnedToCore( Manager_TaskLoop,    "Manager_Task",     10000,  NULL,  configMAX_PRIORITIES - 1,    &Manager_Task,      0 );
+  //xTaskCreatePinnedToCore( SPI_RX_TaskLoop,     "SPI_RX_Task",      10000,  NULL,  configMAX_PRIORITIES - 1,    &SPI_RX_Task,       0 );
+  //xTaskCreatePinnedToCore( TaskMonitorTaskLoop, "TaskMonitor_Task", 5000,   NULL,  configMAX_PRIORITIES - 4,    &TaskMonitor_Task,  0 );
 }
 
 void InitLocalVariables()
@@ -123,13 +128,15 @@ void InitLocalVariables()
 
 void setup(){
   Serial.begin(500000);
-  InitLocalVariables();
-  InitFileSystem();
-  InitWebServer();
-  InitWebSocket();
+  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial2.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+  //InitLocalVariables();
+  //InitFileSystem();
+  //InitWebServer();
+  //InitWebSocket();
   InitTasks();
-  StartWebServer();
-  PrintMemory();
+  //StartWebServer();
+  //PrintMemory();
 }
 
 void loop()

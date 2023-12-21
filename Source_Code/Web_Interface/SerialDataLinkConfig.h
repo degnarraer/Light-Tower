@@ -51,9 +51,9 @@ class SPIDataLinkSlave: public SPI_Datalink_Slave
       { "Sink Connection Status",   DataType_ConnectionStatus_t,              1,  Transciever_RX,   4   },
       { "Sink ReConnect",           DataType_bool_t,                          1,  Transciever_TXRX, 4   },
       { "Sink SSID",                DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
-      { "Amplitude Gain",           DataType_Float_t,                         1,  Transciever_TXRX, 4  },
-      { "FFT Gain",                 DataType_Float_t,                         1,  Transciever_TXRX, 4  },
-      { "Found Speaker SSIDS",      DataType_SSID_Info_With_LastUpdateTime_t, 1,  Transciever_TXRX, 4  },
+      { "Amplitude Gain",           DataType_Float_t,                         1,  Transciever_TXRX, 4   },
+      { "FFT Gain",                 DataType_Float_t,                         1,  Transciever_TXRX, 4   },
+      { "Found Speaker SSIDS",      DataType_SSID_Info_With_LastUpdateTime_t, 1,  Transciever_RX,   4   },
       { "Target Speaker SSID",      DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }

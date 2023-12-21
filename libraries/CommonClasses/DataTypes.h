@@ -24,6 +24,14 @@ struct KeyValuePair
 };
 typedef KeyValuePair KVP;
 
+struct KeyValueTuple
+{
+  String Key;
+  String Value1;
+  String Value2;
+};
+typedef KeyValueTuple KVT;
+
 struct SSID_Info
 {
 	public:
@@ -38,26 +46,7 @@ struct SSID_Info
 			snprintf(SSID, 248, "%s", SSID_In.c_str());
 			RSSI = RSSI_In;
 		}
-		char SSID[248] = "\0";
-		int32_t RSSI = 0;
-		SSID_Info& operator=(const String &a)
-		{
-			if(248 < a.length())
-			{
-				Serial << "Bad SSID: " << a.c_str() << " | " << a.length() << "\n";
-				assert(248 >= a.length());
-			}
-			snprintf(SSID, 248, "%s", a.c_str());
-			return *this;
-		}
-};
-typedef SSID_Info SSID_Info_t;
-
-struct SSID_Info_With_LastUpdateTime
-{
-	public:
-		SSID_Info_With_LastUpdateTime(){}
-		SSID_Info_With_LastUpdateTime(String SSID_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
+		SSID_Info(String SSID_In, String ADDRESS_In, int32_t RSSI_In = 0)
 		{
 			if(248 < SSID_In.length())
 			{
@@ -65,29 +54,53 @@ struct SSID_Info_With_LastUpdateTime
 				assert(248 >= SSID_In.length());
 			}
 			snprintf(SSID, 248, "%s", SSID_In.c_str());
+			if(18 < ADDRESS_In.length())
+			{
+				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
+				assert(18 >= ADDRESS_In.length());
+			}
+			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
+			RSSI = RSSI_In;
+		}
+		char SSID[248] = "\0";
+		char ADDRESS[18] = "\0";
+		int32_t RSSI = 0;
+};
+typedef SSID_Info SSID_Info_t;
+
+struct SSID_Info_With_LastUpdateTime
+{
+	public:
+		SSID_Info_With_LastUpdateTime(){}
+		SSID_Info_With_LastUpdateTime(String SSID_In, String ADDRESS_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
+		{
+			if(248 < SSID_In.length())
+			{
+				Serial << "Bad SSID: " << SSID_In.c_str() << " | " << SSID_In.length() << "\n";
+				assert(248 >= SSID_In.length());
+			}
+			snprintf(SSID, 248, "%s", SSID_In.c_str());
+			if(18 < ADDRESS_In.length())
+			{
+				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
+				assert(18 >= ADDRESS_In.length());
+			}
+			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
 			TimeSinceUdpate = TimeSinceUdpate_in;
 			RSSI = RSSI_In;
 		}
 		char SSID[248] = "\0";
-		uint32_t TimeSinceUdpate = 0;
+		char ADDRESS[18] = "\0";
 		int32_t RSSI = 0;
-		SSID_Info_With_LastUpdateTime& operator=(const String &a)
-		{
-			if(248 < a.length())
-			{
-				Serial << "Bad SSID: " << a.c_str() << " | " << a.length() << "\n";
-				assert(248 >= a.length());
-			}
-			snprintf(SSID, 248, "%s", a.c_str());
-			return *this;
-		}
+		uint32_t TimeSinceUdpate = 0;
 };
 typedef SSID_Info_With_LastUpdateTime SSID_Info_With_LastUpdateTime_t;
 
 
 struct ActiveCompatibleDevice_t
 {
-	std::string SSID;
+	String SSID;
+	String ADDRESS;
 	int32_t RSSI;
 	unsigned long LastUpdateTime;
 };

@@ -42,9 +42,10 @@ void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 	m_MusicDataCallback = callback;
 }
 
-void Bluetooth_Source::StartDevice( const char *SSID )
+void Bluetooth_Source::StartDevice( const char *SourceName, const char *SourceAddress )
 {
-	m_SSID = String(SSID);
+	m_SSID = String(SourceName);
+	m_ADDRESS = String(SourceAddress);
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
 	InstallDevice();
 	m_BTSource.start_raw(m_MusicDataCallback);
@@ -53,23 +54,29 @@ void Bluetooth_Source::StartDevice( const char *SSID )
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tSSID: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_SSID.c_str(), m_ResetBLE, m_AutoReConnect, m_SSPEnabled);
 }
 
+void Bluetooth_Source::SetSSIDToConnect( const char *SourceName, const char *SourceAddress )
+{
+	m_SSID = String(SourceName);
+	m_ADDRESS = String(SourceAddress);
+}
+
 //Callback from BT Source for compatible devices to connect to
 bool Bluetooth_Source::ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi)
 {
-	if(true == compatible_device_found(ssid, rssi))
+	if(true == compatible_device_found(ssid, address, rssi))
 	{
 		SetPairing();
 	}
-	return m_SSID.equals(String(ssid));
+	return m_SSID.equals(String(ssid)) && m_ADDRESS.equals(m_BTSource.to_str(address));
 }
 		
-bool Bluetooth_Source::compatible_device_found(const char* ssid, int32_t rssi)
+bool Bluetooth_Source::compatible_device_found(const char* ssid, esp_bd_addr_t address, int32_t rssi)
 {
 	bool Found = false;
 	String SSID = String(ssid);
 	for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 	{
-		if(0 == m_ActiveCompatibleDevices[i].SSID.compare(SSID.c_str()))
+		if(true == m_ActiveCompatibleDevices[i].SSID.equals(SSID))
 		{
 			Found = true;
 			m_ActiveCompatibleDevices[i].LastUpdateTime = millis();
@@ -81,6 +88,7 @@ bool Bluetooth_Source::compatible_device_found(const char* ssid, int32_t rssi)
 	{
 		ActiveCompatibleDevice_t NewDevice;
 		NewDevice.SSID = SSID.c_str();
+		NewDevice.ADDRESS = m_BTSource.to_str(address);
 		NewDevice.RSSI = rssi;
 		NewDevice.LastUpdateTime = millis();
 		m_ActiveCompatibleDevices.push_back(NewDevice);

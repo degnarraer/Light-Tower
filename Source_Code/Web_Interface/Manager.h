@@ -56,7 +56,7 @@ class Manager: public NamedItem
   private:
     SPIDataLinkSlave &m_SPIDataLinkSlave;
     SettingsWebServerManager &m_SettingsWebServerManager;
-    static const uint8_t m_SignalCount = 11;
+    static const uint8_t m_SignalCount = 12;
     Signal m_Signals[m_SignalCount] = { { "Sound State",              true, false }
                                       , { "Source SSID",              true, true  }
                                       , { "Source Connection Status", true, false }
@@ -67,7 +67,8 @@ class Manager: public NamedItem
                                       , { "Sink Connection Status",   true, false }
                                       , { "Sink ReConnect",           true, true  }
                                       , { "Amplitude Gain",           true, true  }
-                                      , { "FFT Gain",                 true, true  } };
+                                      , { "FFT Gain",                 true, true  }
+                                      , { "Found Speaker SSIDS",      true, false }  };
 
 
 };

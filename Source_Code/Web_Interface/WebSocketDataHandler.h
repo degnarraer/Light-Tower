@@ -163,128 +163,92 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
     WebSocketSSIDArrayDataHandler( DataItem_t *DataItem
                                  , String *WidgetIds
                                  , const size_t NumberOfWidgets
-                                 , SPIDataLinkSlave &SPIDataLinkSlave
                                  , bool ReadUntilEmpty
                                  , TickType_t TicksToWait
                                  , bool Debug )
                                  : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait, Debug)
-                                 , m_SPIDataLinkSlave(SPIDataLinkSlave)
     {
-      xTaskCreatePinnedToCore( StaticActiveSSIDTrackerTaskLoop,   "StaticActiveSSIDTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &ActiveSSIDTrackerTask, 1);
-      xTaskCreatePinnedToCore( StaticProcess_SSIDs,   "ProcessSSIDTask",  2000,  this,   configMAX_PRIORITIES - 3,   &ProcessSSIDTask, 1);
     }
     
     virtual ~WebSocketSSIDArrayDataHandler()
     {
-      vTaskDelete(ActiveSSIDTrackerTask);
-      vTaskDelete(ProcessSSIDTask);
     }
-    
-  private:
-    //Datalink
-    SPIDataLinkSlave &m_SPIDataLinkSlave;
-    
-    //Active SSID Tracking
-    TaskHandle_t ActiveSSIDTrackerTask;
-    std::vector<SSID_Info_With_LastUpdateTime_t> m_ActiveSSIDs;
-    static void StaticActiveSSIDTrackerTaskLoop(void * Parameters)
-    {
-      WebSocketSSIDArrayDataHandler* aWebSocketSSIDArrayDataHandler = (WebSocketSSIDArrayDataHandler*)Parameters;
-      aWebSocketSSIDArrayDataHandler->ActiveSSIDTrackerTaskLoop();
-    }
-    void ActiveSSIDTrackerTaskLoop()
-    {
-      while(true)
-      {
-        unsigned long CurrentTime = millis();
-        for(int i = 0; i < m_ActiveSSIDs.size(); ++i)
-        {
-          if(m_ActiveSSIDs[i].TimeSinceUdpate >= ACTIVE_SSID_TIMEOUT)
-          {
-            m_ActiveSSIDs.erase(m_ActiveSSIDs.begin()+i);
-            break;
-          }
-        }
-        for(int i = 0; i < m_ActiveSSIDs.size(); ++i)
-        {
-          ESP_LOGI("Manager", "Active SSID: %s \tRSSI: %i", m_ActiveSSIDs[i].SSID.c_str(), m_ActiveSSIDs[i].RSSI);
-        }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-      }
-    }
-
-    TaskHandle_t ProcessSSIDTask;
-    static void StaticProcess_SSIDs(void * Parameters)
-    {
-      WebSocketSSIDArrayDataHandler* aWebSocketSSIDArrayDataHandler = (WebSocketSSIDArrayDataHandler*)Parameters;
-      aWebSocketSSIDArrayDataHandler->Process_SSIDs();
-    }
-    void Process_SSIDs()
-    {
-      const TickType_t xFrequency = 20;
-      TickType_t xLastWakeTime = xTaskGetTickCount();
-      while(true)
-      {
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-        SSID_Info_With_LastUpdateTime_t Received_SSID;
-        static bool FoundSpeakerSSIDSPullErrorHasOccured = false;
-        if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&Received_SSID, "Found Speaker SSIDS", false, 0, FoundSpeakerSSIDSPullErrorHasOccured))
-        {
-          Serial << Received_SSID.SSID << " | " << Received_SSID.TimeSinceUdpate << " | " << Received_SSID.RSSI << "\n";
-        }
-      }
-    }
-    
   protected:
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
-      String ValueCopy;
-      char Buffer[m_DataItem->TotalByteCount];
-      if(NULL != m_DataItem && NULL != m_WidgetId)
+      SSID_Info_With_LastUpdateTime_t Received_SSID;
+      unsigned long CurrentTime = millis();
+      size_t TotalSSIDs = uxQueueMessagesWaiting(m_DataItem->QueueHandle_TX);
+      for(int i = 0; i < TotalSSIDs; ++i)
       {
-        if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name, m_ReadUntilEmpty, m_TicksToWait, m_PullError))
+        if(true == GetValueFromQueue(&Received_SSID, m_DataItem->QueueHandle_TX, m_DataItem->Name, false, m_TicksToWait, m_PullError))
         {
-          if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
+          bool Found = false;
+          for(int j = 0; j < m_ActiveSSIDs.size(); ++j)
           {
-            m_Value = String(Buffer);
-            ValueCopy = m_Value;
-            xSemaphoreGive(mySemaphore);
-            for (size_t i = 0; i < m_NumberOfWidgets; i++)
+            if( true == m_ActiveSSIDs[j].SSID.equals(Received_SSID.SSID) )
             {
-              if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              KeyValuePairs.push_back({ m_WidgetId[i], ValueCopy });
+              Found = true;
+              m_ActiveSSIDs[j].RSSI = Received_SSID.RSSI;
+              m_ActiveSSIDs[j].LastUpdateTime = CurrentTime;
+              if(ACTIVE_SSID_TIMEOUT <= Received_SSID.TimeSinceUdpate)
+              {
+                ESP_LOGI("WebSocketDataHandler", "SSID Timedout: %s", Received_SSID.SSID);
+                m_ActiveSSIDs.erase(m_ActiveSSIDs.begin()+j);
+              }
+              break;
             }
           }
+          if(false == Found && ACTIVE_SSID_TIMEOUT >= Received_SSID.TimeSinceUdpate )
+          {
+            ESP_LOGI("WebSocketDataHandler", "Found New SSID: %s", Received_SSID.SSID);
+            ActiveCompatibleDevice_t NewDevice;
+            NewDevice.SSID = Received_SSID.SSID;
+            NewDevice.ADDRESS = Received_SSID.ADDRESS;
+            NewDevice.RSSI = Received_SSID.RSSI;
+            NewDevice.LastUpdateTime = CurrentTime;
+            m_ActiveSSIDs.push_back(NewDevice);
+          }
+        }
+      }
+      
+      std::vector<KVT> KeyValueTupleVector;
+      for(int i = 0; i < m_ActiveSSIDs.size(); ++i)
+      {
+        KVT KeyValueTuple;
+        KeyValueTuple.Key = m_ActiveSSIDs[i].SSID;
+        KeyValueTuple.Value1 = m_ActiveSSIDs[i].ADDRESS;
+        KeyValueTuple.Value2 = String(m_ActiveSSIDs[i].RSSI);
+        KeyValueTupleVector.push_back(KeyValueTuple);
+      }
+      if(0 < KeyValueTupleVector.size())
+      {
+        for(size_t i = 0; i < m_NumberOfWidgets; i++)
+        {
+          KeyValuePairs.push_back({ m_WidgetId[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
         }
       }
     }
-    
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
     {
-      bool Found = false;
-      String InputId = WidgetId;
-      if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        m_Value = Value;
-        String ValueCopy = m_Value;
-        xSemaphoreGive(mySemaphore);
-        if(NULL != m_DataItem && NULL != m_WidgetId)
-        {
-          SSID_Info_t SSID_Info = SSID_Info_t(ValueCopy);
-          for (size_t i = 0; i < m_NumberOfWidgets; i++)
-          {
-            m_WidgetId[i].trim();
-            InputId.trim();
-            if( m_WidgetId[i].equals(InputId) )
-            {
-              Found = true;
-              if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
-            }
-          }
-        }
+      return false;
+    }
+  private:
+    //Datalink
+    std::vector<ActiveCompatibleDevice_t> m_ActiveSSIDs;
+    String Encode_SSID_Values_To_JSON(std::vector<KVT> &KeyValueTuple)
+    {
+      JSONVar JSONVars;
+      for(int i = 0; i < KeyValueTuple.size(); ++i)
+      { 
+        JSONVar SSIDValues;
+        SSIDValues["SSID"] = KeyValueTuple[i].Key;
+        SSIDValues["ADDRESS"] = KeyValueTuple[i].Value1;
+        SSIDValues["RSSI"] = KeyValueTuple[i].Value2;
+        JSONVars["SSIDValue" + String(i)] = SSIDValues;
       }
-      return Found;
+      String Result = JSON.stringify(JSONVars);
+      return Result;
     }
 };
 

@@ -25,12 +25,6 @@
 #define HSPI_PIN_MOSI             13
 #define HSPI_PIN_SS               15
 
-//SPI VSPI PINS
-#define VSPI_PIN_SCK              18
-#define VSPI_PIN_MISO             19
-#define VSPI_PIN_MOSI             23
-#define VSPI_PIN_SS               5
-
 //App Tunes
 #define I2S_SAMPLE_RATE 44100
 

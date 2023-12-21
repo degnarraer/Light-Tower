@@ -25,6 +25,7 @@
 #include <Helpers.h>
 #include <BluetoothA2DPSink.h>
 #include <BluetoothA2DPSource.h>
+#include <BluetoothA2DPCommon.h>
 class BluetoothConnectionStatusCallee
 {
 	public:
@@ -191,7 +192,8 @@ class Bluetooth_Source: public NamedItem
 		}
 		void Setup();
 		void InstallDevice();
-		void StartDevice( const char *SourceName );
+		void StartDevice( const char *SourceName, const char *SourceAddress );
+		void SetSSIDToConnect( const char *SourceName, const char *SourceAddress );
 		void SetMusicDataCallback(music_data_cb_t callback);
 		
 		//Callback from BT Source for compatible devices to connect to
@@ -224,6 +226,7 @@ class Bluetooth_Source: public NamedItem
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
 		String m_SSID;
+		String m_ADDRESS;
 		bool m_ResetNVS = false;
 		bool m_ResetBLE = false;
 		bool m_AutoReConnect = true;
@@ -234,7 +237,7 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
-		bool compatible_device_found(const char* ssid, int32_t rssi);
+		bool compatible_device_found(const char* ssid, esp_bd_addr_t address, int32_t rssi);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
 };

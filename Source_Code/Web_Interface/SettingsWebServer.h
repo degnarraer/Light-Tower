@@ -26,11 +26,9 @@ class SettingsWebServerManager: public QueueManager
 {  
   public:
     SettingsWebServerManager( String Title
-                            , AsyncWebSocket &WebSocket
-                            , SPIDataLinkSlave &SPIDataLinkSlave )
+                            , AsyncWebSocket &WebSocket )
                             : QueueManager(Title + "Queue Manager", GetDataItemConfigCount())
                             , m_WebSocket(WebSocket)
-                            , m_SPIDataLinkSlave(SPIDataLinkSlave)
     {
       mySenderSemaphore = xSemaphoreCreateRecursiveMutex();
       myReceiverSemaphore = xSemaphoreCreateRecursiveMutex();
@@ -45,7 +43,7 @@ class SettingsWebServerManager: public QueueManager
       FFT_Gain_DataHandler = new WebSocketDataHandler<float>( GetPointerToDataItemWithName("FFT Gain"), new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}, 2, true, 0, false );
       SinkSSID_DataHandler = new WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, false );
       SourceSSID_DataHandler = new WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, false );
-      SourceSSIDs_DataHandler = new WebSocketSSIDArrayDataHandler( GetPointerToDataItemWithName("Found Speaker SSIDS"), new String[1]{"TBD"}, 1, m_SPIDataLinkSlave, true, 0, false );
+      SourceSSIDs_DataHandler = new WebSocketSSIDArrayDataHandler( GetPointerToDataItemWithName("Found Speaker SSIDS"), new String[1]{"TBD"}, 1, true, 0, false );
       Source_Connection_Status_DataHandler = new WebSocketDataHandler<ConnectionStatus_t>( GetPointerToDataItemWithName("Source Connection Status"), new String[1]{"Source_Connection_Status"}, 1, true, 0, false );
       Source_BT_Reset_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0, false );
       Source_BT_ReConnect_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
@@ -59,7 +57,7 @@ class SettingsWebServerManager: public QueueManager
     
     virtual ~SettingsWebServerManager()
     {
-      free(SourceSSIDs_DataHandler);
+      free(Sound_State_DataHandler);
       free(Amplitude_Gain_DataHandler);
       free(FFT_Gain_DataHandler);
       free(SinkSSID_DataHandler);
@@ -96,7 +94,7 @@ class SettingsWebServerManager: public QueueManager
       RegisterAsWebSocketDataReceiver(SourceSSID_DataHandler);
       RegisterAsWebSocketDataSender(SourceSSID_DataHandler);
 
-      RegisterAsWebSocketDataReceiver(SourceSSIDs_DataHandler);
+      RegisterAsWebSocketDataSender(SourceSSIDs_DataHandler);
       
       RegisterAsWebSocketDataSender(Source_Connection_Status_DataHandler);
       
@@ -136,7 +134,7 @@ class SettingsWebServerManager: public QueueManager
         xSemaphoreGive(mySenderSemaphore);
         if(KeyValuePairs.size() > 0)
         {
-          NotifyClients(Encode_JSON_Data_Values_To_JSON(KeyValuePairs));
+          NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
         }
       }
     }
@@ -233,7 +231,6 @@ class SettingsWebServerManager: public QueueManager
     SemaphoreHandle_t mySenderSemaphore;
     SemaphoreHandle_t myReceiverSemaphore;
     AsyncWebSocket &m_WebSocket;
-    SPIDataLinkSlave &m_SPIDataLinkSlave;
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
     String message = "";
@@ -292,40 +289,24 @@ class SettingsWebServerManager: public QueueManager
       { "Sink ReConnect",           DataType_bool_t,                          1,  Transciever_TXRX, 4   },
       { "Amplitude Gain",           DataType_Float_t,                         1,  Transciever_TXRX, 4   },
       { "FFT Gain",                 DataType_Float_t,                         1,  Transciever_TXRX, 4   },
-      { "Found Speaker SSIDS",      DataType_SSID_Info_With_LastUpdateTime_t, 1,  Transciever_TXRX, 4   },
+      { "Found Speaker SSIDS",      DataType_SSID_Info_With_LastUpdateTime_t, 1,  Transciever_TX,   4   },
       { "Target Speaker SSID",      DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
     };
     DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
     size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
     
-    //Get Slider Values
-    String Encode_JSON_Data_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
+    String Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
     {
       JSONVar JSONVars;
       for(int i = 0; i < KeyValuePairs.size(); ++i)
       {
-          if( true == isAsciiString(KeyValuePairs[i].Key.c_str()) && true == isAsciiString(KeyValuePairs[i].Value.c_str()) )
-          {
-            JSONVar SettingValues;
-            SettingValues["Id"] = KeyValuePairs[i].Key;
-            SettingValues["Value"] = KeyValuePairs[i].Value;
-            JSONVars["WidgetValue" + String(i)] = SettingValues;
-          }
+        JSONVar SettingValues;
+        SettingValues["Id"] = KeyValuePairs[i].Key;
+        SettingValues["Value"] = KeyValuePairs[i].Value;
+        JSONVars["WidgetValue" + String(i)] = SettingValues; 
       }
       String Result = JSON.stringify(JSONVars);
       return Result;
-    }
-    
-    bool isAsciiString(const char* str)
-    {
-      for (size_t i = 0; str[i] != '\0'; i++) {
-        if (str[i] < 0 || str[i] > 127) {
-          // Character is not ASCII
-          return false;
-        }
-      }
-      // All characters are ASCII
-      return true;
     }
     
     void NotifyClients(String TextString)
