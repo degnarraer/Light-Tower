@@ -40,11 +40,13 @@ class SerialPortMessageManager
 						 : m_Serial(serial)
 						 , m_TaskName(taskName)
 		{
-			xTaskCreatePinnedToCore( StaticSerialMonitor_RXLoop, m_TaskName.c_str(), 1000, this,  configMAX_PRIORITIES - 1,  &m_TaskHandle,  0 );
+			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
+			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
 		}
 		virtual ~SerialPortMessageManager()
 		{
-			vTaskDelete(m_TaskHandle);
+			if(m_RXTaskHandle) vTaskDelete(m_RXTaskHandle);
+			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 		}
 		void SetupSerialPortMessageManager()
 		{
@@ -58,18 +60,33 @@ class SerialPortMessageManager
 				ESP_LOGI("SerialPortMessageManager", "Created the TX Queue.");
 			}
 		}
+		void SendMessage(String *message)
+		{
+			if(NULL != m_TXQueue)
+			{
+				if(xQueueSend(m_TXQueue, message, 0) != pdTRUE)
+				{
+					ESP_LOGW("SerialPortMessageManager", "WARNING! Unable to Send Message.");
+				}
+			}
+			else
+			{
+				ESP_LOGE("SerialPortMessageManager", "Error! NULL Queue!");
+			}
+		}
 	private:
 		HardwareSerial &m_Serial;
 		String m_TaskName = "";
-		TaskHandle_t m_TaskHandle;
+		TaskHandle_t m_RXTaskHandle;
+		TaskHandle_t m_TXTaskHandle;
 		std::vector<NewValueCallBack*> m_NewValueCallBacks = std::vector<NewValueCallBack*>();
 		QueueHandle_t m_TXQueue;
-		static void StaticSerialMonitor_RXLoop(void *Parameters)
+		static void StaticSerialPortMessageManager_RXLoop(void *Parameters)
 		{
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
-			aSerialPortMessageManager->SerialMonitor_RXLoop();
-		}	
-		void SerialMonitor_RXLoop()
+			aSerialPortMessageManager->SerialPortMessageManager_RXLoop();
+		}
+		void SerialPortMessageManager_RXLoop()
 		{
 			const TickType_t xFrequency = 20;
 			TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -91,6 +108,47 @@ class SerialPortMessageManager
 					{
 						message.concat(character);
 					}
+				}
+			}
+		}
+		
+		static void StaticSerialPortMessageManager_TXLoop(void *Parameters)
+		{
+			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
+			aSerialPortMessageManager->SerialPortMessageManager_TXLoop();
+		}
+		void SerialPortMessageManager_TXLoop()
+		{
+			const TickType_t xFrequency = 20;
+			TickType_t xLastWakeTime = xTaskGetTickCount();
+			while(true)
+			{
+				vTaskDelayUntil( &xLastWakeTime, xFrequency );
+				if(NULL != m_TXQueue)
+				{
+					size_t QueueCount = uxQueueMessagesWaiting(m_TXQueue);
+					if(QueueCount > 0)
+					{
+						ESP_LOGE("SerialPortMessageManager", "Queue Count: %i", QueueCount);
+						for(int i = 0; i < QueueCount; ++i)
+						{
+							String* pmessage;
+							if ( xQueueReceive(m_TXQueue, &pmessage, 0) == pdTRUE )
+							{
+								//String message = printf("%s",(*(&(pmessage[0]))));
+								Serial.println(printf("%s",(*(&(pmessage[0])))));
+								free(pmessage);
+							}
+							else
+							{
+								ESP_LOGE("SerialPortMessageManager", "ERROR! Unable to Send Message.");
+							}
+						}
+					}
+				}
+				else
+				{
+					ESP_LOGE("SerialPortMessageManager", "ERROR! NULL TX Queue.");
 				}
 			}
 		}
@@ -165,6 +223,8 @@ class DataItem: public NewValueCallBack
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
 				Serial.println(m_Name + ": TX Periodic Data");
+				String *message = new String("Hello World");
+				m_SerialPortMessageManager.SendMessage(message);
 			}
 			
 		}

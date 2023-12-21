@@ -59,17 +59,17 @@ SerialPortMessageManager CPU1SerialPortMessageManager = SerialPortMessageManager
 SerialPortMessageManager CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2);
 DataSerializer m_DataSerializer;
 DataItem <int16_t>intItem1 = DataItem<int16_t>("Name1", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem2 = DataItem<int16_t>("Name2", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t>intItem2 = DataItem<int16_t>("Name2", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 DataItem <int16_t>intItem3 = DataItem<int16_t>("Name3", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem4 = DataItem<int16_t>("Name4", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t>intItem4 = DataItem<int16_t>("Name4", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 DataItem <int16_t>intItem5 = DataItem<int16_t>("Name5", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem6 = DataItem<int16_t>("Name6", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t>intItem6 = DataItem<int16_t>("Name6", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 DataItem <int16_t>intItem7 = DataItem<int16_t>("Name7", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem8 = DataItem<int16_t>("Name8", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t>intItem8 = DataItem<int16_t>("Name8", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 DataItem <int16_t>intItem9 = DataItem<int16_t>("Name9", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem10 = DataItem<int16_t>("Name10", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t>intItem10 = DataItem<int16_t>("Name10", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 DataItem <int16_t>intItem11 = DataItem<int16_t>("Name11", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem12 = DataItem<int16_t>("Name12", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t>intItem12 = DataItem<int16_t>("Name12", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 
 // Static Callback for Web Socket
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -146,29 +146,17 @@ void setup(){
   CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
   intItem1.EnableDatalinkCommunication(true);
-  delay(100);
   intItem2.EnableDatalinkCommunication(true);
-  delay(100);
   intItem3.EnableDatalinkCommunication(true);
-  delay(100);
   intItem4.EnableDatalinkCommunication(true);
-  delay(100);
   intItem5.EnableDatalinkCommunication(true);
-  delay(100);
   intItem6.EnableDatalinkCommunication(true);
-  delay(100);
   intItem7.EnableDatalinkCommunication(true);
-  delay(100);
   intItem8.EnableDatalinkCommunication(true);
-  delay(100);
   intItem9.EnableDatalinkCommunication(true);
-  delay(100);
   intItem10.EnableDatalinkCommunication(true);
-  delay(100);
   intItem11.EnableDatalinkCommunication(true);
-  delay(100);
   intItem12.EnableDatalinkCommunication(true);
-  delay(100);
   //InitLocalVariables();
   //InitFileSystem();
   //InitWebServer();
