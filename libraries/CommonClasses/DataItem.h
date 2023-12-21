@@ -81,9 +81,10 @@ class SerialPortMessageManager
 		void SendMessage(String message)
 		{
 			String *heapMessage = new String(message);
-			if(NULL != m_TXQueue)
+			if(NULL != m_TXQueue && NULL != heapMessage)
 			{
-				if(xQueueSend(m_TXQueue, heapMessage, 0) != pdTRUE)
+				ESP_LOGI("SerialPortMessageManager", "Send Message: Address: %p Message: %s", static_cast<void*>(heapMessage), heapMessage->c_str());
+				if(xQueueSend(m_TXQueue, &heapMessage, 0) != pdTRUE)
 				{
 					ESP_LOGW("SerialPortMessageManager", "WARNING! Unable to Send Message.");
 				}
@@ -120,7 +121,7 @@ class SerialPortMessageManager
 					if(character == '\n')
 					{
 						message = m_TaskName + " Debug: " + message;
-						Serial.println(message.c_str());
+						//Serial.println(message.c_str());
 						message = "";
 					}
 					else
@@ -148,16 +149,22 @@ class SerialPortMessageManager
 					size_t QueueCount = uxQueueMessagesWaiting(m_TXQueue);
 					if(QueueCount > 0)
 					{
-						ESP_LOGE("SerialPortMessageManager", "Queue Count: %i", QueueCount);
+						ESP_LOGD("SerialPortMessageManager", "Queue Count: %i", QueueCount);
 						for(int i = 0; i < QueueCount; ++i)
 						{
-							String* pmessage;
+							String *pmessage;
 							if ( xQueueReceive(m_TXQueue, &pmessage, 0) == pdTRUE )
 							{
-								String message = String(printf("TX Message: %s\n",(*(&(pmessage[0])))));
-								Serial.println(message);
-								m_Serial.println(message);
-								free(pmessage);
+								if (pmessage != nullptr)
+								{
+									ESP_LOGI("SerialPortMessageManager", "Data TX: Address: %p Message: %s", static_cast<void*>(pmessage), pmessage->c_str());
+									m_Serial.println(pmessage->c_str());
+									free(pmessage);
+								}
+								else
+								{
+									ESP_LOGE("SerialPortMessageManager", "ERROR! Unable to Send Message.");
+								}
 							}
 							else
 							{
@@ -270,8 +277,8 @@ class DataItem: public NewRXValueCallBack
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
 				String message = m_DataSerializer.SerializeDataToJson(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
-				Serial.println(m_Name + ": Data TX:" + message);
-				m_SerialPortMessageManager.SendMessage(message);
+				ESP_LOGI("SerialPortMessageManager", "%s Data TX: %s", m_Name, message.c_str());
+				m_SerialPortMessageManager.SendMessage(message.c_str());
 			}
 			
 		}
