@@ -18,19 +18,37 @@
 
 #include <vector>
 #include "DataSerializer.h"
+#include <Helpers.h>
 
-class NewValueCallBack
+class NewRXValueCallBack
 {
 	public:
-		NewValueCallBack()
+		NewRXValueCallBack()
 		{
 			
 		}
-		virtual ~NewValueCallBack()
+		virtual ~NewRXValueCallBack()
 		{
 			
 		}
-		virtual void NewValueReceived() = 0;
+		virtual void NewRXValueReceived() = 0;
+};
+
+template <typename T>
+class GetSerializeInfoCallBack
+{
+	public:
+		GetSerializeInfoCallBack()
+		{
+			
+		}
+		virtual ~GetSerializeInfoCallBack()
+		{
+			
+		}
+		virtual String GetName() = 0;
+		virtual T *GetValue() = 0;
+		virtual size_t GetCount() = 0;
 };
 
 class SerialPortMessageManager
@@ -60,11 +78,12 @@ class SerialPortMessageManager
 				ESP_LOGI("SerialPortMessageManager", "Created the TX Queue.");
 			}
 		}
-		void SendMessage(String *message)
+		void SendMessage(String message)
 		{
+			String *heapMessage = new String(message);
 			if(NULL != m_TXQueue)
 			{
-				if(xQueueSend(m_TXQueue, message, 0) != pdTRUE)
+				if(xQueueSend(m_TXQueue, heapMessage, 0) != pdTRUE)
 				{
 					ESP_LOGW("SerialPortMessageManager", "WARNING! Unable to Send Message.");
 				}
@@ -79,7 +98,7 @@ class SerialPortMessageManager
 		String m_TaskName = "";
 		TaskHandle_t m_RXTaskHandle;
 		TaskHandle_t m_TXTaskHandle;
-		std::vector<NewValueCallBack*> m_NewValueCallBacks = std::vector<NewValueCallBack*>();
+		std::vector<NewRXValueCallBack*> m_NewValueCallBacks = std::vector<NewRXValueCallBack*>();
 		QueueHandle_t m_TXQueue;
 		static void StaticSerialPortMessageManager_RXLoop(void *Parameters)
 		{
@@ -135,8 +154,9 @@ class SerialPortMessageManager
 							String* pmessage;
 							if ( xQueueReceive(m_TXQueue, &pmessage, 0) == pdTRUE )
 							{
-								//String message = printf("%s",(*(&(pmessage[0]))));
-								Serial.println(printf("%s",(*(&(pmessage[0])))));
+								String message = String(printf("TX Message: %s\n",(*(&(pmessage[0])))));
+								Serial.println(message);
+								m_Serial.println(message);
 								free(pmessage);
 							}
 							else
@@ -161,29 +181,55 @@ enum TXType_t
 	TXType_COUNT
 };
 
-template <typename T>
-class DataItem: public NewValueCallBack
+template <typename T, int COUNT>
+class DataItem: public NewRXValueCallBack
+			  , public GetSerializeInfoCallBack<T>
+			  , public CommonUtils
 {
 	
 	public:
-		DataItem( String name, T initialValue, TXType_t txType, uint16_t rate, DataSerializer &dataSerializer, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name, T &initialValuePointer, TXType_t txType, uint16_t rate, DataSerializer &dataSerializer, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
-				, m_Value(initialValue)
 				, m_TXType(txType)
 				, m_Rate(rate)
 				, m_DataSerializer(dataSerializer)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
+			mp_Value = (T*)malloc(sizeof(T)*COUNT);
+			memcpy(mp_Value, initialValuePointer, sizeof(T)*COUNT);
+		}
+		DataItem( String name, T initialValue, TXType_t txType, uint16_t rate, DataSerializer &dataSerializer, SerialPortMessageManager &serialPortMessageManager )
+			    : m_Name(name)
+				, m_TXType(txType)
+				, m_Rate(rate)
+				, m_DataSerializer(dataSerializer)
+				, m_SerialPortMessageManager(serialPortMessageManager)
+		{
+			mp_Value = (T*)malloc(sizeof(T)*COUNT);
+			memcpy(mp_Value, &initialValue, sizeof(T)*COUNT);
 		}
 		virtual ~DataItem()
 		{
+			free(mp_Value);
 			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
+		}
+		String GetName()
+		{
+			return m_Name;
+		}
+		T *GetValue()
+		{
+			return mp_Value;
+		}
+		size_t GetCount()
+		{
+			return 1;
 		}
 		void EnableDatalinkCommunication(bool enable)
 		{
 			if(enable)
 			{
-				xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), 1000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );	
+				xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );	
 			}
 			else
 			{
@@ -192,7 +238,7 @@ class DataItem: public NewValueCallBack
 		}
 		void SetValue(T value)
 		{
-			m_Value = value;
+			//m_Value = value;
 			if(m_TXType == TXType_ON_UPDATE)
 			{
 				//DO SOMETHING
@@ -200,9 +246,10 @@ class DataItem: public NewValueCallBack
 		}
 	private:
 		String m_Name = "";
-		T m_Value;
+		T *mp_Value;
 		TXType_t m_TXType = TXType_PERIODIC;
 		uint16_t m_Rate = 0;
+		size_t m_Count = 1;
 		DataSerializer &m_DataSerializer;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		TaskHandle_t m_TXTaskHandle;
@@ -222,13 +269,13 @@ class DataItem: public NewValueCallBack
 			while(true)
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
-				Serial.println(m_Name + ": TX Periodic Data");
-				String *message = new String("Hello World");
+				String message = m_DataSerializer.SerializeDataToJson(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
+				Serial.println(m_Name + ": Data TX:" + message);
 				m_SerialPortMessageManager.SendMessage(message);
 			}
 			
 		}
-		void NewValueReceived()
+		void NewRXValueReceived()
 		{
 			
 		}

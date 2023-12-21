@@ -38,6 +38,12 @@ class DataSerializer: public CommonUtils
 		}
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
+			Serial.println(printf("Name: %s\n", Name));
+			Serial.println(printf("DataType: %i\n", DataType));
+			Serial.println(printf("Value: %i\n", (*(int16_t*)Object)));
+			Serial.println(printf("Count: %i\n", Count));
+			String Result = "";
+			
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
 			
@@ -61,7 +67,6 @@ class DataSerializer: public CommonUtils
 				data.add(BytesString);
 			}
 			doc[m_CheckSumTag] = CheckSum;
-			String Result;
 			serializeJson(doc, Result);
 			return Result;
 		}

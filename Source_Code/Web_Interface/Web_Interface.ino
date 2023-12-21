@@ -58,18 +58,18 @@ Manager m_Manager = Manager( "Manager", m_SPIDataLinkSlave, m_SettingsWebServerM
 SerialPortMessageManager CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1);
 SerialPortMessageManager CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2);
 DataSerializer m_DataSerializer;
-DataItem <int16_t>intItem1 = DataItem<int16_t>("Name1", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem2 = DataItem<int16_t>("Name2", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
-DataItem <int16_t>intItem3 = DataItem<int16_t>("Name3", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem4 = DataItem<int16_t>("Name4", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
-DataItem <int16_t>intItem5 = DataItem<int16_t>("Name5", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem6 = DataItem<int16_t>("Name6", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
-DataItem <int16_t>intItem7 = DataItem<int16_t>("Name7", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem8 = DataItem<int16_t>("Name8", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
-DataItem <int16_t>intItem9 = DataItem<int16_t>("Name9", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem10 = DataItem<int16_t>("Name10", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
-DataItem <int16_t>intItem11 = DataItem<int16_t>("Name11", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
-DataItem <int16_t>intItem12 = DataItem<int16_t>("Name12", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
+DataItem <int16_t, 1>intItem1 = DataItem<int16_t, 1>("Name1", 10, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t, 1>intItem2 = DataItem<int16_t, 1>("Name2", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
+DataItem <int16_t, 1>intItem3 = DataItem<int16_t, 1>("Name3", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t, 1>intItem4 = DataItem<int16_t, 1>("Name4", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
+DataItem <int16_t, 1>intItem5 = DataItem<int16_t, 1>("Name5", 0, TXType_PERIODIC, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t, 1>intItem6 = DataItem<int16_t, 1>("Name6", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
+DataItem <int16_t, 1>intItem7 = DataItem<int16_t, 1>("Name7", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t, 1>intItem8 = DataItem<int16_t, 1>("Name8", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
+DataItem <int16_t, 1>intItem9 = DataItem<int16_t, 1>("Name9", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t, 1>intItem10 = DataItem<int16_t, 1>("Name10", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
+DataItem <int16_t, 1>intItem11 = DataItem<int16_t, 1>("Name11", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU1SerialPortMessageManager);
+DataItem <int16_t, 1>intItem12 = DataItem<int16_t, 1>("Name12", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, CPU2SerialPortMessageManager);
 
 // Static Callback for Web Socket
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -146,6 +146,7 @@ void setup(){
   CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
   intItem1.EnableDatalinkCommunication(true);
+  /*
   intItem2.EnableDatalinkCommunication(true);
   intItem3.EnableDatalinkCommunication(true);
   intItem4.EnableDatalinkCommunication(true);
@@ -157,6 +158,7 @@ void setup(){
   intItem10.EnableDatalinkCommunication(true);
   intItem11.EnableDatalinkCommunication(true);
   intItem12.EnableDatalinkCommunication(true);
+  */
   //InitLocalVariables();
   //InitFileSystem();
   //InitWebServer();

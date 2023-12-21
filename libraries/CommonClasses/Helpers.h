@@ -29,6 +29,31 @@ class CommonUtils
 			}
 			return DataType_Undef;
 		}
+		
+		template <typename T>
+		DataType_t GetDataTypeFromType()
+		{
+			DataType_t Result;
+			if(		std::is_same<T, bool>::value) 								return DataType_bool_t;
+			else if(std::is_same<T, int8_t>::value) 							return DataType_Int8_t;
+			else if(std::is_same<T, int16_t>::value) 							return DataType_Int16_t;
+			else if(std::is_same<T, int32_t>::value) 							return DataType_Int32_t;
+			else if(std::is_same<T, uint8_t>::value) 							return DataType_Uint8_t;
+			else if(std::is_same<T, uint16_t>::value) 							return DataType_Uint16_t;
+			else if(std::is_same<T, uint32_t>::value) 							return DataType_Uint32_t;
+			else if(std::is_same<T, String>::value) 							return DataType_String_t;
+			else if(std::is_same<T, SSID_Info_t>::value) 						return DataType_SSID_Info_t;
+			else if(std::is_same<T, SSID_Info_With_LastUpdateTime_t>::value) 	return DataType_SSID_Info_With_LastUpdateTime_t;
+			else if(std::is_same<T, float>::value) 								return DataType_Float_t;
+			else if(std::is_same<T, double>::value) 							return DataType_Double_t;
+			else if(std::is_same<T, ProcessedSoundData_t>::value) 				return DataType_ProcessedSoundData_t;
+			else if(std::is_same<T, MaxBandSoundData_t>::value) 				return DataType_MaxBandSoundData_t;
+			else if(std::is_same<T, Frame_t>::value) 							return DataType_Frame_t;
+			else if(std::is_same<T, ProcessedSoundFrame_t>::value) 				return DataType_ProcessedSoundFrame_t;
+			else if(std::is_same<T, SoundState_t>::value) 						return DataType_SoundState_t;
+			else if(std::is_same<T, ConnectionStatus_t>::value) 				return DataType_ConnectionStatus_t;
+			else 																return DataType_Undef;
+		}
 		size_t GetSizeOfDataType(DataType_t DataType)
 		{
 			uint32_t Result = 0;
