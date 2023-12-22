@@ -24,6 +24,7 @@
 #include <Helpers.h>
 #include <DataTypes.h>
 #include <Arduino_JSON.h>
+#include "Tunes.h"
 
 class SettingsWebServerManager;
 
@@ -147,7 +148,7 @@ class WebSocketDataHandler: public QueueController
                 m_Value = ValueCopy;
                 xSemaphoreGive(mySemaphore);
                 if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << String(ValueCopy) << " to Datalink\n";
-                PushValueToQueue(&ValueCopy, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
+                //PushValueToQueue(&ValueCopy, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
               }
             }
           }
@@ -174,8 +175,10 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
     {
     }
   protected:
+  
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
+      /*
       SSID_Info_With_LastUpdateTime_t Received_SSID;
       unsigned long CurrentTime = millis();
       size_t TotalSSIDs = uxQueueMessagesWaiting(m_DataItem->QueueHandle_TX);
@@ -228,7 +231,9 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
           KeyValuePairs.push_back({ m_WidgetId[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
         }
       }
+    */
     }
+    
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
     {
       return false;
@@ -270,8 +275,10 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
     }
     
   protected:
+  
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
+      /*
       String ValueCopy;
       char Buffer[m_DataItem->TotalByteCount];
       if(NULL != m_DataItem && NULL != m_WidgetId)
@@ -291,8 +298,9 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
           }
         }
       }
+      */
     }
-    
+
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
     {
       bool Found = false;
@@ -313,7 +321,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
             {
               Found = true;
               if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
+              //PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
             }
           }
         }

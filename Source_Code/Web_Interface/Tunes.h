@@ -2,17 +2,11 @@
 #define TUNES_H
 
 
-//SPI HSPI PINS
-#define HSPI_PIN_SCK        14
-#define HSPI_PIN_MISO       12
-#define HSPI_PIN_MOSI       13
-#define HSPI_PIN_SS         15
-
 //CPU1&2 UART
-#define CPU1_RX             32
-#define CPU1_TX             33
-#define CPU2_RX             34
-#define CPU2_TX             35
+#define CPU1_RX             12
+#define CPU1_TX             13
+#define CPU2_RX             14
+#define CPU2_TX             15
 
 
 #define CPU1_EN             18

@@ -16,6 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef DataItem_H
+#define DataItem_H 
+
+
 #include <vector>
 #include "DataSerializer.h"
 #include <Helpers.h>
@@ -54,9 +58,12 @@ class GetSerializeInfoCallBack
 class SerialPortMessageManager
 {
 	public:
-		SerialPortMessageManager(String taskName, HardwareSerial &serial)
-						 : m_Serial(serial)
-						 , m_TaskName(taskName)
+		SerialPortMessageManager( String taskName
+								, HardwareSerial &serial
+								, DataSerializer dataSerializer )
+								: m_TaskName(taskName)
+								, m_Serial(serial)
+								, m_DataSerializer(dataSerializer)
 		{
 			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
 			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
@@ -78,6 +85,11 @@ class SerialPortMessageManager
 				ESP_LOGI("SerialPortMessageManager", "Created the TX Queue.");
 			}
 		}
+		void SerializeAndSendData(String name, DataType_t dataType, void *pValue, size_t count)
+		{
+			SendMessage(m_DataSerializer.SerializeDataToJson(name, dataType, pValue, count));
+		}
+		
 		void SendMessage(String message)
 		{
 			String *heapMessage = new String(message);
@@ -96,6 +108,7 @@ class SerialPortMessageManager
 		}
 	private:
 		HardwareSerial &m_Serial;
+		DataSerializer &m_DataSerializer;
 		String m_TaskName = "";
 		TaskHandle_t m_RXTaskHandle;
 		TaskHandle_t m_TXTaskHandle;
@@ -121,7 +134,7 @@ class SerialPortMessageManager
 					if(character == '\n')
 					{
 						message = m_TaskName + " Debug: " + message;
-						Serial.println(message);
+						Serial.println(message.c_str());
 						message = "";
 					}
 					else
@@ -158,7 +171,8 @@ class SerialPortMessageManager
 								if (pmessage != nullptr)
 								{
 									ESP_LOGI("SerialPortMessageManager", "Data TX: Address: %p Message: %s", static_cast<void*>(pmessage), pmessage->c_str());
-									m_Serial.println(pmessage->c_str());
+									//m_Serial.println(pmessage->c_str());
+									Serial2.println("Fuck You!");
 									free(pmessage);
 								}
 								else
@@ -195,21 +209,19 @@ class DataItem: public NewRXValueCallBack
 {
 	
 	public:
-		DataItem( String name, T &initialValuePointer, TXType_t txType, uint16_t rate, DataSerializer &dataSerializer, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name, T &initialValuePointer, TXType_t txType, uint16_t rate, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_TXType(txType)
 				, m_Rate(rate)
-				, m_DataSerializer(dataSerializer)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value = (T*)malloc(sizeof(T)*COUNT);
 			memcpy(mp_Value, initialValuePointer, sizeof(T)*COUNT);
 		}
-		DataItem( String name, T initialValue, TXType_t txType, uint16_t rate, DataSerializer &dataSerializer, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name, T initialValue, TXType_t txType, uint16_t rate, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_TXType(txType)
 				, m_Rate(rate)
-				, m_DataSerializer(dataSerializer)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value = (T*)malloc(sizeof(T)*COUNT);
@@ -220,6 +232,24 @@ class DataItem: public NewRXValueCallBack
 			free(mp_Value);
 			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 		}
+		
+		// Templated conversion operator for assignment from a value
+		template <typename U>
+		DataItem& operator=(const U& value)
+		{
+			static_assert(std::is_same<T, U>::value, "Types must be the same");
+			std::memcpy(mp_Value, &value, sizeof(T) * COUNT);
+			return *this;
+		}
+
+		// Templated conversion operator for returning a value
+		template <typename U>
+		operator U()
+		{
+			static_assert(std::is_same<T, U>::value, "Types must be the same");
+			return mp_Value[0];
+		}
+		
 		String GetName()
 		{
 			return m_Name;
@@ -257,7 +287,6 @@ class DataItem: public NewRXValueCallBack
 		TXType_t m_TXType = TXType_PERIODIC;
 		uint16_t m_Rate = 0;
 		size_t m_Count = 1;
-		DataSerializer &m_DataSerializer;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		TaskHandle_t m_TXTaskHandle;
 		static void StaticDataItem_TX(void *Parameters)
@@ -276,9 +305,8 @@ class DataItem: public NewRXValueCallBack
 			while(true)
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
-				String message = m_DataSerializer.SerializeDataToJson(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
-				ESP_LOGD("SerialPortMessageManager", "%s Data TX: %s", m_Name, message);
-				m_SerialPortMessageManager.SendMessage(message);
+				ESP_LOGI("DataItem", "%s Data TX Data for: %s", m_Name);
+				String message = m_SerialPortMessageManager.SerializeAndSendData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
 			}
 			
 		}
@@ -287,3 +315,5 @@ class DataItem: public NewRXValueCallBack
 			
 		}
 };
+
+#endif

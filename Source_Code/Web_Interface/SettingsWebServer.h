@@ -18,17 +18,18 @@
 #ifndef SETTINGS_WEB_SERVER_H
 #define SETTINGS_WEB_SERVER_H
 
-#include "WebSocketDataHandler.h"
+//#include "WebSocketDataHandler.h"
 #include "AsyncTCP.h"
 #include "ESPAsyncWebServer.h"
+#include "HardwareSerial.h"
+#include "DataItem.h"
 
-class SettingsWebServerManager: public QueueManager
+class SettingsWebServerManager
 {  
   public:
     SettingsWebServerManager( String Title
                             , AsyncWebSocket &WebSocket )
-                            : QueueManager(Title + "Queue Manager", GetDataItemConfigCount())
-                            , m_WebSocket(WebSocket)
+                            : m_WebSocket(WebSocket)
     {
       mySenderSemaphore = xSemaphoreCreateRecursiveMutex();
       myReceiverSemaphore = xSemaphoreCreateRecursiveMutex();
@@ -38,6 +39,7 @@ class SettingsWebServerManager: public QueueManager
 
     void InitializeMemory()
     {
+      /*
       Sound_State_DataHandler = new WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, false, 0, false );
       Amplitude_Gain_DataHandler = new WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0, false );
       FFT_Gain_DataHandler = new WebSocketDataHandler<float>( GetPointerToDataItemWithName("FFT Gain"), new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}, 2, true, 0, false );
@@ -52,11 +54,13 @@ class SettingsWebServerManager: public QueueManager
       Red_Value_DataHandler = new WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Red Value"), new String[1]{"Red_Value_Slider"}, 1, true, 0, false );
       Sink_BT_ReConnect_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
       Sink_Connection_Status_DataHandler = new WebSocketDataHandler<ConnectionStatus_t>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0, false );
-      Sink_Connection_Enable_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Enable"), new String[1]{"Sink_BT_Enable_Toggle_Button"}, 1, true, 0, false ); 
+      Sink_Connection_Enable_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Enable"), new String[1]{"Sink_BT_Enable_Toggle_Button"}, 1, true, 0, false );
+      */
     }
     
     virtual ~SettingsWebServerManager()
     {
+      /*
       free(Sound_State_DataHandler);
       free(Amplitude_Gain_DataHandler);
       free(FFT_Gain_DataHandler);
@@ -72,14 +76,18 @@ class SettingsWebServerManager: public QueueManager
       free(Sink_BT_ReConnect_DataHandler);
       free(Sink_Connection_Status_DataHandler);
       free(Sink_Connection_Enable_DataHandler);
+      */
     }
     
     void SetupSettingsWebServerManager()
     {
-      SetupQueueManager();
+
+      m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+      m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
+      
       InitWiFiAP();
       InitializeMemory();
-      
+      /*
       RegisterAsWebSocketDataSender(Sound_State_DataHandler);
       
       RegisterAsWebSocketDataReceiver(Amplitude_Gain_DataHandler);
@@ -120,10 +128,12 @@ class SettingsWebServerManager: public QueueManager
 
       RegisterAsWebSocketDataReceiver(Green_Value_DataHandler);
       RegisterAsWebSocketDataSender(Green_Value_DataHandler);
+      */
     }
     
     void ProcessEventQueue()
     {
+      /*
       if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
       {
         std::vector<KVP> KeyValuePairs = std::vector<KVP>();
@@ -137,18 +147,20 @@ class SettingsWebServerManager: public QueueManager
           NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
         }
       }
+      */
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
     {
-      switch (type) {
+      switch (type) 
+      {
         case WS_EVT_CONNECT:
           Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
           break;
         case WS_EVT_PONG:
           break;
         case WS_EVT_DATA:
-          HandleWebSocketMessage(arg, data, len);
+          //HandleWebSocketMessage(arg, data, len);
           break;
         case WS_EVT_ERROR:
           Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
@@ -158,7 +170,7 @@ class SettingsWebServerManager: public QueueManager
           break;
       }
     }
-
+    /*
     void RegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
     {
       if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
@@ -226,7 +238,7 @@ class SettingsWebServerManager: public QueueManager
         xSemaphoreGive(mySenderSemaphore);
       }
     }
-    
+    */
   private:
     SemaphoreHandle_t mySenderSemaphore;
     SemaphoreHandle_t myReceiverSemaphore;
@@ -235,10 +247,34 @@ class SettingsWebServerManager: public QueueManager
     const char* password = "LEDs Rock";
     String message = "";
 
-    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
-    std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
+    //std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
+    //std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
 
+    DataSerializer m_DataSerializer;  
+    SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
+    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);
+    
+    DataItem <float, 1> AmplitudeGain = DataItem<float, 1>("Amplitude Gain", 0, TXType_ON_UPDATE, 1000, m_CPU2SerialPortMessageManager);
+    DataItem <float, 1> FFTGain = DataItem<float, 1>("FFT Gain", 0, TXType_ON_UPDATE, 1000, m_CPU2SerialPortMessageManager);
+    
+    
+    
+    //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <bool, 1> SourceBTReset = DataItem<bool, 1>("Source BT Reset", 0, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <bool, 1> SinkEnable = DataItem<bool, 1>("Sink Enable", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <bool, 1> SinkReConnect = DataItem<bool, 1>("Sink ReConnect", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    
+    //DataItem <DataType_SoundState_t, 1> SoundState  = DataItem<DataType_SoundState_t, 1>("Sound State", LastingSilenceDetected, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_ConnectionStatus_t, 1> SourceConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Source Connection Status", Disconnected, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_ConnectionStatus_t, 1> SinkConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Sink Connection Status", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_With_LastUpdateTime_t, 1> FoundSpeakerSSIDS = DataItem<DataType_SSID_Info_With_LastUpdateTime_t, 1>("Found Speaker SSIDS", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_t, 1> SinkSSID = DataItem<DataType_SSID_Info_t, 1>("Sink SSID", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_t, 1> TargetSpeakerSSID = DataItem<DataType_SSID_Info_t, 1>("Target Speaker", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_t, 1> SourceSSID = DataItem<DataType_SSID_Info_t, 1>("Source SSID", 0, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    
+    /*
     //Sound State Value and Widget Name Values
+    /*
     SoundState_t Sound_State;
     WebSocketDataHandler<SoundState_t> *Sound_State_DataHandler;
 
@@ -273,27 +309,6 @@ class SettingsWebServerManager: public QueueManager
     
     //Red Value and Widget Name Values
     WebSocketDataHandler<uint8_t> *Green_Value_DataHandler;
-
-    //QueueManager Interface
-    static const size_t m_WebServerConfigCount = 13;
-    DataItemConfig_t m_ItemConfig[m_WebServerConfigCount]
-    {
-      { "Sound State",              DataType_SoundState_t,                    1,  Transciever_TX,   4   },
-      { "Source SSID",              DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
-      { "Source Connection Status", DataType_ConnectionStatus_t,              1,  Transciever_TX,   4   },
-      { "Source ReConnect",         DataType_bool_t,                          1,  Transciever_TXRX, 4   },
-      { "Source BT Reset",          DataType_bool_t,                          1,  Transciever_TXRX, 4   },
-      { "Sink SSID",                DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
-      { "Sink Enable",              DataType_bool_t,                          1,  Transciever_TXRX, 4   },
-      { "Sink Connection Status",   DataType_ConnectionStatus_t,              1,  Transciever_TX,   4   },
-      { "Sink ReConnect",           DataType_bool_t,                          1,  Transciever_TXRX, 4   },
-      { "Amplitude Gain",           DataType_Float_t,                         1,  Transciever_TXRX, 4   },
-      { "FFT Gain",                 DataType_Float_t,                         1,  Transciever_TXRX, 4   },
-      { "Found Speaker SSIDS",      DataType_SSID_Info_With_LastUpdateTime_t, 1,  Transciever_TX,   4   },
-      { "Target Speaker SSID",      DataType_SSID_Info_t,                     1,  Transciever_TXRX, 4   },
-    };
-    DataItemConfig_t* GetDataItemConfig() { return m_ItemConfig; }
-    size_t GetDataItemConfigCount() { return m_WebServerConfigCount; }
     
     String Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
     {
@@ -316,7 +331,9 @@ class SettingsWebServerManager: public QueueManager
         m_WebSocket.textAll(TextString.c_str(), TextString.length());
       }
     }
-    
+    */
+
+    /*
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     {
       AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -367,7 +384,7 @@ class SettingsWebServerManager: public QueueManager
         }
       }
     }
-
+    */
     // Initialize WiFi Client
     void InitWiFiClient()
     {

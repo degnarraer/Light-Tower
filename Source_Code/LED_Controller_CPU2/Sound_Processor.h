@@ -30,6 +30,7 @@
 #include "float.h"
 #include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
+#include "DataItem.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
@@ -37,9 +38,9 @@ class Sound_Processor: public NamedItem
 {
   public:
     Sound_Processor( String Title
-                   , SPIDataLinkMaster &SPIDataLinkToCPU1
-                   , SPIDataLinkMaster &SPIDataLinkToCPU3
-                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
+                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
+                   , SerialPortMessageManager CPU1SerialPortMessageManager
+                   , SerialPortMessageManager CPU3SerialPortMessageManager);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain)
@@ -62,18 +63,14 @@ class Sound_Processor: public NamedItem
     }
     
   private:
-    SPIDataLinkMaster &m_SPIDataLinkToCPU1;
-    SPIDataLinkMaster &m_SPIDataLinkToCPU3;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
+    DataItem <float, 1> m_Gain = DataItem<float, 1>("Amplitude Gain", 1.0, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>("FFT Gain", 1.7, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
     
     //Memory Management
     bool m_MemoryIsAllocated = false;
     void AllocateMemory();
     void FreeMemory();
-    
-    //Adjustments
-    float m_Gain = 1.0;
-    float m_FFT_Gain = 1.7;
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
@@ -98,6 +95,8 @@ class Sound_Processor: public NamedItem
       Calculate_FFTs();
     }
   private:
+    SerialPortMessageManager &m_CPU1SerialPortMessageManager;
+    SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     void Calculate_FFTs();
     void Update_Right_Bands_And_Send_Result();
     void Update_Left_Bands_And_Send_Result();

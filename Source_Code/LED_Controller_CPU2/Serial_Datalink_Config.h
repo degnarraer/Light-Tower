@@ -49,6 +49,8 @@ class SPIDataLinkMaster: public SPI_Datalink_Master
     virtual DataItemConfig_t* GetDataItemConfig(){ return NULL; }
 };
 
+
+/*
 class SPIDataLinkToCPU1: public SPIDataLinkMaster
 {
   public:
@@ -121,5 +123,5 @@ class SPIDataLinkToCPU3: public SPIDataLinkMaster
     DataItemConfig_t* GetDataItemConfig() override { return m_ItemConfig; }
     size_t GetDataItemConfigCount() override { return m_SPIDataLinkToCPU3ConfigCount; }
 };
-
+*/
 #endif

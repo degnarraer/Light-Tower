@@ -19,13 +19,13 @@
 #include "Sound_Processor.h"
 
 Sound_Processor::Sound_Processor( String Title
-                                , SPIDataLinkMaster &SPIDataLinkToCPU1
-                                , SPIDataLinkMaster &SPIDataLinkToCPU3
-                                , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer)
+                                , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
+                                , SerialPortMessageManager CPU1SerialPortMessageManager
+                                , SerialPortMessageManager CPU3SerialPortMessageManager)
                                 : NamedItem(Title)
-                                , m_SPIDataLinkToCPU1(SPIDataLinkToCPU1)
-                                , m_SPIDataLinkToCPU3(SPIDataLinkToCPU3)
                                 , m_AudioBuffer(AudioBuffer)
+                                , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
+                                , m_CPU3SerialPortMessageManager(CPU3SerialPortMessageManager)
 {
 }
 Sound_Processor::~Sound_Processor()
@@ -74,6 +74,7 @@ void Sound_Processor::Calculate_FFTs()
 
 void Sound_Processor::Update_Right_Bands_And_Send_Result()
 {
+  /*
   QueueHandle_t R_Bands_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("R_BANDS");
   QueueHandle_t R_MaxBin_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("R_MAXBAND");
   QueueHandle_t R_MajorFreq_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("R_MAJOR_FREQ");
@@ -121,9 +122,11 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result()
     static bool R_MajorFreq_Push_Successful = true;
     PushValueToQueue(m_R_FFT.GetMajorPeakPointer(), R_MajorFreq_QueueOut, "Right Major Frequency: R_MAJOR_FREQ", 0, R_MajorFreq_Push_Successful);
   }
+  */
 }
 void Sound_Processor::Update_Left_Bands_And_Send_Result()
 {
+  /*
   QueueHandle_t L_Bands_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("L_BANDS");
   QueueHandle_t L_MaxBin_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("L_MAXBAND");
   QueueHandle_t L_MajorFreq_QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("L_MAJOR_FREQ");
@@ -171,46 +174,45 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
     static bool L_MajorFreq_Push_Successful = true;
     PushValueToQueue(m_L_FFT.GetMajorPeakPointer(), L_MajorFreq_QueueOut, "Left Major Frequency: L_MAJOR_FREQ", 0, L_MajorFreq_Push_Successful);
   }
+  */
 }
 void Sound_Processor::Calculate_Power()
 {    
-  QueueHandle_t QueueOut = m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem("Processed_Frame");
-  if(QueueOut != NULL)
+  /*
+  size_t PSF_ByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("Processed_Frame");
+  size_t PSF_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("Processed_Frame");
+  assert(1 == PSF_SampleCount);
+  assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
+  
+  Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+  size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
+  for(int i = 0; i < ReadFrames; ++i)
   {
-    size_t PSF_ByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("Processed_Frame");
-    size_t PSF_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("Processed_Frame");
-    assert(1 == PSF_SampleCount);
-    assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
-    
-    Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-    size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
-    for(int i = 0; i < ReadFrames; ++i)
+    bool R_Amplitude_Calculated = false;
+    bool L_Amplitude_Calculated = false;
+    ProcessedSoundData_t R_PSD;
+    ProcessedSoundData_t L_PSD;
+    if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, m_Gain))
     {
-      bool R_Amplitude_Calculated = false;
-      bool L_Amplitude_Calculated = false;
-      ProcessedSoundData_t R_PSD;
-      ProcessedSoundData_t L_PSD;
-      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, m_Gain))
-      {
-        R_Amplitude_Calculated = true;
-        R_PSD = m_RightSoundData.GetProcessedSoundData();
-      }
-      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, m_Gain))
-      {
-        L_Amplitude_Calculated = true;
-        L_PSD = m_LeftSoundData.GetProcessedSoundData();
-      }
-      assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
-      if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
-      {
-        ProcessedSoundFrame_t PSF;
-        PSF.Channel1 = R_PSD;
-        PSF.Channel2 = L_PSD;
-        static bool PSF_Push_Successful = true;
-        PushValueToQueue(&PSF, QueueOut, "Processed Sound Frame: Processed_Frame", 0, PSF_Push_Successful);
-      }
+      R_Amplitude_Calculated = true;
+      R_PSD = m_RightSoundData.GetProcessedSoundData();
+    }
+    if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, m_Gain))
+    {
+      L_Amplitude_Calculated = true;
+      L_PSD = m_LeftSoundData.GetProcessedSoundData();
+    }
+    assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
+    if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
+    {
+      ProcessedSoundFrame_t PSF;
+      PSF.Channel1 = R_PSD;
+      PSF.Channel2 = L_PSD;
+      static bool PSF_Push_Successful = true;
+      PushValueToQueue(&PSF, QueueOut, "Processed Sound Frame: Processed_Frame", 0, PSF_Push_Successful);
     }
   }
+  */
 }
 void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size)
 {

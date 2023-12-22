@@ -28,6 +28,7 @@
 #include "AudioBuffer.h"
 #include <Preferences.h>
 #include <Ticker.h>
+#include "DataItem.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -39,8 +40,8 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , Sound_Processor &SoundProcessor
-           , SPIDataLinkToCPU1 &SPIDataLinkToCPU1
-           , SPIDataLinkToCPU3 &SPIDataLinkToCPU3
+           , SerialPortMessageManager CPU1SerialPortMessageManager
+           , SerialPortMessageManager CPU3SerialPortMessageManager
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
@@ -88,9 +89,9 @@ class Manager: public NamedItem
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
+    SerialPortMessageManager &m_CPU1SerialPortMessageManager;
+    SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     Sound_Processor &m_SoundProcessor;
-    SPIDataLinkToCPU1 &m_SPIDataLinkToCPU1;
-    SPIDataLinkToCPU3 &m_SPIDataLinkToCPU3;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     Frame_t m_FFTFrameBuffer[FFT_SIZE];
@@ -110,7 +111,6 @@ class Manager: public NamedItem
     }
     
     void UpdateNotificationRegistrationStatus();
-    void MoveDataBetweenCPU1AndCPU3();
     
     Preferences m_Preferences;
     void InitializeNVM(bool Reset);

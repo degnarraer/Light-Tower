@@ -20,15 +20,15 @@
 
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
-                , SPIDataLinkToCPU1 &SPIDataLinkToCPU1
-                , SPIDataLinkToCPU3 &SPIDataLinkToCPU3
+                , SerialPortMessageManager CPU1SerialPortMessageManager
+                , SerialPortMessageManager CPU3SerialPortMessageManager
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In
                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer )
                 : NamedItem(Title)
                 , m_SoundProcessor(SoundProcessor)
-                , m_SPIDataLinkToCPU1(SPIDataLinkToCPU1)
-                , m_SPIDataLinkToCPU3(SPIDataLinkToCPU3)
+                , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
+                , m_CPU3SerialPortMessageManager(CPU3SerialPortMessageManager)
                 , m_BT_Out(BT_Out)
                 , m_I2S_In(I2S_In)
                 , m_AudioBuffer(AudioBuffer)
@@ -97,12 +97,6 @@ void Manager::LoadFromNVM()
 void Manager::ProcessEventQueue20mS()
 {
   m_I2S_In.ProcessEventQueue();
-  MoveDataBetweenCPU1AndCPU3();
-  AmplitudeGain_RX();
-  FFTGain_RX();
-  SourceBluetoothReset_RX();
-  SourceAutoReConnect_RX();
-  SourceSSID_RX();
 }
 
 void Manager::ProcessEventQueue1000mS()
@@ -117,45 +111,6 @@ void Manager::ProcessEventQueue1000mS()
 
 void Manager::ProcessEventQueue300000mS()
 {
-}
-
-void Manager::MoveDataBetweenCPU1AndCPU3()
-{
-  struct Signal
-  {
-    String Name;
-    bool A_To_B;
-    bool B_To_A;
-  };
-  const uint8_t count = 5;
-  Signal Signals[count] = { { "Sound State",            true, false }
-                          , { "Sink Enable",            true, true } 
-                          , { "Sink Connection Status", true, false } 
-                          , { "Sink ReConnect",         true, true }
-                          , { "Sink SSID",              true, true } };
-  for(int i = 0; i < count; ++i)
-  {
-    if(Signals[i].A_To_B)
-    {
-      MoveDataFromQueueToQueue( "MoveDataBetweenCPU1AndCPU3: " + Signals[i].Name
-                              , m_SPIDataLinkToCPU1.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
-                              , 0
-                              , false );
-    }
-    if(Signals[i].B_To_A)
-    {
-      MoveDataFromQueueToQueue( "MoveDataBetweenCPU3AndCPU1: " + Signals[i].Name
-                              , m_SPIDataLinkToCPU3.GetQueueHandleRXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU3.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU1.GetQueueHandleTXForDataItem(Signals[i].Name.c_str())
-                              , m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem(Signals[i].Name.c_str())
-                              , 0
-                              , false ); 
-    }
-  }
 }
 
 
@@ -188,6 +143,7 @@ void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStat
 //BluetoothActiveDeviceUpdatee Callback 
 void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
 {
+  /*
   for(int i = 0; i < Devices.size(); ++i)
   {  
     SSID_Info_With_LastUpdateTime_t SSID_Info = SSID_Info_With_LastUpdateTime_t(Devices[i].SSID.c_str(), Devices[i].ADDRESS.c_str(), millis()-Devices[i].LastUpdateTime, Devices[i].RSSI);
@@ -199,20 +155,24 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
                     , 0
                     , FoundSpeakerSSIDSValuePushError );
   }
+  */
 }
 
 void Manager::BluetoothConnectionStatus_TX()
 {
+  /*
   static bool SourceIsConnectedValuePushError = false;
   PushValueToQueue( &m_BluetoothConnectionStatus
                  , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Source Connection Status")
                   , "Source Connection Status"
                   , 0
                   , SourceIsConnectedValuePushError );
+                  */
 }
 
 void Manager::AmplitudeGain_RX()
 {
+  /*
   float DatalinkValue;
   static bool AmplitudeGainPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
@@ -226,17 +186,21 @@ void Manager::AmplitudeGain_RX()
       AmplitudeGain_TX();
     }
   }
+  */
 }
 
 void Manager::AmplitudeGain_TX()
 {
+  /*
   m_AmplitudeGain = m_SoundProcessor.GetGain();
   static bool AmplitudeGainPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_AmplitudeGain, "Amplitude Gain", 0, AmplitudeGainPushErrorHasOccured);
+  */
 }
 
 void Manager::FFTGain_RX()
 {
+  /*
   float DatalinkValue;
   static bool FFTGainPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
@@ -250,17 +214,21 @@ void Manager::FFTGain_RX()
       FFTGain_TX();
     }
   }
+  */
 }
 
 void Manager::FFTGain_TX()
 {
+  /*
   m_FFTGain = m_SoundProcessor.GetFFTGain();
   static bool FFTGainPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_FFTGain, "FFT Gain", 0, FFTGainPushErrorHasOccured);
+  */
 }
 
 void Manager::SourceBluetoothReset_RX()
 {
+  /*
   bool DatalinkValue;
   static bool ResetBluetoothPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Source BT Reset", false, 0, ResetBluetoothPullErrorHasOccured))
@@ -274,16 +242,20 @@ void Manager::SourceBluetoothReset_RX()
       SourceBluetoothReset_TX();
     }
   }
+  */
 }
 
 void Manager::SourceBluetoothReset_TX()
 {
+  /*
   static bool ResetBluetoothPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_SourceBTReset, "Source BT Reset", 0, ResetBluetoothPushErrorHasOccured);
+  */
 }
 
 void Manager::SourceAutoReConnect_RX()
 {
+  /*
   bool DatalinkValue;
   static bool AutoReConnectPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Source ReConnect", false, 0, AutoReConnectPullErrorHasOccured))
@@ -297,16 +269,20 @@ void Manager::SourceAutoReConnect_RX()
       SourceAutoReConnect_TX();
     }
   }
+  */
 }
 
 void Manager::SourceAutoReConnect_TX()
 {
+  /*
   static bool AutoReConnectPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_SourceBTReConnect, "Source ReConnect", 0, AutoReConnectPushErrorHasOccured);
+  */
 }
 
 void Manager::SourceSSID_RX()
 {
+  /*
   SSID_Info_t DatalinkValue;
   static bool SourceSSIDPullErrorHasOccured = false;
   if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, SourceSSIDPullErrorHasOccured))
@@ -326,12 +302,15 @@ void Manager::SourceSSID_RX()
       SourceSSID_TX();
     }
   }
+  */
 }
 
 void Manager::SourceSSID_TX()
 {
+  /*
   m_SourceSSID = m_Preferences.getString("Source SSID", "").c_str();
   SSID_Info_t WifiInfo = SSID_Info_t(m_SourceSSID);
   static bool SourceSSIDPushErrorHasOccured = false;
   m_SPIDataLinkToCPU3.PushValueToTXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDPushErrorHasOccured );
+  */
 }

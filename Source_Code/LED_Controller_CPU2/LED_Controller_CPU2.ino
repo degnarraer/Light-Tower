@@ -19,6 +19,8 @@
 #include "Manager.h"
 #include "Tunes.h"
 #include "esp_log.h"
+#include "HardwareSerial.h"
+#include "DataItem.h"
 
 unsigned long LoopCountTimer = 0;
 TaskHandle_t Manager_20mS_Task;
@@ -64,21 +66,24 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source );
-
-SPIDataLinkToCPU1 m_SPIDataLinkToCPU1 = SPIDataLinkToCPU1();
-SPIDataLinkToCPU3 m_SPIDataLinkToCPU3 = SPIDataLinkToCPU3();
                                                          
 
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
+
+DataSerializer m_DataSerializer;
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
+
+
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_SPIDataLinkToCPU1
-                                                  , m_SPIDataLinkToCPU3
-                                                  , m_AudioBuffer );                                            
+                                                  , m_AudioBuffer
+                                                  , m_CPU1SerialPortMessageManager
+                                                  , m_CPU3SerialPortMessageManager );                                            
 
 Manager m_Manager = Manager( "Manager"
                            , m_SoundProcessor
-                           , m_SPIDataLinkToCPU1
-                           , m_SPIDataLinkToCPU3
+                           , m_CPU1SerialPortMessageManager
+                           , m_CPU3SerialPortMessageManager
                            , m_BT_Out
                            , m_I2S_In
                            , m_AudioBuffer );
@@ -96,30 +101,29 @@ static bool ConnectToThisSSID(const char* ssid, esp_bd_addr_t address, int32_t r
 void setup() 
 {
   //PC Serial Communication
-  Serial.flush();
   Serial.begin(500000);
-  Serial.flush();
+  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
   
   ESP_LOGV("LED_Controller2", "%s, ", __func__);
   ESP_LOGE("LED_Controller2", "Serial Datalink Configured");
   ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
   ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
   ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
+
+
+  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+
   
   m_I2S_In.Setup();
   a2dp_source.set_ssid_callback(ConnectToThisSSID);
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
-  m_SPIDataLinkToCPU1.SetupSPIDataLink();
-  m_SPIDataLinkToCPU1.SetSpewToConsole(false, false);
-  m_SPIDataLinkToCPU3.SetupSPIDataLink();
-  m_SPIDataLinkToCPU3.SetSpewToConsole(false, false);
   m_Manager.Setup();
 
   xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessFFTTask,          0 );
   xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_20mS_Task,       1 );
-  xTaskCreatePinnedToCore( SPI_CPU1_TX_TaskLoop,      "SPI CPU1 TX Task Task",  5000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU1_TXTask,  1 );
-  xTaskCreatePinnedToCore( SPI_CPU3_TX_TaskLoop,      "SPI CPU3 TX Task Task",  5000,   NULL,   configMAX_PRIORITIES - 2,   &ProcessSPI_CPU3_TXTask,  1 );
   xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_1000mS_Task,     1 );
   xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_300000mS_Task,   1 );
   xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  5000,   NULL,   configMAX_PRIORITIES - 4,   &ProcessSoundPowerTask,   1 );
@@ -192,30 +196,6 @@ void Manager_300000mS_TaskLoop(void * parameter)
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     ++Manager_300000mS_TaskLoopCount;
     m_Manager.ProcessEventQueue300000mS();
-  }
-}
-
-void SPI_CPU1_TX_TaskLoop(void * parameter)
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    ++ProcessSPI_CPU1_TXTaskLoopCount;
-    m_SPIDataLinkToCPU1.ProcessEventQueue();
-  }
-}
-
-void SPI_CPU3_TX_TaskLoop(void * parameter)
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    ++ProcessSPI_CPU3_TXTaskLoopCount;
-    m_SPIDataLinkToCPU3.ProcessEventQueue();
   }
 }
 
