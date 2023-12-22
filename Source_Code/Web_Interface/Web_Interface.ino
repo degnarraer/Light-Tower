@@ -146,7 +146,6 @@ void setup(){
   CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
   intItem1.EnableDatalinkCommunication(true);
-  /*
   intItem2.EnableDatalinkCommunication(true);
   intItem3.EnableDatalinkCommunication(true);
   intItem4.EnableDatalinkCommunication(true);
@@ -158,7 +157,6 @@ void setup(){
   intItem10.EnableDatalinkCommunication(true);
   intItem11.EnableDatalinkCommunication(true);
   intItem12.EnableDatalinkCommunication(true);
-  */
   //InitLocalVariables();
   //InitFileSystem();
   //InitWebServer();

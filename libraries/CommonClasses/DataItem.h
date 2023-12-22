@@ -83,7 +83,7 @@ class SerialPortMessageManager
 			String *heapMessage = new String(message);
 			if(NULL != m_TXQueue && NULL != heapMessage)
 			{
-				ESP_LOGI("SerialPortMessageManager", "Send Message: Address: %p Message: %s", static_cast<void*>(heapMessage), heapMessage->c_str());
+				ESP_LOGD("SerialPortMessageManager", "Send Message: Address: %p Message: %s", static_cast<void*>(heapMessage), heapMessage->c_str());
 				if(xQueueSend(m_TXQueue, &heapMessage, 0) != pdTRUE)
 				{
 					ESP_LOGW("SerialPortMessageManager", "WARNING! Unable to Send Message.");
@@ -121,7 +121,7 @@ class SerialPortMessageManager
 					if(character == '\n')
 					{
 						message = m_TaskName + " Debug: " + message;
-						//Serial.println(message.c_str());
+						Serial.println(message);
 						message = "";
 					}
 					else
@@ -277,8 +277,8 @@ class DataItem: public NewRXValueCallBack
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
 				String message = m_DataSerializer.SerializeDataToJson(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
-				ESP_LOGI("SerialPortMessageManager", "%s Data TX: %s", m_Name, message.c_str());
-				m_SerialPortMessageManager.SendMessage(message.c_str());
+				ESP_LOGD("SerialPortMessageManager", "%s Data TX: %s", m_Name, message);
+				m_SerialPortMessageManager.SendMessage(message);
 			}
 			
 		}

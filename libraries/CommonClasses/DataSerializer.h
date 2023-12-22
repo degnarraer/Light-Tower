@@ -44,7 +44,7 @@ class DataSerializer: public CommonUtils
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
 			
 			doc.clear();
-			doc[m_NameTag] = Name.c_str();
+			doc[m_NameTag] = Name;
 			doc[m_CountTag] = Count;
 			doc[m_DataTypeTag] = DataTypeStrings[DataType];
 			JsonArray data = doc.createNestedArray(m_DataTag);
