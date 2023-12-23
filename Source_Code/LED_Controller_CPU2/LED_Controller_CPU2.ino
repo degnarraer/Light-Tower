@@ -105,7 +105,7 @@ void setup()
   Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
   Serial1.flush();
   Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
-  Serial2.flush()v;
+  Serial2.flush();
   
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
