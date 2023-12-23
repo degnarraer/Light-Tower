@@ -209,7 +209,18 @@ enum ConnectionStatus_t
 struct NamedObject_t
 {
 	String Name = "";
-	void* Object = NULL;
+	void* Object;
+	
+	// Destructor to release memory when the object is destroyed.
+    ~NamedObject_t()
+    {
+        if (Object != nullptr)
+        {
+            // Assuming Object points to dynamically allocated memory.
+            free(Object);
+            Object = nullptr;
+        }
+    }
 };
 
 struct DataItem_t

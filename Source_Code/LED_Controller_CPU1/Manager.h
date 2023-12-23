@@ -27,6 +27,8 @@
 #include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
 #include <Preferences.h>
+#include "HardwareSerial.h"
+#include "DataItem.h"
 
 enum InputType_t
 {
@@ -76,6 +78,7 @@ class Manager: public NamedItem
     void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
     
   private:
+    
     StatisticalEngine &m_StatisticalEngine;
     SPIDataLinkSlave &m_SPIDataLinkSlave;
     InputType_t m_InputType;

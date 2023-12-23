@@ -116,11 +116,12 @@ class DataSerializer: public CommonUtils
 					
 					if(CheckSumCalc == CheckSumIn)
 					{
-						NamedObject.Object = &Buffer;
+						NamedObject.Object = Buffer;
 					}
 					else
 					{
-						NamedObject.Object = NULL;
+						free(Buffer);
+						NamedObject.Object = nullptr;
 						++m_FailCount;
 						ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
 					}
