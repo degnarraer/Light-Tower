@@ -20,9 +20,7 @@
 #include "Tunes.h"
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
-#include "HardwareSerial.h"
 
-/*
 TaskHandle_t WebServer_Task;
 uint32_t WebServer_TaskLoopCount = 0;
 
@@ -38,7 +36,7 @@ SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Man
 // Static Callback for Web Socket
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
-  m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
+  //m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
 }
 
 // Web Socket init to register web socket callback and connect it to the web server
@@ -86,7 +84,7 @@ void InitFileSystem()
     Serial.println("An error has occurred while mounting SPIFFS");
   }
 }
-*/
+
 // Init Tasks to run using FreeRTOS
 void InitTasks()
 {
@@ -95,9 +93,8 @@ void InitTasks()
 
 void InitLocalVariables()
 {
-  //m_SettingsWebServerManager.SetupSettingsWebServerManager();
+  m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
-
 void setup()
 {
   Serial.begin(500000);

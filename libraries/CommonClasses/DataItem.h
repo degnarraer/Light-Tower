@@ -60,13 +60,11 @@ class SerialPortMessageManager
 	public:
 		SerialPortMessageManager( String taskName
 								, HardwareSerial &serial
-								, DataSerializer dataSerializer )
+								, DataSerializer &dataSerializer )
 								: m_TaskName(taskName)
 								, m_Serial(serial)
 								, m_DataSerializer(dataSerializer)
 		{
-			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
-			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
 		}
 		virtual ~SerialPortMessageManager()
 		{
@@ -75,6 +73,8 @@ class SerialPortMessageManager
 		}
 		void SetupSerialPortMessageManager()
 		{
+			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
+			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_TaskName.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
 			m_TXQueue = xQueueCreate(10, sizeof(String) );
 			if(m_TXQueue == NULL)
 			{
@@ -85,17 +85,20 @@ class SerialPortMessageManager
 				ESP_LOGI("SerialPortMessageManager", "Created the TX Queue.");
 			}
 		}
-		void SerializeAndSendData(String name, DataType_t dataType, void *pValue, size_t count)
+		void QueueMessageData(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
-			SendMessage(m_DataSerializer.SerializeDataToJson(name, dataType, pValue, count));
+			ESP_LOGI("SerialPortMessageManager", "Serializing Data for: %s Data Type: %i, Pointer: %p Count: %i ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
+			String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
+			ESP_LOGI("SerialPortMessageManager", "Sending Message: %s", message.c_str());
+			QueueMessage(message);
 		}
 		
-		void SendMessage(String message)
+		void QueueMessage(String message)
 		{
 			String *heapMessage = new String(message);
 			if(NULL != m_TXQueue && NULL != heapMessage)
 			{
-				ESP_LOGD("SerialPortMessageManager", "Send Message: Address: %p Message: %s", static_cast<void*>(heapMessage), heapMessage->c_str());
+				ESP_LOGI("SerialPortMessageManager", "Send Message: Address: %p Message: %s", static_cast<void*>(heapMessage), heapMessage->c_str());
 				if(xQueueSend(m_TXQueue, &heapMessage, 0) != pdTRUE)
 				{
 					ESP_LOGW("SerialPortMessageManager", "WARNING! Unable to Send Message.");
@@ -171,8 +174,7 @@ class SerialPortMessageManager
 								if (pmessage != nullptr)
 								{
 									ESP_LOGI("SerialPortMessageManager", "Data TX: Address: %p Message: %s", static_cast<void*>(pmessage), pmessage->c_str());
-									//m_Serial.println(pmessage->c_str());
-									Serial2.println("Fuck You!");
+									m_Serial.println(pmessage->c_str());
 									free(pmessage);
 								}
 								else
@@ -238,7 +240,7 @@ class DataItem: public NewRXValueCallBack
 		DataItem& operator=(const U& value)
 		{
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
-			std::memcpy(mp_Value, &value, sizeof(T) * COUNT);
+			memcpy(mp_Value, &value, sizeof(T) * COUNT);
 			return *this;
 		}
 
@@ -254,10 +256,12 @@ class DataItem: public NewRXValueCallBack
 		{
 			return m_Name;
 		}
+		
 		T *GetValue()
 		{
 			return mp_Value;
 		}
+		
 		size_t GetCount()
 		{
 			return 1;
@@ -266,10 +270,12 @@ class DataItem: public NewRXValueCallBack
 		{
 			if(enable)
 			{
+				ESP_LOGI("DataItem", "%s: Enabled Datalink Transmisster", m_Name.c_str());
 				xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );	
 			}
 			else
 			{
+				ESP_LOGI("DataItem", "%s: Disabled Datalink Transmisster", m_Name.c_str());
 				if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 			}
 		}
@@ -305,8 +311,8 @@ class DataItem: public NewRXValueCallBack
 			while(true)
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
-				ESP_LOGI("DataItem", "%s Data TX Data for: %s", m_Name);
-				String message = m_SerialPortMessageManager.SerializeAndSendData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
+				ESP_LOGI("DataItem", "Data Item: %s Queueing Message", m_Name.c_str());
+				m_SerialPortMessageManager.QueueMessageData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
 			}
 			
 		}

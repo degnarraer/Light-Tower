@@ -19,7 +19,6 @@
 #include "Manager.h"
 #include "Tunes.h"
 #include "esp_log.h"
-#include "HardwareSerial.h"
 #include "DataItem.h"
 
 unsigned long LoopCountTimer = 0;
@@ -105,30 +104,25 @@ void setup()
   Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
   Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
   
-  ESP_LOGV("LED_Controller2", "%s, ", __func__);
-  ESP_LOGE("LED_Controller2", "Serial Datalink Configured");
-  ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
-
-
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
-
   
   m_I2S_In.Setup();
   a2dp_source.set_ssid_callback(ConnectToThisSSID);
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
   m_Manager.Setup();
-
-  xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_20mS_Task,       1 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_1000mS_Task,     1 );
-  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_300000mS_Task,   1 );
-  xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  5000,   NULL,   configMAX_PRIORITIES - 4,   &ProcessSoundPowerTask,   1 );
-  xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        5000,   NULL,   configMAX_PRIORITIES - 4,   &TaskMonitorTask,         1 );
   
+  //xTaskCreatePinnedToCore( ProcessFFTTaskLoop,        "ProcessFFTTask",         5000,   NULL,   configMAX_PRIORITIES - 1,   &ProcessFFTTask,          0 );
+  //xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,   NULL,   configMAX_PRIORITIES - 1,   &Manager_20mS_Task,       1 );
+  //xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_Task",    5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_1000mS_Task,     1 );
+  //xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,   NULL,   configMAX_PRIORITIES - 3,   &Manager_300000mS_Task,   1 );
+  //xTaskCreatePinnedToCore( ProcessSoundPowerTaskLoop, "ProcessSoundPowerTask",  5000,   NULL,   configMAX_PRIORITIES - 4,   &ProcessSoundPowerTask,   1 );
+  //xTaskCreatePinnedToCore( TaskMonitorTaskLoop,       "TaskMonitorTask",        5000,   NULL,   configMAX_PRIORITIES - 4,   &TaskMonitorTask,         1 );
+  
+  ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
   ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
   ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
   ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());

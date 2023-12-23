@@ -20,8 +20,8 @@
 
 Manager::Manager( String Title
                 , Sound_Processor &SoundProcessor
-                , SerialPortMessageManager CPU1SerialPortMessageManager
-                , SerialPortMessageManager CPU3SerialPortMessageManager
+                , SerialPortMessageManager &CPU1SerialPortMessageManager
+                , SerialPortMessageManager &CPU3SerialPortMessageManager
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In
                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer )
@@ -46,10 +46,14 @@ void Manager::Setup()
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_SoundProcessor.SetupSoundProcessor();
   m_AudioBuffer.Initialize();
-  m_I2S_In.StartDevice();
-  m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
-  m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
+  //m_I2S_In.StartDevice();
+  //m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
+  //m_BT_Out.RegisterForActiveDeviceUpdate(this);
+  //m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
+  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_SinkEnable.EnableDatalinkCommunication(true);
+  m_SinkReconnect.EnableDatalinkCommunication(true);
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -132,12 +136,14 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStatusCallee Callback 
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
+  /*
   if(m_BluetoothConnectionStatus != ConnectionStatus)
   {
     m_BluetoothConnectionStatus = ConnectionStatus;
     Serial << "Bluetooth Status Changed: " << m_BluetoothConnectionStatus << "\n";
     BluetoothConnectionStatus_TX();
   }
+  */
 }
 
 //BluetoothActiveDeviceUpdatee Callback 

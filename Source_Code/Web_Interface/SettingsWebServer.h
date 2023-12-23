@@ -21,7 +21,6 @@
 //#include "WebSocketDataHandler.h"
 #include "AsyncTCP.h"
 #include "ESPAsyncWebServer.h"
-#include "HardwareSerial.h"
 #include "DataItem.h"
 
 class SettingsWebServerManager
@@ -81,12 +80,13 @@ class SettingsWebServerManager
     
     void SetupSettingsWebServerManager()
     {
-
-      m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-      m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
-      
       InitWiFiAP();
       InitializeMemory();
+      m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+      m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
+      AmplitudeGain.EnableDatalinkCommunication(true);
+      FFTGain.EnableDatalinkCommunication(true);
+      
       /*
       RegisterAsWebSocketDataSender(Sound_State_DataHandler);
       

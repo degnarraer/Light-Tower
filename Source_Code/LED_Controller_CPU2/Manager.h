@@ -40,8 +40,8 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , Sound_Processor &SoundProcessor
-           , SerialPortMessageManager CPU1SerialPortMessageManager
-           , SerialPortMessageManager CPU3SerialPortMessageManager
+           , SerialPortMessageManager &CPU1SerialPortMessageManager
+           , SerialPortMessageManager &CPU3SerialPortMessageManager
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
@@ -91,6 +91,11 @@ class Manager: public NamedItem
   private:
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
+    DataItem <bool, 1> m_SinkEnable = DataItem<bool, 1>("Sink Enable", 0, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <bool, 1> m_SinkReconnect = DataItem<bool, 1>("Sink Reconnect", 0, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
+    
+
+    
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
