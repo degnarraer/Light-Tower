@@ -206,6 +206,12 @@ enum ConnectionStatus_t
 	Paired = 4
 };
 
+struct NamedObject_t
+{
+	String Name = "";
+	void* Object = NULL;
+};
+
 struct DataItem_t
 {
 	String Name;

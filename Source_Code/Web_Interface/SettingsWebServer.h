@@ -84,9 +84,7 @@ class SettingsWebServerManager
       InitializeMemory();
       m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
       m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
-      AmplitudeGain.EnableDatalinkCommunication(true);
-      FFTGain.EnableDatalinkCommunication(true);
-      
+
       /*
       RegisterAsWebSocketDataSender(Sound_State_DataHandler);
       
@@ -254,23 +252,23 @@ class SettingsWebServerManager
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
     SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);
     
-    DataItem <float, 1> AmplitudeGain = DataItem<float, 1>("Amplitude Gain", 0, TXType_ON_UPDATE, 1000, m_CPU2SerialPortMessageManager);
-    DataItem <float, 1> FFTGain = DataItem<float, 1>("FFT Gain", 0, TXType_ON_UPDATE, 1000, m_CPU2SerialPortMessageManager);
+    DataItem <float, 1> AmplitudeGain = DataItem<float, 1>("Amplitude Gain", 0, RxTxType_Rx, 0, m_CPU2SerialPortMessageManager);
+    DataItem <float, 1> FFTGain = DataItem<float, 1>("FFT Gain", 0, RxTxType_Rx, 0, m_CPU2SerialPortMessageManager);
     
     
     
-    //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <bool, 1> SourceBTReset = DataItem<bool, 1>("Source BT Reset", 0, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    //DataItem <bool, 1> SinkEnable = DataItem<bool, 1>("Sink Enable", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    //DataItem <bool, 1> SinkReConnect = DataItem<bool, 1>("Sink ReConnect", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <bool, 1> SourceBTReset = DataItem<bool, 1>("Source BT Reset", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <bool, 1> SinkEnable = DataItem<bool, 1>("Sink Enable", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <bool, 1> SinkReConnect = DataItem<bool, 1>("Sink ReConnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
     
-    //DataItem <DataType_SoundState_t, 1> SoundState  = DataItem<DataType_SoundState_t, 1>("Sound State", LastingSilenceDetected, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_ConnectionStatus_t, 1> SourceConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Source Connection Status", Disconnected, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_ConnectionStatus_t, 1> SinkConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Sink Connection Status", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_With_LastUpdateTime_t, 1> FoundSpeakerSSIDS = DataItem<DataType_SSID_Info_With_LastUpdateTime_t, 1>("Found Speaker SSIDS", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_t, 1> SinkSSID = DataItem<DataType_SSID_Info_t, 1>("Sink SSID", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_t, 1> TargetSpeakerSSID = DataItem<DataType_SSID_Info_t, 1>("Target Speaker", 0, TXType_ON_UPDATE, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_t, 1> SourceSSID = DataItem<DataType_SSID_Info_t, 1>("Source SSID", 0, TXType_PERIODIC, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SoundState_t, 1> SoundState  = DataItem<DataType_SoundState_t, 1>("Sound State", LastingSilenceDetected, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_ConnectionStatus_t, 1> SourceConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Source Connection Status", Disconnected, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_ConnectionStatus_t, 1> SinkConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Sink Connection Status", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_With_LastUpdateTime_t, 1> FoundSpeakerSSIDS = DataItem<DataType_SSID_Info_With_LastUpdateTime_t, 1>("Found Speaker SSIDS", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_t, 1> SinkSSID = DataItem<DataType_SSID_Info_t, 1>("Sink SSID", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_t, 1> TargetSpeakerSSID = DataItem<DataType_SSID_Info_t, 1>("Target Speaker", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
+    //DataItem <DataType_SSID_Info_t, 1> SourceSSID = DataItem<DataType_SSID_Info_t, 1>("Source SSID", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
     
     /*
     //Sound State Value and Widget Name Values

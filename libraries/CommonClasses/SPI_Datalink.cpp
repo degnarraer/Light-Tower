@@ -160,7 +160,7 @@ void SPI_Datalink_Master::TransmitQueuedData()
 			{
 				ESP_LOGE("SPI_Datalink_Config", "RX: %s", ResultString.c_str());
 			}
-			DeSerializeJsonToMatchingDataItem(ResultString.c_str(), m_SpewRXToConsole);
+			DeSerializeJsonToMatchingDataItem(ResultString.c_str());
 		}
 	}	
 	m_Queued_Transactions_Reset_Point = m_Queued_Transactions;
@@ -220,7 +220,7 @@ void SPI_Datalink_Slave::ProcessCompletedTransactions()
 				{
 					ESP_LOGE("SPI_Datalink", "RX: %s", ResultString.c_str());
 				}
-				DeSerializeJsonToMatchingDataItem(ResultString.c_str(), m_SpewRXToConsole); 
+				DeSerializeJsonToMatchingDataItem(ResultString.c_str()); 
 			}
 		}
 	}

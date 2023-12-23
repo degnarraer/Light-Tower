@@ -98,8 +98,11 @@ void InitLocalVariables()
 void setup()
 {
   Serial.begin(500000);
+  Serial.flush();
   Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.flush();
   Serial2.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+  Serial2.flush();
   InitLocalVariables();
   //InitFileSystem();
   //InitWebServer();

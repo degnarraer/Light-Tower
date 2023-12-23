@@ -64,8 +64,8 @@ class Sound_Processor: public NamedItem
     
   private:
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
-    DataItem <float, 1> m_Gain = DataItem<float, 1>("Amplitude Gain", 1.0, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
-    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>("FFT Gain", 1.7, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_Gain = DataItem<float, 1>("Amplitude Gain", 1.0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>("FFT Gain", 1.7, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
     
     //Memory Management
     bool m_MemoryIsAllocated = false;

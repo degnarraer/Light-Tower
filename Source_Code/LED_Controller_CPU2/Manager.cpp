@@ -52,8 +52,6 @@ void Manager::Setup()
   //m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_SinkEnable.EnableDatalinkCommunication(true);
-  m_SinkReconnect.EnableDatalinkCommunication(true);
 }
 
 void Manager::InitializeNVM(bool Reset)

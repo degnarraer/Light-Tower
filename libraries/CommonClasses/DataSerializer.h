@@ -66,25 +66,87 @@ class DataSerializer: public CommonUtils
 			serializeJson(doc, Result);
 			return Result;
 		}
-		
-		void DeSerializeJsonToMatchingDataItem(String json, bool DebugMessage = false)
+		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
-			m_CurrentTime = millis();
-			++m_TotalCount;
+			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 			DeserializationError error = deserializeJson(doc, json.c_str());
 			// Test if parsing succeeds.
 			if (error)
 			{
 				++m_FailCount;
-				ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: %s.", error.c_str());
+				ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s.", error.c_str());
 				return;
 			}
 			else
 			{
-				if(true == DebugMessage)
+				if(AllTagsExist())
 				{
-					Serial << "JSON String: " << json.c_str() << "\n";
+					const String DocName = doc[m_NameTag];
+					NamedObject.Name = DocName;
+					size_t CheckSumCalc = 0;
+					size_t CheckSumIn = doc[m_CheckSumTag];
+					size_t CountIn = doc[m_CountTag];
+					size_t ByteCountIn = doc[m_TotalByteCountTag];
+					size_t ActualDataCount = doc[m_DataTag].size();
+					DataType_t DataType = GetDataTypeFromString(doc[m_DataTypeTag]);
+					size_t ObjectByteCount = GetSizeOfDataType(DataType);
+					//This memory needs deleted by caller of function.
+					uint8_t *Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);								
+					if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
+					{
+						for(int j = 0; j < CountIn; ++j)
+						{
+							String BytesString = doc[m_DataTag][j];
+							for(int k = 0; k < ObjectByteCount; ++k)
+							{
+								size_t startIndex = 2*k;
+								char hexArray[2];
+								strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
+								long decValue = strtol(String(hexArray).c_str(), NULL, 16);
+								CheckSumCalc += decValue;
+								Buffer[j * ObjectByteCount + k] = decValue;
+							}
+						}
+					}
+					else
+					{
+						++m_FailCount;
+						ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
+					}
+					
+					if(CheckSumCalc == CheckSumIn)
+					{
+						NamedObject.Object = &Buffer;
+					}
+					else
+					{
+						NamedObject.Object = NULL;
+						++m_FailCount;
+						ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
+					}
+					FailPercentage();
+					return;
 				}
+				else
+				{
+					ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Missing Tags");
+				}
+			}
+			FailPercentage();
+		}
+		void DeSerializeJsonToMatchingDataItem(String json)
+		{
+			ESP_LOGD("DeSerializeJsonToMatchingDataItem", "JSON String: %s", json.c_str());
+			DeserializationError error = deserializeJson(doc, json.c_str());
+			// Test if parsing succeeds.
+			if (error)
+			{
+				++m_FailCount;
+				ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: %s.", error.c_str());
+				return;
+			}
+			else
+			{
 				if(NULL != m_DataItems)
 				{
 					for(int i = 0; i < m_DataItemsCount; ++i)
@@ -122,7 +184,7 @@ class DataSerializer: public CommonUtils
 								else
 								{
 									++m_FailCount;
-									ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Byte Count Error.");
+									ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: Byte Count Error.");
 								}
 								
 								if(CheckSumCalc == CheckSumIn)
@@ -134,13 +196,13 @@ class DataSerializer: public CommonUtils
 									else
 									{
 										++m_FailCount;
-										ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: No matching DataItem RX Handle");
+										ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: No matching DataItem RX Handle");
 									}
 								}
 								else
 								{
 									++m_FailCount;
-									ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
+									ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
 								}
 								FailPercentage();
 								return;
@@ -148,7 +210,7 @@ class DataSerializer: public CommonUtils
 						}
 						else
 						{
-							ESP_LOGD("Serial_Datalink", "WARNING! Deserialize failed: Missing Tags");
+							ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: Missing Tags");
 						}
 					}
 					
@@ -158,6 +220,8 @@ class DataSerializer: public CommonUtils
 		}
 		void FailPercentage()
 		{
+			m_CurrentTime = millis();
+			++m_TotalCount;
 			if(m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
 			{
 				m_FailCountTimer = m_CurrentTime;

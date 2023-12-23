@@ -91,8 +91,9 @@ class Manager: public NamedItem
   private:
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    DataItem <bool, 1> m_SinkEnable = DataItem<bool, 1>("Sink Enable", 0, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
-    DataItem <bool, 1> m_SinkReconnect = DataItem<bool, 1>("Sink Reconnect", 0, TXType_ON_UPDATE, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <bool, 1> m_SinkEnable = DataItem<bool, 1>("Sink Enable", 0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <bool, 1> m_SinkReconnect = DataItem<bool, 1>("Sink Reconnect", 0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_FFTGain = DataItem<float, 1>("FFT Gain", 0, RxTxType_Tx_Periodic, 1000, m_CPU3SerialPortMessageManager);
     
 
     
@@ -130,7 +131,6 @@ class Manager: public NamedItem
     void AmplitudeGain_RX();
     void AmplitudeGain_TX();
 
-    float m_FFTGain;
     void FFTGain_RX();
     void FFTGain_TX();
 
