@@ -28,19 +28,17 @@
 #include "Tunes.h"
 #include "Streaming.h"
 #include "float.h"
-#include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
 #include "DataItem.h"
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
-                     , public QueueController
 {
   public:
     Sound_Processor( String Title
                    , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
-                   , SerialPortMessageManager CPU1SerialPortMessageManager
-                   , SerialPortMessageManager CPU3SerialPortMessageManager);
+                   , SerialPortMessageManager &CPU1SerialPortMessageManager
+                   , SerialPortMessageManager &CPU3SerialPortMessageManager);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     void SetGain(float Gain)
@@ -64,13 +62,15 @@ class Sound_Processor: public NamedItem
     
   private:
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
+    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
+    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    
+    SerialPortMessageManager &m_CPU1SerialPortMessageManager;
+    SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     DataItem <float, 1> m_Gain = DataItem<float, 1>("Amplitude Gain", 1.0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
     DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>("FFT Gain", 1.7, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
-    
-    //Memory Management
-    bool m_MemoryIsAllocated = false;
-    void AllocateMemory();
-    void FreeMemory();
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
@@ -79,29 +79,14 @@ class Sound_Processor: public NamedItem
     uint32_t m_16BitLength = pow(2,16);       //Used for Amplitude of 16 bit FFT values
     uint32_t m_32BitLength = pow(2,32);       //Used for Amplitude of 16 bit FFT values
     
-  public:
-    void ProcessSoundPower()
-    {
-      Calculate_Power();
-    }
-  private:
+    TaskHandle_t m_ProcessSoundPowerTask;
+    static void Static_Calculate_Power(void * parameter);
     void Calculate_Power();
-    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
-    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
-    
-  public:
-    void ProcessFFT()
-    {
-      Calculate_FFTs();
-    }
-  private:
-    SerialPortMessageManager &m_CPU1SerialPortMessageManager;
-    SerialPortMessageManager &m_CPU3SerialPortMessageManager;
+    TaskHandle_t m_ProcessFFTTask;
+    static void Static_Calculate_FFTs(void * parameter);
     void Calculate_FFTs();
     void Update_Right_Bands_And_Send_Result();
     void Update_Left_Bands_And_Send_Result();
-    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
-    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
 
     void AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size);
     float GetFreqForBin(int bin);

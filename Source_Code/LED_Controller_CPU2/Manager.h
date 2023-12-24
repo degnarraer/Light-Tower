@@ -24,7 +24,6 @@
 #include <BluetoothA2DPSource.h>
 #include "Bluetooth_Device.h"
 #include "Sound_Processor.h"
-#include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
 #include <Preferences.h>
 #include <Ticker.h>
@@ -47,9 +46,10 @@ class Manager: public NamedItem
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Manager();
     void Setup();
-    void ProcessEventQueue20mS();
-    void ProcessEventQueue1000mS();
-    void ProcessEventQueue300000mS();
+    static void Static_TaskLoop_20mS(void * parameter);
+    void TaskLoop_20mS();
+    static void Static_TaskLoop_1000mS(void * parameter);
+    void TaskLoop_1000mS();
     void LoadFromNVM();
 
     //Delayed Amplitude Gain Save to NVM
@@ -89,13 +89,14 @@ class Manager: public NamedItem
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
+    TaskHandle_t m_Manager_20mS_Task;
+    TaskHandle_t m_Manager_1000mS_Task;
+    TaskHandle_t m_Manager_300000mS_Task;
+
+  
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    DataItem <bool, 1> m_SinkEnable = DataItem<bool, 1>("Sink Enable", 0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
-    DataItem <bool, 1> m_SinkReconnect = DataItem<bool, 1>("Sink Reconnect", 0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
     DataItem <float, 1> m_FFTGain = DataItem<float, 1>("FFT Gain", 0, RxTxType_Tx_Periodic, 1000, m_CPU3SerialPortMessageManager);
-    
-
     
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;

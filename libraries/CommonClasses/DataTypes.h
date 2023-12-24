@@ -208,8 +208,8 @@ enum ConnectionStatus_t
 
 struct NamedObject_t
 {
-	String Name = "";
 	void* Object;
+	String Name = "";
 	
 	// Destructor to release memory when the object is destroyed.
     ~NamedObject_t()

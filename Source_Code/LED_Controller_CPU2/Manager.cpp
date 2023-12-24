@@ -44,14 +44,14 @@ void Manager::Setup()
   InitializeNVM(m_Preferences.getBool("NVM Reset", false));
   LoadFromNVM();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
-  m_SoundProcessor.SetupSoundProcessor();
-  m_AudioBuffer.Initialize();
+  //m_AudioBuffer.Initialize();
   //m_I2S_In.StartDevice();
   //m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   //m_BT_Out.RegisterForActiveDeviceUpdate(this);
   //m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+  
+  xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      5000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
+  xTaskCreatePinnedToCore( Static_TaskLoop_1000mS,   "Manager_1000mS_Task",    5000,   this,   configMAX_PRIORITIES - 3,   &m_Manager_1000mS_Task,     1 );
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -96,25 +96,39 @@ void Manager::LoadFromNVM()
   m_SSP_Enabled = m_Preferences.getBool("SSP Enabled", false);
   m_BT_Out.Set_SSP_Enabled(m_SSP_Enabled);
 }
-void Manager::ProcessEventQueue20mS()
+
+void Manager::Static_TaskLoop_20mS(void * parameter)
 {
-  m_I2S_In.ProcessEventQueue();
+  Manager *aManager = (Manager*)parameter;
+  aManager->TaskLoop_20mS();
 }
 
-void Manager::ProcessEventQueue1000mS()
+void Manager::Static_TaskLoop_1000mS(void * parameter)
 {
-  AmplitudeGain_TX();
-  FFTGain_TX();
-  BluetoothConnectionStatus_TX();
-  SourceBluetoothReset_TX();
-  SourceAutoReConnect_TX();
-  SourceSSID_TX();
+  Manager *aManager = (Manager*)parameter;
+  aManager->TaskLoop_1000mS();
 }
 
-void Manager::ProcessEventQueue300000mS()
+void Manager::TaskLoop_20mS()
 {
+  const TickType_t xFrequency = 20;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    m_I2S_In.ProcessEventQueue();
+  }
 }
 
+void Manager::TaskLoop_1000mS()
+{
+  const TickType_t xFrequency = 1000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+  }
+}
 
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len)
@@ -159,162 +173,5 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
                     , 0
                     , FoundSpeakerSSIDSValuePushError );
   }
-  */
-}
-
-void Manager::BluetoothConnectionStatus_TX()
-{
-  /*
-  static bool SourceIsConnectedValuePushError = false;
-  PushValueToQueue( &m_BluetoothConnectionStatus
-                 , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Source Connection Status")
-                  , "Source Connection Status"
-                  , 0
-                  , SourceIsConnectedValuePushError );
-                  */
-}
-
-void Manager::AmplitudeGain_RX()
-{
-  /*
-  float DatalinkValue;
-  static bool AmplitudeGainPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Amplitude Gain", false, 0, AmplitudeGainPullErrorHasOccured))
-  {
-    if(false == AreEqual(DatalinkValue, m_SoundProcessor.GetGain()))
-    {
-      m_AmplitudeGain = DatalinkValue;
-      Serial << "Amplitude Gain Value Value Changed: " << m_AmplitudeGain << "\n";
-      m_SoundProcessor.SetGain(m_AmplitudeGain);
-      m_Aplitude_Gain_NVM_Save_Ticker.once(10, Static_Amplitude_Gain_Save, this);
-      AmplitudeGain_TX();
-    }
-  }
-  */
-}
-
-void Manager::AmplitudeGain_TX()
-{
-  /*
-  m_AmplitudeGain = m_SoundProcessor.GetGain();
-  static bool AmplitudeGainPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_AmplitudeGain, "Amplitude Gain", 0, AmplitudeGainPushErrorHasOccured);
-  */
-}
-
-void Manager::FFTGain_RX()
-{
-  /*
-  float DatalinkValue;
-  static bool FFTGainPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "FFT Gain", false, 0, FFTGainPullErrorHasOccured))
-  {
-    if(false == AreEqual(DatalinkValue, m_SoundProcessor.GetFFTGain()))
-    {
-      m_FFTGain = DatalinkValue;
-      Serial << "FFT Gain Value Value Changed: " << m_FFTGain << "\n";
-      m_SoundProcessor.SetFFTGain(m_FFTGain);
-      m_FFT_Gain_NVM_Save_Ticker.once(10, Static_FFT_Gain_Save, this);
-      FFTGain_TX();
-    }
-  }
-  */
-}
-
-void Manager::FFTGain_TX()
-{
-  /*
-  m_FFTGain = m_SoundProcessor.GetFFTGain();
-  static bool FFTGainPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_FFTGain, "FFT Gain", 0, FFTGainPushErrorHasOccured);
-  */
-}
-
-void Manager::SourceBluetoothReset_RX()
-{
-  /*
-  bool DatalinkValue;
-  static bool ResetBluetoothPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Source BT Reset", false, 0, ResetBluetoothPullErrorHasOccured))
-  {
-    if(m_SourceBTReset != DatalinkValue)
-    {
-      Serial << "Source BT Reset Value Changed\n";
-      m_SourceBTReset = DatalinkValue;
-      m_BT_Out.Set_Reset_BLE(m_SourceBTReset);
-      m_Preferences.putBool("Source BT Reset", m_SourceBTReset);
-      SourceBluetoothReset_TX();
-    }
-  }
-  */
-}
-
-void Manager::SourceBluetoothReset_TX()
-{
-  /*
-  static bool ResetBluetoothPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_SourceBTReset, "Source BT Reset", 0, ResetBluetoothPushErrorHasOccured);
-  */
-}
-
-void Manager::SourceAutoReConnect_RX()
-{
-  /*
-  bool DatalinkValue;
-  static bool AutoReConnectPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Source ReConnect", false, 0, AutoReConnectPullErrorHasOccured))
-  {
-    if(m_SourceBTReConnect != DatalinkValue)
-    {
-      Serial << "Source ReConnect Value Changed\n";
-      m_SourceBTReConnect = DatalinkValue;
-      m_BT_Out.Set_Auto_Reconnect(m_SourceBTReConnect);
-      m_Preferences.putBool("Src ReConnect", m_SourceBTReConnect);
-      SourceAutoReConnect_TX();
-    }
-  }
-  */
-}
-
-void Manager::SourceAutoReConnect_TX()
-{
-  /*
-  static bool AutoReConnectPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&m_SourceBTReConnect, "Source ReConnect", 0, AutoReConnectPushErrorHasOccured);
-  */
-}
-
-void Manager::SourceSSID_RX()
-{
-  /*
-  SSID_Info_t DatalinkValue;
-  static bool SourceSSIDPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkToCPU3.GetValueFromRXQueue(&DatalinkValue, "Sink SSID", false, 0, SourceSSIDPullErrorHasOccured))
-  {
-    Serial << "RX Datalink SSID Value: " << String(DatalinkValue.SSID) << "\n";
-    Serial << "RX NVMValue Value: " << m_SourceSSID.c_str() << "\n";
-    Serial << "RX Datalink SSID Value: " << String(DatalinkValue.ADDRESS) << "\n";
-    Serial << "RX NVMValue Value: " << m_SourceADDRESS << "\n";
-    if(!m_SourceSSID.equals(String(DatalinkValue.SSID)) || !m_SourceADDRESS.equals(String(DatalinkValue.ADDRESS)) )
-    {
-      Serial << "Source SSID Value Changed\n";
-      m_SourceSSID = String(DatalinkValue.SSID);
-      m_SourceADDRESS = String(DatalinkValue.ADDRESS);
-      m_Preferences.putString("Source SSID", m_SourceSSID);
-      m_Preferences.putString("Source ADDRESS", m_SourceADDRESS);
-      m_BT_Out.SetSSIDToConnect( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
-      SourceSSID_TX();
-    }
-  }
-  */
-}
-
-void Manager::SourceSSID_TX()
-{
-  /*
-  m_SourceSSID = m_Preferences.getString("Source SSID", "").c_str();
-  SSID_Info_t WifiInfo = SSID_Info_t(m_SourceSSID);
-  static bool SourceSSIDPushErrorHasOccured = false;
-  m_SPIDataLinkToCPU3.PushValueToTXQueue(&WifiInfo, "Source SSID", 0, SourceSSIDPushErrorHasOccured );
   */
 }

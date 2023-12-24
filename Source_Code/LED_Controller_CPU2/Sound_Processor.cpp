@@ -20,8 +20,8 @@
 
 Sound_Processor::Sound_Processor( String Title
                                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
-                                , SerialPortMessageManager CPU1SerialPortMessageManager
-                                , SerialPortMessageManager CPU3SerialPortMessageManager)
+                                , SerialPortMessageManager &CPU1SerialPortMessageManager
+                                , SerialPortMessageManager &CPU3SerialPortMessageManager)
                                 : NamedItem(Title)
                                 , m_AudioBuffer(AudioBuffer)
                                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
@@ -30,26 +30,27 @@ Sound_Processor::Sound_Processor( String Title
 }
 Sound_Processor::~Sound_Processor()
 {
-  FreeMemory();
 }
 void Sound_Processor::SetupSoundProcessor()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  if(true == m_MemoryIsAllocated)FreeMemory();
-  AllocateMemory();
+  xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   configMAX_PRIORITIES - 1,   &m_ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   configMAX_PRIORITIES - 1,   &m_ProcessSoundPowerTask,   1 );
 }
-void Sound_Processor::AllocateMemory()
+void Sound_Processor::Static_Calculate_FFTs(void * parameter)
 {
-  m_MemoryIsAllocated = true;
-}
-
-void Sound_Processor::FreeMemory()
-{
-  m_MemoryIsAllocated = false;
+  Sound_Processor *aSound_Processor = (Sound_Processor*)parameter;
+  aSound_Processor->Calculate_FFTs();
 }
 
 void Sound_Processor::Calculate_FFTs()
 {
+  const TickType_t xFrequency = 20;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    /*
     m_R_FFT.ResetCalculator();
     m_L_FFT.ResetCalculator();
     bool R_FFT_Calculated = false;
@@ -70,6 +71,8 @@ void Sound_Processor::Calculate_FFTs()
       }
       assert(R_FFT_Calculated == L_FFT_Calculated); 
     }
+    */
+  }
 }
 
 void Sound_Processor::Update_Right_Bands_And_Send_Result()
@@ -176,43 +179,56 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
   }
   */
 }
+
+
+void Sound_Processor::Static_Calculate_Power(void * parameter)
+{
+  Sound_Processor *aSound_Processor = (Sound_Processor*)parameter;
+  aSound_Processor->Calculate_Power();
+}
 void Sound_Processor::Calculate_Power()
-{    
-  /*
-  size_t PSF_ByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("Processed_Frame");
-  size_t PSF_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("Processed_Frame");
-  assert(1 == PSF_SampleCount);
-  assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
-  
-  Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-  size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
-  for(int i = 0; i < ReadFrames; ++i)
+{
+  const TickType_t xFrequency = 20;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
   {
-    bool R_Amplitude_Calculated = false;
-    bool L_Amplitude_Calculated = false;
-    ProcessedSoundData_t R_PSD;
-    ProcessedSoundData_t L_PSD;
-    if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, m_Gain))
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    /*
+    size_t PSF_ByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("Processed_Frame");
+    size_t PSF_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("Processed_Frame");
+    assert(1 == PSF_SampleCount);
+    assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
+    
+    Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+    size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
+    for(int i = 0; i < ReadFrames; ++i)
     {
-      R_Amplitude_Calculated = true;
-      R_PSD = m_RightSoundData.GetProcessedSoundData();
+      bool R_Amplitude_Calculated = false;
+      bool L_Amplitude_Calculated = false;
+      ProcessedSoundData_t R_PSD;
+      ProcessedSoundData_t L_PSD;
+      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, m_Gain))
+      {
+        R_Amplitude_Calculated = true;
+        R_PSD = m_RightSoundData.GetProcessedSoundData();
+      }
+      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, m_Gain))
+      {
+        L_Amplitude_Calculated = true;
+        L_PSD = m_LeftSoundData.GetProcessedSoundData();
+      }
+      assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
+      if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
+      {
+        ProcessedSoundFrame_t PSF;
+        PSF.Channel1 = R_PSD;
+        PSF.Channel2 = L_PSD;
+        static bool PSF_Push_Successful = true;
+        PushValueToQueue(&PSF, QueueOut, "Processed Sound Frame: Processed_Frame", 0, PSF_Push_Successful);
+      }
     }
-    if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, m_Gain))
-    {
-      L_Amplitude_Calculated = true;
-      L_PSD = m_LeftSoundData.GetProcessedSoundData();
-    }
-    assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
-    if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
-    {
-      ProcessedSoundFrame_t PSF;
-      PSF.Channel1 = R_PSD;
-      PSF.Channel2 = L_PSD;
-      static bool PSF_Push_Successful = true;
-      PushValueToQueue(&PSF, QueueOut, "Processed Sound Frame: Processed_Frame", 0, PSF_Push_Successful);
-    }
+    */
   }
-  */
 }
 void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size)
 {
@@ -266,9 +282,9 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
 
 float Sound_Processor::GetFreqForBin(int Bin)
 {
-  return (float)(Bin * ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE)));
+  return 0.0; // (float)(Bin * ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE)));
 }
 int Sound_Processor::GetBinForFrequency(float Frequency)
 {
-  return ((int)((float)Frequency / ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE))));
+  return 0; // ((int)((float)Frequency / ((float)I2S_SAMPLE_RATE / (float)(FFT_SIZE))));
 }

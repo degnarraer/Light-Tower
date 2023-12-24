@@ -17,12 +17,14 @@
 */
 
 #ifndef DataItem_H
-#define DataItem_H 
-
+#define DataItem_H
+#define MaxQueueCount 10
+#define MaxStringLength 100
 
 #include <vector>
 #include "DataSerializer.h"
 #include <Helpers.h>
+
 
 class NewRXValueCallee
 {
@@ -53,7 +55,7 @@ class NewRXValueCaller
 		
 		void RegisterForNewValueNotification(NewRXValueCallee* NewCallee)
 		{
-			ESP_LOGI("SerialPortMessageManager", "Try Registering Callee");
+			ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
 			bool IsFound = false;
 			for (NewRXValueCallee* callee : m_NewValueCallees)
 			{
@@ -65,7 +67,7 @@ class NewRXValueCaller
 			}
 			if(false == IsFound)
 			{
-				ESP_LOGI("SerialPortMessageManager", "Callee Registered");
+				ESP_LOGI("RegisterForNewValueNotification", "Callee Registered");
 				m_NewValueCallees.push_back(NewCallee);
 			}
 		}
@@ -82,7 +84,7 @@ class NewRXValueCaller
 	protected:
 		void NotifyCallee(const String& name, void* object)
 		{
-			ESP_LOGI("SerialPortMessageManager", "Notify Callees");
+			ESP_LOGI("NotifyCallee", "Notify Callees");
 			for (NewRXValueCallee* callee : m_NewValueCallees)
 			{
 				if (callee) 
@@ -135,39 +137,54 @@ class SerialPortMessageManager: public NewRXValueCaller
 		}
 		void SetupSerialPortMessageManager()
 		{
-			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
-			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
-			m_TXQueue = xQueueCreate(10, sizeof(String) );
-			if(m_TXQueue == NULL)
+			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_Name.c_str(), 10000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
+			xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_Name.c_str(), 10000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
+			m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxStringLength );
+			if(NULL == m_TXQueue)
 			{
-				ESP_LOGE("SerialPortMessageManager", "ERROR! Error creating the TX Queue.");
+				ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
 			}
 			else
 			{
-				ESP_LOGI("SerialPortMessageManager", "Created the TX Queue.");
+				ESP_LOGI("SetupSerialPortMessageManager", "Created the TX Queue.");
 			}
 		}
 		void QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
-			ESP_LOGI("SerialPortMessageManager", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
-			String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
-			QueueMessage(message);
+			
+			if(nullptr == Object || 0 == Name.length() || 0 == Count)
+			{
+				ESP_LOGE("QueueMessageFromData", "Error Invalid Data!");
+			}
+			else
+			{
+				ESP_LOGI("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
+				String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
+				if(message.length() > 0 && message.length() <= MaxStringLength)
+				{
+					QueueMessage(message);
+				}
+				else
+				{
+					ESP_LOGE("QueueMessageFromData", "Error! Invalide String Length!");
+				}
+			}
+			
 		}
 		
 		void QueueMessage(String message)
 		{
-			String *heapMessage = new String(message);
-			if(NULL != m_TXQueue && NULL != heapMessage)
+			if(nullptr != m_TXQueue)
 			{
-				ESP_LOGD("SerialPortMessageManager", "Queue Message: Address: \"%p\" Message: \"%s\"", static_cast<void*>(heapMessage), heapMessage->c_str());
-				if(xQueueSend(m_TXQueue, &heapMessage, 0) != pdTRUE)
+				ESP_LOGI("QueueMessage", "Queue Message: \"%s\"", message.c_str());
+				if(xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE)
 				{
-					ESP_LOGW("SerialPortMessageManager", "WARNING! Unable to Queue Message.");
+					ESP_LOGW("QueueMessage", "WARNING! Unable to Queue Message.");
 				}
 			}
 			else
 			{
-				ESP_LOGE("SerialPortMessageManager", "Error! NULL Queue!");
+				ESP_LOGE("QueueMessage", "Error! NULL Queue!");
 			}
 		}
 	private:
@@ -236,33 +253,25 @@ class SerialPortMessageManager: public NewRXValueCaller
 					size_t QueueCount = uxQueueMessagesWaiting(m_TXQueue);
 					if(QueueCount > 0)
 					{
-						ESP_LOGD("SerialPortMessageManager", "Queue Count: %i", QueueCount);
+						ESP_LOGD("SerialPortMessageManager_TXLoop", "Queue Count: %i", QueueCount);
 						for(int i = 0; i < QueueCount; ++i)
 						{
-							String *pmessage;
-							if ( xQueueReceive(m_TXQueue, &pmessage, 0) == pdTRUE )
+							char message[MaxStringLength];
+							if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 							{
-								if (pmessage != nullptr)
-								{
-									ESP_LOGD("SerialPortMessageManager", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(pmessage), pmessage->c_str());
-									m_Serial.println(pmessage->c_str());
-									free(pmessage);
-								}
-								else
-								{
-									ESP_LOGE("SerialPortMessageManager", "ERROR! Unable to Send Message.");
-								}
+								ESP_LOGD("SerialPortMessageManager_TXLoop", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+								m_Serial.println(String(message).c_str());
 							}
 							else
 							{
-								ESP_LOGE("SerialPortMessageManager", "ERROR! Unable to Send Message.");
+								ESP_LOGE("SerialPortMessageManager_TXLoop", "ERROR! Unable to Send Message.");
 							}
 						}
 					}
 				}
 				else
 				{
-					ESP_LOGE("SerialPortMessageManager", "ERROR! NULL TX Queue.");
+					ESP_LOGE("SerialPortMessageManager_TXLoop", "ERROR! NULL TX Queue.");
 				}
 			}
 		}
@@ -288,8 +297,11 @@ class DataItem: public NewRXValueCallee
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
-			mp_Value = (T*)malloc(sizeof(T)*COUNT);
-			memcpy(mp_Value, initialValuePointer, sizeof(T)*COUNT);
+			mp_Value = new T[COUNT];
+			for (int i = 0; i < COUNT; ++i)
+			{
+				mp_Value[i].DeepCopy(initialValuePointer[i]);
+			}
 			SetDataLinkEnabled(true);
 		}
 		
@@ -299,14 +311,17 @@ class DataItem: public NewRXValueCallee
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
-			mp_Value = (T*)malloc(sizeof(T)*COUNT);
-			memcpy(mp_Value, &initialValue, sizeof(T)*COUNT);
+			mp_Value = new T[COUNT];
+			for (int i = 0; i < COUNT; ++i)
+			{
+				mp_Value[i] = T(initialValue);
+			}
 			SetDataLinkEnabled(true);
 		}
 		
 		virtual ~DataItem()
 		{
-			free(mp_Value);
+			delete[] mp_Value;
 			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 		}
 		
@@ -315,6 +330,7 @@ class DataItem: public NewRXValueCallee
 		DataItem& operator=(const U& value)
 		{
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
+			ESP_LOGI("DataItem& operator=(const U& value)");
 			memcpy(mp_Value, &value, sizeof(T) * COUNT);
 			return *this;
 		}
@@ -324,6 +340,7 @@ class DataItem: public NewRXValueCallee
 		operator U()
 		{
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
+			ESP_LOGI("operator U()");
 			return mp_Value[0];
 		}
 		
@@ -344,7 +361,7 @@ class DataItem: public NewRXValueCallee
 		
 		size_t GetCount()
 		{
-			return 1;
+			return COUNT;
 		}
 		
 		void SetDataLinkEnabled(bool enable)
@@ -369,15 +386,15 @@ class DataItem: public NewRXValueCallee
 					default:
 					break;
 				}
-				if(enableTX) xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
+				if(enableTX) xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), 10000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
 				if(enableRX) m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-				ESP_LOGI("DataItem", "Data Item: \"%s\": Enabled Datalink", m_Name.c_str());
+				ESP_LOGI("SetDataLinkEnabled", "Data Item: \"%s\": Enabled Datalink", m_Name.c_str());
 			}
 			else
 			{
 				if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-				ESP_LOGI("DataItem", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
+				ESP_LOGI("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
 			}
 		}
 	private:
@@ -402,7 +419,7 @@ class DataItem: public NewRXValueCallee
 			while(true)
 			{
 				vTaskDelayUntil( &xLastWakeTime, xFrequency );
-				ESP_LOGD("DataItem", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
+				ESP_LOGD("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
 				m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
 			}
 		}
@@ -411,7 +428,7 @@ class DataItem: public NewRXValueCallee
 		{
 			if(Object)
 			{
-				ESP_LOGI("DataItem", "Data Item \"%s\": New Value Received.", m_Name.c_str());
+				ESP_LOGI("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
 				T* receivedValue = static_cast<T*>(Object);
 				memcpy(mp_Value, receivedValue, sizeof(T) * COUNT);
 			}
