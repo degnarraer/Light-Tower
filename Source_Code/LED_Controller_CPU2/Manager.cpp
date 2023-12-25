@@ -40,15 +40,15 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  m_Preferences.begin("My Settings", false);
+  m_Preferences.begin("Manager Settings", false);
   InitializeNVM(m_Preferences.getBool("NVM Reset", false));
   LoadFromNVM();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
-  //m_AudioBuffer.Initialize();
-  //m_I2S_In.StartDevice();
-  //m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
-  //m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  //m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
+  m_AudioBuffer.Initialize();
+  m_I2S_In.StartDevice();
+  m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
+  m_BT_Out.RegisterForActiveDeviceUpdate(this);
+  m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
   
   xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      5000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
   xTaskCreatePinnedToCore( Static_TaskLoop_1000mS,   "Manager_1000mS_Task",    5000,   this,   configMAX_PRIORITIES - 3,   &m_Manager_1000mS_Task,     1 );
@@ -61,8 +61,6 @@ void Manager::InitializeNVM(bool Reset)
     if(true == Reset) m_Preferences.clear();
     m_Preferences.putString("Source SSID", "");
     m_Preferences.putString("Source ADDRESS", "");
-    m_Preferences.putFloat("Amplitude Gain", 1.0);
-    m_Preferences.putFloat("FFT Gain", 1.0);
     m_Preferences.putBool("Source BT Reset", true);
     m_Preferences.putBool("BT NVS Init", true);
     m_Preferences.putBool("Src ReConnect", false);
@@ -77,12 +75,6 @@ void Manager::LoadFromNVM()
   //Reload NVM Values
   m_SourceSSID = m_Preferences.getString("Source SSID", "");
   m_SourceADDRESS = m_Preferences.getString("Source ADDRESS", "");
-  
-  m_AmplitudeGain = m_Preferences.getFloat("Amplitude Gain", 1.0);
-  m_SoundProcessor.SetGain(m_AmplitudeGain);
-  
-  m_FFTGain = m_Preferences.getFloat("FFT Gain", 1.0);
-  m_SoundProcessor.SetFFTGain(m_FFTGain);
   
   m_SourceBTReset = m_Preferences.getBool("Source BT Reset", true);
   m_BT_Out.Set_Reset_BLE(m_SourceBTReset);
@@ -148,30 +140,17 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStatusCallee Callback 
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
-  /*
-  if(m_BluetoothConnectionStatus != ConnectionStatus)
-  {
-    m_BluetoothConnectionStatus = ConnectionStatus;
-    Serial << "Bluetooth Status Changed: " << m_BluetoothConnectionStatus << "\n";
-    BluetoothConnectionStatus_TX();
-  }
-  */
+  
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
 void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
 {
-  /*
   for(int i = 0; i < Devices.size(); ++i)
   {  
-    SSID_Info_With_LastUpdateTime_t SSID_Info = SSID_Info_With_LastUpdateTime_t(Devices[i].SSID.c_str(), Devices[i].ADDRESS.c_str(), millis()-Devices[i].LastUpdateTime, Devices[i].RSSI);
-    Serial << SSID_Info.SSID << " | " << SSID_Info.TimeSinceUdpate << " | " << SSID_Info.RSSI << "\n";
-    static bool FoundSpeakerSSIDSValuePushError = false;
-    PushValueToQueue( &SSID_Info
-                    , m_SPIDataLinkToCPU3.GetQueueHandleTXForDataItem("Found Speaker SSIDS")
-                    , "Found Speaker SSIDS"
-                    , 0
-                    , FoundSpeakerSSIDSValuePushError );
+    m_SSIDWLUT = SSID_Info_With_LastUpdateTime_t( Devices[i].SSID.c_str()
+                                                , Devices[i].ADDRESS.c_str()
+                                                , millis()-Devices[i].LastUpdateTime
+                                                , Devices[i].RSSI );
   }
-  */
 }

@@ -89,6 +89,35 @@ struct SSID_Info_With_LastUpdateTime
 			TimeSinceUdpate = TimeSinceUdpate_in;
 			RSSI = RSSI_In;
 		}
+		SSID_Info_With_LastUpdateTime& operator=(const SSID_Info_With_LastUpdateTime& other)
+		{
+			strncpy(this->SSID, other.SSID, sizeof(this->SSID) - 1);
+			this->SSID[sizeof(this->SSID) - 1] = '\0';  // Ensure null-terminated
+
+			strncpy(this->ADDRESS, other.ADDRESS, sizeof(this->ADDRESS) - 1);
+			this->ADDRESS[sizeof(this->ADDRESS) - 1] = '\0';  // Ensure null-terminated
+
+			this->RSSI = other.RSSI;
+			this->TimeSinceUdpate = other.TimeSinceUdpate;
+
+			return *this;
+		}
+		bool operator==(const SSID_Info_With_LastUpdateTime& other) const
+		{
+			if( strcmp(this->SSID, other.SSID) == 0 &&
+				strcmp(this->ADDRESS, other.ADDRESS) == 0 &&
+				this->RSSI == other.RSSI &&
+				this->TimeSinceUdpate == other.TimeSinceUdpate) return true;
+			else return false;
+		}
+		bool operator!=(const SSID_Info_With_LastUpdateTime& other) const
+		{
+			if( strcmp(this->SSID, other.SSID) != 0 ||
+				strcmp(this->ADDRESS, other.ADDRESS) != 0 ||
+				this->RSSI != other.RSSI ||
+				this->TimeSinceUdpate != other.TimeSinceUdpate) return true;
+			else return false;
+		}
 		char SSID[248] = "\0";
 		char ADDRESS[18] = "\0";
 		int32_t RSSI = 0;

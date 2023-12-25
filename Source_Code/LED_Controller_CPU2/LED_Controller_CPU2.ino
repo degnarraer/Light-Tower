@@ -62,7 +62,7 @@ Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
                                                   , m_AudioBuffer
                                                   , m_CPU1SerialPortMessageManager
                                                   , m_CPU3SerialPortMessageManager );                                            
-/*
+
 Manager m_Manager = Manager( "Manager"
                            , m_SoundProcessor
                            , m_CPU1SerialPortMessageManager
@@ -71,15 +71,15 @@ Manager m_Manager = Manager( "Manager"
                            , m_I2S_In
                            , m_AudioBuffer );
 
-*/
+
 int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  //return m_Manager.SetBTTxData(Data, channel_len);
+  return m_Manager.SetBTTxData(Data, channel_len);
 }
 
 static bool ConnectToThisSSID(const char* ssid, esp_bd_addr_t address, int32_t rssi)
 {
-  //return m_BT_Out.ConnectToThisSSID(ssid, address, rssi);
+  return m_BT_Out.ConnectToThisSSID(ssid, address, rssi);
 }
 void setup() 
 {
@@ -94,11 +94,11 @@ void setup()
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   
-  //m_I2S_In.Setup();
-  //a2dp_source.set_ssid_callback(ConnectToThisSSID);
-  //m_BT_Out.Setup();
-  //m_BT_Out.SetMusicDataCallback(SetBTTxData);
-  //m_Manager.Setup();
+  m_I2S_In.Setup();
+  a2dp_source.set_ssid_callback(ConnectToThisSSID);
+  m_BT_Out.Setup();
+  m_BT_Out.SetMusicDataCallback(SetBTTxData);
+  m_Manager.Setup();
   
   
   ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());

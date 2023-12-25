@@ -30,6 +30,7 @@
 #include "float.h"
 #include "AudioBuffer.h"
 #include "DataItem.h"
+#include <Preferences.h>
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
@@ -41,26 +42,12 @@ class Sound_Processor: public NamedItem
                    , SerialPortMessageManager &CPU3SerialPortMessageManager);
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
-    void SetGain(float Gain)
-    {
-      m_Gain = Gain;
-      ESP_LOGE("Sound_Processor", "Set Gain: %f", m_Gain);
-    }
-    float GetGain()
-    {
-      return m_Gain;
-    }
-    void SetFFTGain(float Gain)
-    {
-      m_FFT_Gain = Gain;
-      ESP_LOGE("Sound_Processor", "Set FFT Gain: %f", m_FFT_Gain);
-    }
-    float GetFFTGain()
-    {
-      return m_FFT_Gain;
-    }
     
   private:
+    Preferences m_Preferences;
+    void InitializeNVM(bool Reset);
+    void LoadFromNVM();
+    
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
@@ -69,8 +56,8 @@ class Sound_Processor: public NamedItem
     
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    DataItem <float, 1> m_Gain = DataItem<float, 1>("Amplitude Gain", 1.0, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
-    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>("FFT Gain", 1.7, RxTxType_Tx_On_Update, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>("Amplitude Gain", 1.0, RxTxType_Rx_Echo_Value, 1000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>("FFT Gain", 1.7, RxTxType_Rx_Echo_Value, 1000, m_CPU3SerialPortMessageManager);
 
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
