@@ -68,15 +68,19 @@ class Manager: public NamedItem
     TaskHandle_t m_Manager_1000mS_Task;
     TaskHandle_t m_Manager_300000mS_Task;
 
-  
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "SSID Info With Last Update Time"
+    DataItem<SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
                                                                                                            , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
                                                                                                            , RxTxType_Tx_On_Change
                                                                                                            , 0
                                                                                                            , m_CPU3SerialPortMessageManager);
-    
+   
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
+                                                                                         , Disconnected
+                                                                                         , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                         , 5000
+                                                                                         , m_CPU3SerialPortMessageManager);
     
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;

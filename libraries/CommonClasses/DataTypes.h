@@ -205,7 +205,7 @@ static const char* DataTypeStrings[] =
   "Uint32_t",
   "String_t",
   "SSID_Info_t",
-  "SSID_Info_With_LastUpdateTime_t"
+  "SSID_Info_With_LastUpdateTime_t",
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",
@@ -250,6 +250,12 @@ struct NamedObject_t
             Object = nullptr;
         }
     }
+};
+
+struct NamedCallback_t
+{
+	void (*Callback)(const String&, void*);
+	String Name = "";
 };
 
 struct DataItem_t

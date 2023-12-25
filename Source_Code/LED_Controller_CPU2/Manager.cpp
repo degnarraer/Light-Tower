@@ -140,14 +140,20 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStatusCallee Callback 
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
-  
+  m_ConnectionStatus = ConnectionStatus;
+  ESP_LOGI("BluetoothConnectionStatusChanged", "Connection Status Changed to %i", m_ConnectionStatus);
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
 void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
 {
   for(int i = 0; i < Devices.size(); ++i)
-  {  
+  { 
+    ESP_LOGI("BluetoothActiveDeviceListUpdated", "SSID: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
+            , Devices[i].SSID.c_str()
+            , Devices[i].ADDRESS.c_str()
+            , millis()-Devices[i].LastUpdateTime
+            , Devices[i].RSSI );
     m_SSIDWLUT = SSID_Info_With_LastUpdateTime_t( Devices[i].SSID.c_str()
                                                 , Devices[i].ADDRESS.c_str()
                                                 , millis()-Devices[i].LastUpdateTime

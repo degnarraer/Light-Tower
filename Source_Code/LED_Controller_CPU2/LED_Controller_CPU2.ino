@@ -20,7 +20,7 @@
 #include "Tunes.h"
 #include "esp_log.h"
 #include "DataItem.h"
-
+#define SERIAL_BUFFER_SIZE 2048
 
 
 TaskHandle_t ProcessSPI_CPU1_TXTask;
@@ -55,7 +55,6 @@ ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;
 DataSerializer m_DataSerializer;
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
 SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
-DataItem <float, 1> m_Test = DataItem<float, 1>("Test", 0, RxTxType_Tx_Periodic, 1000, m_CPU3SerialPortMessageManager);
 
 
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
@@ -84,11 +83,11 @@ static bool ConnectToThisSSID(const char* ssid, esp_bd_addr_t address, int32_t r
 void setup() 
 {
   //PC Serial Communication
-  Serial.begin(500000);
+  Serial.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE);
   Serial.flush();
-  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU1_RX, CPU1_TX);
   Serial1.flush();
-  Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
+  Serial2.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU3_RX, CPU3_TX);
   Serial2.flush();
   m_SoundProcessor.SetupSoundProcessor();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();

@@ -74,7 +74,7 @@ class DataSerializer: public CommonUtils
 			if (error)
 			{
 				++m_FailCount;
-				ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s.", error.c_str());
+				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. \nInput: %s", error.c_str(), json);
 				return;
 			}
 			else
@@ -111,7 +111,7 @@ class DataSerializer: public CommonUtils
 					else
 					{
 						++m_FailCount;
-						ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
+						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
 					}
 					
 					if(CheckSumCalc == CheckSumIn)
@@ -123,14 +123,14 @@ class DataSerializer: public CommonUtils
 						free(Buffer);
 						NamedObject.Object = nullptr;
 						++m_FailCount;
-						ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
+						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
 					}
 					FailPercentage();
 					return;
 				}
 				else
 				{
-					ESP_LOGD("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Missing Tags");
+					ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Missing Tags");
 				}
 			}
 			FailPercentage();
@@ -143,7 +143,7 @@ class DataSerializer: public CommonUtils
 			if (error)
 			{
 				++m_FailCount;
-				ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: %s.", error.c_str());
+				ESP_LOGE("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: %s.", error.c_str());
 				return;
 			}
 			else

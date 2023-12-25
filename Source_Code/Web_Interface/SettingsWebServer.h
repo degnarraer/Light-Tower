@@ -252,13 +252,29 @@ class SettingsWebServerManager
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
     SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);
     
-    DataItem <float, 1> AmplitudeGain = DataItem<float, 1>("Amplitude Gain", 0, RxTxType_Tx_On_Change, 0, m_CPU2SerialPortMessageManager);
-    DataItem <float, 1> FFTGain = DataItem<float, 1>("FFT Gain", 0, RxTxType_Tx_On_Change, 0, m_CPU2SerialPortMessageManager);
-    DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "SSID Info With Last Update Time"
+    DataItem <float, 1> AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
+                                                          , 0, RxTxType_Tx_On_Change
+                                                          , 0
+                                                          , m_CPU2SerialPortMessageManager);
+    
+    DataItem <float, 1> FFTGain = DataItem<float, 1>( "FFT Gain"
+                                                     , 0
+                                                     , RxTxType_Tx_On_Change
+                                                     , 0
+                                                     , m_CPU2SerialPortMessageManager);
+    
+    DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
                                                                                                            , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
                                                                                                            , RxTxType_Rx
                                                                                                            , 0
                                                                                                            , m_CPU2SerialPortMessageManager);
+
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
+                                                                                        , Disconnected
+                                                                                        , RxTxType_Rx
+                                                                                        , 0
+                                                                                        , m_CPU2SerialPortMessageManager);
+    
     
     
     //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);

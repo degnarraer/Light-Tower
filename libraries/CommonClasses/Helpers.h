@@ -155,7 +155,6 @@ class CommonUtils
 					}
 				}
 				break;
-				
 				case DataType_Int8_t:
 					Serial << "Int8_t Received: " << Value << "\n";
 					*(int8_t*)Buffer = Value.toInt();
@@ -168,24 +167,20 @@ class CommonUtils
 					Serial << "Int32_t Received: " << Value << "\n";
 					*(int32_t*)Buffer = Value.toInt();
 				break;
-				
 				case DataType_Uint8_t:
 				case DataType_Uint16_t:
 				case DataType_Uint32_t:
 					Serial << "UInt Received: " << Value << "\n";
 					Value.getBytes((byte*)Buffer, Value.length());
 				break;
-				
 				case DataType_Float_t:
 					Serial << "Float_t Received: " << Value << "\n";
 					*(float*)Buffer = Value.toFloat();
 				break;
-				
 				case DataType_Double_t:
 					Serial << "Double_t Received: " << Value << "\n";
 					*(double*)Buffer = Value.toDouble();
 				break;
-				
 				case DataType_String_t:
 				case DataType_SSID_Info_t:
 				case DataType_SSID_Info_With_LastUpdateTime_t:
@@ -197,7 +192,6 @@ class CommonUtils
 				case DataType_ConnectionStatus_t:
 					Result = false;
 				break;
-				
 				default:
 					Result = false;
 				break;

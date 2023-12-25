@@ -20,6 +20,7 @@
 #include "Tunes.h"
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
+#define SERIAL_BUFFER_SIZE 2048
 
 TaskHandle_t WebServer_Task;
 uint32_t WebServer_TaskLoopCount = 0;
@@ -97,11 +98,11 @@ void InitLocalVariables()
 }
 void setup()
 {
-  Serial.begin(500000);
+  Serial.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE);
   Serial.flush();
-  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU1_RX, CPU1_TX);
   Serial1.flush();
-  Serial2.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+  Serial2.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU2_RX, CPU2_TX);
   Serial2.flush();
   InitLocalVariables();
   //InitFileSystem();
