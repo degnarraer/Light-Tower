@@ -20,8 +20,6 @@
 #include "Tunes.h"
 #include "esp_log.h"
 #include "DataItem.h"
-#define SERIAL_BUFFER_SIZE 2048
-
 
 TaskHandle_t ProcessSPI_CPU1_TXTask;
 uint32_t ProcessSPI_CPU1_TXTaskLoopCount = 0;
@@ -48,8 +46,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
                                             , a2dp_source );
-
-
+                                            
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 
 DataSerializer m_DataSerializer;
@@ -83,12 +80,13 @@ static bool ConnectToThisSSID(const char* ssid, esp_bd_addr_t address, int32_t r
 void setup() 
 {
   //PC Serial Communication
-  Serial.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE);
   Serial.flush();
-  Serial1.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU1_RX, CPU1_TX);
+  Serial.begin(500000, SERIAL_8N1);
   Serial1.flush();
-  Serial2.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU3_RX, CPU3_TX);
+  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
   Serial2.flush();
+  Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
+
   m_SoundProcessor.SetupSoundProcessor();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();

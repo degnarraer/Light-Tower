@@ -18,102 +18,10 @@
 
 #ifndef DataItem_H
 #define DataItem_H
-#define MaxQueueCount 10
-#define MaxMessageLength 1000
 
-#include <vector>
-#include "DataSerializer.h"
+#include "SerialMessageManager.h"
 #include <Helpers.h>
 
-
-class NewRXValueCallee
-{
-	public:
-		NewRXValueCallee()
-		{
-			
-		}
-		virtual ~NewRXValueCallee()
-		{
-			
-		}
-		virtual void NewRXValueReceived(void* object) = 0;
-		virtual String GetName() = 0;
-};
-
-class NewRXValueCaller
-{
-	public:
-		NewRXValueCaller()
-		{
-			
-		}
-		virtual ~NewRXValueCaller()
-		{
-			
-		}
-		
-		void RegisterForNewValueNotification(NewRXValueCallee* NewCallee);
-		void DeRegisterForNewValueNotification(NewRXValueCallee* Callee);
-		void RegisterNamedCallback(NamedCallback_t* NamedCallback);
-		void DeRegisterNamedCallback(NamedCallback_t* NamedCallback);
-	protected:
-		void NotifyCallee(const String& name, void* object);
-		void CallCallbacks(const String& name, void* object);
-	private:
-		std::vector<NewRXValueCallee*> m_NewValueCallees = std::vector<NewRXValueCallee*>();
-		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
-};
-
-
-template <typename T>
-class GetSerializeInfoCallBack
-{
-	public:
-		GetSerializeInfoCallBack()
-		{
-			
-		}
-		virtual ~GetSerializeInfoCallBack()
-		{
-			
-		}
-		virtual String GetName() = 0;
-		virtual T *GetValue() = 0;
-		virtual size_t GetCount() = 0;
-};
-
-class SerialPortMessageManager: public NewRXValueCaller
-{
-	public:
-		SerialPortMessageManager( String Name
-								, HardwareSerial &serial
-								, DataSerializer &dataSerializer )
-								: m_Name(Name)
-								, m_Serial(serial)
-								, m_DataSerializer(dataSerializer)
-		{
-		}
-		virtual ~SerialPortMessageManager()
-		{
-			if(m_RXTaskHandle) vTaskDelete(m_RXTaskHandle);
-			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
-		}
-		void SetupSerialPortMessageManager();
-		void QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count);
-		void QueueMessage(String message);
-	private:
-		HardwareSerial &m_Serial;
-		DataSerializer &m_DataSerializer;
-		String m_Name = "";
-		TaskHandle_t m_RXTaskHandle;
-		TaskHandle_t m_TXTaskHandle;
-		QueueHandle_t m_TXQueue;
-		static void StaticSerialPortMessageManager_RXLoop(void *Parameters);
-		void SerialPortMessageManager_RXLoop();
-		static void StaticSerialPortMessageManager_TXLoop(void *Parameters);
-		void SerialPortMessageManager_TXLoop();
-};
 
 enum RxTxType_t
 {
@@ -132,10 +40,11 @@ class DataItem: public NewRXValueCallee
 			  , public CommonUtils
 {
 	public:
-		DataItem( String name, T &initialValuePointer, RxTxType_t rxTxType, uint16_t rate, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name, T &initialValuePointer, RxTxType_t rxTxType, uint16_t rate, size_t StackSize, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
 				, m_Rate(rate)
+				, m_StackSize(StackSize)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value =  new T[COUNT];
@@ -146,10 +55,11 @@ class DataItem: public NewRXValueCallee
 			SetDataLinkEnabled(true);
 		}
 		
-		DataItem( String name, T initialValue, RxTxType_t rxTxType, uint16_t rate, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name, T initialValue, RxTxType_t rxTxType, uint16_t rate, size_t StackSize, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
 				, m_Rate(rate)
+				, m_StackSize(StackSize)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value = new T[COUNT];
@@ -173,24 +83,11 @@ class DataItem: public NewRXValueCallee
 			ESP_LOGI("DataItem& operator=(const U& value)");
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
 			bool valueChanged = false;
-			if (*mp_Value != value)
+			if (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0)
 			{
 				valueChanged = true;
-			}
-			memcpy(mp_Value, &value, sizeof(T) * COUNT);
-			bool TXNow = false;
-			switch(m_RxTxType)
-			{
-				case RxTxType_Tx_On_Change:
-				case RxTxType_Tx_On_Change_With_Heartbeat:
-					TXNow = true;
-				default:
-				break;
-			}
-			if(valueChanged && TXNow)
-			{
-				ESP_LOGI("DataItem& operator=(const U& value)", "Value Changed");
-				DataItem_TX_Now();
+				memcpy(mp_Value, &value, sizeof(T) * COUNT);
+				DataItem_Try_TX_On_Change();
 			}
 			return *this;
 		}
@@ -202,6 +99,13 @@ class DataItem: public NewRXValueCallee
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
 			ESP_LOGI("operator U()");
 			return mp_Value[0];
+		}
+		template <typename U>
+		operator U*()
+		{
+			static_assert(std::is_same<T, U>::value, "Types must be the same");
+			ESP_LOGI("operator U*()");
+			return mp_Value;
 		}
 		
 		operator NewRXValueCallee*()
@@ -244,7 +148,7 @@ class DataItem: public NewRXValueCallee
 					default:
 					break;
 				}
-				if(enableTX) xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
+				if(enableTX) xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), m_StackSize, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
 				if(enableRX) m_SerialPortMessageManager.RegisterForNewValueNotification(this);
 				ESP_LOGI("SetDataLinkEnabled", "Data Item: \"%s\": Enabled Datalink", m_Name.c_str());
 			}
@@ -264,6 +168,7 @@ class DataItem: public NewRXValueCallee
 		size_t m_Count = 0;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		TaskHandle_t m_TXTaskHandle;
+		size_t m_StackSize = 0;
 		static void StaticDataItem_TX(void *Parameters)
 		{
 			DataItem* aDataItem = (DataItem*)Parameters;
@@ -280,38 +185,50 @@ class DataItem: public NewRXValueCallee
 				DataItem_TX_Now();
 			}
 		}
+		
+		void DataItem_Try_TX_On_Change()
+		{
+			bool TXNow = false;
+			switch(m_RxTxType)
+			{
+				case RxTxType_Tx_On_Change:
+				case RxTxType_Tx_On_Change_With_Heartbeat:
+					TXNow = true;
+				default:
+				break;
+			}
+			if(TXNow)
+			{
+				ESP_LOGI("DataItem& operator=(const U& value)", "Value Changed and TX Now");
+				DataItem_TX_Now();
+			}
+		}
+		
 		void DataItem_TX_Now()
 		{
-			ESP_LOGD("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
+			ESP_LOGI("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
 			m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
 		}
 		
 		void NewRXValueReceived(void* Object)
 		{
-			bool Should_RX = false;
-			bool Should_Echo_Value = false;
 			switch(m_RxTxType)
 				{
 					case RxTxType_Rx:
-						Should_RX = true;
-					break;
 					case RxTxType_Rx_Echo_Value:
-						Should_RX = true;
-						Should_Echo_Value = true;
+					{
+						ESP_LOGI("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
+						T* receivedValue = static_cast<T*>(Object);
+						if (*mp_Value != *receivedValue)
+						{
+							memcpy(mp_Value, &receivedValue, sizeof(T) * COUNT);
+							DataItem_Try_TX_On_Change();
+						}
+					}
 					break;
 					default:
 					break;
 				}
-			if(Should_RX)
-			{
-				ESP_LOGD("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
-				T* receivedValue = static_cast<T*>(Object);
-				memcpy(mp_Value, receivedValue, sizeof(T) * COUNT);
-			}
-			if(Should_Echo_Value)
-			{
-				DataItem_TX_Now();
-			}
 		}
 };
 

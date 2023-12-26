@@ -1,4 +1,22 @@
-#include "DataItem.h"
+/*
+    Light Tower by Rob Shockency
+    Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include "SerialMessageManager.h"
 
 void NewRXValueCaller::RegisterForNewValueNotification(NewRXValueCallee* NewCallee)
 {
@@ -78,6 +96,7 @@ void NewRXValueCaller::NotifyCallee(const String& name, void* object)
 		}
 	}
 }
+
 void NewRXValueCaller::CallCallbacks(const String& name, void* object)
 {
 	ESP_LOGD("NotifyCallee", "CallCallbacks");
@@ -92,20 +111,19 @@ void NewRXValueCaller::CallCallbacks(const String& name, void* object)
 	}
 }
 
-
 void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
-	xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RXLoop, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 );
-	xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TXLoop, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 ) != pdPASS)
+	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
+	else ESP_LOGI("SetupSerialPortMessageManager", "Created the RX Task.");
+	
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 ) != pdPASS)
+	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
+	else ESP_LOGI("SetupSerialPortMessageManager", "Created the TX Task.");
+	
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
-	if(NULL == m_TXQueue)
-	{
-		ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
-	}
-	else
-	{
-		ESP_LOGI("SetupSerialPortMessageManager", "Created the TX Queue.");
-	}
+	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
+	else ESP_LOGI("SetupSerialPortMessageManager", "Created the TX Queue.");
 }
 void SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
@@ -149,13 +167,9 @@ void SerialPortMessageManager::QueueMessage(String message)
 	}
 }
 
-void SerialPortMessageManager::StaticSerialPortMessageManager_RXLoop(void *Parameters)
+void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
-	SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
-	aSerialPortMessageManager->SerialPortMessageManager_RXLoop();
-}
-void SerialPortMessageManager::SerialPortMessageManager_RXLoop()
-{
+	ESP_LOGI("SetupSerialPortMessageManager", "Started the RX Task.");
 	const TickType_t xFrequency = 20;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	String message = "";
@@ -166,16 +180,18 @@ void SerialPortMessageManager::SerialPortMessageManager_RXLoop()
 		while (m_Serial.available())
 		{
 			character = m_Serial.read();
+			message.concat(character);
+			if(message.length() > MaxMessageLength) message = "";
 			if(character == '\n')
 			{
-				message.concat(character);
-				ESP_LOGD("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
+				ESP_LOGI("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
+				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);
 				if(NamedObject.Object)
 				{
 					ESP_LOGD("SerialPortMessageManager", "DeSerialized Named object: \"%s\" Address: \"%p\"", NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-					NotifyCallee(NamedObject.Name, NamedObject.Object);
+					//NotifyCallee(NamedObject.Name, NamedObject.Object);
 				}
 				else
 				{
@@ -188,23 +204,16 @@ void SerialPortMessageManager::SerialPortMessageManager_RXLoop()
 						ESP_LOGW("SerialPortMessageManager", "DeSerialized Named object failed");
 					}
 				}
+				
 				message = "";
-			}
-			else
-			{
-				message.concat(character);
 			}
 		}
 	}
 }
 
-void SerialPortMessageManager::StaticSerialPortMessageManager_TXLoop(void *Parameters)
+void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
-	SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
-	aSerialPortMessageManager->SerialPortMessageManager_TXLoop();
-}
-void SerialPortMessageManager::SerialPortMessageManager_TXLoop()
-{
+	ESP_LOGI("SetupSerialPortMessageManager", "Started the TX Task.");
 	const TickType_t xFrequency = 20;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
@@ -215,25 +224,25 @@ void SerialPortMessageManager::SerialPortMessageManager_TXLoop()
 			size_t QueueCount = uxQueueMessagesWaiting(m_TXQueue);
 			if(QueueCount > 0)
 			{
-				ESP_LOGD("SerialPortMessageManager_TXLoop", "Queue Count: %i", QueueCount);
+				ESP_LOGD("SerialPortMessageManager_TxTask", "Queue Count: %i", QueueCount);
 				for(int i = 0; i < QueueCount; ++i)
 				{
 					char message[MaxMessageLength];
 					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 					{
-						ESP_LOGI("SerialPortMessageManager_TXLoop", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+						ESP_LOGI("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
 						m_Serial.println(String(message).c_str());
 					}
 					else
 					{
-						ESP_LOGE("SerialPortMessageManager_TXLoop", "ERROR! Unable to Send Message.");
+						ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
 					}
 				}
 			}
 		}
 		else
 		{
-			ESP_LOGE("SerialPortMessageManager_TXLoop", "ERROR! NULL TX Queue.");
+			ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! NULL TX Queue.");
 		}
 	}
 }

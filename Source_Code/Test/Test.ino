@@ -8,7 +8,27 @@
 
 DataSerializer m_DataSerializer;
 SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
-DataItem <float, 1> m_FFTGain = DataItem<float, 1>("FFT Gain", 0, RxTxType_Tx_Periodic, 1000, m_CPU3SerialPortMessageManager);
+DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
+                                                        , 0
+                                                        , RxTxType_Tx_Periodic
+                                                        , 1000
+                                                        , 2000
+                                                        , m_CPU3SerialPortMessageManager);
+                                                  
+DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT Gain"
+                                                  , 0
+                                                  , RxTxType_Tx_Periodic
+                                                  , 1000
+                                                  , 2000
+                                                  , m_CPU3SerialPortMessageManager);
+
+DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
+                                                                                    , Disconnected
+                                                                                    , RxTxType_Tx_Periodic
+                                                                                    , 1000
+                                                                                    , 2000
+                                                                                    , m_CPU3SerialPortMessageManager);
+
     
 void setup()
 {

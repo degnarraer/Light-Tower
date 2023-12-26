@@ -27,8 +27,12 @@ class SettingsWebServerManager
 {  
   public:
     SettingsWebServerManager( String Title
-                            , AsyncWebSocket &WebSocket )
+                            , AsyncWebSocket &WebSocket
+                            , SerialPortMessageManager &CPU1SerialPortMessageManager
+                            , SerialPortMessageManager &CPU2SerialPortMessageManager)
                             : m_WebSocket(WebSocket)
+                            , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
+                            , m_CPU2SerialPortMessageManager(CPU2SerialPortMessageManager)
     {
       mySenderSemaphore = xSemaphoreCreateRecursiveMutex();
       myReceiverSemaphore = xSemaphoreCreateRecursiveMutex();
@@ -82,9 +86,6 @@ class SettingsWebServerManager
     {
       InitWiFiAP();
       InitializeMemory();
-      m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-      m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
-
       /*
       RegisterAsWebSocketDataSender(Sound_State_DataHandler);
       
@@ -238,44 +239,44 @@ class SettingsWebServerManager
     }
     */
   private:
+    SerialPortMessageManager &m_CPU1SerialPortMessageManager;
+    SerialPortMessageManager &m_CPU2SerialPortMessageManager;
+    AsyncWebSocket &m_WebSocket;
     SemaphoreHandle_t mySenderSemaphore;
     SemaphoreHandle_t myReceiverSemaphore;
-    AsyncWebSocket &m_WebSocket;
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
-    String message = "";
 
     //std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     //std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
 
-    DataSerializer m_DataSerializer;  
-    SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
-    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);
-    
     DataItem <float, 1> AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
-                                                          , 0, RxTxType_Tx_On_Change
-                                                          , 0
+                                                          , 1.0
+                                                          , RxTxType_Tx_On_Change_With_Heartbeat
+                                                          , 1000
+                                                          , 2000
                                                           , m_CPU2SerialPortMessageManager);
-    
+        
     DataItem <float, 1> FFTGain = DataItem<float, 1>( "FFT Gain"
-                                                     , 0
-                                                     , RxTxType_Tx_On_Change
-                                                     , 0
+                                                     , 1.7
+                                                     , RxTxType_Tx_On_Change_With_Heartbeat
+                                                     , 1000
+                                                     , 2000
                                                      , m_CPU2SerialPortMessageManager);
-    
+    /*
     DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
                                                                                                            , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
                                                                                                            , RxTxType_Rx
                                                                                                            , 0
+                                                                                                           , 500
                                                                                                            , m_CPU2SerialPortMessageManager);
-
+    */
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
                                                                                         , Disconnected
                                                                                         , RxTxType_Rx
                                                                                         , 0
-                                                                                        , m_CPU2SerialPortMessageManager);
-    
-    
+                                                                                        , 1000
+                                                                                        , m_CPU2SerialPortMessageManager);    
     
     //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
     //DataItem <bool, 1> SourceBTReset = DataItem<bool, 1>("Source BT Reset", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);

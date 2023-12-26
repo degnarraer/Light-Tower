@@ -38,7 +38,7 @@ class BluetoothConnectionStatusCaller
 	public:
 		BluetoothConnectionStatusCaller()
 		{
-			xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 1000,  this,   configMAX_PRIORITIES - 2,  &m_Handle, 1 );
+			xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 5000,  this,   configMAX_PRIORITIES - 2,  &m_Handle, 1 );
 		}
 		virtual ~BluetoothConnectionStatusCaller()
 		{

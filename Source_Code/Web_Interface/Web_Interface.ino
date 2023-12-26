@@ -16,14 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Streaming.h"
 #include "Tunes.h"
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
-#define SERIAL_BUFFER_SIZE 2048
 
-TaskHandle_t WebServer_Task;
-uint32_t WebServer_TaskLoopCount = 0;
+
+DataSerializer m_DataSerializer;  
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
+SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);
+
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer MyWebServer(80);
@@ -32,12 +33,15 @@ AsyncWebServer MyWebServer(80);
 AsyncWebSocket MyWebSocket("/ws");
 
 // Create Settings Web Server that uses the Socket 
-SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager", MyWebSocket );
+SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager"
+                                                   , MyWebSocket
+                                                   , m_CPU1SerialPortMessageManager
+                                                   , m_CPU2SerialPortMessageManager );
 
 // Static Callback for Web Socket
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
 {
-  //m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
+  m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
 }
 
 // Web Socket init to register web socket callback and connect it to the web server
@@ -96,27 +100,30 @@ void InitLocalVariables()
 {
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
+
 void setup()
 {
-  Serial.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE);
   Serial.flush();
-  Serial1.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU1_RX, CPU1_TX);
+  Serial.begin(500000, SERIAL_8N1);
   Serial1.flush();
-  Serial2.begin(500000, SERIAL_8N1, SERIAL_BUFFER_SIZE, CPU2_RX, CPU2_TX);
+  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
   Serial2.flush();
+  Serial2.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
+  
   InitLocalVariables();
-  //InitFileSystem();
-  //InitWebServer();
-  //InitWebSocket();
+  InitFileSystem();
+  InitWebServer();
+  InitWebSocket();
   //InitTasks();
-  //StartWebServer();
+  StartWebServer();
   PrintMemory();
 }
 
 void loop()
 {
 }
-//#pragma GCC diagnostic pop
 
 void PrintMemory()
 {

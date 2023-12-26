@@ -50,8 +50,8 @@ void Manager::Setup()
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
   m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
   
-  xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      5000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
-  xTaskCreatePinnedToCore( Static_TaskLoop_1000mS,   "Manager_1000mS_Task",    5000,   this,   configMAX_PRIORITIES - 3,   &m_Manager_1000mS_Task,     1 );
+  xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      10000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
+  xTaskCreatePinnedToCore( Static_TaskLoop_1000mS,   "Manager_1000mS_Task",    10000,   this,   configMAX_PRIORITIES - 3,   &m_Manager_1000mS_Task,     1 );
 }
 
 void Manager::InitializeNVM(bool Reset)

@@ -9,12 +9,6 @@
 #define CPU2_TX             15
 
 
-#define CPU1_EN             18
-#define CPU1_A0             19
-
-#define CPU2_EN             34
-#define CPU2_A0             35
-
 //APP TUNES
 #define ACTIVE_SSID_TIMEOUT  10000
 
