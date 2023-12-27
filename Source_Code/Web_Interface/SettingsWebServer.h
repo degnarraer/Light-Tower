@@ -18,7 +18,7 @@
 #ifndef SETTINGS_WEB_SERVER_H
 #define SETTINGS_WEB_SERVER_H
 
-//#include "WebSocketDataHandler.h"
+#include "WebSocketDataHandler.h"
 #include "AsyncTCP.h"
 #include "ESPAsyncWebServer.h"
 #include "DataItem.h"
@@ -43,9 +43,6 @@ class SettingsWebServerManager
     void InitializeMemory()
     {
       /*
-      Sound_State_DataHandler = new WebSocketDataHandler<SoundState_t>( GetPointerToDataItemWithName("Sound State"), new String[1]{"Speaker_Image"}, 1, false, 0, false );
-      Amplitude_Gain_DataHandler = new WebSocketDataHandler<float>( GetPointerToDataItemWithName("Amplitude Gain"), new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}, 2, true, 0, false );
-      FFT_Gain_DataHandler = new WebSocketDataHandler<float>( GetPointerToDataItemWithName("FFT Gain"), new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}, 2, true, 0, false );
       SinkSSID_DataHandler = new WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, false );
       SourceSSID_DataHandler = new WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, false );
       SourceSSIDs_DataHandler = new WebSocketSSIDArrayDataHandler( GetPointerToDataItemWithName("Found Speaker SSIDS"), new String[1]{"TBD"}, 1, true, 0, false );
@@ -249,28 +246,47 @@ class SettingsWebServerManager
 
     //std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     //std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
+    //Sound State Value and Widget Name Values
+    
+    //SoundState_t Sound_State;
+    //WebSocketDataHandler<SoundState_t> Sound_State_DataHandler;
+    //Sound_State_DataHandler = new WebSocketDataHandler<SoundState_t>( &String[1]{"Speaker_Image"}, 1, false );
 
-    DataItem <float, 1> AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
+    
+    //Amplitude Gain Value and Widget Name Values
+    DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
                                                           , 1.0
                                                           , RxTxType_Tx_On_Change_With_Heartbeat
                                                           , 1000
                                                           , 2000
                                                           , m_CPU2SerialPortMessageManager);
-        
-    DataItem <float, 1> FFTGain = DataItem<float, 1>( "FFT Gain"
-                                                     , 1.7
-                                                     , RxTxType_Tx_On_Change_With_Heartbeat
-                                                     , 1000
-                                                     , 2000
-                                                     , m_CPU2SerialPortMessageManager);
-    /*
+    
+    WebSocketDataHandler<float> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain Web Socket Handler"
+                                                                                          , new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}
+                                                                                          , 2
+                                                                                          , m_AmplitudeGain
+                                                                                          , false );    
+    
+    DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT Gain"
+                                                      , 1.7
+                                                      , RxTxType_Tx_On_Change_With_Heartbeat
+                                                      , 1000
+                                                      , 2000
+                                                      , m_CPU2SerialPortMessageManager);
+
+    WebSocketDataHandler<float> FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
+                                                                                  , new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
+                                                                                  , 2
+                                                                                  , m_FFTGain
+                                                                                  , false );
+    
     DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
                                                                                                            , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
                                                                                                            , RxTxType_Rx
                                                                                                            , 0
                                                                                                            , 500
                                                                                                            , m_CPU2SerialPortMessageManager);
-    */
+ 
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
                                                                                         , Disconnected
                                                                                         , RxTxType_Rx
@@ -291,18 +307,10 @@ class SettingsWebServerManager
     //DataItem <DataType_SSID_Info_t, 1> TargetSpeakerSSID = DataItem<DataType_SSID_Info_t, 1>("Target Speaker", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
     //DataItem <DataType_SSID_Info_t, 1> SourceSSID = DataItem<DataType_SSID_Info_t, 1>("Source SSID", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
     
-    /*
-    //Sound State Value and Widget Name Values
-    /*
-    SoundState_t Sound_State;
-    WebSocketDataHandler<SoundState_t> *Sound_State_DataHandler;
-
-    //Amplitude Gain Value and Widget Name Values
-    WebSocketDataHandler<float> *Amplitude_Gain_DataHandler;
     
-    //FFT Gain Value and Widget Name Values
-    WebSocketDataHandler<float> *FFT_Gain_DataHandler;
 
+
+    /*
     //Sink SSID Value and Widget Name Values
     WebSocketSSIDDataHandler *SinkSSID_DataHandler;
     

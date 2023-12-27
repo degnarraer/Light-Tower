@@ -34,13 +34,17 @@ enum RxTxType_t
 };
 
 template <typename T, int COUNT>
-class DataItem: public NewRXValueCallee
-			  , public NewRXValueCaller
-			  , public GetSerializeInfoCallBack<T>
+class DataItem: public NewRxValueCallerInterface<T>
+			  , public NewRxTxVoidObjectCalleeInterface
 			  , public CommonUtils
 {
 	public:
-		DataItem( String name, T &initialValuePointer, RxTxType_t rxTxType, uint16_t rate, size_t StackSize, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name
+				, T &initialValuePointer
+				, RxTxType_t rxTxType
+				, uint16_t rate
+				, size_t StackSize
+				, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
 				, m_Rate(rate)
@@ -55,7 +59,12 @@ class DataItem: public NewRXValueCallee
 			SetDataLinkEnabled(true);
 		}
 		
-		DataItem( String name, T initialValue, RxTxType_t rxTxType, uint16_t rate, size_t StackSize, SerialPortMessageManager &serialPortMessageManager )
+		DataItem( String name
+				, T initialValue
+				, RxTxType_t rxTxType
+				, uint16_t rate
+				, size_t StackSize
+				, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
 				, m_Rate(rate)
@@ -76,6 +85,7 @@ class DataItem: public NewRXValueCallee
 			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 		}
 		
+		/*
 		// Templated conversion operator for assignment from a value
 		template <typename U>
 		DataItem& operator=(const U& value)
@@ -108,11 +118,21 @@ class DataItem: public NewRXValueCallee
 			return mp_Value;
 		}
 		
-		operator NewRXValueCallee*()
+		operator NewRXValueCalleeInterface*()
 		{
 			return this;
 		}
 		
+		operator NewRXValueCallerInterface*()
+		{
+			return this;
+		}
+		
+		operator NewTXValueSetteeInterface*()
+		{
+			return this;
+		}
+		*/
 		String GetName()
 		{
 			return m_Name;
@@ -121,6 +141,18 @@ class DataItem: public NewRXValueCallee
 		T *GetValue()
 		{
 			return mp_Value;
+		}
+		
+		void SetValue(T* value)
+		{
+			ESP_LOGI("SetValue");
+			bool valueChanged = false;
+			if (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0)
+			{
+				valueChanged = true;
+				memcpy(mp_Value, &value, sizeof(T) * COUNT);
+				DataItem_Try_TX_On_Change();
+			}
 		}
 		
 		size_t GetCount()
@@ -210,25 +242,30 @@ class DataItem: public NewRXValueCallee
 			m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
 		}
 		
+		void SetNewTxValue(T* Object)
+		{
+			SetValue(Object);
+		}
+		
 		void NewRXValueReceived(void* Object)
 		{
 			switch(m_RxTxType)
+			{
+				case RxTxType_Rx:
+				case RxTxType_Rx_Echo_Value:
 				{
-					case RxTxType_Rx:
-					case RxTxType_Rx_Echo_Value:
+					ESP_LOGI("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
+					T* receivedValue = static_cast<T*>(Object);
+					if (*mp_Value != *receivedValue)
 					{
-						ESP_LOGI("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
-						T* receivedValue = static_cast<T*>(Object);
-						if (*mp_Value != *receivedValue)
-						{
-							memcpy(mp_Value, &receivedValue, sizeof(T) * COUNT);
-							DataItem_Try_TX_On_Change();
-						}
+						memcpy(mp_Value, &receivedValue, sizeof(T) * COUNT);
+						DataItem_Try_TX_On_Change();
 					}
-					break;
-					default:
-					break;
 				}
+				break;
+				default:
+				break;
+			}
 		}
 };
 

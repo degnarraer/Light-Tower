@@ -18,11 +18,11 @@
 
 #include "SerialMessageManager.h"
 
-void NewRXValueCaller::RegisterForNewValueNotification(NewRXValueCallee* NewCallee)
+void NewRxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
 {
 	ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
 	bool IsFound = false;
-	for (NewRXValueCallee* callee : m_NewValueCallees)
+	for (NewRxTxVoidObjectCalleeInterface* callee : m_NewValueCallees)
 	{
 		if(NewCallee == callee)
 		{
@@ -38,7 +38,7 @@ void NewRXValueCaller::RegisterForNewValueNotification(NewRXValueCallee* NewCall
 	}
 }
 
-void NewRXValueCaller::DeRegisterForNewValueNotification(NewRXValueCallee* Callee)
+void NewRxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee)
 {
 	// Find the iterator pointing to the element
 	auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
@@ -49,7 +49,7 @@ void NewRXValueCaller::DeRegisterForNewValueNotification(NewRXValueCallee* Calle
 	}
 }
 
-void NewRXValueCaller::RegisterNamedCallback(NamedCallback_t* NamedCallback)
+void NewRxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* NamedCallback)
 {
 	ESP_LOGI("RegisterNamedCallback", "Try Registering callback");
 	bool IsFound = false;
@@ -70,7 +70,7 @@ void NewRXValueCaller::RegisterNamedCallback(NamedCallback_t* NamedCallback)
 	
 }
 
-void NewRXValueCaller::DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
+void NewRxVoidObjectCallerInterface::DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
 {
 	// Find the iterator pointing to the element
 	auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
@@ -81,10 +81,10 @@ void NewRXValueCaller::DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
 	}
 }
 
-void NewRXValueCaller::NotifyCallee(const String& name, void* object)
+void NewRxVoidObjectCallerInterface::NotifyCallee(const String& name, void* object)
 {
 	ESP_LOGD("NotifyCallee", "Notify Callees");
-	for (NewRXValueCallee* callee : m_NewValueCallees)
+	for (NewRxTxVoidObjectCalleeInterface* callee : m_NewValueCallees)
 	{
 		if (callee) 
 		{
@@ -97,7 +97,7 @@ void NewRXValueCaller::NotifyCallee(const String& name, void* object)
 	}
 }
 
-void NewRXValueCaller::CallCallbacks(const String& name, void* object)
+void NewRxVoidObjectCallerInterface::CallCallbacks(const String& name, void* object)
 {
 	ESP_LOGD("NotifyCallee", "CallCallbacks");
 	for (NamedCallback_t* namedCallback : m_NamedCallbacks)
@@ -191,7 +191,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				if(NamedObject.Object)
 				{
 					ESP_LOGD("SerialPortMessageManager", "DeSerialized Named object: \"%s\" Address: \"%p\"", NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-					//NotifyCallee(NamedObject.Name, NamedObject.Object);
+					NotifyCallee(NamedObject.Name, NamedObject.Object);
 				}
 				else
 				{

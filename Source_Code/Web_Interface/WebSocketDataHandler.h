@@ -23,8 +23,13 @@
 #include <Streaming.h>
 #include <Helpers.h>
 #include <DataTypes.h>
-#include <Arduino_JSON.h>
 #include "Tunes.h"
+#include "DataItem.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-std=c++11"
+#include <Arduino_JSON.h>
+#pragma GCC diagnostic pop
 
 class SettingsWebServerManager;
 
@@ -41,51 +46,54 @@ class WebSocketDataHandlerReceiver
 };
 
 template<typename T>
-class WebSocketDataHandler: public QueueController
-                          , public CommonUtils
-                          , public WebSocketDataHandlerReceiver
+class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                           , public WebSocketDataHandlerSender
+                          , public NewRxTxValueCalleeInterface<T>
 {
   public:
     WebSocketDataHandler()
     {
     }
-    WebSocketDataHandler(const WebSocketDataHandler &t)
+    WebSocketDataHandler( const WebSocketDataHandler &t )
+                        : m_Name(t.m_Name)
+                        , mp_WidgetId(t.mp_WidgetId)
+                        , m_NumberOfWidgets(t.m_NumberOfWidgets)
+                        , m_NewRxValue(t.m_NewRxValue)
+                        , m_Value(t.m_Value)
+                        , m_Debug(t.m_Debug)
     {
-      m_DataItem = t.m_DataItem;
-      m_WidgetId = t.m_WidgetId;
-      m_Value = t.m_Value;
-      m_ReadUntilEmpty = t.m_ReadUntilEmpty;
-      m_TicksToWait = t.m_TicksToWait;
-      mySemaphore = t.mySemaphore;
+      m_NewRxValue.RegisterForNewValueNotification(this);
     }
-    WebSocketDataHandler( DataItem_t *DataItem
+    WebSocketDataHandler( const String &Name
                         , String *WidgetId
                         , const size_t NumberOfWidgets
-                        , bool ReadUntilEmpty
-                        , TickType_t TicksToWait
-                        , bool Debug )
-                        : m_DataItem(DataItem) 
-                        , m_WidgetId(WidgetId)
+                        , NewRxValueCallerInterface<T> &NewRxValue
+                        , const bool &Debug )
+                        : m_Name(Name)
+                        , mp_WidgetId(WidgetId)
+                        , m_NewRxValue(NewRxValue)
                         , m_NumberOfWidgets(NumberOfWidgets)
-                        , m_ReadUntilEmpty(ReadUntilEmpty)
-                        , m_TicksToWait(TicksToWait)
                         , m_Debug(Debug)
     {
-      mySemaphore = xSemaphoreCreateRecursiveMutex();
-      xSemaphoreGive(mySemaphore);
-    }
-    virtual ~WebSocketDataHandler()
-    {
+      m_NewRxValue.RegisterForNewValueNotification(this);
     }
     
+    virtual ~WebSocketDataHandler()
+    {
+      m_NewRxValue.DeRegisterForNewValueNotification(this);
+    }
+    
+    void NewRxValueReceived(T* object)
+    {
+      SetValue(*object);
+    }
+    void SetNewTxValue(T* Object)
+    {
+      SetValue(*Object);
+    }
     void SetValue(T Value)
     {
-      if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        m_Value = Value;
-        xSemaphoreGive(mySemaphore);
-      }
+      m_Value = Value;
     }
     
     T GetValue()
@@ -93,38 +101,31 @@ class WebSocketDataHandler: public QueueController
       return m_Value;
     }
     
+    String GetName()
+    {
+      return m_Name;
+    }
   protected:
-    DataItem_t *m_DataItem = NULL;
-    String *m_WidgetId = NULL;
-    size_t m_NumberOfWidgets = 0;
+    const String &m_Name;
+    String *mp_WidgetId;
+    const size_t &m_NumberOfWidgets;
     T m_Value;
-    bool m_ReadUntilEmpty;
-    TickType_t m_TicksToWait;
-    UBaseType_t m_TaskPriority;
-    uint8_t m_CoreId;
-    bool m_PushError = false;
-    bool m_PullError = false;
-    bool m_Debug = false;
-    SemaphoreHandle_t mySemaphore;
+    T m_OldValue;
+    NewRxValueCallerInterface<T> &m_NewRxValue;
+    const bool &m_Debug;
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      if(NULL != m_DataItem && NULL != m_WidgetId)
+      if(NULL != mp_WidgetId)
       {
-        if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
+        if(m_OldValue != m_Value)
         {
-          bool ValueReceived = GetValueFromQueue(&m_Value, m_DataItem->QueueHandle_TX, m_DataItem->Name, m_ReadUntilEmpty, m_TicksToWait, m_PullError);
-          T ValueCopy = m_Value;
-          xSemaphoreGive(mySemaphore);
-          
-          if(true == ValueReceived)
+          for (size_t i = 0; i < m_NumberOfWidgets; i++)
           {
-            for (size_t i = 0; i < m_NumberOfWidgets; i++)
-            {
-              if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << String(ValueCopy) << " to Web Socket\n";
-              KeyValuePairs.push_back({ m_WidgetId[i], String(ValueCopy) });
-            }
+            if(true == m_Debug) Serial << "Sending " << String(m_Value) << " to Web Socket\n";
+            KeyValuePairs.push_back({ mp_WidgetId[i], String(m_Value) });
           }
+          m_OldValue = m_Value;
         }
       }
     }
@@ -133,24 +134,14 @@ class WebSocketDataHandler: public QueueController
     {
       String InputId = WidgetId;
       bool Found = false;
-      if(NULL != m_DataItem && NULL != m_WidgetId)
+      if(NULL != mp_WidgetId)
       {
         for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-          if( m_WidgetId[i].equals(InputId) )
+          if( mp_WidgetId[i].equals(InputId) )
           {
             Found = true;
-            T ValueCopy;
-            if( true == SetDataItemValueFromValueString(&ValueCopy, Value, m_DataItem->DataType) )
-            {
-              if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
-              {
-                m_Value = ValueCopy;
-                xSemaphoreGive(mySemaphore);
-                if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << String(ValueCopy) << " to Datalink\n";
-                //PushValueToQueue(&ValueCopy, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
-              }
-            }
+            // SEND TO DATALINK
           }
         }
       }
@@ -161,13 +152,16 @@ class WebSocketDataHandler: public QueueController
 class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
 {
   public:
-    WebSocketSSIDArrayDataHandler( DataItem_t *DataItem
+    WebSocketSSIDArrayDataHandler( const String &Name 
                                  , String *WidgetIds
                                  , const size_t NumberOfWidgets
-                                 , bool ReadUntilEmpty
-                                 , TickType_t TicksToWait
-                                 , bool Debug )
-                                 : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait, Debug)
+                                 , NewRxValueCallerInterface<String> &NewRxValue
+                                 , const bool Debug )
+                                 : WebSocketDataHandler<String>( Name
+                                                               , WidgetIds
+                                                               , NumberOfWidgets
+                                                               , NewRxValue
+                                                               , Debug)
     {
     }
     
@@ -228,7 +222,7 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
       {
         for(size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-          KeyValuePairs.push_back({ m_WidgetId[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
+          KeyValuePairs.push_back({ mp_WidgetId[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
         }
       }
     */
@@ -260,13 +254,16 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
 class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
 {
   public:
-    WebSocketSSIDDataHandler( DataItem_t *DataItem
+    WebSocketSSIDDataHandler( const String Name
                             , String *WidgetIds
                             , const size_t NumberOfWidgets
-                            , bool ReadUntilEmpty
-                            , TickType_t TicksToWait
-                            , bool Debug )
-                            : WebSocketDataHandler<String>(DataItem, WidgetIds, NumberOfWidgets, ReadUntilEmpty, TicksToWait, Debug)
+                            , NewRxValueCallerInterface<String> &NewRxValue
+                            , const bool Debug )
+                            : WebSocketDataHandler<String>( Name
+                                                          , WidgetIds
+                                                          , NumberOfWidgets
+                                                          , NewRxValue
+                                                          , Debug)
     {
     }
     
@@ -281,7 +278,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
       /*
       String ValueCopy;
       char Buffer[m_DataItem->TotalByteCount];
-      if(NULL != m_DataItem && NULL != m_WidgetId)
+      if(NULL != m_DataItem && NULL != mp_WidgetId)
       {
         if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name, m_ReadUntilEmpty, m_TicksToWait, m_PullError))
         {
@@ -293,7 +290,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
             for (size_t i = 0; i < m_NumberOfWidgets; i++)
             {
               if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              KeyValuePairs.push_back({ m_WidgetId[i], ValueCopy });
+              KeyValuePairs.push_back({ mp_WidgetId[i], ValueCopy });
             }
           }
         }
@@ -305,24 +302,19 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
     {
       bool Found = false;
       String InputId = WidgetId;
-      if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
+      m_Value = Value;
+      if(NULL != mp_WidgetId)
       {
-        m_Value = Value;
-        String ValueCopy = m_Value;
-        xSemaphoreGive(mySemaphore);
-        if(NULL != m_DataItem && NULL != m_WidgetId)
+        SSID_Info_t SSID_Info = SSID_Info_t(m_Value);
+        for (size_t i = 0; i < m_NumberOfWidgets; i++)
         {
-          SSID_Info_t SSID_Info = SSID_Info_t(ValueCopy);
-          for (size_t i = 0; i < m_NumberOfWidgets; i++)
+          mp_WidgetId[i].trim();
+          InputId.trim();
+          if( mp_WidgetId[i].equals(InputId) )
           {
-            m_WidgetId[i].trim();
-            InputId.trim();
-            if( m_WidgetId[i].equals(InputId) )
-            {
-              Found = true;
-              if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              //PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
-            }
+            Found = true;
+            if(true == m_Debug) Serial << " Sending " << m_Value << " to Web Socket\n";
+            //PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
           }
         }
       }
