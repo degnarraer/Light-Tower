@@ -84,7 +84,7 @@ template<typename T>
 class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                           , public WebSocketDataHandlerSender
                           , public NewRxTxValueCalleeInterface<T>
-                          , public CommonUtils
+                          , public DataTypeFunctions
 {
   public:
     WebSocketDataHandler()
@@ -182,14 +182,20 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       {
         if( m_WidgetIds[i].equals(WidgetId) )
         {
-          ESP_LOGI( "WebSocketDataHandler"
-                  , "ProcessWebSocketValueAndSendToDatalink"
+          ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
                   , "Widget ID[%i]: %s  WidgetId: %s"
-                  , i , m_WidgetIds[i], WidgetId );
+                  , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
           Found = true;
           T Value;
-          SetDataItemValueFromValueString(&Value, StringValue, GetDataTypeFromType<T>());
-          //m_NewRxTxValue.SetNewTxValue(&Value);
+          if (SetDataItemValueFromValueString(&Value, StringValue, GetDataTypeFromType<T>()))
+          {
+              m_NewRxTxValue.SetNewTxValue(&Value);
+          }
+          else
+          {
+              ESP_LOGW("WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink",
+                       "Failed to set value for Widget ID[%i]: %s", i + 1, WidgetId.c_str());
+          }
         }
       }
       return Found;

@@ -36,7 +36,7 @@ enum RxTxType_t
 template <typename T, int COUNT>
 class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
-			  , public CommonUtils
+			  , public DataTypeFunctions
 {
 	public:
 		DataItem( String name
@@ -139,17 +139,23 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		void SetNewTxValue(T* Value)
 		{
+			ESP_LOGI("DataItem: SetNewTxValue", "%s SetNewTxValue to: %s", m_Name.c_str(), GetDataItemValueAsString(Value, GetDataTypeFromType<T>(), COUNT));
 			SetValue(Value);
 		}
 		
 		void SetValue(T* Value)
 		{
-			ESP_LOGD("SetValue");
+			ESP_LOGI("DataItem: SetValue", "%s SetValue to: %s", m_Name.c_str(), GetDataItemValueAsString(Value, GetDataTypeFromType<T>(), COUNT));
 			bool valueChanged = false;
+			assert(Value != nullptr && "Value must not be null");
+			assert(mp_Value != nullptr && "mp_Value must not be null");
+			assert(COUNT > 0 && COUNT <= sizeof(T) && "COUNT must be a valid index range for mp_Value");
+
 			if (memcmp(mp_Value, &Value, sizeof(T) * COUNT) != 0)
 			{
 				valueChanged = true;
-				memcpy(mp_Value, &Value, sizeof(T) * COUNT);
+				memcpy(mp_Value, Value, sizeof(T) * COUNT);
+				ESP_LOGI("DataItem", "%s Value Changed to: %s", m_Name.c_str(), GetDataItemValueAsString(mp_Value, GetDataTypeFromType<T>(), COUNT));
 				DataItem_Try_TX_On_Change();
 			}
 		}
@@ -230,7 +236,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			}
 			if(TXNow)
 			{
-				ESP_LOGD("DataItem& operator=(const U& value)", "Value Changed and TX Now");
+				ESP_LOGI("DataItem& operator=(const U& value)", "Value Changed and TX Now");
 				DataItem_TX_Now();
 			}
 		}
