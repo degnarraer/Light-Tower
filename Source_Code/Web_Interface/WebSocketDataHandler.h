@@ -92,8 +92,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
     WebSocketDataHandler( const WebSocketDataHandler &t )
                         : m_Name(t.m_Name)
-                        , mp_WidgetId(t.mp_WidgetId)
-                        , m_NumberOfWidgets(t.m_NumberOfWidgets)
+                        , m_WidgetIds(t.m_WidgetIds)
                         , m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
                         , m_IsReceiver(t.m_IsReceiver)
                         , m_IsSender(t.m_IsSender)
@@ -104,16 +103,14 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_NewRxTxValue.RegisterForNewValueNotification(this);
     }
     WebSocketDataHandler( const String &Name
-                        , String *WidgetId
-                        , const size_t NumberOfWidgets
+                        , const std::initializer_list<const char*>& WidgetIds
                         , WebSocketDataProcessor &WebSocketDataProcessor
                         , const bool &IsReceiver
                         , const bool &IsSender
                         , NewRxTxValueCallerInterface<T> &NewRxTxValue
                         , const bool &Debug )
                         : m_Name(Name)
-                        , mp_WidgetId(WidgetId)
-                        , m_NumberOfWidgets(NumberOfWidgets)
+                        , m_WidgetIds(WidgetIds.begin(), WidgetIds.end())
                         , m_WebSocketDataProcessor(WebSocketDataProcessor)
                         , m_IsReceiver(IsReceiver)
                         , m_IsSender(IsSender)
@@ -159,8 +156,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     const bool &m_IsReceiver;
     const bool &m_IsSender;
-    String *mp_WidgetId;
-    const size_t &m_NumberOfWidgets;
+    std::vector<String> m_WidgetIds;
     T m_Value;
     T m_OldValue;
     NewRxTxValueCallerInterface<T> &m_NewRxTxValue;
@@ -168,35 +164,32 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      if(NULL != mp_WidgetId)
+      if(m_OldValue != m_Value)
       {
-        if(m_OldValue != m_Value)
+        for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          for (size_t i = 0; i < m_NumberOfWidgets; i++)
-          {
-            if(true == m_Debug) Serial << "Sending " << String(m_Value) << " to Web Socket\n";
-            KeyValuePairs.push_back({ mp_WidgetId[i], String(m_Value) });
-          }
-          m_OldValue = m_Value;
+          if(true == m_Debug) Serial << "Sending " << String(m_Value) << " to Web Socket\n";
+          KeyValuePairs.push_back({ m_WidgetIds[i], String(m_Value) });
         }
+        m_OldValue = m_Value;
       }
     }
     
     virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String StringValue)
     {
-      String InputId = WidgetId;
       bool Found = false;
-      if(NULL != mp_WidgetId)
+      for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
-        for (size_t i = 0; i < m_NumberOfWidgets; i++)
+        if( m_WidgetIds[i].equals(WidgetId) )
         {
-          if( mp_WidgetId[i].equals(InputId) )
-          {
-            Found = true;
-            T Value;
-            SetDataItemValueFromValueString(&Value, StringValue, GetDataTypeFromType<T>());
-            //m_NewRxTxValue.SetNewTxValue(&Value);
-          }
+          ESP_LOGI( "WebSocketDataHandler"
+                  , "ProcessWebSocketValueAndSendToDatalink"
+                  , "Widget ID[%i]: %s  WidgetId: %s"
+                  , i , m_WidgetIds[i], WidgetId );
+          Found = true;
+          T Value;
+          SetDataItemValueFromValueString(&Value, StringValue, GetDataTypeFromType<T>());
+          //m_NewRxTxValue.SetNewTxValue(&Value);
         }
       }
       return Found;
@@ -207,8 +200,7 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
 {
   public:
     WebSocketSSIDArrayDataHandler( const String &Name 
-                                 , String *WidgetIds
-                                 , const size_t NumberOfWidgets
+                                 , const std::initializer_list<const char*>& WidgetIds
                                  , WebSocketDataProcessor &WebSocketDataProcessor
                                  , const bool &IsReceiver
                                  , const bool &IsSender
@@ -216,7 +208,6 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
                                  , const bool Debug )
                                  : WebSocketDataHandler<String>( Name
                                                                , WidgetIds
-                                                               , NumberOfWidgets
                                                                , WebSocketDataProcessor
                                                                , IsReceiver
                                                                , IsSender
@@ -315,8 +306,7 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
 {
   public:
     WebSocketSSIDDataHandler( const String Name
-                            , String *WidgetIds
-                            , const size_t NumberOfWidgets
+                            , const std::initializer_list<const char*>& WidgetIds
                             , WebSocketDataProcessor &WebSocketDataProcessor
                             , const bool &IsReceiver
                             , const bool &IsSender
@@ -324,7 +314,6 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
                             , const bool Debug )
                             : WebSocketDataHandler<String>( Name
                                                           , WidgetIds
-                                                          , NumberOfWidgets
                                                           , WebSocketDataProcessor
                                                           , IsReceiver
                                                           , IsSender
@@ -369,19 +358,16 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
       bool Found = false;
       String InputId = WidgetId;
       m_Value = Value;
-      if(NULL != mp_WidgetId)
+      SSID_Info_t SSID_Info = SSID_Info_t(m_Value);
+      for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
-        SSID_Info_t SSID_Info = SSID_Info_t(m_Value);
-        for (size_t i = 0; i < m_NumberOfWidgets; i++)
+        m_WidgetIds[i].trim();
+        InputId.trim();
+        if( m_WidgetIds[i].equals(InputId) )
         {
-          mp_WidgetId[i].trim();
-          InputId.trim();
-          if( mp_WidgetId[i].equals(InputId) )
-          {
-            Found = true;
-            if(true == m_Debug) Serial << " Sending " << m_Value << " to Web Socket\n";
-            //PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
-          }
+          Found = true;
+          if(true == m_Debug) Serial << " Sending " << m_Value << " to Web Socket\n";
+          //PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
         }
       }
       return Found;

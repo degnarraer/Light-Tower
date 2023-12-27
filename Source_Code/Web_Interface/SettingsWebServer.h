@@ -89,8 +89,7 @@ class SettingsWebServerManager
                                                           , m_CPU2SerialPortMessageManager);
     
     WebSocketDataHandler<float> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain Web Socket Handler"
-                                                                                          , new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}
-                                                                                          , 2
+                                                                                          , {"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}
                                                                                           , m_WebSocketDataProcessor
                                                                                           , true
                                                                                           , true
@@ -105,8 +104,7 @@ class SettingsWebServerManager
                                                       , m_CPU2SerialPortMessageManager);
 
     WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
-                                                                                  , new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
-                                                                                  , 2
+                                                                                  , {"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
                                                                                   , m_WebSocketDataProcessor
                                                                                   , true
                                                                                   , true
