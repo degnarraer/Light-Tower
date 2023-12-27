@@ -19,8 +19,6 @@
 #define SETTINGS_WEB_SERVER_H
 
 #include "WebSocketDataHandler.h"
-#include "AsyncTCP.h"
-#include "ESPAsyncWebServer.h"
 #include "DataItem.h"
 
 class SettingsWebServerManager
@@ -34,101 +32,15 @@ class SettingsWebServerManager
                             , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                             , m_CPU2SerialPortMessageManager(CPU2SerialPortMessageManager)
     {
-      xTaskCreatePinnedToCore( StaticWebServer_Task,  "WebServer_Task",   10000,  this,  configMAX_PRIORITIES - 1,    &m_WebSocketTaskHandle,    0 );
-    }
-
-    void InitializeMemory()
-    {
-      /*
-      SinkSSID_DataHandler = new WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Sink SSID"), new String[1]{"Sink_SSID_Text_Box"}, 1, true, 0, false );
-      SourceSSID_DataHandler = new WebSocketSSIDDataHandler( GetPointerToDataItemWithName("Source SSID"), new String[1]{"Source_SSID_Text_Box"}, 1, true, 0, false );
-      SourceSSIDs_DataHandler = new WebSocketSSIDArrayDataHandler( GetPointerToDataItemWithName("Found Speaker SSIDS"), new String[1]{"TBD"}, 1, true, 0, false );
-      Source_Connection_Status_DataHandler = new WebSocketDataHandler<ConnectionStatus_t>( GetPointerToDataItemWithName("Source Connection Status"), new String[1]{"Source_Connection_Status"}, 1, true, 0, false );
-      Source_BT_Reset_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source BT Reset"), new String[1]{"Source_BT_Reset_Toggle_Button"}, 1, true, 0, false );
-      Source_BT_ReConnect_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Source ReConnect"), new String[1]{"Source_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
-      Green_Value_DataHandler = new WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Green Value"), new String[1]{"Green_Value_Slider"}, 1, true, 0, false );
-      Blue_Value_DataHandler = new WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Blue Value"), new String[1]{"Blue_Value_Slider"}, 1, true, 0, false );
-      Red_Value_DataHandler = new WebSocketDataHandler<uint8_t>( GetPointerToDataItemWithName("Red Value"), new String[1]{"Red_Value_Slider"}, 1, true, 0, false );
-      Sink_BT_ReConnect_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink ReConnect"), new String[1]{"Sink_BT_Auto_ReConnect_Toggle_Button"}, 1, true, 0, false );
-      Sink_Connection_Status_DataHandler = new WebSocketDataHandler<ConnectionStatus_t>( GetPointerToDataItemWithName("Sink Connection Status"), new String[1]{"Sink_Connection_Status"}, 1, true, 0, false );
-      Sink_Connection_Enable_DataHandler = new WebSocketDataHandler<bool>( GetPointerToDataItemWithName("Sink Enable"), new String[1]{"Sink_BT_Enable_Toggle_Button"}, 1, true, 0, false );
-      */
     }
     
     virtual ~SettingsWebServerManager()
     {
-      if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
-    }
-    static void StaticWebServer_Task(void * parameter)
-    {
-      SettingsWebServerManager *aManager = (SettingsWebServerManager*)parameter;
-      aManager->WebServer_Task();
-    }
-    void WebServer_Task()
-    {
-      const TickType_t xFrequency = 20;
-      TickType_t xLastWakeTime = xTaskGetTickCount();
-      while(true)
-      {
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-        std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-        for(int i = 0; i < m_MySenders.size(); ++i)
-        {
-          m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
-        }
-        if(KeyValuePairs.size() > 0)
-        {
-          NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
-        }
-      }  
     }
     
     void SetupSettingsWebServerManager()
     {
       InitWiFiAP();
-      InitializeMemory();
-      RegisterAsWebSocketDataReceiver(m_Amplitude_Gain_DataHandler);
-      RegisterAsWebSocketDataSender(m_Amplitude_Gain_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(m_FFT_Gain_DataHandler);
-      RegisterAsWebSocketDataSender(m_FFT_Gain_DataHandler);
-
-/*
-      RegisterAsWebSocketDataSender(Sound_State_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(SinkSSID_DataHandler);
-      RegisterAsWebSocketDataSender(SinkSSID_DataHandler);
-    
-      RegisterAsWebSocketDataReceiver(SourceSSID_DataHandler);
-      RegisterAsWebSocketDataSender(SourceSSID_DataHandler);
-
-      RegisterAsWebSocketDataSender(SourceSSIDs_DataHandler);
-      
-      RegisterAsWebSocketDataSender(Source_Connection_Status_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(Source_BT_Reset_DataHandler);
-      RegisterAsWebSocketDataSender(Source_BT_Reset_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(Source_BT_ReConnect_DataHandler);
-      RegisterAsWebSocketDataSender(Source_BT_ReConnect_DataHandler);
-
-      RegisterAsWebSocketDataReceiver(Sink_Connection_Enable_DataHandler);
-      RegisterAsWebSocketDataSender(Sink_Connection_Enable_DataHandler);
-      
-      RegisterAsWebSocketDataSender(Sink_Connection_Status_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(Sink_BT_ReConnect_DataHandler);
-      RegisterAsWebSocketDataSender(Sink_BT_ReConnect_DataHandler);
-
-      RegisterAsWebSocketDataReceiver(Red_Value_DataHandler);
-      RegisterAsWebSocketDataSender(Red_Value_DataHandler);
-
-      RegisterAsWebSocketDataReceiver(Blue_Value_DataHandler);
-      RegisterAsWebSocketDataSender(Blue_Value_DataHandler);
-
-      RegisterAsWebSocketDataReceiver(Green_Value_DataHandler);
-      RegisterAsWebSocketDataSender(Green_Value_DataHandler);
-      */
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -152,59 +64,15 @@ class SettingsWebServerManager
       }
     }
     
-    void RegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver &aReceiver)
-    {
-      // Find the iterator pointing to the element
-      auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), &aReceiver);
-
-      // Check if the element was found before adding
-      if (it == m_MyReceivers.end()) {
-        m_MyReceivers.push_back(&aReceiver);
-      }
-    }
-
-    void DeRegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver &aReceiver)
-    {
-      // Find the iterator pointing to the element
-      auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), &aReceiver);
-
-      // Check if the element was found before erasing
-      if (it != m_MyReceivers.end()) {
-        m_MyReceivers.erase(it);
-      }
-    }
     
-    void RegisterAsWebSocketDataSender(WebSocketDataHandlerSender &aSender)
-    {
-      // Find the iterator pointing to the element
-      auto it = std::find(m_MySenders.begin(), m_MySenders.end(), &aSender);
-
-      // Check if the element was found before adding
-      if (it == m_MySenders.end()) {
-        m_MySenders.push_back(&aSender);
-      }
-    }
-    
-    void DeRegisterAsWebSocketDataSender(WebSocketDataHandlerSender &aSender)
-    {
-      // Find the iterator pointing to the element
-      auto it = std::find(m_MySenders.begin(), m_MySenders.end(), &aSender);
-
-      // Check if the element was found before erasing
-      if (it != m_MySenders.end()) {
-        m_MySenders.erase(it);
-      }
-    }
   private:
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU2SerialPortMessageManager;
     AsyncWebSocket &m_WebSocket;
-    TaskHandle_t m_WebSocketTaskHandle;
+    WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebSocket);
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
 
-    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
-    std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     //Sound State Value and Widget Name Values
     
     //SoundState_t Sound_State;
@@ -223,6 +91,9 @@ class SettingsWebServerManager
     WebSocketDataHandler<float> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain Web Socket Handler"
                                                                                           , new String[2]{"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}
                                                                                           , 2
+                                                                                          , m_WebSocketDataProcessor
+                                                                                          , true
+                                                                                          , true
                                                                                           , m_AmplitudeGain
                                                                                           , false );    
     
@@ -236,6 +107,9 @@ class SettingsWebServerManager
     WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
                                                                                   , new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
                                                                                   , 2
+                                                                                  , m_WebSocketDataProcessor
+                                                                                  , true
+                                                                                  , true
                                                                                   , m_FFTGain
                                                                                   , false );
     
@@ -297,29 +171,6 @@ class SettingsWebServerManager
     WebSocketDataHandler<uint8_t> *Green_Value_DataHandler;
     */
     
-    String Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
-    {
-      JSONVar JSONVars;
-      for(int i = 0; i < KeyValuePairs.size(); ++i)
-      {
-        JSONVar SettingValues;
-        SettingValues["Id"] = KeyValuePairs[i].Key;
-        SettingValues["Value"] = KeyValuePairs[i].Value;
-        JSONVars["WidgetValue" + String(i)] = SettingValues; 
-      }
-      String Result = JSON.stringify(JSONVars);
-      return Result;
-    }
-    
-    void NotifyClients(String TextString)
-    {
-      if(0 < TextString.length())
-      {
-        m_WebSocket.textAll(TextString.c_str(), TextString.length());
-      }
-    }
-
-   
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     {
       AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -341,15 +192,7 @@ class SettingsWebServerManager
           {
             const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
-            bool WidgetFound = false;
-            for(int i = 0; i < m_MyReceivers.size(); ++i)
-            {
-              if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
-              {
-                WidgetFound = true;
-              }
-            }
-            if(!WidgetFound)
+            if(true != m_WebSocketDataProcessor.ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
             {
               Serial.println("Unknown Widget: " + WidgetId);
             }

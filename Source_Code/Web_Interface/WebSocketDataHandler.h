@@ -25,6 +25,8 @@
 #include <DataTypes.h>
 #include "Tunes.h"
 #include "DataItem.h"
+#include "ESPAsyncWebServer.h"
+#include "AsyncTCP.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-std=c++11"
@@ -32,7 +34,6 @@
 #pragma GCC diagnostic pop
 
 class SettingsWebServerManager;
-
 class WebSocketDataHandlerSender
 {
   public:
@@ -44,6 +45,40 @@ class WebSocketDataHandlerReceiver
   public:
     virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) = 0;
 };
+
+class WebSocketDataProcessor
+{
+  public:
+    WebSocketDataProcessor( AsyncWebSocket &WebSocket )
+                          : m_WebSocket(WebSocket)
+    {
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   10000,  this,  configMAX_PRIORITIES - 1,    &m_WebSocketTaskHandle,    0 );
+    }
+    virtual ~WebSocketDataProcessor()
+    {
+      if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
+    }
+    void RegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver);
+    void DeRegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver);
+    void RegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender);
+    void DeRegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender);
+    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value);
+    
+    static void StaticWebSocketDataProcessor_Task(void * parameter)
+    {
+      WebSocketDataProcessor *Processor = (WebSocketDataProcessor*)parameter;
+      Processor->WebSocketDataProcessor_Task();
+    }
+  private:
+    AsyncWebSocket &m_WebSocket;
+    TaskHandle_t m_WebSocketTaskHandle;
+    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
+    std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
+    void WebSocketDataProcessor_Task();
+    String Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs);
+    void NotifyClients(String TextString);
+};
+
 
 template<typename T>
 class WebSocketDataHandler: public WebSocketDataHandlerReceiver
@@ -59,6 +94,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                         : m_Name(t.m_Name)
                         , mp_WidgetId(t.mp_WidgetId)
                         , m_NumberOfWidgets(t.m_NumberOfWidgets)
+                        , m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
+                        , m_IsReceiver(t.m_IsReceiver)
+                        , m_IsSender(t.m_IsSender)
                         , m_NewRxTxValue(t.m_NewRxTxValue)
                         , m_Value(t.m_Value)
                         , m_Debug(t.m_Debug)
@@ -68,20 +106,30 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataHandler( const String &Name
                         , String *WidgetId
                         , const size_t NumberOfWidgets
+                        , WebSocketDataProcessor &WebSocketDataProcessor
+                        , const bool &IsReceiver
+                        , const bool &IsSender
                         , NewRxTxValueCallerInterface<T> &NewRxTxValue
                         , const bool &Debug )
                         : m_Name(Name)
                         , mp_WidgetId(WidgetId)
-                        , m_NewRxTxValue(NewRxTxValue)
                         , m_NumberOfWidgets(NumberOfWidgets)
+                        , m_WebSocketDataProcessor(WebSocketDataProcessor)
+                        , m_IsReceiver(IsReceiver)
+                        , m_IsSender(IsSender)
+                        , m_NewRxTxValue(NewRxTxValue)
                         , m_Debug(Debug)
     {
       m_NewRxTxValue.RegisterForNewValueNotification(this);
+      if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
+      if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
     }
     
     virtual ~WebSocketDataHandler()
     {
       m_NewRxTxValue.DeRegisterForNewValueNotification(this);
+      if(m_IsReceiver) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataReceiver(m_Name, this);
+      if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
     
     void NewRxValueReceived(T* object)
@@ -108,6 +156,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
   protected:
     const String &m_Name;
+    WebSocketDataProcessor &m_WebSocketDataProcessor;
+    const bool &m_IsReceiver;
+    const bool &m_IsSender;
     String *mp_WidgetId;
     const size_t &m_NumberOfWidgets;
     T m_Value;
@@ -158,11 +209,17 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
     WebSocketSSIDArrayDataHandler( const String &Name 
                                  , String *WidgetIds
                                  , const size_t NumberOfWidgets
+                                 , WebSocketDataProcessor &WebSocketDataProcessor
+                                 , const bool &IsReceiver
+                                 , const bool &IsSender
                                  , NewRxTxValueCallerInterface<String> &NewRxTxValue
                                  , const bool Debug )
                                  : WebSocketDataHandler<String>( Name
                                                                , WidgetIds
                                                                , NumberOfWidgets
+                                                               , WebSocketDataProcessor
+                                                               , IsReceiver
+                                                               , IsSender
                                                                , NewRxTxValue
                                                                , Debug)
     {
@@ -260,11 +317,17 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
     WebSocketSSIDDataHandler( const String Name
                             , String *WidgetIds
                             , const size_t NumberOfWidgets
+                            , WebSocketDataProcessor &WebSocketDataProcessor
+                            , const bool &IsReceiver
+                            , const bool &IsSender
                             , NewRxTxValueCallerInterface<String> &NewRxTxValue
                             , const bool Debug )
                             : WebSocketDataHandler<String>( Name
                                                           , WidgetIds
                                                           , NumberOfWidgets
+                                                          , WebSocketDataProcessor
+                                                          , IsReceiver
+                                                          , IsSender
                                                           , NewRxTxValue
                                                           , Debug)
     {
