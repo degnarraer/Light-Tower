@@ -85,12 +85,11 @@ class DataItem: public NewRxValueCallerInterface<T>
 			if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 		}
 		
-		/*
 		// Templated conversion operator for assignment from a value
 		template <typename U>
 		DataItem& operator=(const U& value)
 		{
-			ESP_LOGI("DataItem& operator=(const U& value)");
+			ESP_LOGD("DataItem& operator=(const U& value)");
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
 			bool valueChanged = false;
 			if (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0)
@@ -107,32 +106,27 @@ class DataItem: public NewRxValueCallerInterface<T>
 		operator U()
 		{
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
-			ESP_LOGI("operator U()");
+			ESP_LOGD("operator U()");
 			return mp_Value[0];
 		}
 		template <typename U>
 		operator U*()
 		{
 			static_assert(std::is_same<T, U>::value, "Types must be the same");
-			ESP_LOGI("operator U*()");
+			ESP_LOGD("operator U*()");
 			return mp_Value;
 		}
 		
-		operator NewRXValueCalleeInterface*()
+		operator NewRxValueCallerInterface<T>*()
 		{
 			return this;
 		}
 		
-		operator NewRXValueCallerInterface*()
+		operator NewRxTxVoidObjectCalleeInterface*()
 		{
 			return this;
 		}
 		
-		operator NewTXValueSetteeInterface*()
-		{
-			return this;
-		}
-		*/
 		String GetName()
 		{
 			return m_Name;
@@ -145,7 +139,7 @@ class DataItem: public NewRxValueCallerInterface<T>
 		
 		void SetValue(T* value)
 		{
-			ESP_LOGI("SetValue");
+			ESP_LOGD("SetValue");
 			bool valueChanged = false;
 			if (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0)
 			{
@@ -182,13 +176,13 @@ class DataItem: public NewRxValueCallerInterface<T>
 				}
 				if(enableTX) xTaskCreatePinnedToCore( StaticDataItem_TX, m_Name.c_str(), m_StackSize, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 );
 				if(enableRX) m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-				ESP_LOGI("SetDataLinkEnabled", "Data Item: \"%s\": Enabled Datalink", m_Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Enabled Datalink", m_Name.c_str());
 			}
 			else
 			{
 				if(m_TXTaskHandle) vTaskDelete(m_TXTaskHandle);
 				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-				ESP_LOGI("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
 			}
 		}
 	private:
@@ -231,14 +225,14 @@ class DataItem: public NewRxValueCallerInterface<T>
 			}
 			if(TXNow)
 			{
-				ESP_LOGI("DataItem& operator=(const U& value)", "Value Changed and TX Now");
+				ESP_LOGD("DataItem& operator=(const U& value)", "Value Changed and TX Now");
 				DataItem_TX_Now();
 			}
 		}
 		
 		void DataItem_TX_Now()
 		{
-			ESP_LOGI("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
+			ESP_LOGD("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
 			m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
 		}
 		
@@ -254,7 +248,7 @@ class DataItem: public NewRxValueCallerInterface<T>
 				case RxTxType_Rx:
 				case RxTxType_Rx_Echo_Value:
 				{
-					ESP_LOGI("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
+					ESP_LOGD("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
 					T* receivedValue = static_cast<T*>(Object);
 					if (*mp_Value != *receivedValue)
 					{

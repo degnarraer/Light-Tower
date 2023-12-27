@@ -184,7 +184,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 			if(message.length() > MaxMessageLength) message = "";
 			if(character == '\n')
 			{
-				ESP_LOGI("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
+				ESP_LOGD("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
 				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);
@@ -230,7 +230,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 					char message[MaxMessageLength];
 					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 					{
-						ESP_LOGI("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
 						m_Serial.println(String(message).c_str());
 					}
 					else

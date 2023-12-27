@@ -34,10 +34,7 @@ class SettingsWebServerManager
                             , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                             , m_CPU2SerialPortMessageManager(CPU2SerialPortMessageManager)
     {
-      mySenderSemaphore = xSemaphoreCreateRecursiveMutex();
-      myReceiverSemaphore = xSemaphoreCreateRecursiveMutex();
-      xSemaphoreGive(mySenderSemaphore);
-      xSemaphoreGive(myReceiverSemaphore);
+      xTaskCreatePinnedToCore( StaticWebServer_Task,  "WebServer_Task",   10000,  this,  configMAX_PRIORITIES - 1,    &m_WebSocketTaskHandle,    0 );
     }
 
     void InitializeMemory()
@@ -60,37 +57,44 @@ class SettingsWebServerManager
     
     virtual ~SettingsWebServerManager()
     {
-      /*
-      free(Sound_State_DataHandler);
-      free(Amplitude_Gain_DataHandler);
-      free(FFT_Gain_DataHandler);
-      free(SinkSSID_DataHandler);
-      free(SourceSSID_DataHandler);
-      free(SourceSSIDs_DataHandler);
-      free(Source_Connection_Status_DataHandler);
-      free(Source_BT_Reset_DataHandler);
-      free(Source_BT_ReConnect_DataHandler);
-      free(Green_Value_DataHandler);
-      free(Blue_Value_DataHandler);
-      free(Red_Value_DataHandler);
-      free(Sink_BT_ReConnect_DataHandler);
-      free(Sink_Connection_Status_DataHandler);
-      free(Sink_Connection_Enable_DataHandler);
-      */
+      if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
+    }
+    static void StaticWebServer_Task(void * parameter)
+    {
+      SettingsWebServerManager *aManager = (SettingsWebServerManager*)parameter;
+      aManager->WebServer_Task();
+    }
+    void WebServer_Task()
+    {
+      const TickType_t xFrequency = 20;
+      TickType_t xLastWakeTime = xTaskGetTickCount();
+      while(true)
+      {
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+        std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+        for(int i = 0; i < m_MySenders.size(); ++i)
+        {
+          m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
+        }
+        if(KeyValuePairs.size() > 0)
+        {
+          NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
+        }
+      }  
     }
     
     void SetupSettingsWebServerManager()
     {
       InitWiFiAP();
       InitializeMemory();
-      /*
+      RegisterAsWebSocketDataReceiver(m_Amplitude_Gain_DataHandler);
+      RegisterAsWebSocketDataSender(m_Amplitude_Gain_DataHandler);
+      
+      RegisterAsWebSocketDataReceiver(m_FFT_Gain_DataHandler);
+      RegisterAsWebSocketDataSender(m_FFT_Gain_DataHandler);
+
+/*
       RegisterAsWebSocketDataSender(Sound_State_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(Amplitude_Gain_DataHandler);
-      RegisterAsWebSocketDataSender(Amplitude_Gain_DataHandler);
-      
-      RegisterAsWebSocketDataReceiver(FFT_Gain_DataHandler);
-      RegisterAsWebSocketDataSender(FFT_Gain_DataHandler);
       
       RegisterAsWebSocketDataReceiver(SinkSSID_DataHandler);
       RegisterAsWebSocketDataSender(SinkSSID_DataHandler);
@@ -127,25 +131,6 @@ class SettingsWebServerManager
       */
     }
     
-    void ProcessEventQueue()
-    {
-      /*
-      if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-        for(int i = 0; i < m_MySenders.size(); ++i)
-        {
-          m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
-        }
-        xSemaphoreGive(mySenderSemaphore);
-        if(KeyValuePairs.size() > 0)
-        {
-          NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
-        }
-      }
-      */
-    }
-    
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
     {
       switch (type) 
@@ -166,86 +151,60 @@ class SettingsWebServerManager
           break;
       }
     }
-    /*
-    void RegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
+    
+    void RegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver &aReceiver)
     {
-      if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        for(int i = 0; i < m_MyReceivers.size(); ++i)
-        {
-          if(m_MyReceivers[i] == aReceiver)
-          {
-            xSemaphoreGive(myReceiverSemaphore);
-            return;
-          }
-        }
-        m_MyReceivers.push_back(aReceiver);
-        xSemaphoreGive(myReceiverSemaphore);
+      // Find the iterator pointing to the element
+      auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), &aReceiver);
+
+      // Check if the element was found before adding
+      if (it == m_MyReceivers.end()) {
+        m_MyReceivers.push_back(&aReceiver);
       }
     }
 
-    void DeRegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver *aReceiver)
+    void DeRegisterAsWebSocketDataReceiver(WebSocketDataHandlerReceiver &aReceiver)
     {
-      if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        for(int i = 0; i < m_MyReceivers.size(); ++i)
-        {
-          if(m_MyReceivers[i] == aReceiver)
-          {
-            m_MyReceivers.erase(m_MyReceivers.begin() + i);
-            xSemaphoreGive(myReceiverSemaphore);
-            return;
-          }
-        }
-        xSemaphoreGive(myReceiverSemaphore);
+      // Find the iterator pointing to the element
+      auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), &aReceiver);
+
+      // Check if the element was found before erasing
+      if (it != m_MyReceivers.end()) {
+        m_MyReceivers.erase(it);
       }
     }
     
-    void RegisterAsWebSocketDataSender(WebSocketDataHandlerSender *aSender)
+    void RegisterAsWebSocketDataSender(WebSocketDataHandlerSender &aSender)
     {
-      if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        for(int i = 0; i < m_MySenders.size(); ++i)
-        {
-          if(m_MySenders[i] == aSender)
-          {
-            xSemaphoreGive(mySenderSemaphore);
-            return;
-          }
-        }
-        m_MySenders.push_back(aSender);
-        xSemaphoreGive(mySenderSemaphore);
+      // Find the iterator pointing to the element
+      auto it = std::find(m_MySenders.begin(), m_MySenders.end(), &aSender);
+
+      // Check if the element was found before adding
+      if (it == m_MySenders.end()) {
+        m_MySenders.push_back(&aSender);
       }
     }
     
-    void DeRegisterAsWebSocketDataSender(WebSocketDataHandlerSender *aSender)
+    void DeRegisterAsWebSocketDataSender(WebSocketDataHandlerSender &aSender)
     {
-      if(xSemaphoreTake(mySenderSemaphore, portMAX_DELAY) == pdTRUE)
-      {
-        for(int i = 0; i < m_MySenders.size(); ++i)
-        {
-          if(m_MySenders[i] == aSender)
-          {
-            m_MySenders.erase(m_MySenders.begin() + i);
-            xSemaphoreGive(mySenderSemaphore);
-            return;
-          }
-        }
-        xSemaphoreGive(mySenderSemaphore);
+      // Find the iterator pointing to the element
+      auto it = std::find(m_MySenders.begin(), m_MySenders.end(), &aSender);
+
+      // Check if the element was found before erasing
+      if (it != m_MySenders.end()) {
+        m_MySenders.erase(it);
       }
     }
-    */
   private:
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU2SerialPortMessageManager;
     AsyncWebSocket &m_WebSocket;
-    SemaphoreHandle_t mySenderSemaphore;
-    SemaphoreHandle_t myReceiverSemaphore;
+    TaskHandle_t m_WebSocketTaskHandle;
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
 
-    //std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
-    //std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
+    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
+    std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     //Sound State Value and Widget Name Values
     
     //SoundState_t Sound_State;
@@ -274,7 +233,7 @@ class SettingsWebServerManager
                                                       , 2000
                                                       , m_CPU2SerialPortMessageManager);
 
-    WebSocketDataHandler<float> FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
+    WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
                                                                                   , new String[2]{"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
                                                                                   , 2
                                                                                   , m_FFTGain
@@ -336,6 +295,7 @@ class SettingsWebServerManager
     
     //Red Value and Widget Name Values
     WebSocketDataHandler<uint8_t> *Green_Value_DataHandler;
+    */
     
     String Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
     {
@@ -358,9 +318,8 @@ class SettingsWebServerManager
         m_WebSocket.textAll(TextString.c_str(), TextString.length());
       }
     }
-    */
 
-    /*
+   
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     {
       AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -383,18 +342,13 @@ class SettingsWebServerManager
             const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
             bool WidgetFound = false;
-            if(xSemaphoreTake(myReceiverSemaphore, portMAX_DELAY) == pdTRUE)
+            for(int i = 0; i < m_MyReceivers.size(); ++i)
             {
-              for(int i = 0; i < m_MyReceivers.size(); ++i)
+              if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
               {
-                if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
-                {
-                  WidgetFound = true;
-                }
+                WidgetFound = true;
               }
-              xSemaphoreGive(myReceiverSemaphore);
             }
-            
             if(!WidgetFound)
             {
               Serial.println("Unknown Widget: " + WidgetId);
@@ -411,7 +365,7 @@ class SettingsWebServerManager
         }
       }
     }
-    */
+    
     // Initialize WiFi Client
     void InitWiFiClient()
     {

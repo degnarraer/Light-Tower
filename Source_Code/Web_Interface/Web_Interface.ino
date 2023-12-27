@@ -92,11 +92,6 @@ void InitFileSystem()
   }
 }
 
-// Init Tasks to run using FreeRTOS
-void InitTasks()
-{
-  //xTaskCreatePinnedToCore( WebServer_TaskLoop,  "WebServer_Task",   10000,  NULL,  configMAX_PRIORITIES - 1,    &WebServer_Task,    0 );
-}
 
 void InitLocalVariables()
 {
@@ -118,7 +113,6 @@ void setup()
   InitFileSystem();
   InitWebServer();
   InitWebSocket();
-  //InitTasks();
   StartWebServer();
   PrintMemory();
 }
@@ -134,17 +128,3 @@ void PrintMemory()
   ESP_LOGE("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
   ESP_LOGE("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
 }
-
-/*
-void WebServer_TaskLoop(void * parameter)
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    ++WebServer_TaskLoopCount;
-    m_SettingsWebServerManager.ProcessEventQueue();
-  }  
-}
-*/
