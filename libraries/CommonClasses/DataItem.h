@@ -139,18 +139,17 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		void SetNewTxValue(T* Value)
 		{
-			ESP_LOGI("DataItem: SetNewTxValue", "%s SetNewTxValue to: %s", m_Name.c_str(), GetDataItemValueAsString(Value, GetDataTypeFromType<T>(), COUNT));
+			ESP_LOGD("DataItem: SetNewTxValue", "%s SetNewTxValue to: %s", m_Name.c_str(), GetDataItemValueAsString(Value, GetDataTypeFromType<T>(), COUNT));
 			SetValue(Value);
 		}
 		
 		void SetValue(T* Value)
 		{
-			ESP_LOGI("DataItem: SetValue", "%s SetValue to: %s", m_Name.c_str(), GetDataItemValueAsString(Value, GetDataTypeFromType<T>(), COUNT));
-			bool valueChanged = false;
+			ESP_LOGD("DataItem: SetValue", "%s SetValue to: %s", m_Name.c_str(), GetDataItemValueAsString(Value, GetDataTypeFromType<T>(), COUNT));
 			assert(Value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			assert(COUNT > 0 && COUNT <= sizeof(T) && "COUNT must be a valid index range for mp_Value");
-
+			bool valueChanged = false;
 			if (memcmp(mp_Value, &Value, sizeof(T) * COUNT) != 0)
 			{
 				valueChanged = true;
@@ -249,21 +248,25 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		void NewRXValueReceived(void* Object)
 		{
+			T* receivedValue = static_cast<T*>(Object);
 			switch(m_RxTxType)
 			{
 				case RxTxType_Rx:
 				case RxTxType_Rx_Echo_Value:
 				{
-					ESP_LOGD("NewRXValueReceived", "Data Item \"%s\": New Value Received.", m_Name.c_str());
-					T* receivedValue = static_cast<T*>(Object);
-					if (*mp_Value != *receivedValue)
+					ESP_LOGD("DataItem: NewRXValueReceived", "%s New RX Value Received: %s", m_Name.c_str(), GetDataItemValueAsString(receivedValue, GetDataTypeFromType<T>(), COUNT));
+					bool valueChanged = false;
+					if (memcmp(mp_Value, &receivedValue, sizeof(T) * COUNT) != 0)
 					{
-						memcpy(mp_Value, &receivedValue, sizeof(T) * COUNT);
+						valueChanged = true;
+						memcpy(mp_Value, receivedValue, sizeof(T) * COUNT);
+						ESP_LOGI("DataItem", "%s Value Changed to: %s", m_Name.c_str(), GetDataItemValueAsString(mp_Value, GetDataTypeFromType<T>(), COUNT));
 						DataItem_Try_TX_On_Change();
 					}
 				}
 				break;
 				default:
+					ESP_LOGW("DataItem: NewRXValueReceived", "%s Unhandled RX", m_Name.c_str());
 				break;
 			}
 		}

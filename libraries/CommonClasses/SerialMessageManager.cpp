@@ -190,7 +190,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);
 				if(NamedObject.Object)
 				{
-					ESP_LOGD("SerialPortMessageManager", "DeSerialized Named object: \"%s\" Address: \"%p\"", NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+					ESP_LOGI("SerialPortMessageManager", "DeSerialized Named object: \"%s\" Address: \"%p\"", NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
 					NotifyCallee(NamedObject.Name, NamedObject.Object);
 				}
 				else
