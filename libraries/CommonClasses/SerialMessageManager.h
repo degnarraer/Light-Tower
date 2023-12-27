@@ -39,23 +39,22 @@ class NewRxTxValueCalleeInterface
 			
 		}
 		virtual void NewRxValueReceived(T* object) = 0;
-		virtual void SetNewTxValue(T* object) = 0;
 		virtual String GetName() = 0;
 };
 
 template <typename T>
-class NewRxValueCallerInterface
+class NewRxTxValueCallerInterface
 {
 	public:
-		NewRxValueCallerInterface()
+		NewRxTxValueCallerInterface()
 		{
 			
 		}
-		virtual ~NewRxValueCallerInterface()
+		virtual ~NewRxTxValueCallerInterface()
 		{
 			
 		}
-		
+		virtual void SetNewTxValue(T* object) = 0;
 		void RegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* NewCallee)
 		{
 			ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");

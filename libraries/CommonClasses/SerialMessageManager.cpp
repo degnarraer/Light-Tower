@@ -115,15 +115,15 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
 	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
-	else ESP_LOGI("SetupSerialPortMessageManager", "Created the RX Task.");
+	else ESP_LOGI("SetupSerialPortMessageManager", "RX Task Created.");
 	
 	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
-	else ESP_LOGI("SetupSerialPortMessageManager", "Created the TX Task.");
+	else ESP_LOGI("SetupSerialPortMessageManager", "TX Task Created.");
 	
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
 	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
-	else ESP_LOGI("SetupSerialPortMessageManager", "Created the TX Queue.");
+	else ESP_LOGI("SetupSerialPortMessageManager", "TX Queue Created.");
 }
 void SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
@@ -169,7 +169,7 @@ void SerialPortMessageManager::QueueMessage(String message)
 
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
-	ESP_LOGI("SetupSerialPortMessageManager", "Started the RX Task.");
+	ESP_LOGI("SetupSerialPortMessageManager", "Starting RX Task.");
 	const TickType_t xFrequency = 20;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	String message = "";
@@ -213,7 +213,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
-	ESP_LOGI("SetupSerialPortMessageManager", "Started the TX Task.");
+	ESP_LOGI("SetupSerialPortMessageManager", "Starting TX Task.");
 	const TickType_t xFrequency = 20;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)

@@ -141,7 +141,7 @@ class SettingsWebServerManager
         case WS_EVT_PONG:
           break;
         case WS_EVT_DATA:
-          //HandleWebSocketMessage(arg, data, len);
+          HandleWebSocketMessage(arg, data, len);
           break;
         case WS_EVT_ERROR:
           Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());

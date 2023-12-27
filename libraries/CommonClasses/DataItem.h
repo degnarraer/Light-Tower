@@ -34,7 +34,7 @@ enum RxTxType_t
 };
 
 template <typename T, int COUNT>
-class DataItem: public NewRxValueCallerInterface<T>
+class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
 			  , public CommonUtils
 {
@@ -117,7 +117,7 @@ class DataItem: public NewRxValueCallerInterface<T>
 			return mp_Value;
 		}
 		
-		operator NewRxValueCallerInterface<T>*()
+		operator NewRxTxValueCallerInterface<T>*()
 		{
 			return this;
 		}
@@ -137,14 +137,19 @@ class DataItem: public NewRxValueCallerInterface<T>
 			return mp_Value;
 		}
 		
-		void SetValue(T* value)
+		void SetNewTxValue(T* Value)
+		{
+			SetValue(Value);
+		}
+		
+		void SetValue(T* Value)
 		{
 			ESP_LOGD("SetValue");
 			bool valueChanged = false;
-			if (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0)
+			if (memcmp(mp_Value, &Value, sizeof(T) * COUNT) != 0)
 			{
 				valueChanged = true;
-				memcpy(mp_Value, &value, sizeof(T) * COUNT);
+				memcpy(mp_Value, &Value, sizeof(T) * COUNT);
 				DataItem_Try_TX_On_Change();
 			}
 		}
@@ -234,11 +239,6 @@ class DataItem: public NewRxValueCallerInterface<T>
 		{
 			ESP_LOGD("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
 			m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromType<T>(), mp_Value, COUNT);
-		}
-		
-		void SetNewTxValue(T* Object)
-		{
-			SetValue(Object);
 		}
 		
 		void NewRXValueReceived(void* Object)
