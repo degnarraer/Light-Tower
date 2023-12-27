@@ -84,7 +84,7 @@ class SettingsWebServerManager
     DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
                                                           , 1.0
                                                           , RxTxType_Tx_On_Change_With_Heartbeat
-                                                          , 1000
+                                                          , 5000
                                                           , 2000
                                                           , m_CPU2SerialPortMessageManager);
     
@@ -99,7 +99,7 @@ class SettingsWebServerManager
     DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT Gain"
                                                       , 1.7
                                                       , RxTxType_Tx_On_Change_With_Heartbeat
-                                                      , 1000
+                                                      , 5000
                                                       , 2000
                                                       , m_CPU2SerialPortMessageManager);
 

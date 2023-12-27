@@ -150,7 +150,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			assert(COUNT > 0 && COUNT <= sizeof(T) && "COUNT must be a valid index range for mp_Value");
 			bool valueChanged = false;
-			if (memcmp(mp_Value, &Value, sizeof(T) * COUNT) != 0)
+			if (memcmp(mp_Value, Value, sizeof(T) * COUNT) != 0)
 			{
 				valueChanged = true;
 				memcpy(mp_Value, Value, sizeof(T) * COUNT);
