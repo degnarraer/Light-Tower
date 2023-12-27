@@ -256,7 +256,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				{
 					ESP_LOGD("DataItem: NewRXValueReceived", "%s New RX Value Received: %s", m_Name.c_str(), GetDataItemValueAsString(receivedValue, GetDataTypeFromType<T>(), COUNT));
 					bool valueChanged = false;
-					if (memcmp(mp_Value, &receivedValue, sizeof(T) * COUNT) != 0)
+					if (memcmp(mp_Value, receivedValue, sizeof(T) * COUNT) != 0)
 					{
 						valueChanged = true;
 						memcpy(mp_Value, receivedValue, sizeof(T) * COUNT);
