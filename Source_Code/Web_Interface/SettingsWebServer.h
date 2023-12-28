@@ -110,21 +110,31 @@ class SettingsWebServerManager
                                                                                   , true
                                                                                   , m_FFTGain
                                                                                   , false );
-    
-    DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
-                                                                                                           , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
-                                                                                                           , RxTxType_Rx
-                                                                                                           , 0
-                                                                                                           , 500
-                                                                                                           , m_CPU2SerialPortMessageManager);
  
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
                                                                                         , Disconnected
                                                                                         , RxTxType_Rx
                                                                                         , 0
                                                                                         , 1000
-                                                                                        , m_CPU2SerialPortMessageManager);    
+                                                                                        , m_CPU2SerialPortMessageManager);
     
+    WebSocketDataHandler<ConnectionStatus_t> m_ConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t>( "Connection Status Web Socket Handler"
+                                                                                                                      , {"Source_Connection_Status"}
+                                                                                                                      , m_WebSocketDataProcessor
+                                                                                                                      , true
+                                                                                                                      , true
+                                                                                                                      , m_ConnectionStatus
+                                                                                                                      , false );    
+
+
+/*
+    DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
+                                                                                                           , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
+                                                                                                           , RxTxType_Rx
+                                                                                                           , 0
+                                                                                                           , 500
+                                                                                                           , m_CPU2SerialPortMessageManager);
+  */  
     //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
     //DataItem <bool, 1> SourceBTReset = DataItem<bool, 1>("Source BT Reset", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
     //DataItem <bool, 1> SinkEnable = DataItem<bool, 1>("Sink Enable", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
