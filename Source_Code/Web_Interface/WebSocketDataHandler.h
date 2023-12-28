@@ -131,15 +131,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     void NewRxValueReceived(T* object)
     {
-      SetValue(*object);
+      T Value = *static_cast<T*>(object);
+      m_DataLinkValue = Value;
     }
     void SetNewTxValue(T* Object)
     {
-      SetValue(*Object);
-    }
-    void SetValue(T Value)
-    {
-      m_Value = Value;
+      ESP_LOGE( "WebSocketDataHandler: SetNewTxValue", "THIS IS NOT HANDLED YET");
     }
     
     T GetValue()
@@ -158,44 +155,43 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_IsSender;
     std::vector<String> m_WidgetIds;
     T m_Value;
-    T m_OldValue;
+    T m_WebSocketValue;
+    T m_DataLinkValue;
     NewRxTxValueCallerInterface<T> &m_NewRxTxValue;
     const bool &m_Debug;
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      if(m_OldValue != m_Value)
+      if(m_Value != m_DataLinkValue)
       {
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
           if(true == m_Debug) Serial << "Sending " << String(m_Value) << " to Web Socket\n";
           KeyValuePairs.push_back({ m_WidgetIds[i], String(m_Value) });
         }
-        m_OldValue = m_Value;
+        m_Value = m_DataLinkValue;
       }
     }
     
     virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String StringValue)
     {
       bool Found = false;
-      for (size_t i = 0; i < m_WidgetIds.size(); i++)
+      if (SetDataItemValueFromValueString(&m_WebSocketValue, StringValue, GetDataTypeFromType<T>()))
       {
-        if( m_WidgetIds[i].equals(WidgetId) )
+        for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          ESP_LOGD( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                  , "Widget ID[%i]: %s  WidgetId: %s"
-                  , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
-          Found = true;
-          T Value;
-          if (SetDataItemValueFromValueString(&Value, StringValue, GetDataTypeFromType<T>()))
+          if( m_WidgetIds[i].equals(WidgetId) )
           {
-              m_NewRxTxValue.SetNewTxValue(&Value);
+            ESP_LOGD( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+                    , "Widget ID[%i]: %s  WidgetId: %s"
+                    , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
+            Found = true;
           }
-          else
-          {
-              ESP_LOGW("WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink",
-                       "Failed to set value for Widget ID[%i]: %s", i + 1, WidgetId.c_str());
-          }
+        }
+        if(m_Value != m_WebSocketValue && Found)
+        {
+          m_Value = m_WebSocketValue;
+          m_NewRxTxValue.SetNewTxValue(&m_Value);
         }
       }
       return Found;
@@ -336,47 +332,13 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
   
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
-      /*
-      String ValueCopy;
-      char Buffer[m_DataItem->TotalByteCount];
-      if(NULL != m_DataItem && NULL != mp_WidgetId)
-      {
-        if(true == GetValueFromQueue(&Buffer, m_DataItem->QueueHandle_TX, m_DataItem->Name, m_ReadUntilEmpty, m_TicksToWait, m_PullError))
-        {
-          if(xSemaphoreTake(mySemaphore, portMAX_DELAY) == pdTRUE)
-          {
-            m_Value = String(Buffer);
-            ValueCopy = m_Value;
-            xSemaphoreGive(mySemaphore);
-            for (size_t i = 0; i < m_NumberOfWidgets; i++)
-            {
-              if(true == m_Debug) Serial << m_DataItem->Name << " Sending " << ValueCopy << " to Web Socket\n";
-              KeyValuePairs.push_back({ mp_WidgetId[i], ValueCopy });
-            }
-          }
-        }
-      }
-      */
+      ESP_LOGE( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "THIS IS NOT HANDLED YET");
     }
 
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
     {
-      bool Found = false;
-      String InputId = WidgetId;
-      m_Value = Value;
-      SSID_Info_t SSID_Info = SSID_Info_t(m_Value);
-      for (size_t i = 0; i < m_WidgetIds.size(); i++)
-      {
-        m_WidgetIds[i].trim();
-        InputId.trim();
-        if( m_WidgetIds[i].equals(InputId) )
-        {
-          Found = true;
-          if(true == m_Debug) Serial << " Sending " << m_Value << " to Web Socket\n";
-          //PushValueToQueue(&SSID_Info, m_DataItem->QueueHandle_RX, m_DataItem->Name, 0, m_PushError);
-        }
-      }
-      return Found;
+      ESP_LOGE( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink", "THIS IS NOT HANDLED YET");
+      return false;
     }
 };
 #endif

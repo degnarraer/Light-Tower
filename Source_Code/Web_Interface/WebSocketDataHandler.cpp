@@ -1,6 +1,24 @@
 #include "WebSocketDataHandler.h"
 
 
+void WebSocketDataProcessor::WebSocketDataProcessor_Task()
+{
+  const TickType_t xFrequency = 20;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+    for(int i = 0; i < m_MySenders.size(); ++i)
+    {
+      m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
+    }
+    if(KeyValuePairs.size() > 0)
+    {
+      NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
+    }
+  }  
+}
 
 void WebSocketDataProcessor::RegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver)
 {
@@ -58,26 +76,6 @@ bool WebSocketDataProcessor::ProcessWebSocketValueAndSendToDatalink(String Widge
   }
   return WidgetFound;
 }
-
-void WebSocketDataProcessor::WebSocketDataProcessor_Task()
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-    for(int i = 0; i < m_MySenders.size(); ++i)
-    {
-      m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
-    }
-    if(KeyValuePairs.size() > 0)
-    {
-      NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
-    }
-  }  
-}
-
 
 String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
 {

@@ -204,6 +204,10 @@ class SettingsWebServerManager
             {
               ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget: %s", WidgetId.c_str());
             }
+            else
+            {
+              ESP_LOGI("SettingsWebServer: HandleWebSocketMessage", "Known Widget: %s", WidgetId.c_str());
+            }
           }
           else
           {
