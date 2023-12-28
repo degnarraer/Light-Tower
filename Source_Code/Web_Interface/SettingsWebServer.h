@@ -176,11 +176,11 @@ class SettingsWebServerManager
       {
         data[len] = 0;
         String WebSocketData = String((char*)data);
-        Serial << "WebSocket Data from Client: " << WebSocketData << "\n";
+        ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "WebSocket Data from Client: %s", WebSocketData.c_str());
         JSONVar MyDataObject = JSON.parse(WebSocketData);
         if (JSON.typeof(MyDataObject) == "undefined")
         {
-          Serial.println("Parsing Web Socket Data failed!");
+          ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Parsing Web Socket Data failed!");
           return;
         }
         if( true == MyDataObject.hasOwnProperty("WidgetValue") )
@@ -192,17 +192,17 @@ class SettingsWebServerManager
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
             if(true != m_WebSocketDataProcessor.ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
             {
-              Serial.println("Unknown Widget: " + WidgetId);
+              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget: %s", WidgetId.c_str());
             }
           }
           else
           {
-            Serial.println("Misconfigured Widget Value Data: " + MyDataObject["DataValue"]);
+            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Misconfigured Widget Value Data: %s", MyDataObject["DataValue"]);
           }
         }
         else
         {
-          Serial.println("Unsupported Web Socket Data: " + WebSocketData);
+          ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unsupported Web Socket Data: $s", WebSocketData);
         }
       }
     }
@@ -212,12 +212,18 @@ class SettingsWebServerManager
     {
       WiFi.mode(WIFI_STA);
       WiFi.begin(ssid, password);
-      Serial.print("Connecting to WiFi ..");
+      ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting to WiFi ..");
       while (WiFi.status() != WL_CONNECTED) {
-        Serial.print('.');
+        ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting...");
         delay(1000);
       }
-      Serial.println(WiFi.localIP());
+      IPAddress ipAddress = WiFi.localIP();
+      ESP_LOGI( "SettingsWebServer: InitWifiClient"
+              , "Connected! IP Address: %i.%i.%i.%i"
+              , ipAddress[0]
+              , ipAddress[1]
+              , ipAddress[2]
+              , ipAddress[3] );
     }
     
     void InitWiFiAP()
@@ -228,7 +234,13 @@ class SettingsWebServerManager
       
       WiFi.softAPConfig(Ip, Ip, NMask);
       WiFi.softAP(ssid, password);
-      Serial.println(WiFi.softAPIP());  //Show ESP32 IP on serial
+      IPAddress ipAddress = WiFi.softAPIP();
+      ESP_LOGI( "SettingsWebServer: InitWifiClient"
+              , "Connected! IP Address: %i.%i.%i.%i"
+              , ipAddress[0]
+              , ipAddress[1]
+              , ipAddress[2]
+              , ipAddress[3] );
     }
 };
 

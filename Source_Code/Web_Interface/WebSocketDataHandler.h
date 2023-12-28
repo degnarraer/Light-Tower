@@ -182,7 +182,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       {
         if( m_WidgetIds[i].equals(WidgetId) )
         {
-          ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+          ESP_LOGD( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
                   , "Widget ID[%i]: %s  WidgetId: %s"
                   , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
           Found = true;

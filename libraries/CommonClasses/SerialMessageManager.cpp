@@ -230,7 +230,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 					char message[MaxMessageLength];
 					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 					{
-						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+						ESP_LOGI("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
 						m_Serial.println(String(message).c_str());
 					}
 					else

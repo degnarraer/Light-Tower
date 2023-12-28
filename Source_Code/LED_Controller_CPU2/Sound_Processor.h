@@ -56,7 +56,6 @@ class Sound_Processor: public NamedItem
     
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    
     DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amplitude Gain"
                                                              , 1.0
                                                              , RxTxType_Rx_Echo_Value

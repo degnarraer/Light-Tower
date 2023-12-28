@@ -228,11 +228,20 @@ struct DataItemConfig_t
 
 enum ConnectionStatus_t
 {
-	Disconnected = 0,
-	Waiting = 1,
-	Searching = 2,
-	Pairing = 3,
-	Paired = 4
+	Disconnected,
+	Waiting,
+	Searching,
+	Pairing,
+	Paired
+};
+
+static const char* ConnectionStatusStrings[] =
+{
+	"Disconnected",
+	"Waiting",
+	"Searching",
+	"Pairing",
+	"Paired"
 };
 
 struct NamedObject_t
@@ -416,33 +425,33 @@ class DataTypeFunctions
 			switch (DataType)
 			{
 			case DataType_bool_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "Bool Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "Bool Received: %s", Value.c_str());
 				*((bool *)Buffer) = Value.equals("true");
 				break;
 			case DataType_Int8_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "Int8_t Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "Int8_t Received: %s", Value.c_str());
 				*(int8_t *)Buffer = Value.toInt();
 				break;
 			case DataType_Int16_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "Int16_t Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "Int16_t Received: %s", Value.c_str());
 				*(int16_t *)Buffer = Value.toInt();
 				break;
 			case DataType_Int32_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "Int32_t Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "Int32_t Received: %s", Value.c_str());
 				*(int32_t *)Buffer = Value.toInt();
 				break;
 			case DataType_Uint8_t:
 			case DataType_Uint16_t:
 			case DataType_Uint32_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "UInt Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "UInt Received: %s", Value.c_str());
 				Value.getBytes((byte *)Buffer, Value.length());
 				break;
 			case DataType_Float_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "Float_t Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "Float_t Received: %s", Value.c_str());
 				*(float *)Buffer = Value.toFloat();
 				break;
 			case DataType_Double_t:
-				ESP_LOGI("DataTypeFunctions: SetDataItemValueFromValueString", "Double_t Received: %s", Value.c_str());
+				ESP_LOGD("DataTypeFunctions: SetDataItemValueFromValueString", "Double_t Received: %s", Value.c_str());
 				*(double *)Buffer = Value.toDouble();
 				break;
 			case DataType_String_t:
