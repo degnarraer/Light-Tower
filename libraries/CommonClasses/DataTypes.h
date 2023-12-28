@@ -492,6 +492,7 @@ class DataTypeFunctions
 					resultString += String(*((const int16_t *)Buffer + i));
 					break;
 				case DataType_Int32_t:
+				case DataType_ConnectionStatus_t:
 					resultString += String(*((const int32_t *)Buffer + i));
 					break;
 				case DataType_Uint8_t:
@@ -513,7 +514,6 @@ class DataTypeFunctions
 				case DataType_Frame_t:
 				case DataType_ProcessedSoundFrame_t:
 				case DataType_SoundState_t:
-				case DataType_ConnectionStatus_t:
 					resultString = "Unsupported Data Type";
 					break;
 				default:
