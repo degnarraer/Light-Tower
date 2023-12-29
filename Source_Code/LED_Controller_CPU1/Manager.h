@@ -24,7 +24,6 @@
 #include <BluetoothA2DPSink.h>
 #include "Bluetooth_Device.h"
 #include "Statistical_Engine.h"
-#include "Serial_Datalink_Config.h"
 #include "AudioBuffer.h"
 #include <Preferences.h>
 #include "HardwareSerial.h"
@@ -54,7 +53,6 @@ class Manager: public NamedItem
   public:
     Manager( String Title
            , StatisticalEngine &StatisticalEngine
-           , SPIDataLinkSlave &SPIDataLinkSlave
            , Bluetooth_Sink &BT_In
            , I2S_Device &Mic_In
            , I2S_Device &I2S_Out );
@@ -78,9 +76,17 @@ class Manager: public NamedItem
     void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
     
   private:
-    
+    DataSerializer m_DataSerializer;  
+    SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
+    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
+
+    DataItem<bool, 1> m_SinkEnable = DataItem<bool, 1>( "Bluetooth Sink Enable"
+                                                      , false
+                                                      , RxTxType_Rx_Echo_Value
+                                                      , 0
+                                                      , m_CPU3SerialPortMessageManager);
+
     StatisticalEngine &m_StatisticalEngine;
-    SPIDataLinkSlave &m_SPIDataLinkSlave;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
 
@@ -115,7 +121,7 @@ class Manager: public NamedItem
     void SinkAutoReConnect_RX();
     void SinkReConnect_TX();
     
-    bool m_SinkEnable;
+    //bool m_SinkEnable;
     void SinkEnable_RX();
     void SinkEnable_TX();
     

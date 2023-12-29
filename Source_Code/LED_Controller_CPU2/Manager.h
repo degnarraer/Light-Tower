@@ -76,14 +76,12 @@ class Manager: public NamedItem
                                                                                                            , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
                                                                                                            , RxTxType_Tx_On_Change
                                                                                                            , 0
-                                                                                                           , 500
                                                                                                            , m_CPU3SerialPortMessageManager);
    */
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
                                                                                          , Disconnected
                                                                                          , RxTxType_Tx_On_Change_With_Heartbeat
                                                                                          , 1000
-                                                                                         , 2000
                                                                                          , m_CPU3SerialPortMessageManager);
     
     Sound_Processor &m_SoundProcessor;

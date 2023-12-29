@@ -405,7 +405,7 @@ function onMessage(event)
 					sink_BT_Auto_ReConnect_Toggle_Button.checked = false;
 				}
 			}
-			else if(Id == "Sink_Enable_Toggle_Button")
+			else if(Id == "Sink_BT_Enable_Toggle_Button")
 			{
 				if(Value == "1")
 				{

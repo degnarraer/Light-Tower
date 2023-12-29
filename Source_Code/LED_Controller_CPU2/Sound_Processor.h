@@ -60,14 +60,12 @@ class Sound_Processor: public NamedItem
                                                              , 1.0
                                                              , RxTxType_Rx_Echo_Value
                                                              , 1000
-                                                             , 500
                                                              , m_CPU3SerialPortMessageManager);
                                                              
     DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT Gain"
                                                        , 1.7
                                                        , RxTxType_Rx_Echo_Value
                                                        , 1000
-                                                       , 500
                                                        , m_CPU3SerialPortMessageManager);
 
     //DB Conversion taken from INMP441 Datasheet

@@ -162,18 +162,19 @@ class NewRxTxVoidObjectCalleeInterface
 		virtual String GetName() = 0;
 };
 
-class NewRxVoidObjectCallerInterface
+class NewRxTxVoidObjectCallerInterface
 {
 	public:
-		NewRxVoidObjectCallerInterface()
+		NewRxTxVoidObjectCallerInterface()
 		{
 			
 		}
-		virtual ~NewRxVoidObjectCallerInterface()
+		virtual ~NewRxTxVoidObjectCallerInterface()
 		{
 			
 		}
 		
+		void RegisterForTXNotification(NewRxTxVoidObjectCalleeInterface* NewCallee, size_t Rate);
 		void RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee);
 		void DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee);
 		void RegisterNamedCallback(NamedCallback_t* NamedCallback);
@@ -186,9 +187,7 @@ class NewRxVoidObjectCallerInterface
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
 };
 
-
-
-class SerialPortMessageManager: public NewRxVoidObjectCallerInterface
+class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 {
 	public:
 		SerialPortMessageManager( String Name

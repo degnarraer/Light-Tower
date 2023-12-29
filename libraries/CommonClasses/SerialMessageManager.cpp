@@ -18,7 +18,7 @@
 
 #include "SerialMessageManager.h"
 
-void NewRxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
+void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
 {
 	ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
 	bool IsFound = false;
@@ -38,7 +38,7 @@ void NewRxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoid
 	}
 }
 
-void NewRxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee)
+void NewRxTxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee)
 {
 	// Find the iterator pointing to the element
 	auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
@@ -49,7 +49,7 @@ void NewRxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTxVo
 	}
 }
 
-void NewRxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* NamedCallback)
+void NewRxTxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* NamedCallback)
 {
 	ESP_LOGI("RegisterNamedCallback", "Try Registering callback");
 	bool IsFound = false;
@@ -70,7 +70,7 @@ void NewRxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* Name
 	
 }
 
-void NewRxVoidObjectCallerInterface::DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
+void NewRxTxVoidObjectCallerInterface::DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
 {
 	// Find the iterator pointing to the element
 	auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
@@ -81,7 +81,7 @@ void NewRxVoidObjectCallerInterface::DeRegisterNamedCallback(NamedCallback_t* Na
 	}
 }
 
-void NewRxVoidObjectCallerInterface::NotifyCallee(const String& name, void* object)
+void NewRxTxVoidObjectCallerInterface::NotifyCallee(const String& name, void* object)
 {
 	ESP_LOGD("NotifyCallee", "Notify Callees");
 	for (NewRxTxVoidObjectCalleeInterface* callee : m_NewValueCallees)
@@ -97,7 +97,7 @@ void NewRxVoidObjectCallerInterface::NotifyCallee(const String& name, void* obje
 	}
 }
 
-void NewRxVoidObjectCallerInterface::CallCallbacks(const String& name, void* object)
+void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* object)
 {
 	ESP_LOGD("NotifyCallee", "CallCallbacks");
 	for (NamedCallback_t* namedCallback : m_NamedCallbacks)

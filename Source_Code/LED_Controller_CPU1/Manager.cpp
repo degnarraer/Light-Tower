@@ -20,13 +20,11 @@
 
 Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
-                , SPIDataLinkSlave &SPIDataLinkSlave
                 , Bluetooth_Sink &BT_In
                 , I2S_Device &Mic_In
                 , I2S_Device &I2S_Out )
                 : NamedItem(Title)
                 , m_StatisticalEngine(StatisticalEngine)
-                , m_SPIDataLinkSlave(SPIDataLinkSlave)
                 , m_BT_In(BT_In)
                 , m_Mic_In(Mic_In) 
                 , m_I2S_Out(I2S_Out)
@@ -41,6 +39,8 @@ void Manager::Setup()
   m_Preferences.begin("My Settings", false);
   InitializeNVM(m_Preferences.getBool("NVM Reset", false));
   LoadFromNVM();
+  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
@@ -49,8 +49,8 @@ void Manager::Setup()
   m_I2S_Out.Setup();
   m_Mic_In.SetCallback(this);
   m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
+  //SetInputType(InputType_Bluetooth);
+  SetInputType(InputType_Microphone);
 }
 
 void Manager::InitializeNVM(bool Reset)
@@ -163,24 +163,6 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
 
 void Manager::MoveDataToStatisticalEngine()
 {
-  const uint8_t count = 6;
-  String Signals[count] = { "Processed_Frame"
-                          , "R_BANDS"
-                          , "L_BANDS"
-                          , "R_MAXBAND"
-                          , "L_MAXBAND"
-                          , "L_MAJOR_FREQ" };
-                                      
-  for(int i = 0; i < count; ++i)
-  {
-    MoveDataFromQueueToQueue( "Move Data Between CPU1 And Statistical Engine: " + Signals[i]
-                            , m_SPIDataLinkSlave.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_SPIDataLinkSlave.GetTotalByteCountForDataItem(Signals[i].c_str())
-                            , m_StatisticalEngine.GetQueueHandleRXForDataItem(Signals[i].c_str())
-                            , m_StatisticalEngine.GetTotalByteCountForDataItem(Signals[i].c_str())
-                            , 0
-                            , false );
-  }
 }
 
 //BluetoothConnectionStateCallee Callback
@@ -213,35 +195,41 @@ void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStat
 
 void Manager::BluetoothConnectionStatus_TX()
 {
+  /*
   static bool SinkIsConnectedValuePushError = false;
   PushValueToQueue( &m_BluetoothConnectionStatus
                   , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sink Connection Status")
                   , "Sink Connection Status"
                   , 0
                   , SinkIsConnectedValuePushError ); 
+                  */
 }
 
 void Manager::SoundState_RX(SoundState_t SoundState)
 {
+  /*
   if(m_SoundState != SoundState)
   {
       m_SoundState = SoundState;
       SoundState_TX();
   }
-  
+  */
 }
 void Manager::SoundState_TX()
 {
+  /*
   static bool SoundStateValuePushError = false;
   PushValueToQueue( &m_SoundState
                   , m_SPIDataLinkSlave.GetQueueHandleTXForDataItem("Sound State")
                   , "Sound State"
                   , 0
                   , SoundStateValuePushError );
+                  */
 }
 
 void Manager::SinkSSID_RX()
 {
+  /*
   String DatalinkValue;
   char Buffer[m_SPIDataLinkSlave.GetQueueByteCountForDataItem("Sink SSID")];
   static bool SinkSSIDPullErrorHasOccured = false;
@@ -260,18 +248,22 @@ void Manager::SinkSSID_RX()
       SinkSSID_TX();
     }
   }
+  */
 }
 
 void Manager::SinkSSID_TX()
 {
+  /*
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
   SSID_Info_t SSIDInfo = SSID_Info_t(m_SinkSSID);
   static bool SinkSSIDPushErrorHasOccured = false;
   m_SPIDataLinkSlave.PushValueToTXQueue(&SSIDInfo, "Sink SSID", 0, SinkSSIDPushErrorHasOccured );
+  */
 }
 
 void Manager::SinkAutoReConnect_RX()
 {
+  /*
   bool DatalinkValue;
   static bool SinkAutoReConnectPullErrorHasOccured = false;
   if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink ReConnect", false, 0, SinkAutoReConnectPullErrorHasOccured))
@@ -285,16 +277,20 @@ void Manager::SinkAutoReConnect_RX()
       SinkReConnect_TX();
     }
   }
+  */
 }
 
 void Manager::SinkReConnect_TX()
 {
+  /*
   static bool SinkAutoReConnectPushErrorHasOccured = false;
   m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkReConnect, "Sink ReConnect", 0, SinkAutoReConnectPushErrorHasOccured);
+  */
 }
 
 void Manager::SinkEnable_RX()
 {
+  /*
   bool DatalinkValue;
   static bool SinkEnablePullErrorHasOccured = false;
   if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&DatalinkValue, "Sink Enable", false, 0, SinkEnablePullErrorHasOccured))
@@ -315,12 +311,14 @@ void Manager::SinkEnable_RX()
       SinkEnable_TX();
     }
   }
+  */
 }
 
 void Manager::SinkEnable_TX()
 {
+  /*
   static bool SinkEnablePushErrorHasOccured = false;
   m_SPIDataLinkSlave.PushValueToTXQueue(&m_SinkEnable, "Sink Enable", 0, SinkEnablePushErrorHasOccured);
-
+  */
 }
     

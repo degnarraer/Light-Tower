@@ -19,11 +19,11 @@
 #define I2S2_SDIN_PIN             I2S_PIN_NO_CHANGE
 #define I2S2_SDOUT_PIN            33
 
-//SPI HSPI PINS
-#define HSPI_PIN_SCK              14
-#define HSPI_PIN_MISO             12
-#define HSPI_PIN_MOSI             13
-#define HSPI_PIN_SS               15
+//CPU2&3 UART
+#define CPU2_RX                   12
+#define CPU2_TX                   13
+#define CPU3_RX                   14
+#define CPU3_TX                   15
 
 //App Tunes
 #define I2S_SAMPLE_RATE 44100

@@ -72,20 +72,12 @@ class SettingsWebServerManager
     WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebSocket);
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
-
-    //Sound State Value and Widget Name Values
-    
-    //SoundState_t Sound_State;
-    //WebSocketDataHandler<SoundState_t> Sound_State_DataHandler;
-    //Sound_State_DataHandler = new WebSocketDataHandler<SoundState_t>( &String[1]{"Speaker_Image"}, 1, false );
-
     
     //Amplitude Gain Value and Widget Name Values
     DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
                                                           , 1.0
                                                           , RxTxType_Tx_On_Change_With_Heartbeat
-                                                          , 5000
-                                                          , 2000
+                                                          , 1000
                                                           , m_CPU2SerialPortMessageManager);
     
     WebSocketDataHandler<float> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain Web Socket Handler"
@@ -99,8 +91,7 @@ class SettingsWebServerManager
     DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT Gain"
                                                       , 1.7
                                                       , RxTxType_Tx_On_Change_With_Heartbeat
-                                                      , 5000
-                                                      , 2000
+                                                      , 1000
                                                       , m_CPU2SerialPortMessageManager);
 
     WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
@@ -115,7 +106,6 @@ class SettingsWebServerManager
                                                                                         , Disconnected
                                                                                         , RxTxType_Rx
                                                                                         , 0
-                                                                                        , 1000
                                                                                         , m_CPU2SerialPortMessageManager);
     
     WebSocketDataHandler<ConnectionStatus_t> m_ConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t>( "Connection Status Web Socket Handler"
@@ -125,9 +115,27 @@ class SettingsWebServerManager
                                                                                                                       , true
                                                                                                                       , m_ConnectionStatus
                                                                                                                       , false );    
-
+    DataItem<bool, 1> m_BluetoothSinkEnable = DataItem<bool, 1>( "Bluetooth Sink Enable"
+                                                               , true
+                                                               , RxTxType_Tx_On_Change_With_Heartbeat
+                                                               , 1000
+                                                               , m_CPU1SerialPortMessageManager);
+    
+    WebSocketDataHandler<bool> m_SinkEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Sink Enable Web Socket Handler"
+                                                                                    , {"Sink_BT_Enable_Toggle_Button"}
+                                                                                    , m_WebSocketDataProcessor
+                                                                                    , true
+                                                                                    , true
+                                                                                    , m_BluetoothSinkEnable
+                                                                                    , false );   
 
 /*
+    //Sound State Value and Widget Name Values
+    
+    //SoundState_t Sound_State;
+    //WebSocketDataHandler<SoundState_t> Sound_State_DataHandler;
+    //Sound_State_DataHandler = new WebSocketDataHandler<SoundState_t>( &String[1]{"Speaker_Image"}, 1, false );
+
     DataItem <SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
                                                                                                            , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
                                                                                                            , RxTxType_Rx

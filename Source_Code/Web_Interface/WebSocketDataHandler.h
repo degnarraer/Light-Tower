@@ -176,7 +176,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String StringValue)
     {
       bool Found = false;
-      if (SetDataItemValueFromValueString(&m_WebSocketValue, StringValue, GetDataTypeFromType<T>()))
+      if (SetDataItemValueFromValueString(&m_WebSocketValue, StringValue, GetDataTypeFromTemplateType<T>()))
       {
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {

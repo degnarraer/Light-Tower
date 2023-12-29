@@ -82,14 +82,11 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
 StatisticalEngine m_StatisticalEngine = StatisticalEngine();
 StatisticalEngineModelInterface m_StatisticalEngineModelInterface = StatisticalEngineModelInterface(m_StatisticalEngine);
 VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEngineModelInterface);
-
-SPIDataLinkSlave m_SPIDataLinkSlave = SPIDataLinkSlave( );
                                                       
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
 Manager m_Manager = Manager("Manager", m_StatisticalEngine
-                           , m_SPIDataLinkSlave
                            , m_BT_In
                            , m_Mic_In
                            , m_I2S_Out);
@@ -100,7 +97,6 @@ void InitLocalVariables()
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
-  m_SPIDataLinkSlave.SetupSPIDataLink();
   m_Scheduler.AddTask(m_CalculateFPS);
   m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
   m_Scheduler.AddTask(m_VisualizationPlayer);
@@ -127,7 +123,10 @@ void InitSerialCommunication()
   //PC Serial Communication
   Serial.flush();
   Serial.begin(500000);
-  Serial.flush();
+  Serial1.flush();
+  Serial1.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+  Serial2.flush();
+  Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
 }
 
 

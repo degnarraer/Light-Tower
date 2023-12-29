@@ -313,7 +313,7 @@ class DataTypeFunctions
 		}
 
 		template <typename T>
-		DataType_t GetDataTypeFromType()
+		DataType_t GetDataTypeFromTemplateType()
 		{
 			DataType_t Result;
 			if(		std::is_same<T, bool>::value) 								return DataType_bool_t;
