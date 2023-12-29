@@ -54,6 +54,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			{
 				mp_Value[i].DeepCopy(initialValuePointer[i]);
 			}
+			CreateTimer();
 			SetDataLinkEnabled(true);
 		}
 		
@@ -74,6 +75,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				mp_Value[i] = T(initialValue);
 				mp_RxValue[i] = T(initialValue);
 			}
+			CreateTimer();
 			SetDataLinkEnabled(true);
 		}
 		
@@ -87,14 +89,13 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		void CreateTimer()
 		{
-			const esp_timer_create_args_t timerArgs = {
-				.callback = &DataItem_TX_Now,
-				.arg = NULL,
-				.name = "Tx_Timer"
-			  };
+			esp_timer_create_args_t timerArgs;
+			timerArgs.callback = &StaticDataItem_TX_Now;
+			timerArgs.arg = this;
+			timerArgs.name = "Tx_Timer";
 
-			  // Create the timer
-			  esp_timer_create(&timerArgs, &m_TxTimer);
+			// Create the timer
+			esp_timer_create(&timerArgs, &m_TxTimer);
 		}
 		
 		// Templated conversion operator for assignment from a value
@@ -253,7 +254,14 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				DataItem_TX_Now();
 			}
 		}
-		
+		static void StaticDataItem_TX_Now(void *arg)
+		{
+			DataItem *aDataItem = static_cast<DataItem*>(arg);
+			if(aDataItem)
+			{
+				aDataItem->DataItem_TX_Now();
+			}
+		}
 		void DataItem_TX_Now()
 		{
 			ESP_LOGD("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
