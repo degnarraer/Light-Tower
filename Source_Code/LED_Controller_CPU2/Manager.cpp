@@ -140,7 +140,7 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStatusCallee Callback 
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
-  m_ConnectionStatus = ConnectionStatus;
+  m_ConnectionStatus.SetValue(ConnectionStatus);
   ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[ConnectionStatus]).c_str());
 }
 

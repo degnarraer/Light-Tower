@@ -96,35 +96,33 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                         , m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
                         , m_IsReceiver(t.m_IsReceiver)
                         , m_IsSender(t.m_IsSender)
-                        , m_NewRxTxValue(t.m_NewRxTxValue)
-                        , m_Value(t.m_Value)
+                        , m_DataItem(t.m_DataItem)
                         , m_Debug(t.m_Debug)
     {
-      m_NewRxTxValue.RegisterForNewValueNotification(this);
+      if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
+      if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
     }
     WebSocketDataHandler( const String &Name
                         , const std::initializer_list<const char*>& WidgetIds
                         , WebSocketDataProcessor &WebSocketDataProcessor
                         , const bool &IsReceiver
                         , const bool &IsSender
-                        , NewRxTxValueCallerInterface<T> &NewRxTxValue
+                        , DataItem<T, 1> &DataItem
                         , const bool &Debug )
                         : m_Name(Name)
                         , m_WidgetIds(WidgetIds.begin(), WidgetIds.end())
                         , m_WebSocketDataProcessor(WebSocketDataProcessor)
                         , m_IsReceiver(IsReceiver)
                         , m_IsSender(IsSender)
-                        , m_NewRxTxValue(NewRxTxValue)
+                        , m_DataItem(DataItem)
                         , m_Debug(Debug)
     {
-      m_NewRxTxValue.RegisterForNewValueNotification(this);
       if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
       if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
     }
     
     virtual ~WebSocketDataHandler()
     {
-      m_NewRxTxValue.DeRegisterForNewValueNotification(this);
       if(m_IsReceiver) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataReceiver(m_Name, this);
       if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
@@ -132,7 +130,13 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     void NewRxValueReceived(T* object)
     {
       T Value = *static_cast<T*>(object);
-      m_DataLinkValue = Value;
+      if(m_DataItem.GetValue() != Value)
+      {
+        m_DataItem.SetValue(Value);
+        ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+                , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
+                , m_DataItem.GetValueAsString());
+      }
     }
     void SetNewTxValue(T* Object)
     {
@@ -141,7 +145,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     T GetValue()
     {
-      return m_Value;
+      return m_DataItem;
     }
     
     String GetName()
@@ -154,50 +158,61 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_IsReceiver;
     const bool &m_IsSender;
     std::vector<String> m_WidgetIds;
-    T m_Value;
-    T m_WebSocketValue;
-    T m_DataLinkValue;
-    NewRxTxValueCallerInterface<T> &m_NewRxTxValue;
+    DataItem<T, 1> &m_DataItem;
+    T m_OldValue;
     const bool &m_Debug;
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      if(m_Value != m_DataLinkValue)
+      if(m_DataItem.GetValue() != m_OldValue)
       {
+        ESP_LOGE( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value to Web Socket");
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          if(true == m_Debug) Serial << "Sending " << String(m_Value) << " to Web Socket\n";
-          KeyValuePairs.push_back({ m_WidgetIds[i], String(m_Value) });
+          //if(true == m_Debug) Serial << "Sending " << String(m_DataItem) << " to Web Socket\n";
+          KeyValuePairs.push_back({ m_WidgetIds[i], m_DataItem.GetValueAsString() });
         }
-        m_Value = m_DataLinkValue;
+        m_OldValue = m_DataItem.GetValue();
       }
     }
     
     virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String StringValue)
     {
       bool Found = false;
-      if (SetDataItemValueFromValueString(&m_WebSocketValue, StringValue, GetDataTypeFromTemplateType<T>()))
+      for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
-        for (size_t i = 0; i < m_WidgetIds.size(); i++)
+        if( m_WidgetIds[i].equals(WidgetId) )
         {
-          if( m_WidgetIds[i].equals(WidgetId) )
-          {
-            ESP_LOGD( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                    , "Widget ID[%i]: %s  WidgetId: %s"
-                    , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
-            Found = true;
-          }
+          Found = true;
+          ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+                  , "Widget ID[%i]: %s  WidgetId: %s"
+                  , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
         }
-        if(m_Value != m_WebSocketValue && Found)
+      }
+      if(Found)
+      {
+        T newValue;
+        if (SetValueFromFromStringForDataType(&newValue, StringValue, GetDataTypeFromTemplateType<T>()))
         {
-          m_Value = m_WebSocketValue;
-          m_NewRxTxValue.SetNewTxValue(&m_Value);
+          ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+                  , "New Web Socket Value: \tValue: %s \tNew Value: %s"
+                  , m_DataItem.GetValueAsString()
+                  , GetValueAsStringForDataType(&newValue, GetDataTypeFromTemplateType<T>(), 1));
+          if(m_DataItem.GetValue() != newValue )
+          {
+            m_DataItem.SetValue(newValue);
+            ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+                    , "Value Changed: \tValue: %s \tNew Value: %s"
+                    , m_DataItem.GetValueAsString()
+                    , GetValueAsStringForDataType(&newValue, GetDataTypeFromTemplateType<T>(), 1));
+          }
         }
       }
       return Found;
     }
 };
 
+/*
 class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
 {
   public:
@@ -206,14 +221,14 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
                                  , WebSocketDataProcessor &WebSocketDataProcessor
                                  , const bool &IsReceiver
                                  , const bool &IsSender
-                                 , NewRxTxValueCallerInterface<String> &NewRxTxValue
+                                 , DataItem<String, 1> &DataItem
                                  , const bool Debug )
                                  : WebSocketDataHandler<String>( Name
                                                                , WidgetIds
                                                                , WebSocketDataProcessor
                                                                , IsReceiver
                                                                , IsSender
-                                                               , NewRxTxValue
+                                                               , DataItem
                                                                , Debug)
     {
     }
@@ -225,7 +240,6 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
   
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
-      /*
       SSID_Info_With_LastUpdateTime_t Received_SSID;
       unsigned long CurrentTime = millis();
       size_t TotalSSIDs = uxQueueMessagesWaiting(m_DataItem->QueueHandle_TX);
@@ -278,7 +292,6 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
           KeyValuePairs.push_back({ mp_WidgetId[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
         }
       }
-    */
     }
     
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
@@ -312,14 +325,14 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
                             , WebSocketDataProcessor &WebSocketDataProcessor
                             , const bool &IsReceiver
                             , const bool &IsSender
-                            , NewRxTxValueCallerInterface<String> &NewRxTxValue
+                            , DataItem<String, 1> &DataItem
                             , const bool Debug )
                             : WebSocketDataHandler<String>( Name
                                                           , WidgetIds
                                                           , WebSocketDataProcessor
                                                           , IsReceiver
                                                           , IsSender
-                                                          , NewRxTxValue
+                                                          , DataItem
                                                           , Debug)
     {
     }
@@ -341,4 +354,5 @@ class WebSocketSSIDDataHandler: public WebSocketDataHandler<String>
       return false;
     }
 };
+*/
 #endif

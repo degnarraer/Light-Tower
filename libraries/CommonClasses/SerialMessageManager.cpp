@@ -155,7 +155,7 @@ void SerialPortMessageManager::QueueMessage(String message)
 {
 	if(nullptr != m_TXQueue)
 	{
-		ESP_LOGI("QueueMessage", "Queue Message: \"%s\"", message.c_str());
+		ESP_LOGD("QueueMessage", "Queue Message: \"%s\"", message.c_str());
 		if(xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE)
 		{
 			ESP_LOGW("QueueMessage", "WARNING! Unable to Queue Message.");
@@ -180,11 +180,10 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 		while (m_Serial.available())
 		{
 			character = m_Serial.read();
-			message.concat(character);
 			if(message.length() > MaxMessageLength) message = "";
 			if(character == '\n')
 			{
-				ESP_LOGI("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
+				ESP_LOGD("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
 				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);
@@ -206,6 +205,10 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				}
 				
 				message = "";
+			}
+			else
+			{
+				message.concat(character);
 			}
 		}
 	}
@@ -230,7 +233,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 					char message[MaxMessageLength];
 					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 					{
-						ESP_LOGI("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
 						m_Serial.println(String(message).c_str());
 					}
 					else

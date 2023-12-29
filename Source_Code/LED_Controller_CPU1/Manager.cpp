@@ -77,7 +77,7 @@ void Manager::LoadFromNVM()
 {
   m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power");
   m_SinkReConnect = m_Preferences.getBool("Sink ReConnect", true);
-  m_SinkEnable = m_Preferences.getBool("Sink Enable", true);
+  m_SinkEnable.SetValue(m_Preferences.getBool("Sink Enable", true));
 }
 
 void Manager::SoundStateChange(SoundState_t SoundState)

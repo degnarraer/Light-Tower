@@ -121,13 +121,13 @@ class SettingsWebServerManager
                                                                , 1000
                                                                , m_CPU1SerialPortMessageManager);
     
-    WebSocketDataHandler<bool> m_SinkEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Sink Enable Web Socket Handler"
-                                                                                    , {"Sink_BT_Enable_Toggle_Button"}
-                                                                                    , m_WebSocketDataProcessor
-                                                                                    , true
-                                                                                    , true
-                                                                                    , m_BluetoothSinkEnable
-                                                                                    , false );   
+    WebSocketDataHandler<bool> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Sink Enable Web Socket Handler"
+                                                                                             , {"Sink_BT_Enable_Toggle_Button"}
+                                                                                             , m_WebSocketDataProcessor
+                                                                                             , true
+                                                                                             , true
+                                                                                             , m_BluetoothSinkEnable
+                                                                                             , false );   
 
 /*
     //Sound State Value and Widget Name Values
@@ -208,13 +208,13 @@ class SettingsWebServerManager
           {
             const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
             const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
-            if(true != m_WebSocketDataProcessor.ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
+            if(m_WebSocketDataProcessor.ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
             {
-              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget: %s", WidgetId.c_str());
+              ESP_LOGI("SettingsWebServer: HandleWebSocketMessage", "Known Widget: %s", WidgetId.c_str());
             }
             else
             {
-              ESP_LOGI("SettingsWebServer: HandleWebSocketMessage", "Known Widget: %s", WidgetId.c_str());
+              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget: %s", WidgetId.c_str());
             }
           }
           else

@@ -55,8 +55,8 @@ void Sound_Processor::InitializeNVM(bool Reset)
 void Sound_Processor::LoadFromNVM()
 {
   //Reload NVM Values
-  m_Amplitude_Gain = m_Preferences.getFloat("Amplitude Gain", 1.0);
-  m_FFT_Gain = m_Preferences.getFloat("FFT Gain", 1.0);
+  m_Amplitude_Gain.SetValue(m_Preferences.getFloat("Amplitude Gain", 1.0));
+  m_FFT_Gain.SetValue(m_Preferences.getFloat("FFT Gain", 1.0));
 }
 
 void Sound_Processor::Static_Calculate_FFTs(void * parameter)
