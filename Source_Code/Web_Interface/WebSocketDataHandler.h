@@ -195,16 +195,16 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         if (SetValueFromFromStringForDataType(&newValue, StringValue, GetDataTypeFromTemplateType<T>()))
         {
           ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                  , "New Web Socket Value: \tValue: %s \tNew Value: %s"
+                  , "New Web Socket Value: \tCurrentValue: %s \tNew Value: %s"
                   , m_DataItem.GetValueAsString()
                   , GetValueAsStringForDataType(&newValue, GetDataTypeFromTemplateType<T>(), 1));
           if(m_DataItem.GetValue() != newValue )
           {
             m_DataItem.SetValue(newValue);
+            m_OldValue = newValue;
             ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                    , "Value Changed: \tValue: %s \tNew Value: %s"
-                    , m_DataItem.GetValueAsString()
-                    , GetValueAsStringForDataType(&newValue, GetDataTypeFromTemplateType<T>(), 1));
+                    , "Value Changed: %s"
+                    , m_DataItem.GetValueAsString());
           }
         }
       }
