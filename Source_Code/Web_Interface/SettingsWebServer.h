@@ -77,6 +77,7 @@ class SettingsWebServerManager
     DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amplitude Gain"
                                                           , 1.0
                                                           , RxTxType_Tx_On_Change_With_Heartbeat
+                                                          , UpdateStoreType_On_Rx
                                                           , 1000
                                                           , m_CPU2SerialPortMessageManager);
     
@@ -91,20 +92,22 @@ class SettingsWebServerManager
     DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT Gain"
                                                       , 1.7
                                                       , RxTxType_Tx_On_Change_With_Heartbeat
+                                                      , UpdateStoreType_On_Rx
                                                       , 1000
                                                       , m_CPU2SerialPortMessageManager);
 
     WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
-                                                                                  , {"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
-                                                                                  , m_WebSocketDataProcessor
-                                                                                  , true
-                                                                                  , true
-                                                                                  , m_FFTGain
-                                                                                  , false );
+                                                                                    , {"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
+                                                                                    , m_WebSocketDataProcessor
+                                                                                    , true
+                                                                                    , true
+                                                                                    , m_FFTGain
+                                                                                    , false );
  
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
                                                                                         , Disconnected
-                                                                                        , RxTxType_Rx
+                                                                                        , RxTxType_Rx_Only
+                                                                                        , UpdateStoreType_On_Rx
                                                                                         , 0
                                                                                         , m_CPU2SerialPortMessageManager);
     
@@ -118,6 +121,7 @@ class SettingsWebServerManager
     DataItem<bool, 1> m_BluetoothSinkEnable = DataItem<bool, 1>( "Bluetooth Sink Enable"
                                                                , true
                                                                , RxTxType_Tx_On_Change_With_Heartbeat
+                                                               , UpdateStoreType_On_Rx
                                                                , 1000
                                                                , m_CPU1SerialPortMessageManager);
     

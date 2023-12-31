@@ -24,7 +24,7 @@
 #include <Helpers.h>
 
 #define MaxQueueCount 10
-#define MaxMessageLength 1000
+#define MaxMessageLength 250
 
 template <typename T>
 class NewRxTxValueCalleeInterface
@@ -212,8 +212,8 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 			}
 		}
 		void SetupSerialPortMessageManager();
-		void QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count);
-		void QueueMessage(String message);
+		bool QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count);
+		bool QueueMessage(String message);
 	private:
 		HardwareSerial &m_Serial;
 		DataSerializer &m_DataSerializer;

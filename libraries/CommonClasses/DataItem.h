@@ -24,12 +24,19 @@
 
 enum RxTxType_t
 {
-	RxTxType_Tx_Periodic = 0,
+	RxTxType_Tx_Periodic,
 	RxTxType_Tx_On_Change,
 	RxTxType_Tx_On_Change_With_Heartbeat,
-	RxTxType_Rx,
+	RxTxType_Rx_Only,
 	RxTxType_Rx_Echo_Value,
 	RxTxType_Count
+};
+
+enum UpdateStoreType_t
+{
+	UpdateStoreType_On_Tx,
+	UpdateStoreType_On_Rx,
+	UpdateStoreType_Count
 };
 
 template <typename T, int COUNT>
@@ -38,42 +45,49 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public DataTypeFunctions
 {
 	public:
-		DataItem( String name
-				, T &initialValuePointer
-				, RxTxType_t rxTxType
-				, uint16_t rate
+		DataItem( const String name
+				, const T *initialValuePointer
+				, const RxTxType_t rxTxType
+				, const UpdateStoreType_t updateStoreType
+				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
+				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value =  new T[COUNT];
-			mp_RxValue = new T[COUNT];
 			for (int i = 0; i < COUNT; ++i)
 			{
-				mp_Value[i].DeepCopy(initialValuePointer[i]);
+				mp_Value[i] = initialValuePointer[i];
+				mp_RxValue[i] = initialValuePointer[i];
+				mp_TxValue[i] = initialValuePointer[i];
 			}
 			CreateTimer();
 			SetDataLinkEnabled(true);
 		}
 		
-		DataItem( String name
-				, T initialValue
-				, RxTxType_t rxTxType
-				, uint16_t rate
+		DataItem( const String name
+				, const T initialValue
+				, const RxTxType_t rxTxType
+				, const UpdateStoreType_t updateStoreType
+				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
+				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value = new T[COUNT];
 			mp_RxValue = new T[COUNT];
+			mp_TxValue = new T[COUNT];
 			for (int i = 0; i < COUNT; ++i)
 			{
 				mp_Value[i] = T(initialValue);
 				mp_RxValue[i] = T(initialValue);
+				mp_TxValue[i] = T(initialValue);
 			}
 			CreateTimer();
 			SetDataLinkEnabled(true);
@@ -83,6 +97,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		{
 			delete[] mp_Value;
 			delete[] mp_RxValue;
+			delete[] mp_TxValue;
 			esp_timer_stop(m_TxTimer);
 			esp_timer_delete(m_TxTimer);
 		}
@@ -96,70 +111,6 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 
 			// Create the timer
 			esp_timer_create(&timerArgs, &m_TxTimer);
-		}
-		
-		/*
-		// Templated conversion operator for == comparing to a value
-		template <typename U>
-		bool operator==(const U& value)
-		{
-			ESP_LOGI("DataItem: DataItem& operator==(const U& value)");
-			static_assert(std::is_same<T, U>::value || std::is_convertible<U, T>::value, "Types must be the same or convertable");
-			static_assert(COUNT == 1, "Count should be 1 to do this");
-			return (*mp_Value == value);
-		}
-		
-		// Templated conversion operator for != comparing to a value
-		template <typename U>
-		bool operator!=(const U& value)
-		{
-			ESP_LOGI("DataItem: DataItem& operator!=(const U& value)");
-			static_assert(std::is_same<T, U>::value || std::is_convertible<U, T>::value, "Types must be the same or convertable");
-			static_assert(COUNT == 1, "Count should be 1 to do this");
-			return (*mp_Value != value);
-		}
-		
-		// Templated conversion operator for assignment from a value
-		template <typename U>
-		bool operator=(const U& value)
-		{
-			ESP_LOGI("DataItem: DataItem& operator=(const U& value)");
-			static_assert(std::is_same<T, U>::value || std::is_convertible<U, T>::value, "Types must be the same or convertable");
-			static_assert(COUNT == 1, "Count should be 1 to do this");
-			bool valueChanged = !(*mp_Value == value); // Assuming operator== is defined for type T
-			if (valueChanged)
-			{
-				*mp_Value = value;
-				DataItem_Try_TX_On_Change();
-			}
-			return *this;
-		}
-		
-		// Templated conversion operator for returning a value
-		template <typename U>
-		operator U()
-		{
-			static_assert(std::is_same<T, U>::value, "Types must be the same");
-			static_assert(COUNT == 1, "Count should be 1 to do this");
-			ESP_LOGI("operator U()");
-			return *mp_Value;
-		}
-		template <typename U>
-		operator U*()
-		{
-			static_assert(std::is_same<T, U>::value, "Types must be the same");
-			ESP_LOGI("operator U*()");
-			return mp_Value;
-		}
-		*/
-		operator NewRxTxValueCallerInterface<T>*()
-		{
-			return this;
-		}
-		
-		operator NewRxTxVoidObjectCalleeInterface*()
-		{
-			return this;
 		}
 		
 		String GetName()
@@ -185,28 +136,39 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		void SetNewTxValue(T* Value)
 		{
-			ESP_LOGD("DataItem: SetNewTxValue", "%s SetNewTxValue to: %s", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
+			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
 			SetValue(Value);
 		}
 		
 		void SetValue(T Value)
 		{
+			assert(mp_TxValue != nullptr && "mp_Value must not be null");
 			static_assert(COUNT == 1, "Count should be 1 to do this");
-			*mp_Value = Value;
+			ESP_LOGD( "DataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, GetValueAsStringForDataType(&Value, GetDataTypeFromTemplateType<T>(), COUNT));
+			bool ValueChanged = (*mp_Value != Value);
+			if(ValueChanged)
+			{
+				*mp_TxValue = Value;
+				DataItem_Try_TX_On_Change();
+			}
 		}
 		
 		void SetValue(T *Value)
 		{
-			ESP_LOGI("DataItem: SetValue", "%s SetValue to: %s", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
 			assert(Value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
-			assert(COUNT > 0 && COUNT <= sizeof(T) && "COUNT must be a valid index range for mp_Value");
-			bool valueChanged = false;
-			if (memcmp(mp_Value, Value, sizeof(T) * COUNT) != 0)
+			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
+			ESP_LOGD( "DataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
+			bool ValueChanged = (memcmp(mp_Value, Value, sizeof(T) * COUNT) != 0);
+			if(ValueChanged)
 			{
-				valueChanged = true;
-				memcpy(mp_Value, Value, sizeof(T) * COUNT);
-				ESP_LOGI("DataItem", "%s Value Changed to: %s", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT));
+				memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
 				DataItem_Try_TX_On_Change();
 			}
 		}
@@ -231,7 +193,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 						enablePeriodicRX = true;
 						break;
 					case RxTxType_Tx_On_Change:
-					case RxTxType_Rx:
+					case RxTxType_Rx_Only:
 					case RxTxType_Rx_Echo_Value:
 						enablePeriodicRX = true;
 						break;
@@ -243,10 +205,20 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 					esp_timer_start_periodic(m_TxTimer, m_Rate * 1000);
 					ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", m_Name.c_str());
 				}
+				else
+				{
+					esp_timer_stop(m_TxTimer);
+					ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", m_Name.c_str());
+				}
 				if(enablePeriodicRX)
 				{
 					m_SerialPortMessageManager.RegisterForNewValueNotification(this);
 					ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", m_Name.c_str());
+				}
+				else
+				{
+					m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
+					ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", m_Name.c_str());
 				}
 			}
 			else
@@ -257,32 +229,23 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			}
 		}
 	private:
-		String m_Name = "";
+		const String m_Name;
+		const RxTxType_t m_RxTxType;
+		const UpdateStoreType_t m_UpdateStoreType;
+		const uint16_t m_Rate;
 		T *mp_Value;
 		T *mp_RxValue;
-		RxTxType_t m_RxTxType = RxTxType_Rx;
+		T *mp_TxValue;
 		bool m_DataLinkEnabled = true;
-		uint16_t m_Rate = 0;
-		size_t m_Count = 0;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		esp_timer_handle_t m_TxTimer;
-		size_t m_StackSize = 0;
 		
 		void DataItem_Try_TX_On_Change()
 		{
-			bool TXNow = false;
-			switch(m_RxTxType)
+			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
+			bool ValueChanged = (memcmp(mp_TxValue, mp_Value, sizeof(T) * COUNT) != 0);
+			if(ValueChanged && (m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat))
 			{
-				case RxTxType_Tx_On_Change:
-				case RxTxType_Tx_On_Change_With_Heartbeat:
-					TXNow = true;
-				break;
-				default:
-				break;
-			}
-			if(TXNow)
-			{
-				ESP_LOGD("DataItem& operator=(const U& value)", "Value Changed and TX Now");
 				DataItem_TX_Now();
 			}
 		}
@@ -296,69 +259,44 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		}
 		void DataItem_TX_Now()
 		{
-			ESP_LOGD("DataItem_TX", "Data Item: %s: Creating and Queueing Message From Data", m_Name.c_str());
-			m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_Value, COUNT);
+			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
+			{
+				bool TxValueChanged = (memcmp(mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0);
+				if(m_UpdateStoreType == UpdateStoreType_On_Tx)
+				{
+					if(TxValueChanged) memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
+				}
+				ESP_LOGD("DataItem: DataItem_TX_Now", "Data Item: \"%s\": TX Now: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT).c_str());
+			}
+			else
+			{
+				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
+			}
+			
 		}
 		
 		void NewRXValueReceived(void* Object)
 		{	
 			T* receivedValue = static_cast<T*>(Object);
-			switch(m_RxTxType)
+			bool ValueChanged = (memcmp(mp_Value, receivedValue, sizeof(T) * COUNT) != 0);
+			if(ValueChanged)
 			{
-				case RxTxType_Tx_Periodic:
-				case RxTxType_Tx_On_Change:
-				case RxTxType_Tx_On_Change_With_Heartbeat:
+				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
+				ESP_LOGI( "DataItem: NewRXValueReceived"
+						, "\"%s\" New RX Value Received: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT));
+				
+				bool RxValueChanged = (memcmp(mp_Value, mp_RxValue, sizeof(T) * COUNT) != 0);
+				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					ESP_LOGD("DataItem: NewRXValueReceived", "%s New RX Echo Value Received: %s", m_Name.c_str(), GetValueAsStringForDataType(receivedValue, GetDataTypeFromTemplateType<T>(), COUNT));
-					bool valueChanged = false;
-					if (memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
-					{
-						valueChanged = true;
-						memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
-						ESP_LOGD("DataItem", "%s Rx Echo Value Changed to: %s", m_Name.c_str(), GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT));
-						if (memcmp(mp_RxValue, mp_Value, sizeof(T) * COUNT) != 0)
-						{
-							ESP_LOGD("DataItem: NewRXValueReceived", "%s Matching Echo Value Received", m_Name.c_str());
-						}
-						else
-						{
-							ESP_LOGD("DataItem: NewRXValueReceived", "%s Non Matching Echo Value Received!", m_Name.c_str());
-						}
-					}
-					else
-					{
-						ESP_LOGD("DataItem", "%s Rx Echo Value Matches: %s", m_Name.c_str(), GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT));
-					}
+					if(RxValueChanged) memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
 				}
-				break;
-				case RxTxType_Rx:
+				if(RxTxType_Rx_Echo_Value == m_RxTxType)
 				{
-					ESP_LOGD("DataItem: NewRXValueReceived", "%s New RX Value Received: %s", m_Name.c_str(), GetValueAsStringForDataType(receivedValue, GetDataTypeFromTemplateType<T>(), COUNT).c_str());
-					bool valueChanged = false;
-					if (memcmp(mp_Value, receivedValue, sizeof(T) * COUNT) != 0)
-					{
-						valueChanged = true;
-						memcpy(mp_Value, receivedValue, sizeof(T) * COUNT);
-						ESP_LOGI("DataItem: NewRXValueReceived", "%s Value Changed to: %s", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT));
-					}
-				}
-				break;
-				case RxTxType_Rx_Echo_Value:
-				{
-					ESP_LOGD("DataItem: NewRXValueReceived", "%s New RX With Echo Response Value Received: %s", m_Name.c_str(), GetValueAsStringForDataType(receivedValue, GetDataTypeFromTemplateType<T>(), COUNT));
-					bool valueChanged = false;
-					if (memcmp(mp_Value, receivedValue, sizeof(T) * COUNT) != 0)
-					{
-						valueChanged = true;
-						memcpy(mp_Value, receivedValue, sizeof(T) * COUNT);
-						ESP_LOGI("DataItem: NewRXValueReceived", "%s Value Changed to: %s", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT));
-					}
+					memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
 					DataItem_TX_Now();
 				}
-				break;
-				default:
-					ESP_LOGW("DataItem: NewRXValueReceived", "%s Unhandled RX", m_Name.c_str());
-				break;
 			}
 		}
 };

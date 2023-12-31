@@ -83,6 +83,7 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_SinkEnable = DataItem<bool, 1>( "Bluetooth Sink Enable"
                                                       , false
                                                       , RxTxType_Rx_Echo_Value
+                                                      , UpdateStoreType_On_Rx
                                                       , 0
                                                       , m_CPU3SerialPortMessageManager);
 

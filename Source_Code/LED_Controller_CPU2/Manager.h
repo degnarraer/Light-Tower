@@ -81,6 +81,7 @@ class Manager: public NamedItem
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
                                                                                          , Disconnected
                                                                                          , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                         , UpdateStoreType_On_Tx
                                                                                          , 1000
                                                                                          , m_CPU3SerialPortMessageManager);
     

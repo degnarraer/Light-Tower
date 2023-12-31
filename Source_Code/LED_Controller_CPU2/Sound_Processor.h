@@ -59,12 +59,14 @@ class Sound_Processor: public NamedItem
     DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amplitude Gain"
                                                              , 1.0
                                                              , RxTxType_Rx_Echo_Value
+                                                             , UpdateStoreType_On_Rx
                                                              , 1000
                                                              , m_CPU3SerialPortMessageManager);
                                                              
     DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT Gain"
                                                        , 1.7
                                                        , RxTxType_Rx_Echo_Value
+                                                       , UpdateStoreType_On_Rx
                                                        , 1000
                                                        , m_CPU3SerialPortMessageManager);
 

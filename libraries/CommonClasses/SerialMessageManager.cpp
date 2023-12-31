@@ -113,11 +113,11 @@ void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* o
 
 void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  0 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 20000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "RX Task Created.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  0 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 20000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "TX Task Created.");
 	
@@ -125,9 +125,9 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "TX Queue Created.");
 }
-void SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
+bool SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
-	
+	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
 	{
 		ESP_LOGE("QueueMessageFromData", "Error Invalid Data!");
@@ -146,13 +146,15 @@ void SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t Data
 		}
 		else
 		{
-			QueueMessage(message);
+			ESP_LOGI("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
+			result = QueueMessage(message);
 		}
 	}
-	
+	return result;
 }
-void SerialPortMessageManager::QueueMessage(String message)
+bool SerialPortMessageManager::QueueMessage(String message)
 {
+	bool result = false;
 	if(nullptr != m_TXQueue)
 	{
 		ESP_LOGD("QueueMessage", "Queue Message: \"%s\"", message.c_str());
@@ -160,11 +162,16 @@ void SerialPortMessageManager::QueueMessage(String message)
 		{
 			ESP_LOGW("QueueMessage", "WARNING! Unable to Queue Message.");
 		}
+		else
+		{
+			result = true;
+		}
 	}
 	else
 	{
 		ESP_LOGE("QueueMessage", "Error! NULL Queue!");
 	}
+	return result;
 }
 
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
@@ -235,6 +242,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 					{
 						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
 						m_Serial.println(String(message).c_str());
+						m_Serial.flush();
 					}
 					else
 					{
