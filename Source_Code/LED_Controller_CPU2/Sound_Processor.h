@@ -30,7 +30,6 @@
 #include "float.h"
 #include "AudioBuffer.h"
 #include "DataItem.h"
-#include <Preferences.h>
 
 class Sound_Processor: public NamedItem
                      , public CommonUtils
@@ -44,10 +43,6 @@ class Sound_Processor: public NamedItem
     void SetupSoundProcessor();
     
   private:
-    Preferences m_Preferences;
-    void InitializeNVM(bool Reset);
-    void LoadFromNVM();
-    
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
@@ -56,18 +51,20 @@ class Sound_Processor: public NamedItem
     
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amplitude Gain"
+    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amp_Gain"
                                                              , 1.0
                                                              , RxTxType_Rx_Echo_Value
                                                              , UpdateStoreType_On_Rx
                                                              , 1000
+                                                             , NULL
                                                              , m_CPU3SerialPortMessageManager);
                                                              
-    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT Gain"
+    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT_Gain"
                                                        , 1.7
                                                        , RxTxType_Rx_Echo_Value
                                                        , UpdateStoreType_On_Rx
                                                        , 1000
+                                                       , NULL
                                                        , m_CPU3SerialPortMessageManager);
 
     //DB Conversion taken from INMP441 Datasheet

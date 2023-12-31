@@ -92,13 +92,7 @@ void InitFileSystem()
   }
 }
 
-
-void InitLocalVariables()
-{
-  m_SettingsWebServerManager.SetupSettingsWebServerManager();
-}
-
-void setup()
+void SetupSerialPorts()
 {
   Serial.flush();
   Serial.begin(500000, SERIAL_8N1);
@@ -106,9 +100,26 @@ void setup()
   Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
   Serial2.flush();
   Serial2.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+}
+
+void InitLocalVariables()
+{
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
-  
+  m_SettingsWebServerManager.SetupSettingsWebServerManager();
+}
+
+void PrintMemory()
+{
+  ESP_LOGE("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGE("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGE("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGE("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
+}
+
+void setup()
+{
+  SetupSerialPorts();
   InitLocalVariables();
   InitFileSystem();
   InitWebServer();
@@ -119,12 +130,4 @@ void setup()
 
 void loop()
 {
-}
-
-void PrintMemory()
-{
-  ESP_LOGE("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGE("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGE("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGE("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
 }

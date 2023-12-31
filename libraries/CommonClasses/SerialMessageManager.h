@@ -26,6 +26,26 @@
 #define MaxQueueCount 10
 #define MaxMessageLength 250
 
+class SetupCalleeInterface
+{
+	public:
+		SetupCalleeInterface(){}
+		virtual ~SetupCalleeInterface(){}
+		virtual void Setup() = 0;
+};
+class SetupCallerInterface
+{
+	public:
+		SetupCallerInterface(){}
+		virtual ~SetupCallerInterface(){}
+		void RegisterForSetupCall(SetupCalleeInterface* NewCallee);
+		void DeRegisterForSetupCall(SetupCalleeInterface* Callee);
+	protected:
+		void SetupAllSetupCallees();
+	private:
+		std::vector<SetupCalleeInterface*> m_SetupCallees = std::vector<SetupCalleeInterface*>();
+};
+
 template <typename T>
 class NewRxTxValueCalleeInterface
 {
@@ -188,6 +208,7 @@ class NewRxTxVoidObjectCallerInterface
 };
 
 class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
+							  , public SetupCallerInterface
 {
 	public:
 		SerialPortMessageManager( String Name

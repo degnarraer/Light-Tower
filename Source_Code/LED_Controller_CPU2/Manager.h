@@ -83,6 +83,7 @@ class Manager: public NamedItem
                                                                                          , RxTxType_Tx_On_Change_With_Heartbeat
                                                                                          , UpdateStoreType_On_Tx
                                                                                          , 1000
+                                                                                         , NULL
                                                                                          , m_CPU3SerialPortMessageManager);
     
     Sound_Processor &m_SoundProcessor;

@@ -35,28 +35,9 @@ Sound_Processor::~Sound_Processor()
 }
 void Sound_Processor::SetupSoundProcessor()
 {
-  m_Preferences.begin("Sound Processor Settings", false);
-  InitializeNVM(m_Preferences.getBool("NVM Reset", false));
-  LoadFromNVM();
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   configMAX_PRIORITIES - 1,   &m_ProcessFFTTask,          0 );
   xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   configMAX_PRIORITIES - 1,   &m_ProcessSoundPowerTask,   1 );
-}
-void Sound_Processor::InitializeNVM(bool Reset)
-{
-  if(true == Reset || false == m_Preferences.getBool("NVM Initialized", false))
-  {
-    m_Preferences.putFloat("Amplitude Gain", 1.0);
-    m_Preferences.putFloat("FFT Gain", 1.0);
-    m_Preferences.putBool("NVM Initialized", true);
-    m_Preferences.putBool("NVM Reset", false);
-  }
-}
-void Sound_Processor::LoadFromNVM()
-{
-  //Reload NVM Values
-  m_Amplitude_Gain.SetValue(m_Preferences.getFloat("Amplitude Gain", 1.0));
-  m_FFT_Gain.SetValue(m_Preferences.getFloat("FFT Gain", 1.0));
 }
 
 void Sound_Processor::Static_Calculate_FFTs(void * parameter)

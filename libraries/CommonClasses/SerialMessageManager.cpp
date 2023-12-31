@@ -18,6 +18,47 @@
 
 #include "SerialMessageManager.h"
 
+
+void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* NewCallee)
+{
+	ESP_LOGI("RegisterForSetupCall", "Try Registering Callee");
+	bool IsFound = false;
+	for (SetupCalleeInterface* callee : m_SetupCallees)
+	{
+		if(NewCallee == callee)
+		{
+			ESP_LOGE("RegisterForSetupCall", "A callee with this name already exists!");
+			IsFound = true;
+			break;
+		}
+	}
+	if(false == IsFound)
+	{
+		ESP_LOGI("RegisterForSetupCall", "Callee Registered");
+		m_SetupCallees.push_back(NewCallee);
+	}
+}
+void SetupCallerInterface::DeRegisterForSetupCall(SetupCalleeInterface* Callee)
+{
+	auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), Callee);
+	if (it != m_SetupCallees.end())
+	{
+		m_SetupCallees.erase(it);
+	}
+}
+
+void SetupCallerInterface::SetupAllSetupCallees()
+{
+	ESP_LOGD("SetupCallerInterface", "Setup All Setup Callees");
+	for (SetupCalleeInterface* callee : m_SetupCallees)
+	{
+		if (callee) 
+		{
+			callee->Setup();
+		}
+	}
+}
+
 void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
 {
 	ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
@@ -124,6 +165,7 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
 	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "TX Queue Created.");
+	SetupAllSetupCallees();
 }
 bool SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
 {
@@ -238,16 +280,30 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				for(int i = 0; i < QueueCount; ++i)
 				{
 					char message[MaxMessageLength];
-					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
+					if ( xQueuePeek(m_TXQueue, message, 0) == pdTRUE )
 					{
-						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
-						m_Serial.println(String(message).c_str());
-						m_Serial.flush();
+						if (m_Serial.availableForWrite() >= strlen(message))
+						{
+							if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
+							{
+								ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+								m_Serial.println(String(message).c_str());
+							}
+							else
+							{
+								ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
+							}
+						}
+						else
+						{
+							ESP_LOGW("SerialPortMessageManager_TxTask", "WARNING! Serial Port Tx Buffer Full.");
+						}
 					}
 					else
 					{
-						ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
+						ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Peek at Message.");
 					}
+					
 				}
 			}
 		}

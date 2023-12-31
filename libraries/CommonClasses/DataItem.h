@@ -21,6 +21,7 @@
 
 #include "SerialMessageManager.h"
 #include <Helpers.h>
+#include <Preferences.h>
 
 enum RxTxType_t
 {
@@ -42,6 +43,7 @@ enum UpdateStoreType_t
 template <typename T, int COUNT>
 class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
+			  , public SetupCalleeInterface
 			  , public DataTypeFunctions
 {
 	public:
@@ -50,11 +52,13 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
+				, Preferences *preferences
 				, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
+				, m_Preferences(preferences)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value =  new T[COUNT];
@@ -73,11 +77,13 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
+				, Preferences *preferences
 				, SerialPortMessageManager &serialPortMessageManager )
 			    : m_Name(name)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
+				, m_Preferences(preferences)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			mp_Value = new T[COUNT];
@@ -91,6 +97,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			}
 			CreateTimer();
 			SetDataLinkEnabled(true);
+			m_SerialPortMessageManager.RegisterForSetupCall(this);
 		}
 		
 		virtual ~DataItem()
@@ -100,8 +107,61 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			delete[] mp_TxValue;
 			esp_timer_stop(m_TxTimer);
 			esp_timer_delete(m_TxTimer);
+			m_SerialPortMessageManager.DeRegisterForSetupCall(this);
 		}
-		
+		void Setup()
+		{
+			InitializeNVM();
+			LoadFromNVM();
+		}
+		void InitializeNVM()
+		{
+			if(m_Preferences)
+			{
+				if(1 == COUNT)
+				{
+					if (false == m_Preferences->isKey(m_Name.c_str()))
+					{
+						if (std::is_same<T, bool>::value)
+						{
+							m_Preferences->putBool(m_Name.c_str(), mp_Value[0]); // Assuming bool is stored as an integer
+							ESP_LOGI("Dataitem: InitializeNVM", "\"%s\" Initialized BOOL NVM", m_Name.c_str());
+						}
+						else if (std::is_integral<T>::value)
+						{
+							m_Preferences->putInt(m_Name.c_str(), mp_Value[0]);
+							ESP_LOGI("Dataitem: InitializeNVM", "\"%s\" Initialized INTEGRAL NVM", m_Name.c_str());
+						}
+						else if (std::is_floating_point<T>::value)
+						{
+							m_Preferences->putFloat(m_Name.c_str(), mp_Value[0]);
+							ESP_LOGI("Dataitem: InitializeNVM", "\"%s\" Initialized FLOAT NVM", m_Name.c_str());
+						}
+						else if (std::is_same<T, double>::value)
+						{
+							m_Preferences->putDouble(m_Name.c_str(), mp_Value[0]);
+							ESP_LOGI("Dataitem: InitializeNVM", "\"%s\" Initialized DOUBLE NVM", m_Name.c_str());
+						}
+						else
+						{
+							ESP_LOGE("Dataitem: InitializeNVM", "\"%s\" data type is not supported for NVM", m_Name.c_str());
+						}
+					}
+					else
+					{
+						ESP_LOGI("Dataitem: InitializeNVM", "\"%s\" NVM Found", m_Name.c_str());
+					}
+				}
+				else
+				{
+					ESP_LOGE("Dataitem: InitializeNVM", "Cannot use preferences for items with non 1 COUNT size");
+				}
+			}
+		}
+		void LoadFromNVM()
+		{
+			
+		}
 		void CreateTimer()
 		{
 			esp_timer_create_args_t timerArgs;
@@ -229,6 +289,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			}
 		}
 	private:
+		Preferences *m_Preferences = nullptr;
 		const String m_Name;
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
