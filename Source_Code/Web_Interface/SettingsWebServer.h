@@ -96,7 +96,9 @@ class SettingsWebServerManager
     WebSocketDataHandler<bool> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Sink Enable Web Socket Handler" , {"Sink_BT_Enable_Toggle_Button"} , m_WebSocketDataProcessor , true , true , m_BluetoothSinkEnable , false );
 
     //Sink SSID
-    //TBD
+    //DataItem<String, 1> m_BluetoothSinkSSID = DataItem<String, 1>( "BT_Sink_SSID" , "LED Tower of Power" , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU1SerialPortMessageManager);
+    //WebSocketDataHandler<String> m_BluetoothSinkSSID_DataHandler = WebSocketDataHandler<String>( "Bluetooth Sink SSID Web Socket Handler" , {"Sink_SSID_Text_Box"} , m_WebSocketDataProcessor , true , true , m_BluetoothSinkSSID , false );
+
 
     //Sink Connection Status
     DataItem<ConnectionStatus_t, 1> m_SinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat" , ConnectionStatus_t::Disconnected , RxTxType_Rx_Only , UpdateStoreType_On_Rx , 0 , NULL , m_CPU1SerialPortMessageManager);
