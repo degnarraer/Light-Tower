@@ -40,8 +40,15 @@ class SettingsWebServerManager
     
     void SetupSettingsWebServerManager()
     {
-      m_Preferences.begin("Settings", false);
+      InitializePreferences();
       InitWiFiAP();
+    }
+    
+    void InitializePreferences()
+    {
+      m_Preferences.begin("Settings", false);
+      if(m_Preferences.getBool("Pref_Reset", false)) m_Preferences.clear();
+      m_Preferences.putBool("Pref_Reset", false);
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -73,69 +80,55 @@ class SettingsWebServerManager
     const char* ssid = "LED Tower of Power";
     const char* password = "LEDs Rock";
     
-    //Amplitude Gain Value and Widget Name Values
-    DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amp_Gain"
-                                                          , 1.0
-                                                          , RxTxType_Tx_On_Change_With_Heartbeat
-                                                          , UpdateStoreType_On_Rx
-                                                          , 1000
-                                                          , &m_Preferences
-                                                          , m_CPU2SerialPortMessageManager);
+    //Amplitude Gain
+    DataItem <float, 1> m_AmplitudeGain = DataItem<float, 1>( "Amp_Gain" , 1.0, RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<float> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain Web Socket Handler" , {"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"} , m_WebSocketDataProcessor , true , true , m_AmplitudeGain , false );    
     
-    WebSocketDataHandler<float> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float>( "Amplitude Gain Web Socket Handler"
-                                                                                          , {"Amplitude_Gain_Slider1", "Amplitude_Gain_Slider2"}
-                                                                                          , m_WebSocketDataProcessor
-                                                                                          , true
-                                                                                          , true
-                                                                                          , m_AmplitudeGain
-                                                                                          , false );    
-    
-    DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT_Gain"
-                                                      , 1.7
-                                                      , RxTxType_Tx_On_Change_With_Heartbeat
-                                                      , UpdateStoreType_On_Rx
-                                                      , 1000
-                                                      , &m_Preferences
-                                                      , m_CPU2SerialPortMessageManager);
+    //FFT Gain
+    DataItem <float, 1> m_FFTGain = DataItem<float, 1>( "FFT_Gain" , 1.0 , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler" , {"FFT_Gain_Slider1", "FFT_Gain_Slider2"} , m_WebSocketDataProcessor , true , true , m_FFTGain , false );
 
-    WebSocketDataHandler<float> m_FFT_Gain_DataHandler = WebSocketDataHandler<float>( "FFT Gain Web Socket Handler"
-                                                                                    , {"FFT_Gain_Slider1", "FFT_Gain_Slider2"}
-                                                                                    , m_WebSocketDataProcessor
-                                                                                    , true
-                                                                                    , true
-                                                                                    , m_FFTGain
-                                                                                    , false );
- 
-    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Conn_Stat"
-                                                                                        , Disconnected
-                                                                                        , RxTxType_Rx_Only
-                                                                                        , UpdateStoreType_On_Rx
-                                                                                        , 0
-                                                                                        , NULL
-                                                                                        , m_CPU2SerialPortMessageManager);
+    //Microphone Enable
+    //TBD
     
-    WebSocketDataHandler<ConnectionStatus_t> m_ConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t>( "Connection Status Web Socket Handler"
-                                                                                                                      , {"Source_Connection_Status"}
-                                                                                                                      , m_WebSocketDataProcessor
-                                                                                                                      , true
-                                                                                                                      , true
-                                                                                                                      , m_ConnectionStatus
-                                                                                                                      , false );    
-    DataItem<bool, 1> m_BluetoothSinkEnable = DataItem<bool, 1>( "BT_Sink_En"
-                                                               , true
-                                                               , RxTxType_Tx_On_Change_With_Heartbeat
-                                                               , UpdateStoreType_On_Rx
-                                                               , 1000
-                                                               , &m_Preferences
-                                                               , m_CPU1SerialPortMessageManager);
+    //Bluetooth Sink Enable
+    DataItem<bool, 1> m_BluetoothSinkEnable = DataItem<bool, 1>( "BT_Sink_En" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU1SerialPortMessageManager);
+    WebSocketDataHandler<bool> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Sink Enable Web Socket Handler" , {"Sink_BT_Enable_Toggle_Button"} , m_WebSocketDataProcessor , true , true , m_BluetoothSinkEnable , false );
+
+    //Sink SSID
+    //TBD
+
+    //Sink Connection Status
+    DataItem<ConnectionStatus_t, 1> m_SinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat" , ConnectionStatus_t::Disconnected , RxTxType_Rx_Only , UpdateStoreType_On_Rx , 0 , NULL , m_CPU1SerialPortMessageManager);
+    WebSocketDataHandler<ConnectionStatus_t> m_SinkConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t>( "Sink Connection Status Web Socket Handler" , {"Sink_Connection_Status"} , m_WebSocketDataProcessor , false , true , m_SinkConnectionStatus , false );    
     
-    WebSocketDataHandler<bool> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Sink Enable Web Socket Handler"
-                                                                                             , {"Sink_BT_Enable_Toggle_Button"}
-                                                                                             , m_WebSocketDataProcessor
-                                                                                             , true
-                                                                                             , true
-                                                                                             , m_BluetoothSinkEnable
-                                                                                             , false );   
+    //Bluetooth Sink Auto Reconnect
+    DataItem<bool, 1> m_BluetoothSinkAutoReConnect = DataItem<bool, 1>( "BT_Sink_AR" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Tx , 1000 , &m_Preferences , m_CPU1SerialPortMessageManager);
+    WebSocketDataHandler<bool> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Source Enable Web Socket Handler" , {"Sink_BT_Auto_ReConnect_Toggle_Button"} , m_WebSocketDataProcessor , true , true , m_BluetoothSinkAutoReConnect , false );
+    
+    //Bluetooth Source Enable
+    DataItem<bool, 1> m_BluetoothSourceEnable = DataItem<bool, 1>( "BT_Source_En" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Tx , 5000 , &m_Preferences , m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Source Enable Web Socket Handler" , {"Source_BT_Enable_Toggle_Button"} , m_WebSocketDataProcessor , true , true , m_BluetoothSourceEnable , false );
+
+    //Source Available BT SSIDs
+    //TBD
+    
+    //Source SSID
+    //TBD
+    
+    //Bluetooth Source Auto Reconnect
+    DataItem<bool, 1> m_BluetoothSourceAutoReConnect = DataItem<bool, 1>( "BT_Source_AR" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool>( "Bluetooth Source Enable Web Socket Handler" , {"Source_BT_Enable_Toggle_Button"} , m_WebSocketDataProcessor , true , true , m_BluetoothSourceAutoReConnect , false );
+
+    //Source Connection Status
+    DataItem<ConnectionStatus_t, 1> m_SourceConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat" , ConnectionStatus_t::Disconnected , RxTxType_Rx_Only , UpdateStoreType_On_Rx , 0 , NULL , m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<ConnectionStatus_t> m_SourceConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t>( "Source Connection Status Web Socket Handler" , {"Source_Connection_Status"} , m_WebSocketDataProcessor , false , true , m_SourceConnectionStatus , false );    
+
+    //Source Reset
+    //DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "Bt_Src_Reset" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 0 , NULL , m_CPU2SerialPortMessageManager);
+    //WebSocketDataHandler<bool> m_SourceReset_DataHandler = WebSocketDataHandler<bool>( "Source Reset Web Socket Handler" , {"Source_BT_Reset_Toggle_Button"} , m_WebSocketDataProcessor , true , true , m_SourceReset , false );    
+
+    
 
 /*
     //Sound State Value and Widget Name Values

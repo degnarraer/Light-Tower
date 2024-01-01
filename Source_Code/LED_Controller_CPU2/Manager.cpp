@@ -40,65 +40,27 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  m_Preferences.begin("Manager Settings", false);
-  InitializeNVM(m_Preferences.getBool("NVM Reset", false));
-  LoadFromNVM();
+  InitializePreferences();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
-  
+  //m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
   xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      10000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
-  xTaskCreatePinnedToCore( Static_TaskLoop_1000mS,   "Manager_1000mS_Task",    10000,   this,   configMAX_PRIORITIES - 3,   &m_Manager_1000mS_Task,     1 );
 }
 
-void Manager::InitializeNVM(bool Reset)
+void Manager::InitializePreferences()
 {
-  if(true == Reset || false == m_Preferences.getBool("NVM Initialized", false))
-  {
-    if(true == Reset) m_Preferences.clear();
-    m_Preferences.putString("Source SSID", "");
-    m_Preferences.putString("Source ADDRESS", "");
-    m_Preferences.putBool("Source BT Reset", true);
-    m_Preferences.putBool("BT NVS Init", true);
-    m_Preferences.putBool("Src ReConnect", false);
-    m_Preferences.putBool("SSP Enabled", false);
-    m_Preferences.putBool("NVM Initialized", true);
-    m_Preferences.putBool("NVM Reset", false);
-  }
-}
-
-void Manager::LoadFromNVM()
-{
-  //Reload NVM Values
-  m_SourceSSID = m_Preferences.getString("Source SSID", "");
-  m_SourceADDRESS = m_Preferences.getString("Source ADDRESS", "");
-  
-  m_SourceBTReset = m_Preferences.getBool("Source BT Reset", true);
-  m_BT_Out.Set_Reset_BLE(m_SourceBTReset);
-  
-  m_NVSInit = m_Preferences.getBool("BT NVS Init", false);
-  m_BT_Out.Set_NVS_Init(m_NVSInit);
-  
-  m_SourceBTReConnect = m_Preferences.getBool("Src ReConnect", true);
-  m_BT_Out.Set_Auto_Reconnect(m_SourceBTReConnect);
-  
-  m_SSP_Enabled = m_Preferences.getBool("SSP Enabled", false);
-  m_BT_Out.Set_SSP_Enabled(m_SSP_Enabled);
+  m_Preferences.begin("Settings", false);
+  if(m_Preferences.getBool("Pref_Reset", false)) m_Preferences.clear();
+  m_Preferences.putBool("Pref_Reset", false);
 }
 
 void Manager::Static_TaskLoop_20mS(void * parameter)
 {
   Manager *aManager = (Manager*)parameter;
   aManager->TaskLoop_20mS();
-}
-
-void Manager::Static_TaskLoop_1000mS(void * parameter)
-{
-  Manager *aManager = (Manager*)parameter;
-  aManager->TaskLoop_1000mS();
 }
 
 void Manager::TaskLoop_20mS()
@@ -109,16 +71,6 @@ void Manager::TaskLoop_20mS()
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     m_I2S_In.ProcessEventQueue();
-  }
-}
-
-void Manager::TaskLoop_1000mS()
-{
-  const TickType_t xFrequency = 1000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
   }
 }
 

@@ -64,36 +64,25 @@ class Manager: public NamedItem
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
+    Preferences m_Preferences;
+    void InitializePreferences();
+    
     TaskHandle_t m_Manager_20mS_Task;
     TaskHandle_t m_Manager_1000mS_Task;
     TaskHandle_t m_Manager_300000mS_Task;
 
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-
-    /*
-    DataItem<SSID_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<SSID_Info_With_LastUpdateTime_t, 1>( "Available SSID"
-                                                                                                           , SSID_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
-                                                                                                           , RxTxType_Tx_On_Change
-                                                                                                           , 0
-                                                                                                           , m_CPU3SerialPortMessageManager);
-   */
-    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status"
-                                                                                         , Disconnected
-                                                                                         , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                         , UpdateStoreType_On_Tx
-                                                                                         , 1000
-                                                                                         , NULL
-                                                                                         , m_CPU3SerialPortMessageManager);
+   
+    DataItem<bool, 1> m_BluetoothSourceEnable = DataItem<bool, 1>( "BT_Source_En" , false , RxTxType_Rx_Echo_Value , UpdateStoreType_On_Rx , 5000, &m_Preferences , m_CPU3SerialPortMessageManager);
+    DataItem<bool, 1> m_BluetoothSourceAutoReConnect = DataItem<bool, 1>( "BT_Source_AR" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU3SerialPortMessageManager);
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status" , ConnectionStatus_t::Disconnected , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Tx , 1000 , NULL , m_CPU3SerialPortMessageManager);
     
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     Frame_t m_FFTFrameBuffer[FFT_SIZE];
 
-    Ticker m_Aplitude_Gain_NVM_Save_Ticker;
-    Ticker m_FFT_Gain_NVM_Save_Ticker;
-    
     //I2S Sound Data
     I2S_Device &m_I2S_In;
     
@@ -104,40 +93,6 @@ class Manager: public NamedItem
     {
       return abs(A - B) < Epsilon;
     }
-    
-    void UpdateNotificationRegistrationStatus();
-    
-    Preferences m_Preferences;
-    void InitializeNVM(bool Reset);
-    void LoadFromNVM();
-
-    ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
-    void BluetoothConnectionStatus_TX();
-
-    bool m_SSP_Enabled = false;
-    bool m_NVSInit = true;
-    
-    float m_AmplitudeGain;
-    void AmplitudeGain_RX();
-    void AmplitudeGain_TX();
-
-    void FFTGain_RX();
-    void FFTGain_TX();
-
-    bool m_SourceBTReset = true;
-    void SourceBluetoothReset_RX();
-    void SourceBluetoothReset_TX();
-    
-    
-    bool m_SourceBTReConnect = false;
-    void SourceAutoReConnect_RX();
-    void SourceAutoReConnect_TX();
-
-    String m_SourceSSID;
-    String m_SourceADDRESS;
-    void SourceSSID_RX();
-    void SourceSSID_TX();
-    
 };
 
 #endif

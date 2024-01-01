@@ -188,7 +188,7 @@ bool SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t Data
 		}
 		else
 		{
-			ESP_LOGI("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
+			ESP_LOGD("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
 			result = QueueMessage(message);
 		}
 	}

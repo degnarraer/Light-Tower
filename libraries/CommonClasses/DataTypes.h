@@ -263,7 +263,7 @@ struct NamedObject_t
 
 struct NamedCallback_t
 {
-	void (*Callback)(const String&, void*);
+	void (*Callback)(const String& name, void* callback);
 	String Name = "";
 };
 

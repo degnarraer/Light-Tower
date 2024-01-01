@@ -165,9 +165,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
       T CurrentValue = m_DataItem.GetValue();
-      String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), 1);
       if(CurrentValue != m_OldValue)
       {
+        String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), 1);
         ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
@@ -181,8 +181,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String StringValue)
     {
       bool Found = false;
-      T CurrentValue = m_DataItem.GetValue(); 
-      String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), 1);
       for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
         if( m_WidgetIds[i].equals(WidgetId) )
@@ -198,18 +196,11 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         T NewValue;
         if (SetValueFromFromStringForDataType(&NewValue, StringValue, GetDataTypeFromTemplateType<T>()))
         {
+          m_DataItem.SetValue(NewValue);
+          String NewValueString = GetValueAsStringForDataType(&NewValue, GetDataTypeFromTemplateType<T>(), 1);
           ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                  , "New Web Socket Value: \tCurrentValue: %s \tNew Value: %s"
-                  , CurrentValueString.c_str()
-                  , GetValueAsStringForDataType(&NewValue, GetDataTypeFromTemplateType<T>(), 1));
-          if(NewValue != CurrentValue)
-          {
-            m_DataItem.SetValue(NewValue);
-            m_OldValue = NewValue;
-            ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                    , "Value Changed: %s"
-                    , GetValueAsStringForDataType(&NewValue, GetDataTypeFromTemplateType<T>(), 1));
-          }
+                  , "Web Socket Value: %s"
+                  , NewValueString.c_str());
         }
       }
       return Found;

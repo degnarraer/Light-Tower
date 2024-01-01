@@ -48,25 +48,14 @@ class Sound_Processor: public NamedItem
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
     FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+
     
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amp_Gain"
-                                                             , 1.0
-                                                             , RxTxType_Rx_Echo_Value
-                                                             , UpdateStoreType_On_Rx
-                                                             , 1000
-                                                             , NULL
-                                                             , m_CPU3SerialPortMessageManager);
-                                                             
-    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT_Gain"
-                                                       , 1.7
-                                                       , RxTxType_Rx_Echo_Value
-                                                       , UpdateStoreType_On_Rx
-                                                       , 1000
-                                                       , NULL
-                                                       , m_CPU3SerialPortMessageManager);
-
+    
+    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amp_Gain", 1.0, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, NULL, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT_Gain", 1.0, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, NULL, m_CPU3SerialPortMessageManager);
+    
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
     float m_IMNP441_1PA_Value = 420426.0;     //Digital output at 1PA

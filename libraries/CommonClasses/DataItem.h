@@ -208,10 +208,10 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(&Value, GetDataTypeFromTemplateType<T>(), COUNT));
-			bool ValueChanged = (*mp_Value != Value);
+			bool ValueChanged = (*mp_TxValue != Value);
+			*mp_TxValue = Value;
 			if(ValueChanged)
 			{
-				*mp_TxValue = Value;
 				DataItem_Try_TX_On_Change();
 			}
 		}
@@ -221,14 +221,14 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			assert(Value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
-			ESP_LOGD( "DataItem: SetValue"
+			ESP_LOGI( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
-			bool ValueChanged = (memcmp(mp_Value, Value, sizeof(T) * COUNT) != 0);
+			bool ValueChanged = (memcmp(mp_TxValue, Value, sizeof(T) * COUNT) != 0);
+			memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
 			if(ValueChanged)
 			{
-				memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
 				DataItem_Try_TX_On_Change();
 			}
 		}
@@ -304,8 +304,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		void DataItem_Try_TX_On_Change()
 		{
 			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
-			bool ValueChanged = (memcmp(mp_TxValue, mp_Value, sizeof(T) * COUNT) != 0);
-			if(ValueChanged && (m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat))
+			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				DataItem_TX_Now();
 			}
@@ -339,7 +338,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		void NewRXValueReceived(void* Object)
 		{	
 			T* receivedValue = static_cast<T*>(Object);
-			bool ValueChanged = (memcmp(mp_Value, receivedValue, sizeof(T) * COUNT) != 0);
+			bool ValueChanged = (memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0);
 			if(ValueChanged)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);

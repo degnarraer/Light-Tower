@@ -76,17 +76,15 @@ class Manager: public NamedItem
     void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
     
   private:
+    Preferences m_Preferences;
     DataSerializer m_DataSerializer;  
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
 
-    DataItem<bool, 1> m_SinkEnable = DataItem<bool, 1>( "Bluetooth Sink Enable"
-                                                      , false
-                                                      , RxTxType_Rx_Echo_Value
-                                                      , UpdateStoreType_On_Rx
-                                                      , 0
-                                                      , m_CPU3SerialPortMessageManager);
-
+    DataItem<bool, 1> m_BluetoothSinkEnable = DataItem<bool, 1>( "BT_Sink_En", false, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU3SerialPortMessageManager);
+    DataItem<bool, 1> m_BluetoothSinkAutoReConnect = DataItem<bool, 1>( "BT_Sink_AR" , false , RxTxType_Rx_Echo_Value , UpdateStoreType_On_Rx , 50000 , &m_Preferences , m_CPU3SerialPortMessageManager);
+    DataItem<ConnectionStatus_t, 1> m_BluetoothConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat" , ConnectionStatus_t::Disconnected , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Tx , 5000 , NULL , m_CPU3SerialPortMessageManager);
+    
     StatisticalEngine &m_StatisticalEngine;
     InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
@@ -99,33 +97,8 @@ class Manager: public NamedItem
     I2S_Device &m_I2S_Out;
 
     
-    Preferences m_Preferences;
-    void InitializeNVM(bool Reset);
-    void SaveToNVM();
-    void LoadFromNVM();
-
+    void InitializePreferences();
     void MoveDataToStatisticalEngine();
-    
-    ConnectionStatus_t m_BluetoothConnectionStatus = ConnectionStatus_t::Disconnected;
-    void BluetoothConnectionStatus_TX();
-
-    
-    SoundState_t m_SoundState = SoundState_t::LastingSilenceDetected;
-    void SoundState_RX(SoundState_t SoundState);
-    void SoundState_TX();
-
-    String m_SinkSSID;
-    void SinkSSID_TX();
-    void SinkSSID_RX();
-
-    bool m_SinkReConnect;
-    void SinkAutoReConnect_RX();
-    void SinkReConnect_TX();
-    
-    //bool m_SinkEnable;
-    void SinkEnable_RX();
-    void SinkEnable_TX();
-    
 };
 
 #endif
