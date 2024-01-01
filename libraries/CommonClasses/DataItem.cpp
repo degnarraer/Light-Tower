@@ -3,7 +3,75 @@
 template class DataItem<float, 1>;
 template class DataItem<bool, 1>;
 template class DataItem<ConnectionStatus_t, 1>;
-							 
+
+
+template <typename T, int COUNT>
+DataItem<T, COUNT>::DataItem( const String name
+							, const T *initialValuePointer
+							, const RxTxType_t rxTxType
+							, const UpdateStoreType_t updateStoreType
+							, const uint16_t rate
+							, Preferences *preferences
+							, SerialPortMessageManager &serialPortMessageManager )
+							: m_Name(name)
+							, m_RxTxType(rxTxType)
+							, m_UpdateStoreType(updateStoreType)
+							, m_Rate(rate)
+							, m_Preferences(preferences)
+							, m_SerialPortMessageManager(serialPortMessageManager)
+{
+	mp_Value =  new T[COUNT];
+	for (int i = 0; i < COUNT; ++i)
+	{
+		mp_Value[i] = initialValuePointer[i];
+		mp_RxValue[i] = initialValuePointer[i];
+		mp_TxValue[i] = initialValuePointer[i];
+	}
+	CreateTxTimer();
+	SetDataLinkEnabled(true);
+}
+
+template <typename T, int COUNT>
+DataItem<T, COUNT>::DataItem( const String name
+							, const T initialValue
+							, const RxTxType_t rxTxType
+							, const UpdateStoreType_t updateStoreType
+							, const uint16_t rate
+							, Preferences *preferences
+							, SerialPortMessageManager &serialPortMessageManager )
+							: m_Name(name)
+							, m_RxTxType(rxTxType)
+							, m_UpdateStoreType(updateStoreType)
+							, m_Rate(rate)
+							, m_Preferences(preferences)
+							, m_SerialPortMessageManager(serialPortMessageManager)
+{
+	mp_Value = new T[COUNT];
+	mp_RxValue = new T[COUNT];
+	mp_TxValue = new T[COUNT];
+	for (int i = 0; i < COUNT; ++i)
+	{
+		mp_Value[i] = T(initialValue);
+		mp_RxValue[i] = T(initialValue);
+		mp_TxValue[i] = T(initialValue);
+	}
+	CreateTxTimer();
+	SetDataLinkEnabled(true);
+	m_SerialPortMessageManager.RegisterForSetupCall(this);
+}
+
+template <typename T, int COUNT>
+DataItem<T, COUNT>::~DataItem()
+{
+	delete[] mp_Value;
+	delete[] mp_RxValue;
+	delete[] mp_TxValue;
+	esp_timer_stop(m_TxTimer);
+	esp_timer_delete(m_TxTimer);
+	m_SerialPortMessageManager.DeRegisterForSetupCall(this);
+}
+
+		
 template <typename T, int COUNT>				 
 void DataItem<T, COUNT>::Setup()
 {

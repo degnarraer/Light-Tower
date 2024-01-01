@@ -53,24 +53,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, Preferences *preferences
-				, SerialPortMessageManager &serialPortMessageManager )
-			    : m_Name(name)
-				, m_RxTxType(rxTxType)
-				, m_UpdateStoreType(updateStoreType)
-				, m_Rate(rate)
-				, m_Preferences(preferences)
-				, m_SerialPortMessageManager(serialPortMessageManager)
-		{
-			mp_Value =  new T[COUNT];
-			for (int i = 0; i < COUNT; ++i)
-			{
-				mp_Value[i] = initialValuePointer[i];
-				mp_RxValue[i] = initialValuePointer[i];
-				mp_TxValue[i] = initialValuePointer[i];
-			}
-			CreateTxTimer();
-			SetDataLinkEnabled(true);
-		}
+				, SerialPortMessageManager &serialPortMessageManager );
 		
 		DataItem( const String name
 				, const T initialValue
@@ -78,38 +61,9 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, Preferences *preferences
-				, SerialPortMessageManager &serialPortMessageManager )
-			    : m_Name(name)
-				, m_RxTxType(rxTxType)
-				, m_UpdateStoreType(updateStoreType)
-				, m_Rate(rate)
-				, m_Preferences(preferences)
-				, m_SerialPortMessageManager(serialPortMessageManager)
-		{
-			mp_Value = new T[COUNT];
-			mp_RxValue = new T[COUNT];
-			mp_TxValue = new T[COUNT];
-			for (int i = 0; i < COUNT; ++i)
-			{
-				mp_Value[i] = T(initialValue);
-				mp_RxValue[i] = T(initialValue);
-				mp_TxValue[i] = T(initialValue);
-			}
-			CreateTxTimer();
-			SetDataLinkEnabled(true);
-			m_SerialPortMessageManager.RegisterForSetupCall(this);
-		}
+				, SerialPortMessageManager &serialPortMessageManager );
 		
-		
-		virtual ~DataItem()
-		{
-			delete[] mp_Value;
-			delete[] mp_RxValue;
-			delete[] mp_TxValue;
-			esp_timer_stop(m_TxTimer);
-			esp_timer_delete(m_TxTimer);
-			m_SerialPortMessageManager.DeRegisterForSetupCall(this);
-		}
+		virtual ~DataItem();
 		void Setup();
 		void InitializeNVM();
 		void LoadFromNVM();
