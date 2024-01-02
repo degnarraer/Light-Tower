@@ -33,6 +33,8 @@
 #include <Arduino_JSON.h>
 #pragma GCC diagnostic pop
 
+#define HEARTBEAT_MS 1000
+
 class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
@@ -152,6 +154,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       return m_Name;
     }
+  private:
+    uint64_t m_Last_Update_Time = millis();
   protected:
     const String &m_Name;
     WebSocketDataProcessor &m_WebSocketDataProcessor;
@@ -165,15 +169,18 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
       T CurrentValue = m_DataItem.GetValue();
-      if(CurrentValue != m_OldValue)
+      unsigned long currentMillis = millis();
+      unsigned long elapsedTime = currentMillis - m_Last_Update_Time;
+      if(CurrentValue != m_OldValue || HEARTBEAT_MS <= elapsedTime)
       {
         String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), 1);
-        ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
+        ESP_LOGI( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
           ESP_LOGI("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
           KeyValuePairs.push_back({ m_WidgetIds[i], CurrentValueString });
         }
+        m_Last_Update_Time = millis();
         m_OldValue = CurrentValue;
       }
     }

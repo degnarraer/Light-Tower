@@ -22,6 +22,7 @@
 #include "SerialMessageManager.h"
 #include <Helpers.h>
 #include <Preferences.h>
+#include <esp_timer.h>
 
 enum RxTxType_t
 {
@@ -65,12 +66,6 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		virtual ~DataItem();
 		void Setup();
-		void InitializeNVM();
-		void LoadFromNVM();
-		void CreateTxTimer();
-		void CreatePreferencesTimer();
-		void ResetPreferencesTimer();
-		
 		String GetName();
 		T* GetValuePointer();
 		T GetValue();
@@ -82,6 +77,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		void SetDataLinkEnabled(bool enable);
 	private:
 		Preferences *m_Preferences = nullptr;
+		uint64_t m_Preferences_Last_Update = millis();
+		bool m_PreferenceTimerActive = false;
 		const String m_Name;
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
@@ -89,16 +86,23 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		T *mp_Value;
 		T *mp_RxValue;
 		T *mp_TxValue;
+		T *mp_InitialValue;
 		bool m_DataLinkEnabled = true;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		esp_timer_handle_t m_TxTimer;
 		esp_timer_handle_t m_PreferenceTimer;
 		
+		void InitializeNVM();
+		void CreateTxTimer();
+		void CreatePreferencesTimer();
 		void DataItem_Try_TX_On_Change();
 		static void Static_Update_Preference(void *arg);
-		void Update_Preference(const String UpdateType);
-		static void StaticDataItem_TX_Now(void *arg);
+		void Update_Preference(const String &UpdateType);
+		void HandleLoaded(const T& initialValue);
+		void HandleUpdated();
 		void DataItem_TX_Now();
+		static void StaticDataItem_Periodic_TX(void *arg);
+		void DataItem_Periodic_TX();
 		void NewRXValueReceived(void* Object);
 };
 
