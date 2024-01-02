@@ -174,10 +174,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(CurrentValue != m_OldValue || HEARTBEAT_MS <= elapsedTime)
       {
         String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), 1);
-        ESP_LOGI( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
+        ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          ESP_LOGI("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
+          ESP_LOGD("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
           KeyValuePairs.push_back({ m_WidgetIds[i], CurrentValueString });
         }
         m_Last_Update_Time = millis();

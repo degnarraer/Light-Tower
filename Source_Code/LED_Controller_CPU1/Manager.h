@@ -82,7 +82,7 @@ class Manager: public NamedItem
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
 
     DataItem<bool, 1> m_BluetoothSinkEnable = DataItem<bool, 1>( "BT_Sink_En", false, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU3SerialPortMessageManager);
-    DataItem<bool, 1> m_BluetoothSinkAutoReConnect = DataItem<bool, 1>( "BT_Sink_AR" , false , RxTxType_Rx_Echo_Value , UpdateStoreType_On_Rx , 50000 , &m_Preferences , m_CPU3SerialPortMessageManager);
+    DataItem<bool, 1> m_BluetoothSinkAutoReConnect = DataItem<bool, 1>( "BT_Sink_AR" , false , RxTxType_Rx_Echo_Value , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU3SerialPortMessageManager);
     DataItem<ConnectionStatus_t, 1> m_BluetoothConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat" , ConnectionStatus_t::Disconnected , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Tx , 5000 , NULL , m_CPU3SerialPortMessageManager);
     //DataItem<char, 30> m_BluetoothSinkSSID = DataItem<char, 30>( "BT_Sink_SSID" , "LED Tower of Power" , RxTxType_Rx_Echo_Value , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU3SerialPortMessageManager);
     
