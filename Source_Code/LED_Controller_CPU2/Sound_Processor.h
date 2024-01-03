@@ -53,8 +53,8 @@ class Sound_Processor: public NamedItem
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     
-    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amp_Gain", 1.0, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, NULL, m_CPU3SerialPortMessageManager);
-    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT_Gain", 1.0, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, NULL, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_Amplitude_Gain = DataItem<float, 1>( "Amp_Gain", 1.0, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, m_CPU3SerialPortMessageManager);
+    DataItem <float, 1> m_FFT_Gain = DataItem<float, 1>( "FFT_Gain", 1.0, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, m_CPU3SerialPortMessageManager);
     
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA

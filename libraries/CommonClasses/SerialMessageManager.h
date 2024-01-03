@@ -58,7 +58,7 @@ class NewRxTxValueCalleeInterface
 		{
 			
 		}
-		virtual void NewRxValueReceived(T* object) = 0;
+		virtual bool NewRxValueReceived(T* object) = 0;
 		virtual String GetName() = 0;
 };
 
@@ -178,7 +178,7 @@ class NewRxTxVoidObjectCalleeInterface
 		{
 			
 		}
-		virtual void NewRXValueReceived(void* object) = 0;
+		virtual bool NewRXValueReceived(void* object) = 0;
 		virtual String GetName() = 0;
 };
 

@@ -177,7 +177,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          ESP_LOGD("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
+          ESP_LOGI("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
           KeyValuePairs.push_back({ m_WidgetIds[i], CurrentValueString });
         }
         m_Last_Update_Time = millis();
@@ -242,7 +242,7 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
   
     void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
     {
-      SSID_Info_With_LastUpdateTime_t Received_SSID;
+      BT_Info_With_LastUpdateTime_t Received_SSID;
       unsigned long CurrentTime = millis();
       size_t TotalSSIDs = uxQueueMessagesWaiting(m_DataItem->QueueHandle_TX);
       for(int i = 0; i < TotalSSIDs; ++i)

@@ -74,9 +74,10 @@ class Manager: public NamedItem
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
    
-    DataItem<bool, 1> m_BluetoothSourceEnable = DataItem<bool, 1>( "BT_Source_En" , false , RxTxType_Rx_Echo_Value , UpdateStoreType_On_Rx , 5000, &m_Preferences , m_CPU3SerialPortMessageManager);
-    DataItem<bool, 1> m_BluetoothSourceAutoReConnect = DataItem<bool, 1>( "BT_Source_AR" , false , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Rx , 5000 , &m_Preferences , m_CPU3SerialPortMessageManager);
-    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Connection Status" , ConnectionStatus_t::Disconnected , RxTxType_Tx_On_Change_With_Heartbeat , UpdateStoreType_On_Tx , 1000 , NULL , m_CPU3SerialPortMessageManager);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", false, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU3SerialPortMessageManager);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", false, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU3SerialPortMessageManager);
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", ConnectionStatus_t::Disconnected, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
+    DataItem<BT_Info_With_LastUpdateTime_t, 1> m_ScannedName = DataItem<BT_Info_With_LastUpdateTime_t, 1>( "Scan_BT_Device", {"", "", 0, 0}, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
     
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;

@@ -46,7 +46,7 @@ void Manager::Setup()
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  //m_BT_Out.StartDevice( m_SourceSSID.c_str(), m_SourceADDRESS.c_str() );
+  m_BT_Out.StartDevice( "JBL Flip 6", "" );
   xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      10000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
 }
 
@@ -101,16 +101,16 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
 {
   for(int i = 0; i < Devices.size(); ++i)
   { 
-    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "SSID: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
+    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Name: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
             , Devices[i].SSID.c_str()
             , Devices[i].ADDRESS.c_str()
-            , millis()-Devices[i].LastUpdateTime
+            , millis() - Devices[i].LastUpdateTime
             , Devices[i].RSSI );
-    /*
-    m_SSIDWLUT = SSID_Info_With_LastUpdateTime_t( Devices[i].SSID.c_str()
-                                                , Devices[i].ADDRESS.c_str()
-                                                , millis()-Devices[i].LastUpdateTime
-                                                , Devices[i].RSSI );
-                                                */
+    /*BT_Info_With_LastUpdateTime_t ActiveDevice = { Devices[i].SSID.c_str()
+                                                 , Devices[i].ADDRESS.c_str()
+                                                 , millis() - Devices[i].LastUpdateTime
+                                                 , Devices[i].RSSI };
+    */
+    //m_ScannedName.SetValue(ActiveDevice);                                            
   }
 }

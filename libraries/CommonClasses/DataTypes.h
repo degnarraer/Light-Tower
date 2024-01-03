@@ -68,11 +68,11 @@ struct SSID_Info
 };
 typedef SSID_Info SSID_Info_t;
 
-struct SSID_Info_With_LastUpdateTime
+struct BT_Info_With_LastUpdateTime
 {
 	public:
-		SSID_Info_With_LastUpdateTime(){}
-		SSID_Info_With_LastUpdateTime(String SSID_In, String ADDRESS_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
+		BT_Info_With_LastUpdateTime(){}
+		BT_Info_With_LastUpdateTime(String SSID_In, String ADDRESS_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
 		{
 			if(248 < SSID_In.length())
 			{
@@ -89,7 +89,7 @@ struct SSID_Info_With_LastUpdateTime
 			TimeSinceUdpate = TimeSinceUdpate_in;
 			RSSI = RSSI_In;
 		}
-		SSID_Info_With_LastUpdateTime& operator=(const SSID_Info_With_LastUpdateTime& other)
+		BT_Info_With_LastUpdateTime& operator=(const BT_Info_With_LastUpdateTime& other)
 		{
 			strncpy(this->SSID, other.SSID, sizeof(this->SSID) - 1);
 			this->SSID[sizeof(this->SSID) - 1] = '\0';  // Ensure null-terminated
@@ -102,7 +102,7 @@ struct SSID_Info_With_LastUpdateTime
 
 			return *this;
 		}
-		bool operator==(const SSID_Info_With_LastUpdateTime& other) const
+		bool operator==(const BT_Info_With_LastUpdateTime& other) const
 		{
 			if( strcmp(this->SSID, other.SSID) == 0 &&
 				strcmp(this->ADDRESS, other.ADDRESS) == 0 &&
@@ -110,7 +110,7 @@ struct SSID_Info_With_LastUpdateTime
 				this->TimeSinceUdpate == other.TimeSinceUdpate) return true;
 			else return false;
 		}
-		bool operator!=(const SSID_Info_With_LastUpdateTime& other) const
+		bool operator!=(const BT_Info_With_LastUpdateTime& other) const
 		{
 			if( strcmp(this->SSID, other.SSID) != 0 ||
 				strcmp(this->ADDRESS, other.ADDRESS) != 0 ||
@@ -123,7 +123,7 @@ struct SSID_Info_With_LastUpdateTime
 		int32_t RSSI = 0;
 		uint32_t TimeSinceUdpate = 0;
 };
-typedef SSID_Info_With_LastUpdateTime SSID_Info_With_LastUpdateTime_t;
+typedef BT_Info_With_LastUpdateTime BT_Info_With_LastUpdateTime_t;
 
 
 struct ActiveCompatibleDevice_t
@@ -182,7 +182,7 @@ enum DataType_t
   DataType_Uint32_t,
   DataType_String_t,
   DataType_SSID_Info_t,
-  DataType_SSID_Info_With_LastUpdateTime_t,
+  DataType_BT_Info_With_LastUpdateTime_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -205,7 +205,7 @@ static const char* DataTypeStrings[] =
   "Uint32_t",
   "String_t",
   "SSID_Info_t",
-  "SSID_Info_With_LastUpdateTime_t",
+  "BT_Info_With_LastUpdateTime_t",
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",
@@ -325,7 +325,7 @@ class DataTypeFunctions
 			else if(std::is_same<T, uint32_t>::value) 							return DataType_Uint32_t;
 			else if(std::is_same<T, String>::value) 							return DataType_String_t;
 			else if(std::is_same<T, SSID_Info_t>::value) 						return DataType_SSID_Info_t;
-			else if(std::is_same<T, SSID_Info_With_LastUpdateTime_t>::value) 	return DataType_SSID_Info_With_LastUpdateTime_t;
+			else if(std::is_same<T, BT_Info_With_LastUpdateTime_t>::value) 	return DataType_BT_Info_With_LastUpdateTime_t;
 			else if(std::is_same<T, float>::value) 								return DataType_Float_t;
 			else if(std::is_same<T, double>::value) 							return DataType_Double_t;
 			else if(std::is_same<T, ProcessedSoundData_t>::value) 				return DataType_ProcessedSoundData_t;
@@ -377,8 +377,8 @@ class DataTypeFunctions
 					Result = sizeof(SSID_Info_t);
 				break;
 				
-				case DataType_SSID_Info_With_LastUpdateTime_t:
-					Result = sizeof(SSID_Info_With_LastUpdateTime_t);
+				case DataType_BT_Info_With_LastUpdateTime_t:
+					Result = sizeof(BT_Info_With_LastUpdateTime_t);
 				break;
 				
 				case DataType_Float_t:
@@ -456,7 +456,7 @@ class DataTypeFunctions
 				break;
 			case DataType_String_t:
 			case DataType_SSID_Info_t:
-			case DataType_SSID_Info_With_LastUpdateTime_t:
+			case DataType_BT_Info_With_LastUpdateTime_t:
 			case DataType_ProcessedSoundData_t:
 			case DataType_MaxBandSoundData_t:
 			case DataType_Frame_t:
@@ -508,7 +508,7 @@ class DataTypeFunctions
 					break;
 				case DataType_String_t:
 				case DataType_SSID_Info_t:
-				case DataType_SSID_Info_With_LastUpdateTime_t:
+				case DataType_BT_Info_With_LastUpdateTime_t:
 				case DataType_ProcessedSoundData_t:
 				case DataType_MaxBandSoundData_t:
 				case DataType_Frame_t:

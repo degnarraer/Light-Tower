@@ -6,6 +6,9 @@
 template class DataItem<float, 1>;
 template class DataItem<bool, 1>;
 template class DataItem<ConnectionStatus_t, 1>;
+template class DataItem<BT_Info_With_LastUpdateTime_t, 1>;
+template class DataItemWithPreferences<float, 1>;
+template class DataItemWithPreferences<bool, 1>;
 
 
 template <typename T, int COUNT>
@@ -14,13 +17,11 @@ DataItem<T, COUNT>::DataItem( const String name
 							, const RxTxType_t rxTxType
 							, const UpdateStoreType_t updateStoreType
 							, const uint16_t rate
-							, Preferences *preferences
 							, SerialPortMessageManager &serialPortMessageManager )
 							: m_Name(name)
 							, m_RxTxType(rxTxType)
 							, m_UpdateStoreType(updateStoreType)
 							, m_Rate(rate)
-							, m_Preferences(preferences)
 							, m_SerialPortMessageManager(serialPortMessageManager)
 {
 	mp_Value =  new T[COUNT];
@@ -35,7 +36,6 @@ DataItem<T, COUNT>::DataItem( const String name
 		mp_InitialValue[i] = initialValuePointer[i];
 	}
 	CreateTxTimer();
-	CreatePreferencesTimer();
 	SetDataLinkEnabled(true);
 }
 
@@ -45,13 +45,11 @@ DataItem<T, COUNT>::DataItem( const String name
 							, const RxTxType_t rxTxType
 							, const UpdateStoreType_t updateStoreType
 							, const uint16_t rate
-							, Preferences *preferences
 							, SerialPortMessageManager &serialPortMessageManager )
 							: m_Name(name)
 							, m_RxTxType(rxTxType)
 							, m_UpdateStoreType(updateStoreType)
 							, m_Rate(rate)
-							, m_Preferences(preferences)
 							, m_SerialPortMessageManager(serialPortMessageManager)
 {
 	mp_Value = new T[COUNT];
@@ -66,7 +64,6 @@ DataItem<T, COUNT>::DataItem( const String name
 		mp_InitialValue[i] = T(initialValue);
 	}
 	CreateTxTimer();
-	CreatePreferencesTimer();
 	SetDataLinkEnabled(true);
 	m_SerialPortMessageManager.RegisterForSetupCall(this);
 }
@@ -82,36 +79,10 @@ DataItem<T, COUNT>::~DataItem()
 	m_SerialPortMessageManager.DeRegisterForSetupCall(this);
 }
 
-		
 template <typename T, int COUNT>				 
 void DataItem<T, COUNT>::Setup()
 {
-	InitializeNVM();
 }
-
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::InitializeNVM()
-{
-	if(m_Preferences)
-	{
-		if(1 == COUNT)
-		{
-			if (true == m_Preferences->isKey(m_Name.c_str()))
-			{
-				Update_Preference("Loaded");
-			}
-			else
-			{
-				Update_Preference("Initialized");
-			}
-		}
-		else
-		{
-			ESP_LOGE("Dataitem: InitializeNVM", "Cannot use preferences for items with non 1 COUNT size");
-		}
-	}
-}
-
 
 template <typename T, int COUNT>
 void DataItem<T, COUNT>::CreateTxTimer()
@@ -123,18 +94,6 @@ void DataItem<T, COUNT>::CreateTxTimer()
 
 	// Create the timer
 	esp_timer_create(&timerArgs, &m_TxTimer);
-}
-
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::CreatePreferencesTimer()
-{
-	esp_timer_create_args_t timerArgs;
-	timerArgs.callback = &Static_Update_Preference;
-	timerArgs.arg = this;
-	timerArgs.name = "Preferences_Timer";
-
-	// Create the timer
-	esp_timer_create(&timerArgs, &m_PreferenceTimer);
 }
 
 template <typename T, int COUNT>
@@ -273,153 +232,9 @@ void DataItem<T, COUNT>::DataItem_Try_TX_On_Change()
 }
 
 template <typename T, int COUNT>
-void DataItem<T, COUNT>::Static_Update_Preference(void *arg)
+bool DataItem<T, COUNT>::DataItem_TX_Now()
 {
-	DataItem *aDataItem = static_cast<DataItem*>(arg);
-	if(aDataItem)
-	{
-		aDataItem->Update_Preference("Timer");
-	}
-}
-
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::Update_Preference(const String &UpdateType)
-{
-    static_assert(COUNT == 1, "Count should be 1 to do this");
-    assert((UpdateType == "Initialized" || UpdateType == "Loaded" || UpdateType == "Updated" || UpdateType == "Timer") && "Misuse of function");
-
-    unsigned long currentMillis = millis();
-    unsigned long elapsedTime = currentMillis - m_Preferences_Last_Update;
-    if (elapsedTime <= TIMER_TIME && UpdateType.equals("Updated"))
-	{
-		ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": To early to save preference", m_Name.c_str());
-		if(false == m_PreferenceTimerActive)
-		{
-			ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Started NVM Update Timer", m_Name.c_str());
-			esp_timer_start_once(m_PreferenceTimer, ((TIMER_TIME - elapsedTime) + TIMER_BUFFER) * 1000);
-			m_PreferenceTimerActive = true;
-		}
-		return;
-	}
-
-    if (UpdateType.equals("Loaded"))
-	{
-        HandleLoaded(mp_InitialValue[0]);
-    } 
-	else if ( UpdateType.equals("Initialized") || 
-			  UpdateType.equals("Updated") || 
-			  UpdateType.equals("Timer") )
-	{
-        HandleUpdated();
-		if(UpdateType.equals("Timer"))
-		{
-			m_PreferenceTimerActive = false;
-		}
-		m_Preferences_Last_Update = currentMillis;
-    }
-	else
-	{
-        ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Unsupported Update Type", m_Name.c_str());
-	}
-}
-
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::HandleLoaded(const T& initialValue)
-{
-    if (std::is_same<T, bool>::value)
-	{
-		bool value;
-		memcpy(&value , &initialValue, sizeof(bool));
-		bool result = m_Preferences->getBool(m_Name.c_str(), value);
-        memcpy(mp_Value, &result, sizeof(bool));
-        memcpy(mp_TxValue, &result, sizeof(bool));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded Bool", m_Name.c_str());	
-    }
-	else if (std::is_same<T, int32_t>::value)
-	{
-		int32_t value;
-		memcpy(&value , &initialValue, sizeof(int32_t));
-		int32_t result = m_Preferences->getInt(m_Name.c_str(), value);
-        memcpy(mp_Value, &result, sizeof(int32_t));
-        memcpy(mp_TxValue, &result, sizeof(int32_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int32_t", m_Name.c_str());	
-    }
-	else if (std::is_same<T, int16_t>::value)
-	{
-		int16_t value;
-		memcpy(&value , &initialValue, sizeof(int16_t));
-		int16_t result = m_Preferences->getInt(m_Name.c_str(), value);
-        memcpy(mp_Value, &result, sizeof(int16_t));
-        memcpy(mp_TxValue, &result, sizeof(int16_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int16_t", m_Name.c_str());	
-    }
-	else if (std::is_same<T, int8_t>::value)
-	{
-		int8_t value;
-		memcpy(&value , &initialValue, sizeof(int8_t));
-		int8_t result = m_Preferences->getInt(m_Name.c_str(), value);
-        memcpy(mp_Value, &result, sizeof(int8_t));
-        memcpy(mp_TxValue, &result, sizeof(int8_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int8_t", m_Name.c_str());	
-    }
-	else if (std::is_same<T, float>::value)
-	{
-		float value;
-		memcpy(&value , &initialValue, sizeof(float));
-		float result = m_Preferences->getFloat(m_Name.c_str(), value);
-        memcpy(mp_Value, &result, sizeof(float));
-        memcpy(mp_TxValue, &result, sizeof(float));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded float", m_Name.c_str());	
-    }
-	else if (std::is_same<T, double>::value)
-	{
-		double value;
-		memcpy(&value , &initialValue, sizeof(double));
-		double result = m_Preferences->getDouble(m_Name.c_str(), value);
-        memcpy(mp_Value, &result, sizeof(double));
-        memcpy(mp_TxValue, &result, sizeof(double));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double", m_Name.c_str());	
-    }
-	else
-	{
-        ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", m_Name.c_str());
-    }
-	DataItem_Try_TX_On_Change();
-}
-
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::HandleUpdated()
-{
-	
-    if (std::is_same<T, bool>::value)
-	{
-        m_Preferences->putBool(m_Name.c_str(), mp_Value[0]);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving bool", m_Name.c_str());	
-    } 
-	else if (std::is_integral<T>::value)
-	{
-        m_Preferences->putInt(m_Name.c_str(), mp_Value[0]);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer", m_Name.c_str());	
-    } 
-	else if (std::is_floating_point<T>::value)
-	{
-        m_Preferences->putFloat(m_Name.c_str(), mp_Value[0]);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving float", m_Name.c_str());	
-    }
-	else if (std::is_same<T, double>::value)
-	{
-        m_Preferences->putDouble(m_Name.c_str(), mp_Value[0]);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double", m_Name.c_str());	
-    } 
-	else 
-	{
-        ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", m_Name.c_str());
-    }
-}
-
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::DataItem_TX_Now()
-{
+	bool ValueUpdated = false;
 	if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
 	{
 		bool TxValueChanged = (memcmp(mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0);
@@ -428,7 +243,7 @@ void DataItem<T, COUNT>::DataItem_TX_Now()
 			if(TxValueChanged)
 			{
 				memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
-				Update_Preference("Updated");
+				ValueUpdated = true;
 			}
 		}
 		ESP_LOGD("DataItem: DataItem_TX_Now", "Data Item: \"%s\": TX Now: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT).c_str());
@@ -437,7 +252,7 @@ void DataItem<T, COUNT>::DataItem_TX_Now()
 	{
 		ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
 	}
-	
+	return ValueUpdated;
 }
 
 template <typename T, int COUNT>
@@ -460,8 +275,9 @@ void DataItem<T, COUNT>::DataItem_Periodic_TX()
 }
 
 template <typename T, int COUNT>
-void DataItem<T, COUNT>::NewRXValueReceived(void* Object)
+bool DataItem<T, COUNT>::NewRXValueReceived(void* Object)
 {	
+	bool ValueUpdated = false;
 	T* receivedValue = static_cast<T*>(Object);
 	bool ValueChanged = (memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0);
 	if(ValueChanged)
@@ -478,7 +294,7 @@ void DataItem<T, COUNT>::NewRXValueReceived(void* Object)
 			if(RxValueChanged)
 			{
 				memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
-				Update_Preference("Updated");
+				ValueUpdated = true;
 			}
 		}
 		if(RxTxType_Rx_Echo_Value == m_RxTxType)
@@ -487,4 +303,186 @@ void DataItem<T, COUNT>::NewRXValueReceived(void* Object)
 			DataItem_TX_Now();
 		}
 	}
+	return ValueUpdated;
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::CreatePreferencesTimer()
+{
+	esp_timer_create_args_t timerArgs;
+	timerArgs.callback = &Static_Update_Preference;
+	timerArgs.arg = this;
+	timerArgs.name = "Preferences_Timer";
+
+	// Create the timer
+	esp_timer_create(&timerArgs, &m_PreferenceTimer);
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::InitializeNVM()
+{
+	if(m_Preferences)
+	{
+		if(1 == COUNT)
+		{
+			if (true == m_Preferences->isKey(this->m_Name.c_str()))
+			{
+				Update_Preference("Loaded");
+			}
+			else
+			{
+				Update_Preference("Initialized");
+			}
+		}
+		else
+		{
+			ESP_LOGE("Dataitem: InitializeNVM", "Cannot use preferences for items with non 1 COUNT size");
+		}
+	}
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::Static_Update_Preference(void *arg)
+{
+	DataItemWithPreferences *aDataItem = static_cast<DataItemWithPreferences*>(arg);
+	if(aDataItem)
+	{
+		aDataItem->Update_Preference("Timer");
+	}
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::Update_Preference(const String &UpdateType)
+{
+    static_assert(COUNT == 1, "Count should be 1 to do this");
+    if(nullptr == m_Preferences) return;
+    assert((UpdateType == "Initialized" || UpdateType == "Loaded" || UpdateType == "Updated" || UpdateType == "Timer") && "Misuse of function");
+
+    unsigned long currentMillis = millis();
+    unsigned long elapsedTime = currentMillis - m_Preferences_Last_Update;
+	if (elapsedTime <= TIMER_TIME && UpdateType.equals("Updated"))
+	{
+		ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": To early to save preference", this->m_Name.c_str());
+		if(false == m_PreferenceTimerActive)
+		{
+			ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Started NVM Update Timer", this->m_Name.c_str());
+			esp_timer_start_once(m_PreferenceTimer, ((TIMER_TIME - elapsedTime) + TIMER_BUFFER) * 1000);
+			m_PreferenceTimerActive = true;
+		}
+		return;
+	}
+
+    if (UpdateType.equals("Loaded"))
+	{
+        HandleLoaded(this->mp_InitialValue[0]);
+    } 
+	else if ( UpdateType.equals("Initialized") || 
+			  UpdateType.equals("Updated") || 
+			  UpdateType.equals("Timer") )
+	{
+        HandleUpdated();
+		if(UpdateType.equals("Timer"))
+		{
+			m_PreferenceTimerActive = false;
+		}
+		m_Preferences_Last_Update = currentMillis;
+    }
+	else
+	{
+        ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Unsupported Update Type", this->m_Name.c_str());
+	}
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
+{
+    if (std::is_same<T, bool>::value)
+	{
+		bool value;
+		memcpy(&value , &initialValue, sizeof(bool));
+		bool result = m_Preferences->getBool(this->m_Name.c_str(), value);
+        memcpy(this->mp_Value, &result, sizeof(bool));
+        memcpy(this->mp_TxValue, &result, sizeof(bool));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded Bool", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, int32_t>::value)
+	{
+		int32_t value;
+		memcpy(&value , &initialValue, sizeof(int32_t));
+		int32_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
+        memcpy(this->mp_Value, &result, sizeof(int32_t));
+        memcpy(this->mp_TxValue, &result, sizeof(int32_t));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int32_t", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, int16_t>::value)
+	{
+		int16_t value;
+		memcpy(&value , &initialValue, sizeof(int16_t));
+		int16_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
+        memcpy(this->mp_Value, &result, sizeof(int16_t));
+        memcpy(this->mp_TxValue, &result, sizeof(int16_t));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int16_t", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, int8_t>::value)
+	{
+		int8_t value;
+		memcpy(&value , &initialValue, sizeof(int8_t));
+		int8_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
+        memcpy(this->mp_Value, &result, sizeof(int8_t));
+        memcpy(this->mp_TxValue, &result, sizeof(int8_t));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int8_t", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, float>::value)
+	{
+		float value;
+		memcpy(&value , &initialValue, sizeof(float));
+		float result = m_Preferences->getFloat(this->m_Name.c_str(), value);
+        memcpy(this->mp_Value, &result, sizeof(float));
+        memcpy(this->mp_TxValue, &result, sizeof(float));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded float", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, double>::value)
+	{
+		double value;
+		memcpy(&value , &initialValue, sizeof(double));
+		double result = m_Preferences->getDouble(this->m_Name.c_str(), value);
+        memcpy(this->mp_Value, &result, sizeof(double));
+        memcpy(this->mp_TxValue, &result, sizeof(double));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double", this->m_Name.c_str());	
+    }
+	else
+	{
+        ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", this->m_Name.c_str());
+    }
+	DataItem<T, COUNT>::DataItem_Try_TX_On_Change();
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::HandleUpdated()
+{
+	
+    if (std::is_same<T, bool>::value)
+	{
+        m_Preferences->putBool(this->m_Name.c_str(), this->mp_Value[0]);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving bool", this->m_Name.c_str());	
+    } 
+	else if (std::is_integral<T>::value)
+	{
+        m_Preferences->putInt(this->m_Name.c_str(), this->mp_Value[0]);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer", this->m_Name.c_str());	
+    } 
+	else if (std::is_floating_point<T>::value)
+	{
+        m_Preferences->putFloat(this->m_Name.c_str(), this->mp_Value[0]);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving float", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, double>::value)
+	{
+        m_Preferences->putDouble(this->m_Name.c_str(), this->mp_Value[0]);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double", this->m_Name.c_str());	
+    } 
+	else 
+	{
+        ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", this->m_Name.c_str());
+    }
 }
