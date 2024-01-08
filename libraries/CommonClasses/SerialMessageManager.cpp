@@ -131,7 +131,7 @@ void NewRxTxVoidObjectCallerInterface::NotifyCallee(const String& name, void* ob
 		{
 			if (callee->GetName().equals(name))
 			{
-				callee->NewRXValueReceived(object);
+				callee->NewRXValueReceived(object, callee->GetCount());
 				break;
 			}
 		}

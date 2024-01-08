@@ -129,7 +129,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
     
-    bool NewRxValueReceived(T* object)
+    bool NewRxValueReceived(T* object, size_t count)
     {
       T Value = *object;
       bool ValueChanged = false;

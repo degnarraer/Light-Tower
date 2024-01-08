@@ -58,8 +58,11 @@ class NewRxTxValueCalleeInterface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(T* object) = 0;
+		virtual bool NewRxValueReceived(T* object, size_t count) = 0;
 		virtual String GetName() = 0;
+		size_t GetCount(){ return m_Count;}
+	private:
+		size_t m_Count = 0;
 };
 
 template <typename T>
@@ -143,7 +146,7 @@ class NewRxTxValueCallerInterface
 				{
 					if (callee->GetName().equals(name))
 					{
-						callee->NewRXValueReceived(object);
+						callee->NewRXValueReceived(object, callee->GetCount());
 						break;
 					}
 				}
@@ -178,8 +181,11 @@ class NewRxTxVoidObjectCalleeInterface
 		{
 			
 		}
-		virtual bool NewRXValueReceived(void* object) = 0;
+		virtual bool NewRXValueReceived(void* object, size_t Count) = 0;
 		virtual String GetName() = 0;
+		size_t GetCount(){ return m_Count;}
+	private:
+		size_t m_Count = 0;
 };
 
 class NewRxTxVoidObjectCallerInterface

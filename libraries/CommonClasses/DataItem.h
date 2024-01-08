@@ -76,7 +76,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		const UpdateStoreType_t m_UpdateStoreType;
 		const uint16_t m_Rate;
 		virtual bool DataItem_TX_Now();
-		virtual bool NewRXValueReceived(void* Object);
+		virtual bool NewRXValueReceived(void* Object, size_t Count);
 		void DataItem_Try_TX_On_Change();
 	private:
 		bool m_DataLinkEnabled = true;
@@ -114,7 +114,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		void HandleUpdated();
 		void CreatePreferencesTimer();
 		virtual bool DataItem_TX_Now() override;
-		virtual bool NewRXValueReceived(void* Object) override;
+		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
 };
 
 #endif

@@ -247,7 +247,7 @@ void DataItem<T, COUNT>::DataItem_Periodic_TX()
 }
 
 template <typename T, int COUNT>
-bool DataItem<T, COUNT>::NewRXValueReceived(void* Object)
+bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 {	
 	bool ValueUpdated = false;
 	T* receivedValue = static_cast<T*>(Object);
@@ -314,9 +314,9 @@ bool DataItemWithPreferences<T, COUNT>::DataItem_TX_Now()
 }
 
 template <typename T, int COUNT>
-bool DataItemWithPreferences<T, COUNT>::NewRXValueReceived(void* Object)
+bool DataItemWithPreferences<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 {
-	bool result = DataItem<T, COUNT>::NewRXValueReceived(Object);
+	bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
 	if(result) Update_Preference("Update");
 	return result;
 }
