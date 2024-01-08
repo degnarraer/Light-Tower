@@ -19,33 +19,24 @@ DataItem<T, COUNT>::DataItem( const String name
 							, const uint16_t rate
 							, SerialPortMessageManager &serialPortMessageManager )
 							: m_Name(name)
+							, m_InitialValue(initialValue)
 							, m_RxTxType(rxTxType)
 							, m_UpdateStoreType(updateStoreType)
 							, m_Rate(rate)
 							, m_SerialPortMessageManager(serialPortMessageManager)
+							, NewRxTxVoidObjectCalleeInterface(COUNT)
 {
-	mp_Value = new T[COUNT];
-	mp_RxValue = new T[COUNT];
-	mp_TxValue = new T[COUNT];
-	mp_InitialValue =  new T[COUNT];
-	for (int i = 0; i < COUNT; ++i)
-	{
-		mp_Value[i] = T(initialValue);
-		mp_RxValue[i] = T(initialValue);
-		mp_TxValue[i] = T(initialValue);
-		mp_InitialValue[i] = T(initialValue);
-	}
 	CreateTxTimer();
-	SetDataLinkEnabled(true);
 	m_SerialPortMessageManager.RegisterForSetupCall(this);
 }
 
 template <typename T, int COUNT>
 DataItem<T, COUNT>::~DataItem()
 {
-	delete[] mp_Value;
-	delete[] mp_RxValue;
-	delete[] mp_TxValue;
+	heap_caps_free(mp_Value);
+	heap_caps_free(mp_RxValue);
+	heap_caps_free(mp_TxValue);
+	heap_caps_free(mp_InitialValue);
 	esp_timer_stop(m_TxTimer);
 	esp_timer_delete(m_TxTimer);
 	m_SerialPortMessageManager.DeRegisterForSetupCall(this);
@@ -54,6 +45,26 @@ DataItem<T, COUNT>::~DataItem()
 template <typename T, int COUNT>				 
 void DataItem<T, COUNT>::Setup()
 {
+	ESP_LOGE("DataItem<T, COUNT>::Setup()", "Allocating Memory");
+	mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+	mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+	mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+	mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+	if (mp_Value && mp_RxValue && mp_TxValue && mp_InitialValue)
+	{
+		for (int i = 0; i < COUNT; ++i)
+		{
+			memcpy(mp_Value+i, &m_InitialValue, sizeof(T));
+			memcpy(mp_RxValue+i, &m_InitialValue, sizeof(T));
+			memcpy(mp_TxValue+i, &m_InitialValue, sizeof(T));
+			memcpy(mp_InitialValue+i, &m_InitialValue, sizeof(T));
+		}
+		SetDataLinkEnabled(true);
+	}
+	else
+	{
+		ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
+    }
 }
 
 template <typename T, int COUNT>
@@ -75,16 +86,10 @@ String DataItem<T, COUNT>::GetName()
 }
 
 template <typename T, int COUNT>
-T* DataItem<T, COUNT>::GetValuePointer()
+void DataItem<T, COUNT>::GetValue(void* Object, size_t Count)
 {
-	return mp_Value;
-}
-
-template <typename T, int COUNT>
-T DataItem<T, COUNT>::GetValue()
-{
-	static_assert(COUNT == 1, "Count should be 1 to do this");
-	return mp_Value[0];
+	assert(Count == COUNT && "Counts must be equal");
+	memcpy(Object, mp_Value, sizeof(T)*Count);
 }
 
 template <typename T, int COUNT>
@@ -94,12 +99,13 @@ String DataItem<T, COUNT>::GetValueAsString()
 }
 
 template <typename T, int COUNT>
-void DataItem<T, COUNT>::SetNewTxValue(T* Value)
+void DataItem<T, COUNT>::SetNewTxValue(T* Value, size_t Count)
 {
 	ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
-	SetValue(Value);
+	SetValue(Value, Count);
 }
 
+/*
 template <typename T, int COUNT>
 void DataItem<T, COUNT>::SetValue(T Value)
 {
@@ -116,13 +122,15 @@ void DataItem<T, COUNT>::SetValue(T Value)
 		DataItem_Try_TX_On_Change();
 	}
 }
+*/
 
 template <typename T, int COUNT>
-void DataItem<T, COUNT>::SetValue(T *Value)
+void DataItem<T, COUNT>::SetValue(T *Value, size_t Count)
 {
 	assert(Value != nullptr && "Value must not be null");
 	assert(mp_Value != nullptr && "mp_Value must not be null");
 	assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
+	assert(COUNT == Count && "Counts must match");
 	ESP_LOGI( "DataItem: SetValue"
 			, "\"%s\" Set Value: \"%s\""
 			, m_Name.c_str()

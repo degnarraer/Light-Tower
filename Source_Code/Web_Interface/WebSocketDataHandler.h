@@ -82,7 +82,7 @@ class WebSocketDataProcessor
 };
 
 
-template<typename T>
+template<typename T, size_t COUNT>
 class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                           , public WebSocketDataHandlerSender
                           , public NewRxTxValueCalleeInterface<T>
@@ -109,7 +109,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                         , WebSocketDataProcessor &WebSocketDataProcessor
                         , const bool &IsReceiver
                         , const bool &IsSender
-                        , DataItem<T, 1> &DataItem
+                        , DataItem<T, COUNT> &DataItem
                         , const bool &Debug )
                         : m_Name(Name)
                         , m_WidgetIds(WidgetIds.begin(), WidgetIds.end())
@@ -129,13 +129,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
     
-    bool NewRxValueReceived(T* object, size_t count)
+    bool NewRxValueReceived(T* Object, size_t Count)
     {
-      T Value = *object;
       bool ValueChanged = false;
-      if(m_DataItem.GetValue() != Value)
+      if(false == m_DataItem.EqualsValue(Object, Count))
       {
-        m_DataItem.SetValue(Value);
+        m_DataItem.SetValue(Object, Count);
         ValueChanged = true;
         ESP_LOGI( "WebSocketDataHandler: NewRxValueReceived"
                 , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
@@ -143,14 +142,17 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
       return ValueChanged;
     }
-    void SetNewTxValue(T* Object)
+    
+    void SetNewTxValue(T* Object, size_t Count)
     {
       ESP_LOGE( "WebSocketDataHandler: SetNewTxValue", "THIS IS NOT HANDLED YET");
     }
     
     T GetValue()
     {
-      return m_DataItem.GetValue();
+      T Value;
+      m_DataItem.GetValue(&Value, COUNT);
+      return Value;
     }
     
     String GetName()
@@ -165,18 +167,19 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_IsReceiver;
     const bool &m_IsSender;
     std::vector<String> m_WidgetIds;
-    DataItem<T, 1> &m_DataItem;
+    DataItem<T, COUNT> &m_DataItem;
     T m_OldValue;
     const bool &m_Debug;
     
     virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
     {
-      T CurrentValue = m_DataItem.GetValue();
+      T CurrentValue;
+      m_DataItem.GetValue(&CurrentValue, COUNT);
       unsigned long currentMillis = millis();
       unsigned long elapsedTime = currentMillis - m_Last_Update_Time;
       if(CurrentValue != m_OldValue || HEARTBEAT_MS <= elapsedTime)
       {
-        String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), 1);
+        String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), COUNT);
         ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
@@ -206,8 +209,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         T NewValue;
         if (SetValueFromFromStringForDataType(&NewValue, StringValue, GetDataTypeFromTemplateType<T>()))
         {
-          m_DataItem.SetValue(NewValue);
-          String NewValueString = GetValueAsStringForDataType(&NewValue, GetDataTypeFromTemplateType<T>(), 1);
+          m_DataItem.SetValue(&NewValue, 1); //TO DO HANDLE COUNT
+          String NewValueString = GetValueAsStringForDataType(&NewValue, GetDataTypeFromTemplateType<T>(), COUNT);
           ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
                   , "Web Socket Value: %s"
                   , NewValueString.c_str());

@@ -23,6 +23,8 @@
 #include <Helpers.h>
 #include <Preferences.h>
 #include <esp_timer.h>
+#include <Arduino.h>
+#include <esp_heap_caps.h>
 
 enum RxTxType_t
 {
@@ -58,19 +60,23 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		virtual ~DataItem();
 		virtual void Setup();
 		String GetName();
-		T* GetValuePointer();
-		T GetValue();
+		void GetValue(void* Object, size_t Count);
 		String GetValueAsString();
-		void SetNewTxValue(T* Value);
-		void SetValue(T Value);
-		void SetValue(T *Value);
+		void SetNewTxValue(T* Value, size_t Count);
+		void SetValue(T *Value, size_t Count);
 		size_t GetCount();
 		void SetDataLinkEnabled(bool enable);
+		bool EqualsValue(T *Object, size_t Count)
+		{
+			assert(Count == COUNT && "Counts must equal");
+			return (memcmp(mp_Value, Object, Count) == 0);
+		}
 	protected:
 		T *mp_Value;
 		T *mp_RxValue;
 		T *mp_TxValue;
 		T *mp_InitialValue;
+		T m_InitialValue;
 		const String m_Name;
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;

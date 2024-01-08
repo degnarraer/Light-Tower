@@ -77,7 +77,7 @@ class NewRxTxValueCallerInterface
 		{
 			
 		}
-		virtual void SetNewTxValue(T* object) = 0;
+		virtual void SetNewTxValue(T* object, size_t count) = 0;
 		void RegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* NewCallee)
 		{
 			ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
@@ -173,7 +173,8 @@ class NewRxTxValueCallerInterface
 class NewRxTxVoidObjectCalleeInterface
 {
 	public:
-		NewRxTxVoidObjectCalleeInterface()
+		NewRxTxVoidObjectCalleeInterface( size_t Count )
+										: m_Count(Count)
 		{
 			
 		}
