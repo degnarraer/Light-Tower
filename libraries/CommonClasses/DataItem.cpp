@@ -5,39 +5,11 @@
 
 template class DataItem<float, 1>;
 template class DataItem<bool, 1>;
+template class DataItem<String, 1>;
 template class DataItem<ConnectionStatus_t, 1>;
 template class DataItem<BT_Info_With_LastUpdateTime_t, 1>;
 template class DataItemWithPreferences<float, 1>;
 template class DataItemWithPreferences<bool, 1>;
-
-
-template <typename T, int COUNT>
-DataItem<T, COUNT>::DataItem( const String name
-							, const T *initialValuePointer
-							, const RxTxType_t rxTxType
-							, const UpdateStoreType_t updateStoreType
-							, const uint16_t rate
-							, SerialPortMessageManager &serialPortMessageManager )
-							: m_Name(name)
-							, m_RxTxType(rxTxType)
-							, m_UpdateStoreType(updateStoreType)
-							, m_Rate(rate)
-							, m_SerialPortMessageManager(serialPortMessageManager)
-{
-	mp_Value =  new T[COUNT];
-	mp_RxValue =  new T[COUNT];
-	mp_TxValue =  new T[COUNT];
-	mp_InitialValue =  new T[COUNT];
-	for (int i = 0; i < COUNT; ++i)
-	{
-		mp_Value[i] = initialValuePointer[i];
-		mp_RxValue[i] = initialValuePointer[i];
-		mp_TxValue[i] = initialValuePointer[i];
-		mp_InitialValue[i] = initialValuePointer[i];
-	}
-	CreateTxTimer();
-	SetDataLinkEnabled(true);
-}
 
 template <typename T, int COUNT>
 DataItem<T, COUNT>::DataItem( const String name
@@ -304,6 +276,49 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object)
 		}
 	}
 	return ValueUpdated;
+}
+
+template <typename T, int COUNT>
+DataItemWithPreferences<T, COUNT>::DataItemWithPreferences( const String name
+														  , const T initialValue
+														  , const RxTxType_t rxTxType
+														  , const UpdateStoreType_t updateStoreType
+														  , const uint16_t rate
+														  , Preferences *preferences
+														  , SerialPortMessageManager &serialPortMessageManager )
+														  : m_Preferences(preferences)
+														  , DataItem<T, COUNT>( name
+																			  , initialValue
+																			  , rxTxType
+																			  , updateStoreType
+																			  , rate
+																			  , serialPortMessageManager )
+							   
+{
+	CreatePreferencesTimer();
+}
+
+template <typename T, int COUNT>
+void DataItemWithPreferences<T, COUNT>::Setup()
+{
+	DataItem<T, COUNT>::Setup();
+	InitializeNVM();
+}
+
+template <typename T, int COUNT>
+bool DataItemWithPreferences<T, COUNT>::DataItem_TX_Now()
+{
+	bool result = DataItem<T, COUNT>::DataItem_TX_Now();
+	if(result) Update_Preference("Update");
+	return result;
+}
+
+template <typename T, int COUNT>
+bool DataItemWithPreferences<T, COUNT>::NewRXValueReceived(void* Object)
+{
+	bool result = DataItem<T, COUNT>::NewRXValueReceived(Object);
+	if(result) Update_Preference("Update");
+	return result;
 }
 
 template <typename T, int COUNT>

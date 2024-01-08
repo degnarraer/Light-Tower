@@ -48,15 +48,6 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public DataTypeFunctions
 {
 	public:
-		
-		
-		DataItem( const String name
-				, const T *initialValuePointer
-				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
-				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager );
-		
 		DataItem( const String name
 				, const T initialValue
 				, const RxTxType_t rxTxType
@@ -102,48 +93,14 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 {
 	public:
 		DataItemWithPreferences( const String name
-							   , const T *initialValuePointer
-							   , const RxTxType_t rxTxType
-							   , const UpdateStoreType_t updateStoreType
-							   , const uint16_t rate
-							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager )
-							   : m_Preferences(preferences)
-							   , DataItem<T, COUNT>( name
-												   , initialValuePointer
-												   , rxTxType
-												   , updateStoreType
-												   , rate
-												   , serialPortMessageManager )
-							   
-		{
-			CreatePreferencesTimer();
-		}
-		
-		DataItemWithPreferences( const String name
 							   , const T initialValue
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager )
-							   : m_Preferences(preferences)
-							   , DataItem<T, COUNT>( name
-												   , initialValue
-												   , rxTxType
-												   , updateStoreType
-												   , rate
-												   , serialPortMessageManager )
-							   
-		{
-			CreatePreferencesTimer();
-		}
+							   , SerialPortMessageManager &serialPortMessageManager );
 		
-		virtual void Setup() override
-		{
-			DataItem<T, COUNT>::Setup();
-			InitializeNVM();
-		}
+		virtual void Setup() override;
 		virtual ~DataItemWithPreferences(){}
 		static void Static_Update_Preference(void *arg);
 		void Update_Preference(const String &UpdateType);
@@ -156,18 +113,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		void HandleLoaded(const T& initialValue);
 		void HandleUpdated();
 		void CreatePreferencesTimer();
-		virtual bool DataItem_TX_Now() override
-		{
-			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
-			if(result) Update_Preference("Update");
-			return result;
-		}
-		virtual bool NewRXValueReceived(void* Object) override
-		{
-			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object);
-			if(result) Update_Preference("Update");
-			return result;
-		}
+		virtual bool DataItem_TX_Now() override;
+		virtual bool NewRXValueReceived(void* Object) override;
 };
 
 #endif

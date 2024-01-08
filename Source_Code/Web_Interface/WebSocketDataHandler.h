@@ -129,16 +129,19 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
     
-    void NewRxValueReceived(T* object)
+    bool NewRxValueReceived(T* object)
     {
-      T Value = *static_cast<T*>(object);
+      T Value = *object;
+      bool ValueChanged = false;
       if(m_DataItem.GetValue() != Value)
       {
         m_DataItem.SetValue(Value);
+        ValueChanged = true;
         ESP_LOGI( "WebSocketDataHandler: NewRxValueReceived"
                 , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
                 , m_DataItem.GetValueAsString());
       }
+      return ValueChanged;
     }
     void SetNewTxValue(T* Object)
     {
