@@ -30,7 +30,7 @@ class BluetoothConnectionStatusCallee
 {
 	public:
 		BluetoothConnectionStatusCallee(){};
-		virtual void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus) = 0;
+		virtual void BluetoothConnectionStatusChanged(const ConnectionStatus_t ConnectionStatus) = 0;
 };
 
 class BluetoothConnectionStatusCaller

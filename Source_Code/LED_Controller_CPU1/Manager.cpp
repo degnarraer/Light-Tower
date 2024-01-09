@@ -47,8 +47,8 @@ void Manager::Setup()
   m_I2S_Out.Setup();
   m_Mic_In.SetCallback(this);
   m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
-  //SetInputType(InputType_Bluetooth);
-  SetInputType(InputType_Microphone);
+  SetInputType(InputType_Bluetooth);
+  //SetInputType(InputType_Microphone);
 }
 
 
@@ -85,14 +85,18 @@ void Manager::SetInputType(InputType_t Type)
   switch(m_InputType)
   {
     case InputType_Microphone:
-      //m_BT_In.StopDevice();
-      //m_Mic_In.StartDevice();
-      //m_I2S_Out.StartDevice();
+      m_BT_In.StopDevice();
+      m_Mic_In.StartDevice();
+      m_I2S_Out.StartDevice();
     break;
     case InputType_Bluetooth:
-      //m_BT_In.StartDevice(m_SinkSSID.c_str(), m_SinkReConnect);
-      //m_Mic_In.StopDevice();
-      //m_I2S_Out.StopDevice();
+    {
+      bool ReConnect;
+      m_BluetoothSinkAutoReConnect.GetValue(&ReConnect, 1);
+      m_BT_In.StartDevice("LED TOWER OF POWER", ReConnect);
+      m_Mic_In.StopDevice();
+      m_I2S_Out.StopDevice();
+    }
     break;
     default:
       m_BT_In.StopDevice();
@@ -141,9 +145,11 @@ void Manager::MoveDataToStatisticalEngine()
 //BluetoothConnectionStateCallee Callback
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
-  if(m_BluetoothConnectionStatus.GetValue() != ConnectionStatus)
+  ConnectionStatus_t CurrentConnectionStatus;
+  m_BluetoothConnectionStatus.GetValue(&CurrentConnectionStatus, 1);
+  if(CurrentConnectionStatus != ConnectionStatus)
   {
-    m_BluetoothConnectionStatus.SetValue(ConnectionStatus);
+    m_BluetoothConnectionStatus.SetValue(&ConnectionStatus, 1);
     switch(ConnectionStatus)
     {
       case ConnectionStatus_t::Disconnected:

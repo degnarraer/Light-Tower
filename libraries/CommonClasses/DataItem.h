@@ -62,8 +62,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		String GetName();
 		void GetValue(void* Object, size_t Count);
 		String GetValueAsString();
-		void SetNewTxValue(T* Value, size_t Count);
-		void SetValue(T *Value, size_t Count);
+		void SetNewTxValue(const T* Value, const size_t Count);
+		void SetValue(const T *Value, size_t Count);
 		size_t GetCount();
 		void SetDataLinkEnabled(bool enable);
 		bool EqualsValue(T *Object, size_t Count)

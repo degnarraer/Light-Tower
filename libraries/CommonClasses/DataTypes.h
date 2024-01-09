@@ -24,6 +24,24 @@ struct KeyValuePair
 };
 typedef KeyValuePair KVP;
 
+template <typename T>
+struct MyAllocator
+{
+	using value_type = T;
+
+	T* allocate(std::size_t n)
+	{
+		// Implement your custom allocation logic here
+		return static_cast<T*>(heap_caps_malloc(sizeof(T) * n, MALLOC_CAP_SPIRAM));
+	}
+
+	void deallocate(T* p, std::size_t n)
+	{
+		// Implement your custom deallocation logic here
+		heap_caps_free(p);
+	}
+};
+
 struct KeyValueTuple
 {
   String Key;

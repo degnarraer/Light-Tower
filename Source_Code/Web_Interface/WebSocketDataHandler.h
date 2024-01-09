@@ -39,7 +39,7 @@ class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) = 0;
+    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> *KeyValuePairs) = 0;
 };
 
 class WebSocketDataHandlerReceiver
@@ -77,8 +77,19 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     void WebSocketDataProcessor_Task();
-    String Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs);
+    String Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs);
     void NotifyClients(String TextString);
+    template<typename T>
+    std::vector<T>* AllocateVectorOnHeap(size_t count)
+    {
+        T* data = static_cast<T*>(heap_caps_malloc(sizeof(T) * count, MALLOC_CAP_SPIRAM));
+        if (data)
+        {
+            // Construct the vector with the allocated memory
+            return new std::vector<T>(data, data + count);
+        }
+        return nullptr;  // Allocation failed
+    }
 };
 
 
@@ -132,7 +143,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     bool NewRxValueReceived(T* Object, size_t Count)
     {
       bool ValueChanged = false;
-      if(false == m_DataItem.EqualsValue(Object, Count))
+      if(Object && false == m_DataItem.EqualsValue(Object, Count))
       {
         m_DataItem.SetValue(Object, Count);
         ValueChanged = true;
@@ -152,7 +163,14 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       T Value;
       m_DataItem.GetValue(&Value, COUNT);
-      return Value;
+      if(Value)
+      {
+        return Value;
+      }
+      else
+      {
+        return T();
+      }
     }
     
     String GetName()
@@ -168,26 +186,30 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_IsSender;
     std::vector<String> m_WidgetIds;
     DataItem<T, COUNT> &m_DataItem;
-    T m_OldValue;
+    T m_OldValue[COUNT];
     const bool &m_Debug;
     
-    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs)
+    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> *KeyValuePairs)
     {
-      T CurrentValue;
-      m_DataItem.GetValue(&CurrentValue, COUNT);
-      unsigned long currentMillis = millis();
-      unsigned long elapsedTime = currentMillis - m_Last_Update_Time;
-      if(CurrentValue != m_OldValue || HEARTBEAT_MS <= elapsedTime)
+      T CurrentValue[COUNT];
+      m_DataItem.GetValue(CurrentValue, COUNT);
+      if(CurrentValue)
       {
-        String CurrentValueString = GetValueAsStringForDataType(&CurrentValue, GetDataTypeFromTemplateType<T>(), COUNT);
-        ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
-        for (size_t i = 0; i < m_WidgetIds.size(); i++)
+        unsigned long currentMillis = millis();
+        unsigned long elapsedTime = currentMillis - m_Last_Update_Time;
+        bool ValueChanged = (memcmp(CurrentValue, m_OldValue, sizeof(T)*COUNT) != 0);
+        if(ValueChanged || HEARTBEAT_MS <= elapsedTime)
         {
-          ESP_LOGI("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
-          KeyValuePairs.push_back({ m_WidgetIds[i], CurrentValueString });
+          String CurrentValueString = GetValueAsStringForDataType(CurrentValue, GetDataTypeFromTemplateType<T>(), COUNT);
+          ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
+          for (size_t i = 0; i < m_WidgetIds.size(); i++)
+          {
+            ESP_LOGI("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
+            KeyValuePairs->push_back({ m_WidgetIds[i], CurrentValueString });
+          }
+          m_Last_Update_Time = millis();
+          memcpy(m_OldValue, CurrentValue, sizeof(T)*COUNT);
         }
-        m_Last_Update_Time = millis();
-        m_OldValue = CurrentValue;
       }
     }
     
@@ -206,14 +228,17 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
       if(Found)
       {
-        T NewValue;
-        if (SetValueFromFromStringForDataType(&NewValue, StringValue, GetDataTypeFromTemplateType<T>()))
+        T NewValue[COUNT];
+        if (SetValueFromFromStringForDataType(NewValue, StringValue, GetDataTypeFromTemplateType<T>()))
         {
-          m_DataItem.SetValue(&NewValue, 1); //TO DO HANDLE COUNT
-          String NewValueString = GetValueAsStringForDataType(&NewValue, GetDataTypeFromTemplateType<T>(), COUNT);
-          ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
-                  , "Web Socket Value: %s"
-                  , NewValueString.c_str());
+          if(NewValue)
+          {
+            m_DataItem.SetValue(NewValue, COUNT);
+            String NewValueString = GetValueAsStringForDataType(NewValue, GetDataTypeFromTemplateType<T>(), COUNT);
+            ESP_LOGI( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink"
+                    , "Web Socket Value: %s"
+                    , NewValueString.c_str());
+          }
         }
       }
       return Found;

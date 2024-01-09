@@ -58,7 +58,7 @@ class Manager: public NamedItem
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
 
     //BluetoothConnectionStatusCallee Callback 
-    void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
+    void BluetoothConnectionStatusChanged(const ConnectionStatus_t ConnectionStatus);
     
     //BluetoothActiveDeviceUpdatee Callback 
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);

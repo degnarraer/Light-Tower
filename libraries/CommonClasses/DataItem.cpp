@@ -89,7 +89,14 @@ template <typename T, int COUNT>
 void DataItem<T, COUNT>::GetValue(void* Object, size_t Count)
 {
 	assert(Count == COUNT && "Counts must be equal");
-	memcpy(Object, mp_Value, sizeof(T)*Count);
+	if(mp_Value)
+	{
+		memcpy(Object, mp_Value, sizeof(T)*Count);
+	}
+	else
+	{
+		*reinterpret_cast<T**>(Object) = nullptr;
+	}
 }
 
 template <typename T, int COUNT>
@@ -99,7 +106,7 @@ String DataItem<T, COUNT>::GetValueAsString()
 }
 
 template <typename T, int COUNT>
-void DataItem<T, COUNT>::SetNewTxValue(T* Value, size_t Count)
+void DataItem<T, COUNT>::SetNewTxValue(const T* Value, const size_t Count)
 {
 	ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
 	SetValue(Value, Count);
@@ -125,7 +132,7 @@ void DataItem<T, COUNT>::SetValue(T Value)
 */
 
 template <typename T, int COUNT>
-void DataItem<T, COUNT>::SetValue(T *Value, size_t Count)
+void DataItem<T, COUNT>::SetValue(const T *Value, size_t Count)
 {
 	assert(Value != nullptr && "Value must not be null");
 	assert(mp_Value != nullptr && "mp_Value must not be null");
@@ -317,7 +324,7 @@ template <typename T, int COUNT>
 bool DataItemWithPreferences<T, COUNT>::DataItem_TX_Now()
 {
 	bool result = DataItem<T, COUNT>::DataItem_TX_Now();
-	if(result) Update_Preference("Update");
+	if(result) Update_Preference("Updated");
 	return result;
 }
 
@@ -325,7 +332,7 @@ template <typename T, int COUNT>
 bool DataItemWithPreferences<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 {
 	bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
-	if(result) Update_Preference("Update");
+	if(result) Update_Preference("Updated");
 	return result;
 }
 

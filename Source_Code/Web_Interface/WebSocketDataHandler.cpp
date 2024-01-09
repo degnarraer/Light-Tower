@@ -11,11 +11,12 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     std::vector<KVP> KeyValuePairs = std::vector<KVP>();
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
-      m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(KeyValuePairs);
-    }
-    if(KeyValuePairs.size() > 0)
-    {
-      NotifyClients(Encode_Widget_Values_To_JSON(KeyValuePairs));
+      m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(&KeyValuePairs);
+      if(KeyValuePairs.size() > 0)
+      {
+        NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
+        KeyValuePairs.clear();
+      }
     }
   }  
 }
@@ -77,14 +78,14 @@ bool WebSocketDataProcessor::ProcessWebSocketValueAndSendToDatalink(String Widge
   return WidgetFound;
 }
 
-String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> &KeyValuePairs)
+String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs)
 {
   JSONVar JSONVars;
-  for(int i = 0; i < KeyValuePairs.size(); ++i)
+  for(int i = 0; i < KeyValuePairs->size(); ++i)
   {
     JSONVar SettingValues;
-    SettingValues["Id"] = KeyValuePairs[i].Key;
-    SettingValues["Value"] = KeyValuePairs[i].Value;
+    SettingValues["Id"] = KeyValuePairs->at(i).Key;
+    SettingValues["Value"] = KeyValuePairs->at(i).Value;
     JSONVars["WidgetValue" + String(i)] = SettingValues; 
   }
   String Result = JSON.stringify(JSONVars);
