@@ -47,8 +47,15 @@ class SettingsWebServerManager
     void InitializePreferences()
     {
       m_Preferences.begin("Settings", false);
-      if(m_Preferences.getBool("Pref_Reset", false)) m_Preferences.clear();
+      m_Preferences.putBool("Pref_Reset", true);
+      if(m_Preferences.getBool("Pref_Reset", false)) ClearPreferences();
       m_Preferences.putBool("Pref_Reset", false);
+    }
+
+    void ClearPreferences()
+    {
+      m_Preferences.clear();
+      ESP_LOGI("Settings Web Server: ClearPreferences", "Preferences Cleared");
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -96,7 +103,7 @@ class SettingsWebServerManager
     WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Sink Enable Web Socket Handler", {"Sink_BT_Enable_Toggle_Button"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
 
     //Sink SSID
-    DataItemWithPreferences<char, 50> m_BluetoothSinkSSID = DataItemWithPreferences<char, 50>( "BT_Sink_SSID", ssid[0], RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager);
+    DataItemWithPreferences<char, 50> m_BluetoothSinkSSID = DataItemWithPreferences<char, 50>( "BT_Sink_Name", *ssid, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager);
     //WebSocketDataHandler<String> m_BluetoothSinkSSID_DataHandler = WebSocketDataHandler<String>( "Bluetooth Sink SSID Web Socket Handler", {"Sink_SSID_Text_Box"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkSSID, false );
 
 

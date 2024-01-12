@@ -280,32 +280,15 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				for(int i = 0; i < QueueCount; ++i)
 				{
 					char message[MaxMessageLength];
-					if ( xQueuePeek(m_TXQueue, message, 0) == pdTRUE )
+					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 					{
-						ESP_LOGI("SerialPortMessageManager_TxTask", "Serial Port Write Bytes Available: %i", m_Serial.availableForWrite());
-						if (m_Serial.availableForWrite() >= strlen(message))
-						{
-							if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
-							{
-								ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
-								m_Serial.println(String(message).c_str());
-							}
-							else
-							{
-								ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
-							}
-						}
-						else
-						{
-							ESP_LOGW("SerialPortMessageManager_TxTask", "WARNING! Serial Port Tx Buffer Full.");
-							break;
-						}
+						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
+						m_Serial.println(String(message).c_str());
 					}
 					else
 					{
-						ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Peek at Message.");
+						ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
 					}
-					
 				}
 			}
 		}

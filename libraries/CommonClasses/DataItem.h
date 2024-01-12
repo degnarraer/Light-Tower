@@ -76,7 +76,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		T *mp_RxValue;
 		T *mp_TxValue;
 		T *mp_InitialValue;
-		T m_InitialValue;
+		const T &m_InitialValue;
 		const String m_Name;
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
@@ -117,7 +117,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		bool m_PreferenceTimerActive = false;
 		void InitializeNVM();
 		void HandleLoaded(const T& initialValue);
-		void HandleUpdated();
+		void HandleUpdated(const T& value);
 		void CreatePreferencesTimer();
 		virtual bool DataItem_TX_Now() override;
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override;

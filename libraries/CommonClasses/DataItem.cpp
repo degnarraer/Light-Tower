@@ -55,10 +55,10 @@ void DataItem<T, COUNT>::Setup()
 	{
 		for (int i = 0; i < COUNT; ++i)
 		{
-			memcpy(mp_Value+i, &m_InitialValue, sizeof(T));
-			memcpy(mp_RxValue+i, &m_InitialValue, sizeof(T));
-			memcpy(mp_TxValue+i, &m_InitialValue, sizeof(T));
-			memcpy(mp_InitialValue+i, &m_InitialValue, sizeof(T));
+			memcpy(mp_Value+i, &m_InitialValue+i, sizeof(T));
+			memcpy(mp_RxValue+i, &m_InitialValue+i, sizeof(T));
+			memcpy(mp_TxValue+i, &m_InitialValue+i, sizeof(T));
+			memcpy(mp_InitialValue+i, &m_InitialValue+i, sizeof(T));
 		}
 		SetDataLinkEnabled(true);
 	}
@@ -354,20 +354,13 @@ void DataItemWithPreferences<T, COUNT>::InitializeNVM()
 {
 	if(m_Preferences)
 	{
-		if(1 == COUNT)
+		if (true == m_Preferences->isKey(this->m_Name.c_str()))
 		{
-			if (true == m_Preferences->isKey(this->m_Name.c_str()))
-			{
-				Update_Preference("Loaded");
-			}
-			else
-			{
-				Update_Preference("Initialized");
-			}
+			Update_Preference("Loaded");
 		}
 		else
 		{
-			ESP_LOGE("Dataitem: InitializeNVM", "Cannot use preferences for items with non 1 COUNT size");
+			Update_Preference("Initialized");
 		}
 	}
 }
@@ -402,19 +395,22 @@ void DataItemWithPreferences<T, COUNT>::Update_Preference(const String &UpdateTy
 		return;
 	}
 
-    if (UpdateType.equals("Loaded"))
+    if ( UpdateType.equals("Loaded") )
 	{
-        HandleLoaded(this->mp_InitialValue[0]);
+        HandleLoaded( this->mp_InitialValue[0] );
     } 
-	else if ( UpdateType.equals("Initialized") || 
-			  UpdateType.equals("Updated") || 
-			  UpdateType.equals("Timer") )
+	else if ( UpdateType.equals("Initialized") )
 	{
-        HandleUpdated();
-		if(UpdateType.equals("Timer"))
-		{
-			m_PreferenceTimerActive = false;
-		}
+		HandleUpdated( this->mp_InitialValue[0] );
+	}
+	else if ( UpdateType.equals("Updated") )
+	{
+        HandleUpdated( this->mp_Value[0] );
+	}		
+	else if ( UpdateType.equals("Timer") )
+	{
+        HandleUpdated( this->mp_Value[0] );
+		m_PreferenceTimerActive = false;
 		m_Preferences_Last_Update = currentMillis;
     }
 	else
@@ -489,12 +485,48 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
 	else if (std::is_same<T, char>::value)
 	{
 		char value[COUNT];
-		memcpy(&value, &initialValue, sizeof(char)*COUNT);
+		// Copy characters from initialValue to value, ensuring null-termination.
+		for (size_t i = 0; i < COUNT - 1; ++i)
+		{
+			value[i] = ((char*)(&initialValue))[i];
+		}
+		value[COUNT - 1] = '\0';
+
 		String result = m_Preferences->getString(this->m_Name.c_str(), value);
-        assert(result.length() <= COUNT);
-		memcpy(this->mp_Value, &result, result.length());
-        memcpy(this->mp_TxValue, &result, result.length());
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double", this->m_Name.c_str());	
+		ESP_LOGI("DataItem: HandleLoaded", "GetString: \"%s\" String: \"%s\"", result.c_str(), result.c_str());
+
+		// Check the length before copying to avoid buffer overflow.
+		assert(result.length() <= COUNT);
+
+		// Copy characters from result to mp_Value, ensuring null-termination.
+		size_t i = 0;
+		while (i < COUNT - 1 && i < result.length())
+		{
+			this->mp_Value[i] = result[i];
+			++i;
+		}
+
+		// Null-terminate mp_Value if needed.
+		if (i < COUNT)
+		{
+			this->mp_Value[i] = '\0';
+		}
+
+		// Copy characters from result to mp_TxValue, ensuring null-termination.
+		i = 0;
+		while (i < COUNT - 1 && i < result.length())
+		{
+			this->mp_TxValue[i] = result[i];
+			++i;
+		}
+
+		// Null-terminate mp_TxValue if needed.
+		if (i < COUNT)
+		{
+			this->mp_TxValue[i] = '\0';
+		}
+
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded char array", this->m_Name.c_str());
     }
 	else
 	{
@@ -504,27 +536,38 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
 }
 
 template <typename T, int COUNT>
-void DataItemWithPreferences<T, COUNT>::HandleUpdated()
-{
-	
+void DataItemWithPreferences<T, COUNT>::HandleUpdated(const T& value)
+{	
     if (std::is_same<T, bool>::value)
 	{
-        m_Preferences->putBool(this->m_Name.c_str(), this->mp_Value[0]);
+        m_Preferences->putBool(this->m_Name.c_str(), value);
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving bool", this->m_Name.c_str());	
+    } 
+	else if (std::is_same<T, char>::value)
+	{
+		char charValues[COUNT];
+		// Copy characters from initialValue to value, ensuring null-termination.
+		for (size_t i = 0; i < COUNT - 1; ++i)
+		{
+			charValues[i] = ((char*)(&value))[i];
+		}
+		charValues[COUNT - 1] = '\0';
+        m_Preferences->putString(this->m_Name.c_str(), charValues);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving String: %s", this->m_Name.c_str(), String(charValues).c_str() );	
     } 
 	else if (std::is_integral<T>::value)
 	{
-        m_Preferences->putInt(this->m_Name.c_str(), this->mp_Value[0]);
+        m_Preferences->putInt(this->m_Name.c_str(), value);
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer", this->m_Name.c_str());	
     } 
 	else if (std::is_floating_point<T>::value)
 	{
-        m_Preferences->putFloat(this->m_Name.c_str(), this->mp_Value[0]);
+        m_Preferences->putFloat(this->m_Name.c_str(), value);
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving float", this->m_Name.c_str());	
     }
 	else if (std::is_same<T, double>::value)
 	{
-        m_Preferences->putDouble(this->m_Name.c_str(), this->mp_Value[0]);
+        m_Preferences->putDouble(this->m_Name.c_str(), value);
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double", this->m_Name.c_str());	
     } 
 	else 
