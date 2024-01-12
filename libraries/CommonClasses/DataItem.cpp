@@ -46,19 +46,42 @@ DataItem<T, COUNT>::~DataItem()
 template <typename T, int COUNT>				 
 void DataItem<T, COUNT>::Setup()
 {
-	ESP_LOGE("DataItem<T, COUNT>::Setup()", "Allocating Memory");
+	ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 	mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	if (mp_Value && mp_RxValue && mp_TxValue && mp_InitialValue)
 	{
-		for (int i = 0; i < COUNT; ++i)
+		if (std::is_same<T, char>::value)
 		{
-			memcpy(mp_Value+i, &m_InitialValue+i, sizeof(T));
-			memcpy(mp_RxValue+i, &m_InitialValue+i, sizeof(T));
-			memcpy(mp_TxValue+i, &m_InitialValue+i, sizeof(T));
-			memcpy(mp_InitialValue+i, &m_InitialValue+i, sizeof(T));
+			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Char", m_Name.c_str());
+			bool eolFound = false;
+			for (int i = 0; i < COUNT; ++i)
+			{
+				char value;
+				memcpy(&value, &m_InitialValue+i, sizeof(char));
+				if (eolFound || memcmp(&value, "\0", sizeof(char)) == 0 || i == COUNT-1)
+				{
+					eolFound = true;
+					memcpy(&value, "\0", sizeof(char));
+				}
+				memcpy(mp_Value+i, &value, sizeof(char));
+				memcpy(mp_RxValue+i, &value, sizeof(char));
+				memcpy(mp_TxValue+i, &value, sizeof(char));
+				memcpy(mp_InitialValue+i, &value, sizeof(char));
+			}
+		}
+		else
+		{
+			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Other", m_Name.c_str());
+			for (int i = 0; i < COUNT; ++i)
+			{
+				memcpy(mp_Value+i, &m_InitialValue, sizeof(T));
+				memcpy(mp_RxValue+i, &m_InitialValue, sizeof(T));
+				memcpy(mp_TxValue+i, &m_InitialValue, sizeof(T));
+				memcpy(mp_InitialValue+i, &m_InitialValue, sizeof(T));
+			}
 		}
 		SetDataLinkEnabled(true);
 	}
@@ -485,47 +508,24 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
 	else if (std::is_same<T, char>::value)
 	{
 		char value[COUNT];
-		// Copy characters from initialValue to value, ensuring null-termination.
 		for (size_t i = 0; i < COUNT - 1; ++i)
 		{
 			value[i] = ((char*)(&initialValue))[i];
+			this->mp_Value[i] = '\0';
+			this->mp_TxValue[i] = '\0';
 		}
 		value[COUNT - 1] = '\0';
-
+		
 		String result = m_Preferences->getString(this->m_Name.c_str(), value);
-		ESP_LOGI("DataItem: HandleLoaded", "GetString: \"%s\" String: \"%s\"", result.c_str(), result.c_str());
-
-		// Check the length before copying to avoid buffer overflow.
 		assert(result.length() <= COUNT);
-
-		// Copy characters from result to mp_Value, ensuring null-termination.
+		
 		size_t i = 0;
 		while (i < COUNT - 1 && i < result.length())
 		{
 			this->mp_Value[i] = result[i];
-			++i;
-		}
-
-		// Null-terminate mp_Value if needed.
-		if (i < COUNT)
-		{
-			this->mp_Value[i] = '\0';
-		}
-
-		// Copy characters from result to mp_TxValue, ensuring null-termination.
-		i = 0;
-		while (i < COUNT - 1 && i < result.length())
-		{
 			this->mp_TxValue[i] = result[i];
 			++i;
 		}
-
-		// Null-terminate mp_TxValue if needed.
-		if (i < COUNT)
-		{
-			this->mp_TxValue[i] = '\0';
-		}
-
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded char array", this->m_Name.c_str());
     }
 	else

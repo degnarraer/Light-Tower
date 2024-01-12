@@ -47,7 +47,7 @@ class SettingsWebServerManager
     void InitializePreferences()
     {
       m_Preferences.begin("Settings", false);
-      m_Preferences.putBool("Pref_Reset", true);
+      //m_Preferences.putBool("Pref_Reset", true);
       if(m_Preferences.getBool("Pref_Reset", false)) ClearPreferences();
       m_Preferences.putBool("Pref_Reset", false);
     }
