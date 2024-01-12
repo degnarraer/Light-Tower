@@ -188,7 +188,7 @@ bool SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t Data
 		}
 		else
 		{
-			ESP_LOGD("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
+			ESP_LOGI("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
 			result = QueueMessage(message);
 		}
 	}
@@ -282,6 +282,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 					char message[MaxMessageLength];
 					if ( xQueuePeek(m_TXQueue, message, 0) == pdTRUE )
 					{
+						ESP_LOGI("SerialPortMessageManager_TxTask", "Serial Port Write Bytes Available: %i", m_Serial.availableForWrite());
 						if (m_Serial.availableForWrite() >= strlen(message))
 						{
 							if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
@@ -297,6 +298,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 						else
 						{
 							ESP_LOGW("SerialPortMessageManager_TxTask", "WARNING! Serial Port Tx Buffer Full.");
+							break;
 						}
 					}
 					else

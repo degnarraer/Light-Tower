@@ -51,7 +51,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 {
 	public:
 		DataItem( const String name
-				, const T initialValue
+				, const T &initialValue
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
@@ -99,7 +99,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 {
 	public:
 		DataItemWithPreferences( const String name
-							   , const T initialValue
+							   , const T &initialValue
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate

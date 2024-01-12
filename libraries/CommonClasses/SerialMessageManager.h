@@ -24,7 +24,7 @@
 #include <Helpers.h>
 
 #define MaxQueueCount 10
-#define MaxMessageLength 250
+#define MaxMessageLength 350
 
 class SetupCalleeInterface
 {

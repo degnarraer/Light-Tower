@@ -5,15 +5,16 @@
 
 template class DataItem<float, 1>;
 template class DataItem<bool, 1>;
-template class DataItem<String, 1>;
+template class DataItem<char, 50>;
 template class DataItem<ConnectionStatus_t, 1>;
 template class DataItem<BT_Info_With_LastUpdateTime_t, 1>;
 template class DataItemWithPreferences<float, 1>;
 template class DataItemWithPreferences<bool, 1>;
+template class DataItemWithPreferences<char, 50>;
 
 template <typename T, int COUNT>
 DataItem<T, COUNT>::DataItem( const String name
-							, const T initialValue
+							, const T &initialValue
 							, const RxTxType_t rxTxType
 							, const UpdateStoreType_t updateStoreType
 							, const uint16_t rate
@@ -295,7 +296,7 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 
 template <typename T, int COUNT>
 DataItemWithPreferences<T, COUNT>::DataItemWithPreferences( const String name
-														  , const T initialValue
+														  , const T &initialValue
 														  , const RxTxType_t rxTxType
 														  , const UpdateStoreType_t updateStoreType
 														  , const uint16_t rate
@@ -384,7 +385,6 @@ void DataItemWithPreferences<T, COUNT>::Static_Update_Preference(void *arg)
 template <typename T, int COUNT>
 void DataItemWithPreferences<T, COUNT>::Update_Preference(const String &UpdateType)
 {
-    static_assert(COUNT == 1, "Count should be 1 to do this");
     if(nullptr == m_Preferences) return;
     assert((UpdateType == "Initialized" || UpdateType == "Loaded" || UpdateType == "Updated" || UpdateType == "Timer") && "Misuse of function");
 
@@ -428,6 +428,7 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
 {
     if (std::is_same<T, bool>::value)
 	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
 		bool value;
 		memcpy(&value , &initialValue, sizeof(bool));
 		bool result = m_Preferences->getBool(this->m_Name.c_str(), value);
@@ -437,6 +438,7 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
     }
 	else if (std::is_same<T, int32_t>::value)
 	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
 		int32_t value;
 		memcpy(&value , &initialValue, sizeof(int32_t));
 		int32_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
@@ -446,6 +448,7 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
     }
 	else if (std::is_same<T, int16_t>::value)
 	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
 		int16_t value;
 		memcpy(&value , &initialValue, sizeof(int16_t));
 		int16_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
@@ -455,6 +458,7 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
     }
 	else if (std::is_same<T, int8_t>::value)
 	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
 		int8_t value;
 		memcpy(&value , &initialValue, sizeof(int8_t));
 		int8_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
@@ -464,6 +468,7 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
     }
 	else if (std::is_same<T, float>::value)
 	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
 		float value;
 		memcpy(&value , &initialValue, sizeof(float));
 		float result = m_Preferences->getFloat(this->m_Name.c_str(), value);
@@ -473,11 +478,22 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
     }
 	else if (std::is_same<T, double>::value)
 	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
 		double value;
 		memcpy(&value , &initialValue, sizeof(double));
 		double result = m_Preferences->getDouble(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(double));
         memcpy(this->mp_TxValue, &result, sizeof(double));
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double", this->m_Name.c_str());	
+    }
+	else if (std::is_same<T, char>::value)
+	{
+		char value[COUNT];
+		memcpy(&value, &initialValue, sizeof(char)*COUNT);
+		String result = m_Preferences->getString(this->m_Name.c_str(), value);
+        assert(result.length() <= COUNT);
+		memcpy(this->mp_Value, &result, result.length());
+        memcpy(this->mp_TxValue, &result, result.length());
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double", this->m_Name.c_str());	
     }
 	else

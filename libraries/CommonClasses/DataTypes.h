@@ -191,13 +191,14 @@ enum BitLength_t
 
 enum DataType_t
 {
-  DataType_bool_t,
+  DataType_Bool_t,
   DataType_Int8_t,
   DataType_Int16_t,
   DataType_Int32_t,
   DataType_Uint8_t,
   DataType_Uint16_t,
   DataType_Uint32_t,
+  DataType_Char_t,
   DataType_String_t,
   DataType_SSID_Info_t,
   DataType_BT_Info_With_LastUpdateTime_t,
@@ -214,13 +215,14 @@ enum DataType_t
 
 static const char* DataTypeStrings[] =
 {
-  "bool_t",
+  "Bool_t",
   "Int8_t",
   "Int16_t",
   "Int32_t",
   "Uint8_t",
   "Uint16_t",
   "Uint32_t",
+  "Char_t",
   "String_t",
   "SSID_Info_t",
   "BT_Info_With_LastUpdateTime_t",
@@ -334,16 +336,17 @@ class DataTypeFunctions
 		DataType_t GetDataTypeFromTemplateType()
 		{
 			DataType_t Result;
-			if(		std::is_same<T, bool>::value) 								return DataType_bool_t;
+			if(	std::is_same<T, bool>::value) 									return DataType_Bool_t;
 			else if(std::is_same<T, int8_t>::value) 							return DataType_Int8_t;
 			else if(std::is_same<T, int16_t>::value) 							return DataType_Int16_t;
 			else if(std::is_same<T, int32_t>::value) 							return DataType_Int32_t;
 			else if(std::is_same<T, uint8_t>::value) 							return DataType_Uint8_t;
 			else if(std::is_same<T, uint16_t>::value) 							return DataType_Uint16_t;
 			else if(std::is_same<T, uint32_t>::value) 							return DataType_Uint32_t;
+			else if(std::is_same<T, char>::value) 								return DataType_Char_t;
 			else if(std::is_same<T, String>::value) 							return DataType_String_t;
 			else if(std::is_same<T, SSID_Info_t>::value) 						return DataType_SSID_Info_t;
-			else if(std::is_same<T, BT_Info_With_LastUpdateTime_t>::value) 	return DataType_BT_Info_With_LastUpdateTime_t;
+			else if(std::is_same<T, BT_Info_With_LastUpdateTime_t>::value) 		return DataType_BT_Info_With_LastUpdateTime_t;
 			else if(std::is_same<T, float>::value) 								return DataType_Float_t;
 			else if(std::is_same<T, double>::value) 							return DataType_Double_t;
 			else if(std::is_same<T, ProcessedSoundData_t>::value) 				return DataType_ProcessedSoundData_t;
@@ -359,7 +362,7 @@ class DataTypeFunctions
 			uint32_t Result = 0;
 			switch(DataType)
 			{
-				case DataType_bool_t:
+				case DataType_Bool_t:
 					Result = sizeof(bool);
 				break;
 				
@@ -385,6 +388,10 @@ class DataTypeFunctions
 				
 				case DataType_Uint32_t:
 					Result = sizeof(uint32_t);
+				break;
+				
+				case DataType_Char_t:
+					Result = sizeof(char);
 				break;
 				
 				case DataType_String_t:
@@ -442,7 +449,7 @@ class DataTypeFunctions
 			bool Result = true;
 			switch (DataType)
 			{
-			case DataType_bool_t:
+			case DataType_Bool_t:
 				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Bool Received: %s", Value.c_str());
 				*((bool *)Buffer) = Value.equals("true");
 				break;
@@ -472,6 +479,10 @@ class DataTypeFunctions
 				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Double_t Received: %s", Value.c_str());
 				*(double *)Buffer = Value.toDouble();
 				break;
+			case DataType_Char_t:
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Char_t Received: %s", Value.c_str());
+				*(char *)Buffer = Value[0];
+				break;
 			case DataType_String_t:
 			case DataType_SSID_Info_t:
 			case DataType_BT_Info_With_LastUpdateTime_t:
@@ -500,7 +511,7 @@ class DataTypeFunctions
 
 				switch (DataType)
 				{
-				case DataType_bool_t:
+				case DataType_Bool_t:
 					resultString += (*((const bool *)Buffer + i) ? "true" : "false");
 					break;
 				case DataType_Int8_t:
@@ -523,6 +534,9 @@ class DataTypeFunctions
 					break;
 				case DataType_Double_t:
 					resultString += String(*((const double *)Buffer + i));
+					break;
+				case DataType_Char_t:
+					resultString += String(*((const char *)Buffer + i));
 					break;
 				case DataType_String_t:
 				case DataType_SSID_Info_t:
