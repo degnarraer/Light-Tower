@@ -43,7 +43,7 @@ enum UpdateStoreType_t
 	UpdateStoreType_Count
 };
 
-template <typename T, int COUNT>
+template <typename T, size_t COUNT>
 class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
 			  , public SetupCalleeInterface
@@ -94,7 +94,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		static void StaticDataItem_Periodic_TX(void *arg);
 };
 
-template <typename T, int COUNT>
+template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
 {
 	public:
