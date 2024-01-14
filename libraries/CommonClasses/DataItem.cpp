@@ -1,8 +1,5 @@
 #include "DataItem.h"
 
-#define TIMER_TIME 10000UL
-#define TIMER_BUFFER 1000UL
-
 template class DataItem<float, 1>;
 template class DataItem<bool, 1>;
 template class DataItem<char, 50>;

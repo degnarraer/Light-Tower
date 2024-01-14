@@ -135,17 +135,17 @@ class SettingsWebServerManager
     //TBD
     
     //Bluetooth Source Auto Reconnect
-    bool m_BluetoothSourceAutoReConnect_InitialValue = false;
+    const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Enable Web Socket Handler", {"Source_BT_Enable_Toggle_Button"}, m_WebSocketDataProcessor, true, true, m_BluetoothSourceAutoReConnect, false );
 
     //Source Connection Status
-    ConnectionStatus_t m_SourceConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
+    const ConnectionStatus_t m_SourceConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SourceConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", m_SourceConnectionStatus_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<ConnectionStatus_t, 1> m_SourceConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( "Source Connection Status Web Socket Handler", {"Source_Connection_Status"}, m_WebSocketDataProcessor, false, true, m_SourceConnectionStatus, false );    
 
     //Source Reset
-    bool m_SourceReset_InitialValue = false;
+    const bool m_SourceReset_InitialValue = false;
     DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "Bt_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( "Source Reset Web Socket Handler", {"Source_BT_Reset_Toggle_Button"}, m_WebSocketDataProcessor, true, true, m_SourceReset, false );    
 

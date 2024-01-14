@@ -19,6 +19,9 @@
 #ifndef DataItem_H
 #define DataItem_H
 
+#define TIMER_TIME 300000UL
+#define TIMER_BUFFER 1000UL
+
 #include "SerialMessageManager.h"
 #include <Helpers.h>
 #include <Preferences.h>
@@ -100,6 +103,53 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		static void StaticDataItem_Periodic_TX(void *arg);
 };
 
+class StringDataItem: public DataItem<char, 50>
+{
+	public:
+		StringDataItem( const String name
+					  , const char* initialValue
+					  , const RxTxType_t rxTxType
+					  , const UpdateStoreType_t updateStoreType
+					  , const uint16_t rate
+					  , SerialPortMessageManager &serialPortMessageManager )
+					  : DataItem( name
+								, initialValue
+								, rxTxType
+								, updateStoreType
+								, rate
+								, serialPortMessageManager )
+		{
+		  
+		}
+		StringDataItem( const String name
+					  , const char& initialValue
+					  , const RxTxType_t rxTxType
+					  , const UpdateStoreType_t updateStoreType
+					  , const uint16_t rate
+					  , SerialPortMessageManager &serialPortMessageManager )
+					  : DataItem( name
+								, initialValue
+								, rxTxType
+								, updateStoreType
+								, rate
+								, serialPortMessageManager )
+		{
+		  
+		}
+		
+		virtual ~StringDataItem() override
+		{
+		}
+		virtual void Setup() override
+		{
+			DataItem::Setup();
+		}
+	protected:
+		virtual bool DataItem_TX_Now(){ return false; }
+		virtual bool NewRXValueReceived(void* Object, size_t Count){ return false; }
+};
+
+
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
 {
@@ -135,5 +185,51 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual bool DataItem_TX_Now() override;
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
 };
+
+class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
+{
+	public:
+		StringDataItemWithPreferences( const String name
+								     , const char* initialValue
+								     , const RxTxType_t rxTxType
+								     , const UpdateStoreType_t updateStoreType
+								     , const uint16_t rate
+								     , Preferences *preferences
+								     , SerialPortMessageManager &serialPortMessageManager )
+								     : DataItemWithPreferences<char, 50>( name
+																		, initialValue
+																		, rxTxType
+																		, updateStoreType
+																		, rate
+																		, preferences
+																		, serialPortMessageManager )
+																		{
+																			
+																		}
+		StringDataItemWithPreferences( const String name
+								     , const char& initialValue
+								     , const RxTxType_t rxTxType
+								     , const UpdateStoreType_t updateStoreType
+								     , const uint16_t rate
+								     , Preferences *preferences
+								     , SerialPortMessageManager &serialPortMessageManager )
+								     : DataItemWithPreferences<char, 50>( name
+																		, initialValue
+																		, rxTxType
+																		, updateStoreType
+																		, rate
+																		, preferences
+																		, serialPortMessageManager )
+																		{
+																			
+																		}
+		
+		virtual void Setup() override {}
+		virtual ~StringDataItemWithPreferences(){}
+	private:
+		virtual bool DataItem_TX_Now() override {}
+		virtual bool NewRXValueReceived(void* Object, size_t Count) override {}
+};
+
 
 #endif
