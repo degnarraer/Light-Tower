@@ -156,25 +156,6 @@ void DataItem<T, COUNT>::SetNewTxValue(const T* Value, const size_t Count)
 	SetValue(Value, Count);
 }
 
-/*
-template <typename T, int COUNT>
-void DataItem<T, COUNT>::SetValue(T Value)
-{
-	assert(mp_TxValue != nullptr && "mp_Value must not be null");
-	static_assert(COUNT == 1, "Count should be 1 to do this");
-	ESP_LOGD( "DataItem: SetValue"
-			, "\"%s\" Set Value: \"%s\""
-			, m_Name.c_str()
-			, GetValueAsStringForDataType(&Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
-	bool ValueChanged = (*mp_TxValue != Value);
-	*mp_TxValue = Value;
-	if(ValueChanged)
-	{
-		DataItem_Try_TX_On_Change();
-	}
-}
-*/
-
 template <typename T, size_t COUNT>
 void DataItem<T, COUNT>::SetValue(const T *Value, size_t Count)
 {
@@ -197,7 +178,7 @@ void DataItem<T, COUNT>::SetValue(const T *Value, size_t Count)
 template <typename T, size_t COUNT>
 size_t DataItem<T, COUNT>::GetCount()
 {
-	return COUNT;
+	return m_Count;
 }
 
 template <typename T, size_t COUNT>

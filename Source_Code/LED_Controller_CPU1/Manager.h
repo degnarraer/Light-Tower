@@ -92,7 +92,7 @@ class Manager: public NamedItem
     DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat", m_SinkConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager);
 
     const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";
-    DataItemWithPreferences<char, 50> m_BluetoothSinkName = DataItemWithPreferences<char, 50>( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     
     StatisticalEngine &m_StatisticalEngine;
     InputType_t m_InputType;

@@ -72,7 +72,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		void GetValue(void* Object, size_t Count);
 		String GetValueAsString(const String &Divider);
 		void SetNewTxValue(const T* Value, const size_t Count);
-		void SetValue(const T *Value, size_t Count);
+		virtual void SetValue(const T *Value, size_t Count);
 		size_t GetCount();
 		void SetDataLinkEnabled(bool enable);
 		bool EqualsValue(T *Object, size_t Count)
@@ -97,7 +97,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		bool m_DataLinkEnabled = true;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		esp_timer_handle_t m_TxTimer;
-		
+		size_t m_Count = COUNT;
 		void CreateTxTimer();
 		void DataItem_Periodic_TX();
 		static void StaticDataItem_Periodic_TX(void *arg);
@@ -136,22 +136,83 @@ class StringDataItem: public DataItem<char, 50>
 		{
 		  
 		}
-		
 		virtual ~StringDataItem()
 		{
 		}
-		virtual void Setup() override
+		void Setup() override
 		{
 			DataItem<char, 50>::Setup();
+		}
+		virtual void SetValue(const char* Value, size_t Count) override
+		{
+			assert(Value != nullptr && "Value must not be null");
+			assert(mp_Value != nullptr && "mp_Value must not be null");
+			String NewValue = String(Value);
+			String CurrentValue = String(mp_TxValue);
+			assert(NewValue.length() == Count);
+			ESP_LOGI( "DataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, NewValue.c_str() );
+			bool ValueChanged = CurrentValue.equals(NewValue);
+			if(ValueChanged)
+			{
+				for (size_t i = 0; i < this->GetCount(); ++i)
+				{
+					mp_TxValue[i] = '\0';
+				}
+				strcpy(mp_TxValue, Value);
+				this->DataItem_Try_TX_On_Change();
+			}
 		}
 	protected:
 		virtual bool DataItem_TX_Now() override 
 		{ 
-			return false; 
+			return DataItem<char, 50>::DataItem_TX_Now(); 
 		}
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override 
 		{ 
-			return false;
+			bool ValueUpdated = false;
+			String NewValue = String((char*)Object);
+			String CurrentRxValue = String(mp_RxValue);
+			String CurrentValue = String(mp_Value);
+			bool ValueChanged = CurrentRxValue.equals(NewValue);
+			if(ValueChanged)
+			{
+				for (size_t i = 0; i < this->GetCount(); ++i)
+				{
+					mp_RxValue[i] = '\0';
+				}
+				strcpy(mp_RxValue, NewValue.c_str());
+				ESP_LOGD( "DataItem: NewRXValueReceived"
+						, "\"%s\" New RX Value Received: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, ""));
+				
+				bool RxValueChanged = CurrentRxValue.equals(CurrentValue);
+				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
+				{
+					if(RxValueChanged)
+					{
+						for (size_t i = 0; i < this->GetCount(); ++i)
+						{
+							mp_Value[i] = '\0';
+						}
+						strcpy(mp_Value, mp_RxValue);
+						ValueUpdated = true;
+					}
+				}
+				if(RxTxType_Rx_Echo_Value == m_RxTxType)
+				{
+					for (size_t i = 0; i < this->GetCount(); ++i)
+					{
+						mp_TxValue[i] = '\0';
+					}
+					strcpy(mp_TxValue, mp_RxValue);
+					this->DataItem_TX_Now();
+				}
+			}
+			return ValueUpdated;
 		}
 };
 
@@ -175,10 +236,17 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , Preferences *preferences
 							   , SerialPortMessageManager &serialPortMessageManager );
 		
-		virtual void Setup() override;
+		void Setup() override;
 		virtual ~DataItemWithPreferences(){}
+		virtual void SetValue(const T *Value, size_t Count)
+		{
+			DataItem<T, COUNT>::SetValue(Value, Count);
+		}
 		static void Static_Update_Preference(void *arg);
 		void Update_Preference(const String &UpdateType);
+	protected:
+		bool DataItem_TX_Now() override;
+		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
 	private:
 		Preferences *m_Preferences = nullptr;
 		esp_timer_handle_t m_PreferenceTimer;
@@ -188,11 +256,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		void HandleLoaded();
 		void HandleUpdated(const T* value);
 		void CreatePreferencesTimer();
-		virtual bool DataItem_TX_Now() override;
-		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
 };
 
-class StringDataItemWithPreferences: public StringDataItem
+class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 {
 	public:
 		StringDataItemWithPreferences( const String name
@@ -202,11 +268,12 @@ class StringDataItemWithPreferences: public StringDataItem
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
-								     : StringDataItem( name
+								     : DataItemWithPreferences<char, 50>( name
 													 , initialValue
 													 , rxTxType
 													 , updateStoreType
 													 , rate
+													 , preferences
 													 , serialPortMessageManager )
 		{
 			
@@ -218,31 +285,87 @@ class StringDataItemWithPreferences: public StringDataItem
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
-								     : StringDataItem( name
-													 , initialValue
-													 , rxTxType
-													 , updateStoreType
-													 , rate
-													 , serialPortMessageManager )
+								     : DataItemWithPreferences<char, 50>( name
+																		, initialValue
+																		, rxTxType
+																		, updateStoreType
+																		, rate
+																		, preferences
+																		, serialPortMessageManager )
 		{
 			
 		}
 		
-		virtual void Setup() override 
-		{
-			StringDataItem::Setup();
-		}
 		virtual ~StringDataItemWithPreferences(){}
-	private:
-		virtual bool DataItem_TX_Now() override 
+		void SetValue(const char *Value, size_t Count) override
 		{
-			return false;
+			assert(Value != nullptr && "Value must not be null");
+			assert(mp_Value != nullptr && "mp_Value must not be null");
+			String NewValue = String(Value);
+			String CurrentValue = String(mp_TxValue);
+			assert(NewValue.length() == Count);
+			ESP_LOGI( "DataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, NewValue.c_str() );
+			bool ValueChanged = CurrentValue.equals(NewValue);
+			if(ValueChanged)
+			{
+				for (size_t i = 0; i < this->GetCount(); ++i)
+				{
+					mp_TxValue[i] = '\0';
+				}
+				strcpy(mp_TxValue, Value);
+				this->DataItem_Try_TX_On_Change();
+			}
 		}
-		virtual bool NewRXValueReceived(void* Object, size_t Count) override
+	private:
+		bool NewRXValueReceived(void* Object, size_t Count) override
 		{
-			return false;
+			bool ValueUpdated = false;
+			String NewValue = String((char*)Object);
+			String CurrentRxValue = String(mp_RxValue);
+			String CurrentValue = String(mp_Value);
+			bool ValueChanged = CurrentRxValue.equals(NewValue);
+			if(ValueChanged)
+			{
+				for (size_t i = 0; i < this->GetCount(); ++i)
+				{
+					mp_RxValue[i] = '\0';
+				}
+				strcpy(mp_RxValue, NewValue.c_str());
+				ESP_LOGD( "DataItem: NewRXValueReceived"
+						, "\"%s\" New RX Value Received: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, ""));
+				
+				bool RxValueChanged = CurrentRxValue.equals(CurrentValue);
+				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
+				{
+					if(RxValueChanged)
+					{
+						for (size_t i = 0; i < this->GetCount(); ++i)
+						{
+							mp_Value[i] = '\0';
+						}
+						strcpy(mp_Value, mp_RxValue);
+						ValueUpdated = true;
+					}
+				}
+				if(RxTxType_Rx_Echo_Value == m_RxTxType)
+				{
+					for (size_t i = 0; i < this->GetCount(); ++i)
+					{
+						mp_TxValue[i] = '\0';
+					}
+					strcpy(mp_TxValue, mp_RxValue);
+					this->DataItem_TX_Now();
+				}
+			}
+			return ValueUpdated;
 		}
 };
+
 
 
 #endif
