@@ -19,7 +19,7 @@
 #ifndef DataItem_H
 #define DataItem_H
 
-#define TIMER_TIME 300000UL
+#define TIMER_TIME 10000UL
 #define TIMER_BUFFER 1000UL
 
 #include "SerialMessageManager.h"
@@ -262,6 +262,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const uint16_t rate
 							   , Preferences *preferences
 							   , SerialPortMessageManager &serialPortMessageManager );
+							   
 		DataItemWithPreferences( const String name
 							   , const T& initialValue
 							   , const RxTxType_t rxTxType
@@ -281,7 +282,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
 };
 
-class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
+class StringDataItemWithPreferences: public StringDataItem
+								   , public PreferencesWrapper<char, 50>
 {
 	public:
 		StringDataItemWithPreferences( const String name
@@ -291,13 +293,13 @@ class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
-								     : DataItemWithPreferences<char, 50>( name
-																		, initialValue
-																		, rxTxType
-																		, updateStoreType
-																		, rate
-																		, preferences
-																		, serialPortMessageManager )
+								     : PreferencesWrapper<char, 50>(preferences)
+									 , StringDataItem( name
+													 , initialValue
+													 , rxTxType
+													 , updateStoreType
+													 , rate
+													 , serialPortMessageManager )
 		{
 			
 		}
@@ -308,13 +310,13 @@ class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
-								     : DataItemWithPreferences<char, 50>( name
-																		, initialValue
-																		, rxTxType
-																		, updateStoreType
-																		, rate
-																		, preferences
-																		, serialPortMessageManager )
+								     : PreferencesWrapper<char, 50>(preferences)
+									 , StringDataItem( name
+													 , initialValue
+													 , rxTxType
+													 , updateStoreType
+													 , rate
+													 , serialPortMessageManager )
 		{
 			
 		}
@@ -322,70 +324,11 @@ class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 		virtual ~StringDataItemWithPreferences(){}
 		void SetValue(const char *Value, size_t Count) override
 		{
-			assert(Value != nullptr && "Value must not be null");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
-			String NewValue = String(Value);
-			String CurrentValue = String(mp_TxValue);
-			assert(NewValue.length() == Count);
-			ESP_LOGI( "DataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
-					, m_Name.c_str()
-					, NewValue.c_str() );
-			bool ValueChanged = CurrentValue.equals(NewValue);
-			if(ValueChanged)
-			{
-				for (size_t i = 0; i < this->GetCount(); ++i)
-				{
-					mp_TxValue[i] = '\0';
-				}
-				strcpy(mp_TxValue, Value);
-				this->DataItem_Try_TX_On_Change();
-			}
 		}
 	private:
 		bool NewRXValueReceived(void* Object, size_t Count) override
 		{
-			bool ValueUpdated = false;
-			String NewValue = String((char*)Object);
-			String CurrentRxValue = String(mp_RxValue);
-			String CurrentValue = String(mp_Value);
-			bool ValueChanged = CurrentRxValue.equals(NewValue);
-			if(ValueChanged)
-			{
-				for (size_t i = 0; i < this->GetCount(); ++i)
-				{
-					mp_RxValue[i] = '\0';
-				}
-				strcpy(mp_RxValue, NewValue.c_str());
-				ESP_LOGD( "DataItem: NewRXValueReceived"
-						, "\"%s\" New RX Value Received: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, ""));
-				
-				bool RxValueChanged = CurrentRxValue.equals(CurrentValue);
-				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
-				{
-					if(RxValueChanged)
-					{
-						for (size_t i = 0; i < this->GetCount(); ++i)
-						{
-							mp_Value[i] = '\0';
-						}
-						strcpy(mp_Value, mp_RxValue);
-						ValueUpdated = true;
-					}
-				}
-				if(RxTxType_Rx_Echo_Value == m_RxTxType)
-				{
-					for (size_t i = 0; i < this->GetCount(); ++i)
-					{
-						mp_TxValue[i] = '\0';
-					}
-					strcpy(mp_TxValue, mp_RxValue);
-					this->DataItem_TX_Now();
-				}
-			}
-			return ValueUpdated;
+			return false;
 		}
 };
 

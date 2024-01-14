@@ -297,7 +297,7 @@ void DataItem<T, COUNT>::Setup()
 		if (std::is_same<T, char>::value)
 		{
 			String InitialValue = String((char*)mp_InitialValuePtr);
-			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: %s"
+			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
 					, m_Name.c_str()
 					, InitialValue.c_str());
 			bool eolFound = false;
@@ -317,7 +317,7 @@ void DataItem<T, COUNT>::Setup()
 		}
 		else
 		{
-			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: %s"
+			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			for (size_t i = 0; i < COUNT; ++i)
@@ -595,7 +595,6 @@ bool DataItemWithPreferences<T, COUNT>::DataItem_TX_Now()
 {
 	bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 	if(result) this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
-	if(result) this->Update_Preference("Updated", this->GetName().c_str(), this->mp_TxValue, this->mp_InitialValue);
 	return result;
 }
 
