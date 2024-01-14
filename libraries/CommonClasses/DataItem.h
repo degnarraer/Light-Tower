@@ -47,6 +47,47 @@ enum UpdateStoreType_t
 };
 
 template <typename T, size_t COUNT>
+class PreferencesWrapper
+{
+	
+	public:
+		struct PreferencesWrapperTimerArgs;
+		PreferencesWrapper( Preferences *Preferences )
+						  : m_Preferences(Preferences){}
+		virtual ~PreferencesWrapper()
+		{
+			if(mp_TimerArgs)
+			{
+				delete mp_TimerArgs;
+			}
+		}
+		static void Static_Update_Preference(void *arg);
+		void Update_Preference(const String &UpdateType, const String& Name, T* ValuePtr, T* InitialValuePtr);
+		struct PreferencesWrapperTimerArgs 
+		{
+			PreferencesWrapperTimerArgs(PreferencesWrapper<T, COUNT>* preferenceWrapper, const String& name, T* value, T* initialValue)
+				: PreferenceWrapper(preferenceWrapper), Name(name), Value(value), InitialValue(initialValue) {}
+
+			PreferencesWrapper<T, COUNT>* PreferenceWrapper;
+			String Name;
+			T* Value;
+			T* InitialValue;
+		};
+	protected:
+		void CreatePreferencesTimer(const String& Name, T* Value, T* InitialValue);
+		void InitializeNVM(const String& Name, T* ValuePtr, T* InitialValuePtr);
+		void HandleLoaded(const String& Name, T* ValuePtr, T* InitialValuePtr);
+		void HandleUpdated(const String& Name, T* ValuePtr);
+	private:
+		Preferences *m_Preferences = nullptr;
+		esp_timer_handle_t m_PreferenceTimer;
+		PreferencesWrapperTimerArgs* mp_TimerArgs;
+		uint64_t m_Preferences_Last_Update = millis();
+		bool m_PreferenceTimerActive = false;
+};
+
+
+template <typename T, size_t COUNT>
 class DataItem: public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
 			  , public SetupCalleeInterface
@@ -139,10 +180,6 @@ class StringDataItem: public DataItem<char, 50>
 		virtual ~StringDataItem()
 		{
 		}
-		void Setup() override
-		{
-			DataItem<char, 50>::Setup();
-		}
 		virtual void SetValue(const char* Value, size_t Count) override
 		{
 			assert(Value != nullptr && "Value must not be null");
@@ -166,10 +203,6 @@ class StringDataItem: public DataItem<char, 50>
 			}
 		}
 	protected:
-		virtual bool DataItem_TX_Now() override 
-		{ 
-			return DataItem<char, 50>::DataItem_TX_Now(); 
-		}
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override 
 		{ 
 			bool ValueUpdated = false;
@@ -219,6 +252,7 @@ class StringDataItem: public DataItem<char, 50>
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
+							 , public PreferencesWrapper<T, COUNT>
 {
 	public:
 		DataItemWithPreferences( const String name
@@ -242,20 +276,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 			DataItem<T, COUNT>::SetValue(Value, Count);
 		}
-		static void Static_Update_Preference(void *arg);
-		void Update_Preference(const String &UpdateType);
 	protected:
 		bool DataItem_TX_Now() override;
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
-	private:
-		Preferences *m_Preferences = nullptr;
-		esp_timer_handle_t m_PreferenceTimer;
-		uint64_t m_Preferences_Last_Update = millis();
-		bool m_PreferenceTimerActive = false;
-		void InitializeNVM();
-		void HandleLoaded();
-		void HandleUpdated(const T* value);
-		void CreatePreferencesTimer();
 };
 
 class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
@@ -269,12 +292,12 @@ class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
 								     : DataItemWithPreferences<char, 50>( name
-													 , initialValue
-													 , rxTxType
-													 , updateStoreType
-													 , rate
-													 , preferences
-													 , serialPortMessageManager )
+																		, initialValue
+																		, rxTxType
+																		, updateStoreType
+																		, rate
+																		, preferences
+																		, serialPortMessageManager )
 		{
 			
 		}
