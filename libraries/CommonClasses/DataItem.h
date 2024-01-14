@@ -51,7 +51,13 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 {
 	public:
 		DataItem( const String name
-				, const T &initialValue
+				, const T* initialValue
+				, const RxTxType_t rxTxType
+				, const UpdateStoreType_t updateStoreType
+				, const uint16_t rate
+				, SerialPortMessageManager &serialPortMessageManager );
+		DataItem( const String name
+				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
@@ -61,7 +67,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		virtual void Setup();
 		String GetName();
 		void GetValue(void* Object, size_t Count);
-		String GetValueAsString();
+		String GetValueAsString(const String &Divider);
 		void SetNewTxValue(const T* Value, const size_t Count);
 		void SetValue(const T *Value, size_t Count);
 		size_t GetCount();
@@ -76,7 +82,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		T *mp_RxValue;
 		T *mp_TxValue;
 		T *mp_InitialValue;
-		const T &m_InitialValue;
+		const T *mp_InitialValuePtr;
 		const String m_Name;
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
@@ -99,7 +105,14 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 {
 	public:
 		DataItemWithPreferences( const String name
-							   , const T &initialValue
+							   , const T* initialValue
+							   , const RxTxType_t rxTxType
+							   , const UpdateStoreType_t updateStoreType
+							   , const uint16_t rate
+							   , Preferences *preferences
+							   , SerialPortMessageManager &serialPortMessageManager );
+		DataItemWithPreferences( const String name
+							   , const T& initialValue
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
@@ -116,8 +129,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		uint64_t m_Preferences_Last_Update = millis();
 		bool m_PreferenceTimerActive = false;
 		void InitializeNVM();
-		void HandleLoaded(const T& initialValue);
-		void HandleUpdated(const T& value);
+		void HandleLoaded();
+		void HandleUpdated(const T* value);
 		void CreatePreferencesTimer();
 		virtual bool DataItem_TX_Now() override;
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override;

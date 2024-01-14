@@ -501,14 +501,12 @@ class DataTypeFunctions
 
 			return Result;
 		}
-		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count)
+		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count, const String &Divider)
 		{
 			String resultString;
 			for (int i = 0; i < Count; ++i)
 			{
-				if (i > 0)
-					resultString += " ";
-
+				if (i > 0 && Divider.length() > 0) resultString += Divider;
 				switch (DataType)
 				{
 				case DataType_Bool_t:

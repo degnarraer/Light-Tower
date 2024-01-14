@@ -107,6 +107,7 @@ void InitLocalVariables()
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_SettingsWebServerManager.BeginWebServer();
 }
 
 void PrintMemory()

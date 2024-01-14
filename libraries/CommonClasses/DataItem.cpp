@@ -14,13 +14,32 @@ template class DataItemWithPreferences<char, 50>;
 
 template <typename T, size_t COUNT>
 DataItem<T, COUNT>::DataItem( const String name
-							, const T &initialValue
+							, const T* initialValue
 							, const RxTxType_t rxTxType
 							, const UpdateStoreType_t updateStoreType
 							, const uint16_t rate
 							, SerialPortMessageManager &serialPortMessageManager )
 							: m_Name(name)
-							, m_InitialValue(initialValue)
+							, mp_InitialValuePtr(initialValue)
+							, m_RxTxType(rxTxType)
+							, m_UpdateStoreType(updateStoreType)
+							, m_Rate(rate)
+							, m_SerialPortMessageManager(serialPortMessageManager)
+							, NewRxTxVoidObjectCalleeInterface(COUNT)
+{
+	CreateTxTimer();
+	m_SerialPortMessageManager.RegisterForSetupCall(this);
+}
+
+template <typename T, size_t COUNT>
+DataItem<T, COUNT>::DataItem( const String name
+							, const T& initialValue
+							, const RxTxType_t rxTxType
+							, const UpdateStoreType_t updateStoreType
+							, const uint16_t rate
+							, SerialPortMessageManager &serialPortMessageManager )
+							: m_Name(name)
+							, mp_InitialValuePtr(&initialValue)
 							, m_RxTxType(rxTxType)
 							, m_UpdateStoreType(updateStoreType)
 							, m_Rate(rate)
@@ -51,20 +70,22 @@ void DataItem<T, COUNT>::Setup()
 	mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-	if (mp_Value && mp_RxValue && mp_TxValue && mp_InitialValue)
+	if (mp_Value && mp_RxValue && mp_TxValue && mp_InitialValue && mp_InitialValuePtr)
 	{
 		if (std::is_same<T, char>::value)
 		{
-			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Char", m_Name.c_str());
+			String InitialValue = String((char*)mp_InitialValuePtr);
+			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: %s"
+					, m_Name.c_str()
+					, InitialValue.c_str());
 			bool eolFound = false;
 			for (size_t i = 0; i < COUNT; ++i)
 			{
 				char value;
-				memcpy(&value, &m_InitialValue+i, sizeof(char));
-				if (eolFound || memcmp(&value, "\0", sizeof(char)) == 0 || i == COUNT-1)
+				memcpy(&value, mp_InitialValuePtr+i, sizeof(char));
+				if (i >= InitialValue.length())
 				{
-					eolFound = true;
-					memcpy(&value, "\0", sizeof(char));
+					value = '\0';
 				}
 				memcpy(mp_Value+i, &value, sizeof(char));
 				memcpy(mp_RxValue+i, &value, sizeof(char));
@@ -74,13 +95,15 @@ void DataItem<T, COUNT>::Setup()
 		}
 		else
 		{
-			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Other", m_Name.c_str());
+			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: %s"
+					, m_Name.c_str()
+					, GetValueAsStringForDataType(mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			for (size_t i = 0; i < COUNT; ++i)
 			{
-				memcpy(mp_Value+i, &m_InitialValue, sizeof(T));
-				memcpy(mp_RxValue+i, &m_InitialValue, sizeof(T));
-				memcpy(mp_TxValue+i, &m_InitialValue, sizeof(T));
-				memcpy(mp_InitialValue+i, &m_InitialValue, sizeof(T));
+				memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
+				memcpy(mp_RxValue+i, mp_InitialValuePtr, sizeof(T));
+				memcpy(mp_TxValue+i, mp_InitialValuePtr, sizeof(T));
+				memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 			}
 		}
 		SetDataLinkEnabled(true);
@@ -124,15 +147,15 @@ void DataItem<T, COUNT>::GetValue(void* Object, size_t Count)
 }
 
 template <typename T, size_t COUNT>
-String DataItem<T, COUNT>::GetValueAsString()
+String DataItem<T, COUNT>::GetValueAsString(const String &Divider)
 {
-	return GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT);
+	return GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, Divider);
 }
 
 template <typename T, size_t COUNT>
 void DataItem<T, COUNT>::SetNewTxValue(const T* Value, const size_t Count)
 {
-	ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
+	ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
 	SetValue(Value, Count);
 }
 
@@ -145,7 +168,7 @@ void DataItem<T, COUNT>::SetValue(T Value)
 	ESP_LOGD( "DataItem: SetValue"
 			, "\"%s\" Set Value: \"%s\""
 			, m_Name.c_str()
-			, GetValueAsStringForDataType(&Value, GetDataTypeFromTemplateType<T>(), COUNT));
+			, GetValueAsStringForDataType(&Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
 	bool ValueChanged = (*mp_TxValue != Value);
 	*mp_TxValue = Value;
 	if(ValueChanged)
@@ -165,7 +188,7 @@ void DataItem<T, COUNT>::SetValue(const T *Value, size_t Count)
 	ESP_LOGI( "DataItem: SetValue"
 			, "\"%s\" Set Value: \"%s\""
 			, m_Name.c_str()
-			, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT));
+			, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
 	bool ValueChanged = (memcmp(mp_TxValue, Value, sizeof(T) * COUNT) != 0);
 	memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
 	if(ValueChanged)
@@ -235,7 +258,7 @@ void DataItem<T, COUNT>::SetDataLinkEnabled(bool enable)
 template <typename T, size_t COUNT>
 void DataItem<T, COUNT>::DataItem_Try_TX_On_Change()
 {
-	ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
+	ESP_LOGD("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
 	if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 	{
 		DataItem_TX_Now();
@@ -257,7 +280,7 @@ bool DataItem<T, COUNT>::DataItem_TX_Now()
 				ValueUpdated = true;
 			}
 		}
-		ESP_LOGD("DataItem: DataItem_TX_Now", "Data Item: \"%s\": TX Now: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT).c_str());
+		ESP_LOGD("DataItem: DataItem_TX_Now", "Data Item: \"%s\": TX Now: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 	}
 	else
 	{
@@ -281,7 +304,7 @@ void DataItem<T, COUNT>::DataItem_Periodic_TX()
 {
 	if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_Value, COUNT))
 	{
-		ESP_LOGI("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Periodic TX: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT).c_str());
+		ESP_LOGD("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Periodic TX: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 	}
 }
 
@@ -294,10 +317,10 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 	if(ValueChanged)
 	{
 		memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
-		ESP_LOGI( "DataItem: NewRXValueReceived"
+		ESP_LOGD( "DataItem: NewRXValueReceived"
 				, "\"%s\" New RX Value Received: \"%s\""
 				, m_Name.c_str()
-				, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT));
+				, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, ""));
 		
 		bool RxValueChanged = (memcmp(mp_Value, mp_RxValue, sizeof(T) * COUNT) != 0);
 		if( UpdateStoreType_On_Rx == m_UpdateStoreType )
@@ -319,7 +342,27 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 
 template <typename T, size_t COUNT>
 DataItemWithPreferences<T, COUNT>::DataItemWithPreferences( const String name
-														  , const T &initialValue
+														  , const T* initialValue
+														  , const RxTxType_t rxTxType
+														  , const UpdateStoreType_t updateStoreType
+														  , const uint16_t rate
+														  , Preferences *preferences
+														  , SerialPortMessageManager &serialPortMessageManager )
+														  : m_Preferences(preferences)
+														  , DataItem<T, COUNT>( name
+																			  , initialValue
+																			  , rxTxType
+																			  , updateStoreType
+																			  , rate
+																			  , serialPortMessageManager )
+							   
+{
+	CreatePreferencesTimer();
+}
+
+template <typename T, size_t COUNT>
+DataItemWithPreferences<T, COUNT>::DataItemWithPreferences( const String name
+														  , const T& initialValue
 														  , const RxTxType_t rxTxType
 														  , const UpdateStoreType_t updateStoreType
 														  , const uint16_t rate
@@ -420,19 +463,22 @@ void DataItemWithPreferences<T, COUNT>::Update_Preference(const String &UpdateTy
 
     if ( UpdateType.equals("Loaded") )
 	{
-        HandleLoaded( this->mp_InitialValue[0] );
+        ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", this->m_Name.c_str());
+        HandleLoaded();
     } 
 	else if ( UpdateType.equals("Initialized") )
 	{
-		HandleUpdated( this->mp_InitialValue[0] );
+        ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", this->m_Name.c_str());
+		HandleUpdated( this->mp_InitialValue );
 	}
 	else if ( UpdateType.equals("Updated") )
 	{
-        HandleUpdated( this->mp_Value[0] );
+        ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", this->m_Name.c_str());
+        HandleUpdated( this->mp_Value );
 	}		
 	else if ( UpdateType.equals("Timer") )
 	{
-        HandleUpdated( this->mp_Value[0] );
+        HandleUpdated( this->mp_Value );
 		m_PreferenceTimerActive = false;
 		m_Preferences_Last_Update = currentMillis;
     }
@@ -443,74 +489,75 @@ void DataItemWithPreferences<T, COUNT>::Update_Preference(const String &UpdateTy
 }
 
 template <typename T, size_t COUNT>
-void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
+void DataItemWithPreferences<T, COUNT>::HandleLoaded()
 {
-    if (std::is_same<T, bool>::value)
+    if(!this->mp_InitialValue) return;
+	if (std::is_same<T, bool>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
 		bool value;
-		memcpy(&value , &initialValue, sizeof(bool));
+		memcpy(&value , this->mp_InitialValue, sizeof(bool));
 		bool result = m_Preferences->getBool(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(bool));
         memcpy(this->mp_TxValue, &result, sizeof(bool));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded Bool: %i", this->m_Name.c_str(), value);	
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded Bool: %i", this->m_Name.c_str(), result);	
     }
 	else if (std::is_same<T, int32_t>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
 		int32_t value;
-		memcpy(&value , &initialValue, sizeof(int32_t));
+		memcpy(&value , this->mp_InitialValue, sizeof(int32_t));
 		int32_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(int32_t));
         memcpy(this->mp_TxValue, &result, sizeof(int32_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int32_t: %i", this->m_Name.c_str(), value);	
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int32_t: %i", this->m_Name.c_str(), result);	
     }
 	else if (std::is_same<T, int16_t>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
 		int16_t value;
-		memcpy(&value , &initialValue, sizeof(int16_t));
+		memcpy(&value , this->mp_InitialValue, sizeof(int16_t));
 		int16_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(int16_t));
         memcpy(this->mp_TxValue, &result, sizeof(int16_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int16_t: %i", this->m_Name.c_str(), value);	
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int16_t: %i", this->m_Name.c_str(), result);	
     }
 	else if (std::is_same<T, int8_t>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
 		int8_t value;
-		memcpy(&value , &initialValue, sizeof(int8_t));
+		memcpy(&value , this->mp_InitialValue, sizeof(int8_t));
 		int8_t result = m_Preferences->getInt(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(int8_t));
         memcpy(this->mp_TxValue, &result, sizeof(int8_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int8_t: %i", this->m_Name.c_str(), value);	
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int8_t: %i", this->m_Name.c_str(), result);	
     }
 	else if (std::is_same<T, float>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
 		float value;
-		memcpy(&value , &initialValue, sizeof(float));
+		memcpy(&value , this->mp_InitialValue, sizeof(float));
 		float result = m_Preferences->getFloat(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(float));
         memcpy(this->mp_TxValue, &result, sizeof(float));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded float: %f", this->m_Name.c_str(), value);	
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded float: %f", this->m_Name.c_str(), result);	
     }
 	else if (std::is_same<T, double>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
 		double value;
-		memcpy(&value , &initialValue, sizeof(double));
+		memcpy(&value , this->mp_InitialValue, sizeof(double));
 		double result = m_Preferences->getDouble(this->m_Name.c_str(), value);
         memcpy(this->mp_Value, &result, sizeof(double));
         memcpy(this->mp_TxValue, &result, sizeof(double));
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double: %d", this->m_Name.c_str(), value);	
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded double: %d", this->m_Name.c_str(), result);	
     }
 	else if (std::is_same<T, char>::value)
 	{
 		char value[COUNT];
 		for (size_t i = 0; i < COUNT - 1; ++i)
 		{
-			value[i] = ((char*)(&initialValue))[i];
+			value[i] = ((char*)this->mp_InitialValue)[i];
 			this->mp_Value[i] = '\0';
 			this->mp_TxValue[i] = '\0';
 		}
@@ -536,12 +583,13 @@ void DataItemWithPreferences<T, COUNT>::HandleLoaded(const T& initialValue)
 }
 
 template <typename T, size_t COUNT>
-void DataItemWithPreferences<T, COUNT>::HandleUpdated(const T& value)
+void DataItemWithPreferences<T, COUNT>::HandleUpdated(const T* updateValue)
 {	
+    if(!updateValue) return;
     if (std::is_same<T, bool>::value)
 	{
-        m_Preferences->putBool(this->m_Name.c_str(), value);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving bool: %i", this->m_Name.c_str(), value);	
+        m_Preferences->putBool(this->m_Name.c_str(), *updateValue);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving bool: %i", this->m_Name.c_str(), *updateValue);	
     } 
 	else if (std::is_same<T, char>::value)
 	{
@@ -549,7 +597,7 @@ void DataItemWithPreferences<T, COUNT>::HandleUpdated(const T& value)
 		// Copy characters from initialValue to value, ensuring null-termination.
 		for (size_t i = 0; i < COUNT - 1; ++i)
 		{
-			charValues[i] = ((char*)(&value))[i];
+			charValues[i] = ((char*)updateValue)[i];
 		}
 		charValues[COUNT - 1] = '\0';
         m_Preferences->putString(this->m_Name.c_str(), charValues);
@@ -557,18 +605,18 @@ void DataItemWithPreferences<T, COUNT>::HandleUpdated(const T& value)
     } 
 	else if (std::is_integral<T>::value)
 	{
-        m_Preferences->putInt(this->m_Name.c_str(), value);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer: %i", this->m_Name.c_str(), value);	
+        m_Preferences->putInt(this->m_Name.c_str(), *updateValue);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer: %i", this->m_Name.c_str(), *updateValue);	
     } 
-	else if (std::is_floating_point<T>::value)
+	else if (std::is_same<T, float>::value)
 	{
-        m_Preferences->putFloat(this->m_Name.c_str(), value);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving float: %f", this->m_Name.c_str(), value);	
+        m_Preferences->putFloat(this->m_Name.c_str(), *updateValue);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving float: %f", this->m_Name.c_str(), *updateValue);	
     }
 	else if (std::is_same<T, double>::value)
 	{
-        m_Preferences->putDouble(this->m_Name.c_str(), value);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double: %d", this->m_Name.c_str(), value);	
+        m_Preferences->putDouble(this->m_Name.c_str(), *updateValue);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double: %d", this->m_Name.c_str(), *updateValue);	
     } 
 	else 
 	{

@@ -93,7 +93,7 @@ void Manager::SetInputType(InputType_t Type)
     {
       bool ReConnect;
       m_BluetoothSinkAutoReConnect.GetValue(&ReConnect, 1);
-      m_BT_In.StartDevice("LED TOWER OF POWER", ReConnect);
+      m_BT_In.StartDevice(m_BluetoothSinkName.GetValueAsString("").c_str(), ReConnect);
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
     }
@@ -146,10 +146,10 @@ void Manager::MoveDataToStatisticalEngine()
 void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
 {
   ConnectionStatus_t CurrentConnectionStatus;
-  m_BluetoothConnectionStatus.GetValue(&CurrentConnectionStatus, 1);
+  m_BluetoothSinkConnectionStatus.GetValue(&CurrentConnectionStatus, 1);
   if(CurrentConnectionStatus != ConnectionStatus)
   {
-    m_BluetoothConnectionStatus.SetValue(&ConnectionStatus, 1);
+    m_BluetoothSinkConnectionStatus.SetValue(&ConnectionStatus, 1);
     switch(ConnectionStatus)
     {
       case ConnectionStatus_t::Disconnected:
