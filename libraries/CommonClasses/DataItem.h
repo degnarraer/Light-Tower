@@ -112,12 +112,12 @@ class StringDataItem: public DataItem<char, 50>
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
 					  , SerialPortMessageManager &serialPortMessageManager )
-					  : DataItem( name
-								, initialValue
-								, rxTxType
-								, updateStoreType
-								, rate
-								, serialPortMessageManager )
+					  : DataItem<char, 50>( name
+										  , initialValue
+										  , rxTxType
+										  , updateStoreType
+										  , rate
+										  , serialPortMessageManager )
 		{
 		  
 		}
@@ -127,26 +127,32 @@ class StringDataItem: public DataItem<char, 50>
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
 					  , SerialPortMessageManager &serialPortMessageManager )
-					  : DataItem( name
-								, initialValue
-								, rxTxType
-								, updateStoreType
-								, rate
-								, serialPortMessageManager )
+					  : DataItem<char, 50>( name
+										  , initialValue
+										  , rxTxType
+										  , updateStoreType
+										  , rate
+										  , serialPortMessageManager )
 		{
 		  
 		}
 		
-		virtual ~StringDataItem() override
+		virtual ~StringDataItem()
 		{
 		}
 		virtual void Setup() override
 		{
-			DataItem::Setup();
+			DataItem<char, 50>::Setup();
 		}
 	protected:
-		virtual bool DataItem_TX_Now(){ return false; }
-		virtual bool NewRXValueReceived(void* Object, size_t Count){ return false; }
+		virtual bool DataItem_TX_Now() override 
+		{ 
+			return false; 
+		}
+		virtual bool NewRXValueReceived(void* Object, size_t Count) override 
+		{ 
+			return false;
+		}
 };
 
 
@@ -186,7 +192,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override;
 };
 
-class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
+class StringDataItemWithPreferences: public StringDataItem
 {
 	public:
 		StringDataItemWithPreferences( const String name
@@ -196,16 +202,15 @@ class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
-								     : DataItemWithPreferences<char, 50>( name
-																		, initialValue
-																		, rxTxType
-																		, updateStoreType
-																		, rate
-																		, preferences
-																		, serialPortMessageManager )
-																		{
-																			
-																		}
+								     : StringDataItem( name
+													 , initialValue
+													 , rxTxType
+													 , updateStoreType
+													 , rate
+													 , serialPortMessageManager )
+		{
+			
+		}
 		StringDataItemWithPreferences( const String name
 								     , const char& initialValue
 								     , const RxTxType_t rxTxType
@@ -213,22 +218,30 @@ class StringDataItemWithPreferences: public DataItemWithPreferences<char, 50>
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager )
-								     : DataItemWithPreferences<char, 50>( name
-																		, initialValue
-																		, rxTxType
-																		, updateStoreType
-																		, rate
-																		, preferences
-																		, serialPortMessageManager )
-																		{
-																			
-																		}
+								     : StringDataItem( name
+													 , initialValue
+													 , rxTxType
+													 , updateStoreType
+													 , rate
+													 , serialPortMessageManager )
+		{
+			
+		}
 		
-		virtual void Setup() override {}
+		virtual void Setup() override 
+		{
+			StringDataItem::Setup();
+		}
 		virtual ~StringDataItemWithPreferences(){}
 	private:
-		virtual bool DataItem_TX_Now() override {}
-		virtual bool NewRXValueReceived(void* Object, size_t Count) override {}
+		virtual bool DataItem_TX_Now() override 
+		{
+			return false;
+		}
+		virtual bool NewRXValueReceived(void* Object, size_t Count) override
+		{
+			return false;
+		}
 };
 
 
