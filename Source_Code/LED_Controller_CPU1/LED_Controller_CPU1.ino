@@ -23,22 +23,11 @@
 #include "esp_log.h"
 #include "LED_Controller_Helpers.h"
 
-TaskHandle_t Manager_20mS_Task;
-
-TaskHandle_t Manager_1000mS_Task;
-
-TaskHandle_t Manager_300000mS_Task;
-
 TaskHandle_t VisualizationTask;
-
-TaskHandle_t TaskMonitorTask;
 
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &Manager_20mS_Task,     0 );
-  xTaskCreatePinnedToCore( Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 3,  &Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 3,  &Manager_300000mS_Task, 0 );
   xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 );
 }
 
@@ -63,38 +52,5 @@ void VisualizationTaskLoop(void * parameter)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     m_Scheduler.RunScheduler();
-  }
-}
-
-void Manager_20mS_TaskLoop(void * parameter)
-{
-  const TickType_t xFrequency = 10;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    m_Manager.ProcessEventQueue20mS();
-  }
-}
-
-void Manager_1000mS_TaskLoop(void * parameter)
-{
-  const TickType_t xFrequency = 1000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    m_Manager.ProcessEventQueue1000mS();
-  }
-}
-
-void Manager_300000mS_TaskLoop(void * parameter)
-{
-  const TickType_t xFrequency = 300000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    m_Manager.ProcessEventQueue300000mS();
   }
 }

@@ -1,8 +1,8 @@
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 var speakerImages = new Array();
-var SliderTouched = false;
-var SliderTimeoutHandle;
+var sliderTouched = false;
+var sliderTimeoutHandle;
 var Sink_SSID_Value_Changed = false;
 var Sink_SSID_Changed_TimeoutHandle;
 var Source_SSID_Value_Changed = false;
@@ -22,6 +22,7 @@ window.addEventListener('load', onload);
 function onload(event)
 {
     initWebSocket();
+	showContent('menu-content', 'Speaker Status');
 }
 function initWebSocket()
 {
@@ -97,14 +98,14 @@ Source_BT_Auto_ReConnect_Toggle_Button.addEventListener("click", function()
 // Menu Functions
 function openNav() 
 {
-  document.getElementById("LeftSideNavigationMenu").style.width = "200px";
-  document.getElementById("ContentArea").style.marginLeft = "200px";
+  document.getElementById("leftSideNavigationMenu").style.width = "200px";
+  document.getElementById("MainContentArea").style.marginLeft = "200px";
 }
 
 function closeNav()
 {
-  document.getElementById("LeftSideNavigationMenu").style.width = "0";
-  document.getElementById("ContentArea").style.marginLeft = "0";
+  document.getElementById("leftSideNavigationMenu").style.width = "0";
+  document.getElementById("MainContentArea").style.marginLeft = "0";
 }
 
 //Text Box
@@ -167,26 +168,26 @@ function submit_New_SSID(element)
 	}
 }
 
-// Slider Functions
-function updateSliderValue(element)
+// slider Functions
+function updatesliderValue(element)
 {
-	clearTimeout(SliderTimeoutHandle);
-    SliderTouched = true;
-	var SliderName = element.id;
-    var SliderValue = document.getElementById(SliderName).value;
+	clearTimeout(sliderTimeoutHandle);
+    sliderTouched = true;
+	var sliderName = element.id;
+    var sliderValue = document.getElementById(sliderName).value;
     var Root = {};
 	Root.WidgetValue = {};
-	Root["WidgetValue"].Id = SliderName.toString();
-	Root["WidgetValue"].Value = SliderValue.toString();
+	Root["WidgetValue"].Id = sliderName.toString();
+	Root["WidgetValue"].Value = sliderValue.toString();
 	var Message = JSON.stringify(Root);
 	console.log(Message);
     websocket.send(Message);
-	SliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
+	sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 }
 
 function sliderNotTouched()
 {
-    SliderTouched = false;
+    sliderTouched = false;
 }
  
 function setSpeakerImage(value)
@@ -303,12 +304,13 @@ function onMessage(event)
 			{
 				setSpeakerImage(Value);
 			}
-			else if( Id == "Amplitude_Gain_Slider1" || 
-					 Id == "Amplitude_Gain_Slider2" || 
-					 Id == "FFT_Gain_Slider1" ||
-					 Id == "FFT_Gain_Slider2" )
+			else if( Id == "Amplitude_Gain_slider1" || 
+					 Id == "Amplitude_Gain_slider2" || 
+					 Id == "Amplitude_Gain_slider3" || 
+					 Id == "FFT_Gain_slider1" ||
+					 Id == "FFT_Gain_slider2" )
 			{
-				if(false == SliderTouched)
+				if(false == sliderTouched)
 				{
 					document.getElementById(Id).value = Value;
 				}
@@ -416,24 +418,25 @@ function onMessage(event)
 					sink_BT_Enable_Toggle_Button.checked = false;
 				}
 			}
+			else if(Id == "Input_Sound_Source")
+			{
+				var radioOption = document.getElementById(Id);
+				if (radioOption)
+				{
+					radioOption.checked = true;
+				}
+			}
 		}
 	}
 }
 
-function openTab(evt, TabTitle) 
-{
-  var i, TabContent, Tablinks;
-  TabContent = document.getElementsByClassName("TabContent");
-  for (i = 0; i < TabContent.length; i++) 
-  {
-    TabContent[i].style.display = "none";
-  }
-  Tablinks = document.getElementsByClassName("Tablinks");
-  for (i = 0; i < Tablinks.length; i++) 
-  {
-    Tablinks[i].className = Tablinks[i].className.replace(" active", "");
-  }
-  document.getElementById(TabTitle).style.display = "block";
-  evt.currentTarget.className += " active";
-  document.getElementById("TabHeader_Heading").innerHTML = TabTitle;
+function showContent(classId, contentId) {
+	// Hide all tab contents
+	var tabContents = document.querySelectorAll('.' + classId);
+	tabContents.forEach(function (tabContent) {
+		tabContent.classList.remove('active');
+	});
+
+	// Show the selected tab content
+	document.getElementById(contentId).classList.add('active');
 }

@@ -32,25 +32,36 @@ Manager::Manager( String Title
 }
 Manager::~Manager()
 {
+  vTaskDelete(m_Manager_20mS_Task);
+  vTaskDelete(m_Manager_1000mS_Task);
+  vTaskDelete(m_Manager_300000mS_Task);
 }
 
 void Manager::Setup()
 {
   InitializePreferences();
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+  SetupSerialPortManager();
+  SetupBlueTooth();
+  SetupI2S();
+  SetupStatisticalEngine();
+  //SetInputType(SoundInputSource_Bluetooth);
+  SetInputType(SoundInputSource_Microphone);
+  SetupTasks();
+}
+
+void Manager::SetupBlueTooth()
+{
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
   m_BT_In.RegisterForConnectionStatusChangedCallBack(this);
-  m_Mic_In.Setup();
-  m_I2S_Out.Setup();
-  m_Mic_In.SetCallback(this);
-  m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
-  SetInputType(InputType_Bluetooth);
-  //SetInputType(InputType_Microphone);
 }
 
+void Manager::SetupSerialPortManager()
+{
+  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+}
 
 void Manager::InitializePreferences()
 {
@@ -59,38 +70,93 @@ void Manager::InitializePreferences()
   m_Preferences.putBool("Pref_Reset", false);
 }
 
+void Manager::SetupI2S()
+{
+  m_Mic_In.Setup();
+  m_I2S_Out.Setup();
+  m_Mic_In.SetCallback(this); 
+}
+
+void Manager::SetupStatisticalEngine()
+{
+  m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
+}
+
+void Manager::SetupTasks()
+{
+  xTaskCreatePinnedToCore( Static_Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &m_Manager_20mS_Task,     0 );
+  xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 3,  &m_Manager_1000mS_Task,   0 );
+  xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 3,  &m_Manager_300000mS_Task, 0 );
+}
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-  //SoundState_RX(SoundState);
 }
 
+void Manager::Static_Manager_20mS_TaskLoop(void * parameter)
+{
+  Manager* manager = static_cast<Manager*>(parameter);
+  manager->ProcessEventQueue20mS();
+}
 void Manager::ProcessEventQueue20mS()
 {
-  MoveDataToStatisticalEngine();
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    MoveDataToStatisticalEngine();
+  }
 }
 
+void Manager::Static_Manager_1000mS_TaskLoop(void * parameter)
+{
+  Manager* manager = static_cast<Manager*>(parameter);
+  manager->ProcessEventQueue1000mS();
+}
 void Manager::ProcessEventQueue1000mS()
 {
-  //SoundState_TX();
+  
+  const TickType_t xFrequency = 1000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+  }
+}
+
+void Manager::Static_Manager_300000mS_TaskLoop(void * parameter)
+{
+  Manager* manager = static_cast<Manager*>(parameter);
+  manager->ProcessEventQueue300000mS();
 }
 
 void Manager::ProcessEventQueue300000mS()
 {
+  const TickType_t xFrequency = 300000;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    
+  }
 }
 
-void Manager::SetInputType(InputType_t Type)
+void Manager::SetInputType(SoundInputSource_t Type)
 {
-  m_InputType = Type;
-  switch(m_InputType)
+  SoundInputSource_t currentSoundInputSource;
+  m_SoundInputSource.GetValue(&currentSoundInputSource, 1);
+  switch(currentSoundInputSource)
   {
-    case InputType_Microphone:
+    case SoundInputSource_Microphone:
+      ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Microphone.\"");
       m_BT_In.StopDevice();
       m_Mic_In.StartDevice();
       m_I2S_Out.StartDevice();
     break;
-    case InputType_Bluetooth:
+    case SoundInputSource_Bluetooth:
     {
+      ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
       bool ReConnect;
       m_BluetoothSinkAutoReConnect.GetValue(&ReConnect, 1);
       m_BT_In.StartDevice(m_BluetoothSinkName.GetValueAsString("").c_str(), ReConnect);
@@ -98,7 +164,9 @@ void Manager::SetInputType(InputType_t Type)
       m_I2S_Out.StopDevice();
     }
     break;
+    case SoundInputSource_OFF:
     default:
+      ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
       m_BT_In.StopDevice();
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
@@ -114,9 +182,11 @@ void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {  
-  switch(m_InputType)
+  SoundInputSource_t currentSoundInputSource;
+  m_SoundInputSource.GetValue(&currentSoundInputSource, 1);
+  switch(currentSoundInputSource)
   {
-    case InputType_Microphone:
+    case SoundInputSource_Microphone:
     {
       uint16_t Buffer[length];
       for(int i = 0; i < length / sizeof(uint32_t); ++i)
@@ -128,11 +198,12 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
       m_I2S_Out.WriteSoundBufferData((uint8_t *)Buffer, length); 
     }
     break;
-    case InputType_Bluetooth:
+    case SoundInputSource_Bluetooth:
     {
       m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
     }
     break;
+    case SoundInputSource_OFF:
     default:
     break;
   }
@@ -143,56 +214,32 @@ void Manager::MoveDataToStatisticalEngine()
 }
 
 //BluetoothConnectionStateCallee Callback
-void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus)
+void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t connectionStatus)
 {
-  ConnectionStatus_t CurrentConnectionStatus;
-  m_BluetoothSinkConnectionStatus.GetValue(&CurrentConnectionStatus, 1);
-  if(CurrentConnectionStatus != ConnectionStatus)
+  ConnectionStatus_t currentConnectionStatus;
+  m_BluetoothSinkConnectionStatus.GetValue(&currentConnectionStatus, 1);
+  if(currentConnectionStatus != connectionStatus)
   {
-    m_BluetoothSinkConnectionStatus.SetValue(&ConnectionStatus, 1);
-    switch(ConnectionStatus)
+    m_BluetoothSinkConnectionStatus.SetValue(&connectionStatus, 1);
+    switch(connectionStatus)
     {
       case ConnectionStatus_t::Disconnected:
-        Serial << "Bluetooth Connection Status: Disconnected\n";
+        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Disconnected.\"");
       break;
       case ConnectionStatus_t::Searching:
-        Serial << "Bluetooth Connection Status: Searching\n";
+        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Searching.\"");
       break;
       case ConnectionStatus_t::Waiting:
-         Serial << "Bluetooth Connection Status: Waiting\n";
+        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Waiting.\"");
       break;
       case ConnectionStatus_t::Pairing:
-         Serial << "Bluetooth Connection Status: Pairing\n";
+        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Pairing.\"");
       break;
       case ConnectionStatus_t::Paired:
-         Serial << "Bluetooth Connection Status: Paired\n";
+        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Paired.\"");
       break;
     }
   }
 }
-
-  /*
-void Manager::SinkSSID_RX()
-{
-  String DatalinkValue;
-  char Buffer[m_SPIDataLinkSlave.GetQueueByteCountForDataItem("Sink SSID")];
-  static bool SinkSSIDPullErrorHasOccured = false;
-  if(true == m_SPIDataLinkSlave.GetValueFromRXQueue(&Buffer, "Sink SSID", false, 0, SinkSSIDPullErrorHasOccured))
-  {
-    DatalinkValue = String(Buffer);
-    m_SinkSSID = m_Preferences.getString("Sink SSID", "LED Tower of Power").c_str();
-    Serial << "RX Datalink Value: " << DatalinkValue.c_str() << "\n";
-    Serial << "RX NVMValue Value: " << m_SinkSSID.c_str() << "\n";
-    if(!m_SinkSSID.equals(DatalinkValue))
-    {
-      Serial << "Sink SSID Value Changed\n";
-      m_SinkSSID = DatalinkValue;
-      m_Preferences.putString("Sink SSID", m_SinkSSID);
-      m_BT_In.StartDevice(m_SinkSSID.c_str(), m_SinkReConnect);
-      SinkSSID_TX();
-    }
-  }
-}
-  */
 
     

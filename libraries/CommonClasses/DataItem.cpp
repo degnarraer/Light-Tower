@@ -5,14 +5,18 @@ template class DataItem<bool, 1>;
 template class DataItem<char, 50>;
 template class DataItem<ConnectionStatus_t, 1>;
 template class DataItem<BT_Info_With_LastUpdateTime_t, 1>;
+template class DataItem<SoundInputSource_t, 1>;
 
 
 template class PreferencesWrapper<float, 1>;
 template class PreferencesWrapper<bool, 1>;
 template class PreferencesWrapper<char, 50>;
+template class PreferencesWrapper<SoundInputSource_t, 1>;
+
 template class DataItemWithPreferences<float, 1>;
 template class DataItemWithPreferences<bool, 1>;
 template class DataItemWithPreferences<char, 50>;
+template class DataItemWithPreferences<SoundInputSource_t, 1>;
 
 
 template <typename T, size_t COUNT>
@@ -145,6 +149,15 @@ void PreferencesWrapper<T, COUNT>::HandleLoaded(const String& Name, T* ValuePtr,
         memcpy(ValuePtr, &Result, sizeof(int8_t));
 		ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded int8_t: %i", Name.c_str(), Result);	
     }
+	else if (std::is_same<T, SoundInputSource_t>::value)
+	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
+		SoundInputSource_t InitialValue;
+		memcpy(&InitialValue , InitialValuePtr, sizeof(SoundInputSource_t));
+		SoundInputSource_t Result = static_cast<SoundInputSource_t>(m_Preferences->getInt(Name.c_str(), static_cast<int32_t>(InitialValue)));
+        memcpy(ValuePtr, &Result, sizeof(SoundInputSource_t));
+		ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded int8_t: %i", Name.c_str(), Result);	
+    }
 	else if (std::is_same<T, float>::value)
 	{
 		assert(COUNT == 1 && "Count should be 1 to do this");
@@ -166,10 +179,11 @@ void PreferencesWrapper<T, COUNT>::HandleLoaded(const String& Name, T* ValuePtr,
 	else if (std::is_same<T, char>::value)
 	{
 		char value[COUNT];
+		char zeroChar = '\0';
 		for (size_t i = 0; i < COUNT - 1; ++i)
 		{
-			value[i] = ((char*)InitialValuePtr)[i];
-			ValuePtr[i] = '\0';
+			memcpy(value+i, InitialValuePtr+i, sizeof(char));
+			memcpy(ValuePtr+i, &zeroChar, sizeof(char));
 		}
 		value[COUNT - 1] = '\0';
 		
@@ -179,7 +193,7 @@ void PreferencesWrapper<T, COUNT>::HandleLoaded(const String& Name, T* ValuePtr,
 		size_t i = 0;
 		while (i < COUNT - 1 && i < Result.length())
 		{
-			ValuePtr[i] = Result[i];
+			memcpy(ValuePtr+i, Result.c_str()+i, sizeof(char));
 			++i;
 		}
 		ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded String: \"%s\"", Name.c_str(), Result.c_str());
@@ -205,17 +219,12 @@ void PreferencesWrapper<T, COUNT>::HandleUpdated(const String& Name, T* ValuePtr
 		// Copy characters from initialValue to value, ensuring null-termination.
 		for (size_t i = 0; i < COUNT - 1; ++i)
 		{
-			charValues[i] = ((char*)ValuePtr)[i];
+			memcpy(charValues+i, ValuePtr+i, sizeof(char));
 		}
 		charValues[COUNT - 1] = '\0';
         m_Preferences->putString(Name.c_str(), charValues);
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );	
-    } 
-	else if (std::is_integral<T>::value)
-	{
-        m_Preferences->putInt(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
-    } 
+    }
 	else if (std::is_same<T, float>::value)
 	{
         m_Preferences->putFloat(Name.c_str(), *ValuePtr);
@@ -225,7 +234,13 @@ void PreferencesWrapper<T, COUNT>::HandleUpdated(const String& Name, T* ValuePtr
 	{
         m_Preferences->putDouble(Name.c_str(), *ValuePtr);
 		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);	
-    } 
+    }
+	else if ( std::is_integral<T>::value ||
+			  std::is_convertible<T, int32_t>::value )
+	{
+        m_Preferences->putInt(Name.c_str(), *ValuePtr);
+		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
+    }  
 	else 
 	{
         ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", Name.c_str());

@@ -152,6 +152,22 @@ struct ActiveCompatibleDevice_t
 	unsigned long LastUpdateTime;
 };
 	
+enum SoundInputSource
+{
+  SoundInputSource_OFF,
+  SoundInputSource_Microphone,
+  SoundInputSource_Bluetooth,
+  SoundInputSource_Count
+};
+typedef SoundInputSource SoundInputSource_t;
+
+
+enum Mute_State_t
+{
+  Mute_State_Un_Muted = 0,
+  Mute_State_Muted,
+};
+
 enum SoundState_t
 {
   LastingSilenceDetected = 0,
@@ -283,8 +299,27 @@ struct NamedObject_t
 
 struct NamedCallback_t
 {
-	void (*Callback)(const String& name, void* callback);
-	String Name = "";
+	const String& Name;
+    void (*Callback)(const String& name, void* callback);
+
+    NamedCallback_t(const String& name, void (*callback)(const String& name, void* callback))
+        : Name(name), Callback(callback)
+    {
+    }
+	NamedCallback_t(const NamedCallback_t& other)
+        : Name(other.Name), Callback(other.Callback)
+    {
+    }
+    bool operator==(const NamedCallback_t& other) const
+    {
+        return this->Name.equals(other.Name) && this->Callback == other.Callback;
+    }
+
+    NamedCallback_t& operator=(const NamedCallback_t& other)
+    {
+        // Use the constructor with the member initializer list to initialize 'Name'
+        return *this = NamedCallback_t(other.Name, other.Callback);
+    }
 };
 
 struct DataItem_t

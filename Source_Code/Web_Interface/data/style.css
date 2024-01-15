@@ -13,18 +13,18 @@ p {
     font-size: 1.0rem;
 }
 
-.MainScreen {
+.mainScreen {
 	width: 100%;
 	height: 100%;
 }
 
-.ContentArea {	
+.mainContentArea {	
   transition: margin-left .5s;
   padding: 20px;
 }
 
 /* The side navigation menu */
-.LeftSideNavigationMenu {
+.leftSideNavigationMenu {
   position: absolute;
   height: 100%; /* 100% Full-height */
   width: 0; /* 0 width - change this with JavaScript */
@@ -39,7 +39,7 @@ p {
 }
 
 /* Position and style the close button (top right corner) */
-.LeftSideNavigationMenu.CloseButton {
+.leftSideNavigationMenu.CloseButton {
   position: absolute;
   top: 0;
   right: 25px;
@@ -48,7 +48,7 @@ p {
 }
 
 /* The navigation menu links */
-.LeftSideNavigationMenu a {
+.leftSideNavigationMenu a {
   float: right;
   padding: 8px 8px 8px 8px;
   text-decoration: none;
@@ -59,7 +59,7 @@ p {
 }
 
 /* The navigation menu buttons */
-.LeftSideNavigationMenu button {
+.leftSideNavigationMenu button {
 	width: 250px;
 	text-decoration: none;
 	font-size: 25px;
@@ -70,46 +70,52 @@ p {
 	float: right;
 }
 
-.LeftSideNavigationMenu button:hover {
+.leftSideNavigationMenu button:hover {
 	background-color: Yellow;
 	color: black;
 }
 
-.LeftSideNavigationMenu button.active {
+.leftSideNavigationMenu button.active {
 	background-color: #2196F3;
 	color: white;
 }
 
-.TabHeader {
+.mainMenu {
     overflow: hidden;
     background-color: Black;
 	/*border: 2px dashed green;*/
 }
 
-.TabHeader button {
+.mainMenu button {
 	padding: 10px 10px 10px 10px;
     float: left;
 	width: 50;
 	height: 50;
 }
-.TabHeader button:hover {
+.mainMenu button:hover {
 	background-color: Yellow;
 }
 
-.TabHeader button img{
+.mainMenu button img{
 	width: 42px;
 	height: 42px;
 }
 
-.TabHeader h1 {
+.mainMenu h1 {
 	padding: 0px 0px 0px 0px;
 	vertical-align: center;
 }
 
-.TabContent {
-	width: 100%;
-	height: 100%;
-	/*border: 2px dashed red;*/
+.menu-content {
+	display: none;
+	padding: 20px;
+	border: 1px solid #ccc;
+	background-color: white;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-content.active {
+	display: block;
 }
 
 body {
@@ -121,17 +127,59 @@ body {
 	/*border: 2px dashed black;*/
 }
 
-.SettingGroup {
+/*Selection Tabs*/
+.selection_tabs {
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	background-color: #333;
+	color: white;
+	box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.selection_tab {
+	cursor: pointer;
+	padding: 15px;
+	border: none;
+	background-color: #555;
+	color: white;
+	transition: background-color 0.3s ease;
+}
+
+.selection_tab:hover {
+	background-color: #777;
+}
+
+.selection_tab.active {
+	background-color: #4CAF50; /* Lighter blue for the selected tab */
+}
+
+.selection_tab_content {
+	display: none;
+	padding: 20px;
+	border: 1px solid #ccc;
+	background-color: white;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.selection_tab_content.active {
+	display: block;
+}
+
+
+
+/* Settings Group */
+.settingGroup {
     box-sizing: border-box;
 	display: flex;
 	align-items: center;
-	height: 50px;
+	height: auto;
 	background-color: Pink;
     box-shadow: 2px 2px 12px 1px rgba(100,100,100,.5);
 	border: 2px dashed orange;
 }
 
-.SettingGroup_Horrizontal_Grid_TextInput{
+.settingGroup_Horrizontal_Grid_TextInput{
 	box-sizing: border-box;
 	width: 100%;
 	align-content: center;
@@ -140,7 +188,8 @@ body {
 	grid-template-columns: minmax(20%, 40%) minmax(30%, 60%) 100px;
 	border: 2px dashed blue;
 }
-.SettingGroup_Horrizontal_Grid_Slider {
+
+.settingGroup_Horrizontal_Grid_slider {
 	box-sizing: border-box;
 	width: 100%;
 	align-content: center;
@@ -150,7 +199,7 @@ body {
 	border: 2px dashed blue;
 }
 
-.SettingGroup_Horrizontal_Grid_Toggle {
+.settingGroup_Horrizontal_Grid_Toggle {
 	box-sizing: border-box;
 	width: 100%;
 	align-content: center;
@@ -160,7 +209,7 @@ body {
 	border: 2px dashed blue;
 }
 
-.SettingGroup_Horrizontal_Grid_Status {
+.settingGroup_Horrizontal_Grid_Radio_Button {
 	box-sizing: border-box;
 	width: 100%;
 	align-content: center;
@@ -170,7 +219,17 @@ body {
 	border: 2px dashed blue;
 }
 
-.SettingGroup_Title {
+.settingGroup_Horrizontal_Grid_Status {
+	box-sizing: border-box;
+	width: 100%;
+	align-content: center;
+	vertical-align: middle;
+	display: grid;
+	grid-template-columns: auto 100px;
+	border: 2px dashed blue;
+}
+
+.settingGroup_Title {
     box-sizing: border-box;
 	display: flex;
 	justify-content: right;
@@ -178,8 +237,8 @@ body {
     font-size: 1.5rem;
 	border: 2px dashed black;
 }
-  
-.SettingGroup_Widget {
+
+.settingGroup_Widget {
     box-sizing: border-box;
 	display: flex;
 	justify-content: center;
@@ -187,13 +246,36 @@ body {
 	border: 2px dashed yellow;
 }
 
-.SettingGroup_Textbox {
+.settingGroup_Textbox {
     width: 100%; /* make the text box fill the width of its container */
 	box-sizing: border-box; /* include the padding and border in the element's total width */
 	padding: 10px; /* add some padding to the text box */
 	border: 1px solid #ccc; /* add a border to the text box */
 	border-radius: 4px; /* add some border-radius to the text box */
 }
+	
+.settingGroup_Value {
+    box-sizing: border-box;
+	display: flex;
+	justify-content: left;
+	align-items: center;
+	border: 2px dashed black;
+    font-size: 1rem;
+    font-weight: bold;
+    color: Black;
+	border: 2px dashed aqua;
+}
+
+.settingGroup_Radio_Button {
+    box-sizing: border-box;
+	display: flex;
+	justify-content: left;
+	align-items: Left;
+	border: 2px dashed yellow;
+}
+
+
+/*Test Boxes */
 #Source_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
 	box-sizing: border-box; /* include the padding and border in the element's total width */
@@ -227,6 +309,7 @@ body {
 	border-radius: 34px;
 }
 
+/* Buttons */
 #Sink_SSID_Submit_Button:hover {
 	background-color: yellow; /* set the background color of the button when hovering */
 }
@@ -261,39 +344,16 @@ body {
 	background-color: #2196F3; /* set the background color of the button when pressed */
 	transform: scale(0.98);
 	box-shadow: 0 0px #666; /* add a box-shadow to the button when pressed */
-}		
-.SettingGroup_Value {
-    box-sizing: border-box;
-	display: flex;
-	justify-content: left;
-	align-items: center;
-	border: 2px dashed black;
-    font-size: 1rem;
-    font-weight: bold;
-    color: Black;
-	border: 2px dashed aqua;
 }
 
-.Widget_Slider{
+
+/*sliders*/
+.widget_slider{
 	box-sizing: border-box;
 	width: 100%;
 }
 
-.Widget_Toggle_Switch {
-	box-sizing: border-box;
-	position: relative;
-	display: inline-block;
-	width: 60px;
-	height: 34px;
-}
-
-.Widget_Toggle_Switch input { 
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.Slider {
+.slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -305,7 +365,7 @@ body {
   transition: .4s;
 }
 
-.Slider:before {
+.slider:before {
   position: absolute;
   content: "";
   height: 26px;
@@ -317,24 +377,105 @@ body {
   transition: .4s;
 }
 
-input:checked + .Slider {
+input:checked + .slider {
   background-color: #2196F3;
 }
 
-input:focus + .Slider {
+input:focus + .slider {
   box-shadow: 0 0 1px #2196F3;
 }
 
-input:checked + .Slider:before {
+input:checked + .slider:before {
   -webkit-transform: translateX(26px);
   -ms-transform: translateX(26px);
   transform: translateX(26px);
 }
 
-.Slider.Round {
+.slider.Round {
   border-radius: 34px;
 }
 
-.Slider.Round:before {
+.slider.Round:before {
   border-radius: 50%;
+}
+
+/*Toggle Switches*/
+.widget_Toggle_Switch {
+	box-sizing: border-box;
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 34px;
+}
+.widget_Toggle_Switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+
+/* Radio Button Widget */
+
+.widget_Radio_Button {
+	box-sizing: border-box;
+	position: relative;
+	display: inline-block;
+	width: 100px;
+	height: auto 100px;
+}
+
+.settingGroup_Horrizontal_Grid_Radio_Button {
+    box-sizing: border-box;
+    width: 100%;
+    align-content: center;
+    vertical-align: middle;
+    display: grid;
+    grid-template-columns: auto auto auto; /* Adjust the number of tabs as needed */
+    border: 2px dashed blue;
+}
+
+.widget_Radio_Button label {
+    display: inline-block;
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid #3498db;
+    border-radius: 5px 5px 0 0; /* Rounded corners for the top */
+    margin: 5px;
+    background-color: #f1f1f1; /* Background color for the inactive tabs */
+    color: #333; /* Text color for the inactive tabs */
+}
+
+.widget_Radio_Button input[type="radio"]:checked + label {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.settingGroup_Horrizontal_Grid_Radio_Button {
+    box-sizing: border-box;
+    width: 100%;
+    align-content: center;
+    vertical-align: middle;
+    display: grid;
+    grid-template-columns: auto auto auto; /* Adjust the number of tabs as needed */
+    border: 2px dashed blue;
+}
+
+.widget_Radio_Button input[type="radio"] {
+    display: none; /* Hide the actual radio buttons */
+}
+
+.widget_Radio_Button label {
+    display: inline-block;
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid #3498db;
+    border-radius: 5px 5px 0 0; /* Rounded corners for the top */
+    margin: 5px;
+    background-color: #f1f1f1; /* Background color for the inactive tabs */
+    color: #333; /* Text color for the inactive tabs */
+}
+
+.widget_Radio_Button input[type="radio"]:checked + label {
+    background-color: #3498db;
+    color: #fff;
 }

@@ -29,19 +29,6 @@
 #include "HardwareSerial.h"
 #include "DataItem.h"
 
-enum InputType_t
-{
-  InputType_Microphone,
-  InputType_Bluetooth
-};
-
-enum Mute_State_t
-{
-  Mute_State_Un_Muted = 0,
-  Mute_State_Muted,
-};
-
-
 class Manager: public NamedItem
              , public I2S_Device_Callback
              , public Bluetooth_Sink_Callback
@@ -58,11 +45,16 @@ class Manager: public NamedItem
            , I2S_Device &I2S_Out );
     virtual ~Manager();
     void Setup();
+
+    //Tasks
+    static void Static_Manager_20mS_TaskLoop(void * parameter);
     void ProcessEventQueue20mS();
+    static void Static_Manager_1000mS_TaskLoop(void * parameter);
     void ProcessEventQueue1000mS();
+    static void Static_Manager_300000mS_TaskLoop(void * parameter);
     void ProcessEventQueue300000mS();
     
-    void SetInputType(InputType_t Type);
+    void SetInputType(SoundInputSource_t Type);
     //Bluetooth_Callback
     void BTDataReceived(uint8_t *data, uint32_t length);
     
@@ -77,11 +69,31 @@ class Manager: public NamedItem
     
   private:
     Preferences m_Preferences;
-    DataSerializer m_DataSerializer;  
+    DataSerializer m_DataSerializer;
+
+    void SetupSerialPortManager();
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
-
     
+    void SetupTasks();
+    TaskHandle_t m_Manager_20mS_Task;
+    TaskHandle_t m_Manager_1000mS_Task;
+    TaskHandle_t m_Manager_300000mS_Task;
+
+    void RegisterForDataItemCallBacks()
+    {
+      NamedCallback_t namedCallback = {m_SoundInputSource.GetName().c_str(), &SoundInputSourceValueChanged};
+      m_SoundInputSource.RegisterNamedCallback(&namedCallback);
+    }
+    
+    
+    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    static void SoundInputSourceValueChanged(const String &Name, void* object)
+    {
+      
+    }
+
     const bool m_BluetoothSinkEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
 
@@ -93,15 +105,18 @@ class Manager: public NamedItem
 
     const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+
     
+    void SetupStatisticalEngine();
     StatisticalEngine &m_StatisticalEngine;
-    InputType_t m_InputType;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
 
     //Bluetooth Data
+    void SetupBlueTooth();
     Bluetooth_Sink &m_BT_In;
     
     //I2S Sound Data RX
+    void SetupI2S();
     I2S_Device &m_Mic_In; 
     I2S_Device &m_I2S_Out;
 

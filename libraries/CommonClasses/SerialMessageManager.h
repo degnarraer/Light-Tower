@@ -107,13 +107,15 @@ class NewRxTxValueCallerInterface
 				m_NewValueCallees.erase(it);
 			}
 		}
-		void RegisterNamedCallback(NamedCallback_t* NamedCallback)
+		void RegisterNamedCallback(NamedCallback_t *namedCallback)
 		{
 			ESP_LOGI("RegisterNamedCallback", "Try Registering callback");
+			NamedCallback_t* newNamedCallback = new NamedCallback_t(*namedCallback);
+			
 			bool IsFound = false;
 			for (NamedCallback_t* callback : m_NamedCallbacks)
 			{
-				if(NamedCallback == callback)
+				if(*newNamedCallback == *callback)
 				{
 					ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
 					IsFound = true;
@@ -123,7 +125,7 @@ class NewRxTxValueCallerInterface
 			if(false == IsFound)
 			{
 				ESP_LOGI("RegisterNamedCallback", "NamedCallback Registered");
-				m_NamedCallbacks.push_back(NamedCallback);
+				m_NamedCallbacks.push_back(newNamedCallback);
 			}	
 		}
 		void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
@@ -133,6 +135,7 @@ class NewRxTxValueCallerInterface
 
 			// Check if the element was found before erasing
 			if (it != m_NamedCallbacks.end()) {
+				delete *it;
 				m_NamedCallbacks.erase(it);
 			}
 		}
