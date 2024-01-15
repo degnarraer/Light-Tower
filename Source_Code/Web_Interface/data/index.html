@@ -4,6 +4,7 @@
     <title>LED Controller</title>
     <meta name="viewport" Content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="style.css">
+	<link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
 
@@ -34,9 +35,9 @@
 				<div class="settingGroup_Horrizontal_Grid_slider">
 					<div class="settingGroup_Title">Input Gain</div>
 					<div class="settingGroup_Widget">
-						<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
+						<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 					</div>
-					<div class="settingGroup_Value"><span id="Amplitude_Gain_slider1_Value">10.0</span></div>
+					<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider1_Value">10.0</span></div>
 				</div>
 			</div>
 		</div>
@@ -57,9 +58,9 @@
 					<div class="settingGroup_Horrizontal_Grid_slider">
 						<div class="settingGroup_Title">Input Gain</div>
 						<div class="settingGroup_Widget">
-							<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+							<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
-						<div class="settingGroup_Value"><span id="Amplitude_Gain_slider2_Value">10.0</span> </div>
+						<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider2_Value">10.0</span> </div>
 					</div>
 				</div>
 			</div>
@@ -85,10 +86,10 @@
 							Bluetooth Bridge Name
 						</div>
 						<div class="settingGroup_Textbox">
-							<input type="text" id="Sink_SSID_Text_Box" oninput="textBoxValueChanged(this)" value="Enter SSID">
+							<input type="text" id="Sink_Name_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Name">
 						</div>
 						<div class="settingGroup_Widget">
-							<button id="Sink_SSID_Submit_Button" onclick="submit_New_SSID(this)">Submit</button>
+							<button id="Sink_Name_Submit_Button" onclick="submit_New_Name(this)">Submit</button>
 						</div>
 					</div>
 				</div>
@@ -119,9 +120,9 @@
 					<div class="settingGroup_Horrizontal_Grid_slider">
 						<div class="settingGroup_Title">Input Gain</div>
 							<div class="settingGroup_Widget">
-								<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_slider3" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
+								<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider3" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
-							<div class="settingGroup_Value"><span id="Amplitude_Gain_slider3_Value">10.0</span></div>
+							<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider3_Value">10.0</span></div>
 						</div>
 					</div>
 				</div>
@@ -144,10 +145,10 @@
 								Bluetooth Speaker Name
 							</div>
 							<div class="settingGroup_Textbox">
-								<input type="text" id="Source_SSID_Text_Box" value="Enter SSID">
+								<input type="text" id="Source_Name_Text_Box" value="Enter Name">
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Source_SSID_Submit_Button" onclick="submit_New_SSID(this)">Submit</button>
+								<button id="Source_Name_Submit_Button" onclick="submit_New_Name(this)">Submit</button>
 							</div>
 						</div>
 					</div>
@@ -157,7 +158,7 @@
 								Bluetooth Speaker Status
 							</div>
 							<div class="settingGroup_Value">
-								<label id="Source_Connection_Status">Current Status</label>
+								<label id="Source_Connection_Status_Textbox">Current Status</label>
 							</div>
 						</div>
 					</div>
@@ -194,9 +195,9 @@
 					<div class="settingGroup_Horrizontal_Grid_slider">
 						<div class="settingGroup_Title">FFT Gain</div>
 						<div class="settingGroup_Widget">
-							<input type="range" oninput="updatesliderValue(this)" id="FFT_Gain_slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+							<input type="range" oninput="updatesliderValue(this)" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
-						<div class="settingGroup_Value"><span id="FFT_Gain_slider1_Value">10.0</span> </div>
+						<div class="settingGroup_Value"><span id="FFT_Gain_Slider1_Value">10.0</span> </div>
 					</div>
 				</div>
 			</div>
@@ -205,9 +206,9 @@
 					<div class="settingGroup_Horrizontal_Grid_slider">
 						<div class="settingGroup_Title">Input Gain</div>
 						<div class="settingGroup_Widget">
-							<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+							<input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
-						<div class="settingGroup_Value"><span id="Amplitude_Gain_slider2_Value">10.0</span> </div>
+						<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider2_Value">10.0</span> </div>
 					</div>
 				</div>
 				<div class="settingGroup">

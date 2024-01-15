@@ -226,6 +226,7 @@ enum DataType_t
   DataType_ProcessedSoundFrame_t,
   DataType_SoundState_t,
   DataType_ConnectionStatus_t,
+  DataType_SoundInputSource_t,
   DataType_Undef,
 };
 
@@ -250,6 +251,7 @@ static const char* DataTypeStrings[] =
   "ProcessedSoundFrame_t",
   "SoundState_t",
   "ConnectionStatus_t",
+  "SoundInputSource_t",
   "Undefined_t"
 };
 
@@ -364,6 +366,7 @@ class DataTypeFunctions
 			{
 				if(DataType.equals(DataTypeStrings[i]))return (DataType_t)i;
 			}
+			ESP_LOGE("DataTypes: GetDataTypeFromString: %s", "GetDataTypeFromString: \"%s\": Undefined Data Type", DataType.c_str());
 			return DataType_Undef;
 		}
 
@@ -390,7 +393,12 @@ class DataTypeFunctions
 			else if(std::is_same<T, ProcessedSoundFrame_t>::value) 				return DataType_ProcessedSoundFrame_t;
 			else if(std::is_same<T, SoundState_t>::value) 						return DataType_SoundState_t;
 			else if(std::is_same<T, ConnectionStatus_t>::value) 				return DataType_ConnectionStatus_t;
-			else 																return DataType_Undef;
+			else if(std::is_same<T, SoundInputSource_t>::value)					return DataType_SoundInputSource_t;
+			else
+			{
+				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "Undefined Data Type");
+				return DataType_Undef;
+			}
 		}
 		size_t GetSizeOfDataType(DataType_t DataType)
 		{
@@ -473,7 +481,11 @@ class DataTypeFunctions
 					Result = sizeof(ConnectionStatus_t);
 				break;
 				
+				case DataType_SoundInputSource_t:
+					Result = sizeof(SoundInputSource_t);
+				break;
 				default:
+					ESP_LOGE("DataTypes: GetSizeOfDataType: %s", "GetSizeOfDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
 					Result = 0;
 				break;
 			}
@@ -518,6 +530,9 @@ class DataTypeFunctions
 				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Char_t Received: %s", Value.c_str());
 				*(char *)Buffer = Value[0];
 				break;
+			case DataType_SoundInputSource_t:
+				*(SoundInputSource_t *)Buffer = static_cast<SoundInputSource_t>(Value.toInt());
+				break;
 			case DataType_String_t:
 			case DataType_SSID_Info_t:
 			case DataType_BT_Info_With_LastUpdateTime_t:
@@ -530,6 +545,7 @@ class DataTypeFunctions
 				Result = false;
 				break;
 			default:
+				ESP_LOGE("DataTypes: SetValueFromFromStringForDataType", "SetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
 				Result = false;
 				break;
 			}
@@ -571,6 +587,9 @@ class DataTypeFunctions
 				case DataType_Char_t:
 					resultString += String(*((const char *)Buffer + i));
 					break;
+				case DataType_SoundInputSource_t:
+					resultString += String(*((const SoundInputSource_t *)Buffer + i));
+				break;
 				case DataType_String_t:
 				case DataType_SSID_Info_t:
 				case DataType_BT_Info_With_LastUpdateTime_t:
@@ -582,6 +601,7 @@ class DataTypeFunctions
 					resultString = "Unsupported Data Type";
 					break;
 				default:
+					ESP_LOGE("DataTypes: GetValueAsStringForDataType", "GetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
 					resultString = "Invalid Data Type";
 					break;
 				}
