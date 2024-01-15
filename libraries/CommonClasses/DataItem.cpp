@@ -6,17 +6,20 @@ template class DataItem<char, 50>;
 template class DataItem<ConnectionStatus_t, 1>;
 template class DataItem<BT_Info_With_LastUpdateTime_t, 1>;
 template class DataItem<SoundInputSource_t, 1>;
+template class DataItem<SoundOutputSource_t, 1>;
 
 
 template class PreferencesWrapper<float, 1>;
 template class PreferencesWrapper<bool, 1>;
 template class PreferencesWrapper<char, 50>;
 template class PreferencesWrapper<SoundInputSource_t, 1>;
+template class PreferencesWrapper<SoundOutputSource_t, 1>;
 
 template class DataItemWithPreferences<float, 1>;
 template class DataItemWithPreferences<bool, 1>;
 template class DataItemWithPreferences<char, 50>;
 template class DataItemWithPreferences<SoundInputSource_t, 1>;
+template class DataItemWithPreferences<SoundOutputSource_t, 1>;
 
 
 template <typename T, size_t COUNT>

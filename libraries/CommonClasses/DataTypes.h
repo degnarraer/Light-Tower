@@ -151,7 +151,7 @@ struct ActiveCompatibleDevice_t
 	int32_t RSSI;
 	unsigned long LastUpdateTime;
 };
-	
+
 enum SoundInputSource
 {
   SoundInputSource_OFF,
@@ -161,6 +161,13 @@ enum SoundInputSource
 };
 typedef SoundInputSource SoundInputSource_t;
 
+enum SoundOutputSource
+{
+  SoundOutputSource_OFF,
+  SoundOutputSource_Bluetooth,
+  SoundOutputSource_Count
+};
+typedef SoundOutputSource SoundOutputSource_t;
 
 enum Mute_State_t
 {
@@ -227,6 +234,7 @@ enum DataType_t
   DataType_SoundState_t,
   DataType_ConnectionStatus_t,
   DataType_SoundInputSource_t,
+  DataType_SoundOutputSource_t,
   DataType_Undef,
 };
 
@@ -252,6 +260,7 @@ static const char* DataTypeStrings[] =
   "SoundState_t",
   "ConnectionStatus_t",
   "SoundInputSource_t",
+  "SoundOutputSource_t",
   "Undefined_t"
 };
 
@@ -394,6 +403,7 @@ class DataTypeFunctions
 			else if(std::is_same<T, SoundState_t>::value) 						return DataType_SoundState_t;
 			else if(std::is_same<T, ConnectionStatus_t>::value) 				return DataType_ConnectionStatus_t;
 			else if(std::is_same<T, SoundInputSource_t>::value)					return DataType_SoundInputSource_t;
+			else if(std::is_same<T, SoundOutputSource_t>::value)				return DataType_SoundOutputSource_t;
 			else
 			{
 				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "Undefined Data Type");
@@ -484,6 +494,11 @@ class DataTypeFunctions
 				case DataType_SoundInputSource_t:
 					Result = sizeof(SoundInputSource_t);
 				break;
+				
+				case DataType_SoundOutputSource_t:
+					Result = sizeof(SoundOutputSource_t);
+				break;
+				
 				default:
 					ESP_LOGE("DataTypes: GetSizeOfDataType: %s", "GetSizeOfDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
 					Result = 0;
@@ -531,7 +546,12 @@ class DataTypeFunctions
 				*(char *)Buffer = Value[0];
 				break;
 			case DataType_SoundInputSource_t:
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "SoundInputSource_t Received: %s", Value.c_str());
 				*(SoundInputSource_t *)Buffer = static_cast<SoundInputSource_t>(Value.toInt());
+				break;
+			case DataType_SoundOutputSource_t:
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "SoundOutputSource_t Received: %s", Value.c_str());
+				*(SoundOutputSource_t *)Buffer = static_cast<SoundOutputSource_t>(Value.toInt());
 				break;
 			case DataType_String_t:
 			case DataType_SSID_Info_t:
@@ -589,6 +609,9 @@ class DataTypeFunctions
 					break;
 				case DataType_SoundInputSource_t:
 					resultString += String(*((const SoundInputSource_t *)Buffer + i));
+				break;
+				case DataType_SoundOutputSource_t:
+					resultString += String(*((const SoundOutputSource_t *)Buffer + i));
 				break;
 				case DataType_String_t:
 				case DataType_SSID_Info_t:
