@@ -177,7 +177,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	else
 	{
 		ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
-		String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
+		const String& message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
 		if(message.length() == 0)
 		{
 			ESP_LOGE("QueueMessageFromData", "Error! 0 String Length!");
@@ -201,7 +201,8 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	{
 		ESP_LOGI("QueueMessage", "Queue Message: \"%s\"", message.c_str());
 		
-		if(xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE)
+		if( message.length() < MaxMessageLength && 
+			xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE )
 		{
 			ESP_LOGW("QueueMessage", "WARNING! Unable to Queue Message.");
 		}

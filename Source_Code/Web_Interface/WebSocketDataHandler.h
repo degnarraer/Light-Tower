@@ -33,7 +33,7 @@
 #include <Arduino_JSON.h>
 #pragma GCC diagnostic pop
 
-#define HEARTBEAT_MS 1000
+#define HEARTBEAT_MS 10000
 #define MAX_VALUES_TO_SEND_AT_ONCE 50
 
 class SettingsWebServerManager;
