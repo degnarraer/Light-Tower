@@ -11,6 +11,7 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   }
   NotifyClient(clientId, Encode_Widget_Values_To_JSON(&KeyValuePairs));
 }
+
 void WebSocketDataProcessor::WebSocketDataProcessor_Task()
 {
   const TickType_t xFrequency = 20;
@@ -28,10 +29,14 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
         KeyValuePairs.clear();
       }
     }
+    if(KeyValuePairs.size() >0)
+    {
+      NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
+    }
   }  
 }
 
-void WebSocketDataProcessor::RegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::RegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver)
 {
   auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), aReceiver);
   if (it == m_MyReceivers.end())
@@ -41,7 +46,7 @@ void WebSocketDataProcessor::RegisterAsWebSocketDataReceiver(String Name, WebSoc
   }
 }
 
-void WebSocketDataProcessor::DeRegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::DeRegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver)
 {
   auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), aReceiver);
   if (it != m_MyReceivers.end())
@@ -51,7 +56,7 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataReceiver(String Name, WebS
   }
 }
 
-void WebSocketDataProcessor::RegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender)
+void WebSocketDataProcessor::RegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender)
 {
   auto it = std::find(m_MySenders.begin(), m_MySenders.end(), aSender);
   if (it == m_MySenders.end())
@@ -61,7 +66,7 @@ void WebSocketDataProcessor::RegisterAsWebSocketDataSender(String Name, WebSocke
   }
 }
 
-void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender)
+void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender)
 {
   // Find the iterator pointing to the element
   auto it = std::find(m_MySenders.begin(), m_MySenders.end(), aSender);
@@ -75,7 +80,7 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(String Name, WebSoc
 }
 
 
-bool WebSocketDataProcessor::ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value)
+bool WebSocketDataProcessor::ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& Value)
 {
   bool WidgetFound = false;
   for(int i = 0; i < m_MyReceivers.size(); ++i)

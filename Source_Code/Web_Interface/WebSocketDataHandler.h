@@ -46,7 +46,7 @@ class WebSocketDataHandlerSender
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) = 0;
+    virtual bool ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& Value) = 0;
 };
 
 class WebSocketDataProcessor
@@ -61,11 +61,11 @@ class WebSocketDataProcessor
     {
       if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
     }
-    void RegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver);
-    void DeRegisterAsWebSocketDataReceiver(String Name, WebSocketDataHandlerReceiver *aReceiver);
-    void RegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender);
-    void DeRegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender);
-    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value);
+    void RegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver);
+    void DeRegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver);
+    void RegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
+    void DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
+    bool ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& Value);
     void UpdateAllDataToClient(uint8_t clientId);
     static void StaticWebSocketDataProcessor_Task(void * parameter)
     {
@@ -215,7 +215,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     
-    virtual bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String StringValue)
+    virtual bool ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& StringValue)
     {
       bool Found = false;
       for (size_t i = 0; i < m_WidgetIds.size(); i++)
