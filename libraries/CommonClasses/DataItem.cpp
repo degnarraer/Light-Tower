@@ -328,6 +328,7 @@ void DataItem<T, COUNT>::Setup()
 					value = '\0';
 				}
 				memcpy(mp_Value+i, &value, sizeof(char));
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
 				memcpy(mp_RxValue+i, &value, sizeof(char));
 				memcpy(mp_TxValue+i, &value, sizeof(char));
 				memcpy(mp_InitialValue+i, &value, sizeof(char));
@@ -341,6 +342,7 @@ void DataItem<T, COUNT>::Setup()
 			for (size_t i = 0; i < COUNT; ++i)
 			{
 				memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
 				memcpy(mp_RxValue+i, mp_InitialValuePtr, sizeof(T));
 				memcpy(mp_TxValue+i, mp_InitialValuePtr, sizeof(T));
 				memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
@@ -498,6 +500,7 @@ bool DataItem<T, COUNT>::DataItem_TX_Now()
 			if(TxValueChanged)
 			{
 				memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
 				ValueUpdated = true;
 			}
 		}
@@ -549,6 +552,7 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 			if(RxValueChanged)
 			{
 				memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
 				ValueUpdated = true;
 			}
 		}

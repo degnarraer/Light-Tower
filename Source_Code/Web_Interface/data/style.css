@@ -154,7 +154,7 @@ body {
 	background-color: #4CAF50; /* Lighter blue for the selected tab */
 }
 
-.selection_tab_content {
+.selection_tab_content_input_source {
 	display: none;
 	padding: 20px;
 	border: 1px solid #ccc;
@@ -162,7 +162,19 @@ body {
 	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
-.selection_tab_content.active {
+.selection_tab_content_input_source.active {
+	display: block;
+}
+
+.selection_tab_content_output_source {
+	display: none;
+	padding: 20px;
+	border: 1px solid #ccc;
+	background-color: white;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.selection_tab_content_output_source.active {
 	display: block;
 }
 

@@ -325,12 +325,27 @@ const widgetToSignal = {
 	'FFT_Gain_Slider4': 'FFT_Gain',
 };
 
+const classToSignal = {
+	'selection_tab_content_input_source': 'Sound_Input_Source',
+	'selection_tab_content_output_source': 'Sound_Output_Source',
+};
+
+const contentIdToValue = {
+	'Sound_Input_Selection_OFF': '0',
+	'Sound_Input_Selection_Microphone': '1',
+	'Sound_Input_Selection_Bluetooth': '2',
+	'Sound_Output_Selection_OFF': '0',
+	'Sound_Output_Selection_Bluetooth': '1',
+};
+
 const messageHandlers = {
+	'Sound_Input_Source': handleSoundInputSource,
+	'Sound_Output_Source': handleSoundOutputSource,
+	
 	'Speaker_Image': handleSpeakerImage,
 	'Amplitude_Gain': handleAmplitudeGain,
 	'FFT_Gain': handleFFTGain,
 	'FFT_Gain_slider2': handleFFTGain,
-	'Sound_Input_Source': handleSoundInputSource,
 	
 	'BT_Sink_Name': handleBTSinkName,
 	'BT_Sink_Enable': HandleBTSinkEnable,
@@ -343,6 +358,46 @@ const messageHandlers = {
 	'BT_Source_Connection_Status': handleBTSourceConnectionStatus,
 	'BT_Source_Reset': handleBTSourceReset,
 };
+
+function handleSoundInputSource(id, value) {
+	console.log('Setting Sound Input Source!');
+
+}
+
+function handleSoundInputSource(id, value) {
+	console.log('Received Sound Input Source!');
+	switch(parseInt(value))
+	{
+		case 0:
+			showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
+		break;
+		case 1:
+			showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
+		break;
+		case 2:
+			showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
+		break;
+		default:
+			console.log('Undefined Input Source State!');
+		break;
+	}
+}
+
+function handleSoundOutputSource(id, value) {
+	console.log('Received Sound Output Source!');
+	switch(parseInt(value))
+	{
+		case 0:
+			showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
+		break;
+		case 1:
+			showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
+		break;
+		default:
+			console.log('Undefined Input Source State!');
+		break;
+	}
+}
 
 function handleSpeakerImage(id, value) {
 	console.log('Received Speaker Image!');
@@ -390,25 +445,6 @@ function handleFFTGain(id, value) {
 		document.getElementById(widget + '_Value').innerHTML = value;
 	}
   }
-}
-
-function handleSoundInputSource(id, value) {
-	console.log('Received Sound Input Source!');
-	switch(parseInt(value))
-	{
-		case 0:
-			showContent('selection_tab_content', 'Sound_Input_Selection_OFF');
-		break;
-		case 1:
-			showContent('selection_tab_content', 'Sound_Input_Selection_Microphone');
-		break;
-		case 2:
-			showContent('selection_tab_content', 'Sound_Input_Selection_Bluetooth');
-		break;
-		default:
-			console.log('Undefined Input Source State!');
-		break;
-	}
 }
 
 function handleBTSinkName(id, value) {
@@ -557,4 +593,17 @@ function showContent(classId, contentId) {
 
 	// Show the selected tab content
 	document.getElementById(contentId).classList.add('active');
+	
+	var signal = classToSignal[classId.toString()];
+	var value = contentIdToValue[contentId.toString()];
+	if(signal && value)
+	{
+		var Root = {};
+		Root.WidgetValue = {};
+		Root['WidgetValue'].Id = signal.toString();
+		Root['WidgetValue'].Value = value.toString();
+		var Message = JSON.stringify(Root);
+		console.log(Message);
+		websocket.send(Message);
+	}
 }

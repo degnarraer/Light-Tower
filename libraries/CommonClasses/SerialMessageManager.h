@@ -163,8 +163,8 @@ class NewRxTxValueCallerInterface
 				if (namedCallback->Callback) 
 				{
 					void (*aCallback)(const String&, void*);
+					aCallback = namedCallback->Callback;
 					aCallback(namedCallback->Name, object);
-					break;	
 				}
 			}
 		}

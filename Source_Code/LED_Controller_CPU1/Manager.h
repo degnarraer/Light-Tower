@@ -91,7 +91,7 @@ class Manager: public NamedItem
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     static void SoundInputSourceValueChanged(const String &Name, void* object)
     {
-      
+      ESP_LOGI("Manager::SoundInputSourceValueChanged", "Sound Input Value Changed");
     }
 
     const bool m_BluetoothSinkEnable_InitialValue = false;

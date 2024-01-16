@@ -46,6 +46,7 @@ void Manager::Setup()
   SetupStatisticalEngine();
   //SetInputType(SoundInputSource_Bluetooth);
   SetInputType(SoundInputSource_Microphone);
+  RegisterForDataItemCallBacks();
   SetupTasks();
 }
 
