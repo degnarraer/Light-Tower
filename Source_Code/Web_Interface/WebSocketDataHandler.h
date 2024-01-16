@@ -34,12 +34,13 @@
 #pragma GCC diagnostic pop
 
 #define HEARTBEAT_MS 1000
+#define MAX_VALUES_TO_SEND_AT_ONCE 50
 
 class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> *KeyValuePairs) = 0;
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool ifStale = false) = 0;
 };
 
 class WebSocketDataHandlerReceiver
@@ -65,7 +66,7 @@ class WebSocketDataProcessor
     void RegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender);
     void DeRegisterAsWebSocketDataSender(String Name, WebSocketDataHandlerSender *aSender);
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value);
-    
+    void UpdateAllDataToClient(uint8_t clientId);
     static void StaticWebSocketDataProcessor_Task(void * parameter)
     {
       WebSocketDataProcessor *Processor = (WebSocketDataProcessor*)parameter;
@@ -78,7 +79,8 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     void WebSocketDataProcessor_Task();
     String Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs);
-    void NotifyClients(String TextString);
+    void NotifyClient(uint8_t clientID, const String& TextString);
+    void NotifyClients(const String& TextString);
     template<typename T>
     std::vector<T>* AllocateVectorOnHeap(size_t count)
     {
@@ -189,7 +191,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     T m_OldValue[COUNT];
     const bool &m_Debug;
     
-    virtual void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> *KeyValuePairs)
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool ifStale = false)
     {
       T CurrentValue[COUNT];
       m_DataItem.GetValue(CurrentValue, COUNT);
@@ -198,13 +200,13 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         unsigned long currentMillis = millis();
         unsigned long elapsedTime = currentMillis - m_Last_Update_Time;
         bool ValueChanged = (memcmp(CurrentValue, m_OldValue, sizeof(T)*COUNT) != 0);
-        if(ValueChanged || HEARTBEAT_MS <= elapsedTime)
+        if(ifStale || ValueChanged || HEARTBEAT_MS <= elapsedTime)
         {
           String CurrentValueString = GetValueAsStringForDataType(CurrentValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
-          ESP_LOGD( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
+          ESP_LOGD( "WebSocketDataHandler: AppendCurrentValueToKVP", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
           for (size_t i = 0; i < m_WidgetIds.size(); i++)
           {
-            ESP_LOGD("WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
+            ESP_LOGD("WebSocketDataHandler: AppendCurrentValueToKVP", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
             KeyValuePairs->push_back({ m_WidgetIds[i], CurrentValueString });
           }
           m_Last_Update_Time = millis();
@@ -271,7 +273,7 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
     }
   protected:
   
-    void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
+    void AppendCurrentValueToKVP(std::vector<KVP> &KeyValuePairs, bool ifStale = false) override
     {
       BT_Info_With_LastUpdateTime_t Received_SSID;
       unsigned long CurrentTime = millis();
@@ -378,9 +380,9 @@ class WebSocketStringDataHandler: public WebSocketDataHandler<char, 50>
     
   protected:
   
-    void CheckForNewDataLinkValueAndSendToWebSocket(std::vector<KVP> &KeyValuePairs) override
+    void AppendCurrentValueToKVP(std::vector<KVP> &KeyValuePairs, bool ifStale = false) override
     {
-      ESP_LOGE( "WebSocketDataHandler: CheckForNewDataLinkValueAndSendToWebSocket", "THIS IS NOT HANDLED YET");
+      ESP_LOGE( "WebSocketDataHandler: AppendCurrentValueToKVP", "THIS IS NOT HANDLED YET");
     }
 
     bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override

@@ -1,6 +1,16 @@
 #include "WebSocketDataHandler.h"
 
 
+void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
+{
+  ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %i", clientId );
+  std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+  for(int i = 0; i < m_MySenders.size(); ++i)
+  {
+    m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs, true);
+  }
+  NotifyClient(clientId, Encode_Widget_Values_To_JSON(&KeyValuePairs));
+}
 void WebSocketDataProcessor::WebSocketDataProcessor_Task()
 {
   const TickType_t xFrequency = 20;
@@ -11,8 +21,8 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     std::vector<KVP> KeyValuePairs = std::vector<KVP>();
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
-      m_MySenders[i]->CheckForNewDataLinkValueAndSendToWebSocket(&KeyValuePairs);
-      if(KeyValuePairs.size() > 0)
+      m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs);
+      if(KeyValuePairs.size() > MAX_VALUES_TO_SEND_AT_ONCE)
       {
         NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
         KeyValuePairs.clear();
@@ -92,10 +102,20 @@ String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *Ke
   return Result;
 }
 
-void WebSocketDataProcessor::NotifyClients(String TextString)
+void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& TextString)
 {
   if(0 < TextString.length())
   {
-    m_WebSocket.textAll(TextString.c_str(), TextString.length());
+    Serial.println(TextString.c_str());
+    m_WebSocket.text(clientID, TextString);
+  }
+}
+
+void WebSocketDataProcessor::NotifyClients(const String& TextString)
+{
+  if(0 < TextString.length())
+  {
+    Serial.println(TextString.c_str());
+    m_WebSocket.textAll(TextString);
   }
 }

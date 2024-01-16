@@ -221,7 +221,7 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 							  , public SetupCallerInterface
 {
 	public:
-		SerialPortMessageManager( String Name
+		SerialPortMessageManager( const String& Name
 								, HardwareSerial &Serial
 								, DataSerializer &DataSerializer )
 								: m_Name(Name)
@@ -243,8 +243,8 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 			}
 		}
 		void SetupSerialPortMessageManager();
-		bool QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count);
-		bool QueueMessage(String message);
+		bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
+		bool QueueMessage(const String& message);
 	private:
 		HardwareSerial &m_Serial;
 		DataSerializer &m_DataSerializer;

@@ -67,8 +67,10 @@ class SettingsWebServerManager
       {
         case WS_EVT_CONNECT:
           Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+          m_WebSocketDataProcessor.UpdateAllDataToClient(client->id());
           break;
         case WS_EVT_PONG:
+          Serial.printf("WebSocket client #%u Pinged Us!\n", client->id());
           break;
         case WS_EVT_DATA:
           HandleWebSocketMessage(arg, data, len);

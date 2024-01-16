@@ -20,9 +20,6 @@
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
 
-
-
-
 DataSerializer m_DataSerializer;  
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
 SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);

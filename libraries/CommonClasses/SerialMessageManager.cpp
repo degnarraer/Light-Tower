@@ -167,7 +167,7 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	else ESP_LOGI("SetupSerialPortMessageManager", "TX Queue Created.");
 	SetupAllSetupCallees();
 }
-bool SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t DataType, void* Object, size_t Count)
+bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count)
 {
 	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
@@ -194,10 +194,10 @@ bool SerialPortMessageManager::QueueMessageFromData(String Name, DataType_t Data
 	}
 	return result;
 }
-bool SerialPortMessageManager::QueueMessage(String message)
+bool SerialPortMessageManager::QueueMessage(const String& message)
 {
 	bool result = false;
-	if(nullptr != m_TXQueue)
+	if(m_TXQueue)
 	{
 		ESP_LOGD("QueueMessage", "Queue Message: \"%s\"", message.c_str());
 		if(xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE)
