@@ -124,7 +124,6 @@ class SettingsWebServerManager
     StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_SinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager);
     WebSocketDataHandler<char, 50> m_BluetoothSinkName_DataHandler = WebSocketDataHandler<char, 50>( "Bluetooth Sink Name Web Socket Handler", {"BT_Sink_Name"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkName, false );
 
-
     //Sink Connection Status
     const ConnectionStatus_t m_SinkConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat", m_SinkConnectionStatus_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU1SerialPortMessageManager);
@@ -132,7 +131,7 @@ class SettingsWebServerManager
     
     //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, &m_Preferences, m_CPU1SerialPortMessageManager);
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Enable Web Socket Handler", {"BT_Sink_Auto_ReConnect"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkAutoReConnect, false );
     
     //Bluetooth Source Enable

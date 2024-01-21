@@ -177,7 +177,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	else
 	{
 		ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
-		const String& message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
+		const String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
 		if(message.length() == 0)
 		{
 			ESP_LOGE("QueueMessageFromData", "Error! 0 String Length!");
@@ -231,30 +231,26 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 		while (m_Serial.available())
 		{
 			character = m_Serial.read();
-			if(message.length() > MaxMessageLength) message = "";
+			if(message.length() > MaxMessageLength)
+			{
+				ESP_LOGE("SerialPortMessageManager", "Message RX Overrun: \"%s\"", message.c_str());
+				message = "";
+			}
 			if(character == '\n')
 			{
-				ESP_LOGD("SerialPortMessageManager", "Message RX: \"%s\"", message.c_str());
+				ESP_LOGI("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), message.c_str());
 				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);
 				if(NamedObject.Object)
 				{
-					ESP_LOGD("SerialPortMessageManager", "DeSerialized Named object: \"%s\" Address: \"%p\"", NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+					ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
 					NotifyCallee(NamedObject.Name, NamedObject.Object);
 				}
 				else
 				{
-					if(NamedObject.Name.length() > 0)
-					{
-						ESP_LOGW("SerialPortMessageManager", "DeSerialized Named object %s failed", NamedObject.Name);
-					}
-					else
-					{
-						ESP_LOGW("SerialPortMessageManager", "DeSerialized Named object failed");
-					}
+					ESP_LOGW("SerialPortMessageManager", "\"%s\" DeSerialized Named object failed", m_Name.c_str());
 				}
-				
 				message = "";
 			}
 			else

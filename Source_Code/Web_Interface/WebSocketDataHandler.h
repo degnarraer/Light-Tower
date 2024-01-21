@@ -247,102 +247,97 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
 };
 
-/*
-class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
+
+class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_Info_With_LastUpdateTime_t, 1>
 {
   public:
-    WebSocketSSIDArrayDataHandler( const String &Name 
-                                 , const std::initializer_list<const char*>& WidgetIds
-                                 , WebSocketDataProcessor &WebSocketDataProcessor
-                                 , const bool &IsReceiver
-                                 , const bool &IsSender
-                                 , DataItem<String, 1> &DataItem
-                                 , const bool Debug )
-                                 : WebSocketDataHandler<String>( Name
-                                                               , WidgetIds
-                                                               , WebSocketDataProcessor
-                                                               , IsReceiver
-                                                               , IsSender
-                                                               , DataItem
-                                                               , Debug)
+    WebSocket_BT_Info_ArrayDataHandler( const String &Name 
+                                      , const std::initializer_list<const char*>& WidgetIds
+                                      , WebSocketDataProcessor &WebSocketDataProcessor
+                                      , const bool &IsReceiver
+                                      , const bool &IsSender
+                                      , DataItem<BT_Device_Info_With_LastUpdateTime_t, 1> &DataItem
+                                      , const bool Debug )
+                                      : WebSocketDataHandler<BT_Device_Info_With_LastUpdateTime_t, 1>( Name
+                                                                                                     , WidgetIds
+                                                                                                     , WebSocketDataProcessor
+                                                                                                     , IsReceiver
+                                                                                                     , IsSender
+                                                                                                     , DataItem
+                                                                                                     , Debug)
     {
     }
     
-    virtual ~WebSocketSSIDArrayDataHandler()
+    virtual ~WebSocket_BT_Info_ArrayDataHandler()
     {
     }
   protected:
   
-    void AppendCurrentValueToKVP(std::vector<KVP> &KeyValuePairs, bool ifStale = false) override
-    {
-      BT_Info_With_LastUpdateTime_t Received_SSID;
+    void AppendCurrentValueToKVP(std::vector<KVP> &KeyValuePairs, bool ifStale = false)
+    {   
+      BT_Device_Info_With_LastUpdateTime_t CurrentValue;
+      m_DataItem.GetValue(&CurrentValue, 1);
       unsigned long CurrentTime = millis();
-      size_t TotalSSIDs = uxQueueMessagesWaiting(m_DataItem->QueueHandle_TX);
-      for(int i = 0; i < TotalSSIDs; ++i)
+
+      bool Found = false;
+      for(int j = 0; j < m_ActiveCompatibleDevices.size(); ++j)
       {
-        if(true == GetValueFromQueue(&Received_SSID, m_DataItem->QueueHandle_TX, m_DataItem->Name, false, m_TicksToWait, m_PullError))
+        if( true == m_ActiveCompatibleDevices[j].NAME.equals(CurrentValue.NAME) )
         {
-          bool Found = false;
-          for(int j = 0; j < m_ActiveSSIDs.size(); ++j)
+          Found = true;
+          m_ActiveCompatibleDevices[j].RSSI = CurrentValue.RSSI;
+          m_ActiveCompatibleDevices[j].LastUpdateTime = CurrentTime;
+          if(ACTIVE_SSID_TIMEOUT <= CurrentValue.TimeSinceUdpate)
           {
-            if( true == m_ActiveSSIDs[j].SSID.equals(Received_SSID.SSID) )
-            {
-              Found = true;
-              m_ActiveSSIDs[j].RSSI = Received_SSID.RSSI;
-              m_ActiveSSIDs[j].LastUpdateTime = CurrentTime;
-              if(ACTIVE_SSID_TIMEOUT <= Received_SSID.TimeSinceUdpate)
-              {
-                ESP_LOGI("WebSocketDataHandler", "SSID Timedout: %s", Received_SSID.SSID);
-                m_ActiveSSIDs.erase(m_ActiveSSIDs.begin()+j);
-              }
-              break;
-            }
+            ESP_LOGI("WebSocketDataHandler", "SSID Timedout: %s", CurrentValue.NAME);
+            m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+j);
           }
-          if(false == Found && ACTIVE_SSID_TIMEOUT >= Received_SSID.TimeSinceUdpate )
-          {
-            ESP_LOGI("WebSocketDataHandler", "Found New SSID: %s", Received_SSID.SSID);
-            ActiveCompatibleDevice_t NewDevice;
-            NewDevice.SSID = Received_SSID.SSID;
-            NewDevice.ADDRESS = Received_SSID.ADDRESS;
-            NewDevice.RSSI = Received_SSID.RSSI;
-            NewDevice.LastUpdateTime = CurrentTime;
-            m_ActiveSSIDs.push_back(NewDevice);
-          }
+          break;
         }
+      }
+      if(false == Found && ACTIVE_SSID_TIMEOUT >= CurrentValue.TimeSinceUdpate )
+      {
+        ESP_LOGI("WebSocketDataHandler", "Found New Device: %s", CurrentValue.NAME);
+        ActiveCompatibleDevice_t NewDevice;
+        NewDevice.NAME = CurrentValue.NAME;
+        NewDevice.ADDRESS = CurrentValue.ADDRESS;
+        NewDevice.RSSI = CurrentValue.RSSI;
+        NewDevice.LastUpdateTime = CurrentTime;
+        m_ActiveCompatibleDevices.push_back(NewDevice);
       }
       
       std::vector<KVT> KeyValueTupleVector;
-      for(int i = 0; i < m_ActiveSSIDs.size(); ++i)
+      for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         KVT KeyValueTuple;
-        KeyValueTuple.Key = m_ActiveSSIDs[i].SSID;
-        KeyValueTuple.Value1 = m_ActiveSSIDs[i].ADDRESS;
-        KeyValueTuple.Value2 = String(m_ActiveSSIDs[i].RSSI);
+        KeyValueTuple.Key = m_ActiveCompatibleDevices[i].NAME;
+        KeyValueTuple.Value1 = m_ActiveCompatibleDevices[i].ADDRESS;
+        KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].RSSI);
         KeyValueTupleVector.push_back(KeyValueTuple);
       }
       if(0 < KeyValueTupleVector.size())
       {
-        for(size_t i = 0; i < m_NumberOfWidgets; i++)
+        for(size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          KeyValuePairs.push_back({ mp_WidgetId[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
+          KeyValuePairs.push_back({ m_WidgetIds[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
         }
       }
     }
     
-    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
+    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value)
     {
       return false;
     }
   private:
     //Datalink
-    std::vector<ActiveCompatibleDevice_t> m_ActiveSSIDs;
+    std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
     String Encode_SSID_Values_To_JSON(std::vector<KVT> &KeyValueTuple)
     {
       JSONVar JSONVars;
       for(int i = 0; i < KeyValueTuple.size(); ++i)
       { 
         JSONVar SSIDValues;
-        SSIDValues["SSID"] = KeyValueTuple[i].Key;
+        SSIDValues["NAME"] = KeyValueTuple[i].Key;
         SSIDValues["ADDRESS"] = KeyValueTuple[i].Value1;
         SSIDValues["RSSI"] = KeyValueTuple[i].Value2;
         JSONVars["SSIDValue" + String(i)] = SSIDValues;
@@ -351,7 +346,7 @@ class WebSocketSSIDArrayDataHandler: public WebSocketDataHandler<String>
       return Result;
     }
 };
-*/
+
 
 /*
 class WebSocketStringDataHandler: public WebSocketDataHandler<char, 50> 

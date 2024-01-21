@@ -41,13 +41,32 @@ Manager::~Manager()
 void Manager::Setup()
 {
   InitializePreferences();
+  RegisterForDataItemCallBacks();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  m_BT_Out.StartDevice( "JBL Flip 6", "" );
-  xTaskCreatePinnedToCore( Static_TaskLoop_20mS,     "Manager_20mS_Task",      10000,   this,   configMAX_PRIORITIES - 1,   &m_Manager_20mS_Task,       1 );
+  ConnectToTargetDevice();
+  xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, configMAX_PRIORITIES - 1, &m_Manager_20mS_Task, 1 );
+}
+
+void Manager::ConnectToTargetDevice()
+{
+  CompatibleDevice_t targetDevice;
+  m_TargetCompatibleDevice.GetValue(&targetDevice, 1);
+  ESP_LOGI("Manager::ConnectToTargetDevice", "Connecting to Target Device! Name: \"%s\" Address: \"%s\"", targetDevice.NAME, targetDevice.ADDRESS );
+  bool autoReConnect;
+  m_BluetoothSourceAutoReConnect.GetValue(&autoReConnect, 1);
+  bool resetBLE;
+  m_BluetoothReset.GetValue(&resetBLE, 1);
+  bool resetNVS;
+  m_BluetoothResetNVS.GetValue(&resetNVS, 1);
+  m_BT_Out.StartDevice( targetDevice.NAME
+                      , targetDevice.ADDRESS
+                      , autoReConnect
+                      , resetBLE
+                      , resetNVS );
 }
 
 void Manager::InitializePreferences()
@@ -101,16 +120,16 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
 {
   for(int i = 0; i < Devices.size(); ++i)
   { 
-    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Name: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
-            , Devices[i].SSID.c_str()
+    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
+            , i
+            , Devices[i].NAME.c_str()
             , Devices[i].ADDRESS.c_str()
             , millis() - Devices[i].LastUpdateTime
             , Devices[i].RSSI );
-    /*BT_Info_With_LastUpdateTime_t ActiveDevice = { Devices[i].SSID.c_str()
-                                                 , Devices[i].ADDRESS.c_str()
-                                                 , millis() - Devices[i].LastUpdateTime
-                                                 , Devices[i].RSSI };
-    */
-    //m_ScannedName.SetValue(ActiveDevice);                                            
+    BT_Device_Info_With_LastUpdateTime_t ActiveDevice = { Devices[i].NAME.c_str()
+                                                        , Devices[i].ADDRESS.c_str()
+                                                        , millis() - Devices[i].LastUpdateTime
+                                                        , Devices[i].RSSI };
+    m_ScannedDevice.SetValue(&ActiveDevice, 1);                                            
   }
 }

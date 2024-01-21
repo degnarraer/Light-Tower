@@ -74,6 +74,7 @@ class DataSerializer: public CommonUtils
 			if (error)
 			{
 				++m_FailCount;
+				NamedObject.Object = nullptr;
 				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. \nInput: %s", error.c_str(), json);
 				return;
 			}
@@ -111,7 +112,9 @@ class DataSerializer: public CommonUtils
 					else
 					{
 						++m_FailCount;
+						NamedObject.Object = nullptr;
 						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
+						return;
 					}
 					
 					if(CheckSumCalc == CheckSumIn)
@@ -130,7 +133,9 @@ class DataSerializer: public CommonUtils
 				}
 				else
 				{
+					NamedObject.Object = nullptr;
 					ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Missing Tags");
+					return;
 				}
 			}
 			FailPercentage();

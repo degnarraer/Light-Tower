@@ -46,6 +46,7 @@ class Manager: public NamedItem
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
     virtual ~Manager();
     void Setup();
+    void ConnectToTargetDevice();
     static void Static_TaskLoop_20mS(void * parameter);
     void TaskLoop_20mS();
     static void Static_TaskLoop_1000mS(void * parameter);
@@ -74,14 +75,40 @@ class Manager: public NamedItem
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
 
-   
+    void RegisterForDataItemCallBacks()
+    {
+      NamedCallback_t namedCallback = {m_SoundOutputSource.GetName().c_str(), &SoundOutputSourceValueChanged};
+      m_SoundOutputSource.RegisterNamedCallback(&namedCallback);
+    }
+    
+    //Bluetooth Source Enable
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", false, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU3SerialPortMessageManager);
-    
+
+    //Bluetooth Source Auto ReConnect   
     DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", false, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU3SerialPortMessageManager);
-    
+ 
+    //Bluetooth Source Reset   
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "Bt_Src_Reset", false, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+ 
+    //Bluetooth Reset NVS   
+    DataItemWithPreferences<bool, 1> m_BluetoothResetNVS = DataItemWithPreferences<bool, 1>( "BT_SRC_NVS_Rst", false, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+ 
+    //Bluetooth Source Connection Status   
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", ConnectionStatus_t::Disconnected, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
-    
-    DataItem<BT_Info_With_LastUpdateTime_t, 1> m_ScannedName = DataItem<BT_Info_With_LastUpdateTime_t, 1>( "Scan_BT_Device", {"", "", 0, 0}, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
+  
+    //Scanned Device  
+    DataItem<BT_Device_Info_With_LastUpdateTime_t, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_LastUpdateTime_t, 1>( "Scan_BT_Device", {"", "", 0, 0}, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
+
+    //Target Compatible Device
+    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", {"", ""}, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager);
+
+    //Sound Output Source
+    const SoundOutputSource_t m_SoundOutputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_Bluetooth;
+    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOutputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    static void SoundOutputSourceValueChanged(const String &Name, void* object)
+    {
+      ESP_LOGI("Manager::SoundOutputSourceValueChanged", "Sound Output Source Value Changed");
+    }
     
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;

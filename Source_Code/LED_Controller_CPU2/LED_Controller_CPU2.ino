@@ -73,9 +73,9 @@ int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
   return m_Manager.SetBTTxData(Data, channel_len);
 }
 
-static bool ConnectToThisSSID(const char* ssid, esp_bd_addr_t address, int32_t rssi)
+static bool ConnectToThisName(const char* ssid, esp_bd_addr_t address, int32_t rssi)
 {
-  return m_BT_Out.ConnectToThisSSID(ssid, address, rssi);
+  return m_BT_Out.ConnectToThisName(ssid, address, rssi);
 }
 void setup() 
 {
@@ -92,7 +92,7 @@ void setup()
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   
   m_I2S_In.Setup();
-  a2dp_source.set_ssid_callback(ConnectToThisSSID);
+  a2dp_source.set_ssid_callback(ConnectToThisName);
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
   m_Manager.Setup();

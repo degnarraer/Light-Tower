@@ -4,10 +4,10 @@ template class DataItem<float, 1>;
 template class DataItem<bool, 1>;
 template class DataItem<char, 50>;
 template class DataItem<ConnectionStatus_t, 1>;
-template class DataItem<BT_Info_With_LastUpdateTime_t, 1>;
+template class DataItem<CompatibleDevice_t, 1>;
+template class DataItem<BT_Device_Info_With_LastUpdateTime_t, 1>;
 template class DataItem<SoundInputSource_t, 1>;
 template class DataItem<SoundOutputSource_t, 1>;
-
 
 template class PreferencesWrapper<float, 1>;
 template class PreferencesWrapper<bool, 1>;
@@ -102,6 +102,7 @@ void PreferencesWrapper<T, COUNT>::Update_Preference(const String &UpdateType, c
 	}		
 	else if ( UpdateType.equals("Timer") )
 	{
+        ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
         HandleUpdated( Name, ValuePtr );
 		m_PreferenceTimerActive = false;
 		m_Preferences_Last_Update = currentMillis;

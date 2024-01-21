@@ -50,28 +50,28 @@ struct KeyValueTuple
 };
 typedef KeyValueTuple KVT;
 
-struct SSID_Info
+struct BT_Device_Info
 {
 	public:
-		SSID_Info(){}
-		SSID_Info(String SSID_In, int32_t RSSI_In = 0)
+		BT_Device_Info(){}
+		BT_Device_Info(String NAME_In, int32_t RSSI_In = 0)
 		{
-			if(248 < SSID_In.length())
+			if(248 < NAME_In.length())
 			{
-				Serial << "Bad SSID: " << SSID_In.c_str() << " | " << SSID_In.length() << "\n";
-				assert(248 >= SSID_In.length());
+				Serial << "Bad NAME: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
+				assert(248 >= NAME_In.length());
 			}
-			snprintf(SSID, 248, "%s", SSID_In.c_str());
+			snprintf(NAME, 248, "%s", NAME_In.c_str());
 			RSSI = RSSI_In;
 		}
-		SSID_Info(String SSID_In, String ADDRESS_In, int32_t RSSI_In = 0)
+		BT_Device_Info(String NAME_In, String ADDRESS_In, int32_t RSSI_In = 0)
 		{
-			if(248 < SSID_In.length())
+			if(248 < NAME_In.length())
 			{
-				Serial << "Bad SSID: " << SSID_In.c_str() << " | " << SSID_In.length() << "\n";
-				assert(248 >= SSID_In.length());
+				Serial << "Bad NAME: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
+				assert(248 >= NAME_In.length());
 			}
-			snprintf(SSID, 248, "%s", SSID_In.c_str());
+			snprintf(NAME, 248, "%s", NAME_In.c_str());
 			if(18 < ADDRESS_In.length())
 			{
 				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
@@ -80,24 +80,24 @@ struct SSID_Info
 			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
 			RSSI = RSSI_In;
 		}
-		char SSID[248] = "\0";
+		char NAME[248] = "\0";
 		char ADDRESS[18] = "\0";
 		int32_t RSSI = 0;
 };
-typedef SSID_Info SSID_Info_t;
+typedef BT_Device_Info BT_Device_Info_t;
 
-struct BT_Info_With_LastUpdateTime
+struct BT_Device_Info_With_LastUpdateTime_t
 {
 	public:
-		BT_Info_With_LastUpdateTime(){}
-		BT_Info_With_LastUpdateTime(String SSID_In, String ADDRESS_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
+		BT_Device_Info_With_LastUpdateTime_t(){}
+		BT_Device_Info_With_LastUpdateTime_t(String NAME_In, String ADDRESS_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
 		{
-			if(248 < SSID_In.length())
+			if(248 < NAME_In.length())
 			{
-				Serial << "Bad SSID: " << SSID_In.c_str() << " | " << SSID_In.length() << "\n";
-				assert(248 >= SSID_In.length());
+				Serial << "Bad SSID: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
+				assert(248 >= NAME_In.length());
 			}
-			snprintf(SSID, 248, "%s", SSID_In.c_str());
+			snprintf(NAME, 248, "%s", NAME_In.c_str());
 			if(18 < ADDRESS_In.length())
 			{
 				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
@@ -107,10 +107,10 @@ struct BT_Info_With_LastUpdateTime
 			TimeSinceUdpate = TimeSinceUdpate_in;
 			RSSI = RSSI_In;
 		}
-		BT_Info_With_LastUpdateTime& operator=(const BT_Info_With_LastUpdateTime& other)
+		BT_Device_Info_With_LastUpdateTime_t& operator=(const BT_Device_Info_With_LastUpdateTime_t& other)
 		{
-			strncpy(this->SSID, other.SSID, sizeof(this->SSID) - 1);
-			this->SSID[sizeof(this->SSID) - 1] = '\0';  // Ensure null-terminated
+			strncpy(this->NAME, other.NAME, sizeof(this->NAME) - 1);
+			this->NAME[sizeof(this->NAME) - 1] = '\0';  // Ensure null-terminated
 
 			strncpy(this->ADDRESS, other.ADDRESS, sizeof(this->ADDRESS) - 1);
 			this->ADDRESS[sizeof(this->ADDRESS) - 1] = '\0';  // Ensure null-terminated
@@ -120,33 +120,76 @@ struct BT_Info_With_LastUpdateTime
 
 			return *this;
 		}
-		bool operator==(const BT_Info_With_LastUpdateTime& other) const
+		bool operator==(const BT_Device_Info_With_LastUpdateTime_t& other) const
 		{
-			if( strcmp(this->SSID, other.SSID) == 0 &&
+			if( strcmp(this->NAME, other.NAME) == 0 &&
 				strcmp(this->ADDRESS, other.ADDRESS) == 0 &&
 				this->RSSI == other.RSSI &&
 				this->TimeSinceUdpate == other.TimeSinceUdpate) return true;
 			else return false;
 		}
-		bool operator!=(const BT_Info_With_LastUpdateTime& other) const
+		bool operator!=(const BT_Device_Info_With_LastUpdateTime_t& other) const
 		{
-			if( strcmp(this->SSID, other.SSID) != 0 ||
+			if( strcmp(this->NAME, other.NAME) != 0 ||
 				strcmp(this->ADDRESS, other.ADDRESS) != 0 ||
 				this->RSSI != other.RSSI ||
 				this->TimeSinceUdpate != other.TimeSinceUdpate) return true;
 			else return false;
 		}
-		char SSID[248] = "\0";
+		char NAME[248] = "\0";
 		char ADDRESS[18] = "\0";
 		int32_t RSSI = 0;
 		uint32_t TimeSinceUdpate = 0;
 };
-typedef BT_Info_With_LastUpdateTime BT_Info_With_LastUpdateTime_t;
+typedef BT_Device_Info_With_LastUpdateTime_t BT_Device_Info_With_LastUpdateTime_t_t;
 
+struct  CompatibleDevice_t
+{
+	public:
+		CompatibleDevice_t(){}
+		CompatibleDevice_t(String NAME_In, String ADDRESS_In)
+		{
+			if(248 < NAME_In.length())
+			{
+				Serial << "Bad SSID: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
+				assert(248 >= NAME_In.length());
+			}
+			snprintf(NAME, 248, "%s", NAME_In.c_str());
+			if(18 < ADDRESS_In.length())
+			{
+				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
+				assert(18 >= ADDRESS_In.length());
+			}
+			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
+		}
+		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)
+		{
+			strncpy(this->NAME, other.NAME, sizeof(this->NAME) - 1);
+			this->NAME[sizeof(this->NAME) - 1] = '\0';  // Ensure null-terminated
+
+			strncpy(this->ADDRESS, other.ADDRESS, sizeof(this->ADDRESS) - 1);
+			this->ADDRESS[sizeof(this->ADDRESS) - 1] = '\0';  // Ensure null-terminated
+			return *this;
+		}
+		bool operator==(const CompatibleDevice_t& other) const
+		{
+			if( strcmp(this->NAME, other.NAME) == 0 &&
+				strcmp(this->ADDRESS, other.ADDRESS) == 0) return true;
+			else return false;
+		}
+		bool operator!=(const BT_Device_Info_With_LastUpdateTime_t& other) const
+		{
+			if( strcmp(this->NAME, other.NAME) != 0 ||
+				strcmp(this->ADDRESS, other.ADDRESS) != 0) return true;
+			else return false;
+		}
+		char NAME[248] = "\0";
+		char ADDRESS[18] = "\0";
+};
 
 struct ActiveCompatibleDevice_t
 {
-	String SSID;
+	String NAME;
 	String ADDRESS;
 	int32_t RSSI;
 	unsigned long LastUpdateTime;
@@ -223,8 +266,8 @@ enum DataType_t
   DataType_Uint32_t,
   DataType_Char_t,
   DataType_String_t,
-  DataType_SSID_Info_t,
-  DataType_BT_Info_With_LastUpdateTime_t,
+  DataType_BT_Device_Info_t,
+  DataType_BT_Device_Info_With_LastUpdateTime_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -249,7 +292,7 @@ static const char* DataTypeStrings[] =
   "Uint32_t",
   "Char_t",
   "String_t",
-  "SSID_Info_t",
+  "BT_Device_Info_t",
   "BT_Info_With_LastUpdateTime_t",
   "Float_t",
   "Double_t",
@@ -383,27 +426,27 @@ class DataTypeFunctions
 		DataType_t GetDataTypeFromTemplateType()
 		{
 			DataType_t Result;
-			if(	std::is_same<T, bool>::value) 									return DataType_Bool_t;
-			else if(std::is_same<T, int8_t>::value) 							return DataType_Int8_t;
-			else if(std::is_same<T, int16_t>::value) 							return DataType_Int16_t;
-			else if(std::is_same<T, int32_t>::value) 							return DataType_Int32_t;
-			else if(std::is_same<T, uint8_t>::value) 							return DataType_Uint8_t;
-			else if(std::is_same<T, uint16_t>::value) 							return DataType_Uint16_t;
-			else if(std::is_same<T, uint32_t>::value) 							return DataType_Uint32_t;
-			else if(std::is_same<T, char>::value) 								return DataType_Char_t;
-			else if(std::is_same<T, String>::value) 							return DataType_String_t;
-			else if(std::is_same<T, SSID_Info_t>::value) 						return DataType_SSID_Info_t;
-			else if(std::is_same<T, BT_Info_With_LastUpdateTime_t>::value) 		return DataType_BT_Info_With_LastUpdateTime_t;
-			else if(std::is_same<T, float>::value) 								return DataType_Float_t;
-			else if(std::is_same<T, double>::value) 							return DataType_Double_t;
-			else if(std::is_same<T, ProcessedSoundData_t>::value) 				return DataType_ProcessedSoundData_t;
-			else if(std::is_same<T, MaxBandSoundData_t>::value) 				return DataType_MaxBandSoundData_t;
-			else if(std::is_same<T, Frame_t>::value) 							return DataType_Frame_t;
-			else if(std::is_same<T, ProcessedSoundFrame_t>::value) 				return DataType_ProcessedSoundFrame_t;
-			else if(std::is_same<T, SoundState_t>::value) 						return DataType_SoundState_t;
-			else if(std::is_same<T, ConnectionStatus_t>::value) 				return DataType_ConnectionStatus_t;
-			else if(std::is_same<T, SoundInputSource_t>::value)					return DataType_SoundInputSource_t;
-			else if(std::is_same<T, SoundOutputSource_t>::value)				return DataType_SoundOutputSource_t;
+			if(	std::is_same<T, bool>::value) 										return DataType_Bool_t;
+			else if(std::is_same<T, int8_t>::value) 								return DataType_Int8_t;
+			else if(std::is_same<T, int16_t>::value) 								return DataType_Int16_t;
+			else if(std::is_same<T, int32_t>::value) 								return DataType_Int32_t;
+			else if(std::is_same<T, uint8_t>::value) 								return DataType_Uint8_t;
+			else if(std::is_same<T, uint16_t>::value) 								return DataType_Uint16_t;
+			else if(std::is_same<T, uint32_t>::value) 								return DataType_Uint32_t;
+			else if(std::is_same<T, char>::value) 									return DataType_Char_t;
+			else if(std::is_same<T, String>::value) 								return DataType_String_t;
+			else if(std::is_same<T, BT_Device_Info_t>::value) 						return DataType_BT_Device_Info_t;
+			else if(std::is_same<T, BT_Device_Info_With_LastUpdateTime_t>::value) 	return DataType_BT_Device_Info_With_LastUpdateTime_t;
+			else if(std::is_same<T, float>::value) 									return DataType_Float_t;
+			else if(std::is_same<T, double>::value) 								return DataType_Double_t;
+			else if(std::is_same<T, ProcessedSoundData_t>::value) 					return DataType_ProcessedSoundData_t;
+			else if(std::is_same<T, MaxBandSoundData_t>::value) 					return DataType_MaxBandSoundData_t;
+			else if(std::is_same<T, Frame_t>::value) 								return DataType_Frame_t;
+			else if(std::is_same<T, ProcessedSoundFrame_t>::value) 					return DataType_ProcessedSoundFrame_t;
+			else if(std::is_same<T, SoundState_t>::value) 							return DataType_SoundState_t;
+			else if(std::is_same<T, ConnectionStatus_t>::value) 					return DataType_ConnectionStatus_t;
+			else if(std::is_same<T, SoundInputSource_t>::value)						return DataType_SoundInputSource_t;
+			else if(std::is_same<T, SoundOutputSource_t>::value)					return DataType_SoundOutputSource_t;
 			else
 			{
 				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "Undefined Data Type");
@@ -451,12 +494,12 @@ class DataTypeFunctions
 					Result = sizeof(String);
 				break;
 				
-				case DataType_SSID_Info_t:
-					Result = sizeof(SSID_Info_t);
+				case DataType_BT_Device_Info_t:
+					Result = sizeof(BT_Device_Info_t);
 				break;
 				
-				case DataType_BT_Info_With_LastUpdateTime_t:
-					Result = sizeof(BT_Info_With_LastUpdateTime_t);
+				case DataType_BT_Device_Info_With_LastUpdateTime_t:
+					Result = sizeof(BT_Device_Info_With_LastUpdateTime_t);
 				break;
 				
 				case DataType_Float_t:
@@ -554,8 +597,8 @@ class DataTypeFunctions
 				*(SoundOutputSource_t *)Buffer = static_cast<SoundOutputSource_t>(Value.toInt());
 				break;
 			case DataType_String_t:
-			case DataType_SSID_Info_t:
-			case DataType_BT_Info_With_LastUpdateTime_t:
+			case DataType_BT_Device_Info_t:
+			case DataType_BT_Device_Info_With_LastUpdateTime_t:
 			case DataType_ProcessedSoundData_t:
 			case DataType_MaxBandSoundData_t:
 			case DataType_Frame_t:
@@ -614,8 +657,8 @@ class DataTypeFunctions
 					resultString += String(*((const SoundOutputSource_t *)Buffer + i));
 				break;
 				case DataType_String_t:
-				case DataType_SSID_Info_t:
-				case DataType_BT_Info_With_LastUpdateTime_t:
+				case DataType_BT_Device_Info_t:
+				case DataType_BT_Device_Info_With_LastUpdateTime_t:
 				case DataType_ProcessedSoundData_t:
 				case DataType_MaxBandSoundData_t:
 				case DataType_Frame_t:

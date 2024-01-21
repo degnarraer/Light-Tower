@@ -55,7 +55,7 @@ sink_BT_Enable_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'Sink_BT_Enable_Toggle_Button';
+	Root['WidgetValue'].Id = 'BT_Sink_Enable';
 	Root['WidgetValue'].Value = String(sink_BT_Enable_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
@@ -66,7 +66,7 @@ sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'Sink_BT_Auto_ReConnect_Toggle_Button';
+	Root['WidgetValue'].Id = 'BT_Sink_Auto_ReConnect';
 	Root['WidgetValue'].Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
@@ -77,7 +77,7 @@ source_BT_Reset_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'Source_BT_Reset_Toggle_Button';
+	Root['WidgetValue'].Id = 'BT_Source_Reset';
 	Root['WidgetValue'].Value = String(source_BT_Reset_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);
@@ -88,7 +88,7 @@ Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'Source_BT_Auto_ReConnect_Toggle_Button';
+	Root['WidgetValue'].Id = 'BT_Source_Auto_Reconnect';
 	Root['WidgetValue'].Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	console.log(Message);

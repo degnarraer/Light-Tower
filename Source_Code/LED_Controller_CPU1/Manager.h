@@ -86,23 +86,27 @@ class Manager: public NamedItem
       m_SoundInputSource.RegisterNamedCallback(&namedCallback);
     }
     
-    
+    //Sound Input Source
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     static void SoundInputSourceValueChanged(const String &Name, void* object)
     {
       ESP_LOGI("Manager::SoundInputSourceValueChanged", "Sound Input Value Changed");
     }
-
+    
+    //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
 
+    //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     
+    //Bluetooth Sink Connection Status
     const ConnectionStatus_t m_SinkConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat", m_SinkConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager);
 
+    //Bluetooth Sink Name
     const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
 

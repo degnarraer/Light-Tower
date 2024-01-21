@@ -192,12 +192,16 @@ class Bluetooth_Source: public NamedItem
 		}
 		void Setup();
 		void InstallDevice();
-		void StartDevice( const char *SourceName, const char *SourceAddress );
-		void SetSSIDToConnect( const char *SourceName, const char *SourceAddress );
+		void StartDevice( const char *SourceName
+						, const char *SourceAddress
+						, bool AutoReconnect
+						, bool ResetBLE
+						, bool ResetNVS );
+		void SetNameToConnect( const char *SourceName, const char *SourceAddress );
 		void SetMusicDataCallback(music_data_cb_t callback);
 		
 		//Callback from BT Source for compatible devices to connect to
-		bool ConnectToThisSSID(const char*ssid, esp_bd_addr_t address, int32_t rssi);
+		bool ConnectToThisName(const char*name, esp_bd_addr_t address, int32_t rssi);
 		void Set_NVS_Init(bool ResetNVS)
 		{ 
 			m_ResetNVS = ResetNVS;
@@ -225,11 +229,11 @@ class Bluetooth_Source: public NamedItem
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		String m_SSID;
+		String m_NAME;
 		String m_ADDRESS;
 		bool m_ResetNVS = false;
-		bool m_ResetBLE = false;
-		bool m_AutoReConnect = true;
+		bool m_ResetBLE = true;
+		bool m_AutoReConnect = false;
 		bool m_SSPEnabled = false;
 		
 		
@@ -237,7 +241,7 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
-		bool compatible_device_found(const char* ssid, esp_bd_addr_t address, int32_t rssi);
+		bool compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
 };
