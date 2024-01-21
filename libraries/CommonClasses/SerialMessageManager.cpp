@@ -199,12 +199,12 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	bool result = false;
 	if(m_TXQueue)
 	{
-		ESP_LOGI("QueueMessage", "Queue Message: \"%s\"", message.c_str());
+		ESP_LOGI("QueueMessage", "\"%s\" Queue Message: \"%s\"", m_Name.c_str(), message.c_str());
 		
 		if( message.length() < MaxMessageLength && 
 			xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE )
 		{
-			ESP_LOGW("QueueMessage", "WARNING! Unable to Queue Message.");
+			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name.c_str());
 		}
 		else
 		{

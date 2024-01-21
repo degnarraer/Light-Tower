@@ -557,11 +557,11 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 				ValueUpdated = true;
 			}
 		}
-		if(RxTxType_Rx_Echo_Value == m_RxTxType)
-		{
-			memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
-			DataItem_TX_Now();
-		}
+	}
+	if(RxTxType_Rx_Echo_Value == m_RxTxType)
+	{
+		memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
+		DataItem_TX_Now();
 	}
 	return ValueUpdated;
 }
