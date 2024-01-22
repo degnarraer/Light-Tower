@@ -99,6 +99,7 @@ void PreferencesWrapper<T, COUNT>::Update_Preference(const String &UpdateType, c
 	{
         ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
         HandleUpdated( Name, ValuePtr );
+		m_Preferences_Last_Update = currentMillis;
 	}		
 	else if ( UpdateType.equals("Timer") )
 	{
