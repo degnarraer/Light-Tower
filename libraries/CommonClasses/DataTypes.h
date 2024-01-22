@@ -4,6 +4,9 @@
 #include "Arduino.h"
 #include "Streaming.h"
 
+#define BT_NAME_LENGTH 50
+#define BT_ADDRESS_LENGTH 18
+
 class NamedItem
 {
   public:
@@ -54,35 +57,35 @@ struct BT_Device_Info
 {
 	public:
 		BT_Device_Info(){}
-		BT_Device_Info(String NAME_In, int32_t RSSI_In = 0)
+		BT_Device_Info(const char* name_In, int32_t rssi_In = 0)
 		{
-			if(248 < NAME_In.length())
+			if(BT_NAME_LENGTH < String(name_In).length())
 			{
-				Serial << "Bad NAME: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
-				assert(248 >= NAME_In.length());
+				Serial << "Bad name: " << String(name_In).c_str() << " | " << String(name_In).length() << "\n";
+				assert(BT_NAME_LENGTH >= String(name_In).length());
 			}
-			snprintf(NAME, 248, "%s", NAME_In.c_str());
-			RSSI = RSSI_In;
+			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
+			rssi = rssi_In;
 		}
-		BT_Device_Info(String NAME_In, String ADDRESS_In, int32_t RSSI_In = 0)
+		BT_Device_Info(const char* name_In, const char* address_In, int32_t rssi_In = 0)
 		{
-			if(248 < NAME_In.length())
+			if(BT_NAME_LENGTH < String(name_In).length())
 			{
-				Serial << "Bad NAME: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
-				assert(248 >= NAME_In.length());
+				Serial << "Bad name: " << name_In << " | " << String(name_In).length() << "\n";
+				assert(BT_NAME_LENGTH >= String(name_In).length());
 			}
-			snprintf(NAME, 248, "%s", NAME_In.c_str());
-			if(18 < ADDRESS_In.length())
+			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
+			if(BT_ADDRESS_LENGTH < String(address_In).length())
 			{
-				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
-				assert(18 >= ADDRESS_In.length());
+				Serial << "Bad ADDRESS: " << address_In << " | " << String(address_In).length() << "\n";
+				assert(BT_ADDRESS_LENGTH >= String(address_In).length());
 			}
-			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
-			RSSI = RSSI_In;
+			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
+			rssi = rssi_In;
 		}
-		char NAME[248] = "\0";
-		char ADDRESS[18] = "\0";
-		int32_t RSSI = 0;
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		int32_t rssi = 0;
 };
 typedef BT_Device_Info BT_Device_Info_t;
 
@@ -90,56 +93,56 @@ struct BT_Device_Info_With_LastUpdateTime_t
 {
 	public:
 		BT_Device_Info_With_LastUpdateTime_t(){}
-		BT_Device_Info_With_LastUpdateTime_t(String NAME_In, String ADDRESS_In, uint32_t TimeSinceUdpate_in, int32_t RSSI_In = 0)
+		BT_Device_Info_With_LastUpdateTime_t(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)
 		{
-			if(248 < NAME_In.length())
+			if(BT_NAME_LENGTH < String(name_In).length())
 			{
-				Serial << "Bad SSID: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
-				assert(248 >= NAME_In.length());
+				Serial << "Bad SSID: " << name_In << " | " << String(name_In).length() << "\n";
+				assert(BT_NAME_LENGTH >= String(name_In).length());
 			}
-			snprintf(NAME, 248, "%s", NAME_In.c_str());
-			if(18 < ADDRESS_In.length())
+			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
+			if(BT_ADDRESS_LENGTH < String(address_In).length())
 			{
-				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
-				assert(18 >= ADDRESS_In.length());
+				Serial << "Bad address: " << address_In << " | " << String(address_In).length() << "\n";
+				assert(BT_ADDRESS_LENGTH >= String(address_In).length());
 			}
-			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
-			TimeSinceUdpate = TimeSinceUdpate_in;
-			RSSI = RSSI_In;
+			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
+			timeSinceUdpate = timeSinceUdpate_in;
+			rssi = rssi_In;
 		}
 		BT_Device_Info_With_LastUpdateTime_t& operator=(const BT_Device_Info_With_LastUpdateTime_t& other)
 		{
-			strncpy(this->NAME, other.NAME, sizeof(this->NAME) - 1);
-			this->NAME[sizeof(this->NAME) - 1] = '\0';  // Ensure null-terminated
+			strncpy(this->name, other.name, sizeof(this->name) - 1);
+			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
 
-			strncpy(this->ADDRESS, other.ADDRESS, sizeof(this->ADDRESS) - 1);
-			this->ADDRESS[sizeof(this->ADDRESS) - 1] = '\0';  // Ensure null-terminated
+			strncpy(this->address, other.address, sizeof(this->address) - 1);
+			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
 
-			this->RSSI = other.RSSI;
-			this->TimeSinceUdpate = other.TimeSinceUdpate;
+			this->rssi = other.rssi;
+			this->timeSinceUdpate = other.timeSinceUdpate;
 
 			return *this;
 		}
 		bool operator==(const BT_Device_Info_With_LastUpdateTime_t& other) const
 		{
-			if( strcmp(this->NAME, other.NAME) == 0 &&
-				strcmp(this->ADDRESS, other.ADDRESS) == 0 &&
-				this->RSSI == other.RSSI &&
-				this->TimeSinceUdpate == other.TimeSinceUdpate) return true;
+			if( strcmp(this->name, other.name) == 0 &&
+				strcmp(this->address, other.address) == 0 &&
+				this->rssi == other.rssi &&
+				this->timeSinceUdpate == other.timeSinceUdpate) return true;
 			else return false;
 		}
 		bool operator!=(const BT_Device_Info_With_LastUpdateTime_t& other) const
 		{
-			if( strcmp(this->NAME, other.NAME) != 0 ||
-				strcmp(this->ADDRESS, other.ADDRESS) != 0 ||
-				this->RSSI != other.RSSI ||
-				this->TimeSinceUdpate != other.TimeSinceUdpate) return true;
+			if( strcmp(this->name, other.name) != 0 ||
+				strcmp(this->address, other.address) != 0 ||
+				this->rssi != other.rssi ||
+				this->timeSinceUdpate != other.timeSinceUdpate) return true;
 			else return false;
 		}
-		char NAME[248] = "\0";
-		char ADDRESS[18] = "\0";
-		int32_t RSSI = 0;
-		uint32_t TimeSinceUdpate = 0;
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		int32_t rssi = 0;
+		uint32_t timeSinceUdpate = 0;
 };
 typedef BT_Device_Info_With_LastUpdateTime_t BT_Device_Info_With_LastUpdateTime_t_t;
 
@@ -147,52 +150,107 @@ struct  CompatibleDevice_t
 {
 	public:
 		CompatibleDevice_t(){}
-		CompatibleDevice_t(String NAME_In, String ADDRESS_In)
+		CompatibleDevice_t(const char* name_In, const char* address_In)
 		{
-			if(248 < NAME_In.length())
+			if(BT_NAME_LENGTH < String(name_In).length())
 			{
-				Serial << "Bad SSID: " << NAME_In.c_str() << " | " << NAME_In.length() << "\n";
-				assert(248 >= NAME_In.length());
+				Serial << "Bad SSID: " << name_In << " | " << String(name_In).length() << "\n";
+				assert(BT_NAME_LENGTH >= String(name_In).length());
 			}
-			snprintf(NAME, 248, "%s", NAME_In.c_str());
-			if(18 < ADDRESS_In.length())
+			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
+			if(BT_ADDRESS_LENGTH < String(address_In).length())
 			{
-				Serial << "Bad ADDRESS: " << ADDRESS_In.c_str() << " | " << ADDRESS_In.length() << "\n";
-				assert(18 >= ADDRESS_In.length());
+				Serial << "Bad address: " << address_In << " | " << String(address_In).length() << "\n";
+				assert(BT_ADDRESS_LENGTH >= String(address_In).length());
 			}
-			snprintf(ADDRESS, 18, "%s", ADDRESS_In.c_str());
+			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
 		}
 		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)
 		{
-			strncpy(this->NAME, other.NAME, sizeof(this->NAME) - 1);
-			this->NAME[sizeof(this->NAME) - 1] = '\0';  // Ensure null-terminated
+			strncpy(this->name, other.name, sizeof(this->name) - 1);
+			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
 
-			strncpy(this->ADDRESS, other.ADDRESS, sizeof(this->ADDRESS) - 1);
-			this->ADDRESS[sizeof(this->ADDRESS) - 1] = '\0';  // Ensure null-terminated
+			strncpy(this->address, other.address, sizeof(this->address) - 1);
+			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
 			return *this;
 		}
 		bool operator==(const CompatibleDevice_t& other) const
 		{
-			if( strcmp(this->NAME, other.NAME) == 0 &&
-				strcmp(this->ADDRESS, other.ADDRESS) == 0) return true;
+			if( strcmp(this->name, other.name) == 0 &&
+				strcmp(this->address, other.address) == 0) return true;
 			else return false;
 		}
-		bool operator!=(const BT_Device_Info_With_LastUpdateTime_t& other) const
+		bool operator!=(const CompatibleDevice_t& other) const
 		{
-			if( strcmp(this->NAME, other.NAME) != 0 ||
-				strcmp(this->ADDRESS, other.ADDRESS) != 0) return true;
+			if( strcmp(this->name, other.name) != 0 ||
+				strcmp(this->address, other.address) != 0) return true;
 			else return false;
 		}
-		char NAME[248] = "\0";
-		char ADDRESS[18] = "\0";
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
 };
 
 struct ActiveCompatibleDevice_t
 {
-	String NAME;
-	String ADDRESS;
-	int32_t RSSI;
-	unsigned long LastUpdateTime;
+	public:
+		ActiveCompatibleDevice_t(){}
+		ActiveCompatibleDevice_t(String name_In, String address_In)
+		{
+			if(BT_NAME_LENGTH < name_In.length())
+			{
+				Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
+				assert(BT_NAME_LENGTH >= name_In.length());
+			}
+			snprintf(name, BT_NAME_LENGTH, "%s", name_In.c_str());
+			if(BT_ADDRESS_LENGTH < address_In.length())
+			{
+				Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
+				assert(BT_ADDRESS_LENGTH >= address_In.length());
+			}
+			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In.c_str());
+		}
+		ActiveCompatibleDevice_t(String name_In, String address_In, int32_t rssi_in, unsigned long lastUpdateTime_in)
+		{
+			if(BT_NAME_LENGTH < name_In.length())
+			{
+				Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
+				assert(BT_NAME_LENGTH >= name_In.length());
+			}
+			snprintf(name, BT_NAME_LENGTH, "%s", name_In.c_str());
+			if(BT_ADDRESS_LENGTH < address_In.length())
+			{
+				Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
+				assert(BT_ADDRESS_LENGTH >= address_In.length());
+			}
+			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In.c_str());
+			rssi = rssi_in;
+			lastUpdateTime = lastUpdateTime_in;
+		}
+		ActiveCompatibleDevice_t& operator=(const ActiveCompatibleDevice_t& other)
+		{
+			strncpy(this->name, other.name, sizeof(this->name) - 1);
+			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+			strncpy(this->address, other.address, sizeof(this->address) - 1);
+			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+			return *this;
+		}
+		bool operator==(const ActiveCompatibleDevice_t& other) const
+		{
+			if( strcmp(this->name, other.name) == 0 &&
+				strcmp(this->address, other.address) == 0) return true;
+			else return false;
+		}
+		bool operator!=(const ActiveCompatibleDevice_t& other) const
+		{
+			if( strcmp(this->name, other.name) != 0 ||
+				strcmp(this->address, other.address) != 0) return true;
+			else return false;
+		}
+	char name[BT_NAME_LENGTH] = "\0";
+	char address[BT_ADDRESS_LENGTH] = "\0";
+	int32_t rssi;
+	unsigned long lastUpdateTime;
 };
 
 enum SoundInputSource
@@ -618,6 +676,7 @@ class DataTypeFunctions
 		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count, const String &Divider)
 		{
 			String resultString;
+			
 			for (int i = 0; i < Count; ++i)
 			{
 				if (i > 0 && Divider.length() > 0) resultString += Divider;
@@ -656,9 +715,17 @@ class DataTypeFunctions
 				case DataType_SoundOutputSource_t:
 					resultString += String(*((const SoundOutputSource_t *)Buffer + i));
 				break;
+				case DataType_BT_Device_Info_With_LastUpdateTime_t:
+				{
+					const BT_Device_Info_With_LastUpdateTime_t* deviceInfo = (const BT_Device_Info_With_LastUpdateTime_t*)(Buffer + i);
+					resultString += String(deviceInfo->name) + " | ";
+					resultString += String(deviceInfo->address) + " | ";
+					resultString += String(deviceInfo->rssi) + " | ";
+					resultString += String(deviceInfo->timeSinceUdpate);
+					break;
+				}
 				case DataType_String_t:
 				case DataType_BT_Device_Info_t:
-				case DataType_BT_Device_Info_With_LastUpdateTime_t:
 				case DataType_ProcessedSoundData_t:
 				case DataType_MaxBandSoundData_t:
 				case DataType_Frame_t:

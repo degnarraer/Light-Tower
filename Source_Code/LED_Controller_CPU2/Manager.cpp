@@ -55,15 +55,15 @@ void Manager::ConnectToTargetDevice()
 {
   CompatibleDevice_t targetDevice;
   m_TargetCompatibleDevice.GetValue(&targetDevice, 1);
-  ESP_LOGI("Manager::ConnectToTargetDevice", "Connecting to Target Device! Name: \"%s\" Address: \"%s\"", targetDevice.NAME, targetDevice.ADDRESS );
+  ESP_LOGI("Manager::ConnectToTargetDevice", "Connecting to Target Device! Name: \"%s\" Address: \"%s\"", targetDevice.name, targetDevice.address );
   bool autoReConnect;
   m_BluetoothSourceAutoReConnect.GetValue(&autoReConnect, 1);
   bool resetBLE;
   m_BluetoothReset.GetValue(&resetBLE, 1);
   bool resetNVS;
   m_BluetoothResetNVS.GetValue(&resetNVS, 1);
-  m_BT_Out.StartDevice( targetDevice.NAME
-                      , targetDevice.ADDRESS
+  m_BT_Out.StartDevice( targetDevice.name
+                      , targetDevice.address
                       , autoReConnect
                       , resetBLE
                       , resetNVS );
@@ -122,14 +122,14 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
   { 
     ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
             , i
-            , Devices[i].NAME.c_str()
-            , Devices[i].ADDRESS.c_str()
-            , millis() - Devices[i].LastUpdateTime
-            , Devices[i].RSSI );
-    BT_Device_Info_With_LastUpdateTime_t ActiveDevice = { Devices[i].NAME.c_str()
-                                                        , Devices[i].ADDRESS.c_str()
-                                                        , millis() - Devices[i].LastUpdateTime
-                                                        , Devices[i].RSSI };
+            , Devices[i].name
+            , Devices[i].address
+            , millis() - Devices[i].lastUpdateTime
+            , Devices[i].rssi );
+    BT_Device_Info_With_LastUpdateTime_t ActiveDevice = BT_Device_Info_With_LastUpdateTime_t( Devices[i].name
+                                                                                            , Devices[i].address
+                                                                                            , millis() - Devices[i].lastUpdateTime
+                                                                                            , Devices[i].rssi );
     m_ScannedDevice.SetValue(&ActiveDevice, 1);                                            
   }
 }

@@ -73,9 +73,9 @@ int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
   return m_Manager.SetBTTxData(Data, channel_len);
 }
 
-static bool ConnectToThisName(const char* ssid, esp_bd_addr_t address, int32_t rssi)
+static bool ConnectToThisName(const char* aName, esp_bd_addr_t address, int32_t rssi)
 {
-  return m_BT_Out.ConnectToThisName(ssid, address, rssi);
+  return m_BT_Out.ConnectToThisName(aName, address, rssi);
 }
 void setup() 
 {

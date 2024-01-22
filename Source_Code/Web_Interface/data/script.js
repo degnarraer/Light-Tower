@@ -22,7 +22,8 @@ window.addEventListener('load', onload);
 function onload(event)
 {
     initWebSocket();
-	showContent('menu-content', 'Speaker Status');
+	showContent('menu-content', 'Sound Output');
+	handleBTSourceTargetDevices();
 }
 function initWebSocket()
 {
@@ -357,7 +358,38 @@ const messageHandlers = {
 	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
 	'BT_Source_Connection_Status': handleBTSourceConnectionStatus,
 	'BT_Source_Reset': handleBTSourceReset,
+	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
 };
+
+
+
+function handleBTSourceTargetDevices() {
+	var bluetoothDevices = [
+        { name: "Device 1", address: "00:11:22:33:44:55", rssi: -50 },
+        { name: "Device 2", address: "11:22:33:44:55:66", rssi: -60 },
+        { name: "Device 3", address: "22:33:44:55:66:77", rssi: -70 }
+        // Add more devices as needed
+    ];
+        var selectElement = document.getElementById("bluetoothDeviceSelector");
+
+        // Clear existing options
+        selectElement.innerHTML = "";
+
+        // Add a default option
+        var defaultOption = document.createElement("option");
+        defaultOption.text = "Select a Bluetooth Device";
+        selectElement.add(defaultOption);
+
+        // Add options for each Bluetooth device
+        for (var i = 0; i < bluetoothDevices.length; i++) {
+            var device = bluetoothDevices[i];
+            var option = document.createElement("option");
+            option.value = JSON.stringify(device); // Store device data as JSON in option value
+            option.text = device.name + " - RSSI: " + device.rssi + " dBm";
+            selectElement.add(option);
+        }
+    }
+
 
 function handleSoundInputSource(id, value) {
 	console.log('Setting Sound Input Source!');

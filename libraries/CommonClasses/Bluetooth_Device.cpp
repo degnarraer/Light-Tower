@@ -30,7 +30,7 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_reset_ble(m_ResetBLE);
 	m_BTSource.set_auto_reconnect(m_AutoReConnect);
 	m_BTSource.set_ssp_enabled(m_SSPEnabled);
-	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  2000,  this,   configMAX_PRIORITIES - 3,   &CompatibleDeviceTrackerTask, 1);
+	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   configMAX_PRIORITIES - 3,   &m_CompatibleDeviceTrackerTask, 1);
 	m_BTSource.set_local_name(m_NAME.c_str());
 	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(configMAX_PRIORITIES-1);
@@ -83,26 +83,27 @@ bool Bluetooth_Source::ConnectToThisName(const char*name, esp_bd_addr_t address,
 bool Bluetooth_Source::compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi)
 {
 	bool Found = false;
-	String NAME = String(name);
+	String deviceName = String(name);
 	for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 	{
-		if(true == m_ActiveCompatibleDevices[i].NAME.equals(NAME) && m_ActiveCompatibleDevices[i].ADDRESS.equals(m_BTSource.to_str(address)))
+		if( 0 == strcmp(m_ActiveCompatibleDevices[i].name, deviceName.c_str()) && 0 == strcmp(m_ActiveCompatibleDevices[i].address, m_BTSource.to_str(address)))
 		{
 			Found = true;
-			m_ActiveCompatibleDevices[i].LastUpdateTime = millis();
-			m_ActiveCompatibleDevices[i].RSSI = rssi;
+			m_ActiveCompatibleDevices[i].lastUpdateTime = millis();
+			m_ActiveCompatibleDevices[i].rssi = rssi;
+			ESP_LOGI("Bluetooth_Device", "Compatible Device \"%s\" Updated", m_ActiveCompatibleDevices[i].name );
 			break;
 		}
 	}
 	if(false == Found)
 	{
 		ActiveCompatibleDevice_t NewDevice;
-		NewDevice.NAME = NAME.c_str();
-		NewDevice.ADDRESS = m_BTSource.to_str(address);
-		NewDevice.RSSI = rssi;
-		NewDevice.LastUpdateTime = millis();
+		strcpy(NewDevice.name, deviceName.c_str());
+		strcpy(NewDevice.address, m_BTSource.to_str(address));
+		NewDevice.rssi = rssi;
+		NewDevice.lastUpdateTime = millis();
 		m_ActiveCompatibleDevices.push_back(NewDevice);
-		ESP_LOGI("Bluetooth_Device", "NAME Found: %s", NewDevice.NAME.c_str() );
+		ESP_LOGI("Bluetooth_Device", "New COmpatible Device Found: %s", NewDevice.name );
 	}	
 	return Found;
 }
@@ -120,7 +121,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		unsigned long CurrentTime = millis();
 		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 		{
-			if(CurrentTime - m_ActiveCompatibleDevices[i].LastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
+			if(CurrentTime - m_ActiveCompatibleDevices[i].lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
 			{
 				m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
 				break;
@@ -128,9 +129,12 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 		{
-			ESP_LOGI("Bluetooth_Device", "Scanned Device NAME: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].NAME.c_str(), m_ActiveCompatibleDevices[i].RSSI);
+			ESP_LOGI("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].rssi);
 		}
-		if(NULL != m_BluetoothActiveDeviceUpdatee) m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
+		if(NULL != m_BluetoothActiveDeviceUpdatee)
+		{
+			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
+		}
 		vTaskDelay(500 / portTICK_PERIOD_MS);
 	}
 }

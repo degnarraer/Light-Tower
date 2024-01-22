@@ -199,7 +199,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	bool result = false;
 	if(m_TXQueue)
 	{
-		ESP_LOGI("QueueMessage", "\"%s\" Queue Message: \"%s\"", m_Name.c_str(), message.c_str());
+		ESP_LOGD("QueueMessage", "\"%s\" Queue Message: \"%s\"", m_Name.c_str(), message.c_str());
 		
 		if( message.length() < MaxMessageLength && 
 			xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE )
@@ -238,7 +238,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 			}
 			if(character == '\n')
 			{
-				ESP_LOGI("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), message.c_str());
+				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), message.c_str());
 				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);

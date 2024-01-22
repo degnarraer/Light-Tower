@@ -188,7 +188,7 @@ class Bluetooth_Source: public NamedItem
 		}
 		virtual ~Bluetooth_Source()
 		{
-			vTaskDelete(CompatibleDeviceTrackerTask);
+			vTaskDelete(m_CompatibleDeviceTrackerTask);
 		}
 		void Setup();
 		void InstallDevice();
@@ -238,7 +238,7 @@ class Bluetooth_Source: public NamedItem
 		
 		
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
-		TaskHandle_t CompatibleDeviceTrackerTask;
+		TaskHandle_t m_CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
 		bool compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi);

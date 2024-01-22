@@ -282,27 +282,26 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       bool Found = false;
       for(int j = 0; j < m_ActiveCompatibleDevices.size(); ++j)
       {
-        if( true == m_ActiveCompatibleDevices[j].NAME.equals(CurrentValue.NAME) )
+        if( true == String(m_ActiveCompatibleDevices[j].name).equals(String(CurrentValue.name)) )
         {
           Found = true;
-          m_ActiveCompatibleDevices[j].RSSI = CurrentValue.RSSI;
-          m_ActiveCompatibleDevices[j].LastUpdateTime = CurrentTime;
-          if(ACTIVE_SSID_TIMEOUT <= CurrentValue.TimeSinceUdpate)
+          m_ActiveCompatibleDevices[j].rssi = CurrentValue.rssi;
+          m_ActiveCompatibleDevices[j].lastUpdateTime = CurrentTime;
+          if(ACTIVE_SSID_TIMEOUT <= CurrentValue.timeSinceUdpate)
           {
-            ESP_LOGI("WebSocketDataHandler", "SSID Timedout: %s", CurrentValue.NAME);
+            ESP_LOGI("WebSocketDataHandler", "SSID Timedout: %s", CurrentValue.name);
             m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+j);
           }
           break;
         }
       }
-      if(false == Found && ACTIVE_SSID_TIMEOUT >= CurrentValue.TimeSinceUdpate )
+      if(false == Found && ACTIVE_SSID_TIMEOUT >= CurrentValue.timeSinceUdpate )
       {
-        ESP_LOGI("WebSocketDataHandler", "Found New Device: %s", CurrentValue.NAME);
-        ActiveCompatibleDevice_t NewDevice;
-        NewDevice.NAME = CurrentValue.NAME;
-        NewDevice.ADDRESS = CurrentValue.ADDRESS;
-        NewDevice.RSSI = CurrentValue.RSSI;
-        NewDevice.LastUpdateTime = CurrentTime;
+        ESP_LOGI("WebSocketDataHandler", "Found New Device: %s", CurrentValue.name);
+        ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( CurrentValue.name
+                                                                     , CurrentValue.address
+                                                                     , CurrentValue.rssi
+                                                                     , CurrentTime );
         m_ActiveCompatibleDevices.push_back(NewDevice);
       }
       
@@ -310,9 +309,9 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         KVT KeyValueTuple;
-        KeyValueTuple.Key = m_ActiveCompatibleDevices[i].NAME;
-        KeyValueTuple.Value1 = m_ActiveCompatibleDevices[i].ADDRESS;
-        KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].RSSI);
+        KeyValueTuple.Key = m_ActiveCompatibleDevices[i].name;
+        KeyValueTuple.Value1 = m_ActiveCompatibleDevices[i].address;
+        KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi);
         KeyValueTupleVector.push_back(KeyValueTuple);
       }
       if(0 < KeyValueTupleVector.size())

@@ -122,6 +122,12 @@ body {
     margin: 0;
 }
 
+select {
+	width: 300px;
+	padding: 8px;
+	font-size: 16px;
+}
+
 .Content {
     float: left;
 	/*border: 2px dashed black;*/
