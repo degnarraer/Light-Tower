@@ -111,7 +111,6 @@ void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& 
 {
   if(0 < TextString.length())
   {
-    Serial.println(TextString.c_str());
     m_WebSocket.text(clientID, TextString);
   }
 }
@@ -120,7 +119,6 @@ void WebSocketDataProcessor::NotifyClients(const String& TextString)
 {
   if(0 < TextString.length())
   {
-    Serial.println(TextString.c_str());
     m_WebSocket.textAll(TextString);
   }
 }

@@ -122,10 +122,27 @@ body {
     margin: 0;
 }
 
-select {
-	width: 300px;
-	padding: 8px;
-	font-size: 16px;
+#deviceList {
+	list-style: none;
+	padding: 0;
+	max-height: 300px; /* Set the maximum height for the scroll bar */
+	overflow-y: auto; /* Add a vertical scroll bar if needed */
+}
+
+.deviceItem {
+	border: 1px solid #ccc;
+	margin-bottom: 10px;
+	padding: 10px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.deviceItem:hover {
+	background-color: #f0f0f0; /* Highlight on hover */
+}
+
+.selected {
+	background-color: #a6e1fa; /* Highlight for selected item */
 }
 
 .Content {

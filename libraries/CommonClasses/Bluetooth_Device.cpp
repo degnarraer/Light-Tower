@@ -30,10 +30,10 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_reset_ble(m_ResetBLE);
 	m_BTSource.set_auto_reconnect(m_AutoReConnect);
 	m_BTSource.set_ssp_enabled(m_SSPEnabled);
-	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   configMAX_PRIORITIES - 3,   &m_CompatibleDeviceTrackerTask, 1);
+	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1);
 	m_BTSource.set_local_name(m_NAME.c_str());
 	m_BTSource.set_task_core(1);
-	m_BTSource.set_task_priority(THREAD_PRIORITY_RT);
+	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 
@@ -189,7 +189,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_auto_reconnect(m_AutoReConnect);
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_core(1);
-	m_BTSink.set_task_priority(THREAD_PRIORITY_RT);
+	m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());

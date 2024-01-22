@@ -273,29 +273,41 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
     }
   protected:
   
-    void AppendCurrentValueToKVP(std::vector<KVP> &KeyValuePairs, bool ifStale = false)
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool ifStale = false) override
     {   
       BT_Device_Info_With_LastUpdateTime_t CurrentValue;
       m_DataItem.GetValue(&CurrentValue, 1);
       unsigned long CurrentTime = millis();
 
       bool Found = false;
-      for(int j = 0; j < m_ActiveCompatibleDevices.size(); ++j)
+      bool Updated = false;
+      for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
-        if( true == String(m_ActiveCompatibleDevices[j].name).equals(String(CurrentValue.name)) )
+        if( 0 < String(m_ActiveCompatibleDevices[i].name).length() && 
+            0 < String(m_ActiveCompatibleDevices[i].address).length() && 
+            String(m_ActiveCompatibleDevices[i].name).equals(String(CurrentValue.name)) &&
+            String(m_ActiveCompatibleDevices[i].address).equals(String(CurrentValue.address)) )
         {
           Found = true;
-          m_ActiveCompatibleDevices[j].rssi = CurrentValue.rssi;
-          m_ActiveCompatibleDevices[j].lastUpdateTime = CurrentTime;
+          m_ActiveCompatibleDevices[i].lastUpdateTime = CurrentTime;
+          if(m_ActiveCompatibleDevices[i].rssi != CurrentValue.rssi)
+          {
+            m_ActiveCompatibleDevices[i].rssi = CurrentValue.rssi;
+            Updated = true;
+          }
           if(ACTIVE_NAME_TIMEOUT <= CurrentValue.timeSinceUdpate)
           {
             ESP_LOGI("WebSocketDataHandler", "Name Timedout: %s", CurrentValue.name);
-            m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+j);
+            m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
+            Updated = true;
           }
           break;
         }
       }
-      if(false == Found && ACTIVE_NAME_TIMEOUT >= CurrentValue.timeSinceUdpate )
+      if( false == Found && 
+          0 < String(CurrentValue.name).length() && 
+          0 < String(CurrentValue.address).length() && 
+          ACTIVE_NAME_TIMEOUT >= CurrentValue.timeSinceUdpate )
       {
         ESP_LOGI("WebSocketDataHandler", "Found New Device: %s", CurrentValue.name);
         ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( CurrentValue.name
@@ -303,27 +315,30 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
                                                                      , CurrentValue.rssi
                                                                      , CurrentTime );
         m_ActiveCompatibleDevices.push_back(NewDevice);
+        Updated = true;
       }
       
       std::vector<KVT> KeyValueTupleVector;
-      for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+      for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         KVT KeyValueTuple;
-        KeyValueTuple.Key = m_ActiveCompatibleDevices[i].name;
-        KeyValueTuple.Value1 = m_ActiveCompatibleDevices[i].address;
+        KeyValueTuple.Key = String(m_ActiveCompatibleDevices[i].name);
+        KeyValueTuple.Value1 = String(m_ActiveCompatibleDevices[i].address);
         KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi);
         KeyValueTupleVector.push_back(KeyValueTuple);
       }
-      if(0 < KeyValueTupleVector.size())
+      if(Updated && 0 < KeyValueTupleVector.size())
       {
         for(size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          KeyValuePairs.push_back({ m_WidgetIds[i], Encode_SSID_Values_To_JSON(KeyValueTupleVector) });
+          String result = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
+          ESP_LOGI("AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
+          KeyValuePairs->push_back({ m_WidgetIds[i], result });
         }
       }
     }
     
-    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value)
+    virtual bool ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& StringValue) override
     {
       return false;
     }
@@ -335,55 +350,15 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       JSONVar JSONVars;
       for(int i = 0; i < KeyValueTuple.size(); ++i)
       { 
-        JSONVar SSIDValues;
-        SSIDValues["NAME"] = KeyValueTuple[i].Key;
-        SSIDValues["ADDRESS"] = KeyValueTuple[i].Value1;
-        SSIDValues["RSSI"] = KeyValueTuple[i].Value2;
-        JSONVars["SSIDValue" + String(i)] = SSIDValues;
+        JSONVar CompatibleDeviceValues;
+        CompatibleDeviceValues["NAME"] = KeyValueTuple[i].Key;
+        CompatibleDeviceValues["ADDRESS"] = KeyValueTuple[i].Value1;
+        CompatibleDeviceValues["RSSI"] = KeyValueTuple[i].Value2;
+        JSONVars["CompatibleDevice" + String(i)] = CompatibleDeviceValues;
       }
       String Result = JSON.stringify(JSONVars);
       return Result;
     }
 };
 
-
-/*
-class WebSocketStringDataHandler: public WebSocketDataHandler<char, 50> 
-{
-  public:
-    WebSocketSSIDDataHandler( const String Name
-                            , const std::initializer_list<const char*>& WidgetIds
-                            , WebSocketDataProcessor &WebSocketDataProcessor
-                            , const bool &IsReceiver
-                            , const bool &IsSender
-                            , DataItem<char, 50> &DataItem
-                            , const bool Debug )
-                            : WebSocketDataHandler<String>( Name
-                                                          , WidgetIds
-                                                          , WebSocketDataProcessor
-                                                          , IsReceiver
-                                                          , IsSender
-                                                          , DataItem
-                                                          , Debug)
-    {
-    }
-    
-    virtual ~WebSocketSSIDDataHandler()
-    {
-    }
-    
-  protected:
-  
-    void AppendCurrentValueToKVP(std::vector<KVP> &KeyValuePairs, bool ifStale = false) override
-    {
-      ESP_LOGE( "WebSocketDataHandler: AppendCurrentValueToKVP", "THIS IS NOT HANDLED YET");
-    }
-
-    bool ProcessWebSocketValueAndSendToDatalink(String WidgetId, String Value) override
-    {
-      ESP_LOGE( "WebSocketDataHandler: ProcessWebSocketValueAndSendToDatalink", "THIS IS NOT HANDLED YET");
-      return false;
-    }
-};
-*/
 #endif

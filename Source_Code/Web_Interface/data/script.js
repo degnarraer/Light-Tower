@@ -7,6 +7,13 @@ var Sink_Name_Value_Changed = false;
 var Sink_Name_Changed_TimeoutHandle;
 var Source_Name_Value_Changed = false;
 var Source_Name_Changed_TimeoutHandle;
+const mockBluetoothData = [
+	{ name: "Device 1", address: "00:11:22:33:44:55", rssi: -50 },
+	{ name: "Device 2", address: "AA:BB:CC:DD:EE:FF", rssi: -60 },
+	// Add more devices as needed
+];
+let selectedDeviceIndex = -1;
+
 
 const ConnectionStatus = 
 {
@@ -23,7 +30,7 @@ function onload(event)
 {
     initWebSocket();
 	showContent('menu-content', 'Sound Output');
-	handleBTSourceTargetDevices();
+	updateCompatibleDeviceList();
 }
 function initWebSocket()
 {
@@ -361,39 +368,60 @@ const messageHandlers = {
 	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
 };
 
+function handleBTSourceTargetDevices(id, value) {
+    const receivedDeviceData = parseBluetoothData(receivedDataString);
 
+    // Find the index of the device with the same address in mockBluetoothData
+    const index = mockBluetoothData.findIndex(device => device.address === receivedDeviceData.address);
 
-function handleBTSourceTargetDevices() {
-	var bluetoothDevices = [
-        { name: "Device 1", address: "00:11:22:33:44:55", rssi: -50 },
-        { name: "Device 2", address: "11:22:33:44:55:66", rssi: -60 },
-        { name: "Device 3", address: "22:33:44:55:66:77", rssi: -70 }
-        // Add more devices as needed
-    ];
-        var selectElement = document.getElementById("bluetoothDeviceSelector");
-
-        // Clear existing options
-        selectElement.innerHTML = "";
-
-        // Add a default option
-        var defaultOption = document.createElement("option");
-        defaultOption.text = "Select a Bluetooth Device";
-        selectElement.add(defaultOption);
-
-        // Add options for each Bluetooth device
-        for (var i = 0; i < bluetoothDevices.length; i++) {
-            var device = bluetoothDevices[i];
-            var option = document.createElement("option");
-            option.value = JSON.stringify(device); // Store device data as JSON in option value
-            option.text = device.name + " - RSSI: " + device.rssi + " dBm";
-            selectElement.add(option);
-        }
+    if (index !== -1) {
+        // Update existing device in mockBluetoothData
+        mockBluetoothData[index] = receivedDeviceData;
+    } else {
+        // Add new device to mockBluetoothData
+        mockBluetoothData.push(receivedDeviceData);
     }
+
+    // Update the device list on the page
+    updateDeviceList();
+}
+
+function parseBluetoothData(dataString) {
+    const [name, address, rssiString] = dataString.split("|");
+    const rssi = parseInt(rssiString, 10);
+
+    return { name, address, rssi };
+}
+
+function updateCompatibleDeviceList() {
+	const deviceListElement = document.getElementById("compatibleDeviceList");
+	deviceListElement.innerHTML = ""; // Clear previous entries
+
+	// Iterate through the Bluetooth data and create list items
+	mockBluetoothData.forEach((device, index) => 
+	{
+		const listItem = document.createElement("li");
+		listItem.className = "deviceItem";
+		if (index === selectedDeviceIndex)
+		{
+			listItem.classList.add("selected");
+		}
+		listItem.innerHTML = `<strong>Name:</strong> ${device.name}<br>
+							 <strong>Address:</strong> ${device.address}<br>
+							 <strong>RSSI:</strong> ${device.rssi}`;
+
+		listItem.addEventListener("click", () =>
+		{
+			selectedDeviceIndex = index;
+			handleBTSourceTargetDevices(); // Update the list with the new selection
+		});
+		deviceListElement.appendChild(listItem);
+	});
+}
 
 
 function handleSoundInputSource(id, value) {
 	console.log('Setting Sound Input Source!');
-
 }
 
 function handleSoundInputSource(id, value) {

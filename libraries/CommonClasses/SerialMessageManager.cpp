@@ -154,11 +154,11 @@ void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* o
 
 void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 20000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  1 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "RX Task Created.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 20000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  1 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "TX Task Created.");
 	
@@ -178,18 +178,14 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	{
 		ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
 		const String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
-		if(message.length() == 0)
+		if(message.length() == 0 || message.length() >= MaxMessageLength)
 		{
-			ESP_LOGE("QueueMessageFromData", "Error! 0 String Length!");
-		}
-		else if (message.length() >= MaxMessageLength)
-		{
-			ESP_LOGE("QueueMessageFromData", "Error! Message Length of %i is Greater than %i.",message.length(), MaxMessageLength);
+			ESP_LOGE("QueueMessageFromData", "Error! Invalid String Length!");
 		}
 		else
 		{
 			ESP_LOGD("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
-			result = QueueMessage(message);
+			result = QueueMessage(message.c_str());
 		}
 	}
 	return result;
@@ -272,21 +268,18 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 		if(NULL != m_TXQueue)
 		{
 			size_t QueueCount = uxQueueMessagesWaiting(m_TXQueue);
-			if(QueueCount > 0)
+			if(QueueCount) ESP_LOGD("SerialPortMessageManager_TxTask", "Queue Count: %i", QueueCount);
+			for(size_t i = 0; i < QueueCount; ++i)
 			{
-				ESP_LOGD("SerialPortMessageManager_TxTask", "Queue Count: %i", QueueCount);
-				for(int i = 0; i < QueueCount; ++i)
+				char message[MaxMessageLength] = "\0";
+				if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 				{
-					char message[MaxMessageLength];
-					if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
-					{
-						ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), String(message).c_str());
-						m_Serial.println(String(message).c_str());
-					}
-					else
-					{
-						ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
-					}
+					ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), message);
+					m_Serial.println(message);
+				}
+				else
+				{
+					ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
 				}
 			}
 		}

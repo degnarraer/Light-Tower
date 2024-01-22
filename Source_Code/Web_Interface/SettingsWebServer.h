@@ -138,12 +138,11 @@ class SettingsWebServerManager
     const bool m_BluetoothSourceEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Enable Web Socket Handler", {"BT_Source_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSourceEnable, false );
-
-    //Source Available BT SSIDs
-    //TBD
     
-    //Source SSID
-    //TBD
+    //Scanned Device
+    BT_Device_Info_With_LastUpdateTime_t m_ScannedDevice_InitialValue = {"", "", 0, 0};
+    DataItem<BT_Device_Info_With_LastUpdateTime_t, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_LastUpdateTime_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
+    WebSocket_BT_Info_ArrayDataHandler m_ScannedDevice_DataHandler = WebSocket_BT_Info_ArrayDataHandler( "Scan BT Device Web Socket Data Handler", {"BT_Source_Target_Devices"}, m_WebSocketDataProcessor, true, true, m_ScannedDevice, false );
     
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
@@ -160,65 +159,6 @@ class SettingsWebServerManager
     DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "Bt_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( "Source Reset Web Socket Handler", {"BT_Source_Reset"}, m_WebSocketDataProcessor, true, true, m_SourceReset, false );    
 
-    
-
-/*
-    //Sound State Value and Widget Name Values
-    
-    //SoundState_t Sound_State;
-    //WebSocketDataHandler<SoundState_t> Sound_State_DataHandler;
-    //Sound_State_DataHandler = new WebSocketDataHandler<SoundState_t>( &String[1]{"Speaker_Image"}, 1, false );
-
-    DataItem <BT_Info_With_LastUpdateTime_t, 1> m_SSIDWLUT = DataItem<BT_Info_With_LastUpdateTime_t, 1>( "Available SSID"
-                                                                                                          , BT_Info_With_LastUpdateTime_t("\0", "\0", 0, 0)
-                                                                                                           , RxTxType_Rx
-                                                                                                           , 0
-                                                                                                           , 500
-                                                                                                           , m_CPU2SerialPortMessageManager);
-  */  
-    //DataItem <bool, 1> SourceReConnect = DataItem<bool, 1>("Source Reconnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <bool, 1> SourceBTReset = DataItem<bool, 1>("Source BT Reset", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    //DataItem <bool, 1> SinkEnable = DataItem<bool, 1>("Sink Enable", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    //DataItem <bool, 1> SinkReConnect = DataItem<bool, 1>("Sink ReConnect", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    
-    //DataItem <DataType_SoundState_t, 1> SoundState  = DataItem<DataType_SoundState_t, 1>("Sound State", LastingSilenceDetected, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_ConnectionStatus_t, 1> SourceConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Source Connection Status", Disconnected, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_ConnectionStatus_t, 1> SinkConnectionStatus = DataItem<DataType_ConnectionStatus_t, 1>("Sink Connection Status", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_BT_Info_With_LastUpdateTime_t, 1> FoundSpeakerSSIDS = DataItem<DataType_BT_Info_With_LastUpdateTime_t, 1>("Found Speaker SSIDS", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_t, 1> SinkSSID = DataItem<DataType_SSID_Info_t, 1>("Sink SSID", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_t, 1> TargetSpeakerSSID = DataItem<DataType_SSID_Info_t, 1>("Target Speaker", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU2SerialPortMessageManager);
-    //DataItem <DataType_SSID_Info_t, 1> SourceSSID = DataItem<DataType_SSID_Info_t, 1>("Source SSID", 0, RxTxType_Rx, 1000, m_DataSerializer, m_CPU1SerialPortMessageManager);
-    
-    
-
-
-    /*
-    //Sink SSID Value and Widget Name Values
-    WebSocketSSIDDataHandler *SinkSSID_DataHandler;
-    
-    //Source SSID Value and Widget Name Values
-    WebSocketSSIDDataHandler *SourceSSID_DataHandler;
-
-    //Source SSID Compatible SSIDs
-    WebSocketSSIDArrayDataHandler *SourceSSIDs_DataHandler;
-
-    WebSocketDataHandler<ConnectionStatus_t> *Source_Connection_Status_DataHandler;
-    WebSocketDataHandler<bool> *Source_BT_Reset_DataHandler;
-    WebSocketDataHandler<bool> *Source_BT_ReConnect_DataHandler;
-    
-    WebSocketDataHandler<bool> *Sink_Connection_Enable_DataHandler;
-    WebSocketDataHandler<ConnectionStatus_t> *Sink_Connection_Status_DataHandler;
-    WebSocketDataHandler<bool> *Sink_BT_ReConnect_DataHandler;
-
-    //Red Value and Widget Name Values
-    WebSocketDataHandler<uint8_t> *Red_Value_DataHandler;
-    
-    //Blue Value and Widget Name Values
-    WebSocketDataHandler<uint8_t> *Blue_Value_DataHandler;
-    
-    //Red Value and Widget Name Values
-    WebSocketDataHandler<uint8_t> *Green_Value_DataHandler;
-    */
     
     void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
     {

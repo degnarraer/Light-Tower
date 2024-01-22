@@ -545,7 +545,7 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 		ESP_LOGI( "DataItem: NewRXValueReceived"
 				, "\"%s\" New RX Value Received: \"%s\""
 				, m_Name.c_str()
-				, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, ""));
+				, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 		
 		bool RxValueChanged = (memcmp(mp_Value, mp_RxValue, sizeof(T) * COUNT) != 0);
 		if( UpdateStoreType_On_Rx == m_UpdateStoreType )
