@@ -28,7 +28,7 @@ TaskHandle_t VisualizationTask;
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   configMAX_PRIORITIES - 1,  &VisualizationTask,     1 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   THREAD_PRIORITY_MEDIUM,  &VisualizationTask,     1 );
 }
 
 void setup()

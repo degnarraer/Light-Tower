@@ -48,7 +48,7 @@ void Manager::Setup()
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
   ConnectToTargetDevice();
-  xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, configMAX_PRIORITIES - 1, &m_Manager_20mS_Task, 1 );
+  xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 );
 }
 
 void Manager::ConnectToTargetDevice()
@@ -111,8 +111,13 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStatusCallee Callback 
 void Manager::BluetoothConnectionStatusChanged(const ConnectionStatus_t ConnectionStatus)
 {
-  m_ConnectionStatus.SetValue(&ConnectionStatus, 1);
-  ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[ConnectionStatus]).c_str());
+  ConnectionStatus_t currentValue;
+  m_ConnectionStatus.GetValue(&currentValue, 1);
+  if(currentValue != ConnectionStatus)
+  {
+    m_ConnectionStatus.SetValue(&ConnectionStatus, 1);
+    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[ConnectionStatus]).c_str());
+  }
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
@@ -120,7 +125,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
 {
   for(int i = 0; i < Devices.size(); ++i)
   { 
-    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" \nLast Update Time: \"%i\" RSSI: \"%i\""
+    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address

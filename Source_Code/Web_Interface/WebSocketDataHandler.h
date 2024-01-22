@@ -55,7 +55,7 @@ class WebSocketDataProcessor
     WebSocketDataProcessor( AsyncWebSocket &WebSocket )
                           : m_WebSocket(WebSocket)
     {
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   10000,  this,  configMAX_PRIORITIES - 1,    &m_WebSocketTaskHandle,    0 );
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
     }
     virtual ~WebSocketDataProcessor()
     {
@@ -287,15 +287,15 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
           Found = true;
           m_ActiveCompatibleDevices[j].rssi = CurrentValue.rssi;
           m_ActiveCompatibleDevices[j].lastUpdateTime = CurrentTime;
-          if(ACTIVE_SSID_TIMEOUT <= CurrentValue.timeSinceUdpate)
+          if(ACTIVE_NAME_TIMEOUT <= CurrentValue.timeSinceUdpate)
           {
-            ESP_LOGI("WebSocketDataHandler", "SSID Timedout: %s", CurrentValue.name);
+            ESP_LOGI("WebSocketDataHandler", "Name Timedout: %s", CurrentValue.name);
             m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+j);
           }
           break;
         }
       }
-      if(false == Found && ACTIVE_SSID_TIMEOUT >= CurrentValue.timeSinceUdpate )
+      if(false == Found && ACTIVE_NAME_TIMEOUT >= CurrentValue.timeSinceUdpate )
       {
         ESP_LOGI("WebSocketDataHandler", "Found New Device: %s", CurrentValue.name);
         ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( CurrentValue.name

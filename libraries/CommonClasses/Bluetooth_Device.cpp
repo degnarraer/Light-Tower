@@ -33,7 +33,7 @@ void Bluetooth_Source::InstallDevice()
 	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   configMAX_PRIORITIES - 3,   &m_CompatibleDeviceTrackerTask, 1);
 	m_BTSource.set_local_name(m_NAME.c_str());
 	m_BTSource.set_task_core(1);
-	m_BTSource.set_task_priority(configMAX_PRIORITIES-1);
+	m_BTSource.set_task_priority(THREAD_PRIORITY_RT);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 
@@ -70,7 +70,7 @@ void Bluetooth_Source::SetNameToConnect( const char *SourceName, const char *Sou
 //Callback from BT Source for compatible devices to connect to
 bool Bluetooth_Source::ConnectToThisName(const char*name, esp_bd_addr_t address, int32_t rssi)
 {
-	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
+	ESP_LOGD( "Bluetooth_Source::ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
 			, String(name).c_str()
 			, m_BTSource.to_str(address));
 	if(true == compatible_device_found(name, address, rssi))
@@ -91,7 +91,7 @@ bool Bluetooth_Source::compatible_device_found(const char* name, esp_bd_addr_t a
 			Found = true;
 			m_ActiveCompatibleDevices[i].lastUpdateTime = millis();
 			m_ActiveCompatibleDevices[i].rssi = rssi;
-			ESP_LOGI("Bluetooth_Device", "Compatible Device \"%s\" Updated", m_ActiveCompatibleDevices[i].name );
+			ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", m_ActiveCompatibleDevices[i].name );
 			break;
 		}
 	}
@@ -103,7 +103,7 @@ bool Bluetooth_Source::compatible_device_found(const char* name, esp_bd_addr_t a
 		NewDevice.rssi = rssi;
 		NewDevice.lastUpdateTime = millis();
 		m_ActiveCompatibleDevices.push_back(NewDevice);
-		ESP_LOGI("Bluetooth_Device", "New COmpatible Device Found: %s", NewDevice.name );
+		ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", NewDevice.name );
 	}	
 	return Found;
 }
@@ -129,7 +129,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 		{
-			ESP_LOGI("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].rssi);
+			ESP_LOGD("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].rssi);
 		}
 		if(NULL != m_BluetoothActiveDeviceUpdatee)
 		{
@@ -189,7 +189,7 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_auto_reconnect(m_AutoReConnect);
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_core(1);
-	m_BTSink.set_task_priority(configMAX_PRIORITIES-1);
+	m_BTSink.set_task_priority(THREAD_PRIORITY_RT);
 	m_BTSink.set_volume_control(&m_VolumeControl);
 	m_BTSink.set_volume(100);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());

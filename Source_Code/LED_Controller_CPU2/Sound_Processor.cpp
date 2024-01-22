@@ -36,8 +36,8 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::SetupSoundProcessor()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   configMAX_PRIORITIES - 1,   &m_ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   configMAX_PRIORITIES - 1,   &m_ProcessSoundPowerTask,   1 );
+  xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessFFTTask,          0 );
+  xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessSoundPowerTask,   1 );
 }
 
 void Sound_Processor::Static_Calculate_FFTs(void * parameter)

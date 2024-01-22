@@ -154,11 +154,11 @@ void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* o
 
 void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 20000, this,  configMAX_PRIORITIES - 1,  &m_RXTaskHandle,  1 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 20000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "RX Task Created.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 20000, this,  configMAX_PRIORITIES - 1,  &m_TXTaskHandle,  1 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 20000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
 	else ESP_LOGI("SetupSerialPortMessageManager", "TX Task Created.");
 	

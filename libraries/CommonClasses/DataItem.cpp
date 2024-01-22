@@ -409,10 +409,10 @@ void DataItem<T, COUNT>::SetValue(const T *Value, size_t Count)
 	assert(mp_Value != nullptr && "mp_Value must not be null");
 	assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
 	assert(COUNT == Count && "Counts must match");
-	ESP_LOGI( "DataItem: SetValue"
+	ESP_LOGD( "DataItem: SetValue"
 			, "\"%s\" Set Value: \"%s\""
 			, m_Name.c_str()
-			, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
+			, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 	bool ValueChanged = (memcmp(mp_TxValue, Value, sizeof(T) * COUNT) != 0);
 	memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
 	if(ValueChanged)
@@ -542,7 +542,7 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 	if(ValueChanged)
 	{
 		memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
-		ESP_LOGD( "DataItem: NewRXValueReceived"
+		ESP_LOGI( "DataItem: NewRXValueReceived"
 				, "\"%s\" New RX Value Received: \"%s\""
 				, m_Name.c_str()
 				, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, ""));

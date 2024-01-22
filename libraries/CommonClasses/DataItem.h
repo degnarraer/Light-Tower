@@ -187,7 +187,7 @@ class StringDataItem: public DataItem<char, 50>
 			String NewValue = String(Value);
 			String CurrentValue = String(mp_TxValue);
 			assert(NewValue.length() == Count);
-			ESP_LOGI( "DataItem: SetValue"
+			ESP_LOGD( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, NewValue.c_str() );

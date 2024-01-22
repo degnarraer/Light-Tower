@@ -75,7 +75,7 @@ class DataSerializer: public CommonUtils
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
-				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. \nInput: %s", error.c_str(), json);
+				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. \nInput: %s", error.c_str(), json.c_str());
 				return;
 			}
 			else
@@ -92,7 +92,7 @@ class DataSerializer: public CommonUtils
 					DataType_t DataType = GetDataTypeFromString(doc[m_DataTypeTag]);
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
 					//This memory needs deleted by caller of function.
-					uint8_t *Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);								
+					uint8_t *Buffer = (uint8_t*)heap_caps_malloc(sizeof(uint8_t)* ByteCountIn, MALLOC_CAP_SPIRAM);								
 					if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
 					{
 						for(int j = 0; j < CountIn; ++j)
@@ -123,7 +123,7 @@ class DataSerializer: public CommonUtils
 					}
 					else
 					{
-						free(Buffer);
+						heap_caps_free(Buffer);
 						NamedObject.Object = nullptr;
 						++m_FailCount;
 						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
