@@ -3,14 +3,13 @@ var websocket;
 var speakerImages = new Array();
 var sliderTouched = false;
 var sliderTimeoutHandle;
-var Sink_Name_Value_Changed = false;
-var Sink_Name_Changed_TimeoutHandle;
-var Source_Name_Value_Changed = false;
-var Source_Name_Changed_TimeoutHandle;
-const mockBluetoothData = [
+var sink_Name_Value_Changed = false;
+var sink_Name_Changed_TimeoutHandle;
+var source_Name_Value_Changed = false;
+var source_Name_Changed_TimeoutHandle;
+var compatibleDevices = [
 	{ name: "Device 1", address: "00:11:22:33:44:55", rssi: -50 },
 	{ name: "Device 2", address: "AA:BB:CC:DD:EE:FF", rssi: -60 },
-	// Add more devices as needed
 ];
 let selectedDeviceIndex = -1;
 
@@ -30,7 +29,6 @@ function onload(event)
 {
     initWebSocket();
 	showContent('menu-content', 'Sound Output');
-	updateCompatibleDeviceList();
 }
 function initWebSocket()
 {
@@ -121,26 +119,26 @@ function textBoxValueChanged(element)
 {
 	if(element.id == 'Sink_Name_Text_Box')
 	{
-		clearTimeout(Sink_Name_Changed_TimeoutHandle);
-		Sink_Name_Value_Changed = true;
-		Sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 60000);
+		clearTimeout(sink_Name_Changed_TimeoutHandle);
+		sink_Name_Value_Changed = true;
+		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 60000);
 	}
 	else if(element.id == 'Source_Name_Text_Box')
 	{
-		clearTimeout(Source_Name_Changed_TimeoutHandle);
-		Source_Name_Value_Changed = true;
-		Source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 60000);
+		clearTimeout(source_Name_Changed_TimeoutHandle);
+		source_Name_Value_Changed = true;
+		source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 60000);
 	}
 }
 
 function Sink_Name_Changed_Timeout()
 {
-	Sink_Name_Value_Changed = false;
+	sink_Name_Value_Changed = false;
 }
 
 function Source_Name_Changed_Timeout()
 {
-	Source_Name_Value_Changed = false;
+	source_Name_Value_Changed = false;
 }
 
 function submit_New_Name(element)
@@ -150,9 +148,9 @@ function submit_New_Name(element)
 	{
 		var Root = {};
 		var TextboxElement;
-		clearTimeout(Sink_Name_Changed_TimeoutHandle);
+		clearTimeout(sink_Name_Changed_TimeoutHandle);
 		TextboxElement = document.getElementById('Sink_Name_Text_Box');
-		Sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
+		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
 		Root['WidgetValue'].Id = TextboxElement.id;
 		Root['WidgetValue'].Value = TextboxElement.value;
@@ -164,9 +162,9 @@ function submit_New_Name(element)
 	{
 		var Root = {};
 		var TextboxElement;
-		clearTimeout(Source_Name_Changed_TimeoutHandle);
+		clearTimeout(source_Name_Changed_TimeoutHandle);
 		TextboxElement = document.getElementById('Source_Name_Text_Box');
-		Source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 5000);
+		source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
 		Root['WidgetValue'].Id = TextboxElement.id;
 		Root['WidgetValue'].Value = TextboxElement.value;
@@ -356,7 +354,7 @@ const messageHandlers = {
 	'FFT_Gain_slider2': handleFFTGain,
 	
 	'BT_Sink_Name': handleBTSinkName,
-	'BT_Sink_Enable': HandleBTSinkEnable,
+	'BT_Sink_Enable': handleBTSinkEnable,
 	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
 	'BT_Sink_Connection_Status': handleBTSinkConnectionStatus,
 	
@@ -368,22 +366,33 @@ const messageHandlers = {
 	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
 };
 
+
 function handleBTSourceTargetDevices(id, value) {
-    const receivedDeviceData = parseBluetoothData(receivedDataString);
+    try {
+        var sourceTargetData = JSON.parse(event.data);
+        var sourceTargetKeys = Object.keys(sourceTargetData);
+        compatibleDevices.length = 0;
 
-    // Find the index of the device with the same address in mockBluetoothData
-    const index = mockBluetoothData.findIndex(device => device.address === receivedDeviceData.address);
+        for (var i = 0; i < sourceTargetKeys.length; ++i) {
+            var itemId = sourceTargetData[sourceTargetKeys[i]]['Id'];
+            var parsedValue = sourceTargetData[sourceTargetKeys[i]]['Value'];
 
-    if (index !== -1) {
-        // Update existing device in mockBluetoothData
-        mockBluetoothData[index] = receivedDeviceData;
-    } else {
-        // Add new device to mockBluetoothData
-        mockBluetoothData.push(receivedDeviceData);
+            var innerData = JSON.parse(parsedValue);
+            var innerKeys = Object.keys(innerData);
+
+            for (var j = 0; j < innerKeys.length; ++j) {
+                var address = innerData[innerKeys[j]]['ADDRESS'];
+                var name = innerData[innerKeys[j]]['NAME'];
+                var rssi = innerData[innerKeys[j]]['RSSI'];
+                var newValue = { name: name, address: address, rssi: rssi };
+                compatibleDevices.push(newValue);
+            }
+        }
+
+        updateCompatibleDeviceList();
+    } catch (error) {
+        console.error('Error parsing JSON in handleBTSourceTargetDevices:', error);
     }
-
-    // Update the device list on the page
-    updateDeviceList();
 }
 
 function parseBluetoothData(dataString) {
@@ -398,7 +407,7 @@ function updateCompatibleDeviceList() {
 	deviceListElement.innerHTML = ""; // Clear previous entries
 
 	// Iterate through the Bluetooth data and create list items
-	mockBluetoothData.forEach((device, index) => 
+	compatibleDevices.forEach((device, index) => 
 	{
 		const listItem = document.createElement("li");
 		listItem.className = "deviceItem";
@@ -413,7 +422,7 @@ function updateCompatibleDeviceList() {
 		listItem.addEventListener("click", () =>
 		{
 			selectedDeviceIndex = index;
-			handleBTSourceTargetDevices(); // Update the list with the new selection
+			updateCompatibleDeviceList(); // Update the list with the new selection
 		});
 		deviceListElement.appendChild(listItem);
 	});
@@ -513,7 +522,7 @@ function handleBTSinkName(id, value) {
 	[
 		'Sink_Name_Text_Box',
 	];
-	if(!Sink_Name_Value_Changed)
+	if(!sink_Name_Value_Changed)
 	{
 		for(widget in  widgets)
 		{
@@ -525,7 +534,7 @@ function handleBTSinkName(id, value) {
 	}
 }
 	
-function HandleBTSinkEnable(id, value) {
+function handleBTSinkEnable(id, value) {
 	console.log('Received the Bluetooth Sink Enable!');
 	if(value == 'true')
 	{
@@ -581,7 +590,7 @@ function handleBTSourceName(id, value) {
 	[
 		'Source_Name_Text_Box',
 	];
-	if(!Sink_Name_Value_Changed)
+	if(!sink_Name_Value_Changed)
 	{
 		for(widget in  widgets)
 		{

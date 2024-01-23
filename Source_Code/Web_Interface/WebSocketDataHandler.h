@@ -322,9 +322,9 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         KVT KeyValueTuple;
-        KeyValueTuple.Key = String(m_ActiveCompatibleDevices[i].name);
-        KeyValueTuple.Value1 = String(m_ActiveCompatibleDevices[i].address);
-        KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi);
+        KeyValueTuple.Key = m_ActiveCompatibleDevices[i].address;
+        KeyValueTuple.Value1 = m_ActiveCompatibleDevices[i].name;
+        KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi).c_str();
         KeyValueTupleVector.push_back(KeyValueTuple);
       }
       if(Updated && 0 < KeyValueTupleVector.size())
@@ -351,8 +351,8 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       for(int i = 0; i < KeyValueTuple.size(); ++i)
       { 
         JSONVar CompatibleDeviceValues;
-        CompatibleDeviceValues["NAME"] = KeyValueTuple[i].Key;
-        CompatibleDeviceValues["ADDRESS"] = KeyValueTuple[i].Value1;
+        CompatibleDeviceValues["ADDRESS"] = KeyValueTuple[i].Key;
+        CompatibleDeviceValues["NAME"] = KeyValueTuple[i].Value1;
         CompatibleDeviceValues["RSSI"] = KeyValueTuple[i].Value2;
         JSONVars["CompatibleDevice" + String(i)] = CompatibleDeviceValues;
       }
