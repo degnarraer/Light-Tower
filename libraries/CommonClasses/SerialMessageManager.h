@@ -249,6 +249,7 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		HardwareSerial &m_Serial;
 		DataSerializer &m_DataSerializer;
 		String m_Name = "";
+		String m_message = "";
 		TaskHandle_t m_RXTaskHandle;
 		TaskHandle_t m_TXTaskHandle;
 		QueueHandle_t m_TXQueue;

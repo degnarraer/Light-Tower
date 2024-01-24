@@ -177,16 +177,8 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	else
 	{
 		ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
-		const String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
-		if(message.length() == 0 || message.length() >= MaxMessageLength)
-		{
-			ESP_LOGE("QueueMessageFromData", "Error! Invalid String Length!");
-		}
-		else
-		{
-			ESP_LOGD("QueueMessageFromData", "Queueing Message: \"%s\"", message.c_str());
-			result = QueueMessage(message.c_str());
-		}
+		String message = m_DataSerializer.SerializeDataToJson(Name, DataType, Object, Count);
+		result = QueueMessage( message.c_str() );
 	}
 	return result;
 }
@@ -194,17 +186,17 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 {
 	bool result = false;
 	if(m_TXQueue)
-	{
-		ESP_LOGD("QueueMessage", "\"%s\" Queue Message: \"%s\"", m_Name.c_str(), message.c_str());
-		
-		if( message.length() < MaxMessageLength && 
-			xQueueSend(m_TXQueue, message.c_str(), 0) != pdTRUE )
+	{	
+		if( message.length() > 0 &&
+			message.length() <= MaxMessageLength && 
+			xQueueSend(m_TXQueue, message.c_str(), 0) == pdTRUE )
 		{
-			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name.c_str());
+			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());
+			result = true;
 		}
 		else
 		{
-			result = true;
+			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name.c_str());
 		}
 	}
 	else
@@ -217,27 +209,25 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
 	ESP_LOGI("SetupSerialPortMessageManager", "Starting RX Task.");
-	const TickType_t xFrequency = 20;
+	const TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
-	String message = "";
-	char character;
 	while(true)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
 		while (m_Serial.available())
 		{
-			character = m_Serial.read();
-			if(message.length() > MaxMessageLength)
+			char character = m_Serial.read();
+			if(m_message.length() > MaxMessageLength)
 			{
-				ESP_LOGE("SerialPortMessageManager", "Message RX Overrun: \"%s\"", message.c_str());
-				message = "";
+				ESP_LOGE("SerialPortMessageManager", "Message RX Overrun: \"%s\"", m_message.c_str());
+				m_message = "";
 			}
 			if(character == '\n')
 			{
-				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), message.c_str());
+				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
 				
 				NamedObject_t NamedObject;
-				m_DataSerializer.DeSerializeJsonToNamedObject(message, NamedObject);
+				m_DataSerializer.DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject);
 				if(NamedObject.Object)
 				{
 					ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
@@ -247,11 +237,11 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				{
 					ESP_LOGW("SerialPortMessageManager", "\"%s\" DeSerialized Named object failed", m_Name.c_str());
 				}
-				message = "";
+				m_message = "";
 			}
 			else
 			{
-				message.concat(character);
+				m_message += character;
 			}
 		}
 	}
@@ -274,6 +264,11 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				char message[MaxMessageLength] = "\0";
 				if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
 				{
+					if (strlen(message) > MaxMessageLength)
+                    {
+                        ESP_LOGW("SerialPortMessageManager_TxTask", "WARNING! Message exceeds MaxMessageLength. Truncating.");
+                        message[MaxMessageLength - 1] = '\0';
+                    }
 					ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), message);
 					m_Serial.println(message);
 				}

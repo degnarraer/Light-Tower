@@ -381,18 +381,10 @@ function handleBTSourceTargetDevices(id, value) {
                 compatibleDevices.push(newValue);
             }
         }
-
         updateCompatibleDeviceList();
     } catch (error) {
         console.error('Error parsing JSON in handleBTSourceTargetDevices:', error);
     }
-}
-
-function parseBluetoothData(dataString) {
-    const [name, address, rssiString] = dataString.split("|");
-    const rssi = parseInt(rssiString, 10);
-
-    return { name, address, rssi };
 }
 
 function updateCompatibleDeviceList() {
@@ -411,12 +403,6 @@ function updateCompatibleDeviceList() {
 		listItem.innerHTML = `<strong>Name:</strong> ${device.name}<br>
 							 <strong>Address:</strong> ${device.address}<br>
 							 <strong>RSSI:</strong> ${device.rssi}`;
-
-		listItem.addEventListener("click", () =>
-		{
-			selectedDeviceIndex = index;
-			updateCompatibleDeviceList(); // Update the list with the new selection
-		});
 		deviceListElement.appendChild(listItem);
 	});
 }

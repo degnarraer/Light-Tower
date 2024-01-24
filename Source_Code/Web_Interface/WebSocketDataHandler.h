@@ -272,10 +272,11 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
   
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool ifStale = false) override
     {   
-      ActiveCompatibleDevice_t CurrentValue;
+      BT_Device_Info_With_LastUpdateTime_t CurrentValue;
       m_DataItem.GetValue(&CurrentValue, 1);
       bool Found = false;
       bool Updated = false;
+      unsigned long currentTime = millis();
       for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         if( 0 < String(m_ActiveCompatibleDevices[i].name).length() && 
@@ -284,7 +285,7 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
             String(m_ActiveCompatibleDevices[i].address).equals(String(CurrentValue.address)) )
         {
           Found = true;
-          m_ActiveCompatibleDevices[i].lastUpdateTime = CurrentValue.lastUpdateTime;
+          m_ActiveCompatibleDevices[i].lastUpdateTime = currentTime;
           if(m_ActiveCompatibleDevices[i].rssi != CurrentValue.rssi)
           {
             m_ActiveCompatibleDevices[i].rssi = CurrentValue.rssi;
@@ -292,7 +293,7 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
           }
           break;
         }
-        if(ACTIVE_NAME_TIMEOUT <= m_ActiveCompatibleDevices[i].lastUpdateTime)
+        if(ACTIVE_NAME_TIMEOUT <= currentTime - m_ActiveCompatibleDevices[i].lastUpdateTime)
         {
           ESP_LOGI("WebSocketDataHandler", "Name Timedout: %s", CurrentValue.name);
           m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
@@ -302,13 +303,13 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       if( false == Found && 
           0 < String(CurrentValue.name).length() && 
           0 < String(CurrentValue.address).length() && 
-          ACTIVE_NAME_TIMEOUT >= CurrentValue.lastUpdateTime )
+          ACTIVE_NAME_TIMEOUT >= CurrentValue.timeSinceUdpate )
       {
         ESP_LOGI("WebSocketDataHandler", "Found New Device: %s", CurrentValue.name);
         ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( CurrentValue.name
                                                                      , CurrentValue.address
                                                                      , CurrentValue.rssi
-                                                                     , CurrentValue.lastUpdateTime );
+                                                                     , currentTime - CurrentValue.timeSinceUdpate );
         m_ActiveCompatibleDevices.push_back(NewDevice);
         Updated = true;
       }

@@ -84,8 +84,10 @@ void setup()
   Serial.begin(500000, SERIAL_8N1);
   Serial1.flush();
   Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.setRxBufferSize(4096);
   Serial2.flush();
   Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
+  Serial2.setRxBufferSize(4096);
 
   m_SoundProcessor.SetupSoundProcessor();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
