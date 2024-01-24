@@ -42,6 +42,7 @@ function initWebSocket()
 function onOpen(event)
 {
     console.log('Connection opened');
+	websocket.send('Hello I am here!');
 }
 function onClose(event)
 {
@@ -64,7 +65,6 @@ sink_BT_Enable_Toggle_Button.addEventListener('click', function()
 	Root['WidgetValue'].Id = 'BT_Sink_Enable';
 	Root['WidgetValue'].Value = String(sink_BT_Enable_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
-	console.log(Message);
 	websocket.send(Message);
 });
 const sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
@@ -75,7 +75,6 @@ sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 	Root['WidgetValue'].Id = 'BT_Sink_Auto_ReConnect';
 	Root['WidgetValue'].Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
-	console.log(Message);
 	websocket.send(Message);
 });
 const source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
@@ -86,7 +85,6 @@ source_BT_Reset_Toggle_Button.addEventListener('click', function()
 	Root['WidgetValue'].Id = 'BT_Source_Reset';
 	Root['WidgetValue'].Value = String(source_BT_Reset_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
-	console.log(Message);
 	websocket.send(Message);
 });
 const source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
@@ -97,7 +95,6 @@ Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 	Root['WidgetValue'].Id = 'BT_Source_Auto_Reconnect';
 	Root['WidgetValue'].Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
-	console.log(Message);
 	websocket.send(Message);
 });
 
@@ -155,7 +152,6 @@ function submit_New_Name(element)
 		Root['WidgetValue'].Id = TextboxElement.id;
 		Root['WidgetValue'].Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
-		console.log(Message);
 		websocket.send(Message);
 	}
 	else if(ButtonId == 'Source_Name_Submit_Button')
@@ -169,7 +165,6 @@ function submit_New_Name(element)
 		Root['WidgetValue'].Id = TextboxElement.id;
 		Root['WidgetValue'].Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
-		console.log(Message);
 		websocket.send(Message);
 	}
 }
@@ -189,7 +184,6 @@ function updatesliderValue(element)
 		Root['WidgetValue'].Id = signal.toString();
 		Root['WidgetValue'].Value = sliderValue.toString();
 		var Message = JSON.stringify(Root);
-		console.log(Message);
 		websocket.send(Message);
 		sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 	}
@@ -300,14 +294,12 @@ function setSpeakerImage(value)
 
 function onMessage(event)
 {
-	console.log(event.data);
 	var myObj = JSON.parse(event.data);
 	var keys = Object.keys(myObj);
 	for (var i = 0; i < keys.length; ++i)
 	{
 		var id = myObj[keys[i]]['Id'];
 		var value = myObj[keys[i]]['Value'];
-		console.log('WIDGET: ' + id + ' = ' + value);
 		const handler = messageHandlers[id];
 		if (handler) 
 		{
@@ -368,6 +360,7 @@ const messageHandlers = {
 
 
 function handleBTSourceTargetDevices(id, value) {
+	console.log('Received BT Source Target Devices!');
     try {
         var sourceTargetData = JSON.parse(event.data);
         var sourceTargetKeys = Object.keys(sourceTargetData);
@@ -426,11 +419,6 @@ function updateCompatibleDeviceList() {
 		});
 		deviceListElement.appendChild(listItem);
 	});
-}
-
-
-function handleSoundInputSource(id, value) {
-	console.log('Setting Sound Input Source!');
 }
 
 function handleSoundInputSource(id, value) {
@@ -672,7 +660,6 @@ function showContent(classId, contentId) {
 		Root['WidgetValue'].Id = signal.toString();
 		Root['WidgetValue'].Value = value.toString();
 		var Message = JSON.stringify(Root);
-		console.log(Message);
 		websocket.send(Message);
 	}
 }

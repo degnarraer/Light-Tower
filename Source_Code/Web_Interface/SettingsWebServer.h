@@ -72,7 +72,7 @@ class SettingsWebServerManager
           Serial.printf("WebSocket client #%u Pinged Us!\n", client->id());
           break;
         case WS_EVT_DATA:
-          HandleWebSocketMessage(arg, data, len);
+          HandleWebSocketMessage(client, arg, data, len);
           break;
         case WS_EVT_ERROR:
           Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
@@ -159,13 +159,20 @@ class SettingsWebServerManager
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( "Source Reset Web Socket Handler", {"BT_Source_Reset"}, m_WebSocketDataProcessor, true, true, m_SourceReset, false );    
 
     
-    void HandleWebSocketMessage(void *arg, uint8_t *data, size_t len)
+    void HandleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
     {
       AwsFrameInfo *info = (AwsFrameInfo*)arg;
-      if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
+      data[len] = 0;
+      String WebSocketData = String((char*)data);
+      Serial.println(WebSocketData.c_str());
+      if ( WebSocketData.equals("Hello I am here!") )
+      {
+        ESP_LOGI("SettingsWebServer: HandleWebSocketMessage", "New Client Message: \"Hello I am here!\"");
+        m_WebSocketDataProcessor.UpdateAllDataToClient(client->id());
+      }
+      else if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
       {
         data[len] = 0;
-        String WebSocketData = String((char*)data);
         ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "WebSocket Data from Client: %s", WebSocketData.c_str());
         JSONVar MyDataObject = JSON.parse(WebSocketData);
         if (JSON.typeof(MyDataObject) == "undefined")

@@ -543,7 +543,7 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 	if(ValueChanged)
 	{
 		memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
-		ESP_LOGI( "DataItem: NewRXValueReceived"
+		ESP_LOGD( "DataItem: NewRXValueReceived"
 				, "\"%s\" New RX Value Received: \"%s\""
 				, m_Name.c_str()
 				, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
