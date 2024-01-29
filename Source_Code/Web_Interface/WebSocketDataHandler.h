@@ -398,14 +398,11 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
           KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi).c_str();
           KeyValueTupleVector.push_back(KeyValueTuple);
         }
-        if(0 < KeyValueTupleVector.size())
+        String result = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
+        ESP_LOGI("AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
+        for(size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          String result = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
-          ESP_LOGD("AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
-          for(size_t i = 0; i < m_WidgetIds.size(); i++)
-          {
-            KeyValuePairs->push_back({ m_WidgetIds[i], result.c_str() });
-          }
+          KeyValuePairs->push_back({ m_WidgetIds[i], result.c_str() });
         }
       }
     }
@@ -419,6 +416,7 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
     std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
     String Encode_SSID_Values_To_JSON(std::vector<KVT> &KeyValueTuple)
     {
+      String result = "";
       JSONVar JSONVars;
       for(int i = 0; i < KeyValueTuple.size(); ++i)
       { 
@@ -428,7 +426,11 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
         CompatibleDeviceValues["RSSI"] = KeyValueTuple[i].Value2;
         JSONVars["ActiveCompatibleDevice" + String(i)] = CompatibleDeviceValues;
       }
-      return JSON.stringify(JSONVars);
+      if(KeyValueTuple.size() > 0)
+      {
+        result = JSON.stringify(JSONVars);
+      }
+      return result;
     }
 };
 

@@ -331,7 +331,7 @@ function onMessage(event)
 		console.log(id);
 		console.log(value);
 		const messageHandler = messageHandlers[id];
-		if (messageHandler && id && value) 
+		if (messageHandler) 
 		{
 			messageHandler(id, value);
 		}
@@ -406,7 +406,7 @@ function handleBTSourceTargetDevice(id, value)
 
 function handleBTSourceTargetDevices(id, value)
 {
-	if(id && value)
+	if(value)
 	{
 		console.log('Received BT Source Target Devices!');
 		try 
@@ -432,6 +432,11 @@ function handleBTSourceTargetDevices(id, value)
 		{
 			console.error('Error parsing JSON in handleBTSourceTargetDevices:', error);
 		}
+	}
+	else
+	{
+		compatibleDevices.length = 0;
+		updateCompatibleDeviceList();
 	}
 }
 
