@@ -137,10 +137,15 @@ class SettingsWebServerManager
     const bool m_BluetoothSourceEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Enable Web Socket Handler", {"BT_Source_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSourceEnable, false );
-    
+
+    //Target Device
+    CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
+    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
+    WebSocket_Compatible_Device_DataHandler m_TargetCompatibleDevice_DataHandler = WebSocket_Compatible_Device_DataHandler("BT Target Device Web Socket Data Handler", {"BT_Source_Target_Device"}, m_WebSocketDataProcessor, true, true, m_TargetCompatibleDevice, false );
+
     //Scanned Device
-    BT_Device_Info_With_LastUpdateTime_t m_ScannedDevice_InitialValue = {"", "", 0, 0};
-    DataItem<BT_Device_Info_With_LastUpdateTime_t, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_LastUpdateTime_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
+    BT_Device_Info_With_Time_Since_Update_t m_ScannedDevice_InitialValue = {"", "", 0, 0};
+    DataItem<BT_Device_Info_With_Time_Since_Update_t, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
     WebSocket_BT_Info_ArrayDataHandler m_ScannedDevice_DataHandler = WebSocket_BT_Info_ArrayDataHandler( "Scan BT Device Web Socket Data Handler", {"BT_Source_Target_Devices"}, m_WebSocketDataProcessor, true, true, m_ScannedDevice, false );
     
     //Bluetooth Source Auto Reconnect
@@ -158,7 +163,6 @@ class SettingsWebServerManager
     DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( "Source Reset Web Socket Handler", {"BT_Source_Reset"}, m_WebSocketDataProcessor, true, true, m_SourceReset, false );    
 
-    
     void HandleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
     {
       AwsFrameInfo *info = (AwsFrameInfo*)arg;
@@ -198,12 +202,12 @@ class SettingsWebServerManager
           }
           else
           {
-            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Misconfigured Widget Value Data: %s", MyDataObject["DataValue"]);
+            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Misconfigured Widget Value Data: %s", WebSocketData.c_str());
           }
         }
         else
         {
-          ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unsupported Web Socket Data: $s", WebSocketData);
+          ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unsupported Web Socket Data: $s", WebSocketData.c_str());
         }
       }
     }

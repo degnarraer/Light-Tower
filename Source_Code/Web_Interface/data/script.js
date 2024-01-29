@@ -11,6 +11,8 @@ var compatibleDevices = [
 	{ name: "Device 1", address: "00:11:22:33:44:55", rssi: -50 },
 	{ name: "Device 2", address: "AA:BB:CC:DD:EE:FF", rssi: -60 },
 ];
+
+
 let selectedDeviceIndex = -1;
 
 
@@ -60,10 +62,11 @@ function onError(event)
 const sink_BT_Enable_Toggle_Button = document.getElementById('Sink_BT_Enable_Toggle_Button');
 sink_BT_Enable_Toggle_Button.addEventListener('click', function()
 {
+	//FUCK THIS
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'BT_Sink_Enable';
-	Root['WidgetValue'].Value = String(sink_BT_Enable_Toggle_Button.checked);
+	Root.WidgetValue.Id = 'BT_Sink_Enable';
+	Root.WidgetValue.Value = String(sink_BT_Enable_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
@@ -72,8 +75,8 @@ sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'BT_Sink_Auto_ReConnect';
-	Root['WidgetValue'].Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
+	Root.WidgetValue.Id = 'BT_Sink_Auto_ReConnect';
+	Root.WidgetValue.Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
@@ -82,8 +85,8 @@ source_BT_Reset_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'BT_Source_Reset';
-	Root['WidgetValue'].Value = String(source_BT_Reset_Toggle_Button.checked);
+	Root.WidgetValue.Id = 'BT_Source_Reset';
+	Root.WidgetValue.Value = String(source_BT_Reset_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
@@ -92,8 +95,8 @@ Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 {
 	var Root = {};
 	Root.WidgetValue = {};
-	Root['WidgetValue'].Id = 'BT_Source_Auto_Reconnect';
-	Root['WidgetValue'].Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
+	Root.WidgetValue.Id = 'BT_Source_Auto_Reconnect';
+	Root.WidgetValue.Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
@@ -114,13 +117,13 @@ function closeNav()
 //Text Box
 function textBoxValueChanged(element)
 {
-	if(element.id == 'Sink_Name_Text_Box')
+	if(element.Id == 'Sink_Name_Text_Box')
 	{
 		clearTimeout(sink_Name_Changed_TimeoutHandle);
 		sink_Name_Value_Changed = true;
 		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 60000);
 	}
-	else if(element.id == 'Source_Name_Text_Box')
+	else if(element.Id == 'Source_Name_Text_Box')
 	{
 		clearTimeout(source_Name_Changed_TimeoutHandle);
 		source_Name_Value_Changed = true;
@@ -149,8 +152,8 @@ function submit_New_Name(element)
 		TextboxElement = document.getElementById('Sink_Name_Text_Box');
 		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
-		Root['WidgetValue'].Id = TextboxElement.id;
-		Root['WidgetValue'].Value = TextboxElement.value;
+		Root.WidgetValue.Id = TextboxElement.id;
+		Root.WidgetValue.Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -162,8 +165,8 @@ function submit_New_Name(element)
 		TextboxElement = document.getElementById('Source_Name_Text_Box');
 		source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
-		Root['WidgetValue'].Id = TextboxElement.id;
-		Root['WidgetValue'].Value = TextboxElement.value;
+		Root.WidgetValue.Id = TextboxElement.id;
+		Root.WidgetValue.Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -181,8 +184,8 @@ function updatesliderValue(element)
 	var signal = widgetToSignal[sliderName.toString()];
 	if(signal)
 	{
-		Root['WidgetValue'].Id = signal.toString();
-		Root['WidgetValue'].Value = sliderValue.toString();
+		Root.WidgetValue.Id = signal.toString();
+		Root.WidgetValue.Value = sliderValue.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 		sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
@@ -292,22 +295,49 @@ function setSpeakerImage(value)
 	});
 }
 
+const messageHandlers = {
+	'Sound_Input_Source': handleSoundInputSource,
+	'Sound_Output_Source': handleSoundOutputSource,
+	
+	'Speaker_Image': handleSpeakerImage,
+	'Amplitude_Gain': handleAmplitudeGain,
+	'FFT_Gain': handleFFTGain,
+	'FFT_Gain_slider2': handleFFTGain,
+	
+	'BT_Sink_Name': handleBTSinkName,
+	'BT_Sink_Enable': handleBTSinkEnable,
+	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
+	'BT_Sink_Connection_Status': handleBTSinkConnectionStatus,
+	
+	'BT_Source_Enable': handleBTSourceEnable,
+	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
+	'BT_Source_Connection_Status': handleBTSourceConnectionStatus,
+	'BT_Source_Reset': handleBTSourceReset,
+	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
+	'BT_Source_Target_Device': handleBTSourceTargetDevice,
+};
+
+
 function onMessage(event)
 {
+	console.log(event.data);
 	var myObj = JSON.parse(event.data);
 	var keys = Object.keys(myObj);
+	console.log(event.data);
 	for (var i = 0; i < keys.length; ++i)
 	{
 		var id = myObj[keys[i]]['Id'];
 		var value = myObj[keys[i]]['Value'];
-		const handler = messageHandlers[id];
-		if (handler) 
+		console.log(id);
+		console.log(value);
+		const messageHandler = messageHandlers[id];
+		if (messageHandler && id && value) 
 		{
-			handler(id, value);
-		} 
+			messageHandler(id, value);
+		}
 		else 
 		{
-		  console.log('No handler found for message type:', messageType);
+		  console.log('No handler found for message type:', id);
 		}
 	}
 }
@@ -336,55 +366,73 @@ const contentIdToValue = {
 	'Sound_Output_Selection_Bluetooth': '1',
 };
 
-const messageHandlers = {
-	'Sound_Input_Source': handleSoundInputSource,
-	'Sound_Output_Source': handleSoundOutputSource,
-	
-	'Speaker_Image': handleSpeakerImage,
-	'Amplitude_Gain': handleAmplitudeGain,
-	'FFT_Gain': handleFFTGain,
-	'FFT_Gain_slider2': handleFFTGain,
-	
-	'BT_Sink_Name': handleBTSinkName,
-	'BT_Sink_Enable': handleBTSinkEnable,
-	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
-	'BT_Sink_Connection_Status': handleBTSinkConnectionStatus,
-	
-	'BT_Source_Name': handleBTSourceName,
-	'BT_Source_Enable': handleBTSourceEnable,
-	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
-	'BT_Source_Connection_Status': handleBTSourceConnectionStatus,
-	'BT_Source_Reset': handleBTSourceReset,
-	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
-};
+function handleBTSourceTargetDevice(id, value)
+{
+	if(id && value)
+	{
+		console.log('Received BT Source Target Device!');
+		console.log(value);
+		const widgets = 
+		[
+		  'Source_Name_Text_Box',
+		];
+		try 
+		{
+			var innerData = JSON.parse(value);
+			var innerKeys = Object.keys(innerData);
 
+			for (var j = 0; j < innerKeys.length; ++j) 
+			{
+				var address = innerData[innerKeys[j]]['ADDRESS'];
+				var name = innerData[innerKeys[j]]['NAME'];
+				if(address & name)
+				{
+					for(widget in  widgets)
+					{
+						if(document.getElementById(widget))
+						{
+							document.getElementById(widget).value = name;
+						}
+					}
+				}
+			}
+		}
+		catch (error)
+		{
+			console.error('Error parsing JSON in handleBTSourceTargetDevice:', error);
+		}
+	}
+}
 
-function handleBTSourceTargetDevices(id, value) {
-	console.log('Received BT Source Target Devices!');
-    try {
-        var sourceTargetData = JSON.parse(event.data);
-        var sourceTargetKeys = Object.keys(sourceTargetData);
-        compatibleDevices.length = 0;
+function handleBTSourceTargetDevices(id, value)
+{
+	if(id && value)
+	{
+		console.log('Received BT Source Target Devices!');
+		try 
+		{
+			var sourceTargetData = JSON.parse(value);
+			var sourceTargetKeys = Object.keys(sourceTargetData);
+			compatibleDevices.length = 0;
 
-        for (var i = 0; i < sourceTargetKeys.length; ++i) {
-            var itemId = sourceTargetData[sourceTargetKeys[i]]['Id'];
-            var parsedValue = sourceTargetData[sourceTargetKeys[i]]['Value'];
+			var innerData = JSON.parse(value);
+			var innerKeys = Object.keys(innerData);
 
-            var innerData = JSON.parse(parsedValue);
-            var innerKeys = Object.keys(innerData);
-
-            for (var j = 0; j < innerKeys.length; ++j) {
-                var address = innerData[innerKeys[j]]['ADDRESS'];
-                var name = innerData[innerKeys[j]]['NAME'];
-                var rssi = innerData[innerKeys[j]]['RSSI'];
-                var newValue = { name: name, address: address, rssi: rssi };
-                compatibleDevices.push(newValue);
-            }
-        }
-        updateCompatibleDeviceList();
-    } catch (error) {
-        console.error('Error parsing JSON in handleBTSourceTargetDevices:', error);
-    }
+			for (var j = 0; j < innerKeys.length; ++j)
+			{
+				var address = innerData[innerKeys[j]]['ADDRESS'];
+				var name = innerData[innerKeys[j]]['NAME'];
+				var rssi = innerData[innerKeys[j]]['RSSI'];
+				var newValue = { name: name, address: address, rssi: rssi };
+				compatibleDevices.push(newValue);
+			}
+			updateCompatibleDeviceList();
+		} 
+		catch (error)
+		{
+			console.error('Error parsing JSON in handleBTSourceTargetDevices:', error);
+		}
+	}
 }
 
 function updateCompatibleDeviceList() {
@@ -404,226 +452,268 @@ function updateCompatibleDeviceList() {
 							 <strong>Address:</strong> ${device.address}<br>
 							 <strong>RSSI:</strong> ${device.rssi}`;
 		deviceListElement.appendChild(listItem);
+		
+		// Attach a click listener to the list item
+        listItem.addEventListener("click", () => {
+            handleDeviceItemClick(device);
+        });
+		
 	});
 }
 
+
+
+// Function to handle the click event on a device list item
+function handleDeviceItemClick(device) {
+    // Do something with the selected device's name and address
+    console.log("Selected Name:", device.name);
+    console.log("Selected Address:", device.address);
+
+    // Optionally, you can update the selectedDeviceIndex or perform other actions here
+}
+
 function handleSoundInputSource(id, value) {
-	console.log('Received Sound Input Source!');
-	switch(parseInt(value))
+	if(id && value)
 	{
-		case 0:
-			showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
-		break;
-		case 1:
-			showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
-		break;
-		case 2:
-			showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
-		break;
-		default:
-			console.log('Undefined Input Source State!');
-		break;
+		console.log('Received Sound Input Source!');
+		switch(parseInt(value))
+		{
+			case 0:
+				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
+			break;
+			case 1:
+				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
+			break;
+			case 2:
+				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
+			break;
+			default:
+				console.log('Undefined Input Source State!');
+			break;
+		}
 	}
 }
 
 function handleSoundOutputSource(id, value) {
-	console.log('Received Sound Output Source!');
-	switch(parseInt(value))
+	if(id && value)
 	{
-		case 0:
-			showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
-		break;
-		case 1:
-			showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
-		break;
-		default:
-			console.log('Undefined Input Source State!');
-		break;
+		console.log('Received Sound Output Source!');
+		switch(parseInt(value))
+		{
+			case 0:
+				showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
+			break;
+			case 1:
+				showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
+			break;
+			default:
+				console.log('Undefined Input Source State!');
+			break;
+		}
 	}
 }
 
 function handleSpeakerImage(id, value) {
-	console.log('Received Speaker Image!');
-	setSpeakerImage(value);
+	if(id && value)
+	{
+		console.log('Received Speaker Image!');
+		setSpeakerImage(value);
+	}
 }
 
 function handleAmplitudeGain(id, value) {
-  console.log('Received Amplitude Gain!');
-  const widgets = 
-  [
-	  'Amplitude_Gain_Slider1',
-	  'Amplitude_Gain_Slider2',
-	  'Amplitude_Gain_Slider3',
-  ];
-  for (const widget of widgets) 
-  {
-	if(false == sliderTouched && document.getElementById(widget))
+	if(id && value)
 	{
-		document.getElementById(widget).value = value;
+		console.log('Received Amplitude Gain!');
+		const widgets = 
+		[
+		  'Amplitude_Gain_Slider1',
+		  'Amplitude_Gain_Slider2',
+		  'Amplitude_Gain_Slider3',
+		];
+		for (const widget of widgets) 
+		{
+			if(false == sliderTouched && document.getElementById(widget))
+			{
+				document.getElementById(widget).value = value;
+			}
+			if(document.getElementById(widget + '_Value'))
+			{
+				document.getElementById(widget + '_Value').innerHTML = value;
+			}
+		}
 	}
-	if(document.getElementById(widget + '_Value'))
-	{
-		document.getElementById(widget + '_Value').innerHTML = value;
-	}
-  }
 }
 
 function handleFFTGain(id, value) {
-  console.log('Received FFT Gain!');
-  const widgets = 
-  [
-	  'FFT_Gain_Slider1',
-	  'FFT_Gain_Slider2',
-	  'FFT_Gain_Slider3',
-	  'FFT_Gain_Slider4',
-  ];
-  for (const widget of widgets) 
-  {
-	if(false == sliderTouched && document.getElementById(widget))
+	if(id && value)
 	{
-		document.getElementById(widget).value = value;
+		console.log('Received FFT Gain!');
+		const widgets = 
+		[
+			'FFT_Gain_Slider1',
+			'FFT_Gain_Slider2',
+			'FFT_Gain_Slider3',
+			'FFT_Gain_Slider4',
+		];
+		for (const widget of widgets) 
+		{
+			if(false == sliderTouched && document.getElementById(widget))
+			{
+			document.getElementById(widget).value = value;
+			}
+			if(document.getElementById(widget + '_Value'))
+			{
+			document.getElementById(widget + '_Value').innerHTML = value;
+			}
+		}
 	}
-	if(document.getElementById(widget + '_Value'))
-	{
-		document.getElementById(widget + '_Value').innerHTML = value;
-	}
-  }
 }
 
 function handleBTSinkName(id, value) {
-	console.log('Received Bluetooth Sink Name!');
-	const widgets = 
-	[
-		'Sink_Name_Text_Box',
-	];
-	if(!sink_Name_Value_Changed)
+	if(id && value)
 	{
-		for(widget in  widgets)
+		console.log('Received Bluetooth Sink Name!');
+		const widgets = 
+		[
+			'Sink_Name_Text_Box',
+		];
+		if(!sink_Name_Value_Changed)
 		{
-			if(document.getElementById(widget))
+			for(widget in  widgets)
 			{
-				document.getElementById(widget).value = value;
+				if(document.getElementById(widget))
+				{
+					document.getElementById(widget).value = value;
+				}
 			}
 		}
 	}
 }
 	
 function handleBTSinkEnable(id, value) {
-	console.log('Received the Bluetooth Sink Enable!');
-	if(value == 'true')
+	if(id && value)
 	{
-		sink_BT_Enable_Toggle_Button.checked = true;
-	}
-	else
-	{
-		sink_BT_Enable_Toggle_Button.checked = false;
+		console.log('Received the Bluetooth Sink Enable!');
+		if(value == 'true')
+		{
+			sink_BT_Enable_Toggle_Button.checked = true;
+		}
+		else
+		{
+			sink_BT_Enable_Toggle_Button.checked = false;
+		}
 	}
 }
 	
 function handleBTSinkConnectionStatus(id, value) {
-	console.log('Received the Bluetooth Sink Connection Status!');
-	var element = document.getElementById('Sink_Connection_Status');
-	switch(parseInt(value))
+	if(id && value)
 	{
-		case ConnectionStatus.Waiting:
-			element.innerHTML = 'Waiting';
-		break;
-		case ConnectionStatus.Searching:
-			element.innerHTML = 'Searching';
-		break;
-		case ConnectionStatus.Pairing:
-			element.innerHTML = 'Pairing';
-		break;
-		case ConnectionStatus.Paired:
-			element.innerHTML = 'Paired';
-		break;
-		case ConnectionStatus.Disconnected:
-			element.innerHTML = 'Disconnected';
-		break;
-		default:
-			element.innerHTML = 'Error';
-		break;
+		console.log('Received the Bluetooth Sink Connection Status!');
+		var element = document.getElementById('Sink_Connection_Status');
+		switch(parseInt(value))
+		{
+			case ConnectionStatus.Waiting:
+				element.innerHTML = 'Waiting';
+			break;
+			case ConnectionStatus.Searching:
+				element.innerHTML = 'Searching';
+			break;
+			case ConnectionStatus.Pairing:
+				element.innerHTML = 'Pairing';
+			break;
+			case ConnectionStatus.Paired:
+				element.innerHTML = 'Paired';
+			break;
+			case ConnectionStatus.Disconnected:
+				element.innerHTML = 'Disconnected';
+			break;
+			default:
+				element.innerHTML = 'Error';
+			break;
+		}
 	}
 }
 	
 function handleBTSinkAutoReConnect(id, value) {
-	console.log('Received the Bluetooth Sink Auto ReConnect!');
-	if(value == 'true')
+	if(id && value)
 	{
-		sink_BT_Auto_ReConnect_Toggle_Button.checked = true;
-	}
-	else
-	{
-		sink_BT_Auto_ReConnect_Toggle_Button.checked = false;
-	}
-}
-
-function handleBTSourceName(id, value) {
-	console.log('Received Bluetooth Source Name!');  
-	const widgets = 
-	[
-		'Source_Name_Text_Box',
-	];
-	if(!sink_Name_Value_Changed)
-	{
-		for(widget in  widgets)
+		console.log('Received the Bluetooth Sink Auto ReConnect!');
+		if(value == 'true')
 		{
-			document.getElementById(widget).value = value;
+			sink_BT_Auto_ReConnect_Toggle_Button.checked = true;
+		}
+		else
+		{
+			sink_BT_Auto_ReConnect_Toggle_Button.checked = false;
 		}
 	}
 }
 
+
 function handleBTSourceEnable(id, value) {
-  console.log('Received Bluetooth Source Enable!');
+	if(id && value)
+	{
+		console.log('Received Bluetooth Source Enable!');
+	}
 }
 
 function handleBTSourceAutoReconnect(id, value) {
-	console.log('Received Bluetooth Source Auto Reconnect!');
-	if(value == 'true')
+	if(id && value)
 	{
-		source_BT_Auto_ReConnect_Toggle_Button.checked = true;
-	}
-	else
-	{
-		source_BT_Auto_ReConnect_Toggle_Button.checked = false;
+		console.log('Received Bluetooth Source Auto Reconnect!');
+		if(value == 'true')
+		{
+			source_BT_Auto_ReConnect_Toggle_Button.checked = true;
+		}
+		else
+		{
+			source_BT_Auto_ReConnect_Toggle_Button.checked = false;
+		}
 	}
 }
 
 function handleBTSourceConnectionStatus(id, value) {
-	console.log('Received Bluetooth Source Connection Status!');
-	var element = document.getElementById('Source_Connection_Status_Textbox');
-	switch(parseInt(value))
+	if(id && value)
 	{
-		case ConnectionStatus.Waiting:
-			element.innerHTML = 'Waiting';
-		break;
-		case ConnectionStatus.Searching:
-			element.innerHTML = 'Searching';
-		break;
-		case ConnectionStatus.Pairing:
-			element.innerHTML = 'Pairing';
-		break;
-		case ConnectionStatus.Paired:
-			element.innerHTML = 'Paired';
-		break;
-		case ConnectionStatus.Disconnected:
-			element.innerHTML = 'Disconnected';
-		break;
-		default:
-			element.innerHTML = 'Error';
-		break;
+		console.log('Received Bluetooth Source Connection Status!');
+		var element = document.getElementById('Source_Connection_Status_Textbox');
+		switch(parseInt(value))
+		{
+			case ConnectionStatus.Waiting:
+				element.innerHTML = 'Waiting';
+			break;
+			case ConnectionStatus.Searching:
+				element.innerHTML = 'Searching';
+			break;
+			case ConnectionStatus.Pairing:
+				element.innerHTML = 'Pairing';
+			break;
+			case ConnectionStatus.Paired:
+				element.innerHTML = 'Paired';
+			break;
+			case ConnectionStatus.Disconnected:
+				element.innerHTML = 'Disconnected';
+			break;
+			default:
+				element.innerHTML = 'Error';
+			break;
+		}
 	}
 }
 
 function handleBTSourceReset(id, value) {
-	console.log('Received Bluetooth Source Reset!');
-	if(value == 'true')
+	if(id && value)
 	{
-		source_BT_Reset_Toggle_Button.checked = true;
-	}
-	else
-	{
-		source_BT_Reset_Toggle_Button.checked = false;
+		console.log('Received Bluetooth Source Reset!');
+		if(value == 'true')
+		{
+			source_BT_Reset_Toggle_Button.checked = true;
+		}
+		else
+		{
+			source_BT_Reset_Toggle_Button.checked = false;
+		}
 	}
 }
 
@@ -643,8 +733,8 @@ function showContent(classId, contentId) {
 	{
 		var Root = {};
 		Root.WidgetValue = {};
-		Root['WidgetValue'].Id = signal.toString();
-		Root['WidgetValue'].Value = value.toString();
+		Root.WidgetValue.Id = signal.toString();
+		Root.WidgetValue.Value = value.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}

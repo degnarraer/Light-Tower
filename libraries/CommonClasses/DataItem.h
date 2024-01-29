@@ -110,7 +110,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		virtual ~DataItem();
 		virtual void Setup();
 		String GetName();
-		void GetValue(void* Object, size_t Count);
+		size_t GetValue(void* Object, size_t Count);
 		String GetValueAsString(const String &Divider);
 		void SetNewTxValue(const T* Value, const size_t Count);
 		virtual void SetValue(const T *Value, size_t Count);
@@ -136,6 +136,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		void DataItem_Try_TX_On_Change();
 	private:
 		bool m_DataLinkEnabled = true;
+		size_t m_ValueChangeCount = 0;
 		SerialPortMessageManager &m_SerialPortMessageManager;
 		esp_timer_handle_t m_TxTimer;
 		size_t m_Count = COUNT;

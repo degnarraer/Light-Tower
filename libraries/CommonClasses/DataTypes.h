@@ -95,11 +95,11 @@ struct BT_Device_Info
 };
 typedef BT_Device_Info BT_Device_Info_t;
 
-struct BT_Device_Info_With_LastUpdateTime_t
+struct BT_Device_Info_With_Time_Since_Update
 {
 	public:
-		BT_Device_Info_With_LastUpdateTime_t(){}
-		BT_Device_Info_With_LastUpdateTime_t(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)
+		BT_Device_Info_With_Time_Since_Update(){}
+		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)
 		{
 			if(BT_NAME_LENGTH < String(name_In).length())
 			{
@@ -116,7 +116,7 @@ struct BT_Device_Info_With_LastUpdateTime_t
 			timeSinceUdpate = timeSinceUdpate_in;
 			rssi = rssi_In;
 		}
-		BT_Device_Info_With_LastUpdateTime_t& operator=(const BT_Device_Info_With_LastUpdateTime_t& other)
+		BT_Device_Info_With_Time_Since_Update& operator=(const BT_Device_Info_With_Time_Since_Update& other)
 		{
 			strncpy(this->name, other.name, sizeof(this->name) - 1);
 			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
@@ -129,7 +129,7 @@ struct BT_Device_Info_With_LastUpdateTime_t
 
 			return *this;
 		}
-		bool operator==(const BT_Device_Info_With_LastUpdateTime_t& other) const
+		bool operator==(const BT_Device_Info_With_Time_Since_Update& other) const
 		{
 			if( strcmp(this->name, other.name) == 0 &&
 				strcmp(this->address, other.address) == 0 &&
@@ -137,7 +137,7 @@ struct BT_Device_Info_With_LastUpdateTime_t
 				this->timeSinceUdpate == other.timeSinceUdpate) return true;
 			else return false;
 		}
-		bool operator!=(const BT_Device_Info_With_LastUpdateTime_t& other) const
+		bool operator!=(const BT_Device_Info_With_Time_Since_Update& other) const
 		{
 			if( strcmp(this->name, other.name) != 0 ||
 				strcmp(this->address, other.address) != 0 ||
@@ -150,7 +150,7 @@ struct BT_Device_Info_With_LastUpdateTime_t
 		int32_t rssi = 0;
 		uint32_t timeSinceUdpate = 0;
 };
-typedef BT_Device_Info_With_LastUpdateTime_t BT_Device_Info_With_LastUpdateTime_t_t;
+typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Update_t;
 
 struct  CompatibleDevice_t
 {
@@ -331,7 +331,8 @@ enum DataType_t
   DataType_Char_t,
   DataType_String_t,
   DataType_BT_Device_Info_t,
-  DataType_BT_Device_Info_With_LastUpdateTime_t,
+  DataType_BT_Device_Info_With_Time_Since_Update_t,
+  DataType_CompatibleDevice_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -358,6 +359,7 @@ static const char* DataTypeStrings[] =
   "String_t",
   "BT_Device_Info_t",
   "BT_Info_With_LastUpdateTime_t",
+  "CompatibleDevice_t",
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",
@@ -490,27 +492,28 @@ class DataTypeFunctions
 		DataType_t GetDataTypeFromTemplateType()
 		{
 			DataType_t Result;
-			if(	std::is_same<T, bool>::value) 										return DataType_Bool_t;
-			else if(std::is_same<T, int8_t>::value) 								return DataType_Int8_t;
-			else if(std::is_same<T, int16_t>::value) 								return DataType_Int16_t;
-			else if(std::is_same<T, int32_t>::value) 								return DataType_Int32_t;
-			else if(std::is_same<T, uint8_t>::value) 								return DataType_Uint8_t;
-			else if(std::is_same<T, uint16_t>::value) 								return DataType_Uint16_t;
-			else if(std::is_same<T, uint32_t>::value) 								return DataType_Uint32_t;
-			else if(std::is_same<T, char>::value) 									return DataType_Char_t;
-			else if(std::is_same<T, String>::value) 								return DataType_String_t;
-			else if(std::is_same<T, BT_Device_Info_t>::value) 						return DataType_BT_Device_Info_t;
-			else if(std::is_same<T, BT_Device_Info_With_LastUpdateTime_t>::value) 	return DataType_BT_Device_Info_With_LastUpdateTime_t;
-			else if(std::is_same<T, float>::value) 									return DataType_Float_t;
-			else if(std::is_same<T, double>::value) 								return DataType_Double_t;
-			else if(std::is_same<T, ProcessedSoundData_t>::value) 					return DataType_ProcessedSoundData_t;
-			else if(std::is_same<T, MaxBandSoundData_t>::value) 					return DataType_MaxBandSoundData_t;
-			else if(std::is_same<T, Frame_t>::value) 								return DataType_Frame_t;
-			else if(std::is_same<T, ProcessedSoundFrame_t>::value) 					return DataType_ProcessedSoundFrame_t;
-			else if(std::is_same<T, SoundState_t>::value) 							return DataType_SoundState_t;
-			else if(std::is_same<T, ConnectionStatus_t>::value) 					return DataType_ConnectionStatus_t;
-			else if(std::is_same<T, SoundInputSource_t>::value)						return DataType_SoundInputSource_t;
-			else if(std::is_same<T, SoundOutputSource_t>::value)					return DataType_SoundOutputSource_t;
+			if(	std::is_same<T, bool>::value) 											return DataType_Bool_t;
+			else if(std::is_same<T, int8_t>::value) 									return DataType_Int8_t;
+			else if(std::is_same<T, int16_t>::value) 									return DataType_Int16_t;
+			else if(std::is_same<T, int32_t>::value) 									return DataType_Int32_t;
+			else if(std::is_same<T, uint8_t>::value) 									return DataType_Uint8_t;
+			else if(std::is_same<T, uint16_t>::value) 									return DataType_Uint16_t;
+			else if(std::is_same<T, uint32_t>::value) 									return DataType_Uint32_t;
+			else if(std::is_same<T, char>::value) 										return DataType_Char_t;
+			else if(std::is_same<T, String>::value) 									return DataType_String_t;
+			else if(std::is_same<T, BT_Device_Info_t>::value) 							return DataType_BT_Device_Info_t;
+			else if(std::is_same<T, BT_Device_Info_With_Time_Since_Update_t>::value) 	return DataType_BT_Device_Info_With_Time_Since_Update_t;
+			else if(std::is_same<T, CompatibleDevice_t>::value)							return DataType_CompatibleDevice_t;
+			else if(std::is_same<T, float>::value) 										return DataType_Float_t;
+			else if(std::is_same<T, double>::value) 									return DataType_Double_t;
+			else if(std::is_same<T, ProcessedSoundData_t>::value) 						return DataType_ProcessedSoundData_t;
+			else if(std::is_same<T, MaxBandSoundData_t>::value) 						return DataType_MaxBandSoundData_t;
+			else if(std::is_same<T, Frame_t>::value) 									return DataType_Frame_t;
+			else if(std::is_same<T, ProcessedSoundFrame_t>::value) 						return DataType_ProcessedSoundFrame_t;
+			else if(std::is_same<T, SoundState_t>::value) 								return DataType_SoundState_t;
+			else if(std::is_same<T, ConnectionStatus_t>::value) 						return DataType_ConnectionStatus_t;
+			else if(std::is_same<T, SoundInputSource_t>::value)							return DataType_SoundInputSource_t;
+			else if(std::is_same<T, SoundOutputSource_t>::value)						return DataType_SoundOutputSource_t;
 			else
 			{
 				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "Undefined Data Type");
@@ -519,99 +522,103 @@ class DataTypeFunctions
 		}
 		size_t GetSizeOfDataType(DataType_t DataType)
 		{
-			uint32_t Result = 0;
+			uint32_t result = 0;
 			switch(DataType)
 			{
 				case DataType_Bool_t:
-					Result = sizeof(bool);
+					result = sizeof(bool);
 				break;
 				
 				case DataType_Int8_t:
-					Result = sizeof(int8_t);
+					result = sizeof(int8_t);
 				break;
 				
 				case DataType_Int16_t:
-					Result = sizeof(int16_t);
+					result = sizeof(int16_t);
 				break;
 				
 				case DataType_Int32_t:
-					Result = sizeof(int32_t);
+					result = sizeof(int32_t);
 				break;
 				
 				case DataType_Uint8_t:
-					Result = sizeof(uint8_t);
+					result = sizeof(uint8_t);
 				break;
 				
 				case DataType_Uint16_t:
-					Result = sizeof(uint16_t);
+					result = sizeof(uint16_t);
 				break;
 				
 				case DataType_Uint32_t:
-					Result = sizeof(uint32_t);
+					result = sizeof(uint32_t);
 				break;
 				
 				case DataType_Char_t:
-					Result = sizeof(char);
+					result = sizeof(char);
 				break;
 				
 				case DataType_String_t:
-					Result = sizeof(String);
+					result = sizeof(String);
 				break;
 				
 				case DataType_BT_Device_Info_t:
-					Result = sizeof(BT_Device_Info_t);
+					result = sizeof(BT_Device_Info_t);
 				break;
 				
-				case DataType_BT_Device_Info_With_LastUpdateTime_t:
-					Result = sizeof(BT_Device_Info_With_LastUpdateTime_t);
+				case DataType_BT_Device_Info_With_Time_Since_Update_t:
+					result = sizeof(BT_Device_Info_With_Time_Since_Update_t);
+				break;
+				
+				case DataType_CompatibleDevice_t:
+					result = sizeof(CompatibleDevice_t);
 				break;
 				
 				case DataType_Float_t:
-					Result = sizeof(float);
+					result = sizeof(float);
 				break;
 				
 				case DataType_Double_t:
-					Result = sizeof(double);
+					result = sizeof(double);
 				break;
 				
 				case DataType_ProcessedSoundData_t:
-					Result = sizeof(ProcessedSoundData_t);
+					result = sizeof(ProcessedSoundData_t);
 				break;
 				
 				case DataType_MaxBandSoundData_t:
-					Result = sizeof(MaxBandSoundData_t);
+					result = sizeof(MaxBandSoundData_t);
 				break;
 				
 				case DataType_Frame_t:
-					Result = sizeof(Frame_t);
+					result = sizeof(Frame_t);
 				break;
 				
 				case DataType_ProcessedSoundFrame_t:
-					Result = sizeof(ProcessedSoundFrame_t);
+					result = sizeof(ProcessedSoundFrame_t);
 				break;
 				
 				case DataType_SoundState_t:
-					Result = sizeof(SoundState_t);
+					result = sizeof(SoundState_t);
 				break;
 				
 				case DataType_ConnectionStatus_t:
-					Result = sizeof(ConnectionStatus_t);
+					result = sizeof(ConnectionStatus_t);
 				break;
 				
 				case DataType_SoundInputSource_t:
-					Result = sizeof(SoundInputSource_t);
+					result = sizeof(SoundInputSource_t);
 				break;
 				
 				case DataType_SoundOutputSource_t:
-					Result = sizeof(SoundOutputSource_t);
+					result = sizeof(SoundOutputSource_t);
 				break;
 				
 				default:
 					ESP_LOGE("DataTypes: GetSizeOfDataType: %s", "GetSizeOfDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
-					Result = 0;
+					result = 0;
 				break;
 			}
-			return Result;
+			return result;
 		}
 		bool SetValueFromFromStringForDataType(void *Buffer, String Value, DataType_t DataType)
 		{
@@ -662,7 +669,8 @@ class DataTypeFunctions
 				break;
 			case DataType_String_t:
 			case DataType_BT_Device_Info_t:
-			case DataType_BT_Device_Info_With_LastUpdateTime_t:
+			case DataType_BT_Device_Info_With_Time_Since_Update_t:
+			case DataType_CompatibleDevice_t:
 			case DataType_ProcessedSoundData_t:
 			case DataType_MaxBandSoundData_t:
 			case DataType_Frame_t:
@@ -721,13 +729,20 @@ class DataTypeFunctions
 				case DataType_SoundOutputSource_t:
 					resultString += String(*((const SoundOutputSource_t *)Buffer + i));
 				break;
-				case DataType_BT_Device_Info_With_LastUpdateTime_t:
+				case DataType_BT_Device_Info_With_Time_Since_Update_t:
 				{
-					const BT_Device_Info_With_LastUpdateTime_t* deviceInfo = (const BT_Device_Info_With_LastUpdateTime_t*)(Buffer + i);
+					const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = (const BT_Device_Info_With_Time_Since_Update_t*)(Buffer + i);
 					resultString += String(deviceInfo->name) + " | ";
 					resultString += String(deviceInfo->address) + " | ";
 					resultString += String(deviceInfo->rssi) + " | ";
 					resultString += String(deviceInfo->timeSinceUdpate);
+					break;
+				}
+				case DataType_CompatibleDevice_t:
+				{
+					const CompatibleDevice_t* compatibleDevice = (const CompatibleDevice_t*)(Buffer + i);
+					resultString += String(compatibleDevice->name) + " | ";
+					resultString += String(compatibleDevice->address);
 					break;
 				}
 				case DataType_String_t:

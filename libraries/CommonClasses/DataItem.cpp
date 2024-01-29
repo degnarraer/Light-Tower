@@ -5,7 +5,7 @@ template class DataItem<bool, 1>;
 template class DataItem<char, 50>;
 template class DataItem<ConnectionStatus_t, 1>;
 template class DataItem<CompatibleDevice_t, 1>;
-template class DataItem<BT_Device_Info_With_LastUpdateTime_t, 1>;
+template class DataItem<BT_Device_Info_With_Time_Since_Update_t, 1>;
 template class DataItem<SoundInputSource_t, 1>;
 template class DataItem<SoundOutputSource_t, 1>;
 
@@ -377,7 +377,7 @@ String DataItem<T, COUNT>::GetName()
 }
 
 template <typename T, size_t COUNT>
-void DataItem<T, COUNT>::GetValue(void* Object, size_t Count)
+size_t DataItem<T, COUNT>::GetValue(void* Object, size_t Count)
 {
 	assert(Count == COUNT && "Counts must be equal");
 	if(mp_Value)
@@ -388,6 +388,7 @@ void DataItem<T, COUNT>::GetValue(void* Object, size_t Count)
 	{
 		*reinterpret_cast<T**>(Object) = nullptr;
 	}
+	return m_ValueChangeCount;
 }
 
 template <typename T, size_t COUNT>
@@ -502,6 +503,7 @@ bool DataItem<T, COUNT>::DataItem_TX_Now()
 			if(TxValueChanged)
 			{
 				memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
+				++m_ValueChangeCount;
 				this->CallCallbacks(m_Name.c_str(), mp_Value);
 				ValueUpdated = true;
 			}
@@ -554,6 +556,7 @@ bool DataItem<T, COUNT>::NewRXValueReceived(void* Object, size_t Count)
 			if(RxValueChanged)
 			{
 				memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
+				++m_ValueChangeCount;
 				this->CallCallbacks(m_Name.c_str(), mp_Value);
 				ValueUpdated = true;
 			}
