@@ -123,17 +123,22 @@ void Manager::BluetoothConnectionStatusChanged(const ConnectionStatus_t Connecti
 //BluetoothActiveDeviceUpdatee Callback 
 void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
 {
+  unsigned long currentMillis = millis();
   for(int i = 0; i < Devices.size(); ++i)
-  { 
-    ESP_LOGD("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
+  {
+    unsigned long elapsedTime;
+    unsigned long previousMillis = Devices[i].lastUpdateTime;
+    if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
+    else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
+    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address
-            , millis() - Devices[i].lastUpdateTime
+            , elapsedTime
             , Devices[i].rssi );
     BT_Device_Info_With_Time_Since_Update_t ActiveDevice = BT_Device_Info_With_Time_Since_Update_t( Devices[i].name
                                                                                                   , Devices[i].address 
-                                                                                                  , millis() - Devices[i].lastUpdateTime
+                                                                                                  , elapsedTime
                                                                                                   , Devices[i].rssi);
     m_ScannedDevice.SetValue(&ActiveDevice, 1);                                            
   }

@@ -353,14 +353,14 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
         {
           found = true;
           if(valueChanged)
-          {
-            ESP_LOGI("","%s: Device Name: %s Address: %s Value Changed: %i", this->m_Name.c_str(), m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].address, newChangeCount);
-            m_ActiveCompatibleDevices[i].lastUpdateTime = currentMillis;
+          {m_ActiveCompatibleDevices[i].lastUpdateTime = currentMillis;
             if(m_ActiveCompatibleDevices[i].rssi != CurrentValue.rssi)
             {
               m_ActiveCompatibleDevices[i].rssi = CurrentValue.rssi;
               updated = true;
             }
+            ESP_LOGI("","%s: Device Name: %s Address: %s RSSI: %i Change Count: %i", this->m_Name.c_str(), m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].address, m_ActiveCompatibleDevices[i].rssi, newChangeCount);
+            
           }
         }
         if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
@@ -378,7 +378,7 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
           0 < String(CurrentValue.name).length() && 
           0 < String(CurrentValue.address).length() )
       {
-        ESP_LOGI("","%s: New Device Name: %s Address: %s Value Changed: %i", this->m_Name.c_str(), CurrentValue.name, CurrentValue.address, newChangeCount);
+        ESP_LOGI("","%s: New Device Name: %s Address: %s RSSI: %i Change Count: %i", this->m_Name.c_str(), CurrentValue.name, CurrentValue.address, CurrentValue.rssi, newChangeCount);
         ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( CurrentValue.name
                                                                      , CurrentValue.address
                                                                      , CurrentValue.rssi

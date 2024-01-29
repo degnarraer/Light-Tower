@@ -250,7 +250,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
 	ESP_LOGI("SetupSerialPortMessageManager", "Starting TX Task.");
-	const TickType_t xFrequency = 20;
+	const TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
 	{
