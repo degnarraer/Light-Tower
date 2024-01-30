@@ -207,15 +207,15 @@ struct ActiveCompatibleDevice_t
 				Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
 				assert(BT_NAME_LENGTH >= name_In.length());
 			}
-			snprintf(name, BT_NAME_LENGTH, "%s", name_In.c_str());
+			strncpy(this->name, name_In.c_str(), sizeof(this->name) - 1);
 			if(BT_ADDRESS_LENGTH < address_In.length())
 			{
 				Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
 				assert(BT_ADDRESS_LENGTH >= address_In.length());
 			}
-			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In.c_str());
+			strncpy(this->address, address_In.c_str(), sizeof(this->address) - 1);
 		}
-		ActiveCompatibleDevice_t(String name_In, String address_In, int32_t rssi_in, unsigned long lastUpdateTime_in)
+		ActiveCompatibleDevice_t(String name_In, String address_In, int32_t rssi_in, unsigned long lastUpdateTime_in, uint32_t timeSinceUpdate_in)
 		{
 			if(BT_NAME_LENGTH < name_In.length())
 			{
@@ -231,6 +231,7 @@ struct ActiveCompatibleDevice_t
 			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In.c_str());
 			rssi = rssi_in;
 			lastUpdateTime = lastUpdateTime_in;
+			timeSinceUpdate = timeSinceUpdate_in;
 		}
 		ActiveCompatibleDevice_t& operator=(const ActiveCompatibleDevice_t& other)
 		{
@@ -257,6 +258,7 @@ struct ActiveCompatibleDevice_t
 	char address[BT_ADDRESS_LENGTH] = "\0";
 	int32_t rssi;
 	unsigned long lastUpdateTime;
+	uint32_t timeSinceUpdate = 0;
 };
 
 enum SoundInputSource
@@ -333,6 +335,7 @@ enum DataType_t
   DataType_BT_Device_Info_t,
   DataType_BT_Device_Info_With_Time_Since_Update_t,
   DataType_CompatibleDevice_t,
+  DataType_ActiveCompatibleDevice_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -360,6 +363,7 @@ static const char* DataTypeStrings[] =
   "BT_Device_Info_t",
   "BT_Info_With_LastUpdateTime_t",
   "CompatibleDevice_t",
+  "ActiveCompatibleDevice_t",
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",
@@ -419,26 +423,28 @@ struct NamedObject_t
 
 struct NamedCallback_t
 {
-	const String& Name;
-    void (*Callback)(const String& name, void* callback);
+    const String& Name;
+    void (*Callback)(const String& name, void* callback, void* arg);
+    void* Arg;
 
-    NamedCallback_t(const String& name, void (*callback)(const String& name, void* callback))
-        : Name(name), Callback(callback)
+    NamedCallback_t(const String& name, void (*callback)(const String& name, void* callback, void* arg), void* arg = nullptr)
+        : Name(name), Callback(callback), Arg(arg)
     {
     }
-	NamedCallback_t(const NamedCallback_t& other)
-        : Name(other.Name), Callback(other.Callback)
+
+    NamedCallback_t(const NamedCallback_t& other)
+        : Name(other.Name), Callback(other.Callback), Arg(other.Arg)
     {
     }
+
     bool operator==(const NamedCallback_t& other) const
     {
-        return this->Name.equals(other.Name) && this->Callback == other.Callback;
+        return this->Name.equals(other.Name) && this->Callback == other.Callback && this->Arg == other.Arg;
     }
 
     NamedCallback_t& operator=(const NamedCallback_t& other)
     {
-        // Use the constructor with the member initializer list to initialize 'Name'
-        return *this = NamedCallback_t(other.Name, other.Callback);
+        return *this = NamedCallback_t(other.Name, other.Callback, other.Arg);
     }
 };
 
@@ -504,6 +510,7 @@ class DataTypeFunctions
 			else if(std::is_same<T, BT_Device_Info_t>::value) 							return DataType_BT_Device_Info_t;
 			else if(std::is_same<T, BT_Device_Info_With_Time_Since_Update_t>::value) 	return DataType_BT_Device_Info_With_Time_Since_Update_t;
 			else if(std::is_same<T, CompatibleDevice_t>::value)							return DataType_CompatibleDevice_t;
+			else if(std::is_same<T, ActiveCompatibleDevice_t>::value)					return DataType_ActiveCompatibleDevice_t;
 			else if(std::is_same<T, float>::value) 										return DataType_Float_t;
 			else if(std::is_same<T, double>::value) 									return DataType_Double_t;
 			else if(std::is_same<T, ProcessedSoundData_t>::value) 						return DataType_ProcessedSoundData_t;
@@ -571,6 +578,10 @@ class DataTypeFunctions
 				
 				case DataType_CompatibleDevice_t:
 					result = sizeof(CompatibleDevice_t);
+				break;
+				
+				case DataType_ActiveCompatibleDevice_t:
+					result = sizeof(ActiveCompatibleDevice_t);
 				break;
 				
 				case DataType_Float_t:
@@ -671,6 +682,7 @@ class DataTypeFunctions
 			case DataType_BT_Device_Info_t:
 			case DataType_BT_Device_Info_With_Time_Since_Update_t:
 			case DataType_CompatibleDevice_t:
+			case DataType_ActiveCompatibleDevice_t:
 			case DataType_ProcessedSoundData_t:
 			case DataType_MaxBandSoundData_t:
 			case DataType_Frame_t:
@@ -743,6 +755,16 @@ class DataTypeFunctions
 					const CompatibleDevice_t* compatibleDevice = (const CompatibleDevice_t*)(Buffer + i);
 					resultString += String(compatibleDevice->name) + " | ";
 					resultString += String(compatibleDevice->address);
+					break;
+				}
+				case DataType_ActiveCompatibleDevice_t:
+				{
+					const ActiveCompatibleDevice_t* activeCompatibleDevice = (const ActiveCompatibleDevice_t*)(Buffer + i);
+					resultString += String(activeCompatibleDevice->name) + " | ";
+					resultString += String(activeCompatibleDevice->address) + " | ";
+					resultString += String(activeCompatibleDevice->rssi) + " | ";
+					resultString += String(activeCompatibleDevice->lastUpdateTime) + " | ";
+					resultString += String(activeCompatibleDevice->timeSinceUpdate);
 					break;
 				}
 				case DataType_String_t:

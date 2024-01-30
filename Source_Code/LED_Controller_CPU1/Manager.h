@@ -82,14 +82,14 @@ class Manager: public NamedItem
 
     void RegisterForDataItemCallBacks()
     {
-      NamedCallback_t namedCallback = {m_SoundInputSource.GetName().c_str(), &SoundInputSourceValueChanged};
+      NamedCallback_t namedCallback = {m_SoundInputSource.GetName().c_str(), &SoundInputSourceValueChanged, nullptr};
       m_SoundInputSource.RegisterNamedCallback(&namedCallback);
     }
     
     //Sound Input Source
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-    static void SoundInputSourceValueChanged(const String &Name, void* object)
+    static void SoundInputSourceValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::SoundInputSourceValueChanged", "Sound Input Value Changed");
     }

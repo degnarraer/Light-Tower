@@ -162,9 +162,10 @@ class NewRxTxValueCallerInterface
 			{
 				if (namedCallback->Callback) 
 				{
-					void (*aCallback)(const String&, void*);
+					void (*aCallback)(const String&, void*, void*);
 					aCallback = namedCallback->Callback;
-					aCallback(namedCallback->Name, object);
+					void* arg = namedCallback->Arg;
+					aCallback(namedCallback->Name, object, arg);
 				}
 			}
 		}

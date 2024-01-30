@@ -136,10 +136,11 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
             , Devices[i].address
             , elapsedTime
             , Devices[i].rssi );
-    BT_Device_Info_With_Time_Since_Update_t ActiveDevice = BT_Device_Info_With_Time_Since_Update_t( Devices[i].name
-                                                                                                  , Devices[i].address 
-                                                                                                  , elapsedTime
-                                                                                                  , Devices[i].rssi);
+    ActiveCompatibleDevice_t ActiveDevice = ActiveCompatibleDevice_t( Devices[i].name
+                                                                    , Devices[i].address
+                                                                    , Devices[i].rssi
+                                                                    , Devices[i].lastUpdateTime
+                                                                    , elapsedTime );
     m_ScannedDevice.SetValue(&ActiveDevice, 1);                                            
   }
 }

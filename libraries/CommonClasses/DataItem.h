@@ -89,6 +89,7 @@ class PreferencesWrapper
 
 template <typename T, size_t COUNT>
 class DataItem: public NewRxTxValueCallerInterface<T>
+			  //, public NewRxTxValueCalleeInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
 			  , public SetupCalleeInterface
 			  , public DataTypeFunctions

@@ -77,10 +77,10 @@ class Manager: public NamedItem
 
     void RegisterForDataItemCallBacks()
     {
-      NamedCallback_t soundOutputSourceCallback = {m_SoundOutputSource.GetName().c_str(), &SoundOutputSourceValueChanged};
+      NamedCallback_t soundOutputSourceCallback = {m_SoundOutputSource.GetName().c_str(), &SoundOutputSourceValueChanged, nullptr};
       m_SoundOutputSource.RegisterNamedCallback(&soundOutputSourceCallback);
 
-      NamedCallback_t targetCompatibleDeviceCallback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDeviceValueChanged};
+      NamedCallback_t targetCompatibleDeviceCallback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDeviceValueChanged, nullptr};
       m_TargetCompatibleDevice.RegisterNamedCallback(&targetCompatibleDeviceCallback);
     }
     
@@ -105,13 +105,12 @@ class Manager: public NamedItem
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
   
     //Scanned Device
-    BT_Device_Info_With_Time_Since_Update_t m_ScannedDevice_InitialValue = {"", "", 0, 0};
-    DataItem<BT_Device_Info_With_Time_Since_Update_t, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
-
+    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
+    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
     //Target Compatible Device
     CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager);
-    static void TargetCompatibleDeviceValueChanged(const String &Name, void* object)
+    static void TargetCompatibleDeviceValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
     }
@@ -119,7 +118,7 @@ class Manager: public NamedItem
     //Sound Output Source
     const SoundOutputSource_t m_SoundOutputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_Bluetooth;
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOutputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-    static void SoundOutputSourceValueChanged(const String &Name, void* object)
+    static void SoundOutputSourceValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::SoundOutputSourceValueChanged", "Sound Output Source Value Changed");
     }

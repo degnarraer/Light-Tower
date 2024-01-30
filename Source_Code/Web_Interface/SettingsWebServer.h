@@ -41,6 +41,7 @@ class SettingsWebServerManager
     void SetupSettingsWebServerManager()
     {
       InitializePreferences();
+      RegisterForDataItemCallBacks();
     }
 
     void BeginWebServer()
@@ -59,6 +60,12 @@ class SettingsWebServerManager
     {
       m_Preferences.clear();
       ESP_LOGI("Settings Web Server: ClearPreferences", "Preferences Cleared");
+    }
+    
+    void RegisterForDataItemCallBacks()
+    {
+      NamedCallback_t ScannedDeviceCallback = {m_ScannedDevice.GetName().c_str(), &ScannedDeviceValueChanged, &m_ScannedDeviceArguments};
+      m_ScannedDevice.RegisterNamedCallback(&ScannedDeviceCallback);
     }
     
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -144,9 +151,23 @@ class SettingsWebServerManager
     WebSocket_Compatible_Device_DataHandler m_TargetCompatibleDevice_DataHandler = WebSocket_Compatible_Device_DataHandler("BT Target Device Web Socket Data Handler", {"BT_Source_Target_Device"}, m_WebSocketDataProcessor, true, true, m_TargetCompatibleDevice, false );
 
     //Scanned Device
-    BT_Device_Info_With_Time_Since_Update_t m_ScannedDevice_InitialValue = {"", "", 0, 0};
-    DataItem<BT_Device_Info_With_Time_Since_Update_t, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
-    WebSocket_BT_Info_ArrayDataHandler m_ScannedDevice_DataHandler = WebSocket_BT_Info_ArrayDataHandler( "Scan BT Device Web Socket Data Handler", {"BT_Source_Target_Devices"}, m_WebSocketDataProcessor, true, true, m_ScannedDevice, false );
+    struct CallbackArguments 
+    {
+      void* arg1;
+      void* arg2;
+    };
+    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
+    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
+    WebSocket_ActiveCompatibleDevice_ArrayDataHandler m_ScannedDevice_DataHandler = WebSocket_ActiveCompatibleDevice_ArrayDataHandler( "Scan BT Device Web Socket Data Handler", {"BT_Source_Target_Devices"}, m_WebSocketDataProcessor, true, true, m_ScannedDevice, false );
+    CallbackArguments m_ScannedDeviceArguments = {&m_WebSocketDataProcessor, &m_TargetCompatibleDevice_DataHandler};
+    static void ScannedDeviceValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("Manager::ScannedDeviceValueChanged", "Scanned Device Value Changed");
+      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+      WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg1);
+      WebSocket_ActiveCompatibleDevice_ArrayDataHandler* DataHandler = static_cast<WebSocket_ActiveCompatibleDevice_ArrayDataHandler*>(arguments->arg2);
+      processor->UpdateDataForSender(DataHandler, false);
+    }
     
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;

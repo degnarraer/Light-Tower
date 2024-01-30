@@ -26,6 +26,9 @@
 #include <BluetoothA2DPSink.h>
 #include <BluetoothA2DPSource.h>
 #include <BluetoothA2DPCommon.h>
+#include <mutex>
+#include <memory>
+
 class BluetoothConnectionStatusCallee
 {
 	public:
@@ -185,7 +188,9 @@ class Bluetooth_Source: public NamedItem
 						: NamedItem(Title)
 						, m_BTSource(BTSource)
 		{
+			std::lock_guard<std::mutex> lock(m_ActiveCompatibleDevicesMutex);
 		}
+		Bluetooth_Source(const Bluetooth_Source&) = delete;
 		virtual ~Bluetooth_Source()
 		{
 			vTaskDelete(m_CompatibleDeviceTrackerTask);
@@ -221,8 +226,7 @@ class Bluetooth_Source: public NamedItem
 		{
 			m_SSPEnabled = SSPEnabled;
 			m_BTSource.set_ssp_enabled(m_SSPEnabled);
-		}		
-		
+		}
 	protected:
 		bool GetConnectionStatus(){ return m_BTSource.is_connected(); }
 	private:
@@ -236,7 +240,7 @@ class Bluetooth_Source: public NamedItem
 		bool m_AutoReConnect = false;
 		bool m_SSPEnabled = false;
 		
-		
+		std::mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
 		TaskHandle_t m_CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;

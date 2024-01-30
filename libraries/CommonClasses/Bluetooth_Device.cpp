@@ -83,28 +83,33 @@ bool Bluetooth_Source::ConnectToThisName(const char*name, esp_bd_addr_t address,
 bool Bluetooth_Source::compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi)
 {
 	bool Found = false;
-	String deviceName = String(name);
+	String nameString(name);
+	String addressString(m_BTSource.to_str(address));
 	for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 	{
-		if( 0 == strcmp(m_ActiveCompatibleDevices[i].name, deviceName.c_str()) && 0 == strcmp(m_ActiveCompatibleDevices[i].address, m_BTSource.to_str(address)))
+		m_ActiveCompatibleDevicesMutex.lock();
+		if( 0 == strcmp(m_ActiveCompatibleDevices[i].address, addressString.c_str()))
 		{
 			Found = true;
-			m_ActiveCompatibleDevices[i].lastUpdateTime = millis();
+			strcpy(m_ActiveCompatibleDevices[i].name, nameString.c_str());
 			m_ActiveCompatibleDevices[i].rssi = rssi;
+			m_ActiveCompatibleDevices[i].lastUpdateTime = millis();
 			ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", m_ActiveCompatibleDevices[i].name );
-			break;
 		}
+		m_ActiveCompatibleDevicesMutex.unlock();
 	}
 	if(false == Found)
 	{
 		ActiveCompatibleDevice_t NewDevice;
-		strcpy(NewDevice.name, deviceName.c_str());
-		strcpy(NewDevice.address, m_BTSource.to_str(address));
+		strcpy(NewDevice.name, nameString.c_str());
+		strcpy(NewDevice.address, addressString.c_str());
 		NewDevice.rssi = rssi;
 		NewDevice.lastUpdateTime = millis();
+		m_ActiveCompatibleDevicesMutex.lock();
 		m_ActiveCompatibleDevices.push_back(NewDevice);
+		m_ActiveCompatibleDevicesMutex.unlock();
 		ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", NewDevice.name );
-	}	
+	}
 	return Found;
 }
 
@@ -123,7 +128,9 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		{
 			if(CurrentTime - m_ActiveCompatibleDevices[i].lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
 			{
+				m_ActiveCompatibleDevicesMutex.lock();
 				m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
+				m_ActiveCompatibleDevicesMutex.unlock();
 				break;
 			}
 		}
@@ -133,7 +140,9 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		if(NULL != m_BluetoothActiveDeviceUpdatee)
 		{
+			m_ActiveCompatibleDevicesMutex.lock();
 			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
+			m_ActiveCompatibleDevicesMutex.unlock();
 		}
 		vTaskDelay(500 / portTICK_PERIOD_MS);
 	}

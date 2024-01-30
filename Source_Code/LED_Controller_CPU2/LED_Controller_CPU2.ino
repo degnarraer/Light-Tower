@@ -44,8 +44,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
 
 BluetoothA2DPSource a2dp_source;
-Bluetooth_Source m_BT_Out = Bluetooth_Source( "Bluetooth Source"
-                                            , a2dp_source );
+Bluetooth_Source m_BT_Out( "Bluetooth Source", a2dp_source );
                                             
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 

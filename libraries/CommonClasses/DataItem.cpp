@@ -5,7 +5,7 @@ template class DataItem<bool, 1>;
 template class DataItem<char, 50>;
 template class DataItem<ConnectionStatus_t, 1>;
 template class DataItem<CompatibleDevice_t, 1>;
-template class DataItem<BT_Device_Info_With_Time_Since_Update_t, 1>;
+template class DataItem<ActiveCompatibleDevice_t, 1>;
 template class DataItem<SoundInputSource_t, 1>;
 template class DataItem<SoundOutputSource_t, 1>;
 

@@ -66,6 +66,13 @@ class WebSocketDataProcessor
     void DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
     bool ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& Value);
     void UpdateAllDataToClient(uint8_t clientId);
+    void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
+    {
+      ESP_LOGI("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
+      std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+      sender->AppendCurrentValueToKVP(&KeyValuePairs, forceUpdate);
+      NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
+    }
     static void StaticWebSocketDataProcessor_Task(void * parameter)
     {
       WebSocketDataProcessor *Processor = (WebSocketDataProcessor*)parameter;
@@ -310,35 +317,35 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
     }
 };
 
-class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update_t, 1>
+class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHandler<ActiveCompatibleDevice_t, 1>
 {
   public:
-    WebSocket_BT_Info_ArrayDataHandler( const String &Name 
-                                      , const std::initializer_list<const char*>& WidgetIds
-                                      , WebSocketDataProcessor &WebSocketDataProcessor
-                                      , const bool &IsReceiver
-                                      , const bool &IsSender
-                                      , DataItem<BT_Device_Info_With_Time_Since_Update_t, 1> &DataItem
-                                      , const bool Debug )
-                                      : WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update_t, 1>( Name
-                                                                                                     , WidgetIds
-                                                                                                     , WebSocketDataProcessor
-                                                                                                     , IsReceiver
-                                                                                                     , IsSender
-                                                                                                     , DataItem
-                                                                                                     , Debug)
+    WebSocket_ActiveCompatibleDevice_ArrayDataHandler( const String &Name 
+                                                     , const std::initializer_list<const char*>& WidgetIds
+                                                     , WebSocketDataProcessor &WebSocketDataProcessor
+                                                     , const bool &IsReceiver
+                                                     , const bool &IsSender
+                                                     , DataItem<ActiveCompatibleDevice_t, 1> &DataItem
+                                                     , const bool Debug )
+                                                     : WebSocketDataHandler<ActiveCompatibleDevice_t, 1>( Name
+                                                                                                        , WidgetIds
+                                                                                                        , WebSocketDataProcessor
+                                                                                                        , IsReceiver
+                                                                                                        , IsSender
+                                                                                                        , DataItem
+                                                                                                        , Debug)
     {
     }
     
-    virtual ~WebSocket_BT_Info_ArrayDataHandler()
+    virtual ~WebSocket_ActiveCompatibleDevice_ArrayDataHandler()
     {
     }
   protected:
   
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
     {   
-      BT_Device_Info_With_Time_Since_Update_t CurrentValue;
-      size_t newChangeCount = m_DataItem.GetValue(&CurrentValue, 1);
+      ActiveCompatibleDevice_t activeCompatibleDevice;
+      size_t newChangeCount = m_DataItem.GetValue(&activeCompatibleDevice, 1);
       bool valueChanged = newChangeCount != this->m_OldChangeCount;
       this->m_OldChangeCount = newChangeCount;
       bool found = false;
@@ -348,24 +355,50 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       {
         unsigned long elapsedTime;
         unsigned long previousMillis = m_ActiveCompatibleDevices[i].lastUpdateTime;
-        if( strcmp(m_ActiveCompatibleDevices[i].name, CurrentValue.name) == 0 &&
-            strcmp(m_ActiveCompatibleDevices[i].address, CurrentValue.address) == 0 )
+        m_ActiveCompatibleDevices[i].lastUpdateTime = currentMillis;
+        if( strcmp(m_ActiveCompatibleDevices[i].address, activeCompatibleDevice.address) == 0 )
         {
           found = true;
           if(valueChanged)
-          {m_ActiveCompatibleDevices[i].lastUpdateTime = currentMillis;
-            if(m_ActiveCompatibleDevices[i].rssi != CurrentValue.rssi)
+          {
+            if(strcmp(m_ActiveCompatibleDevices[i].name, activeCompatibleDevice.name) == 0)
             {
-              m_ActiveCompatibleDevices[i].rssi = CurrentValue.rssi;
+              strcpy(m_ActiveCompatibleDevices[i].name, activeCompatibleDevice.name);
               updated = true;
             }
-            ESP_LOGI("","%s: Device Name: %s Address: %s RSSI: %i Change Count: %i", this->m_Name.c_str(), m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].address, m_ActiveCompatibleDevices[i].rssi, newChangeCount);
-            
+            if(m_ActiveCompatibleDevices[i].rssi != activeCompatibleDevice.rssi)
+            {
+              m_ActiveCompatibleDevices[i].rssi = activeCompatibleDevice.rssi;
+              updated = true;
+            }
+            if(m_ActiveCompatibleDevices[i].timeSinceUpdate != activeCompatibleDevice.timeSinceUpdate)
+            {
+              m_ActiveCompatibleDevices[i].timeSinceUpdate = activeCompatibleDevice.timeSinceUpdate;
+              updated = true;
+            }
+            ESP_LOGI( "","%s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
+                    , this->m_Name.c_str()
+                    , m_ActiveCompatibleDevices[i].name
+                    , m_ActiveCompatibleDevices[i].address
+                    , m_ActiveCompatibleDevices[i].rssi
+                    , m_ActiveCompatibleDevices[i].lastUpdateTime
+                    , m_ActiveCompatibleDevices[i].timeSinceUpdate
+                    , newChangeCount );
+          }
+          else
+          {
+            if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
+            else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
+            m_ActiveCompatibleDevices[i].timeSinceUpdate += elapsedTime;
           }
         }
-        if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
-        else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
-        if(ACTIVE_NAME_TIMEOUT <= elapsedTime)
+        else
+        {
+          if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
+          else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
+          m_ActiveCompatibleDevices[i].timeSinceUpdate += elapsedTime;
+        }
+        if(ACTIVE_NAME_TIMEOUT <= m_ActiveCompatibleDevices[i].timeSinceUpdate)
         {
           ESP_LOGI("WebSocketDataHandler", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
           m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
@@ -375,14 +408,23 @@ class WebSocket_BT_Info_ArrayDataHandler: public WebSocketDataHandler<BT_Device_
       }
       if( !found &&
           valueChanged && 
-          0 < String(CurrentValue.name).length() && 
-          0 < String(CurrentValue.address).length() )
+          0 < String(activeCompatibleDevice.name).length() && 
+          0 < String(activeCompatibleDevice.address).length() &&
+          ACTIVE_NAME_TIMEOUT > activeCompatibleDevice.timeSinceUpdate)
       {
-        ESP_LOGI("","%s: New Device Name: %s Address: %s RSSI: %i Change Count: %i", this->m_Name.c_str(), CurrentValue.name, CurrentValue.address, CurrentValue.rssi, newChangeCount);
-        ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( CurrentValue.name
-                                                                     , CurrentValue.address
-                                                                     , CurrentValue.rssi
-                                                                     , currentMillis );
+        ESP_LOGI( "","%s: \n************* \nNew Device Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
+                , this->m_Name.c_str()
+                , activeCompatibleDevice.name
+                , activeCompatibleDevice.address
+                , activeCompatibleDevice.rssi
+                , activeCompatibleDevice.lastUpdateTime
+                , activeCompatibleDevice.timeSinceUpdate
+                , newChangeCount);
+        ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( activeCompatibleDevice.name
+                                                                     , activeCompatibleDevice.address
+                                                                     , activeCompatibleDevice.rssi
+                                                                     , currentMillis
+                                                                     , activeCompatibleDevice.timeSinceUpdate );
         m_ActiveCompatibleDevices.push_back(NewDevice);
         updated = true;
       }
