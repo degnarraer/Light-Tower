@@ -40,12 +40,14 @@ void PreferencesWrapper<T, COUNT>::InitializeNVM(const String& Name, T* ValuePtr
 {
 	if(m_Preferences)
 	{
-		if (true == m_Preferences->isKey(Name.c_str()))
+		if (m_Preferences->isKey(Name.c_str()))
 		{
+			ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", Name.c_str());
 			Update_Preference("Loaded", Name, ValuePtr, InitialValuePtr);
 		}
 		else
 		{
+			ESP_LOGI("InitializeNVM", "Preference Not Found: \"%s\"", Name.c_str());
 			Update_Preference("Initialized", Name, ValuePtr, InitialValuePtr);
 		}
 	}
@@ -84,7 +86,6 @@ void PreferencesWrapper<T, COUNT>::Update_Preference(const String &UpdateType, c
 		}
 		return;
 	}
-
     if ( UpdateType.equals("Loaded") )
 	{
         ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
@@ -225,7 +226,7 @@ void PreferencesWrapper<T, COUNT>::HandleUpdated(const String& Name, T* ValuePtr
     if (std::is_same<T, bool>::value)
 	{
         m_Preferences->putBool(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);	
+		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);	
     } 
 	else if (std::is_same<T, char>::value)
 	{
@@ -237,23 +238,23 @@ void PreferencesWrapper<T, COUNT>::HandleUpdated(const String& Name, T* ValuePtr
 		}
 		charValues[COUNT - 1] = '\0';
         m_Preferences->putString(Name.c_str(), charValues);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );	
+		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );	
     }
 	else if (std::is_same<T, float>::value)
 	{
         m_Preferences->putFloat(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);	
+		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);	
     }
 	else if (std::is_same<T, double>::value)
 	{
         m_Preferences->putDouble(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);	
+		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);	
     }
 	else if ( std::is_integral<T>::value ||
 			  std::is_convertible<T, int32_t>::value )
 	{
         m_Preferences->putInt(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
+		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
     }  
 	else 
 	{
@@ -316,7 +317,7 @@ DataItem<T, COUNT>::~DataItem()
 template <typename T, size_t COUNT>				 
 void DataItem<T, COUNT>::Setup()
 {
-	ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+	ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 	mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 	mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
@@ -326,7 +327,7 @@ void DataItem<T, COUNT>::Setup()
 		if (std::is_same<T, char>::value)
 		{
 			String InitialValue = String((char*)mp_InitialValuePtr);
-			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
+			ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
 					, m_Name.c_str()
 					, InitialValue.c_str());
 			bool eolFound = false;
@@ -347,7 +348,7 @@ void DataItem<T, COUNT>::Setup()
 		}
 		else
 		{
-			ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
+			ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			for (size_t i = 0; i < COUNT; ++i)
@@ -464,22 +465,22 @@ void DataItem<T, COUNT>::SetDataLinkEnabled(bool enable)
 		if(enablePeriodicTX)
 		{
 			esp_timer_start_periodic(m_TxTimer, m_Rate * 1000);
-			ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", m_Name.c_str());
+			ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", m_Name.c_str());
 		}
 		else
 		{
 			esp_timer_stop(m_TxTimer);
-			ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", m_Name.c_str());
+			ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", m_Name.c_str());
 		}
 		if(enablePeriodicRX)
 		{
 			m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-			ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", m_Name.c_str());
+			ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", m_Name.c_str());
 		}
 		else
 		{
 			m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-			ESP_LOGI("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", m_Name.c_str());
+			ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", m_Name.c_str());
 		}
 	}
 	else

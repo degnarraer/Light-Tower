@@ -21,6 +21,8 @@
 #include "esp_log.h"
 #include "DataItem.h"
 
+Preferences m_Preferences;
+
 TaskHandle_t ProcessSPI_CPU1_TXTask;
 uint32_t ProcessSPI_CPU1_TXTaskLoopCount = 0;
 
@@ -64,7 +66,8 @@ Manager m_Manager = Manager( "Manager"
                            , m_CPU3SerialPortMessageManager
                            , m_BT_Out
                            , m_I2S_In
-                           , m_AudioBuffer );
+                           , m_AudioBuffer
+                           , m_Preferences);
 
 
 int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
@@ -79,19 +82,18 @@ static bool ConnectToThisName(const char* aName, esp_bd_addr_t address, int32_t 
 void setup() 
 {
   //PC Serial Communication
-  Serial.flush();
   Serial.begin(500000, SERIAL_8N1);
-  Serial1.flush();
+  Serial.flush();
   Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.flush();
   Serial1.setRxBufferSize(4096);
-  Serial2.flush();
   Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);
+  Serial2.flush();
   Serial2.setRxBufferSize(4096);
-
-  m_SoundProcessor.SetupSoundProcessor();
+  InitializePreferences();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
-  
+  m_SoundProcessor.SetupSoundProcessor(); 
   m_I2S_In.Setup();
   a2dp_source.set_ssid_callback(ConnectToThisName);
   m_BT_Out.Setup();
@@ -108,6 +110,23 @@ void setup()
   ESP_LOGE("LED_Controller_CPU2", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
+void InitializePreferences()
+{
+  if(!m_Preferences.begin("Settings", false))
+  {
+    nvs_flash_erase();
+    ESP_LOGI("InitializePreferences", "NVS Cleared!");
+    nvs_flash_init();
+    ESP_LOGI("InitializePreferences", "NVS Initialized");
+    ESP.restart();
+  }
+  else if(m_Preferences.getBool("Pref_Reset", true))
+  {
+    m_Preferences.clear();
+    ESP_LOGI("InitializePreferences", "Preferences Cleared!");
+    m_Preferences.putBool("Pref_Reset", false);
+  }
+}
 void loop()
 {
 }

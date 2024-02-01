@@ -43,7 +43,8 @@ class Manager: public NamedItem
            , SerialPortMessageManager &CPU3SerialPortMessageManager
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
-           , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer);
+           , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
+           , Preferences& preferences );
     virtual ~Manager();
     void Setup();
     void ConnectToTargetDevice();
@@ -65,8 +66,8 @@ class Manager: public NamedItem
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
-    Preferences m_Preferences;
-    void InitializePreferences();
+    Preferences& m_Preferences;
+
     
     TaskHandle_t m_Manager_20mS_Task;
     TaskHandle_t m_Manager_1000mS_Task;
@@ -74,49 +75,80 @@ class Manager: public NamedItem
 
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-
-    void RegisterForDataItemCallBacks()
-    {
-      NamedCallback_t soundOutputSourceCallback = {m_SoundOutputSource.GetName().c_str(), &SoundOutputSourceValueChanged, nullptr};
-      m_SoundOutputSource.RegisterNamedCallback(&soundOutputSourceCallback);
-
-      NamedCallback_t targetCompatibleDeviceCallback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDeviceValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
-      m_TargetCompatibleDevice.RegisterNamedCallback(&targetCompatibleDeviceCallback);
-    }
     
-    //Bluetooth Source Enable
-    bool m_BluetoothSourceEnable_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-
-    //Bluetooth Source Auto ReConnect
-    bool m_BluetoothSourceAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
- 
-    //Bluetooth Source Reset
-    bool m_BluetoothReset_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
- 
-    //Bluetooth Reset NVS
-    bool m_BluetoothResetNVS_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothResetNVS = DataItemWithPreferences<bool, 1>( "BT_SRC_NVS_Rst", m_BluetoothResetNVS_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
- 
-    //Bluetooth Source Connection Status
-    ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
-    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
-  
-    //Scanned Device
-    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
-    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
-    
-    //Target Compatible Device
     struct CallbackArguments 
     {
       void* arg1;
     };
+    
+    void RegisterForDataItemCallBacks()
+    {
+      NamedCallback_t soundOutputSourceCallback = {m_SoundOutputSource.GetName().c_str(), &SoundOutputSource_ValueChanged, nullptr};
+      m_SoundOutputSource.RegisterNamedCallback(&soundOutputSourceCallback);
+
+      NamedCallback_t targetCompatibleDeviceCallback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDevice_ValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
+      m_TargetCompatibleDevice.RegisterNamedCallback(&targetCompatibleDeviceCallback);
+
+      NamedCallback_t BluetoothSourceAutoReConnectCallback = {m_BluetoothSourceAutoReConnect.GetName().c_str(), &BluetoothSourceAutoReConnect_ValueChanged, &m_BluetoothSourceAutoReConnect_CallbackArgs};
+      m_BluetoothSourceAutoReConnect.RegisterNamedCallback(&BluetoothSourceAutoReConnectCallback);
+    }
+    
+    //Bluetooth Source Connection Status
+    ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
+    
+    //Scanned Device
+    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
+    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
+    
+    //Bluetooth Source Enable
+    bool m_BluetoothSourceEnable_InitialValue = true;
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    CallbackArguments m_BluetoothSourceEnable_CallbackArgs = {&m_BT_Out};
+    static void BluetoothSourceEnable_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Bluetooth Source Enable Value Changed Value Changed");
+      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+    }
+
+    //Bluetooth Source Auto ReConnect
+    bool m_BluetoothSourceAutoReConnect_InitialValue = false;
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    CallbackArguments m_BluetoothSourceAutoReConnect_CallbackArgs = {&m_BT_Out};
+    static void BluetoothSourceAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+      Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+      bool autoReconnect = *static_cast<bool*>(object);
+      ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Auto Reconnect Value Changed Value Changed: %i", autoReconnect);
+      //BT_Out->Set_Auto_Reconnect(autoReconnect);
+    }
+    
+    //Bluetooth Source Reset
+    bool m_BluetoothReset_InitialValue = true;
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out};
+    static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Bluetooth Reset Value Changed Value Changed");
+      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+    }
+    
+    //Bluetooth Reset NVS
+    bool m_BluetoothResetNVS_InitialValue = true;
+    DataItemWithPreferences<bool, 1> m_BluetoothResetNVS = DataItemWithPreferences<bool, 1>( "BT_SRC_NVS_Rst", m_BluetoothResetNVS_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    CallbackArguments m_BluetoothResetNVS_CallbackArgs = {&m_BT_Out};
+    static void BluetoothResetNVS_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Bluetooth Reset NVS Value Changed Value Changed");
+      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+    }
+    
+    //Target Compatible Device
     CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager);
     CallbackArguments m_TargetCompatibleDevice_CallbackArgs = {&m_BT_Out};
-    static void TargetCompatibleDeviceValueChanged(const String &Name, void* object, void* arg)
+    static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
       CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
@@ -128,7 +160,7 @@ class Manager: public NamedItem
     //Sound Output Source
     const SoundOutputSource_t m_SoundOutputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_Bluetooth;
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOutputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-    static void SoundOutputSourceValueChanged(const String &Name, void* object, void* arg)
+    static void SoundOutputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::SoundOutputSourceValueChanged", "Sound Output Source Value Changed");
     }

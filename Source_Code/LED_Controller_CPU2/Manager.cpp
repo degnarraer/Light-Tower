@@ -24,7 +24,8 @@ Manager::Manager( String Title
                 , SerialPortMessageManager &CPU3SerialPortMessageManager
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In
-                , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer )
+                , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
+                , Preferences& preferences)
                 : NamedItem(Title)
                 , m_SoundProcessor(SoundProcessor)
                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
@@ -32,6 +33,7 @@ Manager::Manager( String Title
                 , m_BT_Out(BT_Out)
                 , m_I2S_In(I2S_In)
                 , m_AudioBuffer(AudioBuffer)
+                , m_Preferences(preferences)
 {
 }
 Manager::~Manager()
@@ -40,7 +42,6 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  InitializePreferences();
   RegisterForDataItemCallBacks();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
@@ -67,13 +68,6 @@ void Manager::ConnectToTargetDevice()
                       , autoReConnect
                       , resetBLE
                       , resetNVS );
-}
-
-void Manager::InitializePreferences()
-{
-  m_Preferences.begin("Settings", false);
-  if(m_Preferences.getBool("Pref_Reset", false)) m_Preferences.clear();
-  m_Preferences.putBool("Pref_Reset", false);
 }
 
 void Manager::Static_TaskLoop_20mS(void * parameter)

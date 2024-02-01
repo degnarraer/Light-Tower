@@ -25,6 +25,7 @@
 #include "SerialMessageManager.h"
 #include <Helpers.h>
 #include <Preferences.h>
+#include <nvs_flash.h>
 #include <esp_timer.h>
 #include <Arduino.h>
 #include <esp_heap_caps.h>

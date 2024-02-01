@@ -21,7 +21,7 @@
 
 void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* NewCallee)
 {
-	ESP_LOGI("RegisterForSetupCall", "Try Registering Callee");
+	ESP_LOGD("RegisterForSetupCall", "Try Registering Callee");
 	bool IsFound = false;
 	for (SetupCalleeInterface* callee : m_SetupCallees)
 	{
@@ -34,7 +34,7 @@ void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* NewCallee)
 	}
 	if(false == IsFound)
 	{
-		ESP_LOGI("RegisterForSetupCall", "Callee Registered");
+		ESP_LOGD("RegisterForSetupCall", "Callee Registered");
 		m_SetupCallees.push_back(NewCallee);
 	}
 }
@@ -61,7 +61,7 @@ void SetupCallerInterface::SetupAllSetupCallees()
 
 void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
 {
-	ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
+	ESP_LOGD("RegisterForNewValueNotification", "Try Registering Callee");
 	bool IsFound = false;
 	for (NewRxTxVoidObjectCalleeInterface* callee : m_NewValueCallees)
 	{
@@ -74,7 +74,7 @@ void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVo
 	}
 	if(false == IsFound)
 	{
-		ESP_LOGI("RegisterForNewValueNotification", "Callee Registered");
+		ESP_LOGD("RegisterForNewValueNotification", "Callee Registered");
 		m_NewValueCallees.push_back(NewCallee);
 	}
 }
@@ -92,7 +92,7 @@ void NewRxTxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTx
 
 void NewRxTxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* NamedCallback)
 {
-	ESP_LOGI("RegisterNamedCallback", "Try Registering callback");
+	ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
 	bool IsFound = false;
 	for (NamedCallback_t* callback : m_NamedCallbacks)
 	{
@@ -105,7 +105,7 @@ void NewRxTxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* Na
 	}
 	if(false == IsFound)
 	{
-		ESP_LOGI("RegisterNamedCallback", "NamedCallback Registered");
+		ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
 		m_NamedCallbacks.push_back(NamedCallback);
 	}
 	
@@ -156,15 +156,15 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
 	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
-	else ESP_LOGI("SetupSerialPortMessageManager", "RX Task Created.");
+	else ESP_LOGD("SetupSerialPortMessageManager", "RX Task Created.");
 	
 	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  1 ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
-	else ESP_LOGI("SetupSerialPortMessageManager", "TX Task Created.");
+	else ESP_LOGD("SetupSerialPortMessageManager", "TX Task Created.");
 	
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
 	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
-	else ESP_LOGI("SetupSerialPortMessageManager", "TX Queue Created.");
+	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
 	SetupAllSetupCallees();
 }
 bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count)
@@ -208,7 +208,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
-	ESP_LOGI("SetupSerialPortMessageManager", "Starting RX Task.");
+	ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
 	const TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
@@ -249,7 +249,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
-	ESP_LOGI("SetupSerialPortMessageManager", "Starting TX Task.");
+	ESP_LOGD("SetupSerialPortMessageManager", "Starting TX Task.");
 	const TickType_t xFrequency = 10;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)

@@ -51,9 +51,20 @@ class SettingsWebServerManager
     
     void InitializePreferences()
     {
-      m_Preferences.begin("Settings", false);
-      if(m_Preferences.getBool("Pref_Reset", false)) ClearPreferences();
-      m_Preferences.putBool("Pref_Reset", false);
+      if(!m_Preferences.begin("Settings", false))
+      {
+        nvs_flash_erase();
+        ESP_LOGI("InitializePreferences", "NVS Cleared!");
+        nvs_flash_init();
+        ESP_LOGI("InitializePreferences", "NVS Initialized");
+        ESP.restart();
+      }
+      else if(m_Preferences.getBool("Pref_Reset", true))
+      {
+        m_Preferences.clear();
+        ESP_LOGI("InitializePreferences", "Preferences Cleared!");
+        m_Preferences.putBool("Pref_Reset", false);
+      }
     }
 
     void ClearPreferences()
@@ -181,7 +192,7 @@ class SettingsWebServerManager
 
     //Source Reset
     const bool m_SourceReset_InitialValue = false;
-    DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
+    DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( "Source Reset Web Socket Handler", {"BT_Source_Reset"}, m_WebSocketDataProcessor, true, true, m_SourceReset, false );    
 
     void HandleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
