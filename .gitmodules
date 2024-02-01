@@ -1,7 +1,3 @@
-[submodule "libraries/ESP32-A2DP"]
-	path = libraries/ESP32-A2DP
-	url = https://github.com/degnarraer/ESP32-A2DP.git
-	branch = main
 [submodule "libraries/ESP32_I2C_Slave"]
 	path = libraries/ESP32_I2C_Slave
 	url = https://github.com/degnarraer/ESP32_I2C_Slave.git
@@ -34,3 +30,7 @@
 	path = libraries/ESPAsyncWebServer
 	url = https://github.com/degnarraer/ESPAsyncWebServer.git
 	branch = Merge_Fixes
+[submodule "libraries/ESP32-A2DP"]
+	path = libraries/ESP32-A2DP
+	url = https://github.com/pschatzmann/ESP32-A2DP.git
+	branch = main

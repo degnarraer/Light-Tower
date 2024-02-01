@@ -474,7 +474,15 @@ function handleDeviceItemClick(device) {
     console.log("Selected Name:", device.name);
     console.log("Selected Address:", device.address);
 
-    // Optionally, you can update the selectedDeviceIndex or perform other actions here
+    var Root = {};
+	var TextboxElement;
+	Root.JSONValue = {};
+	Root.JSONValue.Id = 'BT_Source_Target_Device';
+	Root.JSONValue.Value = {};
+	Root.JSONValue.Value.Address = device.address;
+	Root.JSONValue.Value.Name = device.name;
+	var Message = JSON.stringify(Root);
+	websocket.send(Message);
 }
 
 function handleSoundInputSource(id, value) {

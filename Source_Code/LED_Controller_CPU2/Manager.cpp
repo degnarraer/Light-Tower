@@ -130,7 +130,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
     unsigned long previousMillis = Devices[i].lastUpdateTime;
     if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
     else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
-    ESP_LOGI("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
+    ESP_LOGD("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address

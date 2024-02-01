@@ -31,7 +31,7 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_auto_reconnect(m_AutoReConnect);
 	m_BTSource.set_ssp_enabled(m_SSPEnabled);
 	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1);
-	m_BTSource.set_local_name(m_NAME.c_str());
+	m_BTSource.set_local_name("");
 	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
@@ -48,8 +48,8 @@ void Bluetooth_Source::StartDevice( const char *SourceName
 								  , bool ResetBLE
 								  , bool ResetNVS )
 {
-	m_NAME = String(SourceName);
-	m_ADDRESS = String(SourceAddress);
+	m_Name = SourceName;
+	m_Address = SourceAddress;
 	m_AutoReConnect = AutoReconnect;
 	m_ResetBLE = ResetBLE;
 	m_ResetNVS = ResetNVS;
@@ -58,13 +58,16 @@ void Bluetooth_Source::StartDevice( const char *SourceName
 	m_BTSource.start_raw(m_MusicDataCallback);
 	m_Is_Running = true;
 	SetSearching();
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tNAME: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_NAME.c_str(), m_ResetBLE, m_AutoReConnect, m_SSPEnabled);
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tNAME: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_Name.c_str(), m_ResetBLE, m_AutoReConnect, m_SSPEnabled);
 }
 
 void Bluetooth_Source::SetNameToConnect( const char *SourceName, const char *SourceAddress )
 {
-	m_NAME = String(SourceName);
-	m_ADDRESS = String(SourceAddress);
+	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
+			, SourceName
+			, SourceAddress );
+	m_Name = SourceName;
+	m_Address = SourceAddress;
 }
 
 //Callback from BT Source for compatible devices to connect to
@@ -72,19 +75,18 @@ bool Bluetooth_Source::ConnectToThisName(const char*name, esp_bd_addr_t address,
 {
 	ESP_LOGD( "Bluetooth_Source::ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
 			, String(name).c_str()
-			, m_BTSource.to_str(address));
-	if(true == compatible_device_found(name, address, rssi))
-	{
-		SetPairing();
-	}
-	return m_NAME.equals(String(name)) && m_ADDRESS.equals(m_BTSource.to_str(address));
+			, GetAddressString(address));
+	bool result = compatible_device_found(name, address, rssi);
+	if(result) SetPairing();
+	return result;
 }
 		
 bool Bluetooth_Source::compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi)
 {
+	ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Address:\"%s\"", name, GetAddressString(address) );
 	bool Found = false;
 	String nameString(name);
-	String addressString(m_BTSource.to_str(address));
+	String addressString(GetAddressString(address));
 	for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 	{
 		m_ActiveCompatibleDevicesMutex.lock();

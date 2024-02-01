@@ -80,12 +80,12 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& Name,
 }
 
 
-bool WebSocketDataProcessor::ProcessWebSocketValueAndSendToDatalink(const String& WidgetId, const String& Value)
+bool WebSocketDataProcessor::ProcessWidgetValueAndSendToDatalink(const String& WidgetId, const String& Value)
 {
   bool WidgetFound = false;
   for(int i = 0; i < m_MyReceivers.size(); ++i)
   {
-    if(true == m_MyReceivers[i]->ProcessWebSocketValueAndSendToDatalink(WidgetId, Value))
+    if(true == m_MyReceivers[i]->ProcessWidgetValueAndSendToDatalink(WidgetId, Value))
     {
       WidgetFound = true;
     }

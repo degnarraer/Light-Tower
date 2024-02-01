@@ -80,7 +80,7 @@ class Manager: public NamedItem
       NamedCallback_t soundOutputSourceCallback = {m_SoundOutputSource.GetName().c_str(), &SoundOutputSourceValueChanged, nullptr};
       m_SoundOutputSource.RegisterNamedCallback(&soundOutputSourceCallback);
 
-      NamedCallback_t targetCompatibleDeviceCallback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDeviceValueChanged, nullptr};
+      NamedCallback_t targetCompatibleDeviceCallback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDeviceValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
       m_TargetCompatibleDevice.RegisterNamedCallback(&targetCompatibleDeviceCallback);
     }
     
@@ -107,12 +107,22 @@ class Manager: public NamedItem
     //Scanned Device
     ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
     DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, m_CPU3SerialPortMessageManager);
+    
     //Target Compatible Device
+    struct CallbackArguments 
+    {
+      void* arg1;
+    };
     CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager);
+    CallbackArguments m_TargetCompatibleDevice_CallbackArgs = {&m_BT_Out};
     static void TargetCompatibleDeviceValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
+      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+      CompatibleDevice_t targetCompatibleDevice = *static_cast<CompatibleDevice_t*>(object);
+      Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+      BT_Out->SetNameToConnect(targetCompatibleDevice.name, targetCompatibleDevice.address);
     }
 
     //Sound Output Source

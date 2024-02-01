@@ -227,14 +227,21 @@ class Bluetooth_Source: public NamedItem
 			m_SSPEnabled = SSPEnabled;
 			m_BTSource.set_ssp_enabled(m_SSPEnabled);
 		}
+		/// converts a esp_bd_addr_t to a string - the string is 18 characters long!
+		const char* GetAddressString(esp_bd_addr_t bda)
+		{
+			static char bda_str[18];
+			sprintf(bda_str, "%02x:%02x:%02x:%02x:%02x:%02x", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
+			return (const char*)bda_str;
+		}
 	protected:
 		bool GetConnectionStatus(){ return m_BTSource.is_connected(); }
 	private:
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		String m_NAME;
-		String m_ADDRESS;
+		String m_Name = "";
+		String m_Address = "";
 		bool m_ResetNVS = false;
 		bool m_ResetBLE = true;
 		bool m_AutoReConnect = false;
