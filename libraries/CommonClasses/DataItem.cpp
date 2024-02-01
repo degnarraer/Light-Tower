@@ -161,7 +161,16 @@ void PreferencesWrapper<T, COUNT>::HandleLoaded(const String& Name, T* ValuePtr,
 		memcpy(&InitialValue , InitialValuePtr, sizeof(SoundInputSource_t));
 		SoundInputSource_t Result = static_cast<SoundInputSource_t>(m_Preferences->getInt(Name.c_str(), static_cast<int32_t>(InitialValue)));
         memcpy(ValuePtr, &Result, sizeof(SoundInputSource_t));
-		ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded int8_t: %i", Name.c_str(), Result);	
+		ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded SoundInputSource_t: %i", Name.c_str(), Result);	
+    }
+	else if (std::is_same<T, SoundOutputSource_t>::value)
+	{
+		assert(COUNT == 1 && "Count should be 1 to do this");
+		SoundOutputSource_t InitialValue;
+		memcpy(&InitialValue , InitialValuePtr, sizeof(SoundOutputSource_t));
+		SoundOutputSource_t Result = static_cast<SoundOutputSource_t>(m_Preferences->getInt(Name.c_str(), static_cast<int32_t>(InitialValue)));
+        memcpy(ValuePtr, &Result, sizeof(SoundOutputSource_t));
+		ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded SoundOutputSource_t: %i", Name.c_str(), Result);	
     }
 	else if (std::is_same<T, float>::value)
 	{
