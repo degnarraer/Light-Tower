@@ -95,7 +95,6 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStateCallee Callback 
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState)
 {
-  ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %i", ConnectionState );
   /*
   ConnectionStatus_t currentValue;
   m_ConnectionStatus.GetValue(&currentValue, 1);
@@ -172,7 +171,8 @@ void Manager::OuputSourceConnect_ValueChanged(const String &Name, void* object, 
     if(arguments->arg1 && object)
     {
       Manager *manager = static_cast<Manager*>(arguments->arg1);
-      if(manager)
+      bool connect = *static_cast<bool*>(object);
+      if(manager && connect)
       {
         manager->StartBluetooth();
       }
@@ -189,7 +189,8 @@ void Manager::OuputSourceDisconnect_ValueChanged(const String &Name, void* objec
     if(arguments->arg1 && object)
     {
       Bluetooth_Source *BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-      if(BT_Out)
+      bool disconnect = *static_cast<bool*>(object);
+      if(BT_Out && disconnect)
       {
         BT_Out->Disconnect();
       }

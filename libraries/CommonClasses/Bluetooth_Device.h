@@ -42,7 +42,7 @@ class BluetoothConnectionStateCaller
 		BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT );
 		virtual ~BluetoothConnectionStateCaller()
 		{
-			//vTaskDelete(m_Handle);
+			vTaskDelete(m_Handle);
 		}
 		void RegisterForConnectionStateChangedCallBack(BluetoothConnectionStateCallee *Callee);
 		bool IsConnected();
@@ -112,7 +112,6 @@ class Bluetooth_Source: public NamedItem
 		void Disconnect()
 		{
 			m_BTSource.disconnect();
-			m_BTSource.end(true);
 		}
 		
 		//Callback from BT Source for compatible devices to connect to

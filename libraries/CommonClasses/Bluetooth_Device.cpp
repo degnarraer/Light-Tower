@@ -56,6 +56,7 @@ void BluetoothConnectionStateCaller::UpdateConnectionStatus()
 		m_ConnectionState = mp_BT->get_connection_state();
 		if(StartingState != m_ConnectionState)
 		{
+			ESP_LOGI("UpdateConnectionStatus", "Connection Status Changed to: \"%s\"", mp_BT->to_str(m_ConnectionState) );
 			mp_ConnectionStateCallee->BluetoothConnectionStateChanged(m_ConnectionState);
 		}
 	}
