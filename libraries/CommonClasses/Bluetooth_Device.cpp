@@ -30,7 +30,10 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_reset_ble(m_ResetBLE);
 	m_BTSource.set_auto_reconnect(m_AutoReConnect);
 	m_BTSource.set_ssp_enabled(m_SSPEnabled);
-	xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1);
+	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
+	{
+		ESP_LOGE("InstallDevice", "Error Creating Task!");
+	}
 	m_BTSource.set_local_name("");
 	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
@@ -61,49 +64,48 @@ void Bluetooth_Source::StartDevice( const char *SourceName
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tNAME: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_Name.c_str(), m_ResetBLE, m_AutoReConnect, m_SSPEnabled);
 }
 
-void Bluetooth_Source::SetNameToConnect( const char *SourceName, const char *SourceAddress )
+void Bluetooth_Source::SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress )
 {
 	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
-			, SourceName
-			, SourceAddress );
+			, SourceName.c_str()
+			, SourceAddress.c_str() );
 	m_Name = SourceName;
 	m_Address = SourceAddress;
 }
 
 //Callback from BT Source for compatible devices to connect to
-bool Bluetooth_Source::ConnectToThisName(const char*name, esp_bd_addr_t address, int32_t rssi)
+bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
 	ESP_LOGD( "Bluetooth_Source::ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
-			, String(name).c_str()
+			, name.c_str()
 			, GetAddressString(address));
 	bool result = compatible_device_found(name, address, rssi);
 	if(result) SetPairing();
 	return result;
 }
 		
-bool Bluetooth_Source::compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi)
+bool Bluetooth_Source::compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
-	ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Address:\"%s\"", name, GetAddressString(address) );
+	ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Address:\"%s\"", name.c_str(), GetAddressString(address) );
 	bool Found = false;
-	String nameString(name);
-	String addressString(GetAddressString(address));
+	std::string addressString(GetAddressString(address));
 	for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 	{
 		m_ActiveCompatibleDevicesMutex.lock();
 		if( 0 == strcmp(m_ActiveCompatibleDevices[i].address, addressString.c_str()))
 		{
 			Found = true;
-			strcpy(m_ActiveCompatibleDevices[i].name, nameString.c_str());
+			strcpy(m_ActiveCompatibleDevices[i].name, name.c_str());
 			m_ActiveCompatibleDevices[i].rssi = rssi;
 			m_ActiveCompatibleDevices[i].lastUpdateTime = millis();
-			ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", m_ActiveCompatibleDevices[i].name );
+			ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", m_ActiveCompatibleDevices[i].name.c_str() );
 		}
 		m_ActiveCompatibleDevicesMutex.unlock();
 	}
 	if(false == Found)
 	{
 		ActiveCompatibleDevice_t NewDevice;
-		strcpy(NewDevice.name, nameString.c_str());
+		strcpy(NewDevice.name, name.c_str());
 		strcpy(NewDevice.address, addressString.c_str());
 		NewDevice.rssi = rssi;
 		NewDevice.lastUpdateTime = millis();

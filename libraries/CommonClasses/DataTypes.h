@@ -423,11 +423,11 @@ struct NamedObject_t
 
 struct NamedCallback_t
 {
-    const String& Name;
+    String Name;
     void (*Callback)(const String& name, void* callback, void* arg);
     void* Arg;
-
-    NamedCallback_t(const String& name, void (*callback)(const String& name, void* callback, void* arg), void* arg = nullptr)
+	NamedCallback_t(){}
+    NamedCallback_t(String name, void (*callback)(const String& name, void* callback, void* arg), void* arg = nullptr)
         : Name(name), Callback(callback), Arg(arg)
     {
     }
@@ -444,7 +444,13 @@ struct NamedCallback_t
 
     NamedCallback_t& operator=(const NamedCallback_t& other)
     {
-        return *this = NamedCallback_t(other.Name, other.Callback, other.Arg);
+        if (this != &other)
+		{
+			Name = other.Name;
+			Callback = other.Callback;
+			Arg = other.Arg;
+		}
+		return *this;
     }
 };
 

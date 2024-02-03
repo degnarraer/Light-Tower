@@ -41,7 +41,11 @@ class BluetoothConnectionStatusCaller
 	public:
 		BluetoothConnectionStatusCaller()
 		{
-			xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 5000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 );
+			if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 5000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
+			{	
+				ESP_LOGE("BluetoothConnectionStatusCaller", "Error Creating Task!");
+			}
+				
 		}
 		virtual ~BluetoothConnectionStatusCaller()
 		{
@@ -202,11 +206,11 @@ class Bluetooth_Source: public NamedItem
 						, bool AutoReconnect
 						, bool ResetBLE
 						, bool ResetNVS );
-		void SetNameToConnect( const char *SourceName, const char *SourceAddress );
+		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
 		void SetMusicDataCallback(music_data_cb_t callback);
 		
 		//Callback from BT Source for compatible devices to connect to
-		bool ConnectToThisName(const char*name, esp_bd_addr_t address, int32_t rssi);
+		bool ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi);
 		void Set_NVS_Init(bool ResetNVS)
 		{ 
 			m_ResetNVS = ResetNVS;
@@ -240,8 +244,8 @@ class Bluetooth_Source: public NamedItem
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		String m_Name = "";
-		String m_Address = "";
+		std::string m_Name;
+		std::string m_Address;
 		bool m_ResetNVS = false;
 		bool m_ResetBLE = true;
 		bool m_AutoReConnect = false;
@@ -252,7 +256,7 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t m_CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
-		bool compatible_device_found(const char* name, esp_bd_addr_t address, int32_t rssi);
+		bool compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
 };

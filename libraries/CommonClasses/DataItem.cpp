@@ -85,8 +85,15 @@ void PreferencesWrapper<T, COUNT>::Update_Preference(const String &UpdateType, c
 			m_PreferenceTimerActive = true;
 		}
 		return;
-	}
-    if ( UpdateType.equals("Loaded") )
+	}	
+	if ( UpdateType.equals("Timer") )
+	{
+        ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Preference Update", Name.c_str());
+        HandleUpdated( Name, ValuePtr );
+		m_PreferenceTimerActive = false;
+		m_Preferences_Last_Update = currentMillis;
+    }
+    else if ( UpdateType.equals("Loaded") )
 	{
         ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
         HandleLoaded(Name, ValuePtr, InitialValuePtr);
@@ -101,14 +108,7 @@ void PreferencesWrapper<T, COUNT>::Update_Preference(const String &UpdateType, c
         ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
         HandleUpdated( Name, ValuePtr );
 		m_Preferences_Last_Update = currentMillis;
-	}		
-	else if ( UpdateType.equals("Timer") )
-	{
-        ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
-        HandleUpdated( Name, ValuePtr );
-		m_PreferenceTimerActive = false;
-		m_Preferences_Last_Update = currentMillis;
-    }
+	}
 	else
 	{
         ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Unsupported Update Type", Name.c_str());
@@ -222,44 +222,50 @@ void PreferencesWrapper<T, COUNT>::HandleLoaded(const String& Name, T* ValuePtr,
 template <typename T, size_t COUNT>
 void PreferencesWrapper<T, COUNT>::HandleUpdated(const String& Name, T* ValuePtr)
 {	
-    if(!ValuePtr) return;
-    if (std::is_same<T, bool>::value)
+    if(ValuePtr)
 	{
-        m_Preferences->putBool(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);	
-    } 
-	else if (std::is_same<T, char>::value)
-	{
-		char charValues[COUNT];
-		// Copy characters from initialValue to value, ensuring null-termination.
-		for (size_t i = 0; i < COUNT - 1; ++i)
+		if (std::is_same<T, bool>::value)
 		{
-			memcpy(charValues+i, ValuePtr+i, sizeof(char));
+			m_Preferences->putBool(Name.c_str(), *ValuePtr);
+			ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);	
+		} 
+		else if (std::is_same<T, char>::value)
+		{
+			char charValues[COUNT];
+			// Copy characters from initialValue to value, ensuring null-termination.
+			for (size_t i = 0; i < COUNT - 1; ++i)
+			{
+				memcpy(charValues+i, ValuePtr+i, sizeof(char));
+			}
+			charValues[COUNT - 1] = '\0';
+			m_Preferences->putString(Name.c_str(), charValues);
+			ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );	
 		}
-		charValues[COUNT - 1] = '\0';
-        m_Preferences->putString(Name.c_str(), charValues);
-		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );	
-    }
-	else if (std::is_same<T, float>::value)
+		else if (std::is_same<T, float>::value)
+		{
+			m_Preferences->putFloat(Name.c_str(), *ValuePtr);
+			ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);	
+		}
+		else if (std::is_same<T, double>::value)
+		{
+			m_Preferences->putDouble(Name.c_str(), *ValuePtr);
+			ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);	
+		}
+		else if ( std::is_integral<T>::value ||
+				  std::is_convertible<T, int32_t>::value )
+		{
+			m_Preferences->putInt(Name.c_str(), *ValuePtr);
+			ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
+		}  
+		else 
+		{
+			ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", Name.c_str());
+		}
+	}
+	else
 	{
-        m_Preferences->putFloat(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);	
-    }
-	else if (std::is_same<T, double>::value)
-	{
-        m_Preferences->putDouble(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);	
-    }
-	else if ( std::is_integral<T>::value ||
-			  std::is_convertible<T, int32_t>::value )
-	{
-        m_Preferences->putInt(Name.c_str(), *ValuePtr);
-		ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
-    }  
-	else 
-	{
-        ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", Name.c_str());
-    }
+		ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Null Value Pointer!", Name.c_str());
+	}
 }
 
 
@@ -597,7 +603,6 @@ DataItemWithPreferences<T, COUNT>::DataItemWithPreferences( const String name
 																			  , serialPortMessageManager )
 							   
 {
-	this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 }
 
 template <typename T, size_t COUNT>
@@ -617,7 +622,6 @@ DataItemWithPreferences<T, COUNT>::DataItemWithPreferences( const String name
 																			  , serialPortMessageManager )
 							   
 {
-	this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 }
 
 template <typename T, size_t COUNT>
@@ -625,6 +629,7 @@ void DataItemWithPreferences<T, COUNT>::Setup()
 {
 	DataItem<T, COUNT>::Setup();
 	this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+	this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 }
 
 template <typename T, size_t COUNT>

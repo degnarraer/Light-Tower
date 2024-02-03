@@ -107,6 +107,11 @@ class SettingsWebServerManager
     AsyncWebSocket &m_WebSocket;
     WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebSocket);
     const char* password = "LEDs Rock";
+    struct CallbackArguments 
+    {
+      void* arg1;
+      void* arg2;
+    };
     
     //Amplitude Gain
     const float m_AmplitudeGain_InitialValue = 2.0;
@@ -130,6 +135,11 @@ class SettingsWebServerManager
     const SoundOutputSource_t m_SoundOuputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_OFF;
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( "Sound Output Source Web Socket Handler", {"Sound_Output_Source"}, m_WebSocketDataProcessor, true, true, m_SoundOuputSource, false );
+
+    //Output Source Disconnect
+    const bool m_OuputSourceDisconnect_InitialValue = false;
+    DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Source_Discon", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_OuputSourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Disconnect Web Socket Handler", {"Output_Source_Disconnect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceDisconnect, false );
 
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
@@ -162,11 +172,6 @@ class SettingsWebServerManager
     WebSocket_Compatible_Device_DataHandler m_TargetCompatibleDevice_DataHandler = WebSocket_Compatible_Device_DataHandler("BT Target Device Web Socket Data Handler", {"BT_Source_Target_Device"}, m_WebSocketDataProcessor, true, true, m_TargetCompatibleDevice, false );
 
     //Scanned Device
-    struct CallbackArguments 
-    {
-      void* arg1;
-      void* arg2;
-    };
     ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
     DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
     WebSocket_ActiveCompatibleDevice_ArrayDataHandler m_ScannedDevice_DataHandler = WebSocket_ActiveCompatibleDevice_ArrayDataHandler( "Scan BT Device Web Socket Data Handler", {"BT_Source_Target_Devices"}, m_WebSocketDataProcessor, true, true, m_ScannedDevice, false );

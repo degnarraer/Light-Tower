@@ -42,27 +42,31 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  RegisterForDataItemCallBacks();
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
   m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStatusChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
+  RegisterForDataItemCallBacks();
   ConnectToTargetDevice();
-  xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 );
+  if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
+  {
+    ESP_LOGE("Setup", "Error creating task!");
+  }
 }
 
 void Manager::ConnectToTargetDevice()
 {
   CompatibleDevice_t targetDevice;
   m_TargetCompatibleDevice.GetValue(&targetDevice, 1);
-  ESP_LOGI("Manager::ConnectToTargetDevice", "Connecting to Target Device! Name: \"%s\" Address: \"%s\"", targetDevice.name, targetDevice.address );
   bool autoReConnect;
   m_BluetoothSourceAutoReConnect.GetValue(&autoReConnect, 1);
   bool resetBLE;
   m_BluetoothReset.GetValue(&resetBLE, 1);
   bool resetNVS;
   m_BluetoothResetNVS.GetValue(&resetNVS, 1);
+  
+  ESP_LOGI("Manager::ConnectToTargetDevice", "Connecting to Target Device! Name: \"%s\" Address: \"%s\"", targetDevice.name, targetDevice.address );
   m_BT_Out.StartDevice( targetDevice.name
                       , targetDevice.address
                       , autoReConnect
