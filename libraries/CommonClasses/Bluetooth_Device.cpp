@@ -18,6 +18,49 @@
 
 #include "Bluetooth_Device.h"
 
+BluetoothConnectionStateCaller::BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT )
+															  : mp_BT(BT)
+{
+	if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStateCaller", 2000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
+	{	
+		ESP_LOGE("BluetoothConnectionStateCaller", "Error Creating Task!");
+	}
+}
+
+void BluetoothConnectionStateCaller::RegisterForConnectionStateChangedCallBack(BluetoothConnectionStateCallee *Callee)
+{
+	mp_ConnectionStateCallee = Callee;
+}
+
+bool BluetoothConnectionStateCaller::IsConnected()
+{
+	return mp_BT->is_connected();
+}
+
+void BluetoothConnectionStateCaller::StaticCheckBluetoothConnection(void *parameter)
+{
+  const TickType_t xFrequency = 100;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+	vTaskDelayUntil( &xLastWakeTime, xFrequency );
+	((BluetoothConnectionStateCaller*)parameter)->UpdateConnectionStatus();
+  }
+}
+
+void BluetoothConnectionStateCaller::UpdateConnectionStatus()
+{
+	if(mp_BT && mp_ConnectionStateCallee)
+	{
+		esp_a2d_connection_state_t StartingState = m_ConnectionState;
+		m_ConnectionState = mp_BT->get_connection_state();
+		if(StartingState != m_ConnectionState)
+		{
+			mp_ConnectionStateCallee->BluetoothConnectionStateChanged(m_ConnectionState);
+		}
+	}
+}
+
 void Bluetooth_Source::Setup()
 {
 	ESP_LOGI("Bluetooth_Device", "%s: Setup", GetTitle().c_str());
@@ -26,18 +69,15 @@ void Bluetooth_Source::Setup()
 void Bluetooth_Source::InstallDevice()
 {
 	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth Device.", GetTitle().c_str());
-	m_BTSource.set_nvs_init(m_ResetNVS);
-	m_BTSource.set_reset_ble(m_ResetBLE);
-	m_BTSource.set_auto_reconnect(m_AutoReConnect);
-	m_BTSource.set_ssp_enabled(m_SSPEnabled);
+	m_BTSource.set_ssp_enabled(false);
+	m_BTSource.set_local_name("LED Tower of Power");
+	m_BTSource.set_task_core(1);
+	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
+	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
 	{
 		ESP_LOGE("InstallDevice", "Error Creating Task!");
 	}
-	m_BTSource.set_local_name("");
-	m_BTSource.set_task_core(1);
-	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
-	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 }
 
 void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
@@ -46,22 +86,15 @@ void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 }
 
 void Bluetooth_Source::StartDevice( const char *SourceName
-								  , const char *SourceAddress
-								  , bool AutoReconnect
-								  , bool ResetBLE
-								  , bool ResetNVS )
+								  , const char *SourceAddress )
 {
 	m_Name = SourceName;
 	m_Address = SourceAddress;
-	m_AutoReConnect = AutoReconnect;
-	m_ResetBLE = ResetBLE;
-	m_ResetNVS = ResetNVS;
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
 	InstallDevice();
 	m_BTSource.start_raw(m_MusicDataCallback);
 	m_Is_Running = true;
-	SetSearching();
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tNAME: %s \n\tReset BLE: %i \n\tAuto Reconnect: %i \n\tSSP Enabled: %i", m_Name.c_str(), m_ResetBLE, m_AutoReConnect, m_SSPEnabled);
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
 }
 
 void Bluetooth_Source::SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress )
@@ -80,7 +113,6 @@ bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t 
 			, name.c_str()
 			, GetAddressString(address));
 	bool result = compatible_device_found(name, address, rssi);
-	if(result) SetPairing();
 	return result;
 }
 		
@@ -217,7 +249,6 @@ void Bluetooth_Sink::StartDevice(String SinkName, bool reconnect)
 		m_Is_Running = true;
 		StopDevice();
 		m_BTSink.start(m_SinkName.c_str());
-		SetWaiting();
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With NAME: %s Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 	}
 	else if(false == m_Is_Running)
@@ -226,7 +257,6 @@ void Bluetooth_Sink::StartDevice(String SinkName, bool reconnect)
 		InstallDevice();
 		ESP_LOGI("Bluetooth_Device", "Starting Bluetooth Sink with NAME: %s", m_SinkName.c_str());
 		m_BTSink.start(m_SinkName.c_str());
-		SetWaiting();
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With NAME: %s Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 	}
 }

@@ -29,131 +29,34 @@
 #include <mutex>
 #include <memory>
 
-class BluetoothConnectionStatusCallee
+class BluetoothConnectionStateCallee
 {
 	public:
-		BluetoothConnectionStatusCallee(){};
-		virtual void BluetoothConnectionStatusChanged(const ConnectionStatus_t ConnectionStatus) = 0;
+		BluetoothConnectionStateCallee(){};
+		virtual void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState) = 0;
 };
 
-class BluetoothConnectionStatusCaller
+class BluetoothConnectionStateCaller
 {
 	public:
-		BluetoothConnectionStatusCaller()
-		{
-			if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStatusCaller", 5000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
-			{	
-				ESP_LOGE("BluetoothConnectionStatusCaller", "Error Creating Task!");
-			}
-				
-		}
-		virtual ~BluetoothConnectionStatusCaller()
+		BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT );
+		virtual ~BluetoothConnectionStateCaller()
 		{
 			//vTaskDelete(m_Handle);
 		}
-		void RegisterForConnectionStatusChangedCallBack(BluetoothConnectionStatusCallee *Callee)
-		{
-			m_ConnectionStatusCallee = Callee;
-		}
-		
-		bool IsConnected()
-		{
-			return (m_ConnectionStatus == ConnectionStatus_t::Paired);
-		}
+		void RegisterForConnectionStateChangedCallBack(BluetoothConnectionStateCallee *Callee);
+		bool IsConnected();
 	
 	protected:
 		virtual bool GetConnectionStatus() = 0;
-		BluetoothConnectionStatusCallee *m_ConnectionStatusCallee = NULL;
-		void SetWaiting()
-		{ 
-			m_ConnectionStatus = ConnectionStatus_t::Waiting;
-			m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
-		}
-		void SetSearching()
-		{ 
-			m_ConnectionStatus = ConnectionStatus_t::Searching;
-			m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
-		}
-		void SetPairing()
-		{
-			m_ConnectionStatus = ConnectionStatus_t::Pairing;
-			m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
-		}
+		BluetoothConnectionStateCallee *mp_ConnectionStateCallee = NULL;
 	
 	private:
-		ConnectionStatus_t m_ConnectionStatus = ConnectionStatus_t::Disconnected;
 		TaskHandle_t m_Handle;
-		static void StaticCheckBluetoothConnection(void *parameter)
-		{
-		  const TickType_t xFrequency = 100;
-		  TickType_t xLastWakeTime = xTaskGetTickCount();
-		  while(true)
-		  {
-			vTaskDelayUntil( &xLastWakeTime, xFrequency );
-			((BluetoothConnectionStatusCaller*)parameter)->UpdateConnectionStatus();
-		  }
-		}
-		void UpdateConnectionStatus()
-		{
-			ConnectionStatus_t StartingStatus = m_ConnectionStatus;
-			switch(m_ConnectionStatus)
-			{
-				case ConnectionStatus_t::Disconnected:
-					if(true == GetConnectionStatus())
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Paired;
-					}
-					else
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Disconnected;
-					}
-				break;
-				case ConnectionStatus_t::Searching:
-					if(true == GetConnectionStatus())
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Paired;
-					}
-					else
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Searching;
-					}
-				break;
-				case ConnectionStatus_t::Waiting:
-					if(true == GetConnectionStatus())
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Paired;
-					}
-					else
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Waiting;
-					}
-				break;
-				case ConnectionStatus_t::Pairing:
-					if(true == GetConnectionStatus())
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Paired;
-					}
-					else
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Pairing;
-					}
-				break;
-				case ConnectionStatus_t::Paired:
-					if(true == GetConnectionStatus())
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Paired;
-					}
-					else
-					{
-						m_ConnectionStatus = ConnectionStatus_t::Disconnected;
-					}
-				break;
-			}
-			if(StartingStatus != m_ConnectionStatus)
-			{
-				m_ConnectionStatusCallee->BluetoothConnectionStatusChanged(m_ConnectionStatus);
-			}
-		}
+		esp_a2d_connection_state_t m_ConnectionState;
+		BluetoothA2DPCommon *mp_BT;
+		static void StaticCheckBluetoothConnection(void *parameter);
+		void UpdateConnectionStatus();
 };
 
 class BluetoothActiveDeviceUpdatee
@@ -181,7 +84,7 @@ class BluetoothActiveDeviceUpdater
 };
 
 class Bluetooth_Source: public NamedItem
-					  , public BluetoothConnectionStatusCaller
+					  , public BluetoothConnectionStateCaller
 					  , public BluetoothActiveDeviceUpdater
 					  , public CommonUtils
 					  , public QueueController
@@ -190,6 +93,7 @@ class Bluetooth_Source: public NamedItem
 		Bluetooth_Source( String Title
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
+						, BluetoothConnectionStateCaller(&BTSource)
 						, m_BTSource(BTSource)
 		{
 			std::lock_guard<std::mutex> lock(m_ActiveCompatibleDevicesMutex);
@@ -202,34 +106,32 @@ class Bluetooth_Source: public NamedItem
 		void Setup();
 		void InstallDevice();
 		void StartDevice( const char *SourceName
-						, const char *SourceAddress
-						, bool AutoReconnect
-						, bool ResetBLE
-						, bool ResetNVS );
+						, const char *SourceAddress );
 		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
 		void SetMusicDataCallback(music_data_cb_t callback);
+		void Disconnect()
+		{
+			m_BTSource.disconnect();
+			m_BTSource.end(true);
+		}
 		
 		//Callback from BT Source for compatible devices to connect to
 		bool ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi);
 		void Set_NVS_Init(bool ResetNVS)
 		{ 
-			m_ResetNVS = ResetNVS;
-			m_BTSource.set_nvs_init(m_ResetNVS);
+			m_BTSource.set_nvs_init(ResetNVS);
 		}
 		void Set_Reset_BLE(bool ResetBLE)
 		{
-			m_ResetBLE = ResetBLE;
-			m_BTSource.set_reset_ble(m_ResetBLE);
+			m_BTSource.set_reset_ble(ResetBLE);
 		}
 		void Set_Auto_Reconnect(bool AutoReConnect)
 		{
-			m_AutoReConnect = AutoReConnect;
-			m_BTSource.set_auto_reconnect(m_AutoReConnect);
+			m_BTSource.set_auto_reconnect(AutoReConnect);
 		}
 		void Set_SSP_Enabled(bool SSPEnabled)
 		{
-			m_SSPEnabled = SSPEnabled;
-			m_BTSource.set_ssp_enabled(m_SSPEnabled);
+			m_BTSource.set_ssp_enabled(SSPEnabled);
 		}
 		/// converts a esp_bd_addr_t to a string - the string is 18 characters long!
 		const char* GetAddressString(esp_bd_addr_t bda)
@@ -246,10 +148,6 @@ class Bluetooth_Source: public NamedItem
 		music_data_cb_t m_MusicDataCallback = NULL;
 		std::string m_Name;
 		std::string m_Address;
-		bool m_ResetNVS = false;
-		bool m_ResetBLE = true;
-		bool m_AutoReConnect = false;
-		bool m_SSPEnabled = false;
 		
 		std::mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
@@ -273,7 +171,7 @@ class Bluetooth_Sink_Callback
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
 				    , public QueueController
-					, public BluetoothConnectionStatusCaller
+					, public BluetoothConnectionStateCaller
 {
   public:
     Bluetooth_Sink( String Title
@@ -293,6 +191,7 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataInPin
 				  , int SerialDataOutPin )
 				  : NamedItem(Title)
+				  , BluetoothConnectionStateCaller(&BTSink)
 				  , m_BTSink(BTSink)
 				  , m_I2S_PORT(i2S_PORT)
 				  , m_i2s_Mode(Mode)

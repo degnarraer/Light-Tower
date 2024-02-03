@@ -172,6 +172,22 @@ function submit_New_Name(element)
 	}
 }
 
+function source_Connect(element, isPressed)
+{
+	var ButtonId = element.id;
+    if(ButtonId == 'Output_Source_Connect_Button')
+	{
+		if(isPressed)console.log('Source Connect Button Pressed:');
+		if(!isPressed)console.log('Source Connect Button Released:');
+		var Root = {};
+		Root.WidgetValue = {};
+		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Value = isPressed.toString();
+		var Message = JSON.stringify(Root);
+		websocket.send(Message);
+	}
+}
+
 function source_Disconnect(element, isPressed)
 {
 	var ButtonId = element.id;
@@ -367,7 +383,8 @@ const widgetToSignal = {
 	'FFT_Gain_Slider2': 'FFT_Gain',
 	'FFT_Gain_Slider3': 'FFT_Gain',
 	'FFT_Gain_Slider4': 'FFT_Gain',
-	'Output_Source_Disconnect_Button': 'Output_Source_Disconnect'
+	'Output_Source_Disconnect_Button': 'Output_Source_Disconnect',
+	'Output_Source_Connect_Button': 'Output_Source_Connect',
 };
 
 const classToSignal = {

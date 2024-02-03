@@ -79,6 +79,7 @@ static bool ConnectToThisName(const char* aName, esp_bd_addr_t address, int32_t 
 {
   return m_BT_Out.ConnectToThisName(aName, address, rssi);
 }
+
 void setup() 
 {
   //PC Serial Communication
