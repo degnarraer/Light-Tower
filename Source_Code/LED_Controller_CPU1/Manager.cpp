@@ -55,7 +55,7 @@ void Manager::SetupBlueTooth()
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
-  m_BT_In.RegisterForConnectionStatusChangedCallBack(this);
+  m_BT_In.RegisterForConnectionStateChangedCallBack(this);
 }
 
 void Manager::SetupSerialPortManager()
@@ -215,31 +215,15 @@ void Manager::MoveDataToStatisticalEngine()
 }
 
 //BluetoothConnectionStateCallee Callback
-void Manager::BluetoothConnectionStatusChanged(ConnectionStatus_t connectionStatus)
+void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {
-  ConnectionStatus_t currentConnectionStatus;
-  m_BluetoothSinkConnectionStatus.GetValue(&currentConnectionStatus, 1);
-  if(currentConnectionStatus != connectionStatus)
+  ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
+  ConnectionStatus_t currentValue;
+  m_BluetoothSinkConnectionStatus.GetValue(&currentValue, 1);
+  if(currentValue != newValue)
   {
-    m_BluetoothSinkConnectionStatus.SetValue(&connectionStatus, 1);
-    switch(connectionStatus)
-    {
-      case ConnectionStatus_t::Disconnected:
-        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Disconnected.\"");
-      break;
-      case ConnectionStatus_t::Searching:
-        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Searching.\"");
-      break;
-      case ConnectionStatus_t::Waiting:
-        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Waiting.\"");
-      break;
-      case ConnectionStatus_t::Pairing:
-        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Pairing.\"");
-      break;
-      case ConnectionStatus_t::Paired:
-        ESP_LOGI("Manager::BluetoothConnectionStatusChanged", "Bluetooth Connection Status: \"Paired.\"");
-      break;
-    }
+    m_BluetoothSinkConnectionStatus.SetValue(&newValue, 1);
+    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
   }
 }
 

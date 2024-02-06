@@ -70,6 +70,8 @@ void Bluetooth_Source::Setup()
 void Bluetooth_Source::InstallDevice()
 {
 	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth Device.", GetTitle().c_str());
+	m_BTSource.set_reset_ble(m_ResetBLE);
+	m_BTSource.set_auto_reconnect(m_AutoReConnect);
 	m_BTSource.set_ssp_enabled(false);
 	m_BTSource.set_local_name("LED Tower of Power");
 	m_BTSource.set_task_core(1);

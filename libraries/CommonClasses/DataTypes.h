@@ -388,20 +388,18 @@ struct DataItemConfig_t
 
 enum ConnectionStatus_t
 {
-	Disconnected,
-	Waiting,
-	Searching,
-	Pairing,
-	Paired
+	Disconnected = 0,
+	Connecting = 1,
+	Connected = 2,
+	Disconnecting = 3
 };
 
 static const char* ConnectionStatusStrings[] =
 {
 	"Disconnected",
-	"Waiting",
-	"Searching",
-	"Pairing",
-	"Paired"
+	"Connecting",
+	"Connected",
+	"Disconnecting",
 };
 
 struct NamedObject_t

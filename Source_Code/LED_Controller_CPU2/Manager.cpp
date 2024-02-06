@@ -57,6 +57,12 @@ void Manager::Setup()
 void Manager::StartBluetooth()
 {
   ESP_LOGI("Manager::ConnectToTargetDevice", "Starting Bluetooth!" );
+  bool autoReconnect;
+  bool resetBLE;
+  m_BluetoothSourceAutoReConnect.GetValue(&autoReconnect, 1);
+  m_BluetoothReset.GetValue(&resetBLE, 1);
+  m_BT_Out.Set_Auto_Reconnect(autoReconnect);
+  m_BT_Out.Set_Reset_BLE(resetBLE);
   m_BT_Out.StartDevice( "", "" );
 }
 
@@ -93,17 +99,16 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 }
 
 //BluetoothConnectionStateCallee Callback 
-void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState)
+void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {
-  /*
+  ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
   ConnectionStatus_t currentValue;
   m_ConnectionStatus.GetValue(&currentValue, 1);
-  if(currentValue != ConnectionStatus)
+  if(currentValue != newValue)
   {
-    m_ConnectionStatus.SetValue(&ConnectionStatus, 1);
-    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[ConnectionStatus]).c_str());
+    m_ConnectionStatus.SetValue(&newValue, 1);
+    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
   }
-  */
 }
 
 //BluetoothActiveDeviceUpdatee Callback 

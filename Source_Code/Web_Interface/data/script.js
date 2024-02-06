@@ -16,13 +16,19 @@ var compatibleDevices = [
 let selectedDeviceIndex = -1;
 
 
-const ConnectionStatus = 
+const ConnectionState = 
 {
 	Disconnected: 0,
-	Waiting: 1,
-	Searching: 2,
-	Pairing: 3,
-	Paired: 4
+	Connecting: 1,
+	Connected: 2,
+	Disconnecting: 3
+}
+const ConnectionStateString = 
+{
+	0: 'Disconnected',
+	1: 'Connecting',
+	2: 'Connected',
+	3: 'Disconnecting'
 }
 
 //Window and Web Socket Functions
@@ -57,7 +63,6 @@ function onError(event)
     setTimeout(initWebSocket, 5000);
 }
 
-
 // Toggle Switch Handlers
 const sink_BT_Enable_Toggle_Button = document.getElementById('Sink_BT_Enable_Toggle_Button');
 sink_BT_Enable_Toggle_Button.addEventListener('click', function()
@@ -70,6 +75,7 @@ sink_BT_Enable_Toggle_Button.addEventListener('click', function()
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
+
 const sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
 sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 {
@@ -80,6 +86,7 @@ sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
+
 const source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
 source_BT_Reset_Toggle_Button.addEventListener('click', function()
 {
@@ -90,6 +97,7 @@ source_BT_Reset_Toggle_Button.addEventListener('click', function()
 	var Message = JSON.stringify(Root);
 	websocket.send(Message);
 });
+
 const source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
 Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
 {
@@ -298,8 +306,6 @@ function setSpeakerImage(value)
 	  break;
 	}
 	imageTwo.src = Image2Source;
-	
-	
 	const imageOnePromise = new Promise((resolve, reject) => {
 	  imageOne.src = Image1Source;
 	  imageOne.onload = () => {
@@ -308,22 +314,22 @@ function setSpeakerImage(value)
 	  imageOne.onerror = () => {
 		reject('Error loading image one');
 	  };
-	});
+});
 
-	const imageTwoPromise = new Promise((resolve, reject) => {
-	  imageTwo.src = Image2Source;
-	  imageTwo.onload = () => {
-		resolve();
-	  };
-	  imageTwo.onerror = () => {
-		reject('Error loading image two');
-	  };
+const imageTwoPromise = new Promise((resolve, reject) => {
+		imageTwo.src = Image2Source;
+		imageTwo.onload = () => {
+			resolve();
+		};
+		imageTwo.onerror = () => {
+			reject('Error loading image two');
+		};
 	});  
 
 	Promise.all([imageOnePromise, imageTwoPromise]).then(() => {
-	  // both images have finished loading
-	  imageOneElement.src = imageOne.src;
-	  imageTwoElement.src = imageTwo.src;
+		// both images have finished loading
+		imageOneElement.src = imageOne.src;
+		imageTwoElement.src = imageTwo.src;
 	});
 }
 
@@ -339,11 +345,11 @@ const messageHandlers = {
 	'BT_Sink_Name': handleBTSinkName,
 	'BT_Sink_Enable': handleBTSinkEnable,
 	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
-	'BT_Sink_Connection_Status': handleBTSinkConnectionStatus,
+	'BT_Sink_Connection_State': handleBTSinkConnectionState,
 	
 	'BT_Source_Enable': handleBTSourceEnable,
 	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
-	'BT_Source_Connection_Status': handleBTSourceConnectionStatus,
+	'BT_Source_Connection_State': handleBTSourceConnectionState,
 	'BT_Source_Reset': handleBTSourceReset,
 	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
 	'BT_Source_Target_Device': handleBTSourceTargetDevice,
@@ -500,13 +506,11 @@ function updateCompatibleDeviceList() {
 	});
 }
 
-
-
 // Function to handle the click event on a device list item
 function handleDeviceItemClick(device) {
     // Do something with the selected device's name and address
-    console.log("Selected Name:", device.name);
-    console.log("Selected Address:", device.address);
+    console.log('Selected Name:', device.name);
+    console.log('Selected Address:', device.address);
 
     var Root = {};
 	var TextboxElement;
@@ -653,33 +657,19 @@ function handleBTSinkEnable(id, value) {
 	}
 }
 	
-function handleBTSinkConnectionStatus(id, value) {
-	if(id && value)
-	{
-		console.log('Received the Bluetooth Sink Connection Status!');
-		var element = document.getElementById('Sink_Connection_Status');
-		switch(parseInt(value))
-		{
-			case ConnectionStatus.Waiting:
-				element.innerHTML = 'Waiting';
-			break;
-			case ConnectionStatus.Searching:
-				element.innerHTML = 'Searching';
-			break;
-			case ConnectionStatus.Pairing:
-				element.innerHTML = 'Pairing';
-			break;
-			case ConnectionStatus.Paired:
-				element.innerHTML = 'Paired';
-			break;
-			case ConnectionStatus.Disconnected:
-				element.innerHTML = 'Disconnected';
-			break;
-			default:
-				element.innerHTML = 'Error';
-			break;
-		}
-	}
+function handleBTSinkConnectionState(id, value) {
+  if (id && value) {
+    console.log('Received Bluetooth Source Connection State!');
+    const widgets = ['Sink_Connection_State_Textbox'];
+
+    for (const widget of widgets) {
+      if (document.getElementById(widget)) {
+        console.log('Setting', widget, 'to', ConnectionStateString[parseInt(value)].toString());
+        var element = document.getElementById(widget);
+        element.innerHTML = ConnectionStateString[parseInt(value)].toString();
+      }
+    }
+  }
 }
 	
 function handleBTSinkAutoReConnect(id, value) {
@@ -720,33 +710,19 @@ function handleBTSourceAutoReconnect(id, value) {
 	}
 }
 
-function handleBTSourceConnectionStatus(id, value) {
-	if(id && value)
-	{
-		console.log('Received Bluetooth Source Connection Status!');
-		var element = document.getElementById('Source_Connection_Status_Textbox');
-		switch(parseInt(value))
-		{
-			case ConnectionStatus.Waiting:
-				element.innerHTML = 'Waiting';
-			break;
-			case ConnectionStatus.Searching:
-				element.innerHTML = 'Searching';
-			break;
-			case ConnectionStatus.Pairing:
-				element.innerHTML = 'Pairing';
-			break;
-			case ConnectionStatus.Paired:
-				element.innerHTML = 'Paired';
-			break;
-			case ConnectionStatus.Disconnected:
-				element.innerHTML = 'Disconnected';
-			break;
-			default:
-				element.innerHTML = 'Error';
-			break;
-		}
-	}
+function handleBTSourceConnectionState(id, value) {
+  if (id && value) {
+    console.log('Received Bluetooth Source Connection State!');
+    const widgets = ['Source_Connection_State_Textbox'];
+
+    for (const widget of widgets) {
+      if (document.getElementById(widget)) {
+        console.log('Setting', widget, 'to', ConnectionStateString[parseInt(value)].toString());
+        var element = document.getElementById(widget);
+        element.innerHTML = ConnectionStateString[parseInt(value)].toString();
+      }
+    }
+  }
 }
 
 function handleBTSourceReset(id, value) {

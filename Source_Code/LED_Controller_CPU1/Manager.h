@@ -33,7 +33,7 @@ class Manager: public NamedItem
              , public I2S_Device_Callback
              , public Bluetooth_Sink_Callback
              , public SoundMeasureCalleeInterface
-             , public BluetoothConnectionStatusCallee
+             , public BluetoothConnectionStateCallee
              , public CommonUtils
              , public QueueController
 {
@@ -64,8 +64,8 @@ class Manager: public NamedItem
     //SoundMeasureCalleeInterface Callback
     void SoundStateChange(SoundState_t SoundState);
 
-    //BluetoothConnectionStatusCallee Callback
-    void BluetoothConnectionStatusChanged(ConnectionStatus_t ConnectionStatus);
+    //BluetoothConnectionStateCallee Callback
+    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState);
     
   private:
     Preferences m_Preferences;
@@ -104,7 +104,7 @@ class Manager: public NamedItem
     
     //Bluetooth Sink Connection Status
     const ConnectionStatus_t m_SinkConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
-    DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_Stat", m_SinkConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager);
+    DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State", m_SinkConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager);
 
     //Bluetooth Sink Name
     const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";

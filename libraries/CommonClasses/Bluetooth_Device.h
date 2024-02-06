@@ -122,11 +122,11 @@ class Bluetooth_Source: public NamedItem
 		}
 		void Set_Reset_BLE(bool ResetBLE)
 		{
-			m_BTSource.set_reset_ble(ResetBLE);
+			m_ResetBLE = ResetBLE;
 		}
 		void Set_Auto_Reconnect(bool AutoReConnect)
 		{
-			m_BTSource.set_auto_reconnect(AutoReConnect);
+			m_AutoReConnect = AutoReConnect;
 		}
 		void Set_SSP_Enabled(bool SSPEnabled)
 		{
@@ -147,7 +147,8 @@ class Bluetooth_Source: public NamedItem
 		music_data_cb_t m_MusicDataCallback = NULL;
 		std::string m_Name;
 		std::string m_Address;
-		
+		bool m_ResetBLE = true;
+		bool m_AutoReConnect = false;
 		std::mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
 		TaskHandle_t m_CompatibleDeviceTrackerTask;
@@ -213,7 +214,6 @@ class Bluetooth_Sink: public NamedItem
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
 		m_AutoReConnect = reconnect;
-        m_BTSink.set_auto_reconnect(m_AutoReConnect);
     }
 
 	//Callbacks from BluetoothSink  

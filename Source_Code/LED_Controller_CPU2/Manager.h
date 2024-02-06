@@ -84,7 +84,7 @@ class Manager: public NamedItem
     
     //Bluetooth Source Connection Status
     ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
-    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_Stat", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, m_CPU3SerialPortMessageManager);
     
     //Output Source Connect
     const bool m_OuputSourceConnect_InitialValue = false;
@@ -113,14 +113,14 @@ class Manager: public NamedItem
 
     //Bluetooth Source Auto ReConnect
     bool m_BluetoothSourceAutoReConnect_InitialValue = false;
-    DataItem<bool, 1> m_BluetoothSourceAutoReConnect = DataItem<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     CallbackArguments m_BluetoothSourceAutoReConnect_CallbackArgs;
     NamedCallback_t m_BluetoothSourceAutoReConnect_Callback;
     static void BluetoothSourceAutoReConnect_ValueChanged(const String &Name, void* object, void* arg);
     
     //Bluetooth Source Reset
     bool m_BluetoothReset_InitialValue = true;
-    DataItem<bool, 1> m_BluetoothReset = DataItem<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager);
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     CallbackArguments m_BluetoothReset_CallbackArgs;
     NamedCallback_t m_BluetoothReset_Callback;
     static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg);

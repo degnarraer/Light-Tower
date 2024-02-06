@@ -38,10 +38,9 @@ class DataSerializer: public CommonUtils
 		}
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
-			String Result = "";
-			
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
+			String Result = "";
 			
 			doc.clear();
 			doc[m_NameTag] = Name;
@@ -69,14 +68,14 @@ class DataSerializer: public CommonUtils
 		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
-			DeserializationError error = deserializeJson(doc, json.c_str());
+			doc.clear();
+			DeserializationError error = deserializeJson(doc, json);
 			// Test if parsing succeeds.
 			if (error)
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
 				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. \nInput: %s", error.c_str(), json.c_str());
-				return;
 			}
 			else
 			{
@@ -108,118 +107,30 @@ class DataSerializer: public CommonUtils
 								Buffer[j * ObjectByteCount + k] = decValue;
 							}
 						}
+						if(CheckSumCalc == CheckSumIn)
+						{
+							NamedObject.Object = Buffer;
+						}
+						else
+						{
+							heap_caps_free(Buffer);
+							NamedObject.Object = nullptr;
+							++m_FailCount;
+							ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Checksum Error\" Value: \"(%i != %i)\"", CheckSumCalc, CheckSumIn);
+						}
 					}
 					else
 					{
 						++m_FailCount;
 						NamedObject.Object = nullptr;
 						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
-						return;
 					}
-					
-					if(CheckSumCalc == CheckSumIn)
-					{
-						NamedObject.Object = Buffer;
-					}
-					else
-					{
-						heap_caps_free(Buffer);
-						NamedObject.Object = nullptr;
-						++m_FailCount;
-						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
-					}
-					FailPercentage();
-					return;
 				}
 				else
 				{
+					++m_FailCount;
 					NamedObject.Object = nullptr;
-					ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Missing Tags");
-					return;
-				}
-			}
-			FailPercentage();
-		}
-		void DeSerializeJsonToMatchingDataItem(String json)
-		{
-			ESP_LOGD("DeSerializeJsonToMatchingDataItem", "JSON String: %s", json.c_str());
-			DeserializationError error = deserializeJson(doc, json.c_str());
-			// Test if parsing succeeds.
-			if (error)
-			{
-				++m_FailCount;
-				ESP_LOGE("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: %s.", error.c_str());
-				return;
-			}
-			else
-			{
-				if(NULL != m_DataItems)
-				{
-					for(int i = 0; i < m_DataItemsCount; ++i)
-					{
-						if(AllTagsExist())
-						{
-							const String ItemName = (m_DataItems[i]).Name;
-							const String DocName = doc[m_NameTag];
-							if(true == ItemName.equals(DocName))
-							{
-								size_t CheckSumCalc = 0;
-								size_t CheckSumIn = doc[m_CheckSumTag];
-								size_t CountIn = doc[m_CountTag];
-								size_t ByteCountIn = doc[m_TotalByteCountTag];
-								size_t ActualDataCount = doc[m_DataTag].size();
-								DataType_t DataType = GetDataTypeFromString(doc[m_DataTypeTag]);
-								size_t ObjectByteCount = GetSizeOfDataType(DataType);
-								uint8_t Buffer[ByteCountIn];							
-								if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
-								{
-									for(int j = 0; j < CountIn; ++j)
-									{
-										String BytesString = doc[m_DataTag][j];
-										for(int k = 0; k < ObjectByteCount; ++k)
-										{
-											size_t startIndex = 2*k;
-											char hexArray[2];
-											strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
-											long decValue = strtol(String(hexArray).c_str(), NULL, 16);
-											CheckSumCalc += decValue;
-											Buffer[j * ObjectByteCount + k] = decValue;
-										}
-									}
-								}
-								else
-								{
-									++m_FailCount;
-									ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: Byte Count Error.");
-								}
-								
-								if(CheckSumCalc == CheckSumIn)
-								{
-									if(NULL != m_DataItems[i].QueueHandle_RX)
-									{
-										PushValueToQueue(Buffer, m_DataItems[i].QueueHandle_RX, ItemName.c_str(), 0, m_DataItems[i].DataPushHasErrored);
-									}
-									else
-									{
-										++m_FailCount;
-										ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: No matching DataItem RX Handle");
-									}
-								}
-								else
-								{
-									++m_FailCount;
-									ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: Checksum Error (%i != %i)", CheckSumCalc, CheckSumIn);
-								}
-								FailPercentage();
-								return;
-							}
-						}
-						else
-						{
-							ESP_LOGD("DeSerializeJsonToMatchingDataItem", "WARNING! Deserialize failed: Missing Tags");
-						}
-					}
-					
+					ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Missing Tags\" Input: \"%s\"", json.c_str());
 				}
 			}
 			FailPercentage();
@@ -238,19 +149,13 @@ class DataSerializer: public CommonUtils
 		}
 		bool AllTagsExist()
 		{
-			JsonVariant FoundObject1 = doc[m_NameTag];
-			JsonVariant FoundObject2 = doc[m_CheckSumTag];
-			JsonVariant FoundObject3 = doc[m_CountTag];
-			JsonVariant FoundObject4 = doc[m_DataTag];
-			JsonVariant FoundObject5 = doc[m_DataTypeTag];
-			JsonVariant FoundObject6 = doc[m_TotalByteCountTag];
-			bool result = !(FoundObject1.isNull()) &&
-						  !(FoundObject2.isNull()) &&
-						  !(FoundObject3.isNull()) &&
-						  !(FoundObject4.isNull()) &&
-						  !(FoundObject5.isNull()) &&
-						  !(FoundObject6.isNull());
-			return result;
+			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
+			for (const String& tag : tags) {
+				if (!doc.containsKey(tag)) {
+					return false;
+				}
+			}
+			return true;
 		}
 	private:
 		size_t m_TotalCount = 0;
@@ -259,18 +164,17 @@ class DataSerializer: public CommonUtils
 		uint64_t m_FailCountTimer = 0;
 		uint64_t m_FailCountDuration = 5000;
 		
-		StaticJsonDocument<10000> doc;
+		StaticJsonDocument<5000> doc;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags
 		String m_Startinator = "<PACKET_START>";
-		String m_NameTag = "N";
-		String m_CheckSumTag = "S";
-		String m_CountTag = "C";
-		String m_DataTag = "D";
-		String m_DataTypeTag = "T";
-		String m_TotalByteCountTag = "B";
-		String m_TotalStringLengthTag = "L";
+		String m_NameTag = "Name";
+		String m_CheckSumTag = "Sum";
+		String m_CountTag = "Count";
+		String m_DataTag = "Data";
+		String m_DataTypeTag = "Type";
+		String m_TotalByteCountTag = "Bytes";
 		String m_Terminator = "<PACKET_END>";
 };
 
