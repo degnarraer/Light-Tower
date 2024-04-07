@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"name": "CPU1",
+			"path": "CPU1"
+		},
+		{
+			"name": "CPU2",
+			"path": "CPU2"
+		},
+		{
+			"name": "CPU3",
+			"path": "CPU3"
+		},
+		{
+			"name": "Libraries",
+			"path": "Libraries"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cmath": "cpp"
+		}
+	}
+}

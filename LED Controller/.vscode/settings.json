@@ -1,0 +1,5 @@
+{
+    "idf.portWin": "COM4",
+    "idf.flashType": "DFU",
+    "idf.adapterTargetName": "esp32"
+}
