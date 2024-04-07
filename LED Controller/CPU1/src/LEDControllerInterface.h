@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LEDControllerInterface_H
-#define LEDControllerInterface_H
 
+#pragma once
 #define FASTLED_ALLOW_INTERRUPTS 1
 #define FASTLED_INTERRUPT_RETRY_COUNT 10
 #include <FastLED.h>
@@ -181,5 +180,3 @@ class LEDControllerInterface: public LEDController
   public:
     LEDControllerInterface(){}
 };
-
-#endif

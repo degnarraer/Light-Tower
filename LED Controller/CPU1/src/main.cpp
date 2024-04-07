@@ -20,7 +20,6 @@
 #include "VisualizationPlayer.h"
 #include "Models.h"
 #include "Tunes.h"
-#include "esp_log.h"
 #include "LED_Controller_Helpers.h"
 
 TaskHandle_t VisualizationTask;
@@ -41,18 +40,10 @@ void InitTasks()
   xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   THREAD_PRIORITY_MEDIUM,  &VisualizationTask,     1 );
 }
 
-void TestPSRam()
-{
-  ESP_LOGE("Startup", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());  
-  byte* psdRamBuffer = (byte*)ps_malloc(500000);
-  ESP_LOGE("Startup", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
-  free(psdRamBuffer);
-  ESP_LOGE("Startup", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
-}
-
 void setup()
 {
   InitSerialCommunication();
+  SetComponentDebugLevels();
   TestPSRam();
   
   PrintFreeHeap();

@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef VisualizationFactory_H
-#define VisualizatiosnFactory_H
 
+#pragma once
 #include "Visualization.h"
 
 //********* VUMeter *********
@@ -945,6 +944,3 @@ class Rotating4Sprites: public Visualization
     SettableColorPowerModel m_PowerColorModel2 = SettableColorPowerModel("Settable Power Model 2");
     SettableColorPowerModel m_PowerColorModel3 = SettableColorPowerModel("Settable Power Model 3");
 };
-
-
-#endif

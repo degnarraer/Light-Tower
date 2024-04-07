@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Models_Core_H
-#define Models_Core_H
 
+#pragma once
 #include "TaskInterface.h"
 #include "Streaming.h"
 #include "Tunes.h"
@@ -337,5 +336,3 @@ class DataModelWithNewValueNotification: public DataModel
     //StatisticalEngineModelInterfaceUsers
     virtual bool RequiresFFT() = 0;
 };
-
-#endif

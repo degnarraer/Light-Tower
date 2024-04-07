@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Models_Color_H
-#define Models_Color_H
 
+#pragma once
 #include "Models_Core.h"
 
 class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
@@ -285,5 +284,3 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
       }
     }
 };
-
-#endif

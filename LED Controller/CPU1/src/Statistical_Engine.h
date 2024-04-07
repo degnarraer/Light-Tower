@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef StatisticalEngine_H
-#define StatisticalEngine_H
 
+#pragma once
 #define STATISTICAL_ENGINE_MEMORY_DEBUG false
 #define STATISTICAL_ENGINE_DATA_DEBUG false
 
@@ -250,5 +249,3 @@ class StatisticalEngine : public NamedItem
     SoundState_t  m_soundState = SoundState_t::SilenceDetected;
     bool          m_SoundDetected = false;
 };
-
-#endif

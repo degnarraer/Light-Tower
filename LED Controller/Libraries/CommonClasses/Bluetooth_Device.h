@@ -24,10 +24,10 @@
 #include <Arduino.h>
 #include <mutex>
 #include <memory>
-#include "Helpers.h"
 #include "BluetoothA2DPSink.h"
 #include "BluetoothA2DPSource.h"
 #include "BluetoothA2DPCommon.h"
+#include "Helpers.h"
 
 class BluetoothConnectionStateCallee
 {
@@ -249,7 +249,5 @@ class Bluetooth_Sink: public NamedItem
 		A2DPDefaultVolumeControl m_VolumeControl;
 		void InstallDevice();
 };
-
-
 
 #endif

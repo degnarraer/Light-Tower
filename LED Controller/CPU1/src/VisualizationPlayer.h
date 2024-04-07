@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
  
-#ifndef VisualizationPlayer_H
-#define VisualizationPlayer_H
 
+#pragma once
 #include "Streaming.h"
 #include "VisualizationFactory.h"
 #include "TaskInterface.h"
@@ -57,5 +56,3 @@ class VisualizationPlayer : public Task
     std::vector<Visualization*> m_MyQueue = std::vector<Visualization*>();
     bool m_TestVisualization = false;
 };
-
-#endif

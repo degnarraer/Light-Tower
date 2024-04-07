@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Views_H
-#define Views_H
 
+#pragma once
 #include "LEDControllerInterface.h"
 #include "TaskInterface.h"
 #include "Streaming.h"
@@ -548,4 +547,3 @@ class RotatingView: public View
     void ScrollView();
     void RotateView();
 };
-#endif

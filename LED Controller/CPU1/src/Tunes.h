@@ -1,5 +1,4 @@
-#ifndef TUNES_H
-#define TUNES_H
+#pragma once
 
 //LED OUT PINS
 #define DATA_PIN_STRIP1_PIN       0
@@ -123,4 +122,3 @@ const float BINS_DOUBLE = FFT_MAX / 2.0;
 const int FFT_RESOLUTION = 16;
 const int FFT_GAIN = 1000;
 const int POWER_GAIN = 20;
-#endif

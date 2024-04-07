@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef TaskInterface_H
-#define TaskInterface_H
-
+#pragma once
 #include <Arduino.h>
 #include <vector>
 #include "Streaming.h"
@@ -106,5 +104,3 @@ class CalculateFPS: public Task
     unsigned int m_frameCount;
     
 };
-
-#endif

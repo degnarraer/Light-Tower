@@ -1,6 +1,7 @@
 
-#ifndef LED_Controller_Helpers_H
-#define LED_Controller_Helpers_H
+#pragma once
+#include "esp_log.h"
+#define CONFIG_LOG_DEFAULT_LEVEL ESP_LOG_VERBOSE
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
@@ -104,18 +105,17 @@ void InitLocalVariables()
 
 void PrintStartupData()
 {
-  ESP_LOGV("LED_Controller1", "%s, ", __func__);
-  ESP_LOGI("LED_Controller1", "Serial Datalink Configured");
-  ESP_LOGI("LED_Controller1", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGI("LED_Controller1", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGI("LED_Controller1", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGI("Startup", "Serial Datalink Configured");
+  ESP_LOGI("Startup", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGI("Startup", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGI("Startup", "Apb Clock Frequency: %i Hz", getApbFrequency());
 }
 void PrintFreeHeap()
 {
-  ESP_LOGE("LED_Controller_CPU1", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGE("LED_Controller_CPU1", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGE("LED_Controller_CPU1", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGE("LED_Controller_CPU1", "Free PSRAM: %d", ESP.getFreePsram());
+  ESP_LOGI("Startup", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGI("Startup", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGI("Startup", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGI("Startup", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void InitSerialCommunication()
@@ -133,5 +133,24 @@ void InitSerialCommunication()
   Serial2.flush();
 }
 
+void TestPSRam()
+{
+  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
+  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(0 == allocationSize && "psram allocation should be 0 at start");
+  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
+  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
+  free(psdRamBuffer);
+  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(0 == allocationSize && "Failed to free allocated psram");
+}
 
-#endif
+void SetComponentDebugLevels()
+{ 
+  //Global Setting
+  esp_log_level_set("*", ESP_LOG_ERROR);
+
+  //Component Setting
+  esp_log_level_set("Startup", ESP_LOG_INFO);
+}

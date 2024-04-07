@@ -16,11 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Models_H
-#define Models_H
+
+#pragma once
 #include "Models_Color.h"
 #include "Models_Band.h"
 #include "Models_Power.h"
 #include "Models_Misc.h"
-
-#endif

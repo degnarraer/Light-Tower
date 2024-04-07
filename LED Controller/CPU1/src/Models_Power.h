@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Models_Power_H
-#define Models_Power_H
 
+#pragma once
 class SoundPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
@@ -129,6 +128,3 @@ class CyclingPowerModel: public DataModelWithNewValueNotification<float>
       m_PreviousTime = m_CurrentTime;
     }
 };
-
-
-#endif

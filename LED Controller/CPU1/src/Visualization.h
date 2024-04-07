@@ -1,6 +1,4 @@
-#ifndef Visualization_H
-#define Visualization_H
-
+#pragma once
 #include "Statistical_Engine.h"
 #include "Views.h"
 #include "Streaming.h"
@@ -82,5 +80,3 @@ class Visualization: public View
     std::vector<View*> m_MyNewedViews = std::vector<View*>();
     std::vector<Model*> m_MyNewedModels = std::vector<Model*>();
 };
-
-#endif

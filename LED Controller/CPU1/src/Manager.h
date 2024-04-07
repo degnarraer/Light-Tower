@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef I2S_EventHander_H
-#define I2S_EventHander_H
+
+#pragma once
 #include <DataTypes.h>
 #include <Helpers.h>
 #include <I2S_Device.h>
@@ -128,5 +128,3 @@ class Manager: public NamedItem
     void InitializePreferences();
     void MoveDataToStatisticalEngine();
 };
-
-#endif

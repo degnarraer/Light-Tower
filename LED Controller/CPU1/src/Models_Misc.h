@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Models_Misc_H
-#define Models_Misc_H
 
+#pragma once
 class GravitationalModel: public ModelWithNewValueNotification<Position>
                         , public ModelEventNotificationCallee<Position>
 {
@@ -121,5 +120,3 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
       return d;
     }
 };
-
-#endif

@@ -16,9 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Models_Band_H
-#define Models_Band_H
 
+#pragma once
 #include "Models_Core.h"
 
 class BandPowerModel: public DataModelWithNewValueNotification<float>
@@ -172,5 +171,3 @@ class BinPowerModel: public DataModelWithNewValueNotification<float>
       }
     }
 };
-
-#endif
