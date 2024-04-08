@@ -394,14 +394,6 @@ enum ConnectionStatus_t
 	Disconnecting = 3
 };
 
-static const char* ConnectionStatusStrings[] =
-{
-	"Disconnected",
-	"Connecting",
-	"Connected",
-	"Disconnecting",
-};
-
 struct NamedObject_t
 {
 	void* Object;
@@ -501,7 +493,6 @@ class DataTypeFunctions
 		template <typename T>
 		DataType_t GetDataTypeFromTemplateType()
 		{
-			DataType_t Result;
 			if(	std::is_same<T, bool>::value) 											return DataType_Bool_t;
 			else if(std::is_same<T, int8_t>::value) 									return DataType_Int8_t;
 			else if(std::is_same<T, int16_t>::value) 									return DataType_Int16_t;
@@ -747,7 +738,8 @@ class DataTypeFunctions
 				break;
 				case DataType_BT_Device_Info_With_Time_Since_Update_t:
 				{
-					const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = (const BT_Device_Info_With_Time_Since_Update_t*)(Buffer + i);
+					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(Buffer);
+					const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = reinterpret_cast<const BT_Device_Info_With_Time_Since_Update_t*>(bufferPtr + i);
 					resultString += String(deviceInfo->name) + " | ";
 					resultString += String(deviceInfo->address) + " | ";
 					resultString += String(deviceInfo->rssi) + " | ";
@@ -756,14 +748,16 @@ class DataTypeFunctions
 				}
 				case DataType_CompatibleDevice_t:
 				{
-					const CompatibleDevice_t* compatibleDevice = (const CompatibleDevice_t*)(Buffer + i);
+					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(Buffer);
+					const CompatibleDevice_t* compatibleDevice = reinterpret_cast<const CompatibleDevice_t*>(bufferPtr + i);
 					resultString += String(compatibleDevice->name) + " | ";
 					resultString += String(compatibleDevice->address);
 					break;
 				}
 				case DataType_ActiveCompatibleDevice_t:
 				{
-					const ActiveCompatibleDevice_t* activeCompatibleDevice = (const ActiveCompatibleDevice_t*)(Buffer + i);
+					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(Buffer);
+					const ActiveCompatibleDevice_t* activeCompatibleDevice = reinterpret_cast<const ActiveCompatibleDevice_t*>(bufferPtr + i);
 					resultString += String(activeCompatibleDevice->name) + " | ";
 					resultString += String(activeCompatibleDevice->address) + " | ";
 					resultString += String(activeCompatibleDevice->rssi) + " | ";

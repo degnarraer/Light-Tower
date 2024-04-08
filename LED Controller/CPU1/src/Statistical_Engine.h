@@ -93,7 +93,6 @@ class SoundMeasureCallerInterface
 class StatisticalEngine : public NamedItem
                         , public Task
                         , public SoundMeasureCallerInterface
-                        , public CommonUtils
                         , public QueueManager
 {
   public:

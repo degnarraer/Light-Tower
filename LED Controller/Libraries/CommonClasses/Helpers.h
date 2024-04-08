@@ -238,8 +238,8 @@ class QueueManager: public CommonUtils
 			else
 			{
 				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
-				return NULL;
 			}
+			return NULL;
 		}
 		QueueHandle_t GetQueueHandleTXForDataItem(String Name){
 			if(NULL != m_DataItem)
@@ -275,7 +275,7 @@ class QueueManager: public CommonUtils
 			{
 				ESP_LOGE("CommonUtils", "ERROR! %s: NULL Data Item.", Name.c_str());
 			}
-			return NULL;
+			return 0;
 		}
 		
 		size_t GetTotalByteCountForDataItem(String Name){
@@ -293,7 +293,7 @@ class QueueManager: public CommonUtils
 			{
 				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
-			return NULL;
+			return 0;
 		}	
 		size_t GetSampleCountForDataItem(String Name){
 			if(NULL != m_DataItem)
@@ -310,7 +310,7 @@ class QueueManager: public CommonUtils
 			{
 				ESP_LOGE("CommonUtils", "ERROR! NULL Data Item.");
 			}
-			return NULL;
+			return 0;
 		}
 	
 		

@@ -1,7 +1,6 @@
 
 #pragma once
 #include "esp_log.h"
-#define CONFIG_LOG_DEFAULT_LEVEL ESP_LOG_VERBOSE
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"

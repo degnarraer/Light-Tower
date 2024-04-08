@@ -62,24 +62,6 @@ void I2S_Device::Setup()
 	m_SampleCount = m_ChannelSampleCount * 2;
     m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
     m_TotalBytesToRead = m_ChannelBytesToRead * 2;
-	DataType_t DataType;
-	switch(m_BitsPerSample)
-	{	
-		case I2S_BITS_PER_SAMPLE_32BIT:
-			DataType = DataType_Int32_t;
-		break;
-		case I2S_BITS_PER_SAMPLE_24BIT:
-			DataType = DataType_Int32_t;
-		break;
-		case I2S_BITS_PER_SAMPLE_16BIT:
-			DataType = DataType_Int16_t;
-		break;
-		case I2S_BITS_PER_SAMPLE_8BIT:
-			DataType = DataType_Int8_t;
-		break;
-		default:
-		break;
-	}
 }
 
 void I2S_Device::StartDevice()

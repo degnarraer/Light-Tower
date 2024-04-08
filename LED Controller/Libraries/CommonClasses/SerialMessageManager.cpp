@@ -141,15 +141,14 @@ void NewRxTxVoidObjectCallerInterface::NotifyCallee(const String& name, void* ob
 void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* object)
 {
 	ESP_LOGD("NotifyCallee", "CallCallbacks");
-	for (NamedCallback_t* namedCallback : m_NamedCallbacks)
-	{
-		if (namedCallback->Callback) 
-		{
-			void (*aCallback)(const String&, void*);
-			aCallback(namedCallback->Name, object);
-			break;	
-		}
-	}
+    for (NamedCallback_t* namedCallback : m_NamedCallbacks)
+    {
+        if (namedCallback->Callback) 
+        {
+            namedCallback->Callback(namedCallback->Name, object, namedCallback->Arg);
+			break;
+        }
+    }
 }
 
 void SerialPortMessageManager::SetupSerialPortMessageManager()
