@@ -16,12 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SerialMessageManager_H
-#define SerialMessageManager_H
-
+#pragma once
 #include <vector>
+#include "Helpers.h"
 #include "DataSerializer.h"
-#include <Helpers.h>
 
 #define MaxQueueCount 10
 #define MaxMessageLength 500
@@ -267,5 +265,3 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		}
 		void SerialPortMessageManager_TxTask();
 };
-
-#endif

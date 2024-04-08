@@ -82,8 +82,8 @@ class I2S_Device: public NamedItem
     const i2s_channel_fmt_t m_Channel_Fmt;
     const i2s_channel_t m_i2s_channel;
 	  const bool m_Use_APLL;
-    const size_t m_BufferCount;
-    const size_t m_BufferSize;
+    const int m_BufferCount;
+    const int m_BufferSize;
     const int m_SerialClockPin;
     const int m_WordSelectPin;
     const int m_SerialDataInPin;

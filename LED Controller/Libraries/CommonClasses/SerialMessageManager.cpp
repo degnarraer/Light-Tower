@@ -166,6 +166,7 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
 	SetupAllSetupCallees();
 }
+
 bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count)
 {
 	bool result = false;
@@ -181,6 +182,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	}
 	return result;
 }
+
 bool SerialPortMessageManager::QueueMessage(const String& message)
 {
 	bool result = false;

@@ -336,7 +336,6 @@ void DataItem<T, COUNT>::Setup()
 			ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
 					, m_Name.c_str()
 					, InitialValue.c_str());
-			bool eolFound = false;
 			for (size_t i = 0; i < COUNT; ++i)
 			{
 				char value;
