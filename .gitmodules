@@ -1,36 +1,36 @@
-[submodule "libraries/ESP32_I2C_Slave"]
-	path = libraries/ESP32_I2C_Slave
+[submodule "LED Controller/Libraries/ESP32_I2C_Slave"]
+	path = LED Controller/Libraries/ESP32_I2C_Slave
 	url = https://github.com/degnarraer/ESP32_I2C_Slave.git
 	branch = master
-[submodule "libraries/AsyncTCP"]
-	path = libraries/AsyncTCP
+[submodule "LED Controller/Libraries/AsyncTCP"]
+	path = LED Controller/Libraries/AsyncTCP
 	url = https://github.com/degnarraer/AsyncTCP.git
 	branch = master
-[submodule "libraries/CircularBuffer"]
-	path = libraries/CircularBuffer
+[submodule "LED Controller/Libraries/CircularBuffer"]
+	path = LED Controller/Libraries/CircularBuffer
 	url = https://github.com/degnarraer/CircularBuffer.git
 	branch = master
-[submodule "libraries/LinkedList"]
-	path = libraries/LinkedList
+[submodule "LED Controller/Libraries/LinkedList"]
+	path = LED Controller/Libraries/LinkedList
 	url = https://github.com/degnarraer/LinkedList.git
 	branch = master
-[submodule "libraries/circle_buf"]
-	path = libraries/circle_buf
+[submodule "LED Controller/Libraries/circle_buf"]
+	path = LED Controller/Libraries/circle_buf
 	url = https://github.com/degnarraer/circle_buf.git
 	branch = main
-[submodule "libraries/Streaming"]
-	path = libraries/Streaming
+[submodule "LED Controller/Libraries/Streaming"]
+	path = LED Controller/Libraries/Streaming
 	url = https://github.com/degnarraer/Streaming.git
 	branch = master
-[submodule "libraries/ESP32DMASPI"]
-	path = libraries/ESP32DMASPI
+[submodule "LED Controller/Libraries/ESP32DMASPI"]
+	path = LED Controller/Libraries/ESP32DMASPI
 	url = https://github.com/degnarraer/ESP32DMASPI.git
 	branch = master
-[submodule "libraries/ESPAsyncWebServer"]
-	path = libraries/ESPAsyncWebServer
+[submodule "LED Controller/Libraries/ESPAsyncWebServer"]
+	path = LED Controller/Libraries/ESPAsyncWebServer
 	url = https://github.com/degnarraer/ESPAsyncWebServer.git
 	branch = Merge_Fixes
-[submodule "libraries/ESP32-A2DP"]
-	path = libraries/ESP32-A2DP
+[submodule "LED Controller/Libraries/ESP32-A2DP"]
+	path = LED Controller/Libraries/ESP32-A2DP
 	url = https://github.com/pschatzmann/ESP32-A2DP.git
 	branch = main
