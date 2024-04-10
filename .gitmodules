@@ -1,14 +1,10 @@
-[submodule "LED Controller/Libraries/ESP32_I2C_Slave"]
-	path = LED Controller/Libraries/ESP32_I2C_Slave
-	url = https://github.com/degnarraer/ESP32_I2C_Slave.git
-	branch = master
 [submodule "LED Controller/Libraries/AsyncTCP"]
 	path = LED Controller/Libraries/AsyncTCP
 	url = https://github.com/degnarraer/AsyncTCP.git
 	branch = master
 [submodule "LED Controller/Libraries/CircularBuffer"]
 	path = LED Controller/Libraries/CircularBuffer
-	url = https://github.com/degnarraer/CircularBuffer.git
+	url = https://github.com/degnarraer/CircularBuffer
 	branch = master
 [submodule "LED Controller/Libraries/LinkedList"]
 	path = LED Controller/Libraries/LinkedList
@@ -20,7 +16,7 @@
 	branch = main
 [submodule "LED Controller/Libraries/Streaming"]
 	path = LED Controller/Libraries/Streaming
-	url = https://github.com/degnarraer/Streaming.git
+	url = https://github.com/degnarraer/Streaming
 	branch = master
 [submodule "LED Controller/Libraries/ESP32DMASPI"]
 	path = LED Controller/Libraries/ESP32DMASPI
@@ -32,5 +28,21 @@
 	branch = Merge_Fixes
 [submodule "LED Controller/Libraries/ESP32-A2DP"]
 	path = LED Controller/Libraries/ESP32-A2DP
-	url = https://github.com/pschatzmann/ESP32-A2DP.git
+	url = https://github.com/degnarraer/ESPAsyncWebServer.git
 	branch = main
+[submodule "LED Controller/Libraries/ArduinoJson"]
+	path = LED Controller/Libraries/ArduinoJson
+	url = https://github.com/degnarraer/ArduinoJson
+	branch = 7.x
+[submodule "LED Controller/Libraries/arduinoFFT"]
+	path = LED Controller/Libraries/arduinoFFT
+	url = https://github.com/degnarraer/arduinoFFT
+	branch = master
+[submodule "LED Controller/Arduino/CircularBuffer"]
+	path = LED Controller/Arduino/CircularBuffer
+	url = https://github.com/degnarraer/CircularBuffer
+	branch = master
+[submodule "LED Controller/Libraries/FastLED"]
+	path = LED Controller/Libraries/FastLED
+	url = https://github.com/FastLED/FastLED
+	branch = master
