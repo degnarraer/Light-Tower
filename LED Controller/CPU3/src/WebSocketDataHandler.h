@@ -15,8 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef WEB_SOCKET_DATA_HANDLER_H
-#define WEB_SOCKET_DATA_HANDLER_H
+#pragma once
 
 #include "Arduino.h"
 #include <freertos/portmacro.h>
@@ -185,13 +184,13 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     uint64_t m_Last_Update_Time = millis();
   protected:
     const String m_Name;
+    std::vector<String> m_WidgetIds;
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     const bool &m_IsReceiver;
     const bool &m_IsSender;
-    std::vector<String> m_WidgetIds;
     DataItem<T, COUNT> &m_DataItem;
-    size_t m_OldChangeCount = 0;
     const bool &m_Debug;
+    size_t m_OldChangeCount = 0;
     
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false)
     {
@@ -482,5 +481,3 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       return result;
     }
 };
-
-#endif
