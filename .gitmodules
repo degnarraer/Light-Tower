@@ -42,3 +42,7 @@
 	path = LED Controller/Libraries/FastLED
 	url = https://github.com/FastLED/FastLED
 	branch = master
+[submodule "LED Controller/Libraries/ESP32-A2DP"]
+	path = LED Controller/Libraries/ESP32-A2DP
+	url = https://github.com/degnarraer/ESP32-A2DP
+	branch = main

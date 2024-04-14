@@ -154,6 +154,4 @@ void setup()
 
 void loop()
 {
-  ESP_LOGI("Loop", "Loop");
-  delay(1000);
 }

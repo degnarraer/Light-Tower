@@ -75,6 +75,14 @@ class Manager: public NamedItem
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     
+    String ConnectionStatusStrings[4]
+    {
+      "DISCONNECTED",
+      "CONNECTING",
+      "CONNECTED",
+      "DISCONNECTING"
+    };
+
     struct CallbackArguments 
     {
       void* arg1;
