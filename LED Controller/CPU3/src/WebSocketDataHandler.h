@@ -20,14 +20,14 @@
 
 #include "Arduino.h"
 #include <freertos/portmacro.h>
-#include <Streaming.h>
-#include <Helpers.h>
-#include <DataTypes.h>
+#include "Streaming.h"
+#include "Helpers.h"
+#include "DataTypes.h"
 #include "Tunes.h"
 #include "DataItem.h"
 #include "ESPAsyncWebServer.h"
 #include "AsyncTCP.h"
-#include <Arduino_JSON.h>
+#include "Arduino_JSON.h"
 
 #define MAX_VALUES_TO_SEND_AT_ONCE 50
 

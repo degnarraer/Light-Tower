@@ -85,37 +85,37 @@ void InitializePreferences()
   if(!m_Preferences.begin("Settings", false))
   {
     nvs_flash_erase();
-    ESP_LOGI("InitializePreferences", "NVS Cleared!");
+    ESP_LOGI("Preferences", "NVS Cleared!");
     nvs_flash_init();
-    ESP_LOGI("InitializePreferences", "NVS Initialized");
+    ESP_LOGI("Preferences", "NVS Initialized");
     ESP.restart();
   }
   else if(m_Preferences.getBool("Pref_Reset", true))
   {
     m_Preferences.clear();
-    ESP_LOGI("InitializePreferences", "Preferences Cleared!");
+    ESP_LOGI("Preferences", "Preferences Cleared!");
     m_Preferences.putBool("Pref_Reset", false);
   }
 }
 
 void OutputSystemStatus()
 {
-  ESP_LOGE("LED_Controller2", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGE("LED_Controller2", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGE("LED_Controller2", "Apb Clock Frequency: %i Hz", getApbFrequency());
-  ESP_LOGE("LED_Controller_CPU2", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGE("LED_Controller_CPU2", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGE("LED_Controller_CPU2", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGE("LED_Controller_CPU2", "Free PSRAM: %d", ESP.getFreePsram());
+  ESP_LOGI("SystemStatus", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGI("SystemStatus", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGI("SystemStatus", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGI("SystemStatus", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGI("SystemStatus", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGI("SystemStatus", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGI("SystemStatus", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void TestPSRam()
 {
-  ESP_LOGE("Main", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());  
+  ESP_LOGI("PS Ram", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());  
   byte* psdRamBuffer = (byte*)ps_malloc(500000);
-  ESP_LOGE("Main", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
+  ESP_LOGI("PS Ram", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
   free(psdRamBuffer);
-  ESP_LOGE("Main", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
+  ESP_LOGI("PS Ram", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
 }
 
 void setup() 
@@ -135,11 +135,10 @@ void setup()
   Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);  
   Serial2.flush();
 
-  //esp_log_level_set("*", ESP_LOG_INFO); // Set global log level
-  //esp_log_level_set("tag_name", ESP_LOG_DEBUG); // Set log level for specific tag
   TestPSRam();
 
   InitializePreferences();
+  
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   m_SoundProcessor.SetupSoundProcessor(); 
@@ -148,7 +147,6 @@ void setup()
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
   m_Manager.Setup();
-  
   OutputSystemStatus();
 }
 
