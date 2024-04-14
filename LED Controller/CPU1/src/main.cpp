@@ -45,13 +45,11 @@ void setup()
   InitSerialCommunication();
   SetComponentDebugLevels();
   TestPSRam();
-  
   PrintFreeHeap();
   PrintStartupData();
   InitLocalVariables();
   InitTasks();
   PrintFreeHeap();
-  
 }
 
 void loop()

@@ -26,10 +26,6 @@
 	path = LED Controller/Libraries/ESPAsyncWebServer
 	url = https://github.com/degnarraer/ESPAsyncWebServer.git
 	branch = Merge_Fixes
-[submodule "LED Controller/Libraries/ESP32-A2DP"]
-	path = LED Controller/Libraries/ESP32-A2DP
-	url = https://github.com/degnarraer/ESPAsyncWebServer.git
-	branch = main
 [submodule "LED Controller/Libraries/ArduinoJson"]
 	path = LED Controller/Libraries/ArduinoJson
 	url = https://github.com/degnarraer/ArduinoJson
