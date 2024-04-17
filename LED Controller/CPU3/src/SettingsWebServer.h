@@ -15,9 +15,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef SETTINGS_WEB_SERVER_H
-#define SETTINGS_WEB_SERVER_H
-
+#pragma once
 #include "WebSocketDataHandler.h"
 #include "DataItem.h"
 
@@ -110,11 +108,12 @@ class SettingsWebServerManager
       }
     } 
   private:
-    Preferences m_Preferences;
+    AsyncWebSocket &m_WebSocket;
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU2SerialPortMessageManager;
-    AsyncWebSocket &m_WebSocket;
     WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebSocket);
+    
+    Preferences m_Preferences;
     const char* password = "LEDs Rock";
     struct CallbackArguments 
     {
@@ -419,6 +418,3 @@ class SettingsWebServerManager
               , ipAddress[3] );
     }
 };
-
-
-#endif

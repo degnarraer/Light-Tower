@@ -16,11 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef Bluetooth_Device_H
-#define Bluetooth_Device_H 
+#pragma once
 #define BT_COMPATIBLE_DEVICE_TIMEOUT 30000
 
-#include <vector> 
+#include <vector>
 #include <Arduino.h>
 #include <mutex>
 #include <memory>
@@ -249,5 +248,3 @@ class Bluetooth_Sink: public NamedItem
 		A2DPDefaultVolumeControl m_VolumeControl;
 		void InstallDevice();
 };
-
-#endif
