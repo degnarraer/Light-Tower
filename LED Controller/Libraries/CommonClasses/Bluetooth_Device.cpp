@@ -16,6 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef BUILD_BLUETOOTH
+
 #include "Bluetooth_Device.h"
 
 BluetoothConnectionStateCaller::BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT )
@@ -273,3 +275,5 @@ void Bluetooth_Sink::StopDevice()
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
 	}
 }
+
+#endif
