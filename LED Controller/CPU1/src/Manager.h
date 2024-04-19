@@ -54,7 +54,7 @@ class Manager: public NamedItem
     static void Static_Manager_300000mS_TaskLoop(void * parameter);
     void ProcessEventQueue300000mS();
     
-    void SetInputType(SoundInputSource_t Type);
+    void SetInputSource(SoundInputSource_t Type);
     //Bluetooth_Callback
     void BTDataReceived(uint8_t *data, uint32_t length);
     
@@ -82,8 +82,9 @@ class Manager: public NamedItem
 
     void RegisterForDataItemCallBacks()
     {
-      NamedCallback_t namedCallback = {m_SoundInputSource.GetName().c_str(), &SoundInputSourceValueChanged, nullptr};
-      m_SoundInputSource.RegisterNamedCallback(&namedCallback);
+      m_SoundInputSource_CallbackArgs = {this};
+      m_SoundInputSource_Callback = { m_SoundInputSource.GetName().c_str(), &SoundINputSource_ValueChanged, & m_SoundInputSource_CallbackArgs};
+      m_SoundInputSource.RegisterNamedCallback(&m_SoundInputSource_Callback);
     }
     
     String ConnectionStatusStrings[4]
@@ -94,12 +95,29 @@ class Manager: public NamedItem
       "DISCONNECTING"
     };
 
-    //Sound Input Source
+    struct CallbackArguments 
+    {
+      void* arg1;
+    };
+
+    //Output Source Connect
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-    static void SoundInputSourceValueChanged(const String &Name, void* object, void* arg)
+    CallbackArguments m_SoundInputSource_CallbackArgs;
+    NamedCallback_t m_SoundInputSource_Callback;
+    static void SoundINputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::SoundInputSourceValueChanged", "Sound Input Value Changed");
+      if(arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && object)
+        {
+          Manager *manager = static_cast<Manager*>(arguments->arg1);
+          SoundInputSource_t *inputSource = static_cast<SoundInputSource_t*>(object);
+          manager->SetInputSource(*inputSource);
+        }
+      }
     }
     
     //Bluetooth Sink Enable

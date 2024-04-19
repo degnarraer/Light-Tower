@@ -44,8 +44,8 @@ void Manager::Setup()
   SetupBlueTooth();
   SetupI2S();
   SetupStatisticalEngine();
-  //SetInputType(SoundInputSource_Bluetooth);
-  SetInputType(SoundInputSource_Microphone);
+  SetInputSource(SoundInputSource_Bluetooth);
+  //SetInputType(SoundInputSource_Microphone);
   RegisterForDataItemCallBacks();
   SetupTasks();
 }
@@ -143,11 +143,10 @@ void Manager::ProcessEventQueue300000mS()
   }
 }
 
-void Manager::SetInputType(SoundInputSource_t Type)
+void Manager::SetInputSource(SoundInputSource_t Type)
 {
-  SoundInputSource_t currentSoundInputSource;
-  m_SoundInputSource.GetValue(&currentSoundInputSource, 1);
-  switch(currentSoundInputSource)
+  m_SoundInputSource.SetValue(&Type, 1);
+  switch(Type)
   {
     case SoundInputSource_Microphone:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Microphone.\"");
