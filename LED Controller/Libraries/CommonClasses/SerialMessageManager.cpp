@@ -18,7 +18,6 @@
 
 #include "SerialMessageManager.h"
 
-
 void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* NewCallee)
 {
 	ESP_LOGD("RegisterForSetupCall", "Try Registering Callee");
@@ -188,9 +187,10 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	bool result = false;
 	if(m_TXQueue)
 	{	
-		if( message.length() > 0 &&
-			message.length() <= MaxMessageLength && 
-			xQueueSend(m_TXQueue, message.c_str(), portMAX_DELAY) == pdTRUE )
+		if( message.length() > 0 &&                   // Check if the message is not empty
+            message.length() <= MaxMessageLength &&   // Check if the message length is within bounds
+            message.indexOf('\0') != -1 &&            // Check if the message is null terminated
+            xQueueSend(m_TXQueue, message.c_str(), portMAX_DELAY) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());
 			result = true;
@@ -218,14 +218,15 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 		while (m_Serial.available())
 		{
 			char character = m_Serial.read();
+			m_message += character;
 			if(m_message.length() > MaxMessageLength)
 			{
 				ESP_LOGE("SerialPortMessageManager", "Message RX Overrun: \"%s\"", m_message.c_str());
 				m_message = "";
 			}
-			if(character == '\n')
+			else if(character == '\n')
 			{
-				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
+				ESP_LOGI("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
 				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject);
@@ -239,10 +240,6 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					ESP_LOGW("SerialPortMessageManager", "\"%s\" DeSerialized Named object failed", m_Name.c_str());
 				}
 				m_message = "";
-			}
-			else
-			{
-				m_message += character;
 			}
 		}
 	}
@@ -267,15 +264,15 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				{
 					if (strlen(message) > MaxMessageLength)
                     {
-                        ESP_LOGW("SerialPortMessageManager_TxTask", "WARNING! Message exceeds MaxMessageLength. Truncating.");
+                        ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "Data TX: Address: \"%p\" Message: \"%s\"", static_cast<void*>(message), message);
+					ESP_LOGI("SerialPortMessageManager_TxTask", "\"%s\" Data TX: Address: \"%p\" Message: \"%s\"",m_Name.c_str(), static_cast<void*>(message), message);
 					m_Serial.println(message);
 				}
 				else
 				{
-					ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! Unable to Send Message.");
+					ESP_LOGE("SerialPortMessageManager_TxTask", "\"%s\" ERROR! Unable to Send Message.",m_Name.c_str());
 				}
 			}
 		}

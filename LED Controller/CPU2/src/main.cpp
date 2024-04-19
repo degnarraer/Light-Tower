@@ -127,12 +127,12 @@ void setup()
   
   Serial1.setRxBufferSize(4096);
   Serial1.flush();
-  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
   Serial1.flush();
 
   Serial2.setRxBufferSize(4096);
   Serial2.flush();
-  Serial2.begin(500000, SERIAL_8N1, CPU3_RX, CPU3_TX);  
+  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);  
   Serial2.flush();
 
   TestPSRam();

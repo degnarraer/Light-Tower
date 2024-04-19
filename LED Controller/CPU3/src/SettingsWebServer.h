@@ -275,7 +275,7 @@ class SettingsWebServerManager
       if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
       {
         String WebSocketData = String((char*)data);
-        ESP_LOGI("SettingsWebServer: HandleWebSocketMessage", "WebSocket Data from Client: %i, Data: %s", client->id(), WebSocketData.c_str());
+        ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "WebSocket Data from Client: %i, Data: %s", client->id(), WebSocketData.c_str());
         if ( WebSocketData.equals("Hello I am here!") )
         {
           ESP_LOGI("SettingsWebServer: HandleWebSocketMessage", "New Client Message: \"Hello I am here!\"");
@@ -298,7 +298,7 @@ class SettingsWebServerManager
               const JsonVariant widgetValue = doc["WidgetValue"];
               if (widgetValue.is<JsonObject>() && widgetValue["Id"].is<String>() && widgetValue["Value"].is<String>())
               {
-                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
+                ESP_LOGD( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
                         , widgetValue["Id"].as<String>().c_str()
                         , widgetValue["Value"].as<String>().c_str() );
                 if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(widgetValue["Id"].as<String>(), widgetValue["Value"].as<String>()))
@@ -316,7 +316,7 @@ class SettingsWebServerManager
               const JsonVariant jSONValue = doc["JSONValue"];
               if (jSONValue.is<JsonObject>() && jSONValue["Id"].is<String>() && jSONValue["Value"].is<JsonObject>())
               {
-                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
+                ESP_LOGD( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
                         , jSONValue["Id"].as<String>().c_str()
                         , jSONValue["Value"].as<String>().c_str() );
                 if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(jSONValue["Id"].as<String>(), jSONValue["Value"].as<String>()))

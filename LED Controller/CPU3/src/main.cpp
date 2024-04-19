@@ -94,10 +94,10 @@ void SetupSerialPorts()
   Serial.flush();
   Serial.begin(500000, SERIAL_8N1);
   Serial1.flush();
-  Serial1.begin(500000, SERIAL_8N1, CPU1_RX, CPU1_TX);
+  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
   Serial1.setRxBufferSize(4096);
   Serial2.flush();
-  Serial2.begin(500000, SERIAL_8N1, CPU2_RX, CPU2_TX);
+  Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
   Serial2.setRxBufferSize(4096);
 }
 
@@ -111,10 +111,10 @@ void InitLocalVariables()
 
 void PrintMemory()
 {
-  ESP_LOGE("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGE("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGE("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGE("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
+  ESP_LOGI("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGI("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGI("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGI("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void setup()
