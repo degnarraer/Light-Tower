@@ -78,8 +78,8 @@ void I2S_Device::StopDevice()
 {
 	if(true == m_Is_Running)
 	{
-		UninstallDevice();
 		i2s_stop(m_I2S_PORT);
+		UninstallDevice();
 		m_Is_Running = false;
 	}
 }

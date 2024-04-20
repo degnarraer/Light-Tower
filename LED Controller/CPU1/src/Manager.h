@@ -83,7 +83,7 @@ class Manager: public NamedItem
     void RegisterForDataItemCallBacks()
     {
       m_SoundInputSource_CallbackArgs = {this};
-      m_SoundInputSource_Callback = { m_SoundInputSource.GetName().c_str(), &SoundINputSource_ValueChanged, & m_SoundInputSource_CallbackArgs};
+      m_SoundInputSource_Callback = { m_SoundInputSource.GetName().c_str(), &SoundInputSource_ValueChanged, & m_SoundInputSource_CallbackArgs};
       m_SoundInputSource.RegisterNamedCallback(&m_SoundInputSource_Callback);
     }
     
@@ -105,9 +105,8 @@ class Manager: public NamedItem
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     CallbackArguments m_SoundInputSource_CallbackArgs;
     NamedCallback_t m_SoundInputSource_Callback;
-    static void SoundINputSource_ValueChanged(const String &Name, void* object, void* arg)
+    static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("Manager::SoundInputSourceValueChanged", "Sound Input Value Changed");
       if(arg)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
@@ -116,6 +115,10 @@ class Manager: public NamedItem
           Manager *manager = static_cast<Manager*>(arguments->arg1);
           SoundInputSource_t *inputSource = static_cast<SoundInputSource_t*>(object);
           manager->SetInputSource(*inputSource);
+        }
+        else
+        {
+          ESP_LOGE("SoundInputSourceValueChanged", "Null Pointers");
         }
       }
     }
