@@ -626,52 +626,52 @@ class DataTypeFunctions
 			}
 			return result;
 		}
-		bool SetValueFromStringForDataType(void *Buffer, String Value, DataType_t DataType)
+		bool SetValueFromStringForDataType(void *buffer, String value, DataType_t dataType)
 		{
-			bool Result = true;
-			switch (DataType)
+			bool result = true;
+			switch (dataType)
 			{
 			case DataType_Bool_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Bool Received: %s", Value.c_str());
-				*((bool *)Buffer) = Value.equals("true");
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Bool Received: %s", value.c_str());
+				*((bool *)buffer) = value.equals("true");
 				break;
 			case DataType_Int8_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Int8_t Received: %s", Value.c_str());
-				*(int8_t *)Buffer = Value.toInt();
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Int8_t Received: %s", value.c_str());
+				*(int8_t *)buffer = value.toInt();
 				break;
 			case DataType_Int16_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Int16_t Received: %s", Value.c_str());
-				*(int16_t *)Buffer = Value.toInt();
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Int16_t Received: %s", value.c_str());
+				*(int16_t *)buffer = value.toInt();
 				break;
 			case DataType_Int32_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Int32_t Received: %s", Value.c_str());
-				*(int32_t *)Buffer = Value.toInt();
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Int32_t Received: %s", value.c_str());
+				*(int32_t *)buffer = value.toInt();
 				break;
 			case DataType_Uint8_t:
 			case DataType_Uint16_t:
 			case DataType_Uint32_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "UInt Received: %s", Value.c_str());
-				Value.getBytes((byte *)Buffer, Value.length());
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "UInt Received: %s", value.c_str());
+				value.getBytes((byte *)buffer, value.length());
 				break;
 			case DataType_Float_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Float_t Received: %s", Value.c_str());
-				*(float *)Buffer = Value.toFloat();
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Float_t Received: %s", value.c_str());
+				*(float *)buffer = value.toFloat();
 				break;
 			case DataType_Double_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Double_t Received: %s", Value.c_str());
-				*(double *)Buffer = Value.toDouble();
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Double_t Received: %s", value.c_str());
+				*(double *)buffer = value.toDouble();
 				break;
 			case DataType_Char_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Char_t Received: %s", Value.c_str());
-				*(char *)Buffer = Value[0];
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "Char_t Received: %s", value.c_str());
+				*(char *)buffer = value[0];
 				break;
 			case DataType_SoundInputSource_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "SoundInputSource_t Received: %s", Value.c_str());
-				*(SoundInputSource_t *)Buffer = static_cast<SoundInputSource_t>(Value.toInt());
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "SoundInputSource_t Received: %s", value.c_str());
+				*(SoundInputSource_t *)buffer = static_cast<SoundInputSource_t>(value.toInt());
 				break;
 			case DataType_SoundOutputSource_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "SoundOutputSource_t Received: %s", Value.c_str());
-				*(SoundOutputSource_t *)Buffer = static_cast<SoundOutputSource_t>(Value.toInt());
+				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "SoundOutputSource_t Received: %s", value.c_str());
+				*(SoundOutputSource_t *)buffer = static_cast<SoundOutputSource_t>(value.toInt());
 				break;
 			case DataType_String_t:
 			case DataType_BT_Device_Info_t:
@@ -684,16 +684,15 @@ class DataTypeFunctions
 			case DataType_ProcessedSoundFrame_t:
 			case DataType_SoundState_t:
 			case DataType_ConnectionStatus_t:
-				ESP_LOGE( "DataTypes: SetValueFromFromStringForDataType", "Data Type Conversion to String for \"%s\": Not Yet Supported!", DataTypeStrings[DataType]);
-				Result = false;
+				ESP_LOGE( "DataTypes: SetValueFromFromStringForDataType", "Data Type Conversion to String for \"%s\": Not Yet Supported!", DataTypeStrings[dataType]);
+				result = false;
 				break;
 			default:
-				ESP_LOGE("DataTypes: SetValueFromFromStringForDataType", "SetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
-				Result = false;
+				ESP_LOGE("DataTypes: SetValueFromFromStringForDataType", "SetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
+				result = false;
 				break;
 			}
-
-			return Result;
+			return result;
 		}
 		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count, const String &Divider)
 		{

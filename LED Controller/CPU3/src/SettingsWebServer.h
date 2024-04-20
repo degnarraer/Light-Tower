@@ -18,6 +18,7 @@
 #pragma once
 #include "WebSocketDataHandler.h"
 #include "DataItem.h"
+#include "DataItemWithPreferences.h"
 
 class SettingsWebServerManager
 {  

@@ -66,7 +66,6 @@ function onError(event)
 const sink_BT_Enable_Toggle_Button = document.getElementById('Sink_BT_Enable_Toggle_Button');
 sink_BT_Enable_Toggle_Button.addEventListener('click', function()
 {
-	//FUCK THIS
 	var Root = {};
 	Root.WidgetValue = {};
 	Root.WidgetValue.Id = 'BT_Sink_Enable';
