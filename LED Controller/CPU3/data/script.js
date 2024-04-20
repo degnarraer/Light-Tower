@@ -538,7 +538,7 @@ function handleSoundInputSource(id, value) {
 				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
 			break;
 			default:
-				console.log('Undefined Input Source State!');
+				console.log('Undefined Input Source!');
 			break;
 		}
 	}
@@ -557,7 +557,7 @@ function handleSoundOutputSource(id, value) {
 				showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
 			break;
 			default:
-				console.log('Undefined Input Source State!');
+				console.log('Undefined Output Source!');
 			break;
 		}
 	}

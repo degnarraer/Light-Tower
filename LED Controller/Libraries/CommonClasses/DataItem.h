@@ -81,10 +81,10 @@ class PreferencesWrapper
 			unsigned long elapsedTime = currentMillis - m_Preferences_Last_Update;
 			if (elapsedTime <= TIMER_TIME && UpdateType.equals("Updated"))
 			{
-				ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": To early to save preference", Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": To early to save preference", Name.c_str());
 				if(false == m_PreferenceTimerActive)
 				{
-					ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Started NVM Update Timer", Name.c_str());
+					ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Started NVM Update Timer", Name.c_str());
 					esp_timer_start_once(m_PreferenceTimer, ((TIMER_TIME - elapsedTime) + TIMER_BUFFER) * 1000);
 					m_PreferenceTimerActive = true;
 				}
@@ -92,7 +92,7 @@ class PreferencesWrapper
 			}	
 			if ( UpdateType.equals("Timer") )
 			{
-				ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Preference Update", Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Preference Update", Name.c_str());
 				HandleUpdated( Name, ValuePtr );
 				m_PreferenceTimerActive = false;
 				m_Preferences_Last_Update = currentMillis;
@@ -104,12 +104,12 @@ class PreferencesWrapper
 			} 
 			else if ( UpdateType.equals("Initialized") )
 			{
-				ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", Name.c_str());
 				HandleUpdated( Name, InitialValuePtr );
 			}
 			else if ( UpdateType.equals("Updated") )
 			{
-				ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
 				HandleUpdated( Name, ValuePtr );
 				m_Preferences_Last_Update = currentMillis;
 			}
@@ -151,7 +151,7 @@ class PreferencesWrapper
 				}
 				else
 				{
-					ESP_LOGI("InitializeNVM", "Preference Not Found: \"%s\"", Name.c_str());
+					ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", Name.c_str());
 					Update_Preference("Initialized", Name, ValuePtr, InitialValuePtr);
 				}
 			}

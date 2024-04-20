@@ -220,8 +220,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         {
           Found = true;
           ESP_LOGD( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
-                  , "Widget ID[%i]: %s  WidgetId: %s"
-                  , i , m_WidgetIds[i].c_str(), WidgetId.c_str() );
+                  , "Widget ID[%i]: %s  Value: %s"
+                  , i , m_WidgetIds[i].c_str(), StringValue );
         }
       }
       if(Found)

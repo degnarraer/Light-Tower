@@ -73,19 +73,18 @@ void InitFileSystem()
 {
   if (SPIFFS.begin())
   {
-    Serial.println("SPIFFS mounted successfully");
+    ESP_LOGI("Settings_Web_Server", "SPIFFS mounted successfully");
     File root = SPIFFS.open("/");
     File file = root.openNextFile();
     while(file)
     {
-        Serial.print("FILE: ");
-        Serial.println(file.name());
-        file = root.openNextFile();
+      ESP_LOGD("Settings_Web_Server", "FILE: %s", file.name());
+      file = root.openNextFile();
     }
   }
   else
   {
-    Serial.println("An error has occurred while mounting SPIFFS");
+    ESP_LOGE("Settings_Web_Server", "An error has occurred while mounting SPIFFS");
   }
 }
 
