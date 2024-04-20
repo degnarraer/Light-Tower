@@ -66,9 +66,21 @@ void Manager::SetupSerialPortManager()
 
 void Manager::InitializePreferences()
 {
-  m_Preferences.begin("Settings", false);
-  if(m_Preferences.getBool("Pref_Reset", false)) m_Preferences.clear();
-  m_Preferences.putBool("Pref_Reset", false);
+  if(!m_Preferences.begin("Settings", false))
+  {
+    ESP_LOGE("InitializePreferences", "Unable to initialize preferences! Resseting Device to Factory Defaults");
+    nvs_flash_erase();
+    ESP_LOGI("InitializePreferences", "NVS Cleared!");
+    nvs_flash_init();
+    ESP_LOGI("InitializePreferences", "NVS Initialized");
+    ESP.restart();
+  }
+  else if(m_Preferences.getBool("Pref_Reset", true))
+  {
+    m_Preferences.clear();
+    ESP_LOGI("InitializePreferences", "Preferences Cleared!");
+    m_Preferences.putBool("Pref_Reset", false);
+  }
 }
 
 void Manager::SetupI2S()

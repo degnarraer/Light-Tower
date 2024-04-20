@@ -40,7 +40,7 @@ class WebSocketDataHandlerSender
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual bool ProcessWidgetValueAndSendToDatalink(const String& WidgetId, const String& Value) = 0;
+    virtual bool  ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) = 0;
 };
 
 class WebSocketDataProcessor
@@ -94,7 +94,6 @@ class WebSocketDataProcessor
         return nullptr;  // Allocation failed
     }
 };
-
 
 template<typename T, size_t COUNT>
 class WebSocketDataHandler: public WebSocketDataHandlerReceiver
@@ -180,25 +179,14 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       return m_Name;
     }
-  private:
-    uint64_t m_Last_Update_Time = millis();
-  protected:
-    const String m_Name;
-    std::vector<String> m_WidgetIds;
-    WebSocketDataProcessor &m_WebSocketDataProcessor;
-    const bool &m_IsReceiver;
-    const bool &m_IsSender;
-    DataItem<T, COUNT> &m_DataItem;
-    const bool &m_Debug;
-    size_t m_OldChangeCount = 0;
-    
-    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false)
+
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
     {
       T CurrentValue[COUNT];
       size_t newChangeCount = m_DataItem.GetValue(CurrentValue, COUNT);
       bool valueChanged = newChangeCount != m_OldChangeCount;
       m_OldChangeCount = newChangeCount;
-      if( CurrentValue && (forceUpdate || valueChanged) )
+      if( forceUpdate || valueChanged )
       {
         String CurrentValueString = m_DataItem.GetValueAsString("");
         ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
@@ -211,36 +199,44 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     
-    virtual bool ProcessWidgetValueAndSendToDatalink(const String& WidgetId, const String& StringValue)
+    virtual bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
     {
       bool Found = false;
       for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
-        if( m_WidgetIds[i].equals(WidgetId) )
+        if( m_WidgetIds[i].equals(widgetId) )
         {
           Found = true;
-          ESP_LOGD( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
+          ESP_LOGI( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
                   , "Widget ID[%i]: %s  Value: %s"
-                  , i , m_WidgetIds[i].c_str(), StringValue );
+                  , i , m_WidgetIds[i].c_str(), stringValue.c_str() );
         }
       }
       if(Found)
       {
         T NewValue[COUNT];
-        if (SetValueFromFromStringForDataType(NewValue, StringValue, GetDataTypeFromTemplateType<T>()))
+        if (SetValueFromStringForDataType(NewValue, stringValue, GetDataTypeFromTemplateType<T>()))
         {
-          if(NewValue)
-          {
-            m_DataItem.SetValue(NewValue, COUNT);
-            String NewValueString = GetValueAsStringForDataType(NewValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
-            ESP_LOGD( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
-                    , "Web Socket Value: %s"
-                    , NewValueString.c_str());
-          }
+          m_DataItem.SetValue(NewValue, COUNT);
+          String NewValueString = GetValueAsStringForDataType(NewValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
+          ESP_LOGD( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
+                  , "Web Socket Value: %s"
+                  , NewValueString.c_str());
         }
       }
       return Found;
     }
+  protected:
+    const String m_Name;
+    std::vector<String> m_WidgetIds;
+    WebSocketDataProcessor &m_WebSocketDataProcessor;
+    const bool &m_IsReceiver;
+    const bool &m_IsSender;
+    DataItem<T, COUNT> &m_DataItem;
+    const bool &m_Debug;
+    size_t m_OldChangeCount = 0;
+  private:
+    uint64_t m_Last_Update_Time = millis();
 };
 
 class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<CompatibleDevice_t, 1>
@@ -285,7 +281,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       result = Encode_Compatible_Device_To_JSON(keyValuePairVector);
       if( forceUpdate || valueChanged )
       {
-        ESP_LOGD("AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
+        ESP_LOGD("WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
         for(size_t i = 0; i < m_WidgetIds.size(); i++)
         {
           keyValuePairs->push_back({ m_WidgetIds[i], result.c_str() });
@@ -293,20 +289,34 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       }
     }
     
-    virtual bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& StringValue) override
+    bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
     {
-      ESP_LOGI("ProcessWidgetValueAndSendToDatalink", "New Web Socket Value for \"%s\": \"%s\"", widgetId.c_str(), StringValue.c_str());
-      JSONVar jSONObject = JSON.parse(StringValue);
-      if (JSON.typeof(jSONObject) == "undefined")
+      bool found = false;
+      for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
-        ESP_LOGE("ProcessWidgetValueAndSendToDatalink", "Error parsing JSON");
-        return false;
+        if( m_WidgetIds[i].equals(widgetId) )
+        {
+          found = true;
+          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: ProcessWidgetValueAndSendToDatalink"
+                  , "Widget ID[%i]: %s  Value: %s"
+                  , i , m_WidgetIds[i].c_str(), stringValue.c_str() );
+        }
       }
-      String name = jSONObject["Name"];
-      String address = jSONObject["Address"];
-      CompatibleDevice_t newValue(name.c_str(), address.c_str());
-      m_DataItem.SetValue(&newValue, 1);
-      return true;
+      if(found)
+      {
+        ESP_LOGI("WebSocket_Compatible_Device_DataHandler: ProcessWidgetValueAndSendToDatalink", "New Web Socket Value for \"%s\": \"%s\"", widgetId.c_str(), stringValue.c_str());
+        JSONVar jSONObject = JSON.parse(stringValue);
+        if (JSON.typeof(jSONObject) == "undefined")
+        {
+          ESP_LOGE("WebSocket_Compatible_Device_DataHandler: ProcessWidgetValueAndSendToDatalink", "Error parsing JSON");
+          return false;
+        }
+        String name = jSONObject["Name"];
+        String address = jSONObject["Address"];
+        CompatibleDevice_t newValue(name.c_str(), address.c_str());
+        m_DataItem.SetValue(&newValue, 1);
+      }
+      return found;
     }
   private:
     String Encode_Compatible_Device_To_JSON(std::vector<KVP> &keyValuePair)
@@ -382,7 +392,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
               m_ActiveCompatibleDevices[i].timeSinceUpdate = activeCompatibleDevice.timeSinceUpdate;
               updated = true;
             }
-            ESP_LOGD( "","%s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
+            ESP_LOGD( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP","%s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
                     , this->m_Name.c_str()
                     , m_ActiveCompatibleDevices[i].name
                     , m_ActiveCompatibleDevices[i].address
@@ -406,7 +416,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         }
         if(ACTIVE_NAME_TIMEOUT < m_ActiveCompatibleDevices[i].timeSinceUpdate)
         {
-          ESP_LOGI("WebSocketDataHandler", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
+          ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
           m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
           --i;
           updated = true;
@@ -418,7 +428,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           0 < String(activeCompatibleDevice.address).length() &&
           ACTIVE_NAME_TIMEOUT >= activeCompatibleDevice.timeSinceUpdate + ACTIVE_NAME_TIMEOUT/2)
       {
-        ESP_LOGD( "","%s: \n************* \nNew Device Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
+        ESP_LOGD( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP","%s: \n************* \nNew Device Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
                 , this->m_Name.c_str()
                 , activeCompatibleDevice.name
                 , activeCompatibleDevice.address
@@ -447,7 +457,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           KeyValueTupleVector.push_back(KeyValueTuple);
         }
         String result = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
-        ESP_LOGD("AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
+        ESP_LOGD("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP"", "Encoding Result: \"%s\"", result.c_str());
         for(size_t i = 0; i < m_WidgetIds.size(); i++)
         {
           KeyValuePairs->push_back({ m_WidgetIds[i], result.c_str() });

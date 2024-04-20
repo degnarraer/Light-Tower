@@ -51,6 +51,7 @@ class SettingsWebServerManager
     {
       if(!m_Preferences.begin("Settings", false))
       {
+        ESP_LOGE("InitializePreferences", "Unable to initialize preferences! Resseting Device to Factory Defaults");
         nvs_flash_erase();
         ESP_LOGI("InitializePreferences", "NVS Cleared!");
         nvs_flash_init();
@@ -73,16 +74,8 @@ class SettingsWebServerManager
     
     void RegisterForDataItemCallBacks()
     {
-      m_OuputSourceConnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
-      m_OuputSourceConnect_Callback = {m_OuputSourceConnect.GetName().c_str(), &OuputSourceConnect_ValueChanged, &m_OuputSourceConnect_CallbackArgs};
       m_OuputSourceConnect.RegisterNamedCallback(&m_OuputSourceConnect_Callback);
-      
-      m_OuputSourceDisconnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
-      m_OuputSourceDisconnect_Callback = {m_OuputSourceDisconnect.GetName().c_str(), &OuputSourceDisconnect_ValueChanged, &m_OuputSourceDisconnect_CallbackArgs};
       m_OuputSourceDisconnect.RegisterNamedCallback(&m_OuputSourceDisconnect_Callback);
-      
-      m_ScannedDevice_CallbackArgs = {&m_WebSocketDataProcessor, &m_TargetCompatibleDevice_DataHandler};
-      m_ScannedDevice_Callback = {m_ScannedDevice.GetName().c_str(), &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
       m_ScannedDevice.RegisterNamedCallback(&m_ScannedDevice_Callback);
     }
     
@@ -136,77 +129,13 @@ class SettingsWebServerManager
 
     //Input Source
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_OFF;
-    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager);
-    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource, 1>( "Sound Input Source Web Socket Handler", {"Sound_Input_Source"}, m_WebSocketDataProcessor, true, true, m_SoundInputSource, false );
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager);
+    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( "Sound Input Source Web Socket Handler", {"Sound_Input_Source"}, m_WebSocketDataProcessor, true, true, m_SoundInputSource, false );
     
     //Output Source
     const SoundOutputSource_t m_SoundOuputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_OFF;
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager);
     WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( "Sound Output Source Web Socket Handler", {"Sound_Output_Source"}, m_WebSocketDataProcessor, true, true, m_SoundOuputSource, false );
-
-    //Output Source Disconnect
-    const bool m_OuputSourceConnect_InitialValue = false;
-    DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect", m_OuputSourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
-    WebSocketDataHandler<bool, 1> m_OuputSourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Connect Web Socket Handler", {"Output_Source_Connect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceConnect, false );
-    CallbackArguments m_OuputSourceConnect_CallbackArgs;
-    NamedCallback_t m_OuputSourceConnect_Callback;
-    static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed");
-      if(arg && object)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2 && object)
-        {
-          bool sourceConnect = *static_cast<bool*>(object);
-          if(sourceConnect)
-          {
-            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
-            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
-            if(targetCompatibleDevice && initialValue)
-            {
-              targetCompatibleDevice->SetValue(initialValue, 1);
-            }
-          }
-        }
-        else
-        {
-          ESP_LOGE("OuputSourceConnect_ValueChanged", "Invalid Pointer!");
-        }
-      }
-    }
-    
-    //Output Source Disconnect
-    const bool m_OuputSourceDisconnect_InitialValue = false;
-    DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_OuputSourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
-    WebSocketDataHandler<bool, 1> m_OuputSourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Disconnect Web Socket Handler", {"Output_Source_Disconnect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceDisconnect, false );
-    CallbackArguments m_OuputSourceDisconnect_CallbackArgs;
-    NamedCallback_t m_OuputSourceDisconnect_Callback;
-    static void OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Ouput Source Disconnect Value Changed");
-      if(arg && object)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2 && object)
-        {
-          bool sourceDisconnect = *static_cast<bool*>(object);
-          if(sourceDisconnect)
-          {
-            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
-            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
-            if(targetCompatibleDevice && initialValue)
-            {
-              targetCompatibleDevice->SetValue(initialValue, 1);
-            }
-          }
-        }
-        else
-        {
-          ESP_LOGE("OuputSourceDisconnect_ValueChanged", "Invalid Pointer!");
-        }
-      }
-    }
     
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
@@ -238,12 +167,76 @@ class SettingsWebServerManager
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
     WebSocket_Compatible_Device_DataHandler m_TargetCompatibleDevice_DataHandler = WebSocket_Compatible_Device_DataHandler("BT Target Device Web Socket Data Handler", {"BT_Source_Target_Device"}, m_WebSocketDataProcessor, true, true, m_TargetCompatibleDevice, false );
 
+    //Output Source Connect
+    const bool m_OuputSourceConnect_InitialValue = false;
+    DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect", m_OuputSourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_OuputSourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Connect Web Socket Handler", {"Output_Source_Connect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceConnect, false );
+    CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    NamedCallback_t m_OuputSourceConnect_Callback = {"Test Name", &OuputSourceConnect_ValueChanged, &m_OuputSourceConnect_CallbackArgs};
+    static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed");
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && arguments->arg2 && object)
+        {
+          bool sourceConnect = *static_cast<bool*>(object);
+          if(sourceConnect)
+          {
+            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
+            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
+            if(targetCompatibleDevice && initialValue)
+            {
+              //targetCompatibleDevice->SetValue(initialValue, 1);
+            }
+          }
+        }
+        else
+        {
+          ESP_LOGE("OuputSourceConnect_ValueChanged", "Invalid Pointer!");
+        }
+      }
+    }
+
+    //Output Source Disconnect
+    const bool m_OuputSourceDisconnect_InitialValue = false;
+    DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_OuputSourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_OuputSourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Disconnect Web Socket Handler", {"Output_Source_Disconnect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceDisconnect, false );
+    CallbackArguments m_OuputSourceDisconnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    NamedCallback_t m_OuputSourceDisconnect_Callback = {"m_OuputSourceDisconnect_Callback", &OuputSourceDisconnect_ValueChanged, &m_OuputSourceDisconnect_CallbackArgs};
+    static void OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Ouput Source Disconnect Value Changed");
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && arguments->arg2 && object)
+        {
+          bool sourceDisconnect = *static_cast<bool*>(object);
+          if(sourceDisconnect)
+          {
+            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
+            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
+            if(targetCompatibleDevice && initialValue)
+            {
+              //targetCompatibleDevice->SetValue(initialValue, 1);
+            }
+          }
+        }
+        else
+        {
+          ESP_LOGE("OuputSourceDisconnect_ValueChanged", "Invalid Pointer!");
+        }
+      }
+    }
+
     //Scanned Device
     ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
     DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU2SerialPortMessageManager);
     WebSocket_ActiveCompatibleDevice_ArrayDataHandler m_ScannedDevice_DataHandler = WebSocket_ActiveCompatibleDevice_ArrayDataHandler( "Scan BT Device Web Socket Data Handler", {"BT_Source_Target_Devices"}, m_WebSocketDataProcessor, true, true, m_ScannedDevice, false );
-    CallbackArguments m_ScannedDevice_CallbackArgs;
-    NamedCallback_t m_ScannedDevice_Callback;
+    CallbackArguments m_ScannedDevice_CallbackArgs = {&m_WebSocketDataProcessor, &m_ScannedDevice_DataHandler};
+    NamedCallback_t m_ScannedDevice_Callback = {"m_ScannedDevice_Callback", &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
     static void ScannedDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::ScannedDeviceValueChanged", "Scanned Device Value Changed");
@@ -284,7 +277,7 @@ class SettingsWebServerManager
         }
         else
         {
-          DynamicJsonDocument doc(1024); // Adjust the size based on your needs
+          DynamicJsonDocument doc(10000); // Adjust the size based on your needs
           DeserializationError error = deserializeJson(doc, WebSocketData);
     
           if (error)

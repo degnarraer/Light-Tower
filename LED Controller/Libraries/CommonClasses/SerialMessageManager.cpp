@@ -152,11 +152,11 @@ void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* o
 
 void SerialPortMessageManager::SetupSerialPortMessageManager()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  1 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
 	else ESP_LOGD("SetupSerialPortMessageManager", "RX Task Created.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  1 ) != pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) != pdPASS)
 	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Task Created.");
 	
@@ -224,7 +224,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				ESP_LOGE("SerialPortMessageManager", "Message RX Overrun: \"%s\"", m_message.c_str());
 				m_message = "";
 			}
-			else if(character == '\n')
+			else if(m_message.charAt(m_message.length() - 1) == '\n')
 			{
 				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
 				

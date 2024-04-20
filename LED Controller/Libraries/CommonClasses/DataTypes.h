@@ -626,7 +626,7 @@ class DataTypeFunctions
 			}
 			return result;
 		}
-		bool SetValueFromFromStringForDataType(void *Buffer, String Value, DataType_t DataType)
+		bool SetValueFromStringForDataType(void *Buffer, String Value, DataType_t DataType)
 		{
 			bool Result = true;
 			switch (DataType)
@@ -684,6 +684,7 @@ class DataTypeFunctions
 			case DataType_ProcessedSoundFrame_t:
 			case DataType_SoundState_t:
 			case DataType_ConnectionStatus_t:
+				ESP_LOGE( "DataTypes: SetValueFromFromStringForDataType", "Data Type Conversion to String for \"%s\": Not Yet Supported!", DataTypeStrings[DataType]);
 				Result = false;
 				break;
 			default:

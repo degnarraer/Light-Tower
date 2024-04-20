@@ -222,10 +222,12 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 	public:
 		SerialPortMessageManager( const String& Name
 								, HardwareSerial &Serial
-								, DataSerializer &DataSerializer )
+								, DataSerializer &DataSerializer
+								, BaseType_t coreId = 1 )
 								: m_Name(Name)
 								, m_Serial(Serial)
 								, m_DataSerializer(DataSerializer)
+								, m_CoreId(coreId)
 		{
 		}
 		virtual ~SerialPortMessageManager()
@@ -248,6 +250,7 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		String m_Name;
 		HardwareSerial &m_Serial;
 		DataSerializer &m_DataSerializer;
+		BaseType_t  m_CoreId = 1;
 		String m_message;
 		TaskHandle_t m_RXTaskHandle;
 		TaskHandle_t m_TXTaskHandle;
