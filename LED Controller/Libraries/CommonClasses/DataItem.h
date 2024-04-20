@@ -264,9 +264,9 @@ class PreferencesWrapper
 			{
 				if (std::is_same<T, bool>::value)
 				{
+					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);
 					m_Preferences->putBool(Name.c_str(), *ValuePtr);
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);	
-				} 
+				}
 				else if (std::is_same<T, char>::value)
 				{
 					char charValues[COUNT];
@@ -276,24 +276,24 @@ class PreferencesWrapper
 						memcpy(charValues+i, ValuePtr+i, sizeof(char));
 					}
 					charValues[COUNT - 1] = '\0';
+					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );
 					m_Preferences->putString(Name.c_str(), charValues);
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );	
 				}
 				else if (std::is_same<T, float>::value)
 				{
-					m_Preferences->putFloat(Name.c_str(), *ValuePtr);
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);	
+					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);
+					m_Preferences->putFloat(Name.c_str(), *ValuePtr);	
 				}
 				else if (std::is_same<T, double>::value)
 				{
+					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);
 					m_Preferences->putDouble(Name.c_str(), *ValuePtr);
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);	
 				}
 				else if ( std::is_integral<T>::value ||
 						std::is_convertible<T, int32_t>::value )
 				{
+					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);
 					m_Preferences->putInt(Name.c_str(), *ValuePtr);
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);	
 				}  
 				else 
 				{
@@ -437,7 +437,14 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		T GetValue()
 		{
 			assert(1 == COUNT && "Count must 1 to use this function");
-			return static_cast<T>(*mp_Value);
+			if(mp_Value)
+			{
+				return static_cast<T>(*mp_Value);
+			}
+			else
+			{
+				return T();
+			}
 		}
 		String GetValueAsString(const String &Divider)
 		{

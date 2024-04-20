@@ -739,7 +739,7 @@ function handleBTSourceReset(id, value) {
 	}
 }
 
-function showContent(classId, contentId, updateWebSocket = true) {
+function showContent(classId, contentId, updateWebSocket = false) {
 	// Hide all tab contents
 	var tabContents = document.querySelectorAll('.' + classId);
 	tabContents.forEach(function (tabContent) {

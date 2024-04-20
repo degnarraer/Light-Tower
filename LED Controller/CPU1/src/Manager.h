@@ -100,7 +100,7 @@ class Manager: public NamedItem
       void* arg1;
     };
 
-    //Output Source Connect
+    //Input Source Connect
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     CallbackArguments m_SoundInputSource_CallbackArgs;
