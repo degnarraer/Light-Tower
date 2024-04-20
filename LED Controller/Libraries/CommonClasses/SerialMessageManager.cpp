@@ -210,7 +210,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
 	ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
-	const TickType_t xFrequency = 10;
+	const TickType_t xFrequency = 1;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
 	{

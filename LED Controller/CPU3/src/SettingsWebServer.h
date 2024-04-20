@@ -337,51 +337,7 @@ class SettingsWebServerManager
         }
       }
     }
-
-
- /*
-          JSONVar MyDataObject = JSON.parse(WebSocketData);
-          if (JSON.typeof(MyDataObject) == "undefined")
-          {
-            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Parsing Web Socket Data failed!");
-          }
-          else if( true == MyDataObject.hasOwnProperty("WidgetValue") && true == MyDataObject["WidgetValue"].hasOwnProperty("Id") && true == MyDataObject["WidgetValue"].hasOwnProperty("Value") )
-          {
-            const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
-            const String Value = String( (const char*)MyDataObject["WidgetValue"]["Value"]);
-            ESP_LOGI("SettingsWebServer:", "New Widget Value Message: Id: \"%s\" Value:\"%s\"", WidgetId.c_str(), Value.c_str());
-            if(m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(WidgetId, Value))
-            {
-              ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known Widget: %s", WidgetId.c_str());
-            }
-            else
-            {
-              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget: %s", WidgetId.c_str());
-            }
-          }
-          else if( true == MyDataObject.hasOwnProperty("JSONValue") && true == MyDataObject["JSONValue"].hasOwnProperty("Id") && true == MyDataObject["JSONValue"].hasOwnProperty("Value")  )
-          {
-            const String WidgetId = String( (const char*)MyDataObject["WidgetValue"]["Id"]);
-            const JSONVar innerObject = JSON.parse(MyDataObject["WidgetValue"]["Value"].toString());
-            ESP_LOGI("SettingsWebServer:", "JSON Value Message: Id: \"%s\" Value:\"%s\"", WidgetId.c_str(), innerObject.toString());
-            if(m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(WidgetId, innerObject.toString()))
-            {
-              ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", WidgetId.c_str());
-            }
-            else
-            {
-              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", WidgetId.c_str());
-            }
-          }
-          else
-          {
-            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unsupported Web Socket Data: %s", WebSocketData.c_str());
-          }
-        }
-       */
-
-
-    
+        
     // Initialize WiFi Client
     void InitWiFiClient()
     {

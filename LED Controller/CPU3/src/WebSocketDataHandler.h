@@ -200,11 +200,11 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_OldChangeCount = newChangeCount;
       if( CurrentValue && (forceUpdate || valueChanged) )
       {
-        String CurrentValueString = GetValueAsStringForDataType(CurrentValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
-        ESP_LOGD( "WebSocketDataHandler: AppendCurrentValueToKVP", "Pushing New Value \"%s\" to Web Socket", CurrentValueString.c_str());
+        String CurrentValueString = m_DataItem.GetValueAsString("");
+        ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
         for (size_t i = 0; i < m_WidgetIds.size(); i++)
         {
-          ESP_LOGI("WebSocketDataHandler: AppendCurrentValueToKVP", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
+          ESP_LOGD("WebSocketDataHandler: AppendCurrentValueToKVP", "Setting \"%s\" to Value \"%s\"", m_WidgetIds[i].c_str(), CurrentValueString.c_str());
           KeyValuePairs->push_back({ m_WidgetIds[i], CurrentValueString.c_str() });
         }
         m_Last_Update_Time = millis();

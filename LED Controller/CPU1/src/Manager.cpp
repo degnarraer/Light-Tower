@@ -145,7 +145,6 @@ void Manager::ProcessEventQueue300000mS()
 
 void Manager::SetInputSource(SoundInputSource_t Type)
 {
-  m_SoundInputSource.SetValue(&Type, 1);
   switch(Type)
   {
     case SoundInputSource_Microphone:
@@ -157,13 +156,11 @@ void Manager::SetInputSource(SoundInputSource_t Type)
     case SoundInputSource_Bluetooth:
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
-      bool ReConnect;
-      m_BluetoothSinkAutoReConnect.GetValue(&ReConnect, 1);
-      m_BT_In.StartDevice(m_BluetoothSinkName.GetValueAsString("").c_str(), ReConnect);
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
+      m_BT_In.StartDevice(m_BluetoothSinkName.GetValueAsString("").c_str(), m_BluetoothSinkAutoReConnect.GetValue());
+      break;
     }
-    break;
     case SoundInputSource_OFF:
     default:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
@@ -182,9 +179,7 @@ void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {  
-  SoundInputSource_t currentSoundInputSource;
-  m_SoundInputSource.GetValue(&currentSoundInputSource, 1);
-  switch(currentSoundInputSource)
+  switch(m_SoundInputSource.GetValue())
   {
     case SoundInputSource_Microphone:
     {
@@ -217,9 +212,7 @@ void Manager::MoveDataToStatisticalEngine()
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {
   ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
-  ConnectionStatus_t currentValue;
-  m_BluetoothSinkConnectionStatus.GetValue(&currentValue, 1);
-  if(currentValue != newValue)
+  if(m_BluetoothSinkConnectionStatus.GetValue() != newValue)
   {
     m_BluetoothSinkConnectionStatus.SetValue(&newValue, 1);
     ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());

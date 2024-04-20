@@ -36,7 +36,6 @@ window.addEventListener('load', onload);
 function onload(event)
 {
     initWebSocket();
-	showContent('menu-content', 'Sound Output');
 }
 function initWebSocket()
 {
@@ -740,7 +739,7 @@ function handleBTSourceReset(id, value) {
 	}
 }
 
-function showContent(classId, contentId) {
+function showContent(classId, contentId, updateWebSocket = true) {
 	// Hide all tab contents
 	var tabContents = document.querySelectorAll('.' + classId);
 	tabContents.forEach(function (tabContent) {
@@ -752,7 +751,7 @@ function showContent(classId, contentId) {
 	
 	var signal = classToSignal[classId.toString()];
 	var value = contentIdToValue[contentId.toString()];
-	if(signal && value)
+	if(updateWebSocket && signal && value)
 	{
 		var Root = {};
 		Root.WidgetValue = {};

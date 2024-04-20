@@ -107,7 +107,7 @@ class NewRxTxValueCallerInterface
 		}
 		void RegisterNamedCallback(NamedCallback_t *namedCallback)
 		{
-			ESP_LOGI("RegisterNamedCallback", "Try Registering callback");
+			ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
 			NamedCallback_t* newNamedCallback = new NamedCallback_t(*namedCallback);
 			
 			bool IsFound = false;
@@ -122,7 +122,7 @@ class NewRxTxValueCallerInterface
 			}
 			if(false == IsFound)
 			{
-				ESP_LOGI("RegisterNamedCallback", "NamedCallback Registered");
+				ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
 				m_NamedCallbacks.push_back(newNamedCallback);
 			}	
 		}

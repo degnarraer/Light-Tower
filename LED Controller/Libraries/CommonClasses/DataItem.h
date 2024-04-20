@@ -99,7 +99,7 @@ class PreferencesWrapper
 			}
 			else if ( UpdateType.equals("Loaded") )
 			{
-				ESP_LOGI("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
 				HandleLoaded(Name, ValuePtr, InitialValuePtr);
 			} 
 			else if ( UpdateType.equals("Initialized") )
@@ -146,7 +146,7 @@ class PreferencesWrapper
 			{
 				if (m_Preferences->isKey(Name.c_str()))
 				{
-					ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", Name.c_str());
+					ESP_LOGD("InitializeNVM", "Preference Found: \"%s\"", Name.c_str());
 					Update_Preference("Loaded", Name, ValuePtr, InitialValuePtr);
 				}
 				else
@@ -433,6 +433,11 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				*reinterpret_cast<T**>(Object) = nullptr;
 			}
 			return m_ValueChangeCount;
+		}
+		T GetValue()
+		{
+			assert(1 == COUNT && "Count must 1 to use this function");
+			return static_cast<T>(*mp_Value);
 		}
 		String GetValueAsString(const String &Divider)
 		{

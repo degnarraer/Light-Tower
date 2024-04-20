@@ -75,7 +75,7 @@ class DataSerializer: public CommonUtils
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
-				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. \nInput: %s", error.c_str(), json.c_str());
+				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. Input: %s", error.c_str(), json.c_str());
 			}
 			else
 			{
