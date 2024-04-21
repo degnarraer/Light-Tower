@@ -19,6 +19,7 @@
 #include "Tunes.h"
 #include "SettingsWebServer.h"
 #include "SPIFFS.h"
+#define SERIAL_RX_BUFFER_SIZE 2048
 
 DataSerializer m_DataSerializer;  
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
@@ -94,10 +95,10 @@ void SetupSerialPorts()
   Serial.begin(500000, SERIAL_8N1);
   Serial1.flush();
   Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  Serial1.setRxBufferSize(4096);
+  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial2.flush();
   Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
-  Serial2.setRxBufferSize(4096);
+  Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
 }
 
 void InitLocalVariables()

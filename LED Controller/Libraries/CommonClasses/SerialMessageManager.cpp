@@ -210,11 +210,12 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
 	ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
-	const TickType_t xFrequency = 1;
+	const TickType_t xFrequency = 25;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		if(m_Serial.available()) ESP_LOGE("SerialPortMessageManager", "Available: %i", m_Serial.available());
 		while (m_Serial.available())
 		{
 			char character = m_Serial.read();
@@ -227,7 +228,6 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 			else if(m_message.charAt(m_message.length() - 1) == '\n')
 			{
 				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
-				
 				NamedObject_t NamedObject;
 				m_DataSerializer.DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject);
 				if(NamedObject.Object)
@@ -248,7 +248,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
 	ESP_LOGD("SetupSerialPortMessageManager", "Starting TX Task.");
-	const TickType_t xFrequency = 10;
+	const TickType_t xFrequency = 25;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
 	{

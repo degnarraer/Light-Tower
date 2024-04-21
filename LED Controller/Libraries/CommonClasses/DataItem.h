@@ -324,6 +324,10 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
+				ESP_LOGI( "DataItem: NewRXValueReceived"
+						, "\"%s\" Echo Value: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 				DataItem_TX_Now();
 			}
 			return ValueUpdated;

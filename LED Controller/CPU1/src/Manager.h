@@ -28,6 +28,7 @@
 #include <Preferences.h>
 #include "HardwareSerial.h"
 #include "DataItem.h"
+#include "DataItemWithPreferences.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback
@@ -102,7 +103,7 @@ class Manager: public NamedItem
 
     //Input Source Connect
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
-    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
     CallbackArguments m_SoundInputSource_CallbackArgs;
     NamedCallback_t m_SoundInputSource_Callback;
     static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)

@@ -1,7 +1,7 @@
 
 #pragma once
 #include "esp_log.h"
-
+#define SERIAL_RX_BUFFER_SIZE 2048
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , m_BTSink
@@ -123,12 +123,12 @@ void InitSerialCommunication()
   Serial.begin(500000);
   Serial.flush();
   
-  Serial1.setRxBufferSize(4096);
   Serial1.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
+  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial1.flush();
   
-  Serial2.setRxBufferSize(4096);
   Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
+  Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial2.flush();
 }
 

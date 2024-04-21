@@ -201,30 +201,31 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
     {
-      bool Found = false;
+      bool found = false;
       for (size_t i = 0; i < m_WidgetIds.size(); i++)
       {
         if( m_WidgetIds[i].equals(widgetId) )
         {
-          Found = true;
+          found = true;
           ESP_LOGI( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
                   , "Widget ID[%i]: %s  Value: %s"
                   , i , m_WidgetIds[i].c_str(), stringValue.c_str() );
         }
       }
-      if(Found)
+      if(found)
       {
-        T NewValue[COUNT];
-        if (SetValueFromStringForDataType(NewValue, stringValue, GetDataTypeFromTemplateType<T>()))
+        ESP_LOGI( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink", "FOUND");
+        T newValue[COUNT];
+        if (SetValueFromStringForDataType(newValue, stringValue, GetDataTypeFromTemplateType<T>()))
         {
-          m_DataItem.SetValue(NewValue, COUNT);
-          String NewValueString = GetValueAsStringForDataType(NewValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
+          m_DataItem.SetValue(newValue, COUNT);
+          String newValueString = GetValueAsStringForDataType(newValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
           ESP_LOGD( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
                   , "Web Socket Value: %s"
-                  , NewValueString.c_str());
+                  , newValueString.c_str());
         }
       }
-      return Found;
+      return found;
     }
   protected:
     const String m_Name;
