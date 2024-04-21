@@ -215,7 +215,6 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 	while(true)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		if(m_Serial.available()) ESP_LOGE("SerialPortMessageManager", "Available: %i", m_Serial.available());
 		while (m_Serial.available())
 		{
 			char character = m_Serial.read();

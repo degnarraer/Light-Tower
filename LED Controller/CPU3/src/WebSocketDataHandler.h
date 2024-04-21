@@ -214,7 +214,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
       if(found)
       {
-        ESP_LOGI( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink", "FOUND");
         T newValue[COUNT];
         if (SetValueFromStringForDataType(newValue, stringValue, GetDataTypeFromTemplateType<T>()))
         {
