@@ -38,35 +38,30 @@ class DataSerializer: public CommonUtils
 		}
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
-			String Result;
-			if(Count > 0)
+			int32_t CheckSum = 0;
+			size_t ObjectByteCount = GetSizeOfDataType(DataType);
+			JSONVar serializeDoc;
+			JSONVar data;
+			serializeDoc[m_NameTag] = Name;
+			serializeDoc[m_CountTag] = Count;
+			serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
+			serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
+			for(int i = 0; i < Count; ++i)
 			{
-				int32_t CheckSum = 0;
-				size_t ObjectByteCount = GetSizeOfDataType(DataType);
-				JSONVar serializeDoc;
-				JSONVar data;
-				serializeDoc[m_NameTag] = Name;
-				serializeDoc[m_CountTag] = Count;
-				serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
-				serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
-				for(int i = 0; i < Count; ++i)
+				String BytesString = "";
+				for(int j = 0; j < ObjectByteCount; ++j)
 				{
-					String BytesString = "";
-					for(int j = 0; j < ObjectByteCount; ++j)
-					{
-						uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
-						char ByteHexValue[2];
-						sprintf(ByteHexValue,"%02X", DecValue);
-						BytesString += String(ByteHexValue);
-						CheckSum += DecValue;
-					}
-					data[i] = BytesString;
+					uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
+					char ByteHexValue[2];
+					sprintf(ByteHexValue,"%02X", DecValue);
+					BytesString += String(ByteHexValue);
+					CheckSum += DecValue;
 				}
-				serializeDoc[m_DataTag] = data;
-				serializeDoc[m_CheckSumTag] = CheckSum;
-				Result = JSON.stringify(serializeDoc);
+				data[i] = BytesString;
 			}
-			return Result;
+			serializeDoc[m_DataTag] = data;
+			serializeDoc[m_CheckSumTag] = CheckSum;
+			return JSON.stringify(serializeDoc);
 		}
 		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{

@@ -23,11 +23,6 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
       m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs);
-      if(KeyValuePairs.size() > MAX_VALUES_TO_SEND_AT_ONCE)
-      {
-        NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
-        KeyValuePairs.clear();
-      }
     }
     if(KeyValuePairs.size() >0)
     {
@@ -96,7 +91,6 @@ bool WebSocketDataProcessor::ProcessWidgetValueAndSendToDatalink(const String& W
 String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs)
 {
   JSONVar jSONVars;
-  String result;
   for(int i = 0; i < KeyValuePairs->size(); ++i)
   {
     JSONVar SettingValues;
@@ -104,15 +98,7 @@ String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *Ke
     SettingValues["Value"] = KeyValuePairs->at(i).Value;
     jSONVars["WidgetValue" + String(i)] = SettingValues; 
   }
-  if(KeyValuePairs->size() > 0)
-  {
-    result = JSON.stringify(jSONVars);
-  }
-  else
-  {
-    result = "";
-  }
-  return result;
+  return JSON.stringify(jSONVars);
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& TextString)

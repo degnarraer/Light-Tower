@@ -719,7 +719,6 @@ function handleBTSinkAutoReConnect(id, value) {
 	}
 }
 
-
 function handleBTSourceEnable(id, value) {
 	if(id && value)
 	{

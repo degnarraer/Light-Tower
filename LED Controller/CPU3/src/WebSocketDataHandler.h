@@ -28,8 +28,6 @@
 #include "AsyncTCP.h"
 #include "Arduino_JSON.h"
 
-#define MAX_VALUES_TO_SEND_AT_ONCE 50
-
 class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
@@ -324,7 +322,6 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
   private:
     String Encode_Compatible_Device_To_JSON(std::vector<KVP> &keyValuePair)
     {
-      String result;
       JSONVar jSONVars;
       for(int i = 0; i < keyValuePair.size(); ++i)
       { 
@@ -333,15 +330,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         compatibleDeviceValues["NAME"] = keyValuePair[i].Value;
         jSONVars["CompatibleDevice" + String(i)] = compatibleDeviceValues;
       }
-      if(jSONVars.length() > 0)
-      {
-        result = JSON.stringify(jSONVars);
-      }
-      else
-      {
-        result = "";
-      }
-      return result;
+      return JSON.stringify(jSONVars);
     }
 };
 
@@ -486,7 +475,6 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
     String Encode_SSID_Values_To_JSON(std::vector<KVT> &KeyValueTuple)
     {
-      String result = "";
       JSONVar JSONVars;
       for(int i = 0; i < KeyValueTuple.size(); ++i)
       { 
@@ -496,17 +484,6 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         CompatibleDeviceValues["RSSI"] = KeyValueTuple[i].Value2;
         JSONVars["ActiveCompatibleDevice" + String(i)] = CompatibleDeviceValues;
       }
-      if(KeyValueTuple.size() > 0)
-      {
-        if(JSONVars.length() > 0)
-        {
-          result = JSON.stringify(JSONVars);
-        }
-        else
-        {
-          result = "";
-        }
-      }
-      return result;
+      return JSON.stringify(JSONVars);
     }
 };
