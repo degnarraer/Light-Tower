@@ -69,15 +69,22 @@
 				<h2>Bluetooth</h2>
 				<p>Sound input has been set to Bluetooth.</p>
 				<div class="settingGroup">
-					<div class="settingGroup_Horrizontal_Grid_Toggle">
+					<div class="settingGroup_Horrizontal_Grid_Status">
 						<div class="settingGroup_Title">
-							Bluetooth Bridge Enabled
+							Connect
 						</div>
 						<div class="settingGroup_Widget">
-							<label class="widget_Toggle_Switch">
-							  <input type="checkbox" id="Sink_BT_Enable_Toggle_Button">
-							  <span class="slider Round"></span>
-							</label>
+							<button id="Sink_Connect_Button" onmousedown="sink_Connect(this, true)" onmouseup="sink_Connect(this, false)">Connect</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_Status">
+						<div class="settingGroup_Title">
+							Disconnect
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="Sink_Disconnect_Button" onmousedown="sink_Disonnect(this, true)" onmouseup="sink_Disonnect(this, false)">Disconnect</button>
 						</div>
 					</div>
 				</div>
@@ -169,7 +176,7 @@
 								Connect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Output_Source_Connect_Button" onmousedown="source_Connect(this, true)" onmouseup="source_Connect(this, false)">Connect</button>
+								<button id="Source_Connect_Button" onmousedown="source_Connect(this, true)" onmouseup="source_Connect(this, false)">Connect</button>
 							</div>
 						</div>
 					</div>
@@ -179,7 +186,7 @@
 								Disconnect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Output_Source_Disconnect_Button" onmousedown="source_Disconnect(this, true)" onmouseup="source_Disconnect(this, false)">Disconnect</button>
+								<button id="Source_Disconnect_Button" onmousedown="source_Disconnect(this, true)" onmouseup="source_Disconnect(this, false)">Disconnect</button>
 							</div>
 						</div>
 					</div>

@@ -104,14 +104,12 @@ class Bluetooth_Source: public NamedItem
 		}
 		void Setup();
 		void InstallDevice();
-		void StartDevice( const char *SourceName
-						, const char *SourceAddress );
+		void StartDevice();
+		void StopDevice();
+		void Connect( const char *SourceName, const char *SourceAddress );
+		void Disconnect();
 		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
 		void SetMusicDataCallback(music_data_cb_t callback);
-		void Disconnect()
-		{
-			m_BTSource.disconnect();
-		}
 		
 		//Callback from BT Source for compatible devices to connect to
 		bool ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi);
@@ -208,8 +206,10 @@ class Bluetooth_Sink: public NamedItem
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
 	virtual ~Bluetooth_Sink(){};
 	void Setup();
-	void StartDevice(String SinkName, bool reconnect);
+	void StartDevice();
 	void StopDevice();
+	void Connect(String SinkName, bool reconnect);
+	void Disconnect();
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
 		m_AutoReConnect = reconnect;

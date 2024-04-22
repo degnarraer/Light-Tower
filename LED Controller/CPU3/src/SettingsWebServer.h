@@ -75,8 +75,10 @@ class SettingsWebServerManager
     
     void RegisterForDataItemCallBacks()
     {
-      m_OuputSourceConnect.RegisterNamedCallback(&m_OuputSourceConnect_Callback);
-      m_OuputSourceDisconnect.RegisterNamedCallback(&m_OuputSourceDisconnect_Callback);
+      m_SinkConnect.RegisterNamedCallback(&m_SinkConnect_Callback);
+      m_SinkDisconnect.RegisterNamedCallback(&m_SinkDisconnect_Callback);
+      m_SourceConnect.RegisterNamedCallback(&m_SourceConnect_Callback);
+      m_SourceDisconnect.RegisterNamedCallback(&m_SourceDisconnect_Callback);
       m_ScannedDevice.RegisterNamedCallback(&m_ScannedDevice_Callback);
     }
     
@@ -168,15 +170,67 @@ class SettingsWebServerManager
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, m_CPU2SerialPortMessageManager);
     WebSocket_Compatible_Device_DataHandler m_TargetCompatibleDevice_DataHandler = WebSocket_Compatible_Device_DataHandler("BT Target Device Web Socket Data Handler", {"BT_Source_Target_Device"}, m_WebSocketDataProcessor, true, true, m_TargetCompatibleDevice, false );
 
-    //Output Source Connect
-    const bool m_OuputSourceConnect_InitialValue = false;
-    DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect", m_OuputSourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
-    WebSocketDataHandler<bool, 1> m_OuputSourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Connect Web Socket Handler", {"Output_Source_Connect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceConnect, false );
-    CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
-    NamedCallback_t m_OuputSourceConnect_Callback = {"Test Name", &OuputSourceConnect_ValueChanged, &m_OuputSourceConnect_CallbackArgs};
-    static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
+    //Sink Connect
+    const bool m_SinkConnect_InitialValue = false;
+    DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect", m_SinkConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU1SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_SinkConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Sink Connect Web Socket Handler", {"Sink_Connect"}, m_WebSocketDataProcessor, true, true, m_SinkConnect, false );
+    CallbackArguments m_SinkConnect_CallbackArgs = {this};
+    NamedCallback_t m_SinkConnect_Callback = {"Test Name", &SinkConnect_ValueChanged, &m_SinkConnect_CallbackArgs};
+    static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed");
+      ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && arguments->arg2 && object)
+        {
+          bool sinkConnect = *static_cast<bool*>(object);
+          if(sinkConnect)
+          {
+          }
+        }
+        else
+        {
+          ESP_LOGE("SinkConnect_ValueChanged", "Invalid Pointer!");
+        }
+      }
+    }
+
+    //Sink Disconnect
+    const bool m_SinkDisconnect_InitialValue = false;
+    DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_SinkDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU1SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_SinkDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( "Sink Disconnect Web Socket Handler", {"Sink_Disconnect"}, m_WebSocketDataProcessor, true, true, m_SinkDisconnect, false );
+    CallbackArguments m_SinkDisconnect_CallbackArgs = {this};
+    NamedCallback_t m_SinkDisconnect_Callback = {"m_SinkDisconnect_Callback", &SinkDisconnect_ValueChanged, &m_SinkDisconnect_CallbackArgs};
+    static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && arguments->arg2 && object)
+        {
+          bool sinkConnect = *static_cast<bool*>(object);
+          if(sinkConnect)
+          {
+          }
+        }
+        else
+        {
+          ESP_LOGE("SinkConnect_ValueChanged", "Invalid Pointer!");
+        }
+      }
+    }
+
+    //Output Source Connect
+    const bool m_SourceConnect_InitialValue = false;
+    DataItem<bool, 1> m_SourceConnect = DataItem<bool, 1>( "Src_Connect", m_SourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_SourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Connect Web Socket Handler", {"Source_Connect"}, m_WebSocketDataProcessor, true, true, m_SourceConnect, false );
+    CallbackArguments m_SourceConnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    NamedCallback_t m_SourceConnect_Callback = {"Test Name", &SourceConnect_ValueChanged, &m_SourceConnect_CallbackArgs};
+    static void SourceConnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("SourceConnect_ValueChanged", "Source Connect Value Changed");
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
@@ -195,20 +249,20 @@ class SettingsWebServerManager
         }
         else
         {
-          ESP_LOGE("OuputSourceConnect_ValueChanged", "Invalid Pointer!");
+          ESP_LOGE("SourceConnect_ValueChanged", "Invalid Pointer!");
         }
       }
     }
 
     //Output Source Disconnect
-    const bool m_OuputSourceDisconnect_InitialValue = false;
-    DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_OuputSourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
-    WebSocketDataHandler<bool, 1> m_OuputSourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Disconnect Web Socket Handler", {"Output_Source_Disconnect"}, m_WebSocketDataProcessor, true, true, m_OuputSourceDisconnect, false );
-    CallbackArguments m_OuputSourceDisconnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
-    NamedCallback_t m_OuputSourceDisconnect_Callback = {"m_OuputSourceDisconnect_Callback", &OuputSourceDisconnect_ValueChanged, &m_OuputSourceDisconnect_CallbackArgs};
-    static void OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    const bool m_SourceDisconnect_InitialValue = false;
+    DataItem<bool, 1> m_SourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_SourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU2SerialPortMessageManager);
+    WebSocketDataHandler<bool, 1> m_SourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( "Output Source Disconnect Web Socket Handler", {"Source_Disconnect"}, m_WebSocketDataProcessor, true, true, m_SourceDisconnect, false );
+    CallbackArguments m_SourceDisconnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    NamedCallback_t m_SourceDisconnect_Callback = {"m_SourceDisconnect_Callback", &SourceDisconnect_ValueChanged, &m_SourceDisconnect_CallbackArgs};
+    static void SourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Ouput Source Disconnect Value Changed");
+      ESP_LOGI("SourceDisconnect_ValueChanged", "Source Disconnect Value Changed");
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);

@@ -178,10 +178,42 @@ function submit_New_Name(element)
 	}
 }
 
+function sink_Connect(element, isPressed)
+{
+	var ButtonId = element.id;
+    if(ButtonId == 'Sink_Connect_Button')
+	{
+		if(isPressed)console.log('Sink Connect Button Pressed:');
+		if(!isPressed)console.log('Sink Connect Button Released:');
+		var Root = {};
+		Root.WidgetValue = {};
+		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Value = isPressed.toString();
+		var Message = JSON.stringify(Root);
+		websocket.send(Message);
+	}
+}
+
+function sink_Disconnect(element, isPressed)
+{
+	var ButtonId = element.id;
+    if(ButtonId == 'Sink_Disconnect_Button')
+	{
+		if(isPressed)console.log('Sink Disconnect Button Pressed:');
+		if(!isPressed)console.log('Sink Disconnect Button Released:');
+		var Root = {};
+		Root.WidgetValue = {};
+		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Value = isPressed.toString();
+		var Message = JSON.stringify(Root);
+		websocket.send(Message);
+	}
+}
+
 function source_Connect(element, isPressed)
 {
 	var ButtonId = element.id;
-    if(ButtonId == 'Output_Source_Connect_Button')
+    if(ButtonId == 'Source_Connect_Button')
 	{
 		if(isPressed)console.log('Source Connect Button Pressed:');
 		if(!isPressed)console.log('Source Connect Button Released:');
@@ -197,7 +229,7 @@ function source_Connect(element, isPressed)
 function source_Disconnect(element, isPressed)
 {
 	var ButtonId = element.id;
-    if(ButtonId == 'Output_Source_Disconnect_Button')
+    if(ButtonId == 'Source_Disconnect_Button')
 	{
 		if(isPressed)console.log('Source Disconnect Button Pressed:');
 		if(!isPressed)console.log('Source Disconnect Button Released:');
@@ -387,8 +419,10 @@ const widgetToSignal = {
 	'FFT_Gain_Slider2': 'FFT_Gain',
 	'FFT_Gain_Slider3': 'FFT_Gain',
 	'FFT_Gain_Slider4': 'FFT_Gain',
-	'Output_Source_Disconnect_Button': 'Output_Source_Disconnect',
-	'Output_Source_Connect_Button': 'Output_Source_Connect',
+	'Sink_Disconnect_Button': 'Sink_Disconnect',
+	'Sink_Connect_Button': 'Sink_Connect',
+	'Source_Disconnect_Button': 'Source_Disconnect',
+	'Source_Connect_Button': 'Source_Connect',
 };
 
 const classToSignal = {

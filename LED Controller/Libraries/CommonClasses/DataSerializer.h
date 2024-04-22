@@ -39,37 +39,32 @@ class DataSerializer: public CommonUtils
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			String Result;
-			int32_t CheckSum = 0;
-			size_t ObjectByteCount = GetSizeOfDataType(DataType);
-			JSONVar serializeDoc;
-			JSONVar data;
-			serializeDoc[m_NameTag] = Name;
-			serializeDoc[m_CountTag] = Count;
-			serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
-			serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
-			for(int i = 0; i < Count; ++i)
+			if(Count > 0)
 			{
-				String BytesString = "";
-				for(int j = 0; j < ObjectByteCount; ++j)
+				int32_t CheckSum = 0;
+				size_t ObjectByteCount = GetSizeOfDataType(DataType);
+				JSONVar serializeDoc;
+				JSONVar data;
+				serializeDoc[m_NameTag] = Name;
+				serializeDoc[m_CountTag] = Count;
+				serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
+				serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
+				for(int i = 0; i < Count; ++i)
 				{
-					uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
-					char ByteHexValue[2];
-					sprintf(ByteHexValue,"%02X", DecValue);
-					BytesString += String(ByteHexValue);
-					CheckSum += DecValue;
+					String BytesString = "";
+					for(int j = 0; j < ObjectByteCount; ++j)
+					{
+						uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
+						char ByteHexValue[2];
+						sprintf(ByteHexValue,"%02X", DecValue);
+						BytesString += String(ByteHexValue);
+						CheckSum += DecValue;
+					}
+					data[i] = BytesString;
 				}
-				data[i] = BytesString;
-			}
-			serializeDoc[m_DataTag] = data;
-			serializeDoc[m_CheckSumTag] = CheckSum;
-			try
-			{
+				serializeDoc[m_DataTag] = data;
+				serializeDoc[m_CheckSumTag] = CheckSum;
 				Result = JSON.stringify(serializeDoc);
-			}
-			catch(const char* error)
-			{
-				ESP_LOGE("DataSerializer: SerializeDataToJson", "Serialization failed: %s", error);
-				Result = "";
 			}
 			return Result;
 		}

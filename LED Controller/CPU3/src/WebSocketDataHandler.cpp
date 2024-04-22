@@ -104,7 +104,7 @@ String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *Ke
     SettingValues["Value"] = KeyValuePairs->at(i).Value;
     jSONVars["WidgetValue" + String(i)] = SettingValues; 
   }
-  if(jSONVars.length() > 0)
+  if(KeyValuePairs->size() > 0)
   {
     result = JSON.stringify(jSONVars);
   }

@@ -44,7 +44,6 @@ void Manager::Setup()
 {
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
-  m_I2S_In.StartDevice();
   m_BT_Out.RegisterForConnectionStateChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
   RegisterForDataItemCallBacks();
@@ -59,7 +58,13 @@ void Manager::StartBluetooth()
   ESP_LOGI("Manager::ConnectToTargetDevice", "Starting Bluetooth!" );
   m_BT_Out.Set_Auto_Reconnect(m_BluetoothSourceAutoReConnect.GetValue());
   m_BT_Out.Set_Reset_BLE(m_BluetoothReset.GetValue());
-  m_BT_Out.StartDevice( "", "" );
+  m_BT_Out.StartDevice();
+}
+
+void Manager::StopBluetooth()
+{
+  ESP_LOGI("Manager::ConnectToTargetDevice", "Stopping Bluetooth!" );
+  m_BT_Out.StopDevice();
 }
 
 void Manager::Static_TaskLoop_20mS(void * parameter)
@@ -132,163 +137,19 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
 
 void Manager::RegisterForDataItemCallBacks()
 {
-  m_OuputSourceConnect_CallbackArgs = {this};
-  m_OuputSourceConnect_Callback = { m_OuputSourceConnect.GetName().c_str(), &OuputSourceConnect_ValueChanged, & m_OuputSourceConnect_CallbackArgs};
   m_OuputSourceConnect.RegisterNamedCallback(&m_OuputSourceConnect_Callback);
-  
-  m_OuputSourceDisconnect_CallbackArgs = {&m_BT_Out};
-  m_OuputSourceDisconnect_Callback = { m_OuputSourceDisconnect.GetName().c_str(), &OuputSourceDisconnect_ValueChanged, & m_OuputSourceDisconnect_CallbackArgs};
   m_OuputSourceDisconnect.RegisterNamedCallback(&m_OuputSourceDisconnect_Callback);
-  
-  m_BluetoothSourceEnable_CallbackArgs = {&m_BT_Out};
-  m_BluetoothSourceEnable_Callback = {m_BluetoothSourceEnable.GetName().c_str(), &BluetoothSourceEnable_ValueChanged, &m_BluetoothSourceEnable_CallbackArgs};
   m_BluetoothSourceEnable.RegisterNamedCallback(&m_BluetoothSourceEnable_Callback);
-
-  m_BluetoothSourceAutoReConnect_CallbackArgs = {&m_BT_Out};
-  m_BluetoothSourceAutoReConnect_Callback = {m_BluetoothSourceAutoReConnect.GetName().c_str(), &BluetoothSourceAutoReConnect_ValueChanged, &m_BluetoothSourceAutoReConnect_CallbackArgs};
   m_BluetoothSourceAutoReConnect.RegisterNamedCallback(&m_BluetoothSourceAutoReConnect_Callback);
-
-  m_BluetoothReset_CallbackArgs = {&m_BT_Out};
-  m_BluetoothReset_Callback = {m_BluetoothReset.GetName().c_str(), &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
   m_BluetoothReset.RegisterNamedCallback(&m_BluetoothReset_Callback);
-
-  m_TargetCompatibleDevice_CallbackArgs = {&m_BT_Out};
-  m_TargetCompatibleDevice_Callback = {m_TargetCompatibleDevice.GetName().c_str(), &TargetCompatibleDevice_ValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
   m_TargetCompatibleDevice.RegisterNamedCallback(&m_TargetCompatibleDevice_Callback);
-
-  m_SoundOutputSource_CallbackArgs = {&m_BT_Out};
-  m_SoundOutputSource_Callback = {m_SoundOutputSource.GetName(), &SoundOutputSource_ValueChanged, &m_SoundOutputSource_CallbackArgs};
   m_SoundOutputSource.RegisterNamedCallback(&m_SoundOutputSource_Callback);
 }
 
-void Manager::OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
-{
-  ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed ");
-  if(arg)
-  {
-    CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-    if(arguments->arg1 && object)
-    {
-      Manager *manager = static_cast<Manager*>(arguments->arg1);
-      bool connect = *static_cast<bool*>(object);
-      if(manager && connect)
-      {
-        manager->StartBluetooth();
-      }
-    }
-  }
-}
 
-void Manager::OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
-{
-  ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Ouput Source Disconnect Value Changed ");
-  if(arg)
-  {
-    CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-    if(arguments->arg1 && object)
-    {
-      Bluetooth_Source *BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-      bool disconnect = *static_cast<bool*>(object);
-      if(BT_Out && disconnect)
-      {
-        BT_Out->Disconnect();
-      }
-    }
-  }
-}
 
-void Manager::BluetoothSourceEnable_ValueChanged(const String &Name, void* object, void* arg)
-{
-  ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Bluetooth Source Enable Value Changed Value Changed");
-  CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-}
 
-void Manager::BluetoothSourceAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
-{
-  if(arg)
-  {
-    CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-    if(arguments->arg1 && object)
-    {
-      Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
-      bool autoReconnect = *static_cast<bool*>(object);
-      ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Auto Reconnect Value Changed Value Changed: %i", autoReconnect);
-      BT_Out.Set_Auto_Reconnect(autoReconnect);
-    }
-    else
-    {
-      ESP_LOGE("BluetoothSourceAutoReConnect_ValueChanged", "Invalid Pointer!");
-    }
-  }
-  else
-  {
-    ESP_LOGE("BluetoothSourceAutoReConnect_ValueChanged", "Invalid arg Pointer!");
-  }
-}
 
-void Manager::BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
-{
-  if(arg)
-  {
-    CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-    if(arguments->arg1 && object)
-    {
-      Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
-      bool resetBLE = *static_cast<bool*>(object);
-      ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Reset Value Changed Value Changed: %i", resetBLE);
-      BT_Out.Set_Reset_BLE(resetBLE);
-    }
-    else
-    {
-      ESP_LOGE("BluetoothSourceAutoReConnect_ValueChanged", "Invalid Pointer!");
-    }
-  }
-  else
-  {
-    ESP_LOGE("BluetoothSourceAutoReConnect_ValueChanged", "Invalid arg Pointer!");
-  }
-}
 
-void Manager::BluetoothResetNVS_ValueChanged(const String &Name, void* object, void* arg)
-{
-  if(arg)
-  {
-    CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-    if(arguments->arg1 && object)
-    {
-      Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
-      bool resetNVS = *static_cast<bool*>(object);
-      ESP_LOGI("Manager::BluetoothSourceResetNVS_ValueChanged", "Bluetooth Source Reset NVS Value Changed: %i", resetNVS);
-      BT_Out.Set_NVS_Init(resetNVS);
-    }
-    else
-    {
-      ESP_LOGE("BluetoothSourceResetNVS_ValueChanged", "Invalid Pointer!");
-    }
-  }
-  else
-  {
-    ESP_LOGE("BluetoothSourceResetNVS_ValueChanged", "Invalid arg Pointer!");
-  }
-}
 
-void Manager::TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
-{
-  ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
-  CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-  CompatibleDevice_t* targetCompatibleDevice = static_cast<CompatibleDevice_t*>(object);
-  Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-  if(BT_Out && targetCompatibleDevice)
-  {
-    BT_Out->SetNameToConnect(targetCompatibleDevice->name, targetCompatibleDevice->address);
-  }
-  else
-  {
-    ESP_LOGE("Manager::TargetCompatibleDeviceValueChanged", "Invalid Pointer!");
-  }
-}
 
-void Manager::SoundOutputSource_ValueChanged(const String &Name, void* object, void* arg)
-{
-  ESP_LOGI("Manager::SoundOutputSourceValueChanged", "Sound Output Source Value Changed");
-}
