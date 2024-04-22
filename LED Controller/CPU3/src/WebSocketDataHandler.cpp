@@ -95,16 +95,24 @@ bool WebSocketDataProcessor::ProcessWidgetValueAndSendToDatalink(const String& W
 
 String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs)
 {
-  JSONVar JSONVars;
+  JSONVar jSONVars;
+  String result;
   for(int i = 0; i < KeyValuePairs->size(); ++i)
   {
     JSONVar SettingValues;
     SettingValues["Id"] = KeyValuePairs->at(i).Key;
     SettingValues["Value"] = KeyValuePairs->at(i).Value;
-    JSONVars["WidgetValue" + String(i)] = SettingValues; 
+    jSONVars["WidgetValue" + String(i)] = SettingValues; 
   }
-  String Result = JSON.stringify(JSONVars);
-  return Result;
+  if(jSONVars.length() > 0)
+  {
+    result = JSON.stringify(jSONVars);
+  }
+  else
+  {
+    result = "";
+  }
+  return result;
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& TextString)

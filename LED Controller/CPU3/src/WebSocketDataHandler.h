@@ -278,13 +278,16 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       keyValuePair.Key = currentValue.address;
       keyValuePair.Value = currentValue.name;
       keyValuePairVector.push_back(keyValuePair);
-      result = Encode_Compatible_Device_To_JSON(keyValuePairVector);
-      if( forceUpdate || valueChanged )
+      if(keyValuePairVector.size())
       {
-        ESP_LOGD("WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
-        for(size_t i = 0; i < m_WidgetIds.size(); i++)
+        result = Encode_Compatible_Device_To_JSON(keyValuePairVector);
+        if( forceUpdate || valueChanged )
         {
-          keyValuePairs->push_back({ m_WidgetIds[i], result.c_str() });
+          ESP_LOGD("WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
+          for(size_t i = 0; i < m_WidgetIds.size(); i++)
+          {
+            keyValuePairs->push_back({ m_WidgetIds[i], result.c_str() });
+          }
         }
       }
     }
@@ -321,6 +324,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
   private:
     String Encode_Compatible_Device_To_JSON(std::vector<KVP> &keyValuePair)
     {
+      String result;
       JSONVar jSONVars;
       for(int i = 0; i < keyValuePair.size(); ++i)
       { 
@@ -329,7 +333,15 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         compatibleDeviceValues["NAME"] = keyValuePair[i].Value;
         jSONVars["CompatibleDevice" + String(i)] = compatibleDeviceValues;
       }
-      return JSON.stringify(jSONVars);
+      if(jSONVars.length() > 0)
+      {
+        result = JSON.stringify(jSONVars);
+      }
+      else
+      {
+        result = "";
+      }
+      return result;
     }
 };
 
@@ -486,7 +498,14 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       }
       if(KeyValueTuple.size() > 0)
       {
-        result = JSON.stringify(JSONVars);
+        if(JSONVars.length() > 0)
+        {
+          result = JSON.stringify(JSONVars);
+        }
+        else
+        {
+          result = "";
+        }
       }
       return result;
     }

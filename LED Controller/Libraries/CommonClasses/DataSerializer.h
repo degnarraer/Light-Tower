@@ -38,7 +38,7 @@ class DataSerializer: public CommonUtils
 		}
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
-			String Result = "";
+			String Result;
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
 			JSONVar serializeDoc;
@@ -62,7 +62,15 @@ class DataSerializer: public CommonUtils
 			}
 			serializeDoc[m_DataTag] = data;
 			serializeDoc[m_CheckSumTag] = CheckSum;
-			Result =  JSON.stringify(serializeDoc);
+			try
+			{
+				Result = JSON.stringify(serializeDoc);
+			}
+			catch(const char* error)
+			{
+				ESP_LOGE("DataSerializer: SerializeDataToJson", "Serialization failed: %s", error);
+				Result = "";
+			}
 			return Result;
 		}
 		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
