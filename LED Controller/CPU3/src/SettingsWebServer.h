@@ -240,7 +240,7 @@ class SettingsWebServerManager
     NamedCallback_t m_ScannedDevice_Callback = {"m_ScannedDevice_Callback", &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
     static void ScannedDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("Manager::ScannedDeviceValueChanged", "Scanned Device Value Changed");
+      ESP_LOGD("Manager::ScannedDeviceValueChanged", "Scanned Device Value Changed");
       CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
       WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg1);
       WebSocket_ActiveCompatibleDevice_ArrayDataHandler* DataHandler = static_cast<WebSocket_ActiveCompatibleDevice_ArrayDataHandler*>(arguments->arg2);

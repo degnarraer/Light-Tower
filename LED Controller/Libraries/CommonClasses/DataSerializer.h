@@ -63,6 +63,7 @@ class DataSerializer: public CommonUtils
 			}
 			serializeDoc[m_CheckSumTag] = CheckSum;
 			serializeJson(serializeDoc, Result);
+			serializeDoc.clear();
 			return Result;
 		}
 		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
@@ -134,6 +135,7 @@ class DataSerializer: public CommonUtils
 				}
 			}
 			FailPercentage();
+			deserializeDoc.clear();
 		}
 		void FailPercentage()
 		{
@@ -150,12 +152,14 @@ class DataSerializer: public CommonUtils
 		bool AllTagsExist()
 		{
 			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
+			bool result = true;
 			for (const String& tag : tags) {
 				if (!deserializeDoc.containsKey(tag)) {
-					return false;
+					ESP_LOGE("AllTagsExist", "Missing Tag: \"%s\"", tag.c_str());
+					result = false;
 				}
 			}
-			return true;
+			return result;
 		}
 	private:
 		size_t m_TotalCount = 0;
@@ -164,19 +168,17 @@ class DataSerializer: public CommonUtils
 		uint64_t m_FailCountTimer = 0;
 		uint64_t m_FailCountDuration = 5000;
 		
-		StaticJsonDocument<1000> serializeDoc;
-		StaticJsonDocument<1000> deserializeDoc;
+		DynamicJsonDocument serializeDoc = DynamicJsonDocument(1024);
+		DynamicJsonDocument deserializeDoc = DynamicJsonDocument(1024);
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags
-		String m_Startinator = "<PACKET_START>";
 		String m_NameTag = "Name";
 		String m_CheckSumTag = "Sum";
 		String m_CountTag = "Count";
 		String m_DataTag = "Data";
 		String m_DataTypeTag = "Type";
 		String m_TotalByteCountTag = "Bytes";
-		String m_Terminator = "<PACKET_END>";
 };
 
 

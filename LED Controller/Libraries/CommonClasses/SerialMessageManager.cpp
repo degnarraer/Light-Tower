@@ -228,6 +228,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 			{
 				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
 				NamedObject_t NamedObject;
+				m_message.trim();
 				m_DataSerializer.DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject);
 				if(NamedObject.Object)
 				{

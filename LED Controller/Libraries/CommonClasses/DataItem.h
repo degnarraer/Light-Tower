@@ -288,7 +288,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 						ValueUpdated = true;
 					}
 				}
-				ESP_LOGI("DataItem: DataItem_TX_Now", "TX Now: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			}
 			else
 			{
@@ -301,14 +301,14 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			bool ValueUpdated = false;
 			T* receivedValue = static_cast<T*>(Object);
 			bool ValueChanged = (memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0);
-			ESP_LOGI( "DataItem: NewRXValueReceived"
-						, "RX Value: \"%s\" Value: \"%s\""
+			ESP_LOGD( "DataItem: NewRXValueReceived"
+						, "RX: \"%s\" Value: \"%s\""
 						, m_Name.c_str()
 						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			if(ValueChanged)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
-				ESP_LOGI( "DataItem: NewRXValueReceived"
+				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, m_Name.c_str()
 						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
@@ -338,7 +338,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		}
 		void DataItem_Try_TX_On_Change()
 		{
-			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
+			ESP_LOGD("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				DataItem_TX_Now();
@@ -363,10 +363,6 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		void DataItem_Periodic_TX()
 		{
 			DataItem_TX_Now();
-			//if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_Value, COUNT))
-			//{
-			//	ESP_LOGD("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Periodic TX: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-			//}
 		}
 		static void StaticDataItem_Periodic_TX(void *arg)
 		{
