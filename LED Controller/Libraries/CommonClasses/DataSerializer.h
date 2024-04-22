@@ -20,9 +20,9 @@
 #define DataSerializer_H
 #include <stdlib.h>
 #include <Arduino.h>
-#include <ArduinoJson.h>
 #include <Helpers.h>
 #include "Streaming.h"
+#include "Arduino_JSON.h"
 
 class DataSerializer: public CommonUtils
 					, public QueueController
@@ -38,15 +38,14 @@ class DataSerializer: public CommonUtils
 		}
 		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
+			String Result = "";
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
-			String Result = "";
-			
-			serializeDoc.clear();
+			JSONVar serializeDoc;
+			JSONVar data;
 			serializeDoc[m_NameTag] = Name;
 			serializeDoc[m_CountTag] = Count;
 			serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
-			JsonArray data = serializeDoc.createNestedArray(m_DataTag);
 			serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
 			for(int i = 0; i < Count; ++i)
 			{
@@ -59,37 +58,36 @@ class DataSerializer: public CommonUtils
 					BytesString += String(ByteHexValue);
 					CheckSum += DecValue;
 				}
-				data.add(BytesString);
+				data[i] = BytesString;
 			}
+			serializeDoc[m_DataTag] = data;
 			serializeDoc[m_CheckSumTag] = CheckSum;
-			serializeJson(serializeDoc, Result);
-			serializeDoc.clear();
+			Result =  JSON.stringify(serializeDoc);
 			return Result;
 		}
 		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
-			deserializeDoc.clear();
-			DeserializationError error = deserializeJson(deserializeDoc, json);
-			// Test if parsing succeeds.
-			if (error)
+			
+			JSONVar jsonObject = JSON.parse(json);
+			if (JSON.typeof(jsonObject) == "undefined")
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
-				ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: %s. Input: %s", error.c_str(), json.c_str());
+				ESP_LOGE("DeSerializeJsonToNamedObject", "Parsing failed for Input: %s", json.c_str());
 			}
 			else
 			{
-				if(AllTagsExist())
+				if(AllTagsExist(jsonObject))
 				{
-					const String DocName = deserializeDoc[m_NameTag];
+					const String DocName = jsonObject[m_NameTag];
 					NamedObject.Name = DocName;
 					size_t CheckSumCalc = 0;
-					size_t CheckSumIn = deserializeDoc[m_CheckSumTag];
-					size_t CountIn = deserializeDoc[m_CountTag];
-					size_t ByteCountIn = deserializeDoc[m_TotalByteCountTag];
-					size_t ActualDataCount = deserializeDoc[m_DataTag].size();
-					DataType_t DataType = GetDataTypeFromString(deserializeDoc[m_DataTypeTag]);
+					size_t CheckSumIn = jsonObject[m_CheckSumTag];
+					size_t CountIn = jsonObject[m_CountTag];
+					size_t ByteCountIn = jsonObject[m_TotalByteCountTag];
+					size_t ActualDataCount = jsonObject[m_DataTag].length();
+					DataType_t DataType = GetDataTypeFromString(jsonObject[m_DataTypeTag]);
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
 					//This memory needs deleted by caller of function.
 					uint8_t *Buffer = (uint8_t*)heap_caps_malloc(sizeof(uint8_t)* ByteCountIn, MALLOC_CAP_SPIRAM);								
@@ -97,7 +95,7 @@ class DataSerializer: public CommonUtils
 					{
 						for(int j = 0; j < CountIn; ++j)
 						{
-							String BytesString = deserializeDoc[m_DataTag][j];
+							String BytesString = jsonObject[m_DataTag][j];
 							for(int k = 0; k < ObjectByteCount; ++k)
 							{
 								size_t startIndex = 2*k;
@@ -135,7 +133,6 @@ class DataSerializer: public CommonUtils
 				}
 			}
 			FailPercentage();
-			deserializeDoc.clear();
 		}
 		void FailPercentage()
 		{
@@ -149,12 +146,12 @@ class DataSerializer: public CommonUtils
 				m_TotalCount = 0;
 			}	
 		}
-		bool AllTagsExist()
+		bool AllTagsExist(JSONVar &jsonObject)
 		{
 			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
 			bool result = true;
 			for (const String& tag : tags) {
-				if (!deserializeDoc.containsKey(tag)) {
+				if (!jsonObject.hasOwnProperty(tag)) {
 					ESP_LOGE("AllTagsExist", "Missing Tag: \"%s\"", tag.c_str());
 					result = false;
 				}
@@ -168,8 +165,6 @@ class DataSerializer: public CommonUtils
 		uint64_t m_FailCountTimer = 0;
 		uint64_t m_FailCountDuration = 5000;
 		
-		DynamicJsonDocument serializeDoc = DynamicJsonDocument(1024);
-		DynamicJsonDocument deserializeDoc = DynamicJsonDocument(1024);
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags

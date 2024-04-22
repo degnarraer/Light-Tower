@@ -278,44 +278,46 @@ class SettingsWebServerManager
         }
         else
         {
-          DynamicJsonDocument doc(10000); // Adjust the size based on your needs
-          DeserializationError error = deserializeJson(doc, WebSocketData);
-    
-          if (error)
+          JSONVar jsonObject = JSON.parse(WebSocketData);
+          if (JSON.typeof(jsonObject) == "undefined")
           {
-            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Error parsing JSON: %s", error.c_str());
+            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Parsing failed for Input: %s", WebSocketData.c_str());
           }
           else
           {
-            if(doc["WidgetValue"])
+            if(jsonObject.hasOwnProperty("WidgetValue"))
             {
-              const JsonVariant widgetValue = doc["WidgetValue"];
-              if (widgetValue.is<JsonObject>() && widgetValue["Id"].is<String>() && widgetValue["Value"].is<String>())
+              JSONVar widgetValue = jsonObject["WidgetValue"];
+              if (widgetValue.hasOwnProperty("Id") && widgetValue.hasOwnProperty("Value"))
               {
-                ESP_LOGD( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
-                        , widgetValue["Id"].as<String>().c_str()
-                        , widgetValue["Value"].as<String>().c_str() );
-                if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(widgetValue["Id"].as<String>(), widgetValue["Value"].as<String>()))
+                String Id = widgetValue["Id"];
+                String Value = widgetValue["Value"];
+                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
+                        , Id.c_str()
+                        , Value.c_str() );
+                if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(Id.c_str(), Value.c_str()))
                 {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget Value Object: %s", widgetValue["Id"].as<String>().c_str());
+                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget Value Object: %s", Id.c_str());
                 }
               }
               else
               {
-                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", widgetValue.as<String>());
+                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", widgetValue["Id"].as<char*>());
               }
             }
-            else if(doc["JSONValue"])
+            else if(jsonObject.hasOwnProperty("JSONValue"))
             {
-              const JsonVariant jSONValue = doc["JSONValue"];
-              if (jSONValue.is<JsonObject>() && jSONValue["Id"].is<String>() && jSONValue["Value"].is<JsonObject>())
+              JSONVar jSONValue = jsonObject["JSONValue"];
+              if (jSONValue.hasOwnProperty("Id") && jSONValue.hasOwnProperty("Value"))
               {
+                String Id = jSONValue["Id"];
+                String Value = jSONValue["Value"];
                 ESP_LOGD( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
-                        , jSONValue["Id"].as<String>().c_str()
-                        , jSONValue["Value"].as<String>().c_str() );
-                if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(jSONValue["Id"].as<String>(), jSONValue["Value"].as<String>()))
+                        , Id.c_str()
+                        , Value.c_str());
+                if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(Id.c_str(), Value.c_str()))
                 {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", jSONValue["Id"].as<String>().c_str());
+                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", Id.c_str());
                 }
               }
               else
