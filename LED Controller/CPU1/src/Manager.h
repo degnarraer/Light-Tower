@@ -155,7 +155,6 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect", m_SinkConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager, &m_SinkConnect_Callback);
     static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
       if(arg && object)
       {
         Callback3Arguments* pArguments = static_cast<Callback3Arguments*>(arg);
@@ -179,21 +178,16 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Sink_Disconnect", m_SinkDisconnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager, &m_SinkDisconnect_Callback);
     static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnect Value Changed");
       if(arg && object)
       {
         CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
-        if(pArguments->arg1)
+        assert(pArguments->arg1 && "Null Pointer!");
+        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+        bool sinkDisconnect = *static_cast<bool*>(object);
+        if(sinkDisconnect)
         {
-          Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-          assert(pBT_In && "Null Pointer!");
-          bool sinkDisconnect = *static_cast<bool*>(object);
-          if(sinkDisconnect)
-          {
-            ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnecting");
-            pBT_In->Disconnect();
-          }
-          
+          ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnecting");
+          pBT_In->Disconnect();
         }
       }
     }
