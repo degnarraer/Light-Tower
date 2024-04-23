@@ -76,7 +76,18 @@ class Manager: public NamedItem
 
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
+       
+    Sound_Processor &m_SoundProcessor;
+    ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
+    Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+    Frame_t m_FFTFrameBuffer[FFT_SIZE];
+
+    //I2S Sound Data
+    I2S_Device &m_I2S_In;
     
+    //Bluetooth Data
+    Bluetooth_Source &m_BT_Out;
+
     String ConnectionStatusStrings[4]
     {
       "DISCONNECTED",
@@ -89,30 +100,40 @@ class Manager: public NamedItem
     {
       void* arg1;
     };
+    struct Callback2Arguments 
+    {
+      void* arg1;
+      void* arg2;
+    };
+    struct Callback3Arguments 
+    {
+      void* arg1;
+      void* arg2;
+      void* arg3;
+    };
         
     //Bluetooth Source Connection Status
     ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager, NULL);
     
     //Output Source Connect
-    CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out};
+    Callback2Arguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_TargetCompatibleDevice};
     NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback", &OuputSourceConnect_ValueChanged, & m_OuputSourceConnect_CallbackArgs};
     const bool m_OuputSourceConnect_InitialValue = false;
     DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect", m_OuputSourceConnect_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager, &m_OuputSourceConnect_Callback);
     static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed ");
-      if(arg)
+      if(arg && object)
       {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && object)
+        Callback2Arguments* arguments = static_cast<Callback2Arguments*>(arg);
+        assert(arguments->arg1 && arguments->arg2 && "Null Pointers!");
+        Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+        CompatibleDevice_t *pTargetDevice = static_cast<CompatibleDevice_t*>(arguments->arg2);
+        bool connect = *static_cast<bool*>(object);
+        if(connect)
         {
-          Bluetooth_Source *BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-          bool connect = *static_cast<bool*>(object);
-          if(BT_Out && connect)
-          {
-            BT_Out->StartDevice();
-          }
+          pBT_Out->Connect(pTargetDevice->name, pTargetDevice->address);
         }
       }
     }
@@ -125,17 +146,15 @@ class Manager: public NamedItem
     static void OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Ouput Source Disconnect Value Changed ");
-      if(arg)
+      if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && object)
+        assert(arguments->arg1 && "Null Pointer!");
+        Bluetooth_Source *BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+        bool disconnect = *static_cast<bool*>(object);
+        if(BT_Out && disconnect)
         {
-          Bluetooth_Source *BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-          bool disconnect = *static_cast<bool*>(object);
-          if(BT_Out && disconnect)
-          {
-            BT_Out->Disconnect();
-          }
+          BT_Out->Disconnect();
         }
       }
     }
@@ -267,47 +286,27 @@ class Manager: public NamedItem
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOutputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, &m_SoundOutputSource_Callback);
     static void SoundOutputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
-      if(arg)
+      if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && object)
+        assert(arguments->arg1 && "Null Pointer!");
+        Manager* manager = static_cast<Manager*>(arguments->arg1);
+        SoundOutputSource_t& soundOutputSource = *static_cast<SoundOutputSource_t*>(object);
+        ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: %i", soundOutputSource);
+        switch(soundOutputSource)
         {
-          Manager* manager = static_cast<Manager*>(arguments->arg1);
-          SoundOutputSource_t& soundOutputSource = *static_cast<SoundOutputSource_t*>(object);
-          ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: %i", soundOutputSource);
-          switch(soundOutputSource)
-          {
-            case SoundOutputSource_OFF:
-              manager->StartBluetooth();
-            break;
-            case SoundOutputSource_Bluetooth:
-              manager->StopBluetooth();
-            break;
-            default:
-            break;
-          }
+          case SoundOutputSource_OFF:
+            manager->StopBluetooth();
+          break;
+          case SoundOutputSource_Bluetooth:
+            manager->StartBluetooth();
+          break;
+          default:
+          break;
         }
-        else
-        {
-          ESP_LOGE("Manager::SoundOutputSource_ValueChanged", "Invalid Pointer!");
-        }
-      }
-      else
-      {
-        ESP_LOGE("BluetoothSourceResetNVS_ValueChanged", "Invalid arg Pointer!");
       }
     }
-    
-    Sound_Processor &m_SoundProcessor;
-    ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
-    Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-    Frame_t m_FFTFrameBuffer[FFT_SIZE];
 
-    //I2S Sound Data
-    I2S_Device &m_I2S_In;
-    
-    //Bluetooth Data
-    Bluetooth_Source &m_BT_Out;
     const float Epsilon = 0.01;
     bool AreEqual(float A, float B)
     {
