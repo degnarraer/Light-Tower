@@ -44,9 +44,6 @@ void Manager::Setup()
   SetupBlueTooth();
   SetupI2S();
   SetupStatisticalEngine();
-  SetInputSource(SoundInputSource_Bluetooth);
-  //SetInputType(SoundInputSource_Microphone);
-  RegisterForDataItemCallBacks();
   SetupTasks();
 }
 
@@ -171,6 +168,7 @@ void Manager::SetInputSource(SoundInputSource_t Type)
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
       m_BT_In.StartDevice();
+      m_BT_In.Connect(m_BluetoothSinkName.GetValuePointer(), m_BluetoothSinkAutoReConnect.GetValue());
       break;
     }
     case SoundInputSource_OFF:
@@ -226,7 +224,7 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
   ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
   if(m_BluetoothSinkConnectionStatus.GetValue() != newValue)
   {
-    m_BluetoothSinkConnectionStatus.SetValue(&newValue, 1);
+    //m_BluetoothSinkConnectionStatus.SetValue(newValue);
     ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
   }
 }

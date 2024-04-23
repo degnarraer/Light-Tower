@@ -31,6 +31,56 @@ const ConnectionStateString =
 	3: 'Disconnecting'
 }
 
+const messageHandlers = {
+	'Sound_Input_Source': handleSoundInputSource,
+	'Sound_Output_Source': handleSoundOutputSource,
+	
+	'Speaker_Image': handleSpeakerImage,
+	'Amplitude_Gain': handleAmplitudeGain,
+	'FFT_Gain': handleFFTGain,
+	'FFT_Gain_slider2': handleFFTGain,
+	
+	'BT_Sink_Name': handleBTSinkName,
+	'BT_Sink_Enable': handleBTSinkEnable,
+	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
+	'BT_Sink_Connection_State': handleBTSinkConnectionState,
+	
+	'BT_Source_Enable': handleBTSourceEnable,
+	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
+	'BT_Source_Connection_State': handleBTSourceConnectionState,
+	'BT_Source_Reset': handleBTSourceReset,
+	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
+	'BT_Source_Target_Device': handleBTSourceTargetDevice,
+};
+
+const widgetToSignal = {
+	'Amplitude_Gain_Slider1': 'Amplitude_Gain',
+	'Amplitude_Gain_Slider2': 'Amplitude_Gain',
+	'Amplitude_Gain_Slider3': 'Amplitude_Gain',
+	'Amplitude_Gain_Slider4': 'Amplitude_Gain',
+	'FFT_Gain_Slider1': 'FFT_Gain',
+	'FFT_Gain_Slider2': 'FFT_Gain',
+	'FFT_Gain_Slider3': 'FFT_Gain',
+	'FFT_Gain_Slider4': 'FFT_Gain',
+	'Sink_Disconnect_Button': 'Sink_Disconnect',
+	'Sink_Connect_Button': 'Sink_Connect',
+	'Source_Disconnect_Button': 'Source_Disconnect',
+	'Source_Connect_Button': 'Source_Connect',
+};
+
+const classToSignal = {
+	'selection_tab_content_input_source': 'Sound_Input_Source',
+	'selection_tab_content_output_source': 'Sound_Output_Source',
+};
+
+const contentIdToValue = {
+	'Sound_Input_Selection_OFF': '0',
+	'Sound_Input_Selection_Microphone': '1',
+	'Sound_Input_Selection_Bluetooth': '2',
+	'Sound_Output_Selection_OFF': '0',
+	'Sound_Output_Selection_Bluetooth': '1',
+};
+
 //Window and Web Socket Functions
 window.addEventListener('load', onload);
 function onload(event)
@@ -363,29 +413,6 @@ const imageTwoPromise = new Promise((resolve, reject) => {
 	});
 }
 
-const messageHandlers = {
-	'Sound_Input_Source': handleSoundInputSource,
-	'Sound_Output_Source': handleSoundOutputSource,
-	
-	'Speaker_Image': handleSpeakerImage,
-	'Amplitude_Gain': handleAmplitudeGain,
-	'FFT_Gain': handleFFTGain,
-	'FFT_Gain_slider2': handleFFTGain,
-	
-	'BT_Sink_Name': handleBTSinkName,
-	'BT_Sink_Enable': handleBTSinkEnable,
-	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
-	'BT_Sink_Connection_State': handleBTSinkConnectionState,
-	
-	'BT_Source_Enable': handleBTSourceEnable,
-	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
-	'BT_Source_Connection_State': handleBTSourceConnectionState,
-	'BT_Source_Reset': handleBTSourceReset,
-	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
-	'BT_Source_Target_Device': handleBTSourceTargetDevice,
-};
-
-
 function onMessage(event)
 {
 	console.log(event.data);
@@ -409,34 +436,6 @@ function onMessage(event)
 		}
 	}
 }
-
-const widgetToSignal = {
-	'Amplitude_Gain_Slider1': 'Amplitude_Gain',
-	'Amplitude_Gain_Slider2': 'Amplitude_Gain',
-	'Amplitude_Gain_Slider3': 'Amplitude_Gain',
-	'Amplitude_Gain_Slider4': 'Amplitude_Gain',
-	'FFT_Gain_Slider1': 'FFT_Gain',
-	'FFT_Gain_Slider2': 'FFT_Gain',
-	'FFT_Gain_Slider3': 'FFT_Gain',
-	'FFT_Gain_Slider4': 'FFT_Gain',
-	'Sink_Disconnect_Button': 'Sink_Disconnect',
-	'Sink_Connect_Button': 'Sink_Connect',
-	'Source_Disconnect_Button': 'Source_Disconnect',
-	'Source_Connect_Button': 'Source_Connect',
-};
-
-const classToSignal = {
-	'selection_tab_content_input_source': 'Sound_Input_Source',
-	'selection_tab_content_output_source': 'Sound_Output_Source',
-};
-
-const contentIdToValue = {
-	'Sound_Input_Selection_OFF': '0',
-	'Sound_Input_Selection_Microphone': '1',
-	'Sound_Input_Selection_Bluetooth': '2',
-	'Sound_Output_Selection_OFF': '0',
-	'Sound_Output_Selection_Bluetooth': '1',
-};
 
 function handleBTSourceTargetDevice(id, value)
 {

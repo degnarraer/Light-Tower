@@ -80,13 +80,6 @@ class Manager: public NamedItem
     TaskHandle_t m_Manager_20mS_Task;
     TaskHandle_t m_Manager_1000mS_Task;
     TaskHandle_t m_Manager_300000mS_Task;
-
-    void RegisterForDataItemCallBacks()
-    {
-      m_SoundInputSource_CallbackArgs = {this};
-      m_SoundInputSource_Callback = { m_SoundInputSource.GetName().c_str(), &SoundInputSource_ValueChanged, & m_SoundInputSource_CallbackArgs};
-      m_SoundInputSource.RegisterNamedCallback(&m_SoundInputSource_Callback);
-    }
     
     String ConnectionStatusStrings[4]
     {
@@ -101,46 +94,19 @@ class Manager: public NamedItem
       void* arg1;
     };
 
-    //Input Source Connect
-    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
-    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-    CallbackArguments m_SoundInputSource_CallbackArgs;
-    NamedCallback_t m_SoundInputSource_Callback;
-    static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)
+    struct Callback2Arguments 
     {
-      if(arg)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && object)
-        {
-          Manager *manager = static_cast<Manager*>(arguments->arg1);
-          SoundInputSource_t *inputSource = static_cast<SoundInputSource_t*>(object);
-          manager->SetInputSource(*inputSource);
-        }
-        else
-        {
-          ESP_LOGE("SoundInputSourceValueChanged", "Null Pointers");
-        }
-      }
-    }
-    
-    //Bluetooth Sink Enable
-    const bool m_BluetoothSinkEnable_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
+      void* arg1;
+      void* arg2;
+    };
 
-    //Bluetooth Sink Auto Reconnect
-    const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-    
-    //Bluetooth Sink Connection Status
-    const ConnectionStatus_t m_SinkConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
-    DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State", m_SinkConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager);
+    struct Callback3Arguments 
+    {
+      void* arg1;
+      void* arg2;
+      void* arg3;
+    };
 
-    //Bluetooth Sink Name
-    const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";
-    StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager);
-
-    
     void SetupStatisticalEngine();
     StatisticalEngine &m_StatisticalEngine;
     Mute_State_t m_MuteState = Mute_State_Un_Muted;
@@ -154,7 +120,90 @@ class Manager: public NamedItem
     I2S_Device &m_Mic_In; 
     I2S_Device &m_I2S_Out;
 
-    
     void InitializePreferences();
     void MoveDataToStatisticalEngine();
+
+    //Input Source
+    CallbackArguments m_SoundInputSource_CallbackArgs = {this};
+    NamedCallback_t m_SoundInputSource_Callback = { "Sound Input Source Callback", &SoundInputSource_ValueChanged, & m_SoundInputSource_CallbackArgs};
+    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, &m_SoundInputSource_Callback);
+    static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        assert(arguments->arg1 && "Null Pointer!");
+        Manager *manager = static_cast<Manager*>(arguments->arg1);
+        SoundInputSource_t *inputSource = static_cast<SoundInputSource_t*>(object);
+        manager->SetInputSource(*inputSource);
+      }
+    }
+    
+    //Bluetooth Sink Name
+    const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";
+    StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, NULL);
+
+    //Bluetooth Sink Auto Reconnect
+    const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, NULL);
+    
+    //Sink Connect
+    Callback3Arguments m_SinkConnect_CallbackArgs = {&m_BT_In, &m_BluetoothSinkName, &m_BluetoothSinkAutoReConnect};
+    NamedCallback_t m_SinkConnect_Callback = {"Sink Connect Callback", &SinkConnect_ValueChanged, &m_SinkConnect_CallbackArgs};
+    const bool m_SinkConnect_InitialValue = false;
+    DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect", m_SinkConnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager, &m_SinkConnect_Callback);
+    static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
+      if(arg && object)
+      {
+        Callback3Arguments* pArguments = static_cast<Callback3Arguments*>(arg);
+        assert(pArguments->arg1 && pArguments->arg2 && pArguments->arg3 && "Null Pointers!");
+        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+        StringDataItemWithPreferences* pBluetoothSinkName = static_cast<StringDataItemWithPreferences*>(pArguments->arg2);
+        DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg3);
+        bool sinkConnect = *static_cast<bool*>(object);
+        if(sinkConnect)
+        {
+          ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
+          pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
+        }
+      }
+    }
+
+    //Sink Disconnect
+    CallbackArguments m_SinkDisconnect_CallbackArgs = {&m_BT_In};
+    NamedCallback_t m_SinkDisconnect_Callback = {"Sink Disconnect Callback", &SinkDisconnect_ValueChanged, &m_SinkDisconnect_CallbackArgs};
+    const bool m_SinkDisconnect_InitialValue = false;
+    DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Sink_Disconnect", m_SinkDisconnect_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager, &m_SinkDisconnect_Callback);
+    static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnect Value Changed");
+      if(arg && object)
+      {
+        CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
+        if(pArguments->arg1)
+        {
+          Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+          assert(pBT_In && "Null Pointer!");
+          bool sinkDisconnect = *static_cast<bool*>(object);
+          if(sinkDisconnect)
+          {
+            ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnecting");
+            pBT_In->Disconnect();
+          }
+          
+        }
+      }
+    }
+
+    //Bluetooth Sink Enable
+    const bool m_BluetoothSinkEnable_InitialValue = false;
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, NULL);
+
+    //Bluetooth Sink Connection Status
+    const ConnectionStatus_t m_SinkConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
+    DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State", m_SinkConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 5000, m_CPU3SerialPortMessageManager, NULL);
+
 };

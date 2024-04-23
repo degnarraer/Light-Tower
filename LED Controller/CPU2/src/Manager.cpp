@@ -46,7 +46,6 @@ void Manager::Setup()
   m_AudioBuffer.Initialize();
   m_BT_Out.RegisterForConnectionStateChangedCallBack(this);
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  RegisterForDataItemCallBacks();
   if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "Error creating task!");
@@ -105,8 +104,8 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
   ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
   if(m_ConnectionStatus.GetValue() != newValue)
   {
-    m_ConnectionStatus.SetValue(&newValue, 1);
-    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
+    m_ConnectionStatus.SetValue(newValue);
+    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", ConnectionStatusStrings[connectionState]);
   }
 }
 
@@ -133,17 +132,6 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
                                                                     , elapsedTime );
     m_ScannedDevice.SetValue(&ActiveDevice, 1);                                            
   }
-}
-
-void Manager::RegisterForDataItemCallBacks()
-{
-  m_OuputSourceConnect.RegisterNamedCallback(&m_OuputSourceConnect_Callback);
-  m_OuputSourceDisconnect.RegisterNamedCallback(&m_OuputSourceDisconnect_Callback);
-  m_BluetoothSourceEnable.RegisterNamedCallback(&m_BluetoothSourceEnable_Callback);
-  m_BluetoothSourceAutoReConnect.RegisterNamedCallback(&m_BluetoothSourceAutoReConnect_Callback);
-  m_BluetoothReset.RegisterNamedCallback(&m_BluetoothReset_Callback);
-  m_TargetCompatibleDevice.RegisterNamedCallback(&m_TargetCompatibleDevice_Callback);
-  m_SoundOutputSource.RegisterNamedCallback(&m_SoundOutputSource_Callback);
 }
 
 

@@ -269,7 +269,6 @@ void Bluetooth_Sink::StartDevice()
 		m_Is_Running = true;
 		InstallDevice();
 	}
-	Connect("LTOP", true);
 }
 void Bluetooth_Sink::StopDevice()
 {
@@ -287,7 +286,7 @@ void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 	m_SinkName = sinkName;
 	m_AutoReConnect = reconnect;
 	m_BTSink.start(m_SinkName.c_str());
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With NAME: %s Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With NAME: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 }
 void Bluetooth_Sink::Disconnect()
 {

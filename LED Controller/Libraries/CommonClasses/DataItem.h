@@ -54,7 +54,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager )
+				, SerialPortMessageManager &serialPortMessageManager
+				, NamedCallback_t *namedCallback )
 				: NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_Name(name)
 				, mp_InitialValuePtr(initialValue)
@@ -71,7 +72,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager )
+				, SerialPortMessageManager &serialPortMessageManager
+				, NamedCallback_t *namedCallback )
 				: NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_Name(name)
 				, mp_InitialValuePtr(&initialValue)
@@ -79,6 +81,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
+				, mp_NamedCallback(namedCallback)
 				
 		{
 			CreateTxTimer();
@@ -87,6 +90,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		virtual ~DataItem()
 		{
+			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
 			heap_caps_free(mp_Value);
 			heap_caps_free(mp_RxValue);
 			heap_caps_free(mp_TxValue);
@@ -98,6 +102,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		virtual void Setup()
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
 			mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
@@ -163,6 +168,12 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			}
 			return m_ValueChangeCount;
 		}
+
+		T* GetValuePointer()
+		{
+			return mp_Value;
+		}
+
 		T GetValue()
 		{
 			assert(1 == COUNT && "Count must 1 to use this function");
@@ -196,6 +207,21 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			bool ValueChanged = (memcmp(mp_TxValue, Value, sizeof(T) * COUNT) != 0);
 			memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
+			if(ValueChanged)
+			{
+				DataItem_Try_TX_On_Change();
+			}
+		}
+		void SetValue(T Value)
+		{
+			assert(COUNT == 1 && "COUNT must be 1 to use this");
+			assert(mp_Value != nullptr && "mp_Value must not be null");
+			ESP_LOGD( "DataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+			bool ValueChanged = (memcmp(mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
+			memcpy(mp_TxValue, &Value, sizeof(T) * COUNT);
 			if(ValueChanged)
 			{
 				DataItem_Try_TX_On_Change();
@@ -348,6 +374,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		bool m_DataLinkEnabled = true;
 		size_t m_ValueChangeCount = 0;
 		SerialPortMessageManager &m_SerialPortMessageManager;
+		NamedCallback_t *mp_NamedCallback = NULL;
 		esp_timer_handle_t m_TxTimer;
 		size_t m_Count = COUNT;
 		void CreateTxTimer()
@@ -381,13 +408,15 @@ class StringDataItem: public DataItem<char, 50>
 					  , const RxTxType_t rxTxType
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
-					  , SerialPortMessageManager &serialPortMessageManager )
+					  , SerialPortMessageManager &serialPortMessageManager
+					  , NamedCallback_t *namedCallback )
 					  : DataItem<char, 50>( name
 										  , initialValue
 										  , rxTxType
 										  , updateStoreType
 										  , rate
-										  , serialPortMessageManager )
+										  , serialPortMessageManager
+										  , namedCallback )
 		{
 		  
 		}
@@ -396,13 +425,15 @@ class StringDataItem: public DataItem<char, 50>
 					  , const RxTxType_t rxTxType
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
-					  , SerialPortMessageManager &serialPortMessageManager )
+					  , SerialPortMessageManager &serialPortMessageManager
+					  , NamedCallback_t *namedCallback )
 					  : DataItem<char, 50>( name
 										  , initialValue
 										  , rxTxType
 										  , updateStoreType
 										  , rate
-										  , serialPortMessageManager )
+										  , serialPortMessageManager
+										  , namedCallback )
 		{
 		  
 		}

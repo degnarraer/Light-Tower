@@ -13,13 +13,15 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager )
+							   , SerialPortMessageManager &serialPortMessageManager
+							   , NamedCallback_t *namedCallback )
 								: DataItem<T, COUNT>( name
 													, initialValue
 													, rxTxType
 													, updateStoreType
 													, rate
-													, serialPortMessageManager )
+													, serialPortMessageManager
+													, namedCallback )
 								, PreferencesWrapper<T, COUNT>(preferences)
 
 		{
@@ -31,13 +33,15 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager )
+							   , SerialPortMessageManager &serialPortMessageManager
+							   , NamedCallback_t *namedCallback )
 								: DataItem<T, COUNT>( name
 													, initialValue
 													, rxTxType
 													, updateStoreType
 													, rate
-													, serialPortMessageManager )
+													, serialPortMessageManager
+													, namedCallback )
 								, PreferencesWrapper<T, COUNT>(preferences)
 							   
 {
@@ -78,14 +82,16 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
 								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
 								     , Preferences *preferences
-								     , SerialPortMessageManager &serialPortMessageManager )
+								     , SerialPortMessageManager &serialPortMessageManager
+									 , NamedCallback_t *namedCallback )
 								     : PreferencesWrapper<char, 50>(preferences)
 									 , StringDataItem( name
 													 , initialValue
 													 , rxTxType
 													 , updateStoreType
 													 , rate
-													 , serialPortMessageManager )
+													 , serialPortMessageManager
+													 , namedCallback )
 		{
 			
 		}
@@ -95,14 +101,16 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
 								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
 								     , Preferences *preferences
-								     , SerialPortMessageManager &serialPortMessageManager )
+								     , SerialPortMessageManager &serialPortMessageManager 
+									 , NamedCallback_t *namedCallback)
 								     : PreferencesWrapper<char, 50>(preferences)
 									 , StringDataItem( name
 													 , initialValue
 													 , rxTxType
 													 , updateStoreType
 													 , rate
-													 , serialPortMessageManager )		
+													 , serialPortMessageManager
+													 , namedCallback )		
 		{
 			
 		}

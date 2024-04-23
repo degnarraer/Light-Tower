@@ -40,35 +40,37 @@ class DataSerializer: public CommonUtils
 		{
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
-			JSONVar serializeDoc;
+			
 			JSONVar data;
-			serializeDoc[m_NameTag] = Name;
-			serializeDoc[m_CountTag] = Count;
-			serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
-			serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
+
+			m_SerializeDoc[m_NameTag] = Name;
+			m_SerializeDoc[m_CountTag] = Count;
+			m_SerializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
+			m_SerializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
+			
+			char ByteHexValue[3];
 			for(int i = 0; i < Count; ++i)
 			{
 				String BytesString = "";
 				for(int j = 0; j < ObjectByteCount; ++j)
 				{
 					uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
-					char ByteHexValue[2];
 					sprintf(ByteHexValue,"%02X", DecValue);
 					BytesString += String(ByteHexValue);
 					CheckSum += DecValue;
 				}
 				data[i] = BytesString;
 			}
-			serializeDoc[m_DataTag] = data;
-			serializeDoc[m_CheckSumTag] = CheckSum;
-			return JSON.stringify(serializeDoc);
+			m_SerializeDoc[m_DataTag] = data;
+			m_SerializeDoc[m_CheckSumTag] = CheckSum;
+			return JSON.stringify(m_SerializeDoc);
 		}
 		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 			
-			JSONVar jsonObject = JSON.parse(json);
-			if (JSON.typeof(jsonObject) == "undefined")
+			m_DeserializeDoc = JSON.parse(json);
+			if (JSON.typeof(m_DeserializeDoc) == "undefined")
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
@@ -76,16 +78,16 @@ class DataSerializer: public CommonUtils
 			}
 			else
 			{
-				if(AllTagsExist(jsonObject))
+				if(AllTagsExist(m_DeserializeDoc))
 				{
-					const String DocName = jsonObject[m_NameTag];
+					const String DocName = m_DeserializeDoc[m_NameTag];
 					NamedObject.Name = DocName;
 					size_t CheckSumCalc = 0;
-					size_t CheckSumIn = jsonObject[m_CheckSumTag];
-					size_t CountIn = jsonObject[m_CountTag];
-					size_t ByteCountIn = jsonObject[m_TotalByteCountTag];
-					size_t ActualDataCount = jsonObject[m_DataTag].length();
-					DataType_t DataType = GetDataTypeFromString(jsonObject[m_DataTypeTag]);
+					size_t CheckSumIn = m_DeserializeDoc[m_CheckSumTag];
+					size_t CountIn = m_DeserializeDoc[m_CountTag];
+					size_t ByteCountIn = m_DeserializeDoc[m_TotalByteCountTag];
+					size_t ActualDataCount = m_DeserializeDoc[m_DataTag].length();
+					DataType_t DataType = GetDataTypeFromString(m_DeserializeDoc[m_DataTypeTag]);
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
 					//This memory needs deleted by caller of function.
 					uint8_t *Buffer = (uint8_t*)heap_caps_malloc(sizeof(uint8_t)* ByteCountIn, MALLOC_CAP_SPIRAM);								
@@ -93,7 +95,7 @@ class DataSerializer: public CommonUtils
 					{
 						for(int j = 0; j < CountIn; ++j)
 						{
-							String BytesString = jsonObject[m_DataTag][j];
+							String BytesString = m_DeserializeDoc[m_DataTag][j];
 							for(int k = 0; k < ObjectByteCount; ++k)
 							{
 								size_t startIndex = 2*k;
@@ -162,7 +164,8 @@ class DataSerializer: public CommonUtils
 		uint64_t m_CurrentTime = 0;
 		uint64_t m_FailCountTimer = 0;
 		uint64_t m_FailCountDuration = 5000;
-		
+		JSONVar m_SerializeDoc;
+		JSONVar m_DeserializeDoc;
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags
