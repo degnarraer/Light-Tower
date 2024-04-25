@@ -7,14 +7,19 @@ var sink_Name_Value_Changed = false;
 var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
+
+//Toggle Buttons
+var source_BT_Reset_Toggle_Button;
+var source_BT_Reset_Toggle_Button;
+var source_BT_Auto_ReConnect_Toggle_Button;
+
+//Compatible Devices
 var compatibleDevices = [
 	{ name: "Device 1", address: "00:11:22:33:44:55", rssi: -50 },
 	{ name: "Device 2", address: "AA:BB:CC:DD:EE:FF", rssi: -60 },
 ];
 
-
 let selectedDeviceIndex = -1;
-
 
 const ConnectionState = 
 {
@@ -41,7 +46,6 @@ const messageHandlers = {
 	'FFT_Gain_slider2': handleFFTGain,
 	
 	'BT_Sink_Name': handleBTSinkName,
-	'BT_Sink_Enable': handleBTSinkEnable,
 	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
 	'BT_Sink_Connection_State': handleBTSinkConnectionState,
 	
@@ -85,8 +89,42 @@ const contentIdToValue = {
 window.addEventListener('load', onload);
 function onload(event)
 {
-    initWebSocket();
+    setTimeout(initWebSocket, 5000);
+	// Toggle Switch Handlers
+	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
+	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
+	{
+		var Root = {};
+		Root.WidgetValue = {};
+		Root.WidgetValue.Id = 'BT_Sink_Auto_ReConnect';
+		Root.WidgetValue.Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
+		var Message = JSON.stringify(Root);
+		websocket.send(Message);
+	});
+
+	source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
+	source_BT_Reset_Toggle_Button.addEventListener('change', function()
+	{
+		var Root = {};
+		Root.WidgetValue = {};
+		Root.WidgetValue.Id = 'BT_Source_Reset';
+		Root.WidgetValue.Value = String(source_BT_Reset_Toggle_Button.checked);
+		var Message = JSON.stringify(Root);
+		websocket.send(Message);
+	});
+
+	source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
+	Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
+	{
+		var Root = {};
+		Root.WidgetValue = {};
+		Root.WidgetValue.Id = 'BT_Source_Auto_Reconnect';
+		Root.WidgetValue.Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
+		var Message = JSON.stringify(Root);
+		websocket.send(Message);
+	});
 }
+
 function initWebSocket()
 {
     console.log('Trying to open a WebSocket connection…');
@@ -96,66 +134,24 @@ function initWebSocket()
     websocket.onmessage = onMessage;
 	websocket.error = onError;
 }
+
 function onOpen(event)
 {
     console.log('Connection opened');
 	websocket.send('Hello I am here!');
 }
+
 function onClose(event)
 {
     console.log('Connection closed');
     setTimeout(initWebSocket, 5000);
 }
+
 function onError(event)
 {
     console.log('Connection Error');
     setTimeout(initWebSocket, 5000);
 }
-
-// Toggle Switch Handlers
-const sink_BT_Enable_Toggle_Button = document.getElementById('Sink_BT_Enable_Toggle_Button');
-sink_BT_Enable_Toggle_Button.addEventListener('click', function()
-{
-	var Root = {};
-	Root.WidgetValue = {};
-	Root.WidgetValue.Id = 'BT_Sink_Enable';
-	Root.WidgetValue.Value = String(sink_BT_Enable_Toggle_Button.checked);
-	var Message = JSON.stringify(Root);
-	websocket.send(Message);
-});
-
-const sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
-sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
-{
-	var Root = {};
-	Root.WidgetValue = {};
-	Root.WidgetValue.Id = 'BT_Sink_Auto_ReConnect';
-	Root.WidgetValue.Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
-	var Message = JSON.stringify(Root);
-	websocket.send(Message);
-});
-
-const source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
-source_BT_Reset_Toggle_Button.addEventListener('click', function()
-{
-	var Root = {};
-	Root.WidgetValue = {};
-	Root.WidgetValue.Id = 'BT_Source_Reset';
-	Root.WidgetValue.Value = String(source_BT_Reset_Toggle_Button.checked);
-	var Message = JSON.stringify(Root);
-	websocket.send(Message);
-});
-
-const source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
-Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('click', function()
-{
-	var Root = {};
-	Root.WidgetValue = {};
-	Root.WidgetValue.Id = 'BT_Source_Auto_Reconnect';
-	Root.WidgetValue.Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
-	var Message = JSON.stringify(Root);
-	websocket.send(Message);
-});
 
 // Menu Functions
 function openNav() 
@@ -418,13 +414,10 @@ function onMessage(event)
 	console.log(event.data);
 	var myObj = JSON.parse(event.data);
 	var keys = Object.keys(myObj);
-	console.log(event.data);
 	for (var i = 0; i < keys.length; ++i)
 	{
 		var id = myObj[keys[i]]['Id'];
 		var value = myObj[keys[i]]['Value'];
-		console.log(id);
-		console.log(value);
 		const messageHandler = messageHandlers[id];
 		if (messageHandler) 
 		{
@@ -673,31 +666,16 @@ function handleBTSinkName(id, value) {
 	}
 }
 	
-function handleBTSinkEnable(id, value) {
-	if(id && value)
-	{
-		console.log('Received the Bluetooth Sink Enable!');
-		if(value == 'true')
-		{
-			sink_BT_Enable_Toggle_Button.checked = true;
-		}
-		else
-		{
-			sink_BT_Enable_Toggle_Button.checked = false;
-		}
-	}
-}
-	
 function handleBTSinkConnectionState(id, value) {
   if (id && value) {
     console.log('Received Bluetooth Source Connection State!');
-    const widgets = ['Sink_Connection_State_Textbox'];
+    const widgets = ['Sink_Connection_State_Text'];
 
     for (const widget of widgets) {
       if (document.getElementById(widget)) {
         console.log('Setting', widget, 'to', ConnectionStateString[parseInt(value)].toString());
         var element = document.getElementById(widget);
-        element.innerHTML = ConnectionStateString[parseInt(value)].toString();
+        element.textContent = ConnectionStateString[parseInt(value)].toString();
       }
     }
   }
@@ -743,13 +721,13 @@ function handleBTSourceAutoReconnect(id, value) {
 function handleBTSourceConnectionState(id, value) {
   if (id && value) {
     console.log('Received Bluetooth Source Connection State!');
-    const widgets = ['Source_Connection_State_Textbox'];
+    const widgets = ['Source_Connection_State_Text'];
 
     for (const widget of widgets) {
       if (document.getElementById(widget)) {
         console.log('Setting', widget, 'to', ConnectionStateString[parseInt(value)].toString());
         var element = document.getElementById(widget);
-        element.innerHTML = ConnectionStateString[parseInt(value)].toString();
+        element.textContent = ConnectionStateString[parseInt(value)].toString();
       }
     }
   }
