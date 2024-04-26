@@ -15,14 +15,14 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , Preferences *preferences
 							   , SerialPortMessageManager &serialPortMessageManager
 							   , NamedCallback_t *namedCallback )
-								: DataItem<T, COUNT>( name
-													, initialValue
-													, rxTxType
-													, updateStoreType
-													, rate
-													, serialPortMessageManager
-													, namedCallback )
-								, PreferencesWrapper<T, COUNT>(preferences)
+							   : DataItem<T, COUNT>( name
+							   					   , initialValue
+							   					   , rxTxType
+							   					   , updateStoreType
+							   					   , rate
+							   					   , serialPortMessageManager
+							   					   , namedCallback )
+							   , PreferencesWrapper<T, COUNT>(preferences)
 
 		{
 		}
@@ -43,9 +43,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 													, serialPortMessageManager
 													, namedCallback )
 								, PreferencesWrapper<T, COUNT>(preferences)
-							   
-{
-}
+		{
+		}
 		
 		void Setup() override
 		{
@@ -118,6 +117,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
 		virtual ~StringDataItemWithPreferences(){}
 		void SetValue(const char *Value, size_t Count) override
 		{
+			StringDataItem::SetValue(Value, Count);
 		}
 	private:
 		bool NewRXValueReceived(void* Object, size_t Count) override

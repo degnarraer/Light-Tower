@@ -82,9 +82,9 @@ function onload(event)
 	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
 	{
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = 'BT_Sink_Auto_ReConnect';
-		Root.WidgetValue.Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
+		Root.SignalValue = {};
+		Root.SignalValue.Id = 'BT_Sink_Auto_ReConnect';
+		Root.SignalValue.Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	});
@@ -93,9 +93,9 @@ function onload(event)
 	source_BT_Reset_Toggle_Button.addEventListener('change', function()
 	{
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = 'BT_Source_Reset';
-		Root.WidgetValue.Value = String(source_BT_Reset_Toggle_Button.checked);
+		Root.SignalValue = {};
+		Root.SignalValue.Id = 'BT_Source_Reset';
+		Root.SignalValue.Value = String(source_BT_Reset_Toggle_Button.checked);
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	});
@@ -104,9 +104,9 @@ function onload(event)
 	Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
 	{
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = 'BT_Source_Auto_Reconnect';
-		Root.WidgetValue.Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
+		Root.SignalValue = {};
+		Root.SignalValue.Id = 'BT_Source_Auto_Reconnect';
+		Root.SignalValue.Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	});
@@ -182,33 +182,16 @@ function Source_Name_Changed_Timeout()
 
 function submit_New_Name(element)
 {
-	var ButtonId = element.id;
-    if(ButtonId == 'Sink_Name_Submit_Button')
-	{
-		var Root = {};
-		var TextboxElement;
-		clearTimeout(sink_Name_Changed_TimeoutHandle);
-		TextboxElement = document.getElementById('Sink_Name_Text_Box');
-		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = TextboxElement.getAttribute("data-Signal");
-		Root.WidgetValue.Value = TextboxElement.value;
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
-	}
-	else if(ButtonId == 'Source_Name_Submit_Button')
-	{
-		var Root = {};
-		var TextboxElement;
-		clearTimeout(source_Name_Changed_TimeoutHandle);
-		TextboxElement = document.getElementById('Source_Name_Text_Box');
-		source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 5000);
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = TextboxElement.getAttribute("data-Signal");
-		Root.WidgetValue.Value = TextboxElement.value;
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
-	}
+	clearTimeout(sink_Name_Changed_TimeoutHandle);
+	var TextboxId = element.getAttribute("for");
+	var TextboxElement = document.getElementById(TextboxId);
+	var Root = {};
+	Root.SignalValue = {};
+	Root.SignalValue.Id = TextboxElement.getAttribute("data-Signal");
+	Root.SignalValue.Value = TextboxElement.value;
+	console.log('Submit New Name: \"' + TextboxElement.value + '\" Signal: \"' + TextboxElement.getAttribute("data-Signal") + '\"');
+	websocket.send(JSON.stringify(Root));
+	sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
 }
 
 function sink_Connect(element, isPressed)
@@ -219,9 +202,9 @@ function sink_Connect(element, isPressed)
 		if(isPressed)console.log('Sink Connect Button Pressed:');
 		if(!isPressed)console.log('Sink Connect Button Released:');
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = element.getAttribute("data-Signal");
-		Root.WidgetValue.Value = isPressed.toString();
+		Root.SignalValue = {};
+		Root.SignalValue.Id = element.getAttribute("data-Signal");
+		Root.SignalValue.Value = isPressed.toString();
 		websocket.send(JSON.stringify(Root));
 	}
 }
@@ -234,9 +217,9 @@ function sink_Disconnect(element, isPressed)
 		if(isPressed)console.log('Sink Disconnect Button Pressed:');
 		if(!isPressed)console.log('Sink Disconnect Button Released:');
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = element.getAttribute("data-Signal");
-		Root.WidgetValue.Value = isPressed.toString();
+		Root.SignalValue = {};
+		Root.SignalValue.Id = element.getAttribute("data-Signal");
+		Root.SignalValue.Value = isPressed.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -250,9 +233,9 @@ function source_Connect(element, isPressed)
 		if(isPressed)console.log('Source Connect Button Pressed:');
 		if(!isPressed)console.log('Source Connect Button Released:');
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = element.getAttribute("data-Signal");
-		Root.WidgetValue.Value = isPressed.toString();
+		Root.SignalValue = {};
+		Root.SignalValue.Id = element.getAttribute("data-Signal");
+		Root.SignalValue.Value = isPressed.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -266,9 +249,9 @@ function source_Disconnect(element, isPressed)
 		if(isPressed)console.log('Source Disconnect Button Pressed:');
 		if(!isPressed)console.log('Source Disconnect Button Released:');
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = element.getAttribute("data-Signal");
-		Root.WidgetValue.Value = isPressed.toString();
+		Root.SignalValue = {};
+		Root.SignalValue.Id = element.getAttribute("data-Signal");
+		Root.SignalValue.Value = isPressed.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -280,11 +263,11 @@ function updatesliderValue(element)
 	clearTimeout(sliderTimeoutHandle);
     sliderTouched = true;
     var Root = {};
-	Root.WidgetValue = {};
+	Root.SignalValue = {};
 	if(element.getAttribute("data-Signal"))
 	{
-		Root.WidgetValue.Id = element.getAttribute("data-Signal");
-		Root.WidgetValue.Value = element.value;
+		Root.SignalValue.Id = element.getAttribute("data-Signal");
+		Root.SignalValue.Value = element.value;
 		websocket.send(JSON.stringify(Root));
 		sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 	}
@@ -730,9 +713,9 @@ function showContent(classId, contentId, updateWebSocket = false) {
 	if(updateWebSocket && signal && value)
 	{
 		var Root = {};
-		Root.WidgetValue = {};
-		Root.WidgetValue.Id = signal.toString();
-		Root.WidgetValue.Value = value.toString();
+		Root.SignalValue = {};
+		Root.SignalValue.Id = signal.toString();
+		Root.SignalValue.Value = value.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}

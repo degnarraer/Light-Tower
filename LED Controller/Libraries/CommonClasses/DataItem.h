@@ -446,7 +446,7 @@ class StringDataItem: public DataItem<char, 50>
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			String NewValue = String(Value);
 			String CurrentValue = String(mp_TxValue);
-			assert(NewValue.length() == Count);
+			assert(NewValue.length() <= Count);
 			ESP_LOGD( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()

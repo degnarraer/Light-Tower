@@ -38,7 +38,7 @@ class WebSocketDataHandlerSender
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual bool  ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) = 0;
+    virtual bool  ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) = 0;
 };
 
 class WebSocketDataProcessor
@@ -57,7 +57,7 @@ class WebSocketDataProcessor
     void DeRegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver);
     void RegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
     void DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
-    bool ProcessWidgetValueAndSendToDatalink(const String& WidgetId, const String& Value);
+    bool ProcessSignalValueAndSendToDatalink(const String& WidgetId, const String& Value);
     void UpdateAllDataToClient(uint8_t clientId);
     void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
     {
@@ -197,7 +197,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     
-    virtual bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
+    virtual bool ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
     {
       bool found = false;
       for (size_t i = 0; i < m_WidgetIds.size(); i++)
@@ -205,7 +205,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         if( m_WidgetIds[i].equals(widgetId) )
         {
           found = true;
-          ESP_LOGI( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
+          ESP_LOGI( "WebSocketDataHandler: ProcessSignalValueAndSendToDatalink"
                   , "Widget ID[%i]: %s  Value: %s"
                   , i , m_WidgetIds[i].c_str(), stringValue.c_str() );
         }
@@ -217,7 +217,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         {
           m_DataItem.SetValue(newValue, COUNT);
           String newValueString = GetValueAsStringForDataType(newValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
-          ESP_LOGD( "WebSocketDataHandler: ProcessWidgetValueAndSendToDatalink"
+          ESP_LOGD( "WebSocketDataHandler: ProcessSignalValueAndSendToDatalink"
                   , "Web Socket Value: %s"
                   , newValueString.c_str());
         }
@@ -290,7 +290,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       }
     }
     
-    bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
+    bool ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
     {
       bool found = false;
       for (size_t i = 0; i < m_WidgetIds.size(); i++)
@@ -298,18 +298,18 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         if( m_WidgetIds[i].equals(widgetId) )
         {
           found = true;
-          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: ProcessWidgetValueAndSendToDatalink"
+          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: ProcessSignalValueAndSendToDatalink"
                   , "Widget ID[%i]: %s  Value: %s"
                   , i , m_WidgetIds[i].c_str(), stringValue.c_str() );
         }
       }
       if(found)
       {
-        ESP_LOGI("WebSocket_Compatible_Device_DataHandler: ProcessWidgetValueAndSendToDatalink", "New Web Socket Value for \"%s\": \"%s\"", widgetId.c_str(), stringValue.c_str());
+        ESP_LOGI("WebSocket_Compatible_Device_DataHandler: ProcessSignalValueAndSendToDatalink", "New Web Socket Value for \"%s\": \"%s\"", widgetId.c_str(), stringValue.c_str());
         JSONVar jSONObject = JSON.parse(stringValue);
         if (JSON.typeof(jSONObject) == "undefined")
         {
-          ESP_LOGE("WebSocket_Compatible_Device_DataHandler: ProcessWidgetValueAndSendToDatalink", "Error parsing JSON");
+          ESP_LOGE("WebSocket_Compatible_Device_DataHandler: ProcessSignalValueAndSendToDatalink", "Error parsing JSON");
           return false;
         }
         String name = jSONObject["Name"];
@@ -466,7 +466,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       }
     }
     
-    virtual bool ProcessWidgetValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
+    virtual bool ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
     {
       return false;
     }

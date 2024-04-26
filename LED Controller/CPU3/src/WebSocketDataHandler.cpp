@@ -75,12 +75,12 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& Name,
 }
 
 
-bool WebSocketDataProcessor::ProcessWidgetValueAndSendToDatalink(const String& WidgetId, const String& Value)
+bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& WidgetId, const String& Value)
 {
   bool WidgetFound = false;
   for(int i = 0; i < m_MyReceivers.size(); ++i)
   {
-    if(true == m_MyReceivers[i]->ProcessWidgetValueAndSendToDatalink(WidgetId, Value))
+    if(true == m_MyReceivers[i]->ProcessSignalValueAndSendToDatalink(WidgetId, Value))
     {
       WidgetFound = true;
     }
@@ -96,7 +96,7 @@ String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *Ke
     JSONVar SettingValues;
     SettingValues["Id"] = KeyValuePairs->at(i).Key;
     SettingValues["Value"] = KeyValuePairs->at(i).Value;
-    jSONVars["WidgetValue" + String(i)] = SettingValues; 
+    jSONVars["SignalValue" + String(i)] = SettingValues; 
   }
   return JSON.stringify(jSONVars);
 }

@@ -133,17 +133,17 @@ class SettingsWebServerManager
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
-    WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Sink Enable Web Socket Handler", {"BT_Sink_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Sink Enable Web Socket Handler", {"BT_Sink_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
 
     //Sink Name
     const String m_SinkName_InitialValue = "LED Tower of Power";  
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
-    WebSocketDataHandler<char, 50> m_SinkName_DataHandler = WebSocketDataHandler<char, 50>( "Bluetooth Sink Name Web Socket Handler", {"Sink_Name"}, m_WebSocketDataProcessor, true, true, m_SinkName, false );
+    WebSocketDataHandler<char, 50> m_SinkName_DataHandler = WebSocketDataHandler<char, 50>( "Sink Name Web Socket Handler", {"Sink_Name"}, m_WebSocketDataProcessor, true, true, m_SinkName, false );
 
     //Source Name
     const String m_SourceName_InitialValue = "";  
     StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue.c_str(), RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
-    WebSocketDataHandler<char, 50> m_SourceName_DataHandler = WebSocketDataHandler<char, 50>( "Bluetooth Sink Name Web Socket Handler", {"Source_Name"}, m_WebSocketDataProcessor, true, true, m_SourceName, false );
+    WebSocketDataHandler<char, 50> m_SourceName_DataHandler = WebSocketDataHandler<char, 50>( "Sink Name Web Socket Handler", {"Source_Name"}, m_WebSocketDataProcessor, true, true, m_SourceName, false );
 
     //Sink Connection State
     const ConnectionStatus_t m_SinkConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
@@ -153,12 +153,12 @@ class SettingsWebServerManager
     //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
-    WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Enable Web Socket Handler", {"BT_Sink_Auto_ReConnect"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkAutoReConnect, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Source Enable Web Socket Handler", {"BT_Sink_Auto_ReConnect"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkAutoReConnect, false );
     
     //Bluetooth Source Enable
     const bool m_BluetoothSourceEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
-    WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Enable Web Socket Handler", {"BT_Source_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSourceEnable, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Source Enable Web Socket Handler", {"BT_Source_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSourceEnable, false );
 
     //Target Device
     CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
@@ -336,7 +336,7 @@ class SettingsWebServerManager
                 ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str() );
-                if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(Id.c_str(), Value.c_str()))
+                if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
                 {
                   ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget Value Object: %s", Id.c_str());
                 }
@@ -356,7 +356,7 @@ class SettingsWebServerManager
                 ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str());
-                if(!m_WebSocketDataProcessor.ProcessWidgetValueAndSendToDatalink(Id.c_str(), Value.c_str()))
+                if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
                 {
                   ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", Id.c_str());
                 }

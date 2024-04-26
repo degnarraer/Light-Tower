@@ -154,7 +154,7 @@ class Manager: public NamedItem
                                                  , &m_SinkAutoReConnect };
     NamedCallback_t m_SinkName_Callback = { "Sink Name Callback"
                                           , &SinkName_ValueChanged
-                                          , &m_SinkConnect_CallbackArgs };
+                                          , &m_SinkName_CallbackArgs };
     const String m_SinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
                                                                             , m_SinkName_InitialValue.c_str()
@@ -166,7 +166,8 @@ class Manager: public NamedItem
                                                                             , &m_SinkName_Callback );
     static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
     {
-      if(arg && object && Name.equals("Sink_Name"))
+      ESP_LOGI("SinkName_ValueChanged", "CALLED");
+      if(arg && object)
       {
         Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
         assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");

@@ -84,7 +84,7 @@
 								Disconnect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" Dataonmousedown="sink_Disconnect(this, true)" onmouseup="sink_Disconnect(this, false)">Disconnect</button>
+								<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" onmousedown="sink_Disconnect(this, true)" onmouseup="sink_Disconnect(this, false)">Disconnect</button>
 							</div>
 						</div>
 					</div>
@@ -96,9 +96,8 @@
 							<div class="settingGroup_Textbox">
 								<label for="Sink_Name_Text_Box"></label><input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Name">
 							</div>
-
 							<div class="settingGroup_Widget">
-								<button id="Sink_Name_Submit_Button" onclick="submit_New_Name(this)">Submit</button>
+								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="submit_New_Name(this)">Submit</button>
 							</div>
 						</div>
 					</div>
