@@ -136,9 +136,14 @@ class SettingsWebServerManager
     WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Sink Enable Web Socket Handler", {"BT_Sink_Enable"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
 
     //Sink Name
-    const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";  
-    StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name", m_BluetoothSinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
-    WebSocketDataHandler<char, 50> m_BluetoothSinkName_DataHandler = WebSocketDataHandler<char, 50>( "Bluetooth Sink Name Web Socket Handler", {"BT_Sink_Name"}, m_WebSocketDataProcessor, true, true, m_BluetoothSinkName, false );
+    const String m_SinkName_InitialValue = "LED Tower of Power";  
+    StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
+    WebSocketDataHandler<char, 50> m_SinkName_DataHandler = WebSocketDataHandler<char, 50>( "Bluetooth Sink Name Web Socket Handler", {"Sink_Name"}, m_WebSocketDataProcessor, true, true, m_SinkName, false );
+
+    //Source Name
+    const String m_SourceName_InitialValue = "";  
+    StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue.c_str(), RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
+    WebSocketDataHandler<char, 50> m_SourceName_DataHandler = WebSocketDataHandler<char, 50>( "Bluetooth Sink Name Web Socket Handler", {"Source_Name"}, m_WebSocketDataProcessor, true, true, m_SourceName, false );
 
     //Sink Connection State
     const ConnectionStatus_t m_SinkConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
@@ -374,7 +379,7 @@ class SettingsWebServerManager
     void InitWiFiClient()
     {
       WiFi.mode(WIFI_STA);
-      WiFi.begin(m_BluetoothSinkName.GetValueAsString("").c_str(), password);
+      WiFi.begin(m_SinkName.GetValuePointer(), password);
       ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting to WiFi ..");
       while (WiFi.status() != WL_CONNECTED) {
         ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting...");
@@ -396,7 +401,7 @@ class SettingsWebServerManager
       IPAddress NMask(255, 255, 255, 0);
       
       WiFi.softAPConfig(Ip, Ip, NMask);
-      WiFi.softAP(m_BluetoothSinkName.GetValueAsString("").c_str(), password);
+      WiFi.softAP(m_SinkName.GetValueAsString("").c_str(), password);
       IPAddress ipAddress = WiFi.softAPIP();
       ESP_LOGI( "SettingsWebServer: InitWifiClient"
               , "Connected! IP Address: %i.%i.%i.%i"

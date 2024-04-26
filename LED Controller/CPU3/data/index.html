@@ -36,9 +36,9 @@
 					<div class="settingGroup_Horrizontal_Grid_slider">
 						<div class="settingGroup_Title">Input Gain</div>
 						<div class="settingGroup_Widget">
-							<label for="Amplitude_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
+							<label for="Amplitude_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
-						<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider1_Value">10.0</span></div>
+						<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1_Value">10.0</span></div>
 					</div>
 				</div>
 			</div>
@@ -59,9 +59,9 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">Input Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
-							<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider2_Value">10.0</span> </div>
+							<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider2_Value">10.0</span> </div>
 						</div>
 					</div>
 				</div>
@@ -74,7 +74,7 @@
 								Connect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Connect_Button" onmousedown="sink_Connect(this, true)" onmouseup="sink_Connect(this, false)">Connect</button>
+								<button id="Sink_Connect_Button" data-Signal="Sink_Connect" onmousedown="sink_Connect(this, true)" onmouseup="sink_Connect(this, false)">Connect</button>
 							</div>
 						</div>
 					</div>
@@ -84,7 +84,7 @@
 								Disconnect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Disconnect_Button" onmousedown="sink_Disconnect(this, true)" onmouseup="sink_Disconnect(this, false)">Disconnect</button>
+								<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" Dataonmousedown="sink_Disconnect(this, true)" onmouseup="sink_Disconnect(this, false)">Disconnect</button>
 							</div>
 						</div>
 					</div>
@@ -94,7 +94,7 @@
 								Bluetooth Bridge Name
 							</div>
 							<div class="settingGroup_Textbox">
-								<label for="Sink_Name_Text_Box"></label><input type="text" id="Sink_Name_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Name">
+								<label for="Sink_Name_Text_Box"></label><input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Name">
 							</div>
 
 							<div class="settingGroup_Widget">
@@ -108,7 +108,7 @@
 								Bluetooth Bridge State
 							</div>
 							<div class="settingGroup_Value">
-        						<span id="Sink_Connection_State_Text">Disconnected</span>
+        						<span data-Signal="BT_Sink_Connection_State" id="Sink_Connection_State_Text">Disconnected</span>
 							</div>
 						</div>
 					</div>
@@ -119,7 +119,7 @@
 							</div>
 							<div for="Sink_BT_Auto_ReConnect_Toggle_Button" class="settingGroup_Widget">
 								<label class="widget_Toggle_Switch">
-								<input type="checkbox" id="Sink_BT_Auto_ReConnect_Toggle_Button">
+								<input type="checkbox" data-Source="BT_Sink_Auto_ReConnect" id="Sink_BT_Auto_ReConnect_Toggle_Button">
 								<span class="slider Round"></span>
 								</label>
 							</div>
@@ -129,9 +129,9 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">Input Gain</div>
 								<div class="settingGroup_Widget">
-									<label for="Amplitude_Gain_Slider3"></label><input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider3" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
+									<label for="Amplitude_Gain_Slider3"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider3" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 								</div>
-								<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider3_Value">10.0</span></div>
+								<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider3_Value">10.0</span></div>
 							</div>
 						</div>
 					</div>
@@ -154,7 +154,7 @@
 									Found Bluetooth Speakers
 								</div>
 								<div class="settingGroup_Widget">
-									<ul id="compatibleDeviceList"></ul>
+									<ul data-Source="BT_Source_Target_Devices" id="compatibleDeviceList"></ul>
 								</div>
 							</div>
 						</div>
@@ -164,7 +164,7 @@
 									Bluetooth Speaker Name
 								</div>
 								<div class="settingGroup_Textbox">
-									<label for="Source_Name_Text_Box"></label><input type="text" id="Source_Name_Text_Box" value="Enter Name">
+									<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" value="Enter Name">
 								</div>
 								<div class="settingGroup_Widget">
 									<button id="Source_Name_Submit_Button" onclick="submit_New_Name(this)">Submit</button>
@@ -177,7 +177,7 @@
 									Connect
 								</div>
 								<div class="settingGroup_Widget">
-									<button id="Source_Connect_Button" onmousedown="source_Connect(this, true)" onmouseup="source_Connect(this, false)">Connect</button>
+									<button id="Source_Connect_Button" data-Signal="Source_Connect" onmousedown="source_Connect(this, true)" onmouseup="source_Connect(this, false)">Connect</button>
 								</div>
 							</div>
 						</div>
@@ -187,7 +187,7 @@
 									Disconnect
 								</div>
 								<div class="settingGroup_Widget">
-									<button id="Source_Disconnect_Button" onmousedown="source_Disconnect(this, true)" onmouseup="source_Disconnect(this, false)">Disconnect</button>
+									<button id="Source_Disconnect_Button" data-Signal="Source_Disconnect" dataonmousedown="source_Disconnect(this, true)" onmouseup="source_Disconnect(this, false)">Disconnect</button>
 								</div>
 							</div>
 						</div>
@@ -197,7 +197,7 @@
 									Bluetooth Speaker State
 								</div>
 								<div class="settingGroup_Value">
-									<span id="Source_Connection_State_Text">Disconnected</span>
+									<span data-Source="BT_Source_Connection_State" id="Source_Connection_State_Text">Disconnected</span>
 								</div>
 							</div>
 						</div>
@@ -208,7 +208,7 @@
 								</div>
 								<div class="settingGroup_Widget">
 									<label for="Source_BT_Reset_Toggle_Button" class="widget_Toggle_Switch">
-									<input type="checkbox" id="Source_BT_Reset_Toggle_Button">
+									<input type="checkbox" data-Source="BT_Source_Reset" id="Source_BT_Reset_Toggle_Button">
 									<span class="slider Round"></span>
 									</label>
 								</div>
@@ -221,7 +221,7 @@
 								</div>
 								<div class="settingGroup_Widget">
 									<label for="Source_BT_Auto_ReConnect_Toggle_Button" class="widget_Toggle_Switch">
-									<input type="checkbox" id="Source_BT_Auto_ReConnect_Toggle_Button">
+									<input type="checkbox" data-Source="BT_Source_Auto_Reconnect" id="Source_BT_Auto_ReConnect_Toggle_Button">
 									<span class="slider Round"></span>
 									</label>
 								</div>
@@ -234,9 +234,9 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">FFT Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="FFT_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="FFT_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="FFT_Gain" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
-							<div class="settingGroup_Value"><span id="FFT_Gain_Slider1_Value">10.0</span> </div>
+							<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_Slider1_Value">10.0</span> </div>
 						</div>
 					</div>
 				</div>
@@ -245,18 +245,18 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">Input Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="updatesliderValue(this)" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider4" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
-							<div class="settingGroup_Value"><span id="Amplitude_Gain_Slider2_Value">10.0</span> </div>
+							<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider4_Value">10.0</span> </div>
 						</div>
 					</div>
 					<div class="settingGroup">
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">FFT Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="FFT_Gain_slider2"></label><input type="range" oninput="updatesliderValue(this)" id="FFT_Gain_slider2" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="FFT_Gain_slider4"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="FFT_Gain" data-Signal="FFT_Gain" id="FFT_Gain_slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
-							<div class="settingGroup_Value"><span id="FFT_Gain_slider2_Value">10.0</span> </div>
+							<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_slider4_Value">10.0</span> </div>
 						</div>
 					</div>	
 				</div>

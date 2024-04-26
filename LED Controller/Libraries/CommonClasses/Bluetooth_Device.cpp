@@ -23,7 +23,7 @@
 BluetoothConnectionStateCaller::BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT )
 															  : mp_BT(BT)
 {
-	if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStateCaller", 2000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
+	if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStateCaller", 10000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
 	{	
 		ESP_LOGE("BluetoothConnectionStateCaller", "Error Creating Task!");
 	}
@@ -79,7 +79,7 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
-	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  5000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
+	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  10000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
 	{
 		ESP_LOGE("InstallDevice", "Error Creating Task!");
 	}
@@ -94,7 +94,7 @@ void Bluetooth_Source::StartDevice()
 {
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
 	InstallDevice();
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Started with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
 }
 
 void Bluetooth_Source::StopDevice()
@@ -112,6 +112,7 @@ void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddres
 {
 	m_Name = SourceName;
 	m_Address = SourceAddress;
+	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
 	m_BTSource.start_raw(m_MusicDataCallback);
 	m_Is_Running = true;
 }

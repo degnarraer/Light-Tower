@@ -37,39 +37,26 @@ const ConnectionStateString =
 }
 
 const messageHandlers = {
-	'Sound_Input_Source': handleSoundInputSource,
-	'Sound_Output_Source': handleSoundOutputSource,
-	
-	'Speaker_Image': handleSpeakerImage,
 	'Amplitude_Gain': handleAmplitudeGain,
 	'FFT_Gain': handleFFTGain,
-	'FFT_Gain_slider2': handleFFTGain,
-	
-	'BT_Sink_Name': handleBTSinkName,
-	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
+	'Sound_Input_Source': handleSoundInputSource,
+	'Sound_Output_Source': handleSoundOutputSource,
+	'BT_Sink_Enable' : handleStubFunction,
+	'Sink_Name': handleBTSinkName,
+	'Source_Name' : handleStubFunction,
 	'BT_Sink_Connection_State': handleBTSinkConnectionState,
-	
-	'BT_Source_Enable': handleBTSourceEnable,
+	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
+	'BT_Source_Enable' : handleStubFunction,
+	'BT_Source_Target_Device': handleBTSourceTargetDevice,
+	'Sink_Connect' : handleStubFunction,
+	'Sink_Disconnect' : handleStubFunction,
+	'Source_Connect' : handleStubFunction,
+	'Source_Disconnect' : handleStubFunction,
+	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
 	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
 	'BT_Source_Connection_State': handleBTSourceConnectionState,
 	'BT_Source_Reset': handleBTSourceReset,
-	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
-	'BT_Source_Target_Device': handleBTSourceTargetDevice,
-};
-
-const widgetToSignal = {
-	'Amplitude_Gain_Slider1': 'Amplitude_Gain',
-	'Amplitude_Gain_Slider2': 'Amplitude_Gain',
-	'Amplitude_Gain_Slider3': 'Amplitude_Gain',
-	'Amplitude_Gain_Slider4': 'Amplitude_Gain',
-	'FFT_Gain_Slider1': 'FFT_Gain',
-	'FFT_Gain_Slider2': 'FFT_Gain',
-	'FFT_Gain_Slider3': 'FFT_Gain',
-	'FFT_Gain_Slider4': 'FFT_Gain',
-	'Sink_Disconnect_Button': 'Sink_Disconnect',
-	'Sink_Connect_Button': 'Sink_Connect',
-	'Source_Disconnect_Button': 'Source_Disconnect',
-	'Source_Connect_Button': 'Source_Connect',
+	'Speaker_Image': handleSpeakerImage,
 };
 
 const classToSignal = {
@@ -89,7 +76,7 @@ const contentIdToValue = {
 window.addEventListener('load', onload);
 function onload(event)
 {
-    setTimeout(initWebSocket, 5000);
+    initWebSocket();
 	// Toggle Switch Handlers
 	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
 	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
@@ -204,7 +191,7 @@ function submit_New_Name(element)
 		TextboxElement = document.getElementById('Sink_Name_Text_Box');
 		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
-		Root.WidgetValue.Id = TextboxElement.id;
+		Root.WidgetValue.Id = TextboxElement.getAttribute("data-Signal");
 		Root.WidgetValue.Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
@@ -217,7 +204,7 @@ function submit_New_Name(element)
 		TextboxElement = document.getElementById('Source_Name_Text_Box');
 		source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 5000);
 		Root.WidgetValue = {};
-		Root.WidgetValue.Id = TextboxElement.id;
+		Root.WidgetValue.Id = TextboxElement.getAttribute("data-Signal");
 		Root.WidgetValue.Value = TextboxElement.value;
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
@@ -233,10 +220,9 @@ function sink_Connect(element, isPressed)
 		if(!isPressed)console.log('Sink Connect Button Released:');
 		var Root = {};
 		Root.WidgetValue = {};
-		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Id = element.getAttribute("data-Signal");
 		Root.WidgetValue.Value = isPressed.toString();
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		websocket.send(JSON.stringify(Root));
 	}
 }
 
@@ -249,7 +235,7 @@ function sink_Disconnect(element, isPressed)
 		if(!isPressed)console.log('Sink Disconnect Button Released:');
 		var Root = {};
 		Root.WidgetValue = {};
-		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Id = element.getAttribute("data-Signal");
 		Root.WidgetValue.Value = isPressed.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
@@ -265,7 +251,7 @@ function source_Connect(element, isPressed)
 		if(!isPressed)console.log('Source Connect Button Released:');
 		var Root = {};
 		Root.WidgetValue = {};
-		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Id = element.getAttribute("data-Signal");
 		Root.WidgetValue.Value = isPressed.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
@@ -281,7 +267,7 @@ function source_Disconnect(element, isPressed)
 		if(!isPressed)console.log('Source Disconnect Button Released:');
 		var Root = {};
 		Root.WidgetValue = {};
-		Root.WidgetValue.Id = widgetToSignal[element.id];
+		Root.WidgetValue.Id = element.getAttribute("data-Signal");
 		Root.WidgetValue.Value = isPressed.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
@@ -293,17 +279,13 @@ function updatesliderValue(element)
 {
 	clearTimeout(sliderTimeoutHandle);
     sliderTouched = true;
-	var sliderName = element.id;
-    var sliderValue = document.getElementById(sliderName).value;
     var Root = {};
 	Root.WidgetValue = {};
-	var signal = widgetToSignal[sliderName.toString()];
-	if(signal)
+	if(element.getAttribute("data-Signal"))
 	{
-		Root.WidgetValue.Id = signal.toString();
-		Root.WidgetValue.Value = sliderValue.toString();
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		Root.WidgetValue.Id = element.getAttribute("data-Signal");
+		Root.WidgetValue.Value = element.value;
+		websocket.send(JSON.stringify(Root));
 		sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 	}
 }
@@ -434,37 +416,30 @@ function handleBTSourceTargetDevice(id, value)
 {
 	if(id && value)
 	{
-		console.log('Received BT Source Target Device!');
-		console.log(value);
-		const widgets = 
-		[
-		  'Source_Name_Text_Box',
-		];
-		try 
+		console.log('Received BT Source Target Device!' && value);
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Source_Name"]');
+		elementsWithDataValue.forEach(function(element)
 		{
-			var innerData = JSON.parse(value);
-			var innerKeys = Object.keys(innerData);
-
-			for (var j = 0; j < innerKeys.length; ++j) 
+			try 
 			{
-				var address = innerData[innerKeys[j]]['ADDRESS'];
-				var name = innerData[innerKeys[j]]['NAME'];
-				if(address & name)
+				var innerData = JSON.parse(value);
+				var innerKeys = Object.keys(innerData);
+
+				for (var j = 0; j < innerKeys.length; ++j) 
 				{
-					for(widget in  widgets)
+					var address = innerData[innerKeys[j]]['ADDRESS'];
+					var name = innerData[innerKeys[j]]['NAME'];
+					if(address & name)
 					{
-						if(document.getElementById(widget))
-						{
-							document.getElementById(widget).value = name;
-						}
+						element.value = name;
 					}
 				}
 			}
-		}
-		catch (error)
-		{
-			console.error('Error parsing JSON in handleBTSourceTargetDevice:', error);
-		}
+			catch (error)
+			{
+				console.error('Error parsing JSON in handleBTSourceTargetDevice:', error);
+			}
+		});
 	}
 }
 
@@ -504,34 +479,37 @@ function handleBTSourceTargetDevices(id, value)
 	}
 }
 
-function updateCompatibleDeviceList() {
-	const deviceListElement = document.getElementById("compatibleDeviceList");
-	deviceListElement.innerHTML = ""; // Clear previous entries
-
-	// Iterate through the Bluetooth data and create list items
-	compatibleDevices.forEach((device, index) => 
-	{
-		const listItem = document.createElement("li");
-		listItem.className = "deviceItem";
-		if (index === selectedDeviceIndex)
-		{
-			listItem.classList.add("selected");
+function updateCompatibleDeviceList() {	
+	var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Target_Devices"]');
+	elementsWithDataValue.forEach(function(element){
+		if(element.hasOwnProperty("innerHTML")){
+			deviceListElement.innerHTML = ""; // Clear previous entries
+			// Iterate through the Bluetooth data and create list items
+			compatibleDevices.forEach((device, index) => {
+				const listItem = document.createElement("li");
+				listItem.className = "deviceItem";
+				if (index === selectedDeviceIndex){
+					listItem.classList.add("selected");
+				}
+				listItem.innerHTML = `<strong>Name:</strong> ${device.name}<br>
+									<strong>Address:</strong> ${device.address}<br>
+									<strong>RSSI:</strong> ${device.rssi}`;
+				element.appendChild(listItem);
+				
+				// Attach a click listener to the list item
+				listItem.addEventListener("click", () => {
+					handleTargetDeviceItemClick(device);
+				});
+			});
 		}
-		listItem.innerHTML = `<strong>Name:</strong> ${device.name}<br>
-							 <strong>Address:</strong> ${device.address}<br>
-							 <strong>RSSI:</strong> ${device.rssi}`;
-		deviceListElement.appendChild(listItem);
-		
-		// Attach a click listener to the list item
-        listItem.addEventListener("click", () => {
-            handleDeviceItemClick(device);
-        });
-		
+		else{
+			console.log('updateCompatibleDeviceList Unsupported Element!');
+		}
 	});
 }
 
 // Function to handle the click event on a device list item
-function handleDeviceItemClick(device) {
+function handleTargetDeviceItemClick(device) {
     // Do something with the selected device's name and address
     console.log('Selected Name:', device.name);
     console.log('Selected Address:', device.address);
@@ -596,110 +574,92 @@ function handleSpeakerImage(id, value) {
 	}
 }
 
+function handleStubFunction(id, value) {
+
+}
+
 function handleAmplitudeGain(id, value) {
-	if(id && value)
-	{
-		console.log('Received Amplitude Gain!');
-		const widgets = 
-		[
-		  'Amplitude_Gain_Slider1',
-		  'Amplitude_Gain_Slider2',
-		  'Amplitude_Gain_Slider3',
-		];
-		for (const widget of widgets) 
-		{
-			if(false == sliderTouched && document.getElementById(widget))
-			{
-				document.getElementById(widget).value = value;
-			}
-			if(document.getElementById(widget + '_Value'))
-			{
-				document.getElementById(widget + '_Value').innerHTML = value;
-			}
-		}
-	}
+    if (id && value) {
+        console.log('Received Amplitude Gain:' + value);
+        var elementsWithDataValue = document.querySelectorAll('[data-Signal="Amplitude_Gain"]');
+        elementsWithDataValue.forEach(function (element) {
+            if (element.hasAttribute("value")) {
+                element.value = value;
+            } else if (element.childNodes.length > 0) {
+                element.innerHTML = value;
+            } else {
+                console.log('handleAmplitudeGain Unsupported Element: ' + element.id);
+            }
+        });
+    }
 }
 
 function handleFFTGain(id, value) {
-	if(id && value)
-	{
-		console.log('Received FFT Gain!');
-		const widgets = 
-		[
-			'FFT_Gain_Slider1',
-			'FFT_Gain_Slider2',
-			'FFT_Gain_Slider3',
-			'FFT_Gain_Slider4',
-		];
-		for (const widget of widgets) 
-		{
-			if(false == sliderTouched && document.getElementById(widget))
-			{
-			document.getElementById(widget).value = value;
-			}
-			if(document.getElementById(widget + '_Value'))
-			{
-			document.getElementById(widget + '_Value').innerHTML = value;
-			}
-		}
-	}
+    if (id && value) {
+        console.log('Received FFT Gain: ' + value);
+        var elementsWithDataValue = document.querySelectorAll('[data-Signal="FFT_Gain"]');
+        elementsWithDataValue.forEach(function (element) {
+            if (element.hasAttribute("value")) {
+                element.value = value;
+            } else if (element.childNodes.length > 0) {
+                element.innerHTML = value;
+            } else {
+                console.log('handleAmplitudeGain Unsupported Element: ' + element.id);
+            }
+        });
+    }
 }
 
 function handleBTSinkName(id, value) {
 	if(id && value)
 	{
 		console.log('Received Bluetooth Sink Name!');
-		const widgets = 
-		[
-			'Sink_Name_Text_Box',
-		];
-		if(!sink_Name_Value_Changed)
-		{
-			for(widget in  widgets)
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Sink_Name"]');
+		elementsWithDataValue.forEach(function(element){
+			if(!sink_Name_Value_Changed)
 			{
-				if(document.getElementById(widget))
-				{
-					document.getElementById(widget).value = value;
+				if (element.hasAttribute("value")) {
+					element.value = value;
+				} else if (element.childNodes.length > 0) {
+					element.innerHTML = value;
+				} else {
+					console.log('handleBTSinkName Unsupported Element: ' + element.id);
 				}
 			}
-		}
+		});
 	}
 }
 	
 function handleBTSinkConnectionState(id, value) {
-  if (id && value) {
-    console.log('Received Bluetooth Source Connection State!');
-    const widgets = ['Sink_Connection_State_Text'];
-
-    for (const widget of widgets) {
-      if (document.getElementById(widget)) {
-        console.log('Setting', widget, 'to', ConnectionStateString[parseInt(value)].toString());
-        var element = document.getElementById(widget);
-        element.textContent = ConnectionStateString[parseInt(value)].toString();
-      }
+    if (id && value) {
+        console.log('Received Bluetooth Source Connection State!');
+        var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Sink_Connection_State"]');
+        elementsWithDataValue.forEach(function (element) {
+            if (element.textContent !== undefined) {
+                element.textContent = ConnectionStateString[parseInt(value)].toString();
+            } else {
+				console.log('handleBTSinkConnectionState Unsupported Element: ' + element.id);
+			}
+        });
     }
-  }
 }
 	
 function handleBTSinkAutoReConnect(id, value) {
 	if(id && value)
 	{
 		console.log('Received the Bluetooth Sink Auto ReConnect!');
-		if(value == 'true')
-		{
-			sink_BT_Auto_ReConnect_Toggle_Button.checked = true;
-		}
-		else
-		{
-			sink_BT_Auto_ReConnect_Toggle_Button.checked = false;
-		}
-	}
-}
-
-function handleBTSourceEnable(id, value) {
-	if(id && value)
-	{
-		console.log('Received Bluetooth Source Enable!');
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Sink_Auto_ReConnect"]');
+		elementsWithDataValue.forEach(function(element){
+			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
+				if(value == 'true'){
+					element.checked = true;
+				}else{
+					element.checked = false;
+				}
+			} else {
+				console.log('handleBTSinkAutoReConnect Unsupported Element!');
+			}
+		});
 	}
 }
 
@@ -707,29 +667,32 @@ function handleBTSourceAutoReconnect(id, value) {
 	if(id && value)
 	{
 		console.log('Received Bluetooth Source Auto Reconnect!');
-		if(value == 'true')
-		{
-			source_BT_Auto_ReConnect_Toggle_Button.checked = true;
-		}
-		else
-		{
-			source_BT_Auto_ReConnect_Toggle_Button.checked = false;
-		}
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Auto_ReConnect"]');
+		elementsWithDataValue.forEach(function(element){
+			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
+				if(value == 'true'){
+					element.checked = true;
+				}else{
+					element.checked = false;
+				}
+			} else {
+				console.log('handleBTSourceAutoReconnect Unsupported Element!');
+			}
+		});
 	}
 }
 
 function handleBTSourceConnectionState(id, value) {
   if (id && value) {
     console.log('Received Bluetooth Source Connection State!');
-    const widgets = ['Source_Connection_State_Text'];
-
-    for (const widget of widgets) {
-      if (document.getElementById(widget)) {
-        console.log('Setting', widget, 'to', ConnectionStateString[parseInt(value)].toString());
-        var element = document.getElementById(widget);
-        element.textContent = ConnectionStateString[parseInt(value)].toString();
-      }
-    }
+	var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Connection_State"]');
+	elementsWithDataValue.forEach(function(element){
+		if(element.hasOwnProperty("textContent")){
+			element.textContent = ConnectionStateString[parseInt(value)].toString();
+		} else {
+			console.log('handleBTSourceConnectionState Unsupported Element!');
+		}
+	});
   }
 }
 
@@ -737,14 +700,18 @@ function handleBTSourceReset(id, value) {
 	if(id && value)
 	{
 		console.log('Received Bluetooth Source Reset!');
-		if(value == 'true')
-		{
-			source_BT_Reset_Toggle_Button.checked = true;
-		}
-		else
-		{
-			source_BT_Reset_Toggle_Button.checked = false;
-		}
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Reset"]');
+		elementsWithDataValue.forEach(function(element){
+			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
+				if(value == 'true'){
+					element.checked = true;
+				}else{
+					element.checked = false;
+				}
+			} else {
+				console.log('handleBTSourceReset Unsupported Element!');
+			}
+		});
 	}
 }
 

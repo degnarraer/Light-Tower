@@ -105,7 +105,7 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
   if(m_ConnectionStatus.GetValue() != newValue)
   {
     m_ConnectionStatus.SetValue(newValue);
-    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", ConnectionStatusStrings[connectionState]);
+    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
   }
 }
 

@@ -150,50 +150,69 @@ class Manager: public NamedItem
     }
     
     //Bluetooth Sink Name
-    Callback2Arguments m_BluetoothSinkName_CallbackArgs = { &m_BT_In
-                                                          , &m_BluetoothSinkAutoReConnect };
-    NamedCallback_t m_BluetoothSinkName_Callback = { "Sink Connect Callback"
-                                                   , &SinkConnect_ValueChanged
-                                                   , &m_SinkConnect_CallbackArgs };
-    const String m_BluetoothSinkName_InitialValue = "LED Tower of Power";
-    StringDataItemWithPreferences m_BluetoothSinkName = StringDataItemWithPreferences( "BT_Sink_Name"
-                                                                                     , m_BluetoothSinkName_InitialValue.c_str()
-                                                                                     , RxTxType_Rx_Echo_Value
-                                                                                     , UpdateStoreType_On_Rx
-                                                                                     , 0
-                                                                                     , &m_Preferences
-                                                                                     , m_CPU3SerialPortMessageManager
-                                                                                     , &m_BluetoothSinkName_Callback );
-    static void BluetoothSinkName_ValueChanged(const String &Name, void* object, void* arg)
+    Callback2Arguments m_SinkName_CallbackArgs = { &m_BT_In
+                                                 , &m_SinkAutoReConnect };
+    NamedCallback_t m_SinkName_Callback = { "Sink Name Callback"
+                                          , &SinkName_ValueChanged
+                                          , &m_SinkConnect_CallbackArgs };
+    const String m_SinkName_InitialValue = "LED Tower of Power";
+    StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
+                                                                            , m_SinkName_InitialValue.c_str()
+                                                                            , RxTxType_Rx_Echo_Value
+                                                                            , UpdateStoreType_On_Rx
+                                                                            , 0
+                                                                            , &m_Preferences
+                                                                            , m_CPU3SerialPortMessageManager
+                                                                            , &m_SinkName_Callback );
+    static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
     {
-      if(arg && object)
+      if(arg && object && Name.equals("Sink_Name"))
       {
         Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
         assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");
         Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
         DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
         char* sinkName = static_cast<char*>(object);
-        ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
+        ESP_LOGI("SinkName_ValueChanged", "Sink Name Changed: %s", sinkName);
         pBT_In->Disconnect();
         pBT_In->Connect(sinkName, pBluetoothSinkAutoReConnect->GetValue());
       }
 
     }
     //Bluetooth Sink Auto Reconnect
-    const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR"
-                                                                                                    , m_BluetoothSinkAutoReConnect_InitialValue
-                                                                                                    , RxTxType_Rx_Echo_Value
-                                                                                                    , UpdateStoreType_On_Rx
-                                                                                                    , 0
-                                                                                                    , &m_Preferences
-                                                                                                    , m_CPU3SerialPortMessageManager
-                                                                                                    , NULL);
-    
+    Callback2Arguments m_SinkAutoReConnect_CallbackArgs = { &m_BT_In
+                                                          , &m_SinkName };
+    NamedCallback_t m_SinkAutoReConnect_Callback = { "Sink Connect Callback"
+                                                   , &SinkAutoReConnect_ValueChanged
+                                                   , &m_SinkAutoReConnect_CallbackArgs };
+    const bool m_SinkAutoReConnect_InitialValue = false;
+    DataItemWithPreferences<bool, 1> m_SinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR"
+                                                                                           , m_SinkAutoReConnect_InitialValue
+                                                                                           , RxTxType_Rx_Echo_Value
+                                                                                           , UpdateStoreType_On_Rx
+                                                                                           , 0
+                                                                                           , &m_Preferences
+                                                                                           , m_CPU3SerialPortMessageManager
+                                                                                           , NULL);
+    static void SinkAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(arg && object)
+      {
+        Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
+        assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");
+        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+        DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
+        ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
+        pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+      }
+    }
+
+
+
     //Sink Connect
     Callback3Arguments m_SinkConnect_CallbackArgs = { &m_BT_In
-                                                    , &m_BluetoothSinkName
-                                                    , &m_BluetoothSinkAutoReConnect };
+                                                    , &m_SinkName
+                                                    , &m_SinkAutoReConnect };
     NamedCallback_t m_SinkConnect_Callback = { "Sink Connect Callback"
                                              , &SinkConnect_ValueChanged
                                              , &m_SinkConnect_CallbackArgs };

@@ -59,7 +59,7 @@ void InitWebServer()
   {
     request->send(SPIFFS, "/index.html", "text/html");
   });
-  MyWebServer.serveStatic("/", SPIFFS, "/").setCacheControl("max-age = 300");
+  MyWebServer.serveStatic("/", SPIFFS, "/").setCacheControl("no-cache, no-store, must-revalidate");
 }
 
 // Start the web server

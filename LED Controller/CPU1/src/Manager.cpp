@@ -168,7 +168,7 @@ void Manager::SetInputSource(SoundInputSource_t Type)
       m_Mic_In.StopDevice();
       m_I2S_Out.StopDevice();
       m_BT_In.StartDevice();
-      m_BT_In.Connect(m_BluetoothSinkName.GetValuePointer(), m_BluetoothSinkAutoReConnect.GetValue());
+      m_BT_In.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
       break;
     }
     case SoundInputSource_OFF:
