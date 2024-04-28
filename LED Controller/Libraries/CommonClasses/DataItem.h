@@ -292,6 +292,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
 		const uint16_t m_Rate;
+		SerialPortMessageManager &m_SerialPortMessageManager;
+		size_t m_ValueChangeCount = 0;
 		
 		T *mp_Value;
 		T *mp_RxValue;
@@ -310,8 +312,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 					{
 						memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
 						++m_ValueChangeCount;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
 						ValueUpdated = true;
+						this->CallCallbacks(m_Name.c_str(), mp_Value);
 					}
 				}
 				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
@@ -346,8 +348,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 					{
 						memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
 						++m_ValueChangeCount;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
 						ValueUpdated = true;
+						this->CallCallbacks(m_Name.c_str(), mp_Value);
 					}
 				}
 			}
@@ -372,8 +374,6 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		}
 	private:
 		bool m_DataLinkEnabled = true;
-		size_t m_ValueChangeCount = 0;
-		SerialPortMessageManager &m_SerialPortMessageManager;
 		NamedCallback_t *mp_NamedCallback = NULL;
 		esp_timer_handle_t m_TxTimer;
 		size_t m_Count = COUNT;
@@ -445,7 +445,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			assert(Value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			String NewValue = String(Value);
-			String CurrentValue = String(mp_TxValue);
+			String CurrentValue = String(this->mp_TxValue);
 			assert(NewValue.length() <= Count);
 			ESP_LOGI( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
@@ -454,18 +454,44 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			bool ValueChanged = !NewValue.equals(CurrentValue);
 			if(ValueChanged)
 			{
-				ZeroOutCharArray(mp_TxValue);
-				strcpy(mp_TxValue, Value);
+				ZeroOutCharArray(this->mp_TxValue);
+				strcpy(this->mp_TxValue, Value);
 				this->DataItem_Try_TX_On_Change();
 			}
 		}
 	protected:
+		virtual bool DataItem_TX_Now() override
+		{
+			bool ValueUpdated = false;
+			String CurrentTxValue = String(this->mp_TxValue);
+			String CurrentValue = String(this->mp_Value);
+			if(this->m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
+			{
+				bool TxValueChanged = !CurrentTxValue.equals(CurrentValue);
+				if(m_UpdateStoreType == UpdateStoreType_On_Tx)
+				{
+					if(TxValueChanged)
+					{
+						strcpy(this->mp_Value, this->mp_TxValue);
+						++m_ValueChangeCount;
+						ValueUpdated = true;
+						this->CallCallbacks(m_Name.c_str(), mp_Value);
+					}
+				}
+				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+			}
+			else
+			{
+				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
+			}
+			return ValueUpdated;
+		}
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override 
 		{ 
 			bool ValueUpdated = false;
 			String NewValue = String((char*)Object);
-			String CurrentRxValue = String(mp_RxValue);
-			String CurrentValue = String(mp_Value);
+			String CurrentRxValue = String(this->mp_RxValue);
+			String CurrentValue = String(this->mp_Value);
 			bool ValueChanged = !NewValue.equals(CurrentRxValue);
 			if(ValueChanged)
 			{
@@ -481,15 +507,17 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 				{
 					if(RxValueChanged)
 					{
-						ZeroOutCharArray(mp_Value);
-						strcpy(mp_Value, mp_RxValue);
+						ZeroOutCharArray(this->mp_Value);
+						strcpy(this->mp_Value, this->mp_RxValue);
+						++m_ValueChangeCount;
 						ValueUpdated = true;
+						this->CallCallbacks(m_Name.c_str(), this->mp_Value);
 					}
 				}
 				if(RxTxType_Rx_Echo_Value == m_RxTxType)
 				{
-					ZeroOutCharArray(mp_TxValue);
-					strcpy(mp_TxValue, mp_RxValue);
+					ZeroOutCharArray(this->mp_TxValue);
+					strcpy(this->mp_TxValue, this->mp_RxValue);
 					this->DataItem_TX_Now();
 				}
 			}
