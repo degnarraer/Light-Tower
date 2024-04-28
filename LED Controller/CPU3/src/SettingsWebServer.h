@@ -138,12 +138,12 @@ class SettingsWebServerManager
     //Sink Name
     const String m_SinkName_InitialValue = "LED Tower of Power";  
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
-    WebSocketDataHandler<char, 50> m_SinkName_DataHandler = WebSocketDataHandler<char, 50>( "Sink Name Web Socket Handler", {"Sink_Name"}, m_WebSocketDataProcessor, true, true, m_SinkName, false );
+    WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( "Sink Name Web Socket Handler", {"Sink_Name"}, m_WebSocketDataProcessor, true, true, m_SinkName, false );
 
     //Source Name
     const String m_SourceName_InitialValue = "";  
     StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue.c_str(), RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
-    WebSocketDataHandler<char, 50> m_SourceName_DataHandler = WebSocketDataHandler<char, 50>( "Sink Name Web Socket Handler", {"Source_Name"}, m_WebSocketDataProcessor, true, true, m_SourceName, false );
+    WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( "Sink Name Web Socket Handler", {"Source_Name"}, m_WebSocketDataProcessor, true, true, m_SourceName, false );
 
     //Sink Connection State
     const ConnectionStatus_t m_SinkConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
@@ -326,13 +326,13 @@ class SettingsWebServerManager
           }
           else
           {
-            if(jsonObject.hasOwnProperty("WidgetValue"))
+            if(jsonObject.hasOwnProperty("SignalValue"))
             {
-              JSONVar widgetValue = jsonObject["WidgetValue"];
-              if (widgetValue.hasOwnProperty("Id") && widgetValue.hasOwnProperty("Value"))
+              JSONVar signalValue = jsonObject["SignalValue"];
+              if (signalValue.hasOwnProperty("Id") && signalValue.hasOwnProperty("Value"))
               {
-                String Id = widgetValue["Id"];
-                String Value = widgetValue["Value"];
+                String Id = signalValue["Id"];
+                String Value = signalValue["Value"];
                 ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str() );
@@ -343,7 +343,7 @@ class SettingsWebServerManager
               }
               else
               {
-                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", widgetValue["Id"].as<char*>());
+                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", signalValue["Id"].as<char*>());
               }
             }
             else if(jsonObject.hasOwnProperty("JSONValue"))

@@ -28,6 +28,8 @@
 #include "AsyncTCP.h"
 #include "Arduino_JSON.h"
 
+#define DATAITEM_STRING_LENGTH 50
+
 class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
@@ -235,6 +237,61 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     size_t m_OldChangeCount = 0;
   private:
     uint64_t m_Last_Update_Time = millis();
+};
+
+class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>
+{
+  public:
+    WebSocket_String_DataHandler( const String &Name 
+                                , const std::initializer_list<const char*>& signalIds
+                                , WebSocketDataProcessor &WebSocketDataProcessor
+                                , const bool &IsReceiver
+                                , const bool &IsSender
+                                , StringDataItem &DataItem
+                                , const bool Debug )
+                                : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( Name
+                                                                , signalIds
+                                                                , WebSocketDataProcessor
+                                                                , IsReceiver
+                                                                , IsSender
+                                                                , DataItem
+                                                                , Debug)
+    {
+    }
+    
+    virtual ~WebSocket_String_DataHandler()
+    {
+    }
+  protected:
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> *keyValuePairs, bool forceUpdate = false) override
+    { 
+      char currentValue[DATAITEM_STRING_LENGTH];
+      size_t newChangeCount = m_DataItem.GetValue(&currentValue, DATAITEM_STRING_LENGTH);
+      bool valueChanged = newChangeCount != this->m_OldChangeCount;
+      this->m_OldChangeCount = newChangeCount;
+      if( forceUpdate || valueChanged )
+      {
+        ESP_LOGI("WebSocket_String_DataHandler: AppendCurrentValueToKVP", "Current Value: \"%s\"", currentValue);
+        for(size_t i = 0; i < m_WidgetIds.size(); i++)
+        {
+          keyValuePairs->push_back({ m_WidgetIds[i], currentValue });
+        }
+      }
+    }
+    
+    virtual bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& stringValue) override
+    {
+      bool found = false;
+      if(signalId.equals(m_DataItem.GetName()))
+      {
+        found = true;
+        m_DataItem.SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
+      }
+      return found;
+    }
+  private:
+    //Datalink
+
 };
 
 class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<CompatibleDevice_t, 1>
