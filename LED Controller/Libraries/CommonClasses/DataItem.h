@@ -411,12 +411,12 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					  , SerialPortMessageManager &serialPortMessageManager
 					  , NamedCallback_t *namedCallback )
 					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
-										  , initialValue
-										  , rxTxType
-										  , updateStoreType
-										  , rate
-										  , serialPortMessageManager
-										  , namedCallback )
+															  , initialValue
+															  , rxTxType
+															  , updateStoreType
+															  , rate
+															  , serialPortMessageManager
+															  , namedCallback )
 		{
 		  
 		}
@@ -428,12 +428,12 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					  , SerialPortMessageManager &serialPortMessageManager
 					  , NamedCallback_t *namedCallback )
 					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
-										  , initialValue
-										  , rxTxType
-										  , updateStoreType
-										  , rate
-										  , serialPortMessageManager
-										  , namedCallback )
+										     				  , initialValue
+										     				  , rxTxType
+										     				  , updateStoreType
+										     				  , rate
+										     				  , serialPortMessageManager
+										     				  , namedCallback )
 		{
 		  
 		}
@@ -447,7 +447,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			String NewValue = String(Value);
 			String CurrentValue = String(mp_TxValue);
 			assert(NewValue.length() <= Count);
-			ESP_LOGD( "DataItem: SetValue"
+			ESP_LOGI( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, NewValue.c_str() );
@@ -471,10 +471,10 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			{
 				ZeroOutCharArray(mp_RxValue);
 				strcpy(mp_RxValue, NewValue.c_str());
-				ESP_LOGD( "DataItem: NewRXValueReceived"
+				ESP_LOGI( "DataItem: NewRXValueReceived"
 						, "\"%s\" New RX Value Received: \"%s\""
 						, m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, DataType_Char_t, this->GetCount(), ""));
+						, NewValue.c_str());
 				
 				bool RxValueChanged = !CurrentRxValue.equals(CurrentValue);
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )

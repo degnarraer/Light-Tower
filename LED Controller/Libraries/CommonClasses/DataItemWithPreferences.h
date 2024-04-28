@@ -53,10 +53,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 		}
 		virtual ~DataItemWithPreferences(){}
-		virtual void SetValue(const T *Value, size_t Count)
-		{
-			DataItem<T, COUNT>::SetValue(Value, Count);
-		}
 	protected:
 		bool DataItem_TX_Now() override
 		{
@@ -71,7 +67,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return result;
 		}
 };
-class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
+class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_STRING_LENGTH>
 								   , public StringDataItem
 {
 	public:
@@ -83,7 +79,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager
 									 , NamedCallback_t *namedCallback )
-								     : PreferencesWrapper<char, 50>(preferences)
+								     : PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
 									 , StringDataItem( name
 													 , initialValue
 													 , rxTxType
@@ -102,7 +98,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager 
 									 , NamedCallback_t *namedCallback)
-								     : PreferencesWrapper<char, 50>(preferences)
+								     : PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
 									 , StringDataItem( name
 													 , initialValue
 													 , rxTxType
