@@ -28,8 +28,6 @@
 #include "AsyncTCP.h"
 #include "Arduino_JSON.h"
 
-#define DATAITEM_STRING_LENGTH 50
-
 class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {

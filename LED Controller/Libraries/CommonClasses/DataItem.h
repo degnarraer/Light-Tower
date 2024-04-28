@@ -25,7 +25,7 @@
 #include <Arduino.h>
 #include <esp_heap_caps.h>
 #include "SerialMessageManager.h"
-
+#define DATAITEM_STRING_LENGTH 50
 enum RxTxType_t
 {
 	RxTxType_Tx_Periodic,
@@ -400,7 +400,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			}
 		}
 };
-class StringDataItem: public DataItem<char, 50>
+class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 {
 	public:
 		StringDataItem( const String name
@@ -410,7 +410,7 @@ class StringDataItem: public DataItem<char, 50>
 					  , const uint16_t rate
 					  , SerialPortMessageManager &serialPortMessageManager
 					  , NamedCallback_t *namedCallback )
-					  : DataItem<char, 50>( name
+					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
 										  , initialValue
 										  , rxTxType
 										  , updateStoreType
@@ -427,7 +427,7 @@ class StringDataItem: public DataItem<char, 50>
 					  , const uint16_t rate
 					  , SerialPortMessageManager &serialPortMessageManager
 					  , NamedCallback_t *namedCallback )
-					  : DataItem<char, 50>( name
+					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
 										  , initialValue
 										  , rxTxType
 										  , updateStoreType
@@ -451,13 +451,10 @@ class StringDataItem: public DataItem<char, 50>
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, NewValue.c_str() );
-			bool ValueChanged = CurrentValue.equals(NewValue);
+			bool ValueChanged = !NewValue.equals(CurrentValue);
 			if(ValueChanged)
 			{
-				for (size_t i = 0; i < this->GetCount(); ++i)
-				{
-					mp_TxValue[i] = '\0';
-				}
+				ZeroOutCharArray(mp_TxValue);
 				strcpy(mp_TxValue, Value);
 				this->DataItem_Try_TX_On_Change();
 			}
@@ -469,42 +466,41 @@ class StringDataItem: public DataItem<char, 50>
 			String NewValue = String((char*)Object);
 			String CurrentRxValue = String(mp_RxValue);
 			String CurrentValue = String(mp_Value);
-			bool ValueChanged = CurrentRxValue.equals(NewValue);
+			bool ValueChanged = !NewValue.equals(CurrentRxValue);
 			if(ValueChanged)
 			{
-				for (size_t i = 0; i < this->GetCount(); ++i)
-				{
-					mp_RxValue[i] = '\0';
-				}
+				ZeroOutCharArray(mp_RxValue);
 				strcpy(mp_RxValue, NewValue.c_str());
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "\"%s\" New RX Value Received: \"%s\""
 						, m_Name.c_str()
 						, GetValueAsStringForDataType(mp_RxValue, DataType_Char_t, this->GetCount(), ""));
 				
-				bool RxValueChanged = CurrentRxValue.equals(CurrentValue);
+				bool RxValueChanged = !CurrentRxValue.equals(CurrentValue);
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
 					if(RxValueChanged)
 					{
-						for (size_t i = 0; i < this->GetCount(); ++i)
-						{
-							mp_Value[i] = '\0';
-						}
+						ZeroOutCharArray(mp_Value);
 						strcpy(mp_Value, mp_RxValue);
 						ValueUpdated = true;
 					}
 				}
 				if(RxTxType_Rx_Echo_Value == m_RxTxType)
 				{
-					for (size_t i = 0; i < this->GetCount(); ++i)
-					{
-						mp_TxValue[i] = '\0';
-					}
+					ZeroOutCharArray(mp_TxValue);
 					strcpy(mp_TxValue, mp_RxValue);
 					this->DataItem_TX_Now();
 				}
 			}
 			return ValueUpdated;
+		}
+	private:
+		void ZeroOutCharArray(char* pChar)
+		{
+			for (size_t i = 0; i < this->GetCount(); ++i)
+			{
+				pChar[i] = '\0';
+			}
 		}
 };

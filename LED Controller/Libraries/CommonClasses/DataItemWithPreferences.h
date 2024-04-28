@@ -46,7 +46,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 		}
 		
-		void Setup() override
+		virtual void Setup() override
 		{
 			DataItem<T, COUNT>::Setup();
 			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
@@ -115,13 +115,31 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, 50>
 		}
 		
 		virtual ~StringDataItemWithPreferences(){}
-		void SetValue(const char *Value, size_t Count) override
-		{
-			StringDataItem::SetValue(Value, Count);
-		}
 	private:
-		bool NewRXValueReceived(void* Object, size_t Count) override
+		virtual void Setup() override
 		{
-			return false;
+			StringDataItem::Setup();
+			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+		}
+
+		virtual bool DataItem_TX_Now() override
+		{
+			bool result = StringDataItem::DataItem_TX_Now();
+			if(result)
+			{
+				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			}
+			return result;
+		}
+
+		virtual bool NewRXValueReceived(void* Object, size_t Count) override
+		{
+			bool result = StringDataItem::NewRXValueReceived(Object, Count);
+			if(result) 
+			{
+				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_RxValue, this->mp_InitialValue);
+			}
+			return result;
 		}
 };
