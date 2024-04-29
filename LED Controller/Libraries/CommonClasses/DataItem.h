@@ -202,7 +202,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
 			assert(COUNT == Count && "Counts must match");
 			ESP_LOGD( "DataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
+					, "\"%s\" Set Value1: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			bool ValueChanged = (memcmp(mp_TxValue, Value, sizeof(T) * COUNT) != 0);
@@ -217,7 +217,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			assert(COUNT == 1 && "COUNT must be 1 to use this");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			ESP_LOGD( "DataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
+					, "\"%s\" Set Value2: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			bool ValueChanged = (memcmp(mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
@@ -304,16 +304,15 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		{
 			bool ValueUpdated = false;
 			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
-			{
-				bool TxValueChanged = (memcmp(mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0);
-				if(m_UpdateStoreType == UpdateStoreType_On_Tx)
+			{				
+				if(memcmp(mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0)
 				{
-					if(TxValueChanged)
+					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
 						memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
 						++m_ValueChangeCount;
 						ValueUpdated = true;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
+						this->CallCallbacks(m_Name.c_str(), mp_Value);		
 					}
 				}
 				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
@@ -328,23 +327,20 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		{	
 			bool ValueUpdated = false;
 			T* receivedValue = static_cast<T*>(Object);
-			bool ValueChanged = (memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0);
 			ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX: \"%s\" Value: \"%s\""
 						, m_Name.c_str()
 						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-			if(ValueChanged)
+			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, m_Name.c_str()
 						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-				
-				bool RxValueChanged = (memcmp(mp_Value, mp_RxValue, sizeof(T) * COUNT) != 0);
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					if(RxValueChanged)
+					if(memcmp(mp_Value, mp_RxValue, sizeof(T) * COUNT) != 0)
 					{
 						memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
 						++m_ValueChangeCount;
@@ -366,7 +362,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		}
 		void DataItem_Try_TX_On_Change()
 		{
-			ESP_LOGD("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
+			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				DataItem_TX_Now();
@@ -445,17 +441,21 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			assert(Value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			String NewValue = String(Value);
-			String CurrentValue = String(this->mp_TxValue);
+			String CurrentValue = String(mp_TxValue);
 			assert(NewValue.length() <= Count);
 			ESP_LOGI( "DataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
+					, "\"%s\" Set Value3A: \"%s\""
 					, m_Name.c_str()
 					, NewValue.c_str() );
 			bool ValueChanged = !NewValue.equals(CurrentValue);
+			ZeroOutCharArray(mp_TxValue);
+			strcpy(mp_TxValue, Value);
+			ESP_LOGI( "DataItem: SetValue"
+					, "\"%s\" Set Value3B: \"%s\""
+					, m_Name.c_str()
+					, NewValue.c_str() );
 			if(ValueChanged)
 			{
-				ZeroOutCharArray(this->mp_TxValue);
-				strcpy(this->mp_TxValue, Value);
 				this->DataItem_Try_TX_On_Change();
 			}
 		}
@@ -463,16 +463,14 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool DataItem_TX_Now() override
 		{
 			bool ValueUpdated = false;
-			String CurrentTxValue = String(this->mp_TxValue);
-			String CurrentValue = String(this->mp_Value);
 			if(this->m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
 			{
-				bool TxValueChanged = !CurrentTxValue.equals(CurrentValue);
-				if(m_UpdateStoreType == UpdateStoreType_On_Tx)
+				if(strcmp(mp_Value, mp_TxValue) != 0)
 				{
-					if(TxValueChanged)
+					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
-						strcpy(this->mp_Value, this->mp_TxValue);
+						ZeroOutCharArray(mp_Value);
+						strcpy(mp_Value, mp_TxValue);
 						++m_ValueChangeCount;
 						ValueUpdated = true;
 						this->CallCallbacks(m_Name.c_str(), mp_Value);
@@ -489,37 +487,32 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override 
 		{ 
 			bool ValueUpdated = false;
-			String NewValue = String((char*)Object);
-			String CurrentRxValue = String(this->mp_RxValue);
-			String CurrentValue = String(this->mp_Value);
-			bool ValueChanged = !NewValue.equals(CurrentRxValue);
-			if(ValueChanged)
+			char* receivedValue = (char*)Object;
+			if(strcmp(mp_RxValue, receivedValue) != 0)
 			{
 				ZeroOutCharArray(mp_RxValue);
-				strcpy(mp_RxValue, NewValue.c_str());
+				strcpy(mp_RxValue, receivedValue);
 				ESP_LOGI( "DataItem: NewRXValueReceived"
 						, "\"%s\" New RX Value Received: \"%s\""
 						, m_Name.c_str()
-						, NewValue.c_str());
-				
-				bool RxValueChanged = !CurrentRxValue.equals(CurrentValue);
-				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
+						, receivedValue );
+				if(strcmp(mp_Value, mp_RxValue) != 0)
 				{
-					if(RxValueChanged)
+					if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 					{
-						ZeroOutCharArray(this->mp_Value);
-						strcpy(this->mp_Value, this->mp_RxValue);
+						ZeroOutCharArray(mp_Value);
+						strcpy(mp_Value, mp_RxValue);
 						++m_ValueChangeCount;
 						ValueUpdated = true;
-						this->CallCallbacks(m_Name.c_str(), this->mp_Value);
+						this->CallCallbacks(m_Name.c_str(), mp_Value);
 					}
 				}
-				if(RxTxType_Rx_Echo_Value == m_RxTxType)
-				{
-					ZeroOutCharArray(this->mp_TxValue);
-					strcpy(this->mp_TxValue, this->mp_RxValue);
-					this->DataItem_TX_Now();
-				}
+			}
+			if(RxTxType_Rx_Echo_Value == m_RxTxType)
+			{
+				ZeroOutCharArray(mp_TxValue);
+				strcpy(mp_TxValue, mp_RxValue);
+				this->DataItem_TX_Now();
 			}
 			return ValueUpdated;
 		}

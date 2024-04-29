@@ -57,13 +57,19 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		bool DataItem_TX_Now() override
 		{
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
-			if(result) this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			if(result)
+			{
+				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			}
 			return result;
 		}
 		virtual bool NewRXValueReceived(void* Object, size_t Count) override
 		{
 			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
-			if(result) this->Update_Preference("Updated", this->GetName().c_str(), this->mp_RxValue, this->mp_InitialValue);
+			if(result)
+			{
+				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			}
 			return result;
 		}
 };
@@ -134,7 +140,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::NewRXValueReceived(Object, Count);
 			if(result) 
 			{
-				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_RxValue, this->mp_InitialValue);
+				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			}
 			return result;
 		}
