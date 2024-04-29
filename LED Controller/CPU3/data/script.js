@@ -28,6 +28,7 @@ const ConnectionState =
 	Connected: 2,
 	Disconnecting: 3
 }
+
 const ConnectionStateString = 
 {
 	0: 'Disconnected',
@@ -44,6 +45,8 @@ const messageHandlers = {
 	'BT_Sink_Enable' : handleStubFunction,
 	'Sink_Name': handleBTSinkName,
 	'Source_Name' : handleStubFunction,
+	'SSID' : handleSSID,
+	'Password' : handlePassword,
 	'BT_Sink_Connection_State': handleBTSinkConnectionState,
 	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
 	'BT_Source_Enable' : handleStubFunction,
@@ -180,7 +183,7 @@ function Source_Name_Changed_Timeout()
 	source_Name_Value_Changed = false;
 }
 
-function submit_New_Name(element)
+function submit_New_Value_From_TextBox(element)
 {
 	clearTimeout(sink_Name_Changed_TimeoutHandle);
 	var TextboxId = element.getAttribute("for");
@@ -593,21 +596,52 @@ function handleFFTGain(id, value) {
     }
 }
 
+function handleSSID(id, value){
+	if(id && value)
+	{
+		console.log('Received SSID!');
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="SSID"]');
+		elementsWithDataValue.forEach(function(element){
+			if (element.hasAttribute("value")) {
+				element.value = value;
+			} else if (element.childNodes.length > 0) {
+				element.innerHTML = value;
+			} else {
+				console.log('handleBTSinkName Unsupported Element: ' + element.id);
+			}
+		});
+	}
+}
+
+function handlePassword(id, value){
+	if(id && value)
+	{
+		console.log('Received Password!');
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Password"]');
+		elementsWithDataValue.forEach(function(element){
+			if (element.hasAttribute("value")) {
+				element.value = value;
+			} else if (element.childNodes.length > 0) {
+				element.innerHTML = value;
+			} else {
+				console.log('handleBTSinkName Unsupported Element: ' + element.id);
+			}
+		});
+	}
+}
+
 function handleBTSinkName(id, value) {
 	if(id && value)
 	{
 		console.log('Received Bluetooth Sink Name!');
 		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Sink_Name"]');
 		elementsWithDataValue.forEach(function(element){
-			if(!sink_Name_Value_Changed)
-			{
-				if (element.hasAttribute("value")) {
-					element.value = value;
-				} else if (element.childNodes.length > 0) {
-					element.innerHTML = value;
-				} else {
-					console.log('handleBTSinkName Unsupported Element: ' + element.id);
-				}
+			if (element.hasAttribute("value")) {
+				element.value = value;
+			} else if (element.childNodes.length > 0) {
+				element.innerHTML = value;
+			} else {
+				console.log('handleBTSinkName Unsupported Element: ' + element.id);
 			}
 		});
 	}
@@ -704,7 +738,9 @@ function showContent(classId, contentId, updateWebSocket = false) {
 	tabContents.forEach(function (tabContent) {
 		tabContent.classList.remove('active');
 	});
-
+	var heading = document.getElementById("mainMenu_Heading");
+	heading.innerText = contentId;
+	
 	// Show the selected tab content
 	document.getElementById(contentId).classList.add('active');
 	

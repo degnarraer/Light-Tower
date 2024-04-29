@@ -14,6 +14,7 @@
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
 			<a href="javascript:void(0)"  class="CloseButton" onclick="closeNav()">&times;</a>
 			<button class="Tablinks" onclick="showContent('menu-content', 'Speaker Status')">Speaker Status</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Wifi')">Wifi</button>
 			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Input')">Sound Input</button>
 			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Output')">Sound Output</button>
 			<button class="Tablinks" onclick="showContent('menu-content', 'Real Time FFT')">Real Time FFT</button>
@@ -39,6 +40,34 @@
 							<label for="Amplitude_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
 						<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1_Value">10.0</span></div>
+					</div>
+				</div>
+			</div>
+			<div class="menu-content" id="Wifi">
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_TextInput">
+						<div class="settingGroup_Title">
+							SSID
+						</div>
+						<div class="settingGroup_Textbox">
+							<label for="SSID_Text_Box"></label><input type="text" data-Signal="SSID" id="SSID_Text_Box" oninput="textBoxValueChanged(this)" value="Enter SSID">
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="SSID_Submit_Button" for="SSID_Text_Box" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_TextInput">
+						<div class="settingGroup_Title">
+							Password
+						</div>
+						<div class="settingGroup_Textbox">
+							<label for="Password_Text_Box"></label><input type="text" data-Signal="Password" id="Password_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Password">
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="Password_Submit_Button" for="Password_Text_Box" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -97,7 +126,7 @@
 								<label for="Sink_Name_Text_Box"></label><input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Name">
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="submit_New_Name(this)">Submit</button>
+								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
 							</div>
 						</div>
 					</div>
@@ -166,7 +195,7 @@
 									<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" value="Enter Name">
 								</div>
 								<div class="settingGroup_Widget">
-									<button id="Source_Name_Submit_Button" onclick="submit_New_Name(this)">Submit</button>
+									<button id="Source_Name_Submit_Button" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
 								</div>
 							</div>
 						</div>

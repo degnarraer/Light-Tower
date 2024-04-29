@@ -148,7 +148,7 @@ class Manager: public NamedItem
         manager->SetInputSource(*inputSource);
       }
     }
-    
+
     //Bluetooth Sink Name
     Callback2Arguments m_SinkName_CallbackArgs = { &m_BT_In
                                                  , &m_SinkAutoReConnect };
@@ -178,8 +178,8 @@ class Manager: public NamedItem
         pBT_In->Disconnect();
         pBT_In->Connect(sinkName, pBluetoothSinkAutoReConnect->GetValue());
       }
-
     }
+
     //Bluetooth Sink Auto Reconnect
     Callback2Arguments m_SinkAutoReConnect_CallbackArgs = { &m_BT_In
                                                           , &m_SinkName };
