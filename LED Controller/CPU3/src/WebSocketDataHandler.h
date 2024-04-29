@@ -38,7 +38,7 @@ class WebSocketDataHandlerSender
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual bool  ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) = 0;
+    virtual bool  ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& stringValue) = 0;
 };
 
 class WebSocketDataProcessor
@@ -57,14 +57,14 @@ class WebSocketDataProcessor
     void DeRegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver);
     void RegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
     void DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
-    bool ProcessSignalValueAndSendToDatalink(const String& WidgetId, const String& Value);
+    bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& Value);
     void UpdateAllDataToClient(uint8_t clientId);
     void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
     {
       ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
       std::vector<KVP> KeyValuePairs = std::vector<KVP>();
       sender->AppendCurrentValueToKVP(&KeyValuePairs, forceUpdate);
-      NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
+      NotifyClients(Encode_Signal_Values_To_JSON(&KeyValuePairs));
     }
     static void StaticWebSocketDataProcessor_Task(void * parameter)
     {
@@ -77,7 +77,7 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     void WebSocketDataProcessor_Task();
-    String Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs);
+    String Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs);
     void NotifyClient(uint8_t clientID, const String& TextString);
     void NotifyClients(const String& TextString);
     template<typename T>
@@ -193,9 +193,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     
-    virtual bool ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
+    virtual bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& stringValue) override
     {
-      bool found = m_Signal.equals(widgetId);      
+      bool found = m_Signal.equals(SignalId);      
       if(found)
       {
         T newValue[COUNT];
@@ -327,12 +327,12 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       }
     }
     
-    bool ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
+    bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& stringValue) override
     {
-      bool found = m_Signal.equals(widgetId);
+      bool found = m_Signal.equals(SignalId);
       if(found)
       {
-        ESP_LOGI("WebSocket_Compatible_Device_DataHandler: ProcessSignalValueAndSendToDatalink", "New Web Socket Value for \"%s\": \"%s\"", widgetId.c_str(), stringValue.c_str());
+        ESP_LOGI("WebSocket_Compatible_Device_DataHandler: ProcessSignalValueAndSendToDatalink", "New Web Socket Value for \"%s\": \"%s\"", SignalId.c_str(), stringValue.c_str());
         JSONVar jSONObject = JSON.parse(stringValue);
         if (JSON.typeof(jSONObject) == "undefined")
         {
@@ -490,7 +490,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       }
     }
     
-    virtual bool ProcessSignalValueAndSendToDatalink(const String& widgetId, const String& stringValue) override
+    virtual bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& stringValue) override
     {
       return false;
     }

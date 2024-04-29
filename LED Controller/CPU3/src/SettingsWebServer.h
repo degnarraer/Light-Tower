@@ -390,12 +390,12 @@ class SettingsWebServerManager
               {
                 String Id = signalValue["Id"];
                 String Value = signalValue["Value"];
-                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Widget Value Data Received. Id: \"%s\" Value: \"%s\""
+                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Signal Value Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str() );
                 if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
                 {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Widget Value Object: %s", Id.c_str());
+                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Signal Value Object: %s", Id.c_str());
                 }
               }
               else

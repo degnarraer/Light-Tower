@@ -9,7 +9,7 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   {
     m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs, true);
   }
-  NotifyClient(clientId, Encode_Widget_Values_To_JSON(&KeyValuePairs));
+  NotifyClient(clientId, Encode_Signal_Values_To_JSON(&KeyValuePairs));
 }
 
 void WebSocketDataProcessor::WebSocketDataProcessor_Task()
@@ -26,7 +26,7 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     }
     if(KeyValuePairs.size() >0)
     {
-      NotifyClients(Encode_Widget_Values_To_JSON(&KeyValuePairs));
+      NotifyClients(Encode_Signal_Values_To_JSON(&KeyValuePairs));
     }
   }  
 }
@@ -75,20 +75,20 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& Name,
 }
 
 
-bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& WidgetId, const String& Value)
+bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& Value)
 {
-  bool WidgetFound = false;
+  bool SignalFound = false;
   for(int i = 0; i < m_MyReceivers.size(); ++i)
   {
-    if(true == m_MyReceivers[i]->ProcessSignalValueAndSendToDatalink(WidgetId, Value))
+    if(true == m_MyReceivers[i]->ProcessSignalValueAndSendToDatalink(SignalId, Value))
     {
-      WidgetFound = true;
+      SignalFound = true;
     }
   }
-  return WidgetFound;
+  return SignalFound;
 }
 
-String WebSocketDataProcessor::Encode_Widget_Values_To_JSON(std::vector<KVP> *KeyValuePairs)
+String WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs)
 {
   JSONVar jSONVars;
   for(int i = 0; i < KeyValuePairs->size(); ++i)
