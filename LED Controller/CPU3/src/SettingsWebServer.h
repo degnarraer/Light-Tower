@@ -72,12 +72,6 @@ class SettingsWebServerManager: public SetupCallerInterface
         m_Preferences.putBool("Pref_Reset", false);
       }
     }
-    // Web Socket init to register web socket callback and connect it to the web server
-    void InitWebSocket()
-    {
-      m_WebSocket.onEvent(OnEvent);
-      m_WebServer.addHandler(&m_WebSocket);
-    }
 
     // Init the web server to use the local SPIFFS memory and serve up index.html file.
     void InitWebServer()
@@ -115,7 +109,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       m_WebServer.begin();
     }
 
-    static void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+    void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
     {
       SettingsWebServerManager *instance = reinterpret_cast<SettingsWebServerManager*>(arg);
       if (instance)
@@ -129,7 +123,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             Serial.printf("WebSocket client #%u Pinged Us!\n", client->id());
             break;
           case WS_EVT_DATA:
-            instance->HandleWebSocketMessage(client, arg, data, len);
+            HandleWebSocketMessage(client, arg, data, len);
             break;
           case WS_EVT_ERROR:
             Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
@@ -489,7 +483,6 @@ class SettingsWebServerManager: public SetupCallerInterface
         IPAddress ipAddress = WiFi.localIP();
         if(connected)
         {
-          InitWebSocket();
           InitWebServer();
           BeginWebServer();
           ESP_LOGI( "SettingsWebServer: InitWifiClient"
@@ -527,7 +520,6 @@ class SettingsWebServerManager: public SetupCallerInterface
         IPAddress ipAddress = WiFi.softAPIP();
         if(connected)
         {
-          InitWebSocket();
           InitWebServer();
           BeginWebServer();
           ESP_LOGI( "SettingsWebServer: InitWifiClient"
