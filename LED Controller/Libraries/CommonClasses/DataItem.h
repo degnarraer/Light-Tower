@@ -183,6 +183,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				++m_ValueChangeCount;
 				this->CallCallbacks(this->m_Name.c_str(), this->mp_Value);
 			}
+			return ValueChanged;
 		}
 		virtual bool SetValue(T Value)
 		{
@@ -414,6 +415,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				memcpy(this->mp_TxValue, &Value, sizeof(T) * COUNT);
 				DataItem_Try_TX_On_Change();
 			}
+			return ValueChanged;
 		}
 		void SetDataLinkEnabled(bool enable)
 		{
@@ -623,6 +625,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 				strcpy(this->mp_TxValue, Value);
 				this->DataItem_Try_TX_On_Change();
 			}
+			return ValueChanged;
 		}
 	protected:
 		virtual bool DataItem_TX_Now() override

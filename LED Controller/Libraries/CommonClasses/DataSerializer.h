@@ -65,16 +65,17 @@ class DataSerializer: public CommonUtils
 			m_SerializeDoc[m_CheckSumTag] = CheckSum;
 			return JSON.stringify(m_SerializeDoc);
 		}
-		void DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
+		bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
-			
+			bool deserialized = false;
 			m_DeserializeDoc = JSON.parse(json);
 			if (JSON.typeof(m_DeserializeDoc) == "undefined")
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
 				ESP_LOGE("DeSerializeJsonToNamedObject", "Parsing failed for Input: %s", json.c_str());
+				return deserialized;
 			}
 			else
 			{
@@ -109,6 +110,7 @@ class DataSerializer: public CommonUtils
 						if(CheckSumCalc == CheckSumIn)
 						{
 							NamedObject.Object = Buffer;
+							deserialized = true;
 						}
 						else
 						{
@@ -133,6 +135,7 @@ class DataSerializer: public CommonUtils
 				}
 			}
 			FailPercentage();
+			return deserialized;
 		}
 		void FailPercentage()
 		{

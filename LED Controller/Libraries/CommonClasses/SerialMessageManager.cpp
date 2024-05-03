@@ -229,8 +229,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
 				NamedObject_t NamedObject;
 				m_message.trim();
-				m_DataSerializer.DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject);
-				if(NamedObject.Object)
+				if(m_DataSerializer.DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
 				{
 					ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
 					NotifyCallee(NamedObject.Name, NamedObject.Object);
