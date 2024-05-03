@@ -42,11 +42,246 @@ enum UpdateStoreType_t
 	UpdateStoreType_Count
 };
 
+
 template <typename T, size_t COUNT>
-class DataItem: public NewRxTxValueCallerInterface<T>
+class LocalDataItem: public NamedCallbackInterface<T>
+				   , public SetupCalleeInterface
+				   , public DataTypeFunctions
+{
+	public:
+		LocalDataItem( const String name
+					 , const T* initialValue
+					 , NamedCallback_t *namedCallback )
+					 : m_Name(name)
+					 , mp_InitialValuePtr(initialValue)
+		{}
+		
+		LocalDataItem( const String name
+					 , const T& initialValue
+					 , NamedCallback_t *namedCallback )
+					 : m_Name(name)
+					 , mp_InitialValuePtr(&initialValue)
+		{}
+		
+		virtual ~LocalDataItem()
+		{
+			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Freeing Memory", m_Name.c_str());
+			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
+			heap_caps_free(this->mp_Value);
+			heap_caps_free(this->mp_InitialValue);
+		}
+		virtual void Setup()
+		{
+			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
+			this->mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			this->mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			if (this->mp_Value && this->mp_InitialValue && this->mp_InitialValuePtr)
+			{
+				if (std::is_same<T, char>::value)
+				{
+					String InitialValue = String((char*)mp_InitialValuePtr);
+					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
+							, m_Name.c_str()
+							, InitialValue.c_str());
+					for (size_t i = 0; i < COUNT; ++i)
+					{
+						char value;
+						memcpy(&value, this->mp_InitialValuePtr+i, sizeof(char));
+						if (i >= InitialValue.length())
+						{
+							value = '\0';
+						}
+						memcpy(this->mp_Value+i, &value, sizeof(char));
+						this->CallCallbacks(m_Name.c_str(), this->mp_Value);
+						memcpy(this->mp_InitialValue+i, &value, sizeof(char));
+					}
+				}
+				else
+				{
+					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
+							, m_Name.c_str()
+							, GetValueAsStringForDataType(this->mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+					for (size_t i = 0; i < COUNT; ++i)
+					{
+						memcpy(this->mp_Value+i, this->mp_InitialValuePtr, sizeof(T));
+						this->CallCallbacks(m_Name.c_str(), this->mp_Value);
+						memcpy(this->mp_InitialValue+i, this->mp_InitialValuePtr, sizeof(T));
+					}
+				}
+			}
+			else
+			{
+				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
+			}
+		}
+		virtual String GetName()
+		{
+			return this->m_Name;
+		}
+		size_t GetCount()
+		{
+			return this->m_Count;
+		}
+		size_t GetValue(void* Object, size_t Count)
+		{
+			assert(Count == COUNT && "Counts must be equal");
+			if(this->mp_Value)
+			{
+				memcpy(Object, this->mp_Value, sizeof(T)*Count);
+			}
+			else
+			{
+				*reinterpret_cast<T**>(Object) = nullptr;
+			}
+			return this->m_ValueChangeCount;
+		}
+
+		T* GetValuePointer()
+		{
+			return this->mp_Value;
+		}
+
+		T GetValue()
+		{
+			assert(1 == COUNT && "Count must 1 to use this function");
+			if(this->mp_Value)
+			{
+				return static_cast<T>(*this->mp_Value);
+			}
+			else
+			{
+				return T();
+			}
+		}
+		String GetValueAsString(const String &Divider)
+		{
+			if(this->mp_Value)
+			{
+				return GetValueAsStringForDataType(this->mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, Divider);
+			}
+			else
+			{
+				return "";
+			}
+		}
+		virtual bool SetValue(const T *Value, size_t Count)
+		{
+			assert(Value != nullptr && "Value must not be null");
+			assert(this->mp_Value != nullptr && "mp_Value must not be null");
+			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
+			assert(COUNT == Count && "Counts must match");
+			ESP_LOGD( "LocalDataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+			
+			bool ValueChanged = (memcmp(this->mp_Value, &Value, sizeof(T) * COUNT) != 0);
+			if(ValueChanged)
+			{
+				memcpy(this->mp_Value, &Value, sizeof(T) * COUNT);
+				++m_ValueChangeCount;
+				this->CallCallbacks(this->m_Name.c_str(), this->mp_Value);
+			}
+		}
+		virtual bool SetValue(T Value)
+		{
+			assert(COUNT == 1 && "COUNT must be 1 to use this");
+			assert(this->mp_Value != nullptr && "mp_Value must not be null");
+			ESP_LOGD( "LocalDataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, this->m_Name.c_str()
+					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+			
+			bool ValueChanged = (memcmp(this->mp_Value, &Value, sizeof(T) * COUNT) != 0);
+			if(ValueChanged)
+			{
+				memcpy(this->mp_Value, &Value, sizeof(T) * COUNT);
+				++this->m_ValueChangeCount;
+				this->CallCallbacks(this->m_Name.c_str(), this->mp_Value);
+			}
+			return ValueChanged;
+		}
+		bool EqualsValue(T *Object, size_t Count)
+		{
+			assert(Count == COUNT && "Counts must equal");
+			return (memcmp(this->mp_Value, Object, Count) == 0);
+		}
+	protected:
+		const String m_Name;
+		const T *mp_InitialValuePtr;
+		T *mp_Value;
+		T *mp_InitialValue;
+		NamedCallback_t *mp_NamedCallback = NULL;
+		size_t m_ValueChangeCount = 0;
+	private:
+		size_t m_Count = COUNT;
+};
+
+class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
+{
+	public:
+		LocalStringDataItem( const String name
+					 	   , const char* initialValue
+					 	   , NamedCallback_t *namedCallback )
+						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue, namedCallback)
+						   {
+
+						   }
+		
+		LocalStringDataItem( const String name
+					 	   , const char& initialValue
+					 	   , NamedCallback_t *namedCallback )
+						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue, namedCallback)
+						   {
+
+						   }
+		virtual ~LocalStringDataItem()
+		{
+			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
+		}
+
+		virtual void Setup() override
+		{
+			LocalDataItem::Setup();
+		}
+
+		virtual bool SetValue(const char* Value, size_t Count) override
+		{
+			assert(Value != nullptr && "Value must not be null");
+			assert(mp_Value != nullptr && "mp_Value must not be null");
+			String NewValue = String(Value);
+			assert(NewValue.length() <= Count);
+			ESP_LOGI( "DataItem: SetValue"
+					, "\"%s\" Set Value3A: \"%s\""
+					, m_Name.c_str()
+					, NewValue.c_str() );
+					
+			bool ValueChanged = (strcmp(this->mp_Value, Value) != 0);
+			if(ValueChanged)
+			{	
+				ZeroOutCharArray(this->mp_Value);
+				strcpy(this->mp_Value, Value);
+				++m_ValueChangeCount;
+				this->CallCallbacks(m_Name.c_str(), this->mp_Value);
+			}
+			return ValueChanged;
+		}
+	protected:
+		void ZeroOutCharArray(char* pChar)
+		{
+			for (size_t i = 0; i < this->GetCount(); ++i)
+			{
+				pChar[i] = '\0';
+			}
+		}
+};
+
+
+template <typename T, size_t COUNT>
+class DataItem: public LocalDataItem<T, COUNT>
+			  , public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface
-			  , public SetupCalleeInterface
-			  , public DataTypeFunctions
 {
 	public:
 		DataItem( const String name
@@ -56,9 +291,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
 				, NamedCallback_t *namedCallback )
-				: NewRxTxVoidObjectCalleeInterface(COUNT)
-				, m_Name(name)
-				, mp_InitialValuePtr(initialValue)
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback)
+				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
@@ -74,14 +308,12 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
 				, NamedCallback_t *namedCallback )
-				: NewRxTxVoidObjectCalleeInterface(COUNT)
-				, m_Name(name)
-				, mp_InitialValuePtr(&initialValue)
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback)
+				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
-				, mp_NamedCallback(namedCallback)
 				
 		{
 			CreateTxTimer();
@@ -90,44 +322,37 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 		
 		virtual ~DataItem()
 		{
-			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
-			heap_caps_free(mp_Value);
-			heap_caps_free(mp_RxValue);
-			heap_caps_free(mp_TxValue);
-			heap_caps_free(mp_InitialValue);
-			esp_timer_stop(m_TxTimer);
-			esp_timer_delete(m_TxTimer);
+			ESP_LOGI("DataItem::~DataItem()", "\"%s\": Freeing Memory", this->GetName().c_str());
+			heap_caps_free(this->mp_RxValue);
+			heap_caps_free(this->mp_TxValue);
+			esp_timer_stop(this->m_TxTimer);
+			esp_timer_delete(this->m_TxTimer);
 			m_SerialPortMessageManager.DeRegisterForSetupCall(this);
 		}
-		virtual void Setup()
+		virtual void Setup() override
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
-			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
-			mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			if (mp_Value && mp_RxValue && mp_TxValue && mp_InitialValue && mp_InitialValuePtr)
+			LocalDataItem<T, COUNT>::Setup();
+			this->mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			this->mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			if (this->mp_RxValue && this->mp_TxValue && this->mp_InitialValuePtr)
 			{
 				if (std::is_same<T, char>::value)
 				{
-					String InitialValue = String((char*)mp_InitialValuePtr);
+					String InitialValue = String((char*)this->mp_InitialValuePtr);
 					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
-							, m_Name.c_str()
+							, this->m_Name.c_str()
 							, InitialValue.c_str());
 					for (size_t i = 0; i < COUNT; ++i)
 					{
 						char value;
-						memcpy(&value, mp_InitialValuePtr+i, sizeof(char));
+						memcpy(&value, this->mp_InitialValuePtr+i, sizeof(char));
 						if (i >= InitialValue.length())
 						{
 							value = '\0';
 						}
-						memcpy(mp_Value+i, &value, sizeof(char));
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
-						memcpy(mp_RxValue+i, &value, sizeof(char));
-						memcpy(mp_TxValue+i, &value, sizeof(char));
-						memcpy(mp_InitialValue+i, &value, sizeof(char));
+						memcpy(this->mp_RxValue+i, &value, sizeof(char));
+						memcpy(this->mp_TxValue+i, &value, sizeof(char));
 					}
 				}
 				else
@@ -137,11 +362,8 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 							, GetValueAsStringForDataType(mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 					for (size_t i = 0; i < COUNT; ++i)
 					{
-						memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
-						memcpy(mp_RxValue+i, mp_InitialValuePtr, sizeof(T));
-						memcpy(mp_TxValue+i, mp_InitialValuePtr, sizeof(T));
-						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
+						memcpy(this->mp_RxValue+i, this->mp_InitialValuePtr, sizeof(T));
+						memcpy(this->mp_TxValue+i, this->mp_InitialValuePtr, sizeof(T));
 					}
 				}
 				SetDataLinkEnabled(true);
@@ -151,85 +373,47 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
 			}
 		}
-		String GetName()
+		virtual String GetName() override
 		{
-			return m_Name;
-		}
-		size_t GetValue(void* Object, size_t Count)
-		{
-			assert(Count == COUNT && "Counts must be equal");
-			if(mp_Value)
-			{
-				memcpy(Object, mp_Value, sizeof(T)*Count);
-			}
-			else
-			{
-				*reinterpret_cast<T**>(Object) = nullptr;
-			}
-			return m_ValueChangeCount;
-		}
-
-		T* GetValuePointer()
-		{
-			return mp_Value;
-		}
-
-		T GetValue()
-		{
-			assert(1 == COUNT && "Count must 1 to use this function");
-			if(mp_Value)
-			{
-				return static_cast<T>(*mp_Value);
-			}
-			else
-			{
-				return T();
-			}
-		}
-		String GetValueAsString(const String &Divider)
-		{
-			return GetValueAsStringForDataType(mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, Divider);
+			return LocalDataItem<T, COUNT>::GetName();
 		}
 		void SetNewTxValue(const T* Value, const size_t Count)
 		{
 			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
 			SetValue(Value, Count);
 		}
-		virtual void SetValue(const T *Value, size_t Count)
+		virtual bool SetValue(const T *Value, size_t Count) override
 		{
 			assert(Value != nullptr && "Value must not be null");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
+			assert(this->mp_Value != nullptr && "mp_Value must not be null");
 			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
 			assert(COUNT == Count && "Counts must match");
 			ESP_LOGD( "DataItem: SetValue"
 					, "\"%s\" Set Value1: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-			bool ValueChanged = (memcmp(mp_TxValue, Value, sizeof(T) * COUNT) != 0);
-			memcpy(mp_TxValue, Value, sizeof(T) * COUNT);
+			bool ValueChanged = (memcmp(this->mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
 			if(ValueChanged)
 			{
+				memcpy(this->mp_TxValue, Value, sizeof(T) * COUNT);
 				DataItem_Try_TX_On_Change();
 			}
+			return ValueChanged;
 		}
-		void SetValue(T Value)
+		virtual bool SetValue(T Value) override
 		{
 			assert(COUNT == 1 && "COUNT must be 1 to use this");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
+			assert(this->mp_Value != nullptr && "mp_Value must not be null");
 			ESP_LOGD( "DataItem: SetValue"
 					, "\"%s\" Set Value2: \"%s\""
-					, m_Name.c_str()
+					, this->m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-			bool ValueChanged = (memcmp(mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
-			memcpy(mp_TxValue, &Value, sizeof(T) * COUNT);
+			bool ValueChanged = (memcmp(this->mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
 			if(ValueChanged)
 			{
+				memcpy(this->mp_TxValue, &Value, sizeof(T) * COUNT);
 				DataItem_Try_TX_On_Change();
 			}
-		}
-		size_t GetCount()
-		{
-			return m_Count;
 		}
 		void SetDataLinkEnabled(bool enable)
 		{
@@ -256,70 +440,58 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 				if(enablePeriodicTX)
 				{
 					esp_timer_start_periodic(m_TxTimer, m_Rate * 1000);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", this->m_Name.c_str());
 				}
 				else
 				{
 					esp_timer_stop(m_TxTimer);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", this->m_Name.c_str());
 				}
 				if(enablePeriodicRX)
 				{
 					m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", this->m_Name.c_str());
 				}
 				else
 				{
 					m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", this->m_Name.c_str());
 				}
 			}
 			else
 			{
 				esp_timer_stop(m_TxTimer);
 				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", this->m_Name.c_str());
 			}
 		}
-		bool EqualsValue(T *Object, size_t Count)
-		{
-			assert(Count == COUNT && "Counts must equal");
-			return (memcmp(mp_Value, Object, Count) == 0);
-		}
 	protected:
-		const String m_Name;
-		const T *mp_InitialValuePtr;
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
 		const uint16_t m_Rate;
 		SerialPortMessageManager &m_SerialPortMessageManager;
-		size_t m_ValueChangeCount = 0;
-		
-		T *mp_Value;
+
 		T *mp_RxValue;
 		T *mp_TxValue;
-		T *mp_InitialValue;
 		
 		virtual bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
-			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
+			if(m_SerialPortMessageManager.QueueMessageFromData(this->GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
 			{				
-				if(memcmp(mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0)
+				if(memcmp(this->mp_Value, this->mp_TxValue, sizeof(T) * COUNT) != 0)
 				{
 					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
-						memcpy(mp_Value, mp_TxValue, sizeof(T) * COUNT);
-						++m_ValueChangeCount;
-						ValueUpdated = true;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);		
+						LocalDataItem<T, COUNT>::SetValue(this->mp_TxValue, COUNT);						
+						ValueUpdated = true;		
 					}
 				}
-				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			}
 			else
 			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
+				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", this->m_Name.c_str());
 			}
 			return ValueUpdated;
 		}
@@ -329,50 +501,46 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			T* receivedValue = static_cast<T*>(Object);
 			ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX: \"%s\" Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+						, this->m_Name.c_str()
+						, GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+						, this->m_Name.c_str()
+						, GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					if(memcmp(mp_Value, mp_RxValue, sizeof(T) * COUNT) != 0)
+					if(memcmp(this->mp_Value, this->mp_RxValue, sizeof(T) * COUNT) != 0)
 					{
-						memcpy(mp_Value, mp_RxValue, sizeof(T) * COUNT);
-						++m_ValueChangeCount;
+						LocalDataItem<T, COUNT>::SetValue(this->mp_RxValue, COUNT);	
 						ValueUpdated = true;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
 					}
 				}
 			}
-			if(RxTxType_Rx_Echo_Value == m_RxTxType)
+			if(RxTxType_Rx_Echo_Value == this->m_RxTxType)
 			{
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+						, this->GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 				DataItem_TX_Now();
 			}
 			return ValueUpdated;
 		}
 		void DataItem_Try_TX_On_Change()
 		{
-			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", m_Name.c_str());
-			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
+			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", this->m_Name.c_str());
+			if(this->m_RxTxType == RxTxType_Tx_On_Change || this->m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				DataItem_TX_Now();
 			}
 		}
 	private:
 		bool m_DataLinkEnabled = true;
-		NamedCallback_t *mp_NamedCallback = NULL;
 		esp_timer_handle_t m_TxTimer;
-		size_t m_Count = COUNT;
 		void CreateTxTimer()
 		{
 			esp_timer_create_args_t timerArgs;
@@ -381,7 +549,7 @@ class DataItem: public NewRxTxValueCallerInterface<T>
 			timerArgs.name = "Tx_Timer";
 
 			// Create the timer
-			esp_timer_create(&timerArgs, &m_TxTimer);
+			esp_timer_create(&timerArgs, &this->m_TxTimer);
 		}
 		void DataItem_Periodic_TX()
 		{
@@ -435,27 +603,24 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		}
 		virtual ~StringDataItem()
 		{
+			ESP_LOGI("StringDataItem::~StringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
-		virtual void SetValue(const char* Value, size_t Count) override
+		virtual bool SetValue(const char* Value, size_t Count) override
 		{
 			assert(Value != nullptr && "Value must not be null");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
+			assert(this->mp_Value != nullptr && "mp_Value must not be null");
 			String NewValue = String(Value);
 			String CurrentValue = String(mp_TxValue);
 			assert(NewValue.length() <= Count);
-			ESP_LOGI( "DataItem: SetValue"
-					, "\"%s\" Set Value3A: \"%s\""
-					, m_Name.c_str()
-					, NewValue.c_str() );
 			bool ValueChanged = !NewValue.equals(CurrentValue);
-			ZeroOutCharArray(mp_TxValue);
-			strcpy(mp_TxValue, Value);
-			ESP_LOGI( "DataItem: SetValue"
-					, "\"%s\" Set Value3B: \"%s\""
-					, m_Name.c_str()
-					, NewValue.c_str() );
 			if(ValueChanged)
-			{
+			{	
+				ESP_LOGI( "DataItem: SetValue"
+						, "\"%s\" Set Value: \"%s\""
+						, this->m_Name.c_str()
+						, NewValue.c_str() );
+				this->ZeroOutCharArray(this->mp_TxValue);
+				strcpy(this->mp_TxValue, Value);
 				this->DataItem_Try_TX_On_Change();
 			}
 		}
@@ -463,24 +628,24 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool DataItem_TX_Now() override
 		{
 			bool ValueUpdated = false;
-			if(this->m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
+			if(this->m_SerialPortMessageManager.QueueMessageFromData(this->m_Name, DataType_Char_t, this->mp_TxValue, DATAITEM_STRING_LENGTH))
 			{
-				if(strcmp(mp_Value, mp_TxValue) != 0)
+				if(strcmp(this->mp_Value, this->mp_TxValue) != 0)
 				{
 					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
-						ZeroOutCharArray(mp_Value);
-						strcpy(mp_Value, mp_TxValue);
-						++m_ValueChangeCount;
+						this->ZeroOutCharArray(this->mp_Value);
+						strcpy(this->mp_Value, this->mp_TxValue);
+						++this->m_ValueChangeCount;
 						ValueUpdated = true;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
+						this->CallCallbacks(this->m_Name.c_str(), this->mp_Value);
 					}
 				}
-				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsStringForDataType(this->mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			}
 			else
 			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
+				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", this->m_Name.c_str());
 			}
 			return ValueUpdated;
 		}
@@ -488,38 +653,37 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		{ 
 			bool ValueUpdated = false;
 			char* receivedValue = (char*)Object;
-			if(strcmp(mp_RxValue, receivedValue) != 0)
+			if(strcmp(this->mp_RxValue, receivedValue) != 0)
 			{
-				ZeroOutCharArray(mp_RxValue);
-				strcpy(mp_RxValue, receivedValue);
+				this->ZeroOutCharArray(this->mp_RxValue);
+				strcpy(this->mp_RxValue, receivedValue);
 				ESP_LOGI( "DataItem: NewRXValueReceived"
 						, "\"%s\" New RX Value Received: \"%s\""
 						, m_Name.c_str()
 						, receivedValue );
-				if(strcmp(mp_Value, mp_RxValue) != 0)
+				if(strcmp(this->mp_Value, this->mp_RxValue) != 0)
 				{
 					if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 					{
-						ZeroOutCharArray(mp_Value);
-						strcpy(mp_Value, mp_RxValue);
+						ZeroOutCharArray(this->mp_Value);
+						strcpy(this->mp_Value, this->mp_RxValue);
 						++m_ValueChangeCount;
 						ValueUpdated = true;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
+						this->CallCallbacks(this->m_Name.c_str(), mp_Value);
 					}
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
-				ZeroOutCharArray(mp_TxValue);
-				strcpy(mp_TxValue, mp_RxValue);
+				ZeroOutCharArray(this->mp_TxValue);
+				strcpy(this->mp_TxValue, this->mp_RxValue);
 				this->DataItem_TX_Now();
 			}
 			return ValueUpdated;
 		}
-	private:
 		void ZeroOutCharArray(char* pChar)
 		{
-			for (size_t i = 0; i < this->GetCount(); ++i)
+			for (size_t i = 0; i < LocalDataItem::GetCount(); ++i)
 			{
 				pChar[i] = '\0';
 			}

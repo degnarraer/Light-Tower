@@ -45,14 +45,16 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 								, PreferencesWrapper<T, COUNT>(preferences)
 		{
 		}
-		
+		virtual ~DataItemWithPreferences()
+		{
+			ESP_LOGI("DataItemWithPreferences::~DataItemWithPreferences()", "\"%s\": Freeing Memory", this->GetName().c_str());
+		}
 		virtual void Setup() override
 		{
 			DataItem<T, COUNT>::Setup();
 			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 		}
-		virtual ~DataItemWithPreferences(){}
 	protected:
 		bool DataItem_TX_Now() override
 		{
@@ -73,6 +75,56 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return result;
 		}
 };
+
+class LocalStringDataItemWithPreferences: public LocalStringDataItem
+							 			, public PreferencesWrapper<char, DATAITEM_STRING_LENGTH>
+{
+	public:
+		LocalStringDataItemWithPreferences( const String name
+					 	   , const char* initialValue
+						   , Preferences *preferences
+						   , SetupCallerInterface *setupCallerInterface
+					 	   , NamedCallback_t *namedCallback )
+						   : LocalStringDataItem( name, initialValue, namedCallback)
+						   , PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
+		{
+			setupCallerInterface->RegisterForSetupCall(this);
+		}
+		
+		LocalStringDataItemWithPreferences( const String name
+										  , const char& initialValue
+						   				  , Preferences *preferences
+						   				  , SetupCallerInterface *setupCallerInterface
+					 	   				  , NamedCallback_t *namedCallback )
+						   				  : LocalStringDataItem( name, initialValue, namedCallback)
+						   				  , PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
+		{
+			setupCallerInterface->RegisterForSetupCall(this);
+		}
+
+		virtual ~LocalStringDataItemWithPreferences()
+		{
+			ESP_LOGI("LocalStringDataItemWithPreferences::~LocalStringDataItemWithPreferences()", "\"%s\": Freeing Memory", m_Name.c_str());
+		}
+
+		virtual void Setup() override
+		{
+			LocalStringDataItem::Setup();
+			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+		}
+		
+		virtual bool SetValue(const char* Value, size_t Count) override
+		{
+			bool result = LocalStringDataItem::SetValue(Value, Count);
+			if(result)
+			{
+				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			}
+			return result;
+		}
+};
+
 class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_STRING_LENGTH>
 								   , public StringDataItem
 {
@@ -116,7 +168,10 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			
 		}
 		
-		virtual ~StringDataItemWithPreferences(){}
+		virtual ~StringDataItemWithPreferences()
+		{
+			ESP_LOGI("StringDataItemWithPreferences::~StringDataItemWithPreferences()", "\"%s\": Freeing Memory", m_Name.c_str());
+		}
 	private:
 		virtual void Setup() override
 		{

@@ -17,17 +17,22 @@
 */
 #pragma once
 #include "WebSocketDataHandler.h"
+#include "SPIFFS.h"
 #include "DataItem.h"
 #include "DataItemWithPreferences.h"
 
-class SettingsWebServerManager
+class SettingsWebServerManager: public SetupCallerInterface
 {  
   public:
     SettingsWebServerManager( String Title
                             , AsyncWebSocket &WebSocket
+                            , AsyncWebServer &WebServer
+                            , Preferences &Preferences
                             , SerialPortMessageManager &CPU1SerialPortMessageManager
                             , SerialPortMessageManager &CPU2SerialPortMessageManager)
                             : m_WebSocket(WebSocket)
+                            , m_WebServer(WebServer)
+                            , m_Preferences(Preferences)
                             , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                             , m_CPU2SerialPortMessageManager(CPU2SerialPortMessageManager)
     {
@@ -40,13 +45,15 @@ class SettingsWebServerManager
     void SetupSettingsWebServerManager()
     {
       InitializePreferences();
+      SetupAllSetupCallees();
+      InitFileSystem();
     }
 
-    void BeginWebServer()
+    void SetupWifi()
     {
       InitWiFiAP();
     }
-    
+
     void InitializePreferences()
     {
       if(!m_Preferences.begin("Settings", false))
@@ -65,41 +72,82 @@ class SettingsWebServerManager
         m_Preferences.putBool("Pref_Reset", false);
       }
     }
-
-    void ClearPreferences()
+    // Web Socket init to register web socket callback and connect it to the web server
+    void InitWebSocket()
     {
-      m_Preferences.clear();
-      ESP_LOGI("Settings Web Server: ClearPreferences", "Preferences Cleared");
+      m_WebSocket.onEvent(OnEvent);
+      m_WebServer.addHandler(&m_WebSocket);
     }
 
-    void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+    // Init the web server to use the local SPIFFS memory and serve up index.html file.
+    void InitWebServer()
     {
-      switch (type) 
+      // Web Server Root URL
+      m_WebServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
       {
-        case WS_EVT_CONNECT:
-          Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
-          break;
-        case WS_EVT_PONG:
-          Serial.printf("WebSocket client #%u Pinged Us!\n", client->id());
-          break;
-        case WS_EVT_DATA:
-          HandleWebSocketMessage(client, arg, data, len);
-          break;
-        case WS_EVT_ERROR:
-          Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
-          break;
-        case WS_EVT_DISCONNECT:
-          Serial.printf("WebSocket client #%u disconnected. Closing Connection.\n", client->id());
-          break;
+        request->send(SPIFFS, "/index.html", "text/html");
+      });
+      m_WebServer.serveStatic("/", SPIFFS, "/").setCacheControl("no-cache, no-store, must-revalidate");
+    }
+    
+    // Initialize SPIFFS
+    void InitFileSystem()
+    {
+      if (SPIFFS.begin())
+      {
+        ESP_LOGI("Settings_Web_Server", "SPIFFS mounted successfully");
+        File root = SPIFFS.open("/");
+        File file = root.openNextFile();
+        while(file)
+        {
+          ESP_LOGD("Settings_Web_Server", "FILE: %s", file.name());
+          file = root.openNextFile();
+        }
+      }
+      else
+      {
+        ESP_LOGE("Settings_Web_Server", "An error has occurred while mounting SPIFFS");
+      }
+    }
+
+    void BeginWebServer()
+    {
+      m_WebServer.begin();
+    }
+
+    static void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+    {
+      SettingsWebServerManager *instance = reinterpret_cast<SettingsWebServerManager*>(arg);
+      if (instance)
+      {
+        switch (type) 
+        {
+          case WS_EVT_CONNECT:
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            break;
+          case WS_EVT_PONG:
+            Serial.printf("WebSocket client #%u Pinged Us!\n", client->id());
+            break;
+          case WS_EVT_DATA:
+            instance->HandleWebSocketMessage(client, arg, data, len);
+            break;
+          case WS_EVT_ERROR:
+            Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
+            break;
+          case WS_EVT_DISCONNECT:
+            Serial.printf("WebSocket client #%u disconnected. Closing Connection.\n", client->id());
+            break;
+        }
       }
     } 
   private:
     AsyncWebSocket &m_WebSocket;
+    AsyncWebServer &m_WebServer;
+    Preferences &m_Preferences;
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU2SerialPortMessageManager;
-    WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebSocket);
-    
-    Preferences m_Preferences;
+    WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebServer, m_WebSocket);
+
     struct CallbackArguments 
     {
       void* arg1;
@@ -112,14 +160,11 @@ class SettingsWebServerManager
                                       , &SSID_ValueChanged
                                       , &m_SSID_CallbackArgs };
     const String m_SSID_InitialValue = "LED Tower of Power";
-    StringDataItemWithPreferences m_SSID = StringDataItemWithPreferences( "SSID"
-                                                                        , m_SSID_InitialValue.c_str()
-                                                                        , RxTxType_Tx_On_Change
-                                                                        , UpdateStoreType_On_Tx
-                                                                        , 0
-                                                                        , &m_Preferences
-                                                                        , m_CPU1SerialPortMessageManager //TBD need to have a local DataItem
-                                                                        , &m_SSID_Callback );
+    LocalStringDataItemWithPreferences m_SSID = LocalStringDataItemWithPreferences( "SSID"
+                                                                                  , m_SSID_InitialValue.c_str()
+                                                                                  , &m_Preferences
+                                                                                  , this
+                                                                                  , &m_SSID_Callback );
     WebSocket_String_DataHandler m_SSID_DataHandler = WebSocket_String_DataHandler( "SSID Web Socket Handler", "SSID", m_WebSocketDataProcessor, true, true, m_SSID, false );
     static void SSID_ValueChanged(const String &Name, void* object, void* arg)
     {
@@ -131,7 +176,6 @@ class SettingsWebServerManager
         SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
         char* pSSID = static_cast<char*>(object);
         ESP_LOGI("SSID_ValueChanged", "SSID Changed: %s", pSSID);
-        pSettingWebServer->BeginWebServer();
       }
     }
 
@@ -141,14 +185,11 @@ class SettingsWebServerManager
                                           , &Password_ValueChanged
                                           , &m_Password_CallbackArgs };
     const String m_Password_InitialValue = "LEDs Rock";
-    StringDataItemWithPreferences m_Password = StringDataItemWithPreferences( "Password"
-                                                                        , m_Password_InitialValue.c_str()
-                                                                        , RxTxType_Tx_On_Change
-                                                                        , UpdateStoreType_On_Tx
-                                                                        , 0
-                                                                        , &m_Preferences
-                                                                        , m_CPU1SerialPortMessageManager //TBD need to have a local DataItem
-                                                                        , &m_Password_Callback );
+    LocalStringDataItemWithPreferences m_Password = LocalStringDataItemWithPreferences( "Password"
+                                                                                      , m_Password_InitialValue.c_str()
+                                                                                      , &m_Preferences
+                                                                                      , this
+                                                                                      , &m_Password_Callback );
     WebSocket_String_DataHandler m_Password_DataHandler = WebSocket_String_DataHandler( "Password Web Socket Handler", "Password", m_WebSocketDataProcessor, true, true, m_Password, false );
     static void Password_ValueChanged(const String &Name, void* object, void* arg)
     {
@@ -160,7 +201,6 @@ class SettingsWebServerManager
         SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
         char* pPassword = static_cast<char*>(object);
         ESP_LOGI("Password_ValueChanged", "Password Changed: %s", pPassword);
-        pSettingWebServer->BeginWebServer();
       }
     }
 
@@ -435,37 +475,78 @@ class SettingsWebServerManager
     // Initialize WiFi Client
     void InitWiFiClient()
     {
-      WiFi.disconnect();
-      WiFi.mode(WIFI_STA);
-      WiFi.begin(m_SinkName.GetValuePointer(), m_Password.GetValueAsString("").c_str());
-      ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting to WiFi ..");
-      while (WiFi.status() != WL_CONNECTED) {
-        ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting...");
-        delay(1000);
+      ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Client");
+      if(m_SSID.GetValueAsString("").length(), m_Password.GetValueAsString("").length())
+      {
+        //WiFi.disconnect();
+        WiFi.mode(WIFI_STA);
+        bool connected = WiFi.begin(m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
+        ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting to WiFi ..");
+        while (WiFi.status() != WL_CONNECTED) {
+          ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting...");
+          delay(1000);
+        }
+        IPAddress ipAddress = WiFi.localIP();
+        if(connected)
+        {
+          InitWebSocket();
+          InitWebServer();
+          BeginWebServer();
+          ESP_LOGI( "SettingsWebServer: InitWifiClient"
+                  , "Wifi Started! IP Address: %i.%i.%i.%i"
+                  , ipAddress[0]
+                  , ipAddress[1]
+                  , ipAddress[2]
+                  , ipAddress[3] );
+        }
+        else
+        {
+          ESP_LOGE( "SettingsWebServer: InitWifiClient"
+                  , "Wifi failed to start!");
+        }
       }
-      IPAddress ipAddress = WiFi.localIP();
-      ESP_LOGI( "SettingsWebServer: InitWifiClient"
-              , "Connected! IP Address: %i.%i.%i.%i"
-              , ipAddress[0]
-              , ipAddress[1]
-              , ipAddress[2]
-              , ipAddress[3] );
+      else
+      {
+          ESP_LOGE( "SettingsWebServer: InitWifiClient"
+                  , "Null Pointers!");
+      }
     }
     
     void InitWiFiAP()
     {
+      ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Access Point");
+      if(m_SSID.GetValueAsString("").length(), m_Password.GetValueAsString("").length())
+      {
         // Setup ESP32 as Access Point
-      IPAddress Ip(192, 168, 0, 1);
-      IPAddress NMask(255, 255, 255, 0);
-      WiFi.disconnect();
-      WiFi.softAPConfig(Ip, Ip, NMask);
-      WiFi.softAP(m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
-      IPAddress ipAddress = WiFi.softAPIP();
-      ESP_LOGI( "SettingsWebServer: InitWifiClient"
-              , "Connected! IP Address: %i.%i.%i.%i"
-              , ipAddress[0]
-              , ipAddress[1]
-              , ipAddress[2]
-              , ipAddress[3] );
+        IPAddress Ip(192, 168, 0, 1);
+        IPAddress NMask(255, 255, 255, 0);
+        //WiFi.disconnect();
+        WiFi.softAPConfig(Ip, Ip, NMask);
+        ESP_LOGI( "SettingsWebServer: InitWifiClient", "Starting Access Point: SSID: \"%s\" Password: \"%s\"", m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
+        bool connected = WiFi.softAP(m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
+        IPAddress ipAddress = WiFi.softAPIP();
+        if(connected)
+        {
+          InitWebSocket();
+          InitWebServer();
+          BeginWebServer();
+          ESP_LOGI( "SettingsWebServer: InitWifiClient"
+                  , "Wifi AP Started! IP Address: %i.%i.%i.%i"
+                  , ipAddress[0]
+                  , ipAddress[1]
+                  , ipAddress[2]
+                  , ipAddress[3] );
+        }
+        else
+        {
+          ESP_LOGE( "SettingsWebServer: InitWifiClient"
+                  , "Wifi failed to start!");
+        }
+      }
+      else
+      {
+          ESP_LOGE( "SettingsWebServer: InitWifiClient"
+                  , "Null Pointers!");
+      }
     }
 };

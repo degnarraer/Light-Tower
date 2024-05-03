@@ -18,13 +18,12 @@
 
 #include "Tunes.h"
 #include "SettingsWebServer.h"
-#include "SPIFFS.h"
 #define SERIAL_RX_BUFFER_SIZE 2048
 
+Preferences m_Preferences;
 DataSerializer m_DataSerializer;  
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
 SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", Serial2, m_DataSerializer);
-
 
 // Create AsyncWebServer object on port 80
 AsyncWebServer MyWebServer(80);
@@ -35,59 +34,10 @@ AsyncWebSocket MyWebSocket("/ws");
 // Create Settings Web Server that uses the Socket 
 SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager"
                                                    , MyWebSocket
+                                                   , MyWebServer
+                                                   , m_Preferences
                                                    , m_CPU1SerialPortMessageManager
                                                    , m_CPU2SerialPortMessageManager );
-
-// Static Callback for Web Socket
-void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
-}
-
-// Web Socket init to register web socket callback and connect it to the web server
-void InitWebSocket()
-{
-  MyWebSocket.onEvent(OnEvent);
-  MyWebServer.addHandler(&MyWebSocket);
-}
-
-// Init the web server to use the local SPIFFS memory and serve up index.html file.
-void InitWebServer()
-{
-  // Web Server Root URL
-  MyWebServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-  {
-    request->send(SPIFFS, "/index.html", "text/html");
-  });
-  MyWebServer.serveStatic("/", SPIFFS, "/").setCacheControl("no-cache, no-store, must-revalidate");
-}
-
-// Start the web server
-void StartWebServer()
-{
-  // Start server
-  MyWebServer.begin();
-}
-
-// Initialize SPIFFS
-void InitFileSystem()
-{
-  if (SPIFFS.begin())
-  {
-    ESP_LOGI("Settings_Web_Server", "SPIFFS mounted successfully");
-    File root = SPIFFS.open("/");
-    File file = root.openNextFile();
-    while(file)
-    {
-      ESP_LOGD("Settings_Web_Server", "FILE: %s", file.name());
-      file = root.openNextFile();
-    }
-  }
-  else
-  {
-    ESP_LOGE("Settings_Web_Server", "An error has occurred while mounting SPIFFS");
-  }
-}
 
 void SetupSerialPorts()
 {
@@ -101,12 +51,13 @@ void SetupSerialPorts()
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
 }
 
+
 void InitLocalVariables()
 {
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_SettingsWebServerManager.BeginWebServer();
+  m_SettingsWebServerManager.SetupWifi();
 }
 
 void PrintMemory()
@@ -121,10 +72,6 @@ void setup()
 {
   SetupSerialPorts();
   InitLocalVariables();
-  InitFileSystem();
-  InitWebServer();
-  InitWebSocket();
-  StartWebServer();
   PrintMemory();
 }
 

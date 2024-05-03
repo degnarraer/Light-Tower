@@ -44,8 +44,10 @@ class WebSocketDataHandlerReceiver
 class WebSocketDataProcessor
 {
   public:
-    WebSocketDataProcessor( AsyncWebSocket &WebSocket )
-                          : m_WebSocket(WebSocket)
+    WebSocketDataProcessor( AsyncWebServer &webServer
+                          , AsyncWebSocket &webSocket )
+                          : m_WebServer(webServer)
+                          , m_WebSocket(webSocket)
     {
       xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
     }
@@ -72,6 +74,7 @@ class WebSocketDataProcessor
       Processor->WebSocketDataProcessor_Task();
     }
   private:
+    AsyncWebServer &m_WebServer;
     AsyncWebSocket &m_WebSocket;
     TaskHandle_t m_WebSocketTaskHandle;
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
@@ -120,7 +123,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                         , WebSocketDataProcessor &WebSocketDataProcessor
                         , const bool &IsReceiver
                         , const bool &IsSender
-                        , DataItem<T, COUNT> &DataItem
+                        , LocalDataItem<T, COUNT> &DataItem
                         , const bool &Debug )
                         : m_Name(Name)
                         , m_Signal(Signal)
@@ -184,9 +187,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       size_t newChangeCount = m_DataItem.GetValue(CurrentValue, COUNT);
       bool valueChanged = newChangeCount != m_OldChangeCount;
       m_OldChangeCount = newChangeCount;
-      if( forceUpdate || valueChanged )
+      String CurrentValueString = m_DataItem.GetValueAsString("");
+      if( (forceUpdate || valueChanged) && CurrentValueString.length() > 0 )
       {
-        String CurrentValueString = m_DataItem.GetValueAsString("");
         ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
         KeyValuePairs->push_back({ m_Signal, CurrentValueString.c_str() });
         m_Last_Update_Time = millis();
@@ -216,7 +219,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     const bool &m_IsReceiver;
     const bool &m_IsSender;
-    DataItem<T, COUNT> &m_DataItem;
+    LocalDataItem<T, COUNT> &m_DataItem;
     const bool &m_Debug;
     size_t m_OldChangeCount = 0;
   private:
@@ -231,15 +234,15 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
                                 , WebSocketDataProcessor &WebSocketDataProcessor
                                 , const bool &IsReceiver
                                 , const bool &IsSender
-                                , StringDataItem &DataItem
+                                , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem
                                 , const bool Debug )
                                 : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( Name
-                                                                , signalIds
-                                                                , WebSocketDataProcessor
-                                                                , IsReceiver
-                                                                , IsSender
-                                                                , DataItem
-                                                                , Debug)
+                                                                                    , signalIds
+                                                                                    , WebSocketDataProcessor
+                                                                                    , IsReceiver
+                                                                                    , IsSender
+                                                                                    , DataItem
+                                                                                    , Debug)
     {
     }
     
@@ -253,9 +256,10 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
       size_t newChangeCount = m_DataItem.GetValue(&currentValue, DATAITEM_STRING_LENGTH);
       bool valueChanged = newChangeCount != this->m_OldChangeCount;
       this->m_OldChangeCount = newChangeCount;
-      if( forceUpdate || valueChanged )
+      String CurrentValueString = m_DataItem.GetValueAsString("");
+      if( (forceUpdate || valueChanged) && CurrentValueString.length() > 0 )
       {
-        String CurrentValueString = m_DataItem.GetValueAsString("");
+        
         ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
         keyValuePairs->push_back({ m_Signal, currentValue });
       }
@@ -318,7 +322,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       if(keyValuePairVector.size())
       {
         result = Encode_Compatible_Device_To_JSON(keyValuePairVector);
-        if( forceUpdate || valueChanged )
+        if( (forceUpdate || valueChanged) && result.length() > 0 )
         {
           String CurrentValueString = m_DataItem.GetValueAsString("");
           ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
@@ -420,7 +424,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
               m_ActiveCompatibleDevices[i].timeSinceUpdate = activeCompatibleDevice.timeSinceUpdate;
               updated = true;
             }
-            ESP_LOGD( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP","%s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
+            ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP","%s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
                     , this->m_Name.c_str()
                     , m_ActiveCompatibleDevices[i].name
                     , m_ActiveCompatibleDevices[i].address
@@ -456,7 +460,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           0 < String(activeCompatibleDevice.address).length() &&
           ACTIVE_NAME_TIMEOUT >= activeCompatibleDevice.timeSinceUpdate + ACTIVE_NAME_TIMEOUT/2)
       {
-        ESP_LOGD( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP","%s: \n************* \nNew Device Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
+        ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP","%s: \n************* \nNew Device Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i"
                 , this->m_Name.c_str()
                 , activeCompatibleDevice.name
                 , activeCompatibleDevice.address
@@ -485,8 +489,11 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           KeyValueTupleVector.push_back(KeyValueTuple);
         }
         String result = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
-        ESP_LOGD("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP"", "Encoding Result: \"%s\"", result.c_str());
-        KeyValuePairs->push_back({ m_Signal, result.c_str() });
+        ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
+        if(result.length() > 0)
+        {
+          KeyValuePairs->push_back({ m_Signal, result.c_str() });
+        }
       }
     }
     

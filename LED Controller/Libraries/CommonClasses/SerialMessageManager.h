@@ -64,6 +64,69 @@ class NewRxTxValueCalleeInterface
 };
 
 template <typename T>
+class NamedCallbackInterface
+{
+	public:
+		NamedCallbackInterface()
+		{
+			
+		}
+		virtual ~NamedCallbackInterface()
+		{
+			
+		}
+		void RegisterNamedCallback(NamedCallback_t *namedCallback)
+		{
+			ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
+			NamedCallback_t* newNamedCallback = new NamedCallback_t(*namedCallback);
+			
+			bool IsFound = false;
+			for (NamedCallback_t* callback : m_NamedCallbacks)
+			{
+				if(*newNamedCallback == *callback)
+				{
+					ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
+					IsFound = true;
+					break;
+				}
+			}
+			if(false == IsFound)
+			{
+				ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
+				m_NamedCallbacks.push_back(newNamedCallback);
+			}	
+		}
+		void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
+		{
+			// Find the iterator pointing to the element
+			auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
+
+			// Check if the element was found before erasing
+			if (it != m_NamedCallbacks.end()) {
+				delete *it;
+				m_NamedCallbacks.erase(it);
+			}
+		}
+	protected:
+		void CallCallbacks(const String& name, T* object)
+		{
+			ESP_LOGD("NotifyCallee", "CallCallbacks");
+			for (NamedCallback_t* namedCallback : m_NamedCallbacks)
+			{
+				if (namedCallback->Callback) 
+				{
+					void (*aCallback)(const String&, void*, void*);
+					aCallback = namedCallback->Callback;
+					void* arg = namedCallback->Arg;
+					aCallback(namedCallback->Name, object, arg);
+				}
+			}
+		}
+	private:
+		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
+};
+
+template <typename T>
 class NewRxTxValueCallerInterface
 {
 	public:
@@ -105,38 +168,7 @@ class NewRxTxValueCallerInterface
 				m_NewValueCallees.erase(it);
 			}
 		}
-		void RegisterNamedCallback(NamedCallback_t *namedCallback)
-		{
-			ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
-			NamedCallback_t* newNamedCallback = new NamedCallback_t(*namedCallback);
-			
-			bool IsFound = false;
-			for (NamedCallback_t* callback : m_NamedCallbacks)
-			{
-				if(*newNamedCallback == *callback)
-				{
-					ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
-					IsFound = true;
-					break;
-				}
-			}
-			if(false == IsFound)
-			{
-				ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
-				m_NamedCallbacks.push_back(newNamedCallback);
-			}	
-		}
-		void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
-		{
-			// Find the iterator pointing to the element
-			auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
-
-			// Check if the element was found before erasing
-			if (it != m_NamedCallbacks.end()) {
-				delete *it;
-				m_NamedCallbacks.erase(it);
-			}
-		}
+		
 	protected:
 		void NotifyCallee(const String& name, T* object)
 		{
@@ -153,23 +185,8 @@ class NewRxTxValueCallerInterface
 				}
 			}
 		}
-		void CallCallbacks(const String& name, T* object)
-		{
-			ESP_LOGD("NotifyCallee", "CallCallbacks");
-			for (NamedCallback_t* namedCallback : m_NamedCallbacks)
-			{
-				if (namedCallback->Callback) 
-				{
-					void (*aCallback)(const String&, void*, void*);
-					aCallback = namedCallback->Callback;
-					void* arg = namedCallback->Arg;
-					aCallback(namedCallback->Name, object, arg);
-				}
-			}
-		}
 	private:
 		std::vector<NewRxTxValueCalleeInterface<T>*> m_NewValueCallees = std::vector<NewRxTxValueCalleeInterface<T>*>();
-		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
 };
 
 class NewRxTxVoidObjectCalleeInterface
