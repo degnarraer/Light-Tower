@@ -250,8 +250,9 @@ class PreferencesWrapper
 				else if ( std::is_integral<T>::value ||
 						std::is_convertible<T, int32_t>::value )
 				{
+					int32_t value = static_cast<int32_t>(*ValuePtr);
 					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);
-					m_Preferences->putInt(Name.c_str(), *ValuePtr);
+					m_Preferences->putInt(Name.c_str(), value);
 				}  
 				else 
 				{

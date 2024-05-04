@@ -514,11 +514,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 						, GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					if(memcmp(this->mp_Value, this->mp_RxValue, sizeof(T) * COUNT) != 0)
-					{
-						LocalDataItem<T, COUNT>::SetValue(this->mp_RxValue, COUNT);	
-						ValueUpdated = true;
-					}
+					LocalDataItem<T, COUNT>::SetValue(this->mp_RxValue, COUNT);	
+					ValueUpdated = true;
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == this->m_RxTxType)
@@ -639,8 +636,8 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					{
 						this->ZeroOutCharArray(this->mp_Value);
 						strcpy(this->mp_Value, this->mp_TxValue);
-						++this->m_ValueChangeCount;
 						ValueUpdated = true;
+						++this->m_ValueChangeCount;
 						this->CallCallbacks(this->m_Name.c_str(), this->mp_Value);
 					}
 				}
@@ -664,16 +661,14 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 						, "\"%s\" New RX Value Received: \"%s\""
 						, m_Name.c_str()
 						, receivedValue );
-				if(strcmp(this->mp_Value, this->mp_RxValue) != 0)
+				if( UpdateStoreType_On_Rx == m_UpdateStoreType &&
+					strcmp(this->mp_Value, this->mp_RxValue) != 0 )
 				{
-					if( UpdateStoreType_On_Rx == m_UpdateStoreType )
-					{
-						ZeroOutCharArray(this->mp_Value);
-						strcpy(this->mp_Value, this->mp_RxValue);
-						++m_ValueChangeCount;
-						ValueUpdated = true;
-						this->CallCallbacks(this->m_Name.c_str(), mp_Value);
-					}
+					ZeroOutCharArray(this->mp_Value);
+					strcpy(this->mp_Value, this->mp_RxValue);
+					++m_ValueChangeCount;
+					ValueUpdated = true;
+					this->CallCallbacks(this->m_Name.c_str(), mp_Value);
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
