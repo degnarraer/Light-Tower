@@ -61,18 +61,8 @@ class WebSocketDataProcessor
     void DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
     bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& Value);
     void UpdateAllDataToClient(uint8_t clientId);
-    void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
-    {
-      ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
-      std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-      sender->AppendCurrentValueToKVP(&KeyValuePairs, forceUpdate);
-      NotifyClients(Encode_Signal_Values_To_JSON(&KeyValuePairs));
-    }
-    static void StaticWebSocketDataProcessor_Task(void * parameter)
-    {
-      WebSocketDataProcessor *Processor = (WebSocketDataProcessor*)parameter;
-      Processor->WebSocketDataProcessor_Task();
-    }
+    void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate);
+    static void StaticWebSocketDataProcessor_Task(void * parameter);
   private:
     AsyncWebServer &m_WebServer;
     AsyncWebSocket &m_WebSocket;
@@ -184,11 +174,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
     {
       T CurrentValue[COUNT];
-      size_t newChangeCount = m_DataItem.GetValue(CurrentValue, COUNT);
-      bool valueChanged = newChangeCount != m_OldChangeCount;
-      m_OldChangeCount = newChangeCount;
       String CurrentValueString = m_DataItem.GetValueAsString("");
-      if( (forceUpdate || valueChanged) && CurrentValueString.length() > 0 )
+      if( (ValueChanged(CurrentValue) || forceUpdate) && CurrentValueString.length() > 0 )
       {
         ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
         KeyValuePairs->push_back({ m_Signal, CurrentValueString.c_str() });
@@ -221,7 +208,15 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_IsSender;
     LocalDataItem<T, COUNT> &m_DataItem;
     const bool &m_Debug;
-    size_t m_OldChangeCount = 0;
+    size_t m_ChangeCount = 0;
+
+    bool ValueChanged(void* object)
+    {
+      size_t newChangeCount = m_DataItem.GetValue(object, COUNT);
+      bool valueChanged = newChangeCount != m_ChangeCount;
+      m_ChangeCount = newChangeCount;
+      return valueChanged;
+    }
   private:
     uint64_t m_Last_Update_Time = millis();
 };
@@ -253,13 +248,9 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *keyValuePairs, bool forceUpdate = false) override
     { 
       char currentValue[DATAITEM_STRING_LENGTH];
-      size_t newChangeCount = m_DataItem.GetValue(&currentValue, DATAITEM_STRING_LENGTH);
-      bool valueChanged = newChangeCount != this->m_OldChangeCount;
-      this->m_OldChangeCount = newChangeCount;
       String CurrentValueString = m_DataItem.GetValueAsString("");
-      if( (forceUpdate || valueChanged) && CurrentValueString.length() > 0 )
+      if( (ValueChanged(currentValue) || forceUpdate) && CurrentValueString.length() > 0 )
       {
-        
         ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
         keyValuePairs->push_back({ m_Signal, currentValue });
       }
@@ -313,8 +304,8 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       String result;
 
       size_t newChangeCount = m_DataItem.GetValue(&currentValue, 1);
-      bool valueChanged = newChangeCount != this->m_OldChangeCount;
-      this->m_OldChangeCount = newChangeCount;
+      bool valueChanged = newChangeCount != this->m_ChangeCount;
+      this->m_ChangeCount = newChangeCount;
 
       keyValuePair.Key = currentValue.address;
       keyValuePair.Value = currentValue.name;
@@ -393,9 +384,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
     {   
       ActiveCompatibleDevice_t activeCompatibleDevice;
-      size_t newChangeCount = m_DataItem.GetValue(&activeCompatibleDevice, 1);
-      bool valueChanged = newChangeCount != this->m_OldChangeCount;
-      this->m_OldChangeCount = newChangeCount;
+      bool valueChanged = ValueChanged(&activeCompatibleDevice);
       bool found = false;
       bool updated = false;
       unsigned long currentMillis = millis();
@@ -431,7 +420,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
                     , m_ActiveCompatibleDevices[i].rssi
                     , m_ActiveCompatibleDevices[i].lastUpdateTime
                     , m_ActiveCompatibleDevices[i].timeSinceUpdate
-                    , newChangeCount );
+                    , m_ChangeCount );
           }
           else
           {
@@ -467,7 +456,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
                 , activeCompatibleDevice.rssi
                 , activeCompatibleDevice.lastUpdateTime
                 , activeCompatibleDevice.timeSinceUpdate
-                , newChangeCount);
+                , m_ChangeCount);
         ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t( activeCompatibleDevice.name
                                                                      , activeCompatibleDevice.address
                                                                      , activeCompatibleDevice.rssi

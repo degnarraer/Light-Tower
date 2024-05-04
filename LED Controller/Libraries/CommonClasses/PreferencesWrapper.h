@@ -1,10 +1,11 @@
 #pragma once
+#include "DataTypes.h"
 
 #define TIMER_TIME 10000UL
 #define TIMER_BUFFER 1000UL
 
 template <typename T, size_t COUNT>
-class PreferencesWrapper
+class PreferencesWrapper: public DataTypeFunctions
 {
 	
 	public:
@@ -33,11 +34,11 @@ class PreferencesWrapper
 		void Update_Preference(const String &UpdateType, const String& Name, T* ValuePtr, T* InitialValuePtr)
 		{
 			if(nullptr == m_Preferences) return;
-			assert((UpdateType == "Initialized" || UpdateType == "Loaded" || UpdateType == "Updated" || UpdateType == "Timer") && "Misuse of function");
+			assert((UpdateType == "Initialize" || UpdateType == "Load" || UpdateType == "Save" || UpdateType == "Timer") && "Misuse of function");
 
 			unsigned long currentMillis = millis();
 			unsigned long elapsedTime = currentMillis - m_Preferences_Last_Update;
-			if (elapsedTime <= TIMER_TIME && UpdateType.equals("Updated"))
+			if (elapsedTime <= TIMER_TIME && UpdateType.equals("Save"))
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": To early to save preference", Name.c_str());
 				if(false == m_PreferenceTimerActive)
@@ -47,28 +48,28 @@ class PreferencesWrapper
 					m_PreferenceTimerActive = true;
 				}
 				return;
-			}	
+			}
 			if ( UpdateType.equals("Timer") )
 			{
-				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Preference Update", Name.c_str());
-				HandleUpdated( Name, ValuePtr );
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", Name.c_str());
+				HandleSave( Name, ValuePtr );
 				m_PreferenceTimerActive = false;
 				m_Preferences_Last_Update = currentMillis;
 			}
-			else if ( UpdateType.equals("Loaded") )
-			{
-				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
-				HandleLoaded(Name, ValuePtr, InitialValuePtr);
-			} 
-			else if ( UpdateType.equals("Initialized") )
+			else if ( UpdateType.equals("Initialize") )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", Name.c_str());
-				HandleUpdated( Name, InitialValuePtr );
+				HandleSave( Name, InitialValuePtr );
 			}
-			else if ( UpdateType.equals("Updated") )
+			else if ( UpdateType.equals("Load") )
+			{
+				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
+				HandleLoad( Name, ValuePtr, InitialValuePtr );
+			} 
+			else if ( UpdateType.equals("Save") )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
-				HandleUpdated( Name, ValuePtr );
+				HandleSave( Name, ValuePtr );
 				m_Preferences_Last_Update = currentMillis;
 			}
 			else
@@ -87,9 +88,9 @@ class PreferencesWrapper
 			T* InitialValue;
 		};
 	protected:
-		void CreatePreferencesTimer(const String& Name, T* Value, T* InitialValue)
+		void CreatePreferencesTimer(const String& key, T* value, T* initialValue)
 		{
-			mp_TimerArgs = new PreferencesWrapperTimerArgs(this, Name, Value, InitialValue);
+			mp_TimerArgs = new PreferencesWrapperTimerArgs(this, key, value, initialValue);
 			esp_timer_create_args_t timerArgs;
 			timerArgs.callback = &Static_Update_Preference;
 			timerArgs.arg = mp_TimerArgs;
@@ -98,170 +99,61 @@ class PreferencesWrapper
 			// Create the timer
 			esp_timer_create(&timerArgs, &m_PreferenceTimer);
 		}
-		void InitializeNVM(const String& Name, T* ValuePtr, T* InitialValuePtr)
+
+		void InitializeNVM(const String& key, T* valuePtr, T* initialValuePtr)
 		{
 			if(m_Preferences)
 			{
-				if (m_Preferences->isKey(Name.c_str()))
+				if (m_Preferences->isKey(key.c_str()))
 				{
-					ESP_LOGD("InitializeNVM", "Preference Found: \"%s\"", Name.c_str());
-					Update_Preference("Loaded", Name, ValuePtr, InitialValuePtr);
+					ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", key.c_str());
+					Update_Preference("Load", key, valuePtr, initialValuePtr);
 				}
 				else
 				{
-					ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", Name.c_str());
-					Update_Preference("Initialized", Name, ValuePtr, InitialValuePtr);
+					ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", key.c_str());
+					Update_Preference("Initialize", key, valuePtr, initialValuePtr);
 				}
 			}
+			else
+			{
+				ESP_LOGE("PreferencesWrapper: InitializeNVM", "Key: \"%s\": Null Value Pointer!", key.c_str());
+			}
 		}
-		void HandleLoaded(const String& Name, T* ValuePtr, T* InitialValuePtr)
+		void HandleLoad(const String& key, T* valuePtr, T* initialValuePtr)
 		{
-			if(!ValuePtr || !InitialValuePtr) return;
-			if (std::is_same<T, bool>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				bool InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(bool));
-				bool Result = m_Preferences->getBool(Name.c_str(), InitialValue);
-				memcpy(ValuePtr, &Result, sizeof(bool));
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded Bool: %i", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, int32_t>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				int32_t InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(int32_t));
-				int32_t Result = m_Preferences->getInt(Name.c_str(), InitialValue);
-				memcpy(ValuePtr, &Result, sizeof(int32_t));
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded int32_t: %i", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, int16_t>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				int16_t InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(int16_t));
-				int16_t Result = m_Preferences->getInt(Name.c_str(), InitialValue);
-				memcpy(ValuePtr, &Result, sizeof(int16_t));
-				ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded int16_t: %i", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, int8_t>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				int8_t InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(int8_t));
-				int8_t Result = m_Preferences->getInt(Name.c_str(), InitialValue);
-				memcpy(ValuePtr, &Result, sizeof(int8_t));
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded int8_t: %i", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, SoundInputSource_t>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				SoundInputSource_t InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(SoundInputSource_t));
-				SoundInputSource_t Result = static_cast<SoundInputSource_t>(m_Preferences->getInt(Name.c_str(), static_cast<int32_t>(InitialValue)));
-				memcpy(ValuePtr, &Result, sizeof(SoundInputSource_t));
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded SoundInputSource_t: %i", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, SoundOutputSource_t>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				SoundOutputSource_t InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(SoundOutputSource_t));
-				SoundOutputSource_t Result = static_cast<SoundOutputSource_t>(m_Preferences->getInt(Name.c_str(), static_cast<uint32_t>(InitialValue)));
-				memcpy(ValuePtr, &Result, sizeof(SoundOutputSource_t));
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded SoundOutputSource_t: %i", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, float>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				float InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(float));
-				float Result = m_Preferences->getFloat(Name.c_str(), InitialValue);
-				memcpy(ValuePtr, &Result, sizeof(float));
-				ESP_LOGI("DataItem: HandleLoaded", "Data Item: \"%s\": Loaded float: %f", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, double>::value)
-			{
-				assert(COUNT == 1 && "Count should be 1 to do this");
-				double InitialValue;
-				memcpy(&InitialValue , InitialValuePtr, sizeof(double));
-				double Result = m_Preferences->getDouble(Name.c_str(), InitialValue);
-				memcpy(ValuePtr, &Result, sizeof(double));
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded double: %d", Name.c_str(), Result);	
-			}
-			else if (std::is_same<T, char>::value)
-			{
-				char value[COUNT];
-				char zeroChar = '\0';
-				for (size_t i = 0; i < COUNT - 1; ++i)
-				{
-					memcpy(value+i, InitialValuePtr+i, sizeof(char));
-					memcpy(ValuePtr+i, &zeroChar, sizeof(char));
-				}
-				value[COUNT - 1] = '\0';
-				
-				String Result = m_Preferences->getString(Name.c_str(), value);
-				assert(Result.length() <= COUNT);
-				
-				size_t i = 0;
-				while (i < COUNT - 1 && i < Result.length())
-				{
-					memcpy(ValuePtr+i, Result.c_str()+i, sizeof(char));
-					++i;
-				}
-				ESP_LOGI("DataItem: HandleLoaded", "Name: \"%s\": Loaded String: \"%s\"", Name.c_str(), Result.c_str());
+			if(valuePtr && initialValuePtr)
+			{ 
+				String value = m_Preferences->getString( key.c_str()
+														, GetValueAsStringForDataType( initialValuePtr
+																					 , GetDataTypeFromTemplateType<T>()
+																					 , COUNT
+														  							 , "|") );
+				SetValueFromStringForDataType( valuePtr
+										 	 , value
+										 	 , GetDataTypeFromTemplateType<T>() );
+				ESP_LOGI("PreferencesWrapper: HandleLoaded", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
 			}
 			else
 			{
-				ESP_LOGE("DataItem: HandleLoaded", "Name: \"%s\": Unsupported Data Type", Name.c_str());
+				ESP_LOGE("PreferencesWrapper: HandleLoaded", "Key: \"%s\": Null Value Pointer!", key.c_str());
 			}
 		}
-		void HandleUpdated(const String& Name, T* ValuePtr)
+		void HandleSave(const String& key, T* valuePtr)
 		{	
-			if(ValuePtr)
+			if(valuePtr)
 			{
-				if (std::is_same<T, bool>::value)
-				{
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving bool: %i", Name.c_str(), *ValuePtr);
-					m_Preferences->putBool(Name.c_str(), *ValuePtr);
-				}
-				else if (std::is_same<T, char>::value)
-				{
-					char charValues[COUNT];
-					// Copy characters from initialValue to value, ensuring null-termination.
-					for (size_t i = 0; i < COUNT - 1; ++i)
-					{
-						memcpy(charValues+i, ValuePtr+i, sizeof(char));
-					}
-					charValues[COUNT - 1] = '\0';
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving String: %s", Name.c_str(), String(charValues).c_str() );
-					m_Preferences->putString(Name.c_str(), charValues);
-				}
-				else if (std::is_same<T, float>::value)
-				{
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving float: %f", Name.c_str(), *ValuePtr);
-					m_Preferences->putFloat(Name.c_str(), *ValuePtr);	
-				}
-				else if (std::is_same<T, double>::value)
-				{
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving double: %d", Name.c_str(), *ValuePtr);
-					m_Preferences->putDouble(Name.c_str(), *ValuePtr);
-				}
-				else if ( std::is_integral<T>::value ||
-						std::is_convertible<T, int32_t>::value )
-				{
-					int32_t value = static_cast<int32_t>(*ValuePtr);
-					ESP_LOGI("DataItem: HandleUpdated", "Data Item: \"%s\": Saving integer: %i", Name.c_str(), *ValuePtr);
-					m_Preferences->putInt(Name.c_str(), value);
-				}  
-				else 
-				{
-					ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Unsupported Data Type", Name.c_str());
-				}
+				String value = GetValueAsStringForDataType( valuePtr 
+														  , GetDataTypeFromTemplateType<T>()
+														  , COUNT
+														  , "|" );
+				m_Preferences->putString( key.c_str()
+										, value );
+				ESP_LOGI("PreferencesWrapper: Handle Updated", "Saved Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
 			}
 			else
 			{
-				ESP_LOGE("SetDataLinkEnabled", "Data Item: \"%s\": Null Value Pointer!", Name.c_str());
+				ESP_LOGE("PreferencesWrapper: Handle Updated", "Key: \"%s\": Null Value Pointer!", key.c_str());
 			}
 		}
 	private:

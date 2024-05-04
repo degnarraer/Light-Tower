@@ -116,3 +116,20 @@ void WebSocketDataProcessor::NotifyClients(const String& TextString)
     m_WebSocket.textAll(TextString);
   }
 }
+
+void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
+{
+  ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
+  std::vector<KVP> KeyValuePairs = std::vector<KVP>();
+  sender->AppendCurrentValueToKVP(&KeyValuePairs, forceUpdate);
+  if(KeyValuePairs.size() > 0)
+  {
+    NotifyClients(Encode_Signal_Values_To_JSON(&KeyValuePairs));
+  }
+}
+
+void WebSocketDataProcessor::StaticWebSocketDataProcessor_Task(void * parameter)
+{
+  WebSocketDataProcessor *Processor = (WebSocketDataProcessor*)parameter;
+  Processor->WebSocketDataProcessor_Task();
+}
