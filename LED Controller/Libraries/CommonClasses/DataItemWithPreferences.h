@@ -61,7 +61,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			}
 			return result;
 		}
@@ -70,7 +70,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			}
 			return result;
 		}
@@ -119,7 +119,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			bool result = LocalStringDataItem::SetValue(Value, Count);
 			if(result)
 			{
-				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			}
 			return result;
 		}
@@ -185,7 +185,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			}
 			return result;
 		}
@@ -195,7 +195,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::NewRXValueReceived(Object, Count);
 			if(result) 
 			{
-				this->Update_Preference("Updated", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
 			}
 			return result;
 		}

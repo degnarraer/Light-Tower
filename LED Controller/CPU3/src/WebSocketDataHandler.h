@@ -27,6 +27,9 @@
 #include "ESPAsyncWebServer.h"
 #include "AsyncTCP.h"
 #include "Arduino_JSON.h"
+#include <mutex>
+
+#define MESSAGE_LENGTH 500
 
 class SettingsWebServerManager;
 class WebSocketDataHandlerSender
@@ -67,10 +70,11 @@ class WebSocketDataProcessor
     AsyncWebServer &m_WebServer;
     AsyncWebSocket &m_WebSocket;
     TaskHandle_t m_WebSocketTaskHandle;
+    char m_Message[MESSAGE_LENGTH];
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     void WebSocketDataProcessor_Task();
-    String Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs);
+    void Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs, char *result);
     void NotifyClient(uint8_t clientID, const String& TextString);
     void NotifyClients(const String& TextString);
     template<typename T>
@@ -173,12 +177,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
 
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
     {
-      T CurrentValue[COUNT];
-      String CurrentValueString = m_DataItem.GetValueAsString("");
-      if( (ValueChanged(CurrentValue) || forceUpdate) && CurrentValueString.length() > 0 )
+      T currentValue[COUNT];
+      String currentValueString;
+      if( (ValueChanged(currentValue) || forceUpdate) && m_DataItem.GetStringValue(currentValueString, "") )
       {
-        ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
-        KeyValuePairs->push_back({ m_Signal, CurrentValueString.c_str() });
+        ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), currentValueString.c_str());
+        KeyValuePairs->push_back({ m_Signal.c_str(), currentValueString.c_str() });
         m_Last_Update_Time = millis();
       }
     }
@@ -248,7 +252,7 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *keyValuePairs, bool forceUpdate = false) override
     { 
       char currentValue[DATAITEM_STRING_LENGTH];
-      String CurrentValueString = m_DataItem.GetValueAsString("");
+      String CurrentValueString;// = m_DataItem.GetValueAsString("");
       if( (ValueChanged(currentValue) || forceUpdate) && CurrentValueString.length() > 0 )
       {
         ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
@@ -301,8 +305,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       std::vector<KVP> keyValuePairVector;
       KVP keyValuePair;
       CompatibleDevice_t currentValue;
-      String result;
-
+      
       size_t newChangeCount = m_DataItem.GetValue(&currentValue, 1);
       bool valueChanged = newChangeCount != this->m_ChangeCount;
       this->m_ChangeCount = newChangeCount;
@@ -312,10 +315,10 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       keyValuePairVector.push_back(keyValuePair);
       if(keyValuePairVector.size())
       {
-        result = Encode_Compatible_Device_To_JSON(keyValuePairVector);
+        String result; // = Encode_Compatible_Device_To_JSON(keyValuePairVector);
         if( (forceUpdate || valueChanged) && result.length() > 0 )
         {
-          String CurrentValueString = m_DataItem.GetValueAsString("");
+          String CurrentValueString;// = m_DataItem.GetValueAsString("");
           ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
           keyValuePairs->push_back({ m_Signal, result.c_str() });
         }
@@ -384,11 +387,11 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
     {   
       ActiveCompatibleDevice_t activeCompatibleDevice;
-      bool valueChanged = ValueChanged(&activeCompatibleDevice);
+      bool valueChanged = false; // = ValueChanged(&activeCompatibleDevice);
       bool found = false;
       bool updated = false;
       unsigned long currentMillis = millis();
-      for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+      for(int i = 0; false; ++i ) //size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         unsigned long elapsedTime;
         unsigned long previousMillis = m_ActiveCompatibleDevices[i].lastUpdateTime;
@@ -477,7 +480,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi).c_str();
           KeyValueTupleVector.push_back(KeyValueTuple);
         }
-        String result = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
+        String result; // = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
         ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
         if(result.length() > 0)
         {

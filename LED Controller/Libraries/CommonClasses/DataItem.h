@@ -165,6 +165,13 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				return "";
 			}
 		}
+		
+		bool GetStringValue(String &stringValue, const String &divider)
+		{
+			if(this->mp_Value) return GetStringValueForDataType(stringValue, this->mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, divider);
+			return false;
+		}
+
 		virtual bool SetValue(const T *Value, size_t Count)
 		{
 			assert(Value != nullptr && "Value must not be null");

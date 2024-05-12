@@ -9,7 +9,10 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   {
     m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs, true);
   }
-  NotifyClient(clientId, Encode_Signal_Values_To_JSON(&KeyValuePairs));
+  if(KeyValuePairs.size())
+  {
+    Encode_Signal_Values_To_JSON(&KeyValuePairs, m_Message);
+  } NotifyClient(clientId, m_Message);
 }
 
 void WebSocketDataProcessor::WebSocketDataProcessor_Task()
@@ -24,9 +27,10 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     {
       m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs);
     }
-    if(KeyValuePairs.size() >0)
+    if(KeyValuePairs.size())
     {
-      NotifyClients(Encode_Signal_Values_To_JSON(&KeyValuePairs));
+      Encode_Signal_Values_To_JSON(&KeyValuePairs, m_Message);
+      NotifyClients(m_Message);
     }
   }  
 }
@@ -88,7 +92,7 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& S
   return SignalFound;
 }
 
-String WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs)
+void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs, char *result)
 {
   JSONVar jSONVars;
   for(int i = 0; i < KeyValuePairs->size(); ++i)
@@ -98,7 +102,8 @@ String WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> *Ke
     SettingValues["Value"] = KeyValuePairs->at(i).Value;
     jSONVars["SignalValue" + String(i)] = SettingValues; 
   }
-  return JSON.stringify(jSONVars);
+  assert(jSONVars.length() > 0 && jSONVars.length() <= MESSAGE_LENGTH && "Invalid Length");
+  strcpy(result, JSON.stringify(jSONVars).c_str());
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& TextString)
@@ -122,9 +127,10 @@ void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sen
   ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
   std::vector<KVP> KeyValuePairs = std::vector<KVP>();
   sender->AppendCurrentValueToKVP(&KeyValuePairs, forceUpdate);
-  if(KeyValuePairs.size() > 0)
+  if(KeyValuePairs.size())
   {
-    NotifyClients(Encode_Signal_Values_To_JSON(&KeyValuePairs));
+    Encode_Signal_Values_To_JSON(&KeyValuePairs, m_Message);
+    NotifyClients(m_Message);
   }
 }
 

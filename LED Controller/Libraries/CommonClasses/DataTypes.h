@@ -697,10 +697,112 @@ class DataTypeFunctions
 			}
 			return result;
 		}
+
+		bool GetStringValueForDataType(String &stringValue, const void *buffer, DataType_t dataType, size_t count, const String &divider)
+		{
+			bool success = false;
+			if(!buffer) return success;
+			for (int i = 0; i < count; ++i)
+			{
+				if (i > 0 && divider.length() > 0) stringValue += divider;
+				switch (dataType)
+				{
+				case DataType_Bool_t:
+					stringValue += (*((const bool *)buffer + i) ? "True" : "False");
+					success = true;
+					break;
+				case DataType_Int8_t:
+					stringValue += String(*((const int8_t *)buffer + i));
+					success = true;
+					break;
+				case DataType_Int16_t:
+					stringValue += String(*((const int16_t *)buffer + i));
+					success = true;
+					break;
+				case DataType_Int32_t:
+				case DataType_ConnectionStatus_t:
+					stringValue += String(*((const int32_t *)buffer + i));
+					success = true;
+					break;
+				case DataType_Uint8_t:
+				case DataType_Uint16_t:
+				case DataType_Uint32_t:
+					stringValue += String(((const char *)buffer)[i]);
+					success = true;
+					break;
+				case DataType_Float_t:
+					stringValue += String(*((const float *)buffer + i));
+					success = true;
+					break;
+				case DataType_Double_t:
+					stringValue += String(*((const double *)buffer + i));
+					success = true;
+					break;
+				case DataType_Char_t:
+					stringValue += String(*((const char *)buffer + i));
+					success = true;
+					break;
+				case DataType_SoundInputSource_t:
+					stringValue += String(*((const SoundInputSource_t *)buffer + i));
+					success = true;
+				break;
+				case DataType_SoundOutputSource_t:
+					stringValue += String(*((const SoundOutputSource_t *)buffer + i));
+					success = true;
+				break;
+				case DataType_BT_Device_Info_With_Time_Since_Update_t:
+				{
+					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
+					const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = reinterpret_cast<const BT_Device_Info_With_Time_Since_Update_t*>(bufferPtr + i);
+					stringValue += String(deviceInfo->name) + " | ";
+					stringValue += String(deviceInfo->address) + " | ";
+					stringValue += String(deviceInfo->rssi) + " | ";
+					stringValue += String(deviceInfo->timeSinceUdpate);
+					success = true;
+					break;
+				}
+				case DataType_CompatibleDevice_t:
+				{
+					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
+					const CompatibleDevice_t* compatibleDevice = reinterpret_cast<const CompatibleDevice_t*>(bufferPtr + i);
+					stringValue += String(compatibleDevice->name) + " | ";
+					stringValue += String(compatibleDevice->address);
+					success = true;
+					break;
+				}
+				case DataType_ActiveCompatibleDevice_t:
+				{
+					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
+					const ActiveCompatibleDevice_t* activeCompatibleDevice = reinterpret_cast<const ActiveCompatibleDevice_t*>(bufferPtr + i);
+					stringValue += String(activeCompatibleDevice->name) + " | ";
+					stringValue += String(activeCompatibleDevice->address) + " | ";
+					stringValue += String(activeCompatibleDevice->rssi) + " | ";
+					stringValue += String(activeCompatibleDevice->lastUpdateTime) + " | ";
+					stringValue += String(activeCompatibleDevice->timeSinceUpdate);
+					success = true;
+					break;
+				}
+				case DataType_String_t:
+				case DataType_BT_Device_Info_t:
+				case DataType_ProcessedSoundData_t:
+				case DataType_MaxBandSoundData_t:
+				case DataType_Frame_t:
+				case DataType_ProcessedSoundFrame_t:
+				case DataType_SoundState_t:
+					stringValue = "Unsupported Data Type";
+					break;
+				default:
+					ESP_LOGE("DataTypes: GetValueAsStringForDataType", "GetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
+					stringValue = "Invalid Data Type";
+					break;
+				}
+			}
+			return success;
+		}
+
 		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count, const String &Divider)
 		{
 			String resultString;
-			
 			for (int i = 0; i < Count; ++i)
 			{
 				if (i > 0 && Divider.length() > 0) resultString += Divider;
