@@ -83,9 +83,10 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& s
   bool SignalFound = false;
   for(int i = 0; i < m_MyReceivers.size(); ++i)
   {
-    if(true == m_MyReceivers[i]->ProcessSignalValueAndSendToDatalink(signalId, value))
+    if(true == m_MyReceivers[i]->GetSignal().equals(signalId))
     {
       SignalFound = true;
+      m_MyReceivers[i]->HandleNewSignalValue(value);
     }
   }
   return SignalFound;
