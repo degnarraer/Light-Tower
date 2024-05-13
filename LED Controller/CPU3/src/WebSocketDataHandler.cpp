@@ -99,7 +99,7 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyV
     JSONVar SettingValues;
     SettingValues["Id"] = keyValuePairs.at(i).Key;
     SettingValues["Value"] = keyValuePairs.at(i).Value;
-    jSONVars["SignalValue" + String(i)] = SettingValues; 
+    jSONVars["SignalValue" + String(i)] = SettingValues;
   }
   result = JSON.stringify(jSONVars);
 }

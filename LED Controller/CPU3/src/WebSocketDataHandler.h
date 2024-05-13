@@ -58,11 +58,11 @@ class WebSocketDataProcessor
     {
       if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
     }
-    void RegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver);
-    void DeRegisterAsWebSocketDataReceiver(const String& Name, WebSocketDataHandlerReceiver *aReceiver);
-    void RegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
-    void DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender);
-    bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& Value);
+    void RegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver);
+    void DeRegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver);
+    void RegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender);
+    void DeRegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender);
+    bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& Value);
     void UpdateAllDataToClient(uint8_t clientId);
     void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate);
     static void StaticWebSocketDataProcessor_Task(void * parameter);
@@ -73,19 +73,18 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     void WebSocketDataProcessor_Task();
-    void Encode_Signal_Values_To_JSON(std::vector<KVP> &KeyValuePairs, String &result);
-    void NotifyClient(uint8_t clientID, const String& TextString);
-    void NotifyClients(const String& TextString);
+    void Encode_Signal_Values_To_JSON(std::vector<KVP> &keyValuePairs, String &result);
+    void NotifyClient(uint8_t clientID, const String& textString);
+    void NotifyClients(const String& textString);
     template<typename T>
     std::vector<T>* AllocateVectorOnHeap(size_t count)
     {
         T* data = static_cast<T*>(heap_caps_malloc(sizeof(T) * count, MALLOC_CAP_SPIRAM));
         if (data)
         {
-            // Construct the vector with the allocated memory
             return new std::vector<T>(data, data + count);
         }
-        return nullptr;  // Allocation failed
+        return nullptr;
     }
 };
 
@@ -111,20 +110,20 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
       if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
     }
-    WebSocketDataHandler( const String &Name
-                        , const String &Signal
-                        , WebSocketDataProcessor &WebSocketDataProcessor
-                        , const bool &IsReceiver
-                        , const bool &IsSender
-                        , LocalDataItem<T, COUNT> &DataItem
-                        , const bool &Debug )
-                        : m_Name(Name)
-                        , m_Signal(Signal)
-                        , m_WebSocketDataProcessor(WebSocketDataProcessor)
-                        , m_IsReceiver(IsReceiver)
-                        , m_IsSender(IsSender)
-                        , m_DataItem(DataItem)
-                        , m_Debug(Debug)
+    WebSocketDataHandler( const String &name
+                        , const String &signal
+                        , WebSocketDataProcessor &webSocketDataProcessor
+                        , const bool &isReceiver
+                        , const bool &isSender
+                        , LocalDataItem<T, COUNT> &dataItem
+                        , const bool &debug )
+                        : m_Name(name)
+                        , m_Signal(signal)
+                        , m_WebSocketDataProcessor(webSocketDataProcessor)
+                        , m_IsReceiver(isReceiver)
+                        , m_IsSender(isSender)
+                        , m_DataItem(dataItem)
+                        , m_Debug(debug)
     {
       if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
       if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
@@ -380,11 +379,11 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     virtual void AppendCurrentValueToKVP(std::vector<KVP> &keyValuePairs, bool forceUpdate = false) override
     {   
       ActiveCompatibleDevice_t activeCompatibleDevice;
-      bool valueChanged = false; // = ValueChanged(&activeCompatibleDevice);
+      bool valueChanged = m_DataItem.GetValue(&activeCompatibleDevice, 1);
       bool found = false;
       bool updated = false;
       unsigned long currentMillis = millis();
-      for(int i = 0; false; ++i ) //size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+      for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
         unsigned long elapsedTime;
         unsigned long previousMillis = m_ActiveCompatibleDevices[i].lastUpdateTime;
@@ -464,16 +463,16 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
 
       if(forceUpdate || updated)
       {
-        std::vector<KVT> KeyValueTupleVector;
+        std::vector<KVT> keyValueTupleVector;
         for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
         {
-          KVT KeyValueTuple;
-          KeyValueTuple.Key = m_ActiveCompatibleDevices[i].address;
-          KeyValueTuple.Value1 = m_ActiveCompatibleDevices[i].name;
-          KeyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi).c_str();
-          KeyValueTupleVector.push_back(KeyValueTuple);
+          KVT keyValueTuple;
+          keyValueTuple.Key = m_ActiveCompatibleDevices[i].address;
+          keyValueTuple.Value1 = m_ActiveCompatibleDevices[i].name;
+          keyValueTuple.Value2 = String(m_ActiveCompatibleDevices[i].rssi).c_str();
+          keyValueTupleVector.push_back(keyValueTuple);
         }
-        String result; // = Encode_SSID_Values_To_JSON(KeyValueTupleVector);
+        String result = Encode_SSID_Values_To_JSON(keyValueTupleVector);
         ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
         if(result.length() > 0)
         {
@@ -482,23 +481,23 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       }
     }
     
-    virtual bool ProcessSignalValueAndSendToDatalink(const String& SignalId, const String& stringValue) override
+    virtual bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& stringValue) override
     {
       return false;
     }
   private:
     //Datalink
     std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
-    String Encode_SSID_Values_To_JSON(std::vector<KVT> &KeyValueTuple)
+    String Encode_SSID_Values_To_JSON(std::vector<KVT> &keyValueTuple)
     {
       JSONVar JSONVars;
-      for(int i = 0; i < KeyValueTuple.size(); ++i)
+      for(int i = 0; i < keyValueTuple.size(); ++i)
       { 
-        JSONVar CompatibleDeviceValues;
-        CompatibleDeviceValues["ADDRESS"] = KeyValueTuple[i].Key;
-        CompatibleDeviceValues["NAME"] = KeyValueTuple[i].Value1;
-        CompatibleDeviceValues["RSSI"] = KeyValueTuple[i].Value2;
-        JSONVars["ActiveCompatibleDevice" + String(i)] = CompatibleDeviceValues;
+        JSONVar compatibleDeviceValues;
+        compatibleDeviceValues["ADDRESS"] = keyValueTuple[i].Key;
+        compatibleDeviceValues["NAME"] = keyValueTuple[i].Value1;
+        compatibleDeviceValues["RSSI"] = keyValueTuple[i].Value2;
+        JSONVars["ActiveCompatibleDevice" + String(i)] = compatibleDeviceValues;
       }
       return JSON.stringify(JSONVars);
     }
