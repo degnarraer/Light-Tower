@@ -1,18 +1,19 @@
 #include "WebSocketDataHandler.h"
 
-
 void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
 {
   ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %i", clientId );
   std::vector<KVP> KeyValuePairs = std::vector<KVP>();
   for(int i = 0; i < m_MySenders.size(); ++i)
   {
-    m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs, true);
+    m_MySenders[i]->AppendCurrentValueToKVP(KeyValuePairs, true);
   }
   if(KeyValuePairs.size())
   {
-    Encode_Signal_Values_To_JSON(&KeyValuePairs, m_Message);
-  } NotifyClient(clientId, m_Message);
+    String message;
+    Encode_Signal_Values_To_JSON(KeyValuePairs, message);
+    NotifyClient(clientId, message);
+  }
 }
 
 void WebSocketDataProcessor::WebSocketDataProcessor_Task()
@@ -25,12 +26,13 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     std::vector<KVP> KeyValuePairs = std::vector<KVP>();
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
-      m_MySenders[i]->AppendCurrentValueToKVP(&KeyValuePairs);
+      m_MySenders[i]->AppendCurrentValueToKVP(KeyValuePairs);
     }
     if(KeyValuePairs.size())
     {
-      Encode_Signal_Values_To_JSON(&KeyValuePairs, m_Message);
-      NotifyClients(m_Message);
+      String message;
+      Encode_Signal_Values_To_JSON(KeyValuePairs, message);
+      NotifyClients(message);
     }
   }  
 }
@@ -67,10 +69,7 @@ void WebSocketDataProcessor::RegisterAsWebSocketDataSender(const String& Name, W
 
 void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& Name, WebSocketDataHandlerSender *aSender)
 {
-  // Find the iterator pointing to the element
   auto it = std::find(m_MySenders.begin(), m_MySenders.end(), aSender);
-
-  // Check if the element was found before erasing
   if (it != m_MySenders.end())
   {
     ESP_LOGI("RegisterAsWebSocketDataSender", "DeRegistering %s as Web Socket Data Sender.", Name.c_str());
@@ -92,18 +91,17 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& S
   return SignalFound;
 }
 
-void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs, char *result)
+void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyValuePairs, String &result)
 {
   JSONVar jSONVars;
-  for(int i = 0; i < KeyValuePairs->size(); ++i)
+  for(int i = 0; i < keyValuePairs.size(); ++i)
   {
     JSONVar SettingValues;
-    SettingValues["Id"] = KeyValuePairs->at(i).Key;
-    SettingValues["Value"] = KeyValuePairs->at(i).Value;
+    SettingValues["Id"] = keyValuePairs.at(i).Key;
+    SettingValues["Value"] = keyValuePairs.at(i).Value;
     jSONVars["SignalValue" + String(i)] = SettingValues; 
   }
-  assert(jSONVars.length() > 0 && jSONVars.length() <= MESSAGE_LENGTH && "Invalid Length");
-  strcpy(result, JSON.stringify(jSONVars).c_str());
+  result = JSON.stringify(jSONVars);
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& TextString)
@@ -126,16 +124,17 @@ void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sen
 {
   ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
   std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-  sender->AppendCurrentValueToKVP(&KeyValuePairs, forceUpdate);
+  sender->AppendCurrentValueToKVP(KeyValuePairs, forceUpdate);
   if(KeyValuePairs.size())
   {
-    Encode_Signal_Values_To_JSON(&KeyValuePairs, m_Message);
-    NotifyClients(m_Message);
+    String message;
+    Encode_Signal_Values_To_JSON(KeyValuePairs, message);
+    NotifyClients(message);
   }
 }
 
 void WebSocketDataProcessor::StaticWebSocketDataProcessor_Task(void * parameter)
 {
-  WebSocketDataProcessor *Processor = (WebSocketDataProcessor*)parameter;
-  Processor->WebSocketDataProcessor_Task();
+  WebSocketDataProcessor *processor = (WebSocketDataProcessor*)parameter;
+  processor->WebSocketDataProcessor_Task();
 }

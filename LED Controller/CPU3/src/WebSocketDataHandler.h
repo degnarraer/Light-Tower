@@ -35,7 +35,7 @@ class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) = 0;
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> &keyValuePairs, bool forceUpdate = false) = 0;
 };
 
 class WebSocketDataHandlerReceiver
@@ -70,11 +70,10 @@ class WebSocketDataProcessor
     AsyncWebServer &m_WebServer;
     AsyncWebSocket &m_WebSocket;
     TaskHandle_t m_WebSocketTaskHandle;
-    char m_Message[MESSAGE_LENGTH];
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
     void WebSocketDataProcessor_Task();
-    void Encode_Signal_Values_To_JSON(std::vector<KVP> *KeyValuePairs, char *result);
+    void Encode_Signal_Values_To_JSON(std::vector<KVP> &KeyValuePairs, String &result);
     void NotifyClient(uint8_t clientID, const String& TextString);
     void NotifyClients(const String& TextString);
     template<typename T>
@@ -172,17 +171,19 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     String GetName()
     {
+
+
       return m_Name;
     }
 
-    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> &keyValuePairs, bool forceUpdate = false) override
     {
-      T currentValue[COUNT];
-      String currentValueString;
-      if( (ValueChanged(currentValue) || forceUpdate) && m_DataItem.GetStringValue(currentValueString, "") )
+      KVP newKVP;
+      newKVP.Key = m_Signal;
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(newKVP.Value, "") )
       {
-        ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), currentValueString.c_str());
-        KeyValuePairs->push_back({ m_Signal.c_str(), currentValueString.c_str() });
+        ESP_LOGI( "WebSocketDataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), newKVP.Value.c_str());
+        keyValuePairs.push_back(newKVP);
         m_Last_Update_Time = millis();
       }
     }
@@ -206,7 +207,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
   protected:
     const String m_Name;
-    const String &m_Signal;
+    const String m_Signal;
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     const bool &m_IsReceiver;
     const bool &m_IsSender;
@@ -214,9 +215,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_Debug;
     size_t m_ChangeCount = 0;
 
-    bool ValueChanged(void* object)
+    bool ValueChanged()
     {
-      size_t newChangeCount = m_DataItem.GetValue(object, COUNT);
+      size_t newChangeCount = m_DataItem.GetChangeCount();
       bool valueChanged = newChangeCount != m_ChangeCount;
       m_ChangeCount = newChangeCount;
       return valueChanged;
@@ -229,14 +230,14 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
 {
   public:
     WebSocket_String_DataHandler( const String &Name 
-                                , const String &signalIds
+                                , const String &Signal
                                 , WebSocketDataProcessor &WebSocketDataProcessor
                                 , const bool &IsReceiver
                                 , const bool &IsSender
                                 , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem
                                 , const bool Debug )
                                 : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( Name
-                                                                                    , signalIds
+                                                                                    , Signal
                                                                                     , WebSocketDataProcessor
                                                                                     , IsReceiver
                                                                                     , IsSender
@@ -249,14 +250,14 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     {
     }
   protected:
-    virtual void AppendCurrentValueToKVP(std::vector<KVP> *keyValuePairs, bool forceUpdate = false) override
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> &keyValuePairs, bool forceUpdate = false) override
     { 
-      char currentValue[DATAITEM_STRING_LENGTH];
-      String CurrentValueString;// = m_DataItem.GetValueAsString("");
-      if( (ValueChanged(currentValue) || forceUpdate) && CurrentValueString.length() > 0 )
+      KVP newKVP;
+      newKVP.Key = m_Signal;
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(newKVP.Value, "") )
       {
-        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
-        keyValuePairs->push_back({ m_Signal, currentValue });
+        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), newKVP.Value.c_str());
+        keyValuePairs.push_back(newKVP);
       }
     }
     
@@ -270,9 +271,6 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
       }
       return found;
     }
-  private:
-    //Datalink
-
 };
 
 class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<CompatibleDevice_t, 1>
@@ -300,27 +298,22 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
     }
   protected:
   
-    virtual void AppendCurrentValueToKVP(std::vector<KVP> *keyValuePairs, bool forceUpdate = false) override
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> &keyValuePairs, bool forceUpdate = false) override
     {
-      std::vector<KVP> keyValuePairVector;
-      KVP keyValuePair;
+      KVP compatibleDevice;
       CompatibleDevice_t currentValue;
-      
-      size_t newChangeCount = m_DataItem.GetValue(&currentValue, 1);
-      bool valueChanged = newChangeCount != this->m_ChangeCount;
-      this->m_ChangeCount = newChangeCount;
-
-      keyValuePair.Key = currentValue.address;
-      keyValuePair.Value = currentValue.name;
-      keyValuePairVector.push_back(keyValuePair);
-      if(keyValuePairVector.size())
+      m_DataItem.GetValue(&currentValue, 1);
+      if( forceUpdate || ValueChanged() )
       {
-        String result; // = Encode_Compatible_Device_To_JSON(keyValuePairVector);
-        if( (forceUpdate || valueChanged) && result.length() > 0 )
+        std::vector<KVP> compatibleDevices;
+        compatibleDevice.Key = currentValue.address;
+        compatibleDevice.Value = currentValue.name;
+        compatibleDevices.push_back(compatibleDevice);
+        String result = Encode_Compatible_Device_To_JSON(compatibleDevices);
+        if(result.length())
         {
-          String CurrentValueString;// = m_DataItem.GetValueAsString("");
-          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), CurrentValueString.c_str());
-          keyValuePairs->push_back({ m_Signal, result.c_str() });
+          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentValueToKVP", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), result.c_str());
+          keyValuePairs.push_back({ m_Signal, result });
         }
       }
     }
@@ -384,7 +377,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     }
   protected:
   
-    virtual void AppendCurrentValueToKVP(std::vector<KVP> *KeyValuePairs, bool forceUpdate = false) override
+    virtual void AppendCurrentValueToKVP(std::vector<KVP> &keyValuePairs, bool forceUpdate = false) override
     {   
       ActiveCompatibleDevice_t activeCompatibleDevice;
       bool valueChanged = false; // = ValueChanged(&activeCompatibleDevice);
@@ -484,7 +477,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentValueToKVP", "Encoding Result: \"%s\"", result.c_str());
         if(result.length() > 0)
         {
-          KeyValuePairs->push_back({ m_Signal, result.c_str() });
+          keyValuePairs.push_back({ m_Signal, result.c_str() });
         }
       }
     }

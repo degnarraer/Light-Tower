@@ -123,6 +123,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		{
 			return this->m_Count;
 		}
+		size_t GetChangeCount()
+		{
+			return m_ValueChangeCount;
+		}
 		size_t GetValue(void* Object, size_t Count)
 		{
 			assert(Count == COUNT && "Counts must be equal");
