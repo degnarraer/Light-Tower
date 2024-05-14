@@ -26,6 +26,7 @@
 #include <esp_heap_caps.h>
 #include "SerialMessageManager.h"
 #define DATAITEM_STRING_LENGTH 50
+
 enum RxTxType_t
 {
 	RxTxType_Tx_Periodic,
@@ -35,13 +36,13 @@ enum RxTxType_t
 	RxTxType_Rx_Echo_Value,
 	RxTxType_Count
 };
+
 enum UpdateStoreType_t
 {
 	UpdateStoreType_On_Tx,
 	UpdateStoreType_On_Rx,
 	UpdateStoreType_Count
 };
-
 
 template <typename T, size_t COUNT>
 class LocalDataItem: public NamedCallbackInterface<T>
@@ -125,9 +126,9 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		}
 		size_t GetChangeCount()
 		{
-			return m_ValueChangeCount;
+			return this->m_ValueChangeCount;
 		}
-		size_t GetValue(void* Object, size_t Count)
+		void GetValue(void* Object, size_t Count)
 		{
 			assert(Count == COUNT && "Counts must be equal");
 			if(this->mp_Value)
@@ -136,13 +137,17 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
+				ESP_LOGE("GetValueAsString", "NULL Pointer!");
 				*reinterpret_cast<T**>(Object) = nullptr;
 			}
-			return this->m_ValueChangeCount;
 		}
 
 		T* GetValuePointer()
 		{
+			if(!this->mp_Value)
+			{
+				ESP_LOGE("GetValueAsString", "NULL Pointer!");
+			}
 			return this->mp_Value;
 		}
 
@@ -155,6 +160,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
+				ESP_LOGE("GetValueAsString", "NULL Pointer!");
 				return T();
 			}
 		}
@@ -166,14 +172,22 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
+				//ESP_LOGE("GetValueAsString", "NULL Pointer!");
 				return "";
 			}
 		}
 		
 		bool GetStringValue(String &stringValue, const String &divider)
 		{
-			if(this->mp_Value) return GetStringValueForDataType(stringValue, this->mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, divider);
-			return false;
+			if(this->mp_Value)
+			{
+				return GetStringValueForDataType(stringValue, this->mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, divider);
+			}
+			else
+			{
+				ESP_LOGE("GetValueAsString", "NULL Pointer!");
+				return false;
+			}
 		}
 
 		virtual bool SetValue(const T *Value, size_t Count)

@@ -155,24 +155,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       ESP_LOGE( "WebSocketDataHandler: SetNewTxValue", "THIS IS NOT HANDLED YET");
     }
-    
-    T GetValue()
-    {
-      T Value;
-      m_DataItem.GetValue(&Value, COUNT);
-      if(Value)
-      {
-        return Value;
-      }
-      else
-      {
-        return T();
-      }
-    }
+
     String GetSignal()
     {
       return m_Signal;
     }
+
     String GetName()
     {
       return m_Name;
@@ -367,100 +355,65 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     virtual void AppendCurrentSignalValue(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     { 
       bool valueChanged = ValueChanged();
+      unsigned long elapsedTime = 0;
       unsigned long currentMillis = millis();
       bool updated = false;
-      ActiveCompatibleDevice_t activeCompatibleDevice;
-      m_DataItem.GetValue(&activeCompatibleDevice, 1);
-      for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+      if(valueChanged)
       {
-          unsigned long elapsedTime = 0; // Initialize elapsedTime
-          
-          // Get previousMillis for comparison
-          unsigned long previousMillis = m_ActiveCompatibleDevices[i].lastUpdateTime;
-          
+        ActiveCompatibleDevice_t activeCompatibleDevice;
+        m_DataItem.GetValue(&activeCompatibleDevice, 1);
+        for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+        {
           // Check if the address matches
           if(strcmp(m_ActiveCompatibleDevices[i].address, activeCompatibleDevice.address) == 0)
           {
-              // Update existing device
-              m_ActiveCompatibleDevices[i].lastUpdateTime = currentMillis;
-              if(valueChanged)
-              {
-                  // Update device details
-                  strcpy(m_ActiveCompatibleDevices[i].name, activeCompatibleDevice.name);
-                  m_ActiveCompatibleDevices[i].rssi = activeCompatibleDevice.rssi;
-                  m_ActiveCompatibleDevices[i].timeSinceUpdate = activeCompatibleDevice.timeSinceUpdate;
-                  updated = true;
-                  // Log device details
-                  ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue",
-                            "%s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i",
-                            this->m_Name.c_str(),
-                            m_ActiveCompatibleDevices[i].name,
-                            m_ActiveCompatibleDevices[i].address,
-                            m_ActiveCompatibleDevices[i].rssi,
-                            m_ActiveCompatibleDevices[i].lastUpdateTime,
-                            m_ActiveCompatibleDevices[i].timeSinceUpdate,
-                            m_ChangeCount );
-              }
-              else
-              {
-                  // Calculate elapsed time if no value change
-                  if (currentMillis >= previousMillis) {
-                      elapsedTime = currentMillis - previousMillis;
-                  } 
-                  else {
-                      elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1;
-                  }
-                  m_ActiveCompatibleDevices[i].timeSinceUpdate += elapsedTime;
-              }
+            // Update device details
+            strcpy(m_ActiveCompatibleDevices[i].name, activeCompatibleDevice.name);
+            m_ActiveCompatibleDevices[i].rssi = activeCompatibleDevice.rssi;
+            m_ActiveCompatibleDevices[i].timeSinceUpdate = activeCompatibleDevice.timeSinceUpdate;
+            m_ActiveCompatibleDevices[i].lastUpdateTime = currentMillis;
+            updated = true;
+            LogDetails(m_ActiveCompatibleDevices[i], "Updated Device");
           }
-          else
-          {
-              // Calculate elapsed time if address doesn't match
-              if (currentMillis >= previousMillis) {
-                  elapsedTime = currentMillis - previousMillis;
-              } 
-              else {
-                  elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1;
-              }
-              m_ActiveCompatibleDevices[i].timeSinceUpdate += elapsedTime;
-          }
-
-          // Remove devices with timed out names
-          if(ACTIVE_NAME_TIMEOUT < m_ActiveCompatibleDevices[i].timeSinceUpdate)
-          {
-              ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
-              m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin() + i);
-              --i;
-              updated = true;
-          }
+        }
+        // Add new device if not found and conditions met
+        if( !updated && ACTIVE_NAME_TIMEOUT >= activeCompatibleDevice.timeSinceUpdate + ACTIVE_NAME_TIMEOUT/2 )
+        {
+          // Create new device and add to the vector
+          ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t(activeCompatibleDevice.name,
+                                                                        activeCompatibleDevice.address,
+                                                                        activeCompatibleDevice.rssi,
+                                                                        currentMillis,
+                                                                        activeCompatibleDevice.timeSinceUpdate);
+          m_ActiveCompatibleDevices.push_back(NewDevice);
+          updated = true;
+          LogDetails(activeCompatibleDevice, "Added Device");
+        }
       }
-
-      // Add new device if not found and conditions met
-      if(!updated && valueChanged && 
-          strlen(activeCompatibleDevice.name) > 0 && 
-          strlen(activeCompatibleDevice.address) > 0 &&
-          ACTIVE_NAME_TIMEOUT >= activeCompatibleDevice.timeSinceUpdate + ACTIVE_NAME_TIMEOUT/2)
+      //Updated Elapsed Time Since Update for all Active Devices
+      for(size_t i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
       {
-        ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue",
-            "%s: \n************* \nNew Device Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i",
-            this->m_Name.c_str(),
-            activeCompatibleDevice.name,
-            activeCompatibleDevice.address,
-            activeCompatibleDevice.rssi,
-            activeCompatibleDevice.lastUpdateTime,
-            activeCompatibleDevice.timeSinceUpdate,
-            m_ChangeCount);
-        
-        // Create new device and add to the vector
-        ActiveCompatibleDevice_t NewDevice = ActiveCompatibleDevice_t(activeCompatibleDevice.name,
-                                                                      activeCompatibleDevice.address,
-                                                                      activeCompatibleDevice.rssi,
-                                                                      currentMillis,
-                                                                      activeCompatibleDevice.timeSinceUpdate);
-        m_ActiveCompatibleDevices.push_back(NewDevice);
-        updated = true;
+        // Get previousMillis for comparison
+        unsigned long previousMillis = m_ActiveCompatibleDevices[i].lastUpdateTime;
+        // Calculate elapsed time
+        if (currentMillis >= previousMillis) {
+            elapsedTime = currentMillis - previousMillis;
+        } 
+        else {
+            elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1;
+        }
+        m_ActiveCompatibleDevices[i].timeSinceUpdate += elapsedTime;
+      
+        // Remove timed out device
+        if(ACTIVE_NAME_TIMEOUT < m_ActiveCompatibleDevices[i].timeSinceUpdate)
+        {
+            ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
+            m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin() + i);
+            --i;
+            updated = true;
+        }
       }
-
+      
       // Update signalValues if forceUpdate or changes detected
       if(forceUpdate || updated)
       {
@@ -506,5 +459,19 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         JSONVars["ActiveCompatibleDevice" + String(i)] = compatibleDeviceValues;
       }
       return JSON.stringify(JSONVars);
+    }
+    void LogDetails(ActiveCompatibleDevice_t &device, const String &context)
+    {
+      // Log device details
+      ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue",
+                "%s: %s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i",
+                context.c_str(),
+                this->m_Name.c_str(),
+                device.name,
+                device.address,
+                device.rssi,
+                device.lastUpdateTime,
+                device.timeSinceUpdate,
+                m_ChangeCount );
     }
 };
