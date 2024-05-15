@@ -170,7 +170,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       KVP signalValue;
       signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value, "") )
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value, "|") )
       {
         ESP_LOGI( "WebSocketDataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
@@ -181,10 +181,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
       T newValue[COUNT];
-      if (SetValueFromStringForDataType(newValue, stringValue, GetDataTypeFromTemplateType<T>()))
+      if (SetValueFromStringForDataType(newValue, stringValue, GetDataTypeFromTemplateType<T>(), "|"))
       {
         m_DataItem.SetValue(newValue, COUNT);
-        String newValueString = GetValueAsStringForDataType(newValue, GetDataTypeFromTemplateType<T>(), COUNT, "");
+        String newValueString = GetValueAsStringForDataType(newValue, GetDataTypeFromTemplateType<T>(), COUNT, "|");
         ESP_LOGD( "WebSocketDataHandler: HandleNewSignalValue"
                 , "Web Socket Value: %s"
                 , newValueString.c_str());

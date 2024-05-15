@@ -626,76 +626,86 @@ class DataTypeFunctions
 			}
 			return result;
 		}
-		bool SetValueFromStringForDataType(void *buffer, String stringValue, DataType_t dataType)
+		bool SetValueFromStringForDataType(void *buffer, String stringValue, DataType_t dataType, const String &divider)
 		{
-			bool result = true;
-			switch (dataType)
+			String token;
+			size_t pos = 0;
+			size_t count = 0;
+			bool success = true;
+
+			while (success && (pos = stringValue.indexOf(divider)) != -1)
 			{
-			case DataType_Bool_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Bool_t Received: %s", value.c_str());
-				*((bool *)buffer) = stringValue.equals("True");
-				break;
-			case DataType_Int8_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int8_t Received: %s", value.c_str());
-				*(int8_t *)buffer = stringValue.toInt();
-				break;
-			case DataType_Int16_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int16_t Received: %s", value.c_str());
-				*(int16_t *)buffer = stringValue.toInt();
-				break;
-			case DataType_Int32_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int32_t Received: %s", value.c_str());
-				*(int32_t *)buffer = stringValue.toInt();
-				break;
-			case DataType_Uint8_t:
-			case DataType_Uint16_t:
-			case DataType_Uint32_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Uint Received: %s", value.c_str());
-				stringValue.getBytes((byte *)buffer, stringValue.length());
-				break;
-			case DataType_Float_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Float_t Received: %s", value.c_str());
-				*(float *)buffer = stringValue.toFloat();
-				break;
-			case DataType_Double_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Double_t Received: %s", value.c_str());
-				*(double *)buffer = stringValue.toDouble();
-				break;
-			case DataType_Char_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Char_t Received: %s", value.c_str());
-				*(char *)buffer = stringValue[0];
-				break;
-			case DataType_SoundInputSource_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_SoundInputSource_t Received: %s", value.c_str());
-				*(SoundInputSource_t *)buffer = static_cast<SoundInputSource_t>(stringValue.toInt());
-				break;
-			case DataType_SoundOutputSource_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_SoundOutputSource_t Received: %s", value.c_str());
-				*(SoundOutputSource_t *)buffer = static_cast<SoundOutputSource_t>(stringValue.toInt());
-				break;
-			case DataType_ConnectionStatus_t:
-				ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_ConnectionStatus_t Received: %s", value.c_str());
-				*(SoundOutputSource_t *)buffer = static_cast<SoundOutputSource_t>(stringValue.toInt());
-				break;
-			case DataType_String_t:
-			case DataType_BT_Device_Info_t:
-			case DataType_BT_Device_Info_With_Time_Since_Update_t:
-			case DataType_CompatibleDevice_t:
-			case DataType_ActiveCompatibleDevice_t:
-			case DataType_ProcessedSoundData_t:
-			case DataType_MaxBandSoundData_t:
-			case DataType_Frame_t:
-			case DataType_ProcessedSoundFrame_t:
-			case DataType_SoundState_t:
-				ESP_LOGE( "DataTypes: SetValueFromFromStringForDataType", "Data Type Conversion to String for \"%s\": Not Yet Supported!", DataTypeStrings[dataType]);
-				result = false;
-				break;
-			default:
-				ESP_LOGE("DataTypes: SetValueFromFromStringForDataType", "SetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
-				result = false;
-				break;
+        		token = stringValue.substring(0, pos);
+				switch (dataType)
+				{
+					case DataType_Bool_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Bool_t Received: %s", token.c_str());
+						*((bool *)buffer + count) = token.equals("True");
+						break;
+					case DataType_Int8_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int8_t Received: %s", token.c_str());
+						*((int8_t *)buffer + count) = token.toInt();
+						break;
+					case DataType_Int16_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int16_t Received: %s", token.c_str());
+						*((int16_t *)buffer + count) = token.toInt();
+						break;
+					case DataType_Int32_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int32_t Received: %s", token.c_str());
+						*((int32_t *)buffer + count) = token.toInt();
+						break;
+					case DataType_Uint8_t:
+					case DataType_Uint16_t:
+					case DataType_Uint32_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Uint Received: %s", token.c_str());
+						stringValue.getBytes((byte *)buffer + count, token.length());
+						break;
+					case DataType_Float_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Float_t Received: %s", token.c_str());
+						*((float *)buffer + count) = token.toFloat();
+						break;
+					case DataType_Double_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Double_t Received: %s", token.c_str());
+						*((double *)buffer + count) = token.toDouble();
+						break;
+					case DataType_Char_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Char_t Received: %s", token.c_str());
+						*((char *)buffer + count) = token[0];
+						break;
+					case DataType_SoundInputSource_t:
+						ESP_LOGI("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_SoundInputSource_t Received: %s", token.c_str());
+						*((SoundInputSource_t *)buffer + count) = static_cast<SoundInputSource_t>(token.toInt());
+						break;
+					case DataType_SoundOutputSource_t:
+						ESP_LOGI("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_SoundOutputSource_t Received: %s", token.c_str());
+						*((SoundOutputSource_t *)buffer + count) = static_cast<SoundOutputSource_t>(token.toInt());
+						break;
+					case DataType_ConnectionStatus_t:
+						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_ConnectionStatus_t Received: %s", token.c_str());
+						*((ConnectionStatus_t *)buffer + count) = static_cast<ConnectionStatus_t>(token.toInt());
+						break;
+					case DataType_String_t:
+					case DataType_BT_Device_Info_t:
+					case DataType_BT_Device_Info_With_Time_Since_Update_t:
+					case DataType_CompatibleDevice_t:
+					case DataType_ActiveCompatibleDevice_t:
+					case DataType_ProcessedSoundData_t:
+					case DataType_MaxBandSoundData_t:
+					case DataType_Frame_t:
+					case DataType_ProcessedSoundFrame_t:
+					case DataType_SoundState_t:
+						ESP_LOGE( "DataTypes: SetValueFromFromStringForDataType", "Data Type Conversion to String for \"%s\": Not Yet Supported!", DataTypeStrings[dataType]);
+						success = false;
+						break;
+					default:
+						ESP_LOGE("DataTypes: SetValueFromFromStringForDataType", "SetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
+						success = false;
+						break;
+				}
+        		stringValue.remove(0, pos + divider.length());
+				++count;
 			}
-			return result;
+			return success;
 		}
 
 		bool GetStringValueForDataType(String &stringValue, const void *buffer, DataType_t dataType, size_t count, const String &divider)
@@ -707,93 +717,124 @@ class DataTypeFunctions
 				if (i > 0 && divider.length() > 0) stringValue += divider;
 				switch (dataType)
 				{
-				case DataType_Bool_t:
-					stringValue += (*((const bool *)buffer + i) ? "True" : "False");
-					success = true;
+					case DataType_Bool_t:
+						stringValue += (*((const bool *)buffer + i) ? "True" : "False");
+						success = true;
 					break;
-				case DataType_Int8_t:
-					stringValue += String(*((const int8_t *)buffer + i));
-					success = true;
+					case DataType_Int8_t:
+						stringValue += String(*((const int8_t *)buffer + i));
+						success = true;
 					break;
-				case DataType_Int16_t:
-					stringValue += String(*((const int16_t *)buffer + i));
-					success = true;
+					case DataType_Int16_t:
+						stringValue += String(*((const int16_t *)buffer + i));
+						success = true;
 					break;
-				case DataType_Int32_t:
-				case DataType_ConnectionStatus_t:
-					stringValue += String(*((const int32_t *)buffer + i));
-					success = true;
+					case DataType_Int32_t:
+					case DataType_ConnectionStatus_t:
+						stringValue += String(*((const int32_t *)buffer + i));
+						success = true;
 					break;
-				case DataType_Uint8_t:
-				case DataType_Uint16_t:
-				case DataType_Uint32_t:
-					stringValue += String(((const char *)buffer)[i]);
-					success = true;
+					case DataType_Uint8_t:
+					case DataType_Uint16_t:
+					case DataType_Uint32_t:
+						stringValue += String(((const byte *)buffer)[i]);
+						success = true;
 					break;
-				case DataType_Float_t:
-					stringValue += String(*((const float *)buffer + i));
-					success = true;
+					case DataType_Float_t:
+						stringValue += String(*((const float *)buffer + i));
+						success = true;
 					break;
-				case DataType_Double_t:
-					stringValue += String(*((const double *)buffer + i));
-					success = true;
+					case DataType_Double_t:
+						stringValue += String(*((const double *)buffer + i));
+						success = true;
 					break;
-				case DataType_Char_t:
-					stringValue += String(*((const char *)buffer + i));
-					success = true;
+					case DataType_Char_t:
+						stringValue += String(*((const char *)buffer + i));
+						success = true;
 					break;
-				case DataType_SoundInputSource_t:
-					stringValue += String(*((const SoundInputSource_t *)buffer + i));
-					success = true;
-				break;
-				case DataType_SoundOutputSource_t:
-					stringValue += String(*((const SoundOutputSource_t *)buffer + i));
-					success = true;
-				break;
-				case DataType_BT_Device_Info_With_Time_Since_Update_t:
-				{
-					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
-					const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = reinterpret_cast<const BT_Device_Info_With_Time_Since_Update_t*>(bufferPtr + i);
-					stringValue += String(deviceInfo->name) + " | ";
-					stringValue += String(deviceInfo->address) + " | ";
-					stringValue += String(deviceInfo->rssi) + " | ";
-					stringValue += String(deviceInfo->timeSinceUdpate);
-					success = true;
+					case DataType_SoundInputSource_t:
+						{
+							const SoundInputSource_t item = ((const SoundInputSource_t *)buffer)[i];
+							switch(item)
+							{
+								case SoundInputSource_OFF:
+									stringValue += "Off";
+								break;
+								case SoundInputSource_Microphone:
+									stringValue += "Microphone";
+								break;
+								case SoundInputSource_Bluetooth:
+									stringValue += "Bluetooth";
+								break;
+								default:
+									stringValue += "Unknown Value";
+								break;
+							}
+							success = true;
+						}
 					break;
-				}
-				case DataType_CompatibleDevice_t:
-				{
-					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
-					const CompatibleDevice_t* compatibleDevice = reinterpret_cast<const CompatibleDevice_t*>(bufferPtr + i);
-					stringValue += String(compatibleDevice->name) + " | ";
-					stringValue += String(compatibleDevice->address);
-					success = true;
+					case DataType_SoundOutputSource_t:
+						{
+							const SoundOutputSource_t item = ((const SoundOutputSource_t *)buffer)[i];
+							switch(item)
+							{
+								case SoundOutputSource_OFF:
+									stringValue += "Off";
+								break;
+								case SoundOutputSource_Bluetooth:
+									stringValue += "Bluetooth";
+								break;
+								default:
+									stringValue += "Unknown Value";
+								break;
+							}
+							success = true;
+						}
 					break;
-				}
-				case DataType_ActiveCompatibleDevice_t:
-				{
-					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
-					const ActiveCompatibleDevice_t* activeCompatibleDevice = reinterpret_cast<const ActiveCompatibleDevice_t*>(bufferPtr + i);
-					stringValue += String(activeCompatibleDevice->name) + " | ";
-					stringValue += String(activeCompatibleDevice->address) + " | ";
-					stringValue += String(activeCompatibleDevice->rssi) + " | ";
-					stringValue += String(activeCompatibleDevice->lastUpdateTime) + " | ";
-					stringValue += String(activeCompatibleDevice->timeSinceUpdate);
-					success = true;
+					case DataType_BT_Device_Info_With_Time_Since_Update_t:
+					{
+						const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
+						const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = reinterpret_cast<const BT_Device_Info_With_Time_Since_Update_t*>(bufferPtr + i);
+						stringValue += String(deviceInfo->name) + " | ";
+						stringValue += String(deviceInfo->address) + " | ";
+						stringValue += String(deviceInfo->rssi) + " | ";
+						stringValue += String(deviceInfo->timeSinceUdpate);
+						success = true;
+					}
 					break;
-				}
-				case DataType_String_t:
-				case DataType_BT_Device_Info_t:
-				case DataType_ProcessedSoundData_t:
-				case DataType_MaxBandSoundData_t:
-				case DataType_Frame_t:
-				case DataType_ProcessedSoundFrame_t:
-				case DataType_SoundState_t:
-					stringValue = "Unsupported Data Type";
+					case DataType_CompatibleDevice_t:
+					{
+						const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
+						const CompatibleDevice_t* compatibleDevice = reinterpret_cast<const CompatibleDevice_t*>(bufferPtr + i);
+						stringValue += String(compatibleDevice->name) + " | ";
+						stringValue += String(compatibleDevice->address);
+						success = true;
+					}
 					break;
-				default:
-					ESP_LOGE("DataTypes: GetValueAsStringForDataType", "GetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
-					stringValue = "Invalid Data Type";
+					case DataType_ActiveCompatibleDevice_t:
+					{
+						const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
+						const ActiveCompatibleDevice_t* activeCompatibleDevice = reinterpret_cast<const ActiveCompatibleDevice_t*>(bufferPtr + i);
+						stringValue += String(activeCompatibleDevice->name) + " | ";
+						stringValue += String(activeCompatibleDevice->address) + " | ";
+						stringValue += String(activeCompatibleDevice->rssi) + " | ";
+						stringValue += String(activeCompatibleDevice->lastUpdateTime) + " | ";
+						stringValue += String(activeCompatibleDevice->timeSinceUpdate);
+						success = true;
+					}
+					break;
+					case DataType_String_t:
+					case DataType_BT_Device_Info_t:
+					case DataType_ProcessedSoundData_t:
+					case DataType_MaxBandSoundData_t:
+					case DataType_Frame_t:
+					case DataType_ProcessedSoundFrame_t:
+					case DataType_SoundState_t:
+						stringValue = "Unsupported Data Type";
+					break;
+					default:
+						ESP_LOGE("DataTypes: GetValueAsStringForDataType", "GetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
+						stringValue = "Invalid Data Type";
 					break;
 				}
 			}
@@ -803,90 +844,14 @@ class DataTypeFunctions
 		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count, const String &Divider)
 		{
 			String resultString;
-			for (int i = 0; i < Count; ++i)
+			if(GetStringValueForDataType(resultString, Buffer, DataType, Count, Divider))
 			{
-				if (i > 0 && Divider.length() > 0) resultString += Divider;
-				switch (DataType)
-				{
-				case DataType_Bool_t:
-					resultString += (*((const bool *)Buffer + i) ? "True" : "False");
-					break;
-				case DataType_Int8_t:
-					resultString += String(*((const int8_t *)Buffer + i));
-					break;
-				case DataType_Int16_t:
-					resultString += String(*((const int16_t *)Buffer + i));
-					break;
-				case DataType_Int32_t:
-				case DataType_ConnectionStatus_t:
-					resultString += String(*((const int32_t *)Buffer + i));
-					break;
-				case DataType_Uint8_t:
-				case DataType_Uint16_t:
-				case DataType_Uint32_t:
-					resultString += String(((const char *)Buffer)[i]);
-					break;
-				case DataType_Float_t:
-					resultString += String(*((const float *)Buffer + i));
-					break;
-				case DataType_Double_t:
-					resultString += String(*((const double *)Buffer + i));
-					break;
-				case DataType_Char_t:
-					resultString += String(*((const char *)Buffer + i));
-					break;
-				case DataType_SoundInputSource_t:
-					resultString += String(*((const SoundInputSource_t *)Buffer + i));
-				break;
-				case DataType_SoundOutputSource_t:
-					resultString += String(*((const SoundOutputSource_t *)Buffer + i));
-				break;
-				case DataType_BT_Device_Info_With_Time_Since_Update_t:
-				{
-					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(Buffer);
-					const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = reinterpret_cast<const BT_Device_Info_With_Time_Since_Update_t*>(bufferPtr + i);
-					resultString += String(deviceInfo->name) + " | ";
-					resultString += String(deviceInfo->address) + " | ";
-					resultString += String(deviceInfo->rssi) + " | ";
-					resultString += String(deviceInfo->timeSinceUdpate);
-					break;
-				}
-				case DataType_CompatibleDevice_t:
-				{
-					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(Buffer);
-					const CompatibleDevice_t* compatibleDevice = reinterpret_cast<const CompatibleDevice_t*>(bufferPtr + i);
-					resultString += String(compatibleDevice->name) + " | ";
-					resultString += String(compatibleDevice->address);
-					break;
-				}
-				case DataType_ActiveCompatibleDevice_t:
-				{
-					const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(Buffer);
-					const ActiveCompatibleDevice_t* activeCompatibleDevice = reinterpret_cast<const ActiveCompatibleDevice_t*>(bufferPtr + i);
-					resultString += String(activeCompatibleDevice->name) + " | ";
-					resultString += String(activeCompatibleDevice->address) + " | ";
-					resultString += String(activeCompatibleDevice->rssi) + " | ";
-					resultString += String(activeCompatibleDevice->lastUpdateTime) + " | ";
-					resultString += String(activeCompatibleDevice->timeSinceUpdate);
-					break;
-				}
-				case DataType_String_t:
-				case DataType_BT_Device_Info_t:
-				case DataType_ProcessedSoundData_t:
-				case DataType_MaxBandSoundData_t:
-				case DataType_Frame_t:
-				case DataType_ProcessedSoundFrame_t:
-				case DataType_SoundState_t:
-					resultString = "Unsupported Data Type";
-					break;
-				default:
-					ESP_LOGE("DataTypes: GetValueAsStringForDataType", "GetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
-					resultString = "Invalid Data Type";
-					break;
-				}
+				return resultString;
 			}
-
-			return resultString;
+			else
+			{
+				return "***";
+			}
 		}
 };
 

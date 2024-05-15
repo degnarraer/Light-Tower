@@ -131,7 +131,8 @@ class PreferencesWrapper: public DataTypeFunctions
 														  							 , "|") );
 				SetValueFromStringForDataType( valuePtr
 										 	 , value
-										 	 , GetDataTypeFromTemplateType<T>() );
+										 	 , GetDataTypeFromTemplateType<T>()
+											 , "|");
 				ESP_LOGI("PreferencesWrapper: HandleLoaded", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
 			}
 			else

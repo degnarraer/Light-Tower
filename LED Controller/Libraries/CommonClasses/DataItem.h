@@ -415,7 +415,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
 			assert(COUNT == Count && "Counts must match");
 			ESP_LOGD( "DataItem: SetValue"
-					, "\"%s\" Set Value1: \"%s\""
+					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			bool ValueChanged = (memcmp(this->mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
@@ -431,7 +431,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			assert(COUNT == 1 && "COUNT must be 1 to use this");
 			assert(this->mp_Value != nullptr && "mp_Value must not be null");
 			ESP_LOGD( "DataItem: SetValue"
-					, "\"%s\" Set Value2: \"%s\""
+					, "\"%s\" Set Value: \"%s\""
 					, this->m_Name.c_str()
 					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			bool ValueChanged = (memcmp(this->mp_TxValue, &Value, sizeof(T) * COUNT) != 0);
@@ -504,7 +504,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 		virtual bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
-			if(m_SerialPortMessageManager.QueueMessageFromData(this->GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
+			if(m_SerialPortMessageManager.QueueMessageFromData(this->GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), this->mp_TxValue, COUNT))
 			{				
 				if(memcmp(this->mp_Value, this->mp_TxValue, sizeof(T) * COUNT) != 0)
 				{
@@ -514,7 +514,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 						ValueUpdated = true;		
 					}
 				}
-				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+				ESP_LOGI( "DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\""
+						, this->m_Name.c_str()
+						, DataTypeFunctions::GetValueAsStringForDataType(this->mp_TxValue, DataTypeFunctions::GetDataTypeFromTemplateType<T>(), COUNT, "").c_str() );
 			}
 			else
 			{
