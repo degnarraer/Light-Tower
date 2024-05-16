@@ -109,7 +109,7 @@ class Manager: public NamedItem
 
     void SetupStatisticalEngine();
     StatisticalEngine &m_StatisticalEngine;
-    Mute_State_t m_MuteState = Mute_State_Un_Muted;
+    Mute_State_t m_MuteState = Mute_State_t::Mute_State_Un_Muted;
 
     //Bluetooth Data
     void SetupBlueTooth();
@@ -128,7 +128,7 @@ class Manager: public NamedItem
     NamedCallback_t m_SoundInputSource_Callback = { "Sound Input Source Callback"
                                                   , &SoundInputSource_ValueChanged
                                                   , & m_SoundInputSource_CallbackArgs };
-    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_Microphone;
+    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::Microphone;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
                                                                                                                       , m_SoundInputSource_InitialValue
                                                                                                                       , RxTxType_Rx_Echo_Value

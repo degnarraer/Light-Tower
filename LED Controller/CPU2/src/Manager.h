@@ -255,7 +255,7 @@ class Manager: public NamedItem
     //Sound Output Source
     CallbackArguments m_SoundOutputSource_CallbackArgs = {this};
     NamedCallback_t m_SoundOutputSource_Callback = {"Sound Output Source Callback", &SoundOutputSource_ValueChanged, &m_SoundOutputSource_CallbackArgs};
-    const SoundOutputSource_t m_SoundOutputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_Bluetooth;
+    const SoundOutputSource_t m_SoundOutputSource_InitialValue = SoundOutputSource_t::Bluetooth;
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOutputSource_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, &m_SoundOutputSource_Callback);
     static void SoundOutputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
@@ -268,10 +268,10 @@ class Manager: public NamedItem
         ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: %i", soundOutputSource);
         switch(soundOutputSource)
         {
-          case SoundOutputSource_OFF:
+          case SoundOutputSource_t::OFF:
             manager->StopBluetooth();
           break;
-          case SoundOutputSource_Bluetooth:
+          case SoundOutputSource_t::Bluetooth:
             manager->StartBluetooth();
           break;
           default:

@@ -156,13 +156,13 @@ void Manager::SetInputSource(SoundInputSource_t Type)
 {
   switch(Type)
   {
-    case SoundInputSource_Microphone:
+    case SoundInputSource_t::Microphone:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Microphone.\"");
       m_BT_In.StopDevice();
       m_Mic_In.StartDevice();
       m_I2S_Out.StartDevice();
     break;
-    case SoundInputSource_Bluetooth:
+    case SoundInputSource_t::Bluetooth:
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
       m_Mic_In.StopDevice();
@@ -171,7 +171,7 @@ void Manager::SetInputSource(SoundInputSource_t Type)
       m_BT_In.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
       break;
     }
-    case SoundInputSource_OFF:
+    case SoundInputSource_t::OFF:
     default:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
       m_BT_In.StopDevice();
@@ -191,7 +191,7 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
 {  
   switch(m_SoundInputSource.GetValue())
   {
-    case SoundInputSource_Microphone:
+    case SoundInputSource_t::Microphone:
     {
       uint16_t Buffer[length];
       for(int i = 0; i < length / sizeof(uint32_t); ++i)
@@ -203,12 +203,12 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
       m_I2S_Out.WriteSoundBufferData((uint8_t *)Buffer, length); 
     }
     break;
-    case SoundInputSource_Bluetooth:
+    case SoundInputSource_t::Bluetooth:
     {
       m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
     }
     break;
-    case SoundInputSource_OFF:
+    case SoundInputSource_t::OFF:
     default:
     break;
   }
@@ -225,16 +225,16 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
   switch(connectionState)
   {
     case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
-      m_BluetoothSinkConnectionStatus.SetValue(Disconnected);
+      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
       break;
     case ESP_A2D_CONNECTION_STATE_CONNECTING:
-      m_BluetoothSinkConnectionStatus.SetValue(Connecting);
+      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Connecting);
       break;
     case ESP_A2D_CONNECTION_STATE_CONNECTED:
-      m_BluetoothSinkConnectionStatus.SetValue(Connected);
+      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Connected);
       break;
     case ESP_A2D_CONNECTION_STATE_DISCONNECTING:
-      m_BluetoothSinkConnectionStatus.SetValue(Disconnecting);
+      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnecting);
       break;
     default:
     break;
