@@ -212,12 +212,12 @@ class SettingsWebServerManager: public SetupCallerInterface
     //TBD
 
     //Input Source
-    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::SoundInputSource_OFF;
+    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::OFF;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
     WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( "Sound Input Source Web Socket Handler", "Sound_Input_Source", m_WebSocketDataProcessor, true, true, m_SoundInputSource, false );
     
     //Output Source
-    const SoundOutputSource_t m_SoundOuputSource_InitialValue = SoundOutputSource_t::SoundOutputSource_OFF;
+    const SoundOutputSource_t m_SoundOuputSource_InitialValue = SoundOutputSource_t::OFF;
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
     WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( "Sound Output Source Web Socket Handler", "Sound_Output_Source", m_WebSocketDataProcessor, true, true, m_SoundOuputSource, false );
     
@@ -471,11 +471,11 @@ class SettingsWebServerManager: public SetupCallerInterface
     void InitWiFiClient()
     {
       ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Client");
-      if(m_SSID.GetValueAsString("").length(), m_Password.GetValueAsString("").length())
+      if(m_SSID.GetValueAsString().length(), m_Password.GetValueAsString().length())
       {
         //WiFi.disconnect();
         WiFi.mode(WIFI_STA);
-        bool connected = WiFi.begin(m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
+        bool connected = WiFi.begin(m_SSID.GetValueAsString().c_str(), m_Password.GetValueAsString().c_str());
         ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting to WiFi ..");
         while (WiFi.status() != WL_CONNECTED) {
           ESP_LOGI("SettingsWebServer: InitWifiClient", "Connecting...");
@@ -509,15 +509,15 @@ class SettingsWebServerManager: public SetupCallerInterface
     void InitWiFiAP()
     {
       ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Access Point");
-      if(m_SSID.GetValueAsString("").length(), m_Password.GetValueAsString("").length())
+      if(m_SSID.GetValueAsString().length(), m_Password.GetValueAsString().length())
       {
         // Setup ESP32 as Access Point
         IPAddress Ip(192, 168, 0, 1);
         IPAddress NMask(255, 255, 255, 0);
         //WiFi.disconnect();
         WiFi.softAPConfig(Ip, Ip, NMask);
-        ESP_LOGI( "SettingsWebServer: InitWifiClient", "Starting Access Point: SSID: \"%s\" Password: \"%s\"", m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
-        bool connected = WiFi.softAP(m_SSID.GetValueAsString("").c_str(), m_Password.GetValueAsString("").c_str());
+        ESP_LOGI( "SettingsWebServer: InitWifiClient", "Starting Access Point: SSID: \"%s\" Password: \"%s\"", m_SSID.GetValueAsString().c_str(), m_Password.GetValueAsString().c_str());
+        bool connected = WiFi.softAP(m_SSID.GetValueAsString().c_str(), m_Password.GetValueAsString().c_str());
         IPAddress ipAddress = WiFi.softAPIP();
         if(connected)
         {

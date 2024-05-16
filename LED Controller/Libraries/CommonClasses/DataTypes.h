@@ -156,6 +156,10 @@ struct  CompatibleDevice_t
 {
 	public:
 		CompatibleDevice_t(){}
+		CompatibleDevice_t(const String &str)
+		{
+			*this =  fromString(str);
+		}
 		CompatibleDevice_t(const char* name_In, const char* address_In)
 		{
 			if(BT_NAME_LENGTH < String(name_In).length())
@@ -192,122 +196,387 @@ struct  CompatibleDevice_t
 				strcmp(this->address, other.address) != 0) return true;
 			else return false;
 		}
+		operator String() const
+        {
+            return toString();
+        }
+
+		// Function to convert to string
+        String toString() const
+        {
+            return String(name) + " | " + String(address);
+        }
+
+		// Static function to convert from string
+		static CompatibleDevice_t fromString(const String &str)
+		{
+			int delimiterIndex = str.indexOf('|');
+			if (delimiterIndex == -1)
+			{
+				// handle error, return default
+				return CompatibleDevice_t();
+			}
+
+			String name = str.substring(0, delimiterIndex - 1);
+			String address = str.substring(delimiterIndex + 2);
+			return CompatibleDevice_t(name.c_str(), address.c_str());
+		}
 		char name[BT_NAME_LENGTH] = "\0";
 		char address[BT_ADDRESS_LENGTH] = "\0";
 };
 
 struct ActiveCompatibleDevice_t
 {
-	public:
-		ActiveCompatibleDevice_t(){}
-		ActiveCompatibleDevice_t(String name_In, String address_In)
-		{
-			if(BT_NAME_LENGTH < name_In.length())
-			{
-				Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
-				assert(BT_NAME_LENGTH >= name_In.length());
-			}
-			strncpy(this->name, name_In.c_str(), sizeof(this->name) - 1);
-			if(BT_ADDRESS_LENGTH < address_In.length())
-			{
-				Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
-				assert(BT_ADDRESS_LENGTH >= address_In.length());
-			}
-			strncpy(this->address, address_In.c_str(), sizeof(this->address) - 1);
-		}
-		ActiveCompatibleDevice_t(String name_In, String address_In, int32_t rssi_in, unsigned long lastUpdateTime_in, uint32_t timeSinceUpdate_in)
-		{
-			if(BT_NAME_LENGTH < name_In.length())
-			{
-				Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
-				assert(BT_NAME_LENGTH >= name_In.length());
-			}
-			snprintf(name, BT_NAME_LENGTH, "%s", name_In.c_str());
-			if(BT_ADDRESS_LENGTH < address_In.length())
-			{
-				Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
-				assert(BT_ADDRESS_LENGTH >= address_In.length());
-			}
-			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In.c_str());
-			rssi = rssi_in;
-			lastUpdateTime = lastUpdateTime_in;
-			timeSinceUpdate = timeSinceUpdate_in;
-		}
-		ActiveCompatibleDevice_t& operator=(const ActiveCompatibleDevice_t& other)
-		{
-			strncpy(this->name, other.name, sizeof(this->name) - 1);
-			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+public:
+    // Default constructor
+    ActiveCompatibleDevice_t() : rssi(0), lastUpdateTime(0), timeSinceUpdate(0)
+    {
+        name[0] = '\0';
+        address[0] = '\0';
+    }
 
-			strncpy(this->address, other.address, sizeof(this->address) - 1);
-			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
-			return *this;
-		}
-		bool operator==(const ActiveCompatibleDevice_t& other) const
-		{
-			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0) return true;
-			else return false;
-		}
-		bool operator!=(const ActiveCompatibleDevice_t& other) const
-		{
-			if( strcmp(this->name, other.name) != 0 ||
-				strcmp(this->address, other.address) != 0) return true;
-			else return false;
-		}
-	char name[BT_NAME_LENGTH] = "\0";
-	char address[BT_ADDRESS_LENGTH] = "\0";
-	int32_t rssi;
-	unsigned long lastUpdateTime;
-	uint32_t timeSinceUpdate = 0;
+	ActiveCompatibleDevice_t(const String &str)
+	{
+		*this =  fromString(str);
+	}
+
+    // Constructor with name and address
+    ActiveCompatibleDevice_t(const String& name_In, const String& address_In)
+    {
+        if (BT_NAME_LENGTH < name_In.length())
+        {
+            Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
+            assert(BT_NAME_LENGTH >= name_In.length());
+        }
+        strncpy(this->name, name_In.c_str(), sizeof(this->name) - 1);
+        this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+        if (BT_ADDRESS_LENGTH < address_In.length())
+        {
+            Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
+            assert(BT_ADDRESS_LENGTH >= address_In.length());
+        }
+        strncpy(this->address, address_In.c_str(), sizeof(this->address) - 1);
+        this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+    }
+
+    // Constructor with all parameters
+    ActiveCompatibleDevice_t(const String& name_In, const String& address_In, int32_t rssi_in, unsigned long lastUpdateTime_in, uint32_t timeSinceUpdate_in)
+    {
+        if (BT_NAME_LENGTH < name_In.length())
+        {
+            Serial << "Bad SSID: " << name_In.c_str() << " | " << name_In.length() << "\n";
+            assert(BT_NAME_LENGTH >= name_In.length());
+        }
+        strncpy(this->name, name_In.c_str(), sizeof(this->name) - 1);
+        this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+        if (BT_ADDRESS_LENGTH < address_In.length())
+        {
+            Serial << "Bad address: " << address_In.c_str() << " | " << address_In.length() << "\n";
+            assert(BT_ADDRESS_LENGTH >= address_In.length());
+        }
+        strncpy(this->address, address_In.c_str(), sizeof(this->address) - 1);
+        this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+
+        rssi = rssi_in;
+        lastUpdateTime = lastUpdateTime_in;
+        timeSinceUpdate = timeSinceUpdate_in;
+    }
+
+    // Assignment operator
+    ActiveCompatibleDevice_t& operator=(const ActiveCompatibleDevice_t& other)
+    {
+        if (this != &other) // Self-assignment check
+        {
+            strncpy(this->name, other.name, sizeof(this->name) - 1);
+            this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+            strncpy(this->address, other.address, sizeof(this->address) - 1);
+            this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+
+            rssi = other.rssi;
+            lastUpdateTime = other.lastUpdateTime;
+            timeSinceUpdate = other.timeSinceUpdate;
+        }
+        return *this;
+    }
+
+    // Equality operator
+    bool operator==(const ActiveCompatibleDevice_t& other) const
+    {
+        return (strcmp(this->name, other.name) == 0 && strcmp(this->address, other.address) == 0);
+    }
+
+    // Inequality operator
+    bool operator!=(const ActiveCompatibleDevice_t& other) const
+    {
+        return !(*this == other);
+    }
+
+	operator String() const
+	{
+		return toString();
+	}
+
+    // Convert object to string
+    String toString() const
+    {
+        return String(name) + " | " + String(address) + " | " + String(rssi) + " | " + String(lastUpdateTime) + " | " + String(timeSinceUpdate);
+    }
+
+    // Create object from string
+    static ActiveCompatibleDevice_t fromString(const String &str)
+    {
+        int delimiterIndex = str.indexOf('|');
+        if (delimiterIndex == -1)
+        {
+            // handle error, return default
+            return ActiveCompatibleDevice_t();
+        }
+
+        String name = str.substring(0, delimiterIndex - 1);
+        int nextDelimiterIndex = str.indexOf('|', delimiterIndex + 1);
+        if (nextDelimiterIndex == -1)
+        {
+            // handle error, return default
+            return ActiveCompatibleDevice_t();
+        }
+
+        String address = str.substring(delimiterIndex + 2, nextDelimiterIndex - 1);
+        int nextDelimiterIndex2 = str.indexOf('|', nextDelimiterIndex + 1);
+        if (nextDelimiterIndex2 == -1)
+        {
+            // handle error, return default
+            return ActiveCompatibleDevice_t();
+        }
+
+        String rssiStr = str.substring(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1);
+        int rssi = rssiStr.toInt(); // Convert string to integer
+
+        int nextDelimiterIndex3 = str.indexOf('|', nextDelimiterIndex2 + 1);
+        if (nextDelimiterIndex3 == -1)
+        {
+            // handle error, return default
+            return ActiveCompatibleDevice_t();
+        }
+
+        String lastUpdateTimeStr = str.substring(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1);
+        unsigned long lastUpdateTime = lastUpdateTimeStr.toInt(); // Convert string to unsigned long
+
+        String timeSinceUpdateStr = str.substring(nextDelimiterIndex3 + 2);
+        uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt(); // Convert string to uint32_t
+
+        return ActiveCompatibleDevice_t(name, address, rssi, lastUpdateTime, timeSinceUpdate);
+    }
+    char name[BT_NAME_LENGTH];
+    char address[BT_ADDRESS_LENGTH];
+    int32_t rssi;
+    unsigned long lastUpdateTime;
+    uint32_t timeSinceUpdate;
 };
 
-enum SoundInputSource
+class SoundInputSource
 {
-  SoundInputSource_OFF,
-  SoundInputSource_Microphone,
-  SoundInputSource_Bluetooth,
-  SoundInputSource_Count
-};
-typedef SoundInputSource SoundInputSource_t;
+public:
+    enum Value
+    {
+        OFF,
+        Microphone,
+        Bluetooth,
+        Count
+    };
 
-enum SoundOutputSource
-{
-  SoundOutputSource_OFF,
-  SoundOutputSource_Bluetooth,
-  SoundOutputSource_Count
-};
-typedef SoundOutputSource SoundOutputSource_t;
+    // Function to convert enum to string
+    static String ToString(Value source)
+    {
+        switch (source)
+        {
+            case OFF: return "OFF";
+            case Microphone: return "Microphone";
+            case Bluetooth: return "Bluetooth";
+            case Count: return "Count";
+            default: return "Unknown";
+        }
+    }
 
-enum Mute_State_t
-{
-  Mute_State_Un_Muted = 0,
-  Mute_State_Muted,
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "OFF") return OFF;
+        if (str == "Microphone") return Microphone;
+        if (str == "Bluetooth") return Bluetooth;
+        if (str == "Count") return Count;
+        
+        return OFF; // Default or error value
+    }
 };
+typedef SoundInputSource::Value SoundInputSource_t;
 
-enum SoundState_t
+class SoundOutputSource
 {
-  LastingSilenceDetected = 0,
-  SilenceDetected = 1,
-  Sound_Level1_Detected = 2,
-  Sound_Level2_Detected = 3,
-  Sound_Level3_Detected = 4,
-  Sound_Level4_Detected = 5,
-  Sound_Level5_Detected = 6,
-  Sound_Level6_Detected = 7,
-  Sound_Level7_Detected = 8,
-  Sound_Level8_Detected = 9,
-  Sound_Level9_Detected = 10,
-  Sound_Level10_Detected = 11,
-  Sound_Level11_Detected = 12,
-};
+public:
+    enum Value
+    {
+        OFF,
+        Bluetooth,
+        Count
+    };
 
-enum Transciever_t
-{
-	Transciever_None,
-	Transciever_TX,
-	Transciever_RX,
-	Transciever_TXRX
+    // Function to convert enum to string
+    static String ToString(Value source)
+    {
+        switch (source)
+        {
+            case OFF:         return "OFF";
+            case Bluetooth:   return "Bluetooth";
+            case Count:       return "Count";
+            default:          return "Unknown";
+        }
+    }
+
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "OFF") return OFF;
+        if (str == "Bluetooth") return Bluetooth;
+        if (str == "Count") return Count;
+        
+        return OFF; // Default or error value
+    }
 };
+typedef SoundOutputSource::Value SoundOutputSource_t;
+
+class Mute_State
+{
+public:
+    enum Value
+    {
+        Mute_State_Un_Muted = 0,
+        Mute_State_Muted
+    };
+
+    // Function to convert enum to string
+    static String ToString(Value state)
+    {
+        switch (state)
+        {
+            case Mute_State_Un_Muted: return "Mute_State_Un_Muted";
+            case Mute_State_Muted: return "Mute_State_Muted";
+            default: return "Unknown";
+        }
+    }
+
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "Mute_State_Un_Muted") return Mute_State_Un_Muted;
+        if (str == "Mute_State_Muted") return Mute_State_Muted;
+        
+        return Mute_State_Un_Muted; // Default or error value
+    }
+};
+typedef Mute_State::Value Mute_State_t;
+
+class SoundState
+{
+public:
+    enum Value
+    {
+        LastingSilenceDetected = 0,
+        SilenceDetected = 1,
+        Sound_Level1_Detected = 2,
+        Sound_Level2_Detected = 3,
+        Sound_Level3_Detected = 4,
+        Sound_Level4_Detected = 5,
+        Sound_Level5_Detected = 6,
+        Sound_Level6_Detected = 7,
+        Sound_Level7_Detected = 8,
+        Sound_Level8_Detected = 9,
+        Sound_Level9_Detected = 10,
+        Sound_Level10_Detected = 11,
+        Sound_Level11_Detected = 12
+    };
+
+    // Function to convert enum to string
+    static String ToString(Value state)
+    {
+        switch (state)
+        {
+            case LastingSilenceDetected: return "LastingSilenceDetected";
+            case SilenceDetected: return "SilenceDetected";
+            case Sound_Level1_Detected: return "Sound_Level1_Detected";
+            case Sound_Level2_Detected: return "Sound_Level2_Detected";
+            case Sound_Level3_Detected: return "Sound_Level3_Detected";
+            case Sound_Level4_Detected: return "Sound_Level4_Detected";
+            case Sound_Level5_Detected: return "Sound_Level5_Detected";
+            case Sound_Level6_Detected: return "Sound_Level6_Detected";
+            case Sound_Level7_Detected: return "Sound_Level7_Detected";
+            case Sound_Level8_Detected: return "Sound_Level8_Detected";
+            case Sound_Level9_Detected: return "Sound_Level9_Detected";
+            case Sound_Level10_Detected: return "Sound_Level10_Detected";
+            case Sound_Level11_Detected: return "Sound_Level11_Detected";
+            default: return "Unknown";
+        }
+    }
+
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "LastingSilenceDetected") return LastingSilenceDetected;
+        if (str == "SilenceDetected") return SilenceDetected;
+        if (str == "Sound_Level1_Detected") return Sound_Level1_Detected;
+        if (str == "Sound_Level2_Detected") return Sound_Level2_Detected;
+        if (str == "Sound_Level3_Detected") return Sound_Level3_Detected;
+        if (str == "Sound_Level4_Detected") return Sound_Level4_Detected;
+        if (str == "Sound_Level5_Detected") return Sound_Level5_Detected;
+        if (str == "Sound_Level6_Detected") return Sound_Level6_Detected;
+        if (str == "Sound_Level7_Detected") return Sound_Level7_Detected;
+        if (str == "Sound_Level8_Detected") return Sound_Level8_Detected;
+        if (str == "Sound_Level9_Detected") return Sound_Level9_Detected;
+        if (str == "Sound_Level10_Detected") return Sound_Level10_Detected;
+        if (str == "Sound_Level11_Detected") return Sound_Level11_Detected;
+        return LastingSilenceDetected; // Default or error value
+    }
+};
+typedef SoundState::Value SoundState_t;
+
+class Transciever
+{
+public:
+    enum Value
+    {
+        Transciever_None,
+        Transciever_TX,
+        Transciever_RX,
+        Transciever_TXRX
+    };
+
+    // Function to convert enum to string
+    static String ToString(Value transciever)
+    {
+        switch (transciever)
+        {
+            case Transciever_None: return "Transciever_None";
+            case Transciever_TX: return "Transciever_TX";
+            case Transciever_RX: return "Transciever_RX";
+            case Transciever_TXRX: return "Transciever_TXRX";
+            default: return "Unknown";
+        }
+    }
+
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "Transciever_None") return Transciever_None;
+        if (str == "Transciever_TX") return Transciever_TX;
+        if (str == "Transciever_RX") return Transciever_RX;
+        if (str == "Transciever_TXRX") return Transciever_TXRX;
+        
+        return Transciever_None; // Default or error value
+    }
+};
+typedef Transciever::Value Transciever_t;
 
 struct __attribute__((packed)) Frame_t {
   int16_t channel1;
@@ -386,13 +655,42 @@ struct DataItemConfig_t
   size_t QueueCount;
 };
 
-enum ConnectionStatus_t
+class ConnectionStatus
 {
-	Disconnected = 0,
-	Connecting = 1,
-	Connected = 2,
-	Disconnecting = 3
+public:
+    enum Value
+    {
+        Disconnected = 0,
+        Connecting,
+        Connected,
+        Disconnecting
+    };
+
+    // Function to convert enum to string
+    static String ToString(Value status)
+    {
+        switch (status)
+        {
+            case Disconnected: return "Disconnected";
+            case Connecting: return "Connecting";
+            case Connected: return "Connected";
+            case Disconnecting: return "Disconnecting";
+            default: return "Unknown";
+        }
+    }
+
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "Disconnected") return Disconnected;
+        if (str == "Connecting") return Connecting;
+        if (str == "Connected") return Connected;
+        if (str == "Disconnecting") return Disconnecting;
+        
+        return Disconnected; // Default or error value
+    }
 };
+typedef ConnectionStatus::Value ConnectionStatus_t;
 
 struct NamedObject_t
 {
@@ -625,233 +923,6 @@ class DataTypeFunctions
 				break;
 			}
 			return result;
-		}
-		bool SetValueFromStringForDataType(void *buffer, String stringValue, DataType_t dataType, const String &divider)
-		{
-			String token;
-			size_t pos = 0;
-			size_t count = 0;
-			bool success = true;
-
-			while (success && (pos = stringValue.indexOf(divider)) != -1)
-			{
-        		token = stringValue.substring(0, pos);
-				switch (dataType)
-				{
-					case DataType_Bool_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Bool_t Received: %s", token.c_str());
-						*((bool *)buffer + count) = token.equals("True");
-						break;
-					case DataType_Int8_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int8_t Received: %s", token.c_str());
-						*((int8_t *)buffer + count) = token.toInt();
-						break;
-					case DataType_Int16_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int16_t Received: %s", token.c_str());
-						*((int16_t *)buffer + count) = token.toInt();
-						break;
-					case DataType_Int32_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Int32_t Received: %s", token.c_str());
-						*((int32_t *)buffer + count) = token.toInt();
-						break;
-					case DataType_Uint8_t:
-					case DataType_Uint16_t:
-					case DataType_Uint32_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Uint Received: %s", token.c_str());
-						stringValue.getBytes((byte *)buffer + count, token.length());
-						break;
-					case DataType_Float_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Float_t Received: %s", token.c_str());
-						*((float *)buffer + count) = token.toFloat();
-						break;
-					case DataType_Double_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Double_t Received: %s", token.c_str());
-						*((double *)buffer + count) = token.toDouble();
-						break;
-					case DataType_Char_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_Char_t Received: %s", token.c_str());
-						*((char *)buffer + count) = token[0];
-						break;
-					case DataType_SoundInputSource_t:
-						ESP_LOGI("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_SoundInputSource_t Received: %s", token.c_str());
-						*((SoundInputSource_t *)buffer + count) = static_cast<SoundInputSource_t>(token.toInt());
-						break;
-					case DataType_SoundOutputSource_t:
-						ESP_LOGI("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_SoundOutputSource_t Received: %s", token.c_str());
-						*((SoundOutputSource_t *)buffer + count) = static_cast<SoundOutputSource_t>(token.toInt());
-						break;
-					case DataType_ConnectionStatus_t:
-						ESP_LOGD("DataTypeFunctions: SetValueFromFromStringForDataType", "DataType_ConnectionStatus_t Received: %s", token.c_str());
-						*((ConnectionStatus_t *)buffer + count) = static_cast<ConnectionStatus_t>(token.toInt());
-						break;
-					case DataType_String_t:
-					case DataType_BT_Device_Info_t:
-					case DataType_BT_Device_Info_With_Time_Since_Update_t:
-					case DataType_CompatibleDevice_t:
-					case DataType_ActiveCompatibleDevice_t:
-					case DataType_ProcessedSoundData_t:
-					case DataType_MaxBandSoundData_t:
-					case DataType_Frame_t:
-					case DataType_ProcessedSoundFrame_t:
-					case DataType_SoundState_t:
-						ESP_LOGE( "DataTypes: SetValueFromFromStringForDataType", "Data Type Conversion to String for \"%s\": Not Yet Supported!", DataTypeStrings[dataType]);
-						success = false;
-						break;
-					default:
-						ESP_LOGE("DataTypes: SetValueFromFromStringForDataType", "SetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
-						success = false;
-						break;
-				}
-        		stringValue.remove(0, pos + divider.length());
-				++count;
-			}
-			return success;
-		}
-
-		bool GetStringValueForDataType(String &stringValue, const void *buffer, DataType_t dataType, size_t count, const String &divider)
-		{
-			bool success = false;
-			if(!buffer) return success;
-			for (int i = 0; i < count; ++i)
-			{
-				if (i > 0 && divider.length() > 0) stringValue += divider;
-				switch (dataType)
-				{
-					case DataType_Bool_t:
-						stringValue += (*((const bool *)buffer + i) ? "True" : "False");
-						success = true;
-					break;
-					case DataType_Int8_t:
-						stringValue += String(*((const int8_t *)buffer + i));
-						success = true;
-					break;
-					case DataType_Int16_t:
-						stringValue += String(*((const int16_t *)buffer + i));
-						success = true;
-					break;
-					case DataType_Int32_t:
-					case DataType_ConnectionStatus_t:
-						stringValue += String(*((const int32_t *)buffer + i));
-						success = true;
-					break;
-					case DataType_Uint8_t:
-					case DataType_Uint16_t:
-					case DataType_Uint32_t:
-						stringValue += String(((const byte *)buffer)[i]);
-						success = true;
-					break;
-					case DataType_Float_t:
-						stringValue += String(*((const float *)buffer + i));
-						success = true;
-					break;
-					case DataType_Double_t:
-						stringValue += String(*((const double *)buffer + i));
-						success = true;
-					break;
-					case DataType_Char_t:
-						stringValue += String(*((const char *)buffer + i));
-						success = true;
-					break;
-					case DataType_SoundInputSource_t:
-						{
-							const SoundInputSource_t item = ((const SoundInputSource_t *)buffer)[i];
-							switch(item)
-							{
-								case SoundInputSource_OFF:
-									stringValue += "Off";
-								break;
-								case SoundInputSource_Microphone:
-									stringValue += "Microphone";
-								break;
-								case SoundInputSource_Bluetooth:
-									stringValue += "Bluetooth";
-								break;
-								default:
-									stringValue += "Unknown Value";
-								break;
-							}
-							success = true;
-						}
-					break;
-					case DataType_SoundOutputSource_t:
-						{
-							const SoundOutputSource_t item = ((const SoundOutputSource_t *)buffer)[i];
-							switch(item)
-							{
-								case SoundOutputSource_OFF:
-									stringValue += "Off";
-								break;
-								case SoundOutputSource_Bluetooth:
-									stringValue += "Bluetooth";
-								break;
-								default:
-									stringValue += "Unknown Value";
-								break;
-							}
-							success = true;
-						}
-					break;
-					case DataType_BT_Device_Info_With_Time_Since_Update_t:
-					{
-						const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
-						const BT_Device_Info_With_Time_Since_Update_t* deviceInfo = reinterpret_cast<const BT_Device_Info_With_Time_Since_Update_t*>(bufferPtr + i);
-						stringValue += String(deviceInfo->name) + " | ";
-						stringValue += String(deviceInfo->address) + " | ";
-						stringValue += String(deviceInfo->rssi) + " | ";
-						stringValue += String(deviceInfo->timeSinceUdpate);
-						success = true;
-					}
-					break;
-					case DataType_CompatibleDevice_t:
-					{
-						const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
-						const CompatibleDevice_t* compatibleDevice = reinterpret_cast<const CompatibleDevice_t*>(bufferPtr + i);
-						stringValue += String(compatibleDevice->name) + " | ";
-						stringValue += String(compatibleDevice->address);
-						success = true;
-					}
-					break;
-					case DataType_ActiveCompatibleDevice_t:
-					{
-						const uint8_t* bufferPtr = reinterpret_cast<const uint8_t*>(buffer);
-						const ActiveCompatibleDevice_t* activeCompatibleDevice = reinterpret_cast<const ActiveCompatibleDevice_t*>(bufferPtr + i);
-						stringValue += String(activeCompatibleDevice->name) + " | ";
-						stringValue += String(activeCompatibleDevice->address) + " | ";
-						stringValue += String(activeCompatibleDevice->rssi) + " | ";
-						stringValue += String(activeCompatibleDevice->lastUpdateTime) + " | ";
-						stringValue += String(activeCompatibleDevice->timeSinceUpdate);
-						success = true;
-					}
-					break;
-					case DataType_String_t:
-					case DataType_BT_Device_Info_t:
-					case DataType_ProcessedSoundData_t:
-					case DataType_MaxBandSoundData_t:
-					case DataType_Frame_t:
-					case DataType_ProcessedSoundFrame_t:
-					case DataType_SoundState_t:
-						stringValue = "Unsupported Data Type";
-					break;
-					default:
-						ESP_LOGE("DataTypes: GetValueAsStringForDataType", "GetValueFromStringForDataType: \"%s\": Undefined Data Type", DataTypeStrings[dataType]);
-						stringValue = "Invalid Data Type";
-					break;
-				}
-			}
-			return success;
-		}
-
-		String GetValueAsStringForDataType(const void *Buffer, DataType_t DataType, size_t Count, const String &Divider)
-		{
-			String resultString;
-			if(GetStringValueForDataType(resultString, Buffer, DataType, Count, Divider))
-			{
-				return resultString;
-			}
-			else
-			{
-				return "***";
-			}
 		}
 };
 

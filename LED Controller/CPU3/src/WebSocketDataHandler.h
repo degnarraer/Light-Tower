@@ -170,7 +170,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       KVP signalValue;
       signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value, "|") )
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value) )
       {
         ESP_LOGI( "WebSocketDataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
@@ -180,15 +180,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
-      T newValue[COUNT];
-      if (SetValueFromStringForDataType(newValue, stringValue, GetDataTypeFromTemplateType<T>(), "|"))
-      {
-        m_DataItem.SetValue(newValue, COUNT);
-        String newValueString = GetValueAsStringForDataType(newValue, GetDataTypeFromTemplateType<T>(), COUNT, "|");
-        ESP_LOGD( "WebSocketDataHandler: HandleNewSignalValue"
-                , "Web Socket Value: %s"
-                , newValueString.c_str());
-      }
+      m_DataItem.SetValueFromString(stringValue);
+      ESP_LOGD( "WebSocketDataHandler: HandleNewSignalValue"
+              , "Web Socket Value: %s"
+              , stringValue.c_str());
     }
   protected:
     const String m_Name;
@@ -239,7 +234,7 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     { 
       KVP signalValue;
       signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value, "") )
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value) )
       {
         ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);

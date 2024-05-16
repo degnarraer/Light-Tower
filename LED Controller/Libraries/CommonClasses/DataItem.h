@@ -26,6 +26,7 @@
 #include <esp_heap_caps.h>
 #include "SerialMessageManager.h"
 #define DATAITEM_STRING_LENGTH 50
+#define DIVIDER "|"
 
 enum RxTxType_t
 {
@@ -102,7 +103,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				{
 					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
 							, m_Name.c_str()
-							, GetValueAsStringForDataType(this->mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+							, this->GetValueAsString().c_str());
 					for (size_t i = 0; i < COUNT; ++i)
 					{
 						memcpy(this->mp_Value+i, this->mp_InitialValuePtr, sizeof(T));
@@ -120,15 +121,15 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		{
 			return this->m_Name;
 		}
-		size_t GetCount()
+		virtual size_t GetCount()
 		{
 			return this->m_Count;
 		}
-		size_t GetChangeCount()
+		virtual size_t GetChangeCount()
 		{
 			return this->m_ValueChangeCount;
 		}
-		void GetValue(void* Object, size_t Count)
+		virtual void GetValue(void* Object, size_t Count)
 		{
 			assert(Count == COUNT && "Counts must be equal");
 			if(this->mp_Value)
@@ -142,7 +143,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		T* GetValuePointer()
+		virtual T* GetValuePointer()
 		{
 			if(!this->mp_Value)
 			{
@@ -151,7 +152,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return this->mp_Value;
 		}
 
-		T GetValue()
+		virtual T GetValue()
 		{
 			assert(1 == COUNT && "Count must 1 to use this function");
 			if(this->mp_Value)
@@ -164,30 +165,74 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				return T();
 			}
 		}
-		String GetValueAsString(const String &Divider)
+
+		virtual bool GetStringInitialValue(String &stringValue)
 		{
-			if(this->mp_Value)
-			{
-				return GetValueAsStringForDataType(this->mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, Divider);
-			}
-			else
-			{
-				//ESP_LOGE("GetValueAsString", "NULL Pointer!");
-				return "";
-			}
+			stringValue = String(*mp_InitialValue);
+			return true;
 		}
 		
-		bool GetStringValue(String &stringValue, const String &divider)
+		virtual String GetInitialValueAsString()
 		{
-			if(this->mp_Value)
+			String value;
+			if(!this->GetStringInitialValue(value))
 			{
-				return GetStringValueForDataType(stringValue, this->mp_Value, GetDataTypeFromTemplateType<T>(), COUNT, divider);
+				value = "";
 			}
-			else
-			{
-				ESP_LOGE("GetValueAsString", "NULL Pointer!");
+			return value;
+		}
+
+		virtual bool GetStringValue(String &stringValue)
+		{
+			if (COUNT == 0)
 				return false;
+
+			std::vector<String> valueStrings;
+
+			for (size_t i = 0; i < COUNT; ++i)
+			{
+				valueStrings.push_back(String(mp_Value[i]));
 			}
+
+			stringValue = "";
+			
+			for (size_t i = 0; i < COUNT - 1; ++i)
+			{
+				stringValue += valueStrings[i] + DIVIDER;
+			}
+			stringValue += valueStrings[COUNT - 1];
+
+			return true;
+		}
+
+		virtual String GetValueAsString()
+		{
+			String value;
+			if(!this->GetStringValue(value))
+			{
+				value = "";
+			}
+			return value;
+		}
+
+		virtual bool SetValueFromString(String stringValue)
+		{
+			T value[COUNT];
+			std::vector<String> substrings;
+			size_t start = 0;
+			size_t end = stringValue.indexOf(DIVIDER);
+			while (end != -1)
+			{
+				substrings.push_back(stringValue.substring(start, end - start));
+				start = end + 1;
+				end = stringValue.indexOf(DIVIDER, start);
+			}
+			assert(substrings.size() == COUNT && "String did not parse to expected length");
+			for (size_t i = 0; i < COUNT; ++i)
+			{
+				value[i] = static_cast<T>(substrings[i].toInt());
+			}
+			return SetValue(value, COUNT);
 		}
 
 		virtual bool SetValue(const T *Value, size_t Count)
@@ -210,6 +255,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 			return ValueChanged;
 		}
+
 		virtual bool SetValue(T Value)
 		{
 			assert(COUNT == 1 && "COUNT must be 1 to use this");
@@ -516,7 +562,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				ESP_LOGI( "DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\""
 						, this->m_Name.c_str()
-						, DataTypeFunctions::GetValueAsStringForDataType(this->mp_TxValue, DataTypeFunctions::GetDataTypeFromTemplateType<T>(), COUNT, "").c_str() );
+						, this->GetValueAsString().c_str() );
 			}
 			else
 			{
@@ -531,14 +577,14 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX: \"%s\" Value: \"%s\""
 						, this->m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+						, this->GetValueAsString().c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, this->m_Name.c_str()
-						, GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+						, this->GetValueAsString().c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
 					LocalDataItem<T, COUNT>::SetValue(this->mp_RxValue, COUNT);	
@@ -551,7 +597,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, m_Name.c_str()
-						, this->GetValueAsStringForDataType(mp_RxValue, this->GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+						, this->GetValueAsString().c_str());
 				DataItem_TX_Now();
 			}
 			return ValueUpdated;

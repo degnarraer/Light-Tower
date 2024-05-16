@@ -459,15 +459,15 @@ class QueueManager: public CommonUtils
 				bytes = GetSizeOfDataType(ConfigFile[i].DataType) * ConfigFile[i].Count;
 				switch(ConfigFile[i].TransceiverConfig)
 				{
-					case Transciever_None:
+					case Transciever_t::Transciever_None:
 					break;
-					case Transciever_TX:
+					case Transciever_t::Transciever_TX:
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
 					break;
-					case Transciever_RX:
+					case Transciever_t::Transciever_RX:
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, ConfigFile[i].QueueCount, true);
 					break;
-					case Transciever_TXRX:
+					case Transciever_t::Transciever_TXRX:
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_RX, bytes, ConfigFile[i].QueueCount, true);
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
 					break;
@@ -486,15 +486,15 @@ class QueueManager: public CommonUtils
 			{		
 				switch(m_DataItem[i].TransceiverConfig)
 				{
-					case Transciever_None:
+					case Transciever_t::Transciever_None:
 					break;
-					case Transciever_TX:
+					case Transciever_t::Transciever_TX:
 						vQueueDelete(m_DataItem[i].QueueHandle_TX);
 					break;
-					case Transciever_RX:
+					case Transciever_t::Transciever_RX:
 						vQueueDelete(m_DataItem[i].QueueHandle_RX);
 					break;
-					case Transciever_TXRX:
+					case Transciever_t::Transciever_TXRX:
 						vQueueDelete(m_DataItem[i].QueueHandle_RX);
 						vQueueDelete(m_DataItem[i].QueueHandle_TX);
 					break;

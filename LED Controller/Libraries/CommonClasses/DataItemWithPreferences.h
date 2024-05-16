@@ -52,8 +52,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual void Setup() override
 		{
 			DataItem<T, COUNT>::Setup();
-			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
-			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			this->InitializeNVM(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str() );
+			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 	protected:
 		bool DataItem_TX_Now() override
@@ -61,7 +61,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 			}
 			return result;
 		}
@@ -70,7 +70,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 			}
 			return result;
 		}
@@ -110,8 +110,8 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
-			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			this->InitializeNVM(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 		
 		virtual bool SetValue(const char* Value, size_t Count) override
@@ -119,7 +119,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			bool result = LocalStringDataItem::SetValue(Value, Count);
 			if(result)
 			{
-				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 			}
 			return result;
 		}
@@ -176,8 +176,8 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 		virtual void Setup() override
 		{
 			StringDataItem::Setup();
-			this->InitializeNVM(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
-			this->CreatePreferencesTimer(this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+			this->InitializeNVM(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 
 		virtual bool DataItem_TX_Now() override
@@ -185,7 +185,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 			}
 			return result;
 		}
@@ -195,7 +195,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::NewRXValueReceived(Object, Count);
 			if(result) 
 			{
-				this->Update_Preference("Save", this->GetName().c_str(), this->mp_Value, this->mp_InitialValue);
+				this->Update_Preference("Save", this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 			}
 			return result;
 		}

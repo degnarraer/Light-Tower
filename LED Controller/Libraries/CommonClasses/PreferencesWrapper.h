@@ -11,7 +11,7 @@ class PreferencesWrapper: public DataTypeFunctions
 	public:
 		struct PreferencesWrapperTimerArgs;
 		PreferencesWrapper( Preferences *Preferences )
-						  : m_Preferences(Preferences){}
+						  : mp_Preferences(Preferences){}
 		virtual ~PreferencesWrapper()
 		{
 			if(mp_TimerArgs)
@@ -23,17 +23,14 @@ class PreferencesWrapper: public DataTypeFunctions
 		{
 			PreferencesWrapperTimerArgs* timerArgsPtr = static_cast<PreferencesWrapperTimerArgs*>(arg);
 			PreferencesWrapper<T, COUNT>* aPreferenceWrapper = const_cast<PreferencesWrapper<T, COUNT>*>(timerArgsPtr->PreferenceWrapper);
-			const String& name = timerArgsPtr->Name;
-			T* valuePtr = const_cast<T*>(timerArgsPtr->Value);
-			T* initialValuePtr = const_cast<T*>(timerArgsPtr->InitialValue);
 			if(aPreferenceWrapper)
 			{
-				aPreferenceWrapper->Update_Preference("Timer", name, valuePtr, initialValuePtr);
+				aPreferenceWrapper->Update_Preference("Timer", timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue);
 			}
 		}
-		void Update_Preference(const String &UpdateType, const String& Name, T* ValuePtr, T* InitialValuePtr)
+		void Update_Preference(const String &UpdateType, const String& Name, String value, const String initialValue)
 		{
-			if(nullptr == m_Preferences) return;
+			if(nullptr == mp_Preferences) return;
 			assert((UpdateType == "Initialize" || UpdateType == "Load" || UpdateType == "Save" || UpdateType == "Timer") && "Misuse of function");
 
 			unsigned long currentMillis = millis();
@@ -52,24 +49,24 @@ class PreferencesWrapper: public DataTypeFunctions
 			if ( UpdateType.equals("Timer") )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", Name.c_str());
-				HandleSave( Name, ValuePtr );
+				HandleSave( Name, value );
 				m_PreferenceTimerActive = false;
 				m_Preferences_Last_Update = currentMillis;
 			}
 			else if ( UpdateType.equals("Initialize") )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", Name.c_str());
-				HandleSave( Name, InitialValuePtr );
+				HandleSave( Name, initialValue );
 			}
 			else if ( UpdateType.equals("Load") )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
-				HandleLoad( Name, ValuePtr, InitialValuePtr );
+				HandleLoad( Name, value, initialValue );
 			} 
 			else if ( UpdateType.equals("Save") )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
-				HandleSave( Name, ValuePtr );
+				HandleSave( Name, value );
 				m_Preferences_Last_Update = currentMillis;
 			}
 			else
@@ -79,16 +76,16 @@ class PreferencesWrapper: public DataTypeFunctions
 		}
 		struct PreferencesWrapperTimerArgs 
 		{
-			PreferencesWrapperTimerArgs(PreferencesWrapper<T, COUNT>* preferenceWrapper, const String& name, T* value, T* initialValue)
+			PreferencesWrapperTimerArgs(PreferencesWrapper<T, COUNT>* preferenceWrapper, const String& name, String value, const String initialValue)
 				: PreferenceWrapper(preferenceWrapper), Name(name), Value(value), InitialValue(initialValue) {}
 
 			PreferencesWrapper<T, COUNT>* PreferenceWrapper;
 			String Name;
-			T* Value;
-			T* InitialValue;
+			String Value;
+			String InitialValue;
 		};
 	protected:
-		void CreatePreferencesTimer(const String& key, T* value, T* initialValue)
+		void CreatePreferencesTimer(const String& key, String value, const String initialValue)
 		{
 			mp_TimerArgs = new PreferencesWrapperTimerArgs(this, key, value, initialValue);
 			esp_timer_create_args_t timerArgs;
@@ -100,65 +97,38 @@ class PreferencesWrapper: public DataTypeFunctions
 			esp_timer_create(&timerArgs, &m_PreferenceTimer);
 		}
 
-		void InitializeNVM(const String& key, T* valuePtr, T* initialValuePtr)
+		void InitializeNVM(const String& key, String value, const String initialValue)
 		{
-			if(m_Preferences)
+			if(mp_Preferences)
 			{
-				if (m_Preferences->isKey(key.c_str()))
+				if (mp_Preferences->isKey(key.c_str()))
 				{
 					ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", key.c_str());
-					Update_Preference("Load", key, valuePtr, initialValuePtr);
+					Update_Preference("Load", key, value, initialValue);
 				}
 				else
 				{
 					ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", key.c_str());
-					Update_Preference("Initialize", key, valuePtr, initialValuePtr);
+					Update_Preference("Initialize", key, value, initialValue);
 				}
 			}
 			else
 			{
-				ESP_LOGE("PreferencesWrapper: InitializeNVM", "Key: \"%s\": Null Value Pointer!", key.c_str());
+				ESP_LOGE("PreferencesWrapper: InitializeNVM", "Null Preferences Pointer!");
 			}
 		}
-		void HandleLoad(const String& key, T* valuePtr, T* initialValuePtr)
+		void HandleLoad(const String& key, String value, const String initialValue)
 		{
-			if(valuePtr && initialValuePtr)
-			{ 
-				String value = m_Preferences->getString( key.c_str()
-														, GetValueAsStringForDataType( initialValuePtr
-																					 , GetDataTypeFromTemplateType<T>()
-																					 , COUNT
-														  							 , "|") );
-				SetValueFromStringForDataType( valuePtr
-										 	 , value
-										 	 , GetDataTypeFromTemplateType<T>()
-											 , "|");
-				ESP_LOGI("PreferencesWrapper: HandleLoaded", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
-			}
-			else
-			{
-				ESP_LOGE("PreferencesWrapper: HandleLoaded", "Key: \"%s\": Null Value Pointer!", key.c_str());
-			}
+			value = mp_Preferences->getString( key.c_str(), initialValue.c_str() );
+			ESP_LOGI("PreferencesWrapper: HandleLoaded", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());	
 		}
-		void HandleSave(const String& key, T* valuePtr)
-		{	
-			if(valuePtr)
-			{
-				String value = GetValueAsStringForDataType( valuePtr 
-														  , GetDataTypeFromTemplateType<T>()
-														  , COUNT
-														  , "|" );
-				m_Preferences->putString( key.c_str()
-										, value );
-				ESP_LOGI("PreferencesWrapper: Handle Updated", "Saved Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
-			}
-			else
-			{
-				ESP_LOGE("PreferencesWrapper: Handle Updated", "Key: \"%s\": Null Value Pointer!", key.c_str());
-			}
+		void HandleSave(const String& key, String value)
+		{		
+			mp_Preferences->putString( key.c_str(), value );
+			ESP_LOGI("PreferencesWrapper: Handle Updated", "Saved Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
 		}
 	private:
-		Preferences *m_Preferences = nullptr;
+		Preferences *mp_Preferences = nullptr;
 		esp_timer_handle_t m_PreferenceTimer;
 		PreferencesWrapperTimerArgs* mp_TimerArgs;
 		uint64_t m_Preferences_Last_Update = millis();
