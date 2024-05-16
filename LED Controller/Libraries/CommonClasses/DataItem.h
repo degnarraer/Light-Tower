@@ -215,7 +215,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return value;
 		}
 
-		virtual bool SetValueFromString(String stringValue)
+		virtual bool SetValueFromString(const String& stringValue)
 		{
 			T value[COUNT];
 			std::vector<String> substrings;
@@ -230,11 +230,19 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			assert(substrings.size() == COUNT && "String did not parse to expected length");
 			for (size_t i = 0; i < COUNT; ++i)
 			{
-				value[i] = static_cast<T>(substrings[i].toInt());
+				value[i] = decodeFromString(substrings[i]);
 			}
 			return SetValue(value, COUNT);
 		}
 
+		T decodeFromString(String str) {
+			std::string stdStr = str.c_str();
+			std::istringstream iss(stdStr);
+			T value;
+			iss >> value;
+			return value;
+		}
+		
 		virtual bool SetValue(const T *Value, size_t Count)
 		{
 			assert(Value != nullptr && "Value must not be null");

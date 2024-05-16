@@ -422,8 +422,8 @@ class SettingsWebServerManager: public SetupCallerInterface
               JSONVar signalValue = jsonObject["SignalValue"];
               if (signalValue.hasOwnProperty("Id") && signalValue.hasOwnProperty("Value"))
               {
-                String Id = signalValue["Id"];
-                String Value = signalValue["Value"];
+                const String Id = signalValue["Id"];
+                const String Value = signalValue["Value"];
                 ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Signal Value Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str() );
@@ -442,8 +442,8 @@ class SettingsWebServerManager: public SetupCallerInterface
               JSONVar jSONValue = jsonObject["JSONValue"];
               if (jSONValue.hasOwnProperty("Id") && jSONValue.hasOwnProperty("Value"))
               {
-                String Id = jSONValue["Id"];
-                String Value = jSONValue["Value"];
+                const String Id = jSONValue["Id"];
+                const String Value = jSONValue["Value"];
                 ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str());

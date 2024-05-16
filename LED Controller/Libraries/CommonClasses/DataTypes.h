@@ -3,6 +3,10 @@
 
 #include "Arduino.h"
 #include "Streaming.h"
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <type_traits>
 
 #define BT_NAME_LENGTH 50
 #define BT_ADDRESS_LENGTH 18
@@ -156,10 +160,12 @@ struct  CompatibleDevice_t
 {
 	public:
 		CompatibleDevice_t(){}
+
 		CompatibleDevice_t(const String &str)
 		{
-			*this =  fromString(str);
+			*this = fromString(str.c_str());
 		}
+
 		CompatibleDevice_t(const char* name_In, const char* address_In)
 		{
 			if(BT_NAME_LENGTH < String(name_In).length())
@@ -175,6 +181,7 @@ struct  CompatibleDevice_t
 			}
 			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
 		}
+
 		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)
 		{
 			strncpy(this->name, other.name, sizeof(this->name) - 1);
@@ -184,18 +191,21 @@ struct  CompatibleDevice_t
 			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
 			return *this;
 		}
+
 		bool operator==(const CompatibleDevice_t& other) const
 		{
 			if( strcmp(this->name, other.name) == 0 &&
 				strcmp(this->address, other.address) == 0) return true;
 			else return false;
 		}
+
 		bool operator!=(const CompatibleDevice_t& other) const
 		{
 			if( strcmp(this->name, other.name) != 0 ||
 				strcmp(this->address, other.address) != 0) return true;
 			else return false;
 		}
+
 		operator String() const
         {
             return toString();
@@ -208,19 +218,34 @@ struct  CompatibleDevice_t
         }
 
 		// Static function to convert from string
-		static CompatibleDevice_t fromString(const String &str)
+		static CompatibleDevice_t fromString(const std::string &str)
 		{
-			int delimiterIndex = str.indexOf('|');
+			int delimiterIndex = str.find('|');
 			if (delimiterIndex == -1)
 			{
 				// handle error, return default
 				return CompatibleDevice_t();
 			}
 
-			String name = str.substring(0, delimiterIndex - 1);
-			String address = str.substring(delimiterIndex + 2);
+			String name = String(str.substr(0, delimiterIndex - 1).c_str());
+			String address = String(str.substr(delimiterIndex + 2).c_str());
 			return CompatibleDevice_t(name.c_str(), address.c_str());
 		}
+
+		// Overload the extraction operator
+		friend std::istream& operator>>(std::istream& is, CompatibleDevice_t& device) {
+			std::string str;
+			std::getline(is, str); // Read a line from the stream
+			device = CompatibleDevice_t::fromString(str); // Use fromString to create device from the string
+			return is;
+		}
+
+		// Overload the insertion operator
+		friend std::ostream& operator<<(std::ostream& os, const CompatibleDevice_t& device) {
+			os << device.toString(); // Use toString to convert device to a string and write it to the stream
+			return os;
+		}
+
 		char name[BT_NAME_LENGTH] = "\0";
 		char address[BT_ADDRESS_LENGTH] = "\0";
 };
@@ -237,7 +262,7 @@ public:
 
 	ActiveCompatibleDevice_t(const String &str)
 	{
-		*this =  fromString(str);
+		*this =  fromString(str.c_str());
 	}
 
     // Constructor with name and address
@@ -326,49 +351,64 @@ public:
     }
 
     // Create object from string
-    static ActiveCompatibleDevice_t fromString(const String &str)
+    static ActiveCompatibleDevice_t fromString(const std::string &str)
     {
-        int delimiterIndex = str.indexOf('|');
+        int delimiterIndex = str.find('|');
         if (delimiterIndex == -1)
         {
             // handle error, return default
             return ActiveCompatibleDevice_t();
         }
 
-        String name = str.substring(0, delimiterIndex - 1);
-        int nextDelimiterIndex = str.indexOf('|', delimiterIndex + 1);
+        String name = String(str.substr(0, delimiterIndex - 1).c_str());
+        int nextDelimiterIndex = str.find('|', delimiterIndex + 1);
         if (nextDelimiterIndex == -1)
         {
             // handle error, return default
             return ActiveCompatibleDevice_t();
         }
 
-        String address = str.substring(delimiterIndex + 2, nextDelimiterIndex - 1);
-        int nextDelimiterIndex2 = str.indexOf('|', nextDelimiterIndex + 1);
+        String address = String(str.substr(delimiterIndex + 2, nextDelimiterIndex - 1).c_str());
+        int nextDelimiterIndex2 = str.find('|', nextDelimiterIndex + 1);
         if (nextDelimiterIndex2 == -1)
         {
             // handle error, return default
             return ActiveCompatibleDevice_t();
         }
 
-        String rssiStr = str.substring(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1);
+        String rssiStr =  String(str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1).c_str());
         int rssi = rssiStr.toInt(); // Convert string to integer
 
-        int nextDelimiterIndex3 = str.indexOf('|', nextDelimiterIndex2 + 1);
+        int nextDelimiterIndex3 = str.find('|', nextDelimiterIndex2 + 1);
         if (nextDelimiterIndex3 == -1)
         {
             // handle error, return default
             return ActiveCompatibleDevice_t();
         }
 
-        String lastUpdateTimeStr = str.substring(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1);
+        String lastUpdateTimeStr =  String(str.substr(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1).c_str());
         unsigned long lastUpdateTime = lastUpdateTimeStr.toInt(); // Convert string to unsigned long
 
-        String timeSinceUpdateStr = str.substring(nextDelimiterIndex3 + 2);
+        String timeSinceUpdateStr =  String(str.substr(nextDelimiterIndex3 + 2).c_str());
         uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt(); // Convert string to uint32_t
 
         return ActiveCompatibleDevice_t(name, address, rssi, lastUpdateTime, timeSinceUpdate);
     }
+	
+	// Overload the extraction operator
+    friend std::istream& operator>>(std::istream& is, ActiveCompatibleDevice_t& device) {
+        std::string str;
+        std::getline(is, str); // Read a line from the stream
+        device = ActiveCompatibleDevice_t::fromString(str); // Use fromString to create device from the string
+        return is;
+    }
+
+    // Overload the insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const ActiveCompatibleDevice_t& device) {
+        os << device.toString(); // Use toString to convert device to a string and write it to the stream
+        return os;
+    }
+	
     char name[BT_NAME_LENGTH];
     char address[BT_ADDRESS_LENGTH];
     int32_t rssi;
@@ -410,6 +450,15 @@ public:
         
         return OFF; // Default or error value
     }
+
+	friend std::istream& operator>>(std::istream& is, SoundInputSource::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = SoundInputSource::FromString(token.c_str());
+		return is;
+	}
+
 };
 typedef SoundInputSource::Value SoundInputSource_t;
 
@@ -444,6 +493,14 @@ public:
         
         return OFF; // Default or error value
     }
+
+	friend std::istream& operator>>(std::istream& is, SoundOutputSource::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = SoundOutputSource::FromString(token.c_str());
+		return is;
+	}
 };
 typedef SoundOutputSource::Value SoundOutputSource_t;
 
@@ -475,6 +532,14 @@ public:
         
         return Mute_State_Un_Muted; // Default or error value
     }
+
+	friend std::istream& operator>>(std::istream& is, Mute_State::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = Mute_State::FromString(token.c_str());
+		return is;
+	}
 };
 typedef Mute_State::Value Mute_State_t;
 
@@ -538,6 +603,14 @@ public:
         if (str == "Sound_Level11_Detected") return Sound_Level11_Detected;
         return LastingSilenceDetected; // Default or error value
     }
+
+	friend std::istream& operator>>(std::istream& is, SoundState::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = SoundState::FromString(token.c_str());
+		return is;
+	}
 };
 typedef SoundState::Value SoundState_t;
 
@@ -575,6 +648,14 @@ public:
         
         return Transciever_None; // Default or error value
     }
+
+	friend std::istream& operator>>(std::istream& is, Transciever::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = Transciever::FromString(token.c_str());
+		return is;
+	}
 };
 typedef Transciever::Value Transciever_t;
 
@@ -689,6 +770,14 @@ public:
         
         return Disconnected; // Default or error value
     }
+
+	friend std::istream& operator>>(std::istream& is, ConnectionStatus::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = ConnectionStatus::FromString(token.c_str());
+		return is;
+	}
 };
 typedef ConnectionStatus::Value ConnectionStatus_t;
 
