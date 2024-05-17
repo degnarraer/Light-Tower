@@ -205,6 +205,15 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return true;
 		}
 
+		virtual String& GetValueString()
+		{
+			if(!this->GetStringValue(m_value))
+			{
+				m_value = "";
+			}
+			return m_value;
+		}
+
 		virtual String GetValueAsString()
 		{
 			String value;
@@ -292,6 +301,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		const String m_Name;
 		const T *mp_InitialValuePtr;
 		T *mp_Value;
+		String m_value;
 		T *mp_InitialValue;
 		NamedCallback_t *mp_NamedCallback = NULL;
 		size_t m_ValueChangeCount = 0;

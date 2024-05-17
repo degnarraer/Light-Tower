@@ -52,7 +52,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual void Setup() override
 		{
 			DataItem<T, COUNT>::Setup();
-			this->InitializeNVM(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str() );
+			this->InitializeNVM( this->GetName().c_str()
+							   , this->GetInitialValueAsString().c_str()
+							   , NULL );
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 	protected:
@@ -61,7 +63,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference(PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save, this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+				this->Update_Preference( PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save
+									   , this->GetName().c_str()
+									   , this->GetValueAsString().c_str()
+									   , this->GetInitialValueAsString().c_str()
+									   , NULL );
 			}
 			return result;
 		}
@@ -70,7 +76,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference(PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save, this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+				this->Update_Preference( PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save
+									   , LocalDataItem<T, COUNT>::GetName().c_str()
+									   , LocalDataItem<T, COUNT>::GetValueAsString().c_str()
+									   , LocalDataItem<T, COUNT>::GetInitialValueAsString().c_str()
+									   , NULL );
 			}
 			return result;
 		}
@@ -110,7 +120,10 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			this->InitializeNVM(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( this->GetName().c_str()
+							   											   , this->GetValueAsString().c_str()
+							   											   , this->GetInitialValueAsString().c_str()
+							   											   , NULL );
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 		
@@ -119,7 +132,11 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			bool result = LocalStringDataItem::SetValue(Value, Count);
 			if(result)
 			{
-				this->Update_Preference(PreferencesWrapper::Save, this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+				this->Update_Preference( PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::PreferenceUpdateType::Save
+									   , this->GetName().c_str()
+									   , this->GetValueAsString()
+									   , this->GetInitialValueAsString().c_str()
+									   , NULL );
 			}
 			return result;
 		}
@@ -176,7 +193,10 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 		virtual void Setup() override
 		{
 			StringDataItem::Setup();
-			this->InitializeNVM(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( this->GetName().c_str()
+							   										  	   , this->GetValueAsString().c_str()
+																		   , this->GetInitialValueAsString().c_str()
+																		   , NULL );
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 
@@ -185,7 +205,11 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference(PreferenceUpdateType::Save, this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+				this->Update_Preference( PreferenceUpdateType::Save
+									   , this->GetName().c_str()
+									   , this->GetValueAsString().c_str()
+									   , this->GetInitialValueAsString().c_str()
+									   , NULL );
 			}
 			return result;
 		}
@@ -195,7 +219,11 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			bool result = StringDataItem::NewRXValueReceived(Object, Count);
 			if(result) 
 			{
-				this->Update_Preference(PreferenceUpdateType::Save, this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+				this->Update_Preference( PreferenceUpdateType::Save
+									   , this->GetName().c_str()
+									   , this->GetValueAsString().c_str()
+									   , this->GetInitialValueAsString().c_str()
+									   , NULL );
 			}
 			return result;
 		}
