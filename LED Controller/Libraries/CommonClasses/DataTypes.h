@@ -66,6 +66,10 @@ typedef KeyValueTuple KVT;
 struct BT_Device_Info
 {
 	public:
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		int32_t rssi = 0;
+        
 		BT_Device_Info(){}
 		BT_Device_Info(const char* name_In, int32_t rssi_In = 0)
 		{
@@ -93,15 +97,17 @@ struct BT_Device_Info
 			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
 			rssi = rssi_In;
 		}
-		char name[BT_NAME_LENGTH] = "\0";
-		char address[BT_ADDRESS_LENGTH] = "\0";
-		int32_t rssi = 0;
 };
 typedef BT_Device_Info BT_Device_Info_t;
 
 struct BT_Device_Info_With_Time_Since_Update
 {
 	public:
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		int32_t rssi = 0;
+		uint32_t timeSinceUdpate = 0;
+
 		BT_Device_Info_With_Time_Since_Update(){}
 		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)
 		{
@@ -149,17 +155,16 @@ struct BT_Device_Info_With_Time_Since_Update
 				this->timeSinceUdpate != other.timeSinceUdpate) return true;
 			else return false;
 		}
-		char name[BT_NAME_LENGTH] = "\0";
-		char address[BT_ADDRESS_LENGTH] = "\0";
-		int32_t rssi = 0;
-		uint32_t timeSinceUdpate = 0;
 };
 typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Update_t;
 
 struct  CompatibleDevice_t
 {
 	public:
-		CompatibleDevice_t(){}
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		
+        CompatibleDevice_t(){}
 
 		CompatibleDevice_t(const String &str)
 		{
@@ -245,21 +250,25 @@ struct  CompatibleDevice_t
 			os << device.toString(); // Use toString to convert device to a string and write it to the stream
 			return os;
 		}
-
-		char name[BT_NAME_LENGTH] = "\0";
-		char address[BT_ADDRESS_LENGTH] = "\0";
 };
 
 struct ActiveCompatibleDevice_t
 {
 public:
+    char name[BT_NAME_LENGTH];
+    char address[BT_ADDRESS_LENGTH];
+    int32_t rssi;
+    unsigned long lastUpdateTime;
+    uint32_t timeSinceUpdate;
+    
     // Default constructor
     ActiveCompatibleDevice_t() : rssi(0), lastUpdateTime(0), timeSinceUpdate(0)
     {
         name[0] = '\0';
         address[0] = '\0';
     }
-
+    
+    // Construct from String
 	ActiveCompatibleDevice_t(const String &str)
 	{
 		*this =  fromString(str.c_str());
@@ -408,12 +417,6 @@ public:
         os << device.toString(); // Use toString to convert device to a string and write it to the stream
         return os;
     }
-	
-    char name[BT_NAME_LENGTH];
-    char address[BT_ADDRESS_LENGTH];
-    int32_t rssi;
-    unsigned long lastUpdateTime;
-    uint32_t timeSinceUpdate;
 };
 
 class SoundInputSource
@@ -451,6 +454,13 @@ public:
         return OFF; // Default or error value
     }
 
+    // Overload the insertion operator
+    friend std::ostream& operator<<(std::ostream& os, const SoundInputSource::Value& value) {
+        os << SoundInputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
+        return os;
+    }
+    
+    // Overload the extraction operator
 	friend std::istream& operator>>(std::istream& is, SoundInputSource::Value& value) 
 	{
 		std::string token;
@@ -458,7 +468,6 @@ public:
 		value = SoundInputSource::FromString(token.c_str());
 		return is;
 	}
-
 };
 typedef SoundInputSource::Value SoundInputSource_t;
 
@@ -494,6 +503,7 @@ public:
         return OFF; // Default or error value
     }
 
+    // Overload the insertion operator
 	friend std::istream& operator>>(std::istream& is, SoundOutputSource::Value& value) 
 	{
 		std::string token;
@@ -501,6 +511,12 @@ public:
 		value = SoundOutputSource::FromString(token.c_str());
 		return is;
 	}
+    
+    // Overload the extraction operator
+    friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
+        os << SoundOutputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
+        return os;
+    }
 };
 typedef SoundOutputSource::Value SoundOutputSource_t;
 
@@ -529,10 +545,10 @@ public:
     {
         if (str == "Mute_State_Un_Muted") return Mute_State_Un_Muted;
         if (str == "Mute_State_Muted") return Mute_State_Muted;
-        
-        return Mute_State_Un_Muted; // Default or error value
+        return Mute_State_Un_Muted;
     }
 
+    // Overload the insertion operator
 	friend std::istream& operator>>(std::istream& is, Mute_State::Value& value) 
 	{
 		std::string token;
@@ -540,6 +556,12 @@ public:
 		value = Mute_State::FromString(token.c_str());
 		return is;
 	}
+    
+    // Overload the extraction operator
+    friend std::ostream& operator<<(std::ostream& os, const Mute_State::Value& value) {
+        os << Mute_State::ToString(value);
+        return os;
+    }
 };
 typedef Mute_State::Value Mute_State_t;
 
@@ -568,42 +590,43 @@ public:
     {
         switch (state)
         {
-            case LastingSilenceDetected: return "LastingSilenceDetected";
-            case SilenceDetected: return "SilenceDetected";
-            case Sound_Level1_Detected: return "Sound_Level1_Detected";
-            case Sound_Level2_Detected: return "Sound_Level2_Detected";
-            case Sound_Level3_Detected: return "Sound_Level3_Detected";
-            case Sound_Level4_Detected: return "Sound_Level4_Detected";
-            case Sound_Level5_Detected: return "Sound_Level5_Detected";
-            case Sound_Level6_Detected: return "Sound_Level6_Detected";
-            case Sound_Level7_Detected: return "Sound_Level7_Detected";
-            case Sound_Level8_Detected: return "Sound_Level8_Detected";
-            case Sound_Level9_Detected: return "Sound_Level9_Detected";
-            case Sound_Level10_Detected: return "Sound_Level10_Detected";
-            case Sound_Level11_Detected: return "Sound_Level11_Detected";
-            default: return "Unknown";
+            case LastingSilenceDetected:    return "LastingSilenceDetected";
+            case SilenceDetected:           return "SilenceDetected";
+            case Sound_Level1_Detected:     return "Sound_Level1_Detected";
+            case Sound_Level2_Detected:     return "Sound_Level2_Detected";
+            case Sound_Level3_Detected:     return "Sound_Level3_Detected";
+            case Sound_Level4_Detected:     return "Sound_Level4_Detected";
+            case Sound_Level5_Detected:     return "Sound_Level5_Detected";
+            case Sound_Level6_Detected:     return "Sound_Level6_Detected";
+            case Sound_Level7_Detected:     return "Sound_Level7_Detected";
+            case Sound_Level8_Detected:     return "Sound_Level8_Detected";
+            case Sound_Level9_Detected:     return "Sound_Level9_Detected";
+            case Sound_Level10_Detected:    return "Sound_Level10_Detected";
+            case Sound_Level11_Detected:    return "Sound_Level11_Detected";
+            default:                        return "Unknown";
         }
     }
 
     // Function to convert string to enum
     static Value FromString(const String& str)
     {
-        if (str == "LastingSilenceDetected") return LastingSilenceDetected;
-        if (str == "SilenceDetected") return SilenceDetected;
-        if (str == "Sound_Level1_Detected") return Sound_Level1_Detected;
-        if (str == "Sound_Level2_Detected") return Sound_Level2_Detected;
-        if (str == "Sound_Level3_Detected") return Sound_Level3_Detected;
-        if (str == "Sound_Level4_Detected") return Sound_Level4_Detected;
-        if (str == "Sound_Level5_Detected") return Sound_Level5_Detected;
-        if (str == "Sound_Level6_Detected") return Sound_Level6_Detected;
-        if (str == "Sound_Level7_Detected") return Sound_Level7_Detected;
-        if (str == "Sound_Level8_Detected") return Sound_Level8_Detected;
-        if (str == "Sound_Level9_Detected") return Sound_Level9_Detected;
-        if (str == "Sound_Level10_Detected") return Sound_Level10_Detected;
-        if (str == "Sound_Level11_Detected") return Sound_Level11_Detected;
-        return LastingSilenceDetected; // Default or error value
+        if (str == "LastingSilenceDetected")    return LastingSilenceDetected;
+        if (str == "SilenceDetected")           return SilenceDetected;
+        if (str == "Sound_Level1_Detected")     return Sound_Level1_Detected;
+        if (str == "Sound_Level2_Detected")     return Sound_Level2_Detected;
+        if (str == "Sound_Level3_Detected")     return Sound_Level3_Detected;
+        if (str == "Sound_Level4_Detected")     return Sound_Level4_Detected;
+        if (str == "Sound_Level5_Detected")     return Sound_Level5_Detected;
+        if (str == "Sound_Level6_Detected")     return Sound_Level6_Detected;
+        if (str == "Sound_Level7_Detected")     return Sound_Level7_Detected;
+        if (str == "Sound_Level8_Detected")     return Sound_Level8_Detected;
+        if (str == "Sound_Level9_Detected")     return Sound_Level9_Detected;
+        if (str == "Sound_Level10_Detected")    return Sound_Level10_Detected;
+        if (str == "Sound_Level11_Detected")    return Sound_Level11_Detected;
+        return  LastingSilenceDetected;
     }
 
+    // Overload the insertion operator
 	friend std::istream& operator>>(std::istream& is, SoundState::Value& value) 
 	{
 		std::string token;
@@ -611,6 +634,12 @@ public:
 		value = SoundState::FromString(token.c_str());
 		return is;
 	}
+    
+    // Overload the extraction operator
+    friend std::ostream& operator<<(std::ostream& os, const SoundState::Value& value) {
+        os << SoundState::ToString(value);
+        return os;
+    }
 };
 typedef SoundState::Value SoundState_t;
 
@@ -649,6 +678,7 @@ public:
         return Transciever_None; // Default or error value
     }
 
+    // Overload the insertion operator
 	friend std::istream& operator>>(std::istream& is, Transciever::Value& value) 
 	{
 		std::string token;
@@ -656,6 +686,12 @@ public:
 		value = Transciever::FromString(token.c_str());
 		return is;
 	}
+    
+    // Overload the extraction operator
+    friend std::ostream& operator<<(std::ostream& os, const Transciever::Value& value) {
+        os << Transciever::ToString(value);
+        return os;
+    }
 };
 typedef Transciever::Value Transciever_t;
 
@@ -771,6 +807,7 @@ public:
         return Disconnected; // Default or error value
     }
 
+    // Overload the insertion operator
 	friend std::istream& operator>>(std::istream& is, ConnectionStatus::Value& value) 
 	{
 		std::string token;
@@ -778,6 +815,12 @@ public:
 		value = ConnectionStatus::FromString(token.c_str());
 		return is;
 	}
+    
+    // Overload the extraction operator
+    friend std::ostream& operator<<(std::ostream& os, const ConnectionStatus::Value& value) {
+        os << ConnectionStatus::ToString(value);
+        return os;
+    }
 };
 typedef ConnectionStatus::Value ConnectionStatus_t;
 

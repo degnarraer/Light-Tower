@@ -230,6 +230,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			assert(substrings.size() == COUNT && "String did not parse to expected length");
 			for (size_t i = 0; i < COUNT; ++i)
 			{
+				ESP_LOGI("SetValueFromString", "SetValueFromString: %s", substrings[i].c_str());
 				value[i] = decodeFromString(substrings[i]);
 			}
 			return SetValue(value, COUNT);

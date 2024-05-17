@@ -9,6 +9,13 @@ class PreferencesWrapper: public DataTypeFunctions
 {
 	
 	public:
+		enum PreferenceUpdateType
+		{
+			Initialize,
+			Load,
+			Save,
+			Timer
+		};
 		struct PreferencesWrapperTimerArgs;
 		PreferencesWrapper( Preferences *Preferences )
 						  : mp_Preferences(Preferences){}
@@ -25,17 +32,16 @@ class PreferencesWrapper: public DataTypeFunctions
 			PreferencesWrapper<T, COUNT>* aPreferenceWrapper = const_cast<PreferencesWrapper<T, COUNT>*>(timerArgsPtr->PreferenceWrapper);
 			if(aPreferenceWrapper)
 			{
-				aPreferenceWrapper->Update_Preference("Timer", timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue);
+				aPreferenceWrapper->Update_Preference(PreferenceUpdateType::Timer, timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue);
 			}
 		}
-		void Update_Preference(const String &UpdateType, const String& Name, String value, const String initialValue)
+		void Update_Preference(const PreferenceUpdateType &UpdateType, const String& Name, String value, const String initialValue)
 		{
 			if(nullptr == mp_Preferences) return;
-			assert((UpdateType == "Initialize" || UpdateType == "Load" || UpdateType == "Save" || UpdateType == "Timer") && "Misuse of function");
 
 			unsigned long currentMillis = millis();
 			unsigned long elapsedTime = currentMillis - m_Preferences_Last_Update;
-			if (elapsedTime <= TIMER_TIME && UpdateType.equals("Save"))
+			if (elapsedTime <= TIMER_TIME && UpdateType == PreferenceUpdateType::Save)
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": To early to save preference", Name.c_str());
 				if(false == m_PreferenceTimerActive)
@@ -46,24 +52,24 @@ class PreferencesWrapper: public DataTypeFunctions
 				}
 				return;
 			}
-			if ( UpdateType.equals("Timer") )
+			if ( PreferenceUpdateType::Timer == UpdateType )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", Name.c_str());
 				HandleSave( Name, value );
 				m_PreferenceTimerActive = false;
 				m_Preferences_Last_Update = currentMillis;
 			}
-			else if ( UpdateType.equals("Initialize") )
+			else if ( PreferenceUpdateType::Initialize == UpdateType )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", Name.c_str());
 				HandleSave( Name, initialValue );
 			}
-			else if ( UpdateType.equals("Load") )
+			else if ( PreferenceUpdateType::Load == UpdateType )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", Name.c_str());
 				HandleLoad( Name, value, initialValue );
 			} 
-			else if ( UpdateType.equals("Save") )
+			else if ( PreferenceUpdateType::Save == UpdateType )
 			{
 				ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", Name.c_str());
 				HandleSave( Name, value );
@@ -104,12 +110,12 @@ class PreferencesWrapper: public DataTypeFunctions
 				if (mp_Preferences->isKey(key.c_str()))
 				{
 					ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", key.c_str());
-					Update_Preference("Load", key, value, initialValue);
+					Update_Preference(PreferenceUpdateType::Load, key, value, initialValue);
 				}
 				else
 				{
 					ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", key.c_str());
-					Update_Preference("Initialize", key, value, initialValue);
+					Update_Preference(PreferenceUpdateType::Initialize, key, value, initialValue);
 				}
 			}
 			else
