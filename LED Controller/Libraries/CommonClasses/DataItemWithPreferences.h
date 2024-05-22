@@ -121,7 +121,6 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		{
 			LocalStringDataItem::Setup();
 			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( this->GetName().c_str()
-							   											   , this->GetValueAsString().c_str()
 							   											   , this->GetInitialValueAsString().c_str()
 							   											   , NULL );
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
@@ -194,7 +193,6 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 		{
 			StringDataItem::Setup();
 			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( this->GetName().c_str()
-							   										  	   , this->GetValueAsString().c_str()
 																		   , this->GetInitialValueAsString().c_str()
 																		   , NULL );
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());

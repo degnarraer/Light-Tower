@@ -106,16 +106,16 @@ protected:
     void CreatePreferencesTimer(const String& key, const String& value, const String& initialValue)
     {
         mp_TimerArgs = new PreferencesWrapperTimerArgs(this, key, value, initialValue);
-        esp_timer_create_args_t timerArgs = {
-            .callback = &Static_Update_Preference,
-            .arg = mp_TimerArgs,
-            .name = "Preferences_Timer"
-        };
+        esp_timer_create_args_t timerArgs;
+        timerArgs.callback = &Static_Update_Preference;
+        timerArgs.arg = mp_TimerArgs;
+        timerArgs.name = "Preferences_Timer";
         esp_timer_create(&timerArgs, &m_PreferenceTimer);
     }
 
     void InitializeNVM(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
     {
+        assert(initialValue.length() && "Initial Value must be provided");
         if (mp_Preferences)
         {
             if (mp_Preferences->isKey(key.c_str()))
@@ -137,6 +137,7 @@ protected:
 
     void HandleLoad(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
     {
+        assert(initialValue.length() && "Initial Value must be provided");
         String loadedValue = mp_Preferences->getString(key.c_str(), initialValue.c_str());
         if (loadedValueCallback)
         {
@@ -157,6 +158,7 @@ protected:
 
     void HandleSave(const String& key, const String& saveValue)
     {
+        assert(saveValue.length() && "Save Value must be provided");
         mp_Preferences->putString(key.c_str(), saveValue);
         ESP_LOGI("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Value: \"%s\"", key.c_str(), saveValue.c_str());
     }
