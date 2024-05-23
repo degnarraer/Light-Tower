@@ -701,7 +701,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			return ValueChanged;
 		}
 	protected:
-		virtual bool DataItem_TX_Now()
+		bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
 			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
@@ -710,28 +710,28 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 				{
 					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
-						this->ZeroOutCharArray(mp_Value);
+						ZeroOutCharArray(mp_Value);
 						strcpy(mp_Value, mp_TxValue);
 						ValueUpdated = true;
 						++m_ValueChangeCount;
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
+						CallCallbacks(m_Name.c_str(), mp_Value);
 					}
 				}
 				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
 			}
 			else
 			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", this->m_Name.c_str());
+				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
 			}
 			return ValueUpdated;
 		}
-		virtual bool NewRXValueReceived(void* Object, size_t Count) override 
+		bool NewRXValueReceived(void* Object, size_t Count)
 		{ 
 			bool ValueUpdated = false;
 			char* receivedValue = (char*)Object;
 			if(strcmp(mp_RxValue, receivedValue) != 0)
 			{
-				this->ZeroOutCharArray(mp_RxValue);
+				ZeroOutCharArray(mp_RxValue);
 				strcpy(mp_RxValue, receivedValue);
 				ESP_LOGI( "DataItem: NewRXValueReceived"
 						, "\"%s\" New RX Value Received: \"%s\""
@@ -744,14 +744,14 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					strcpy(mp_Value, mp_RxValue);
 					++m_ValueChangeCount;
 					ValueUpdated = true;
-					this->CallCallbacks(this->m_Name.c_str(), mp_Value);
+					CallCallbacks(m_Name.c_str(), mp_Value);
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
 				ZeroOutCharArray(mp_TxValue);
 				strcpy(mp_TxValue, mp_RxValue);
-				this->DataItem_TX_Now();
+				DataItem_TX_Now();
 			}
 			return ValueUpdated;
 		}

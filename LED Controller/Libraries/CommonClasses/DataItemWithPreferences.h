@@ -47,15 +47,15 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		}
 		virtual ~DataItemWithPreferences()
 		{
-			ESP_LOGI("DataItemWithPreferences::~DataItemWithPreferences()", "\"%s\": Freeing Memory", this->GetName().c_str());
+			ESP_LOGI("DataItemWithPreferences::~DataItemWithPreferences()", "\"%s\": Freeing Memory", this->m_Name.c_str());
 		}
 		virtual void Setup() override
 		{
 			DataItem<T, COUNT>::Setup();
-			this->InitializeNVM( this->GetName().c_str()
+			this->InitializeNVM( this->m_Name.c_str()
 							   , this->GetInitialValueAsString().c_str()
 							   , NULL );
-			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			this->CreatePreferencesTimer(this->m_Name.c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 	protected:
 		bool DataItem_TX_Now()
@@ -64,7 +64,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save
-									   , this->GetName().c_str()
+									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
 									   , NULL );
@@ -120,10 +120,10 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( this->GetName().c_str()
-							   											   , this->GetInitialValueAsString().c_str()
+			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
+							   											   , GetInitialValueAsString().c_str()
 							   											   , NULL );
-			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
 		}
 		
 		bool SetValue(const char* Value, size_t Count)
@@ -132,9 +132,9 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::PreferenceUpdateType::Save
-									   , this->GetName().c_str()
-									   , this->GetValueAsString()
-									   , this->GetInitialValueAsString().c_str()
+									   , m_Name.c_str()
+									   , GetValueAsString()
+									   , GetInitialValueAsString().c_str()
 									   , NULL );
 			}
 			return result;
@@ -189,24 +189,24 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			ESP_LOGI("StringDataItemWithPreferences::~StringDataItemWithPreferences()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 	private:
-		virtual void Setup() override
+		void Setup()
 		{
 			StringDataItem::Setup();
-			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( this->GetName().c_str()
-																		   , this->GetInitialValueAsString().c_str()
+			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
+																		   , GetInitialValueAsString().c_str()
 																		   , NULL );
-			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
 		}
 
-		virtual bool DataItem_TX_Now() override
+		bool DataItem_TX_Now()
 		{
 			bool result = StringDataItem::DataItem_TX_Now();
 			if(result)
 			{
 				this->Update_Preference( PreferenceUpdateType::Save
-									   , this->GetName().c_str()
-									   , this->GetValueAsString().c_str()
-									   , this->GetInitialValueAsString().c_str()
+									   , m_Name.c_str()
+									   , GetValueAsString().c_str()
+									   , GetInitialValueAsString().c_str()
 									   , NULL );
 			}
 			return result;
@@ -218,9 +218,9 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			if(result) 
 			{
 				this->Update_Preference( PreferenceUpdateType::Save
-									   , this->GetName().c_str()
-									   , this->GetValueAsString().c_str()
-									   , this->GetInitialValueAsString().c_str()
+									   , m_Name.c_str()
+									   , GetValueAsString().c_str()
+									   , GetInitialValueAsString().c_str()
 									   , NULL );
 			}
 			return result;
