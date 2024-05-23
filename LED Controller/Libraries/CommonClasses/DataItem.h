@@ -332,31 +332,26 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
-		virtual void Setup() override
+		bool SetValue(const char* value, size_t count)
 		{
-			LocalDataItem::Setup();
-		}
-
-		bool SetValue(const char* Value, size_t Count)
-		{
-			assert(Value != nullptr && "Value must not be null");
+			assert(value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
-			String NewValue = String(Value);
-			assert(NewValue.length() <= Count);
+			String newValue = String(value);
+			assert(newValue.length() <= count);
 			ESP_LOGI( "DataItem: SetValue"
 					, "\"%s\" Set Value3A: \"%s\""
 					, m_Name.c_str()
-					, NewValue.c_str() );
+					, newValue.c_str() );
 					
-			bool ValueChanged = (strcmp(mp_Value, Value) != 0);
-			if(ValueChanged)
+			bool valueChanged = (strcmp(mp_Value, value) != 0);
+			if(valueChanged)
 			{	
 				ZeroOutCharArray(mp_Value);
-				strcpy(mp_Value, Value);
+				strcpy(mp_Value, value);
 				++m_ValueChangeCount;
 				this->CallCallbacks(m_Name.c_str(), mp_Value);
 			}
-			return ValueChanged;
+			return valueChanged;
 		}
 	protected:
 		void ZeroOutCharArray(char* pChar)
@@ -464,10 +459,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
 			}
 		}
+
 		String GetName()
 		{
 			return LocalDataItem<T, COUNT>::GetName();
 		}
+
 		void SetNewTxValue(const T* Value, const size_t Count)
 		{
 			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
@@ -519,29 +516,29 @@ class DataItem: public LocalDataItem<T, COUNT>
 				if(enablePeriodicTX)
 				{
 					esp_timer_start_periodic(m_TxTimer, m_Rate * 1000);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", this->m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", m_Name.c_str());
 				}
 				else
 				{
 					esp_timer_stop(m_TxTimer);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", this->m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", m_Name.c_str());
 				}
 				if(enablePeriodicRX)
 				{
 					m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", this->m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", m_Name.c_str());
 				}
 				else
 				{
 					m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", this->m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", m_Name.c_str());
 				}
 			}
 			else
 			{
 				esp_timer_stop(m_TxTimer);
 				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", this->m_Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
 			}
 		}
 	protected:
@@ -553,7 +550,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 		T *mp_RxValue;
 		T *mp_TxValue;
 		
-		virtual bool DataItem_TX_Now()
+		bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
 			if(m_SerialPortMessageManager.QueueMessageFromData(this->GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
@@ -576,24 +573,24 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			return ValueUpdated;
 		}
-		virtual bool NewRXValueReceived(void* Object, size_t Count)
+		bool NewRXValueReceived(void* Object, size_t Count)
 		{	
 			bool ValueUpdated = false;
 			T* receivedValue = static_cast<T*>(Object);
 			ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX: \"%s\" Value: \"%s\""
-						, this->m_Name.c_str()
-						, this->GetValueAsString().c_str());
+						, m_Name.c_str()
+						, GetValueAsString().c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
-						, this->m_Name.c_str()
-						, this->GetValueAsString().c_str());
+						, m_Name.c_str()
+						, GetValueAsString().c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					LocalDataItem<T, COUNT>::SetValue(mp_RxValue, COUNT);	
+					SetValue(mp_RxValue, COUNT);	
 					ValueUpdated = true;
 				}
 			}
@@ -603,7 +600,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, m_Name.c_str()
-						, this->GetValueAsString().c_str());
+						, GetValueAsString().c_str());
 				DataItem_TX_Now();
 			}
 			return ValueUpdated;
@@ -704,7 +701,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			return ValueChanged;
 		}
 	protected:
-		virtual bool DataItem_TX_Now() override
+		virtual bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
 			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))

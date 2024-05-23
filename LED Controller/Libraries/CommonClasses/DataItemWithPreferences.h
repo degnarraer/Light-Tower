@@ -58,7 +58,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 	protected:
-		bool DataItem_TX_Now() override
+		bool DataItem_TX_Now()
 		{
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
@@ -71,7 +71,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			}
 			return result;
 		}
-		virtual bool NewRXValueReceived(void* Object, size_t Count) override
+		bool NewRXValueReceived(void* Object, size_t Count)
 		{
 			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
 			if(result)
@@ -212,7 +212,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 			return result;
 		}
 
-		virtual bool NewRXValueReceived(void* Object, size_t Count) override
+		bool NewRXValueReceived(void* Object, size_t Count)
 		{
 			bool result = StringDataItem::NewRXValueReceived(Object, Count);
 			if(result) 
