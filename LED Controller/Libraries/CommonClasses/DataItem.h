@@ -144,7 +144,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		{
 			if(!mp_Value)
 			{
-				ESP_LOGE("GetValueAsString", "NULL Pointer!");
+				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
 			}
 			return mp_Value;
 		}
@@ -158,7 +158,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "NULL Pointer!");
+				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
 				return T();
 			}
 		}
@@ -198,7 +198,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				stringValue += valueStrings[i] + DIVIDER;
 			}
 			stringValue += valueStrings[COUNT - 1];
-			ESP_LOGI("GetStringValue", "GetStringValue: %s", stringValue.c_str());
+			ESP_LOGI("GetStringValue"
+					, "\"%s\": GetStringValue: %s"
+					, m_Name.c_str()
+					, stringValue.c_str());
 			return true;
 		}
 
@@ -236,7 +239,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			assert(substrings.size() == COUNT && "String did not parse to expected length");
 			for (size_t i = 0; i < COUNT; ++i)
 			{
-				ESP_LOGI("SetValueFromString", "SetValueFromString: %s", substrings[i].c_str());
+				ESP_LOGI("SetValueFromString"
+						, "\"%s\": SetValueFromString: %s"
+						, m_Name.c_str()
+						, substrings[i].c_str());
 				value[i] = decodeFromString(substrings[i]);
 			}
 			return SetValue(value, COUNT);
