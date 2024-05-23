@@ -126,7 +126,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			this->CreatePreferencesTimer(this->GetName().c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 		
-		virtual bool SetValue(const char* Value, size_t Count) override
+		bool SetValue(const char* Value, size_t Count)
 		{
 			bool result = LocalStringDataItem::SetValue(Value, Count);
 			if(result)
