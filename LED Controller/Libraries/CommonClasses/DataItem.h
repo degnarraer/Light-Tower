@@ -566,7 +566,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 						ValueUpdated = true;		
 					}
 				}
-				ESP_LOGI( "DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\""
+				ESP_LOGI( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
+						, this->m_SerialPortMessageManager.GetName().c_str()
 						, this->m_Name.c_str()
 						, this->GetValueAsString().c_str() );
 			}
@@ -580,17 +581,18 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{	
 			bool ValueUpdated = false;
 			T* receivedValue = static_cast<T*>(Object);
-			ESP_LOGD( "DataItem: NewRXValueReceived"
-						, "RX: \"%s\" Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsString().c_str());
+			ESP_LOGI( "DataItem: NewRXValueReceived"
+						, "\"%s\" RX: \"%s\" Value: \"%s\""
+						, this->m_SerialPortMessageManager.GetName().c_str()
+						, this->m_Name.c_str()
+						, this->GetValueAsString().c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsString().c_str());
+						, this->m_Name.c_str()
+						, this->GetValueAsString().c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
 					SetValue(mp_RxValue, COUNT);	
@@ -602,8 +604,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRXValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsString().c_str());
+						, this->m_Name.c_str()
+						, this->GetValueAsString().c_str());
 				DataItem_TX_Now();
 			}
 			return ValueUpdated;

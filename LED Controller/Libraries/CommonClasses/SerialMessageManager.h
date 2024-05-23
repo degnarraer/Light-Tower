@@ -263,6 +263,10 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		void SetupSerialPortMessageManager();
 		bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
 		bool QueueMessage(const String& message);
+		String GetName()
+		{
+			return m_Name;
+		}
 	private:
 		String m_Name;
 		HardwareSerial &m_Serial;
