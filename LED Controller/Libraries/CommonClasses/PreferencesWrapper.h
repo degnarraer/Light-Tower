@@ -115,7 +115,6 @@ protected:
 
     void InitializeNVM(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
     {
-        assert(initialValue.length() && "Initial Value must be provided");
         if (mp_Preferences)
         {
             if (mp_Preferences->isKey(key.c_str()))
@@ -137,7 +136,6 @@ protected:
 
     void HandleLoad(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
     {
-        assert(initialValue.length() && "Initial Value must be provided");
         String loadedValue = mp_Preferences->getString(key.c_str(), initialValue.c_str());
         if (loadedValueCallback)
         {
