@@ -349,7 +349,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				ZeroOutCharArray(mp_Value);
 				strcpy(mp_Value, value);
 				++m_ValueChangeCount;
-				this->CallCallbacks(m_Name.c_str(), mp_Value);
+				CallCallbacks(m_Name.c_str(), mp_Value);
 			}
 			return valueChanged;
 		}
@@ -411,8 +411,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem::~DataItem()", "\"%s\": Freeing Memory", this->GetName().c_str());
 			heap_caps_free(mp_RxValue);
 			heap_caps_free(mp_TxValue);
-			esp_timer_stop(this->m_TxTimer);
-			esp_timer_delete(this->m_TxTimer);
+			esp_timer_stop(m_TxTimer);
+			esp_timer_delete(m_TxTimer);
 			m_SerialPortMessageManager.DeRegisterForSetupCall(this);
 		}
 		void Setup()
@@ -624,7 +624,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			timerArgs.name = "Tx_Timer";
 
 			// Create the timer
-			esp_timer_create(&timerArgs, &this->m_TxTimer);
+			esp_timer_create(&timerArgs, &m_TxTimer);
 		}
 		void DataItem_Periodic_TX()
 		{
