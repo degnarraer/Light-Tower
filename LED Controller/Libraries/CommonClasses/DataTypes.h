@@ -468,14 +468,6 @@ class SoundInputSource
             value = SoundInputSource::FromString(token.c_str());
             return is;
         }
-
-        // Implicit conversion operator to std::string
-        operator String() const
-        {
-            return ToString(value);
-        }
-    private:
-        Value value;
 };
 typedef SoundInputSource::Value SoundInputSource_t;
 
@@ -525,14 +517,6 @@ class SoundOutputSource
             os << SoundOutputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
             return os;
         }
-
-        // Implicit conversion operator to std::string
-        operator String() const
-        {
-            return ToString(value);
-        }
-    private:
-        Value value;
 };
 typedef SoundOutputSource::Value SoundOutputSource_t;
 
@@ -578,14 +562,6 @@ class Mute_State
             os << Mute_State::ToString(value);
             return os;
         }
-
-        // Implicit conversion operator to std::string
-        operator String() const
-        {
-            return ToString(value);
-        }
-    private:
-        Value value;
 };
 typedef Mute_State::Value Mute_State_t;
 
@@ -664,14 +640,6 @@ class SoundState
             os << SoundState::ToString(value);
             return os;
         }
-
-        // Implicit conversion operator to std::string
-        operator String() const
-        {
-            return ToString(value);
-        }
-    private:
-        Value value;
 };
 typedef SoundState::Value SoundState_t;
 
@@ -725,13 +693,6 @@ class Transciever
             return os;
         }
 
-        // Implicit conversion operator to std::string
-        operator String() const
-        {
-            return ToString(value);
-        }
-    private:
-        Value value;
 };
 typedef Transciever::Value Transciever_t;
 
