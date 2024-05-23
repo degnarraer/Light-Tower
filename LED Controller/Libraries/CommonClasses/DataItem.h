@@ -83,9 +83,6 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				if (std::is_same<T, char>::value)
 				{
 					String InitialValue = String((char*)mp_InitialValuePtr);
-					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
-							, m_Name.c_str()
-							, InitialValue.c_str());
 					for (size_t i = 0; i < COUNT; ++i)
 					{
 						char value;
@@ -95,22 +92,22 @@ class LocalDataItem: public NamedCallbackInterface<T>
 							value = '\0';
 						}
 						memcpy(mp_Value+i, &value, sizeof(char));
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
+					this->CallCallbacks(m_Name.c_str(), mp_Value);
 				}
 				else
 				{
-					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
-							, m_Name.c_str()
-							, GetValueAsString().c_str());
 					for (size_t i = 0; i < COUNT; ++i)
 					{
 						memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
-						this->CallCallbacks(m_Name.c_str(), mp_Value);
 						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 					}
+					this->CallCallbacks(m_Name.c_str(), mp_Value);
 				}
+				ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsString().c_str());
 			}
 			else
 			{
@@ -172,7 +169,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return true;
 		}
 		
-		virtual String GetInitialValueAsString()
+		String GetInitialValueAsString()
 		{
 			String value;
 			if(!GetStringInitialValue(value))
@@ -191,17 +188,17 @@ class LocalDataItem: public NamedCallbackInterface<T>
 
 			for (size_t i = 0; i < COUNT; ++i)
 			{
-				valueStrings.push_back(String(mp_Value[i]));
+				valueStrings.push_back(String(mp_Value[i]).c_str());
 			}
 
 			stringValue = "";
 			
-			for (size_t i = 0; i < COUNT - 1; ++i)
+			for (size_t i = 0; i < valueStrings.size() - 1; ++i)
 			{
 				stringValue += valueStrings[i] + DIVIDER;
 			}
 			stringValue += valueStrings[COUNT - 1];
-
+			ESP_LOGI("GetStringValue", "GetStringValue: %s", stringValue.c_str());
 			return true;
 		}
 

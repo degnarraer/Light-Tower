@@ -421,277 +421,317 @@ public:
 
 class SoundInputSource
 {
-public:
-    enum Value
-    {
-        OFF,
-        Microphone,
-        Bluetooth,
-        Count
-    };
-
-    // Function to convert enum to string
-    static String ToString(Value source)
-    {
-        switch (source)
+    public:
+        enum Value
         {
-            case OFF: return "OFF";
-            case Microphone: return "Microphone";
-            case Bluetooth: return "Bluetooth";
-            case Count: return "Count";
-            default: return "Unknown";
+            OFF,
+            Microphone,
+            Bluetooth,
+            Count
+        };
+
+        // Function to convert enum to string
+        static String ToString(Value source)
+        {
+            switch (source)
+            {
+                case OFF: return "OFF";
+                case Microphone: return "Microphone";
+                case Bluetooth: return "Bluetooth";
+                case Count: return "Count";
+                default: return "Unknown";
+            }
         }
-    }
 
-    // Function to convert string to enum
-    static Value FromString(const String& str)
-    {
-        if (str == "OFF") return OFF;
-        if (str == "Microphone") return Microphone;
-        if (str == "Bluetooth") return Bluetooth;
-        if (str == "Count") return Count;
+        // Function to convert string to enum
+        static Value FromString(const String& str)
+        {
+            if (str == "OFF") return OFF;
+            if (str == "Microphone") return Microphone;
+            if (str == "Bluetooth") return Bluetooth;
+            if (str == "Count") return Count;
+            
+            return OFF; // Default or error value
+        }
+
+        // Overload the insertion operator
+        friend std::ostream& operator<<(std::ostream& os, const SoundInputSource::Value& value) {
+            os << SoundInputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
+            return os;
+        }
         
-        return OFF; // Default or error value
-    }
+        // Overload the extraction operator
+        friend std::istream& operator>>(std::istream& is, SoundInputSource::Value& value) 
+        {
+            std::string token;
+            is >> token;
+            value = SoundInputSource::FromString(token.c_str());
+            return is;
+        }
 
-    // Overload the insertion operator
-    friend std::ostream& operator<<(std::ostream& os, const SoundInputSource::Value& value) {
-        os << SoundInputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
-        return os;
-    }
-    
-    // Overload the extraction operator
-	friend std::istream& operator>>(std::istream& is, SoundInputSource::Value& value) 
-	{
-		std::string token;
-		is >> token;
-		value = SoundInputSource::FromString(token.c_str());
-		return is;
-	}
+        // Implicit conversion operator to std::string
+        operator String() const
+        {
+            return ToString(value);
+        }
+    private:
+        Value value;
 };
 typedef SoundInputSource::Value SoundInputSource_t;
 
 class SoundOutputSource
 {
-public:
-    enum Value
-    {
-        OFF,
-        Bluetooth,
-        Count
-    };
-
-    // Function to convert enum to string
-    static String ToString(Value source)
-    {
-        switch (source)
+    public:
+        enum Value
         {
-            case OFF:         return "OFF";
-            case Bluetooth:   return "Bluetooth";
-            case Count:       return "Count";
-            default:          return "Unknown";
+            OFF,
+            Bluetooth,
+            Count
+        };
+
+        // Function to convert enum to string
+        static String ToString(Value source)
+        {
+            switch (source)
+            {
+                case OFF:         return "OFF";
+                case Bluetooth:   return "Bluetooth";
+                case Count:       return "Count";
+                default:          return "Unknown";
+            }
         }
-    }
 
-    // Function to convert string to enum
-    static Value FromString(const String& str)
-    {
-        if (str == "OFF") return OFF;
-        if (str == "Bluetooth") return Bluetooth;
-        if (str == "Count") return Count;
+        // Function to convert string to enum
+        static Value FromString(const String& str)
+        {
+            if (str == "OFF") return OFF;
+            if (str == "Bluetooth") return Bluetooth;
+            if (str == "Count") return Count;
+            
+            return OFF; // Default or error value
+        }
+
+        // Overload the insertion operator
+        friend std::istream& operator>>(std::istream& is, SoundOutputSource::Value& value) 
+        {
+            std::string token;
+            is >> token;
+            value = SoundOutputSource::FromString(token.c_str());
+            return is;
+        }
         
-        return OFF; // Default or error value
-    }
+        // Overload the extraction operator
+        friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
+            os << SoundOutputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
+            return os;
+        }
 
-    // Overload the insertion operator
-	friend std::istream& operator>>(std::istream& is, SoundOutputSource::Value& value) 
-	{
-		std::string token;
-		is >> token;
-		value = SoundOutputSource::FromString(token.c_str());
-		return is;
-	}
-    
-    // Overload the extraction operator
-    friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
-        os << SoundOutputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
-        return os;
-    }
+        // Implicit conversion operator to std::string
+        operator String() const
+        {
+            return ToString(value);
+        }
+    private:
+        Value value;
 };
 typedef SoundOutputSource::Value SoundOutputSource_t;
 
 class Mute_State
 {
-public:
-    enum Value
-    {
-        Mute_State_Un_Muted = 0,
-        Mute_State_Muted
-    };
-
-    // Function to convert enum to string
-    static String ToString(Value state)
-    {
-        switch (state)
+    public:
+        enum Value
         {
-            case Mute_State_Un_Muted: return "Mute_State_Un_Muted";
-            case Mute_State_Muted: return "Mute_State_Muted";
-            default: return "Unknown";
+            Mute_State_Un_Muted = 0,
+            Mute_State_Muted
+        };
+
+        // Function to convert enum to string
+        static String ToString(Value state)
+        {
+            switch (state)
+            {
+                case Mute_State_Un_Muted: return "Mute_State_Un_Muted";
+                case Mute_State_Muted: return "Mute_State_Muted";
+                default: return "Unknown";
+            }
         }
-    }
 
-    // Function to convert string to enum
-    static Value FromString(const String& str)
-    {
-        if (str == "Mute_State_Un_Muted") return Mute_State_Un_Muted;
-        if (str == "Mute_State_Muted") return Mute_State_Muted;
-        return Mute_State_Un_Muted;
-    }
+        // Function to convert string to enum
+        static Value FromString(const String& str)
+        {
+            if (str == "Mute_State_Un_Muted") return Mute_State_Un_Muted;
+            if (str == "Mute_State_Muted") return Mute_State_Muted;
+            return Mute_State_Un_Muted;
+        }
 
-    // Overload the insertion operator
-	friend std::istream& operator>>(std::istream& is, Mute_State::Value& value) 
-	{
-		std::string token;
-		is >> token;
-		value = Mute_State::FromString(token.c_str());
-		return is;
-	}
-    
-    // Overload the extraction operator
-    friend std::ostream& operator<<(std::ostream& os, const Mute_State::Value& value) {
-        os << Mute_State::ToString(value);
-        return os;
-    }
+        // Overload the insertion operator
+        friend std::istream& operator>>(std::istream& is, Mute_State::Value& value) 
+        {
+            std::string token;
+            is >> token;
+            value = Mute_State::FromString(token.c_str());
+            return is;
+        }
+        
+        // Overload the extraction operator
+        friend std::ostream& operator<<(std::ostream& os, const Mute_State::Value& value) {
+            os << Mute_State::ToString(value);
+            return os;
+        }
+
+        // Implicit conversion operator to std::string
+        operator String() const
+        {
+            return ToString(value);
+        }
+    private:
+        Value value;
 };
 typedef Mute_State::Value Mute_State_t;
 
 class SoundState
 {
-public:
-    enum Value
-    {
-        LastingSilenceDetected = 0,
-        SilenceDetected = 1,
-        Sound_Level1_Detected = 2,
-        Sound_Level2_Detected = 3,
-        Sound_Level3_Detected = 4,
-        Sound_Level4_Detected = 5,
-        Sound_Level5_Detected = 6,
-        Sound_Level6_Detected = 7,
-        Sound_Level7_Detected = 8,
-        Sound_Level8_Detected = 9,
-        Sound_Level9_Detected = 10,
-        Sound_Level10_Detected = 11,
-        Sound_Level11_Detected = 12
-    };
-
-    // Function to convert enum to string
-    static String ToString(Value state)
-    {
-        switch (state)
+    public:
+        enum Value
         {
-            case LastingSilenceDetected:    return "LastingSilenceDetected";
-            case SilenceDetected:           return "SilenceDetected";
-            case Sound_Level1_Detected:     return "Sound_Level1_Detected";
-            case Sound_Level2_Detected:     return "Sound_Level2_Detected";
-            case Sound_Level3_Detected:     return "Sound_Level3_Detected";
-            case Sound_Level4_Detected:     return "Sound_Level4_Detected";
-            case Sound_Level5_Detected:     return "Sound_Level5_Detected";
-            case Sound_Level6_Detected:     return "Sound_Level6_Detected";
-            case Sound_Level7_Detected:     return "Sound_Level7_Detected";
-            case Sound_Level8_Detected:     return "Sound_Level8_Detected";
-            case Sound_Level9_Detected:     return "Sound_Level9_Detected";
-            case Sound_Level10_Detected:    return "Sound_Level10_Detected";
-            case Sound_Level11_Detected:    return "Sound_Level11_Detected";
-            default:                        return "Unknown";
+            LastingSilenceDetected = 0,
+            SilenceDetected = 1,
+            Sound_Level1_Detected = 2,
+            Sound_Level2_Detected = 3,
+            Sound_Level3_Detected = 4,
+            Sound_Level4_Detected = 5,
+            Sound_Level5_Detected = 6,
+            Sound_Level6_Detected = 7,
+            Sound_Level7_Detected = 8,
+            Sound_Level8_Detected = 9,
+            Sound_Level9_Detected = 10,
+            Sound_Level10_Detected = 11,
+            Sound_Level11_Detected = 12
+        };
+
+        // Function to convert enum to string
+        static String ToString(Value state)
+        {
+            switch (state)
+            {
+                case LastingSilenceDetected:    return "LastingSilenceDetected";
+                case SilenceDetected:           return "SilenceDetected";
+                case Sound_Level1_Detected:     return "Sound_Level1_Detected";
+                case Sound_Level2_Detected:     return "Sound_Level2_Detected";
+                case Sound_Level3_Detected:     return "Sound_Level3_Detected";
+                case Sound_Level4_Detected:     return "Sound_Level4_Detected";
+                case Sound_Level5_Detected:     return "Sound_Level5_Detected";
+                case Sound_Level6_Detected:     return "Sound_Level6_Detected";
+                case Sound_Level7_Detected:     return "Sound_Level7_Detected";
+                case Sound_Level8_Detected:     return "Sound_Level8_Detected";
+                case Sound_Level9_Detected:     return "Sound_Level9_Detected";
+                case Sound_Level10_Detected:    return "Sound_Level10_Detected";
+                case Sound_Level11_Detected:    return "Sound_Level11_Detected";
+                default:                        return "Unknown";
+            }
         }
-    }
 
-    // Function to convert string to enum
-    static Value FromString(const String& str)
-    {
-        if (str == "LastingSilenceDetected")    return LastingSilenceDetected;
-        if (str == "SilenceDetected")           return SilenceDetected;
-        if (str == "Sound_Level1_Detected")     return Sound_Level1_Detected;
-        if (str == "Sound_Level2_Detected")     return Sound_Level2_Detected;
-        if (str == "Sound_Level3_Detected")     return Sound_Level3_Detected;
-        if (str == "Sound_Level4_Detected")     return Sound_Level4_Detected;
-        if (str == "Sound_Level5_Detected")     return Sound_Level5_Detected;
-        if (str == "Sound_Level6_Detected")     return Sound_Level6_Detected;
-        if (str == "Sound_Level7_Detected")     return Sound_Level7_Detected;
-        if (str == "Sound_Level8_Detected")     return Sound_Level8_Detected;
-        if (str == "Sound_Level9_Detected")     return Sound_Level9_Detected;
-        if (str == "Sound_Level10_Detected")    return Sound_Level10_Detected;
-        if (str == "Sound_Level11_Detected")    return Sound_Level11_Detected;
-        return  LastingSilenceDetected;
-    }
+        // Function to convert string to enum
+        static Value FromString(const String& str)
+        {
+            if (str == "LastingSilenceDetected")    return LastingSilenceDetected;
+            if (str == "SilenceDetected")           return SilenceDetected;
+            if (str == "Sound_Level1_Detected")     return Sound_Level1_Detected;
+            if (str == "Sound_Level2_Detected")     return Sound_Level2_Detected;
+            if (str == "Sound_Level3_Detected")     return Sound_Level3_Detected;
+            if (str == "Sound_Level4_Detected")     return Sound_Level4_Detected;
+            if (str == "Sound_Level5_Detected")     return Sound_Level5_Detected;
+            if (str == "Sound_Level6_Detected")     return Sound_Level6_Detected;
+            if (str == "Sound_Level7_Detected")     return Sound_Level7_Detected;
+            if (str == "Sound_Level8_Detected")     return Sound_Level8_Detected;
+            if (str == "Sound_Level9_Detected")     return Sound_Level9_Detected;
+            if (str == "Sound_Level10_Detected")    return Sound_Level10_Detected;
+            if (str == "Sound_Level11_Detected")    return Sound_Level11_Detected;
+            return  LastingSilenceDetected;
+        }
 
-    // Overload the insertion operator
-	friend std::istream& operator>>(std::istream& is, SoundState::Value& value) 
-	{
-		std::string token;
-		is >> token;
-		value = SoundState::FromString(token.c_str());
-		return is;
-	}
-    
-    // Overload the extraction operator
-    friend std::ostream& operator<<(std::ostream& os, const SoundState::Value& value) {
-        os << SoundState::ToString(value);
-        return os;
-    }
+        // Overload the insertion operator
+        friend std::istream& operator>>(std::istream& is, SoundState::Value& value) 
+        {
+            std::string token;
+            is >> token;
+            value = SoundState::FromString(token.c_str());
+            return is;
+        }
+        
+        // Overload the extraction operator
+        friend std::ostream& operator<<(std::ostream& os, const SoundState::Value& value) {
+            os << SoundState::ToString(value);
+            return os;
+        }
+
+        // Implicit conversion operator to std::string
+        operator String() const
+        {
+            return ToString(value);
+        }
+    private:
+        Value value;
 };
 typedef SoundState::Value SoundState_t;
 
 class Transciever
 {
-public:
-    enum Value
-    {
-        Transciever_None,
-        Transciever_TX,
-        Transciever_RX,
-        Transciever_TXRX
-    };
-
-    // Function to convert enum to string
-    static String ToString(Value transciever)
-    {
-        switch (transciever)
+    public:
+        enum Value
         {
-            case Transciever_None: return "Transciever_None";
-            case Transciever_TX: return "Transciever_TX";
-            case Transciever_RX: return "Transciever_RX";
-            case Transciever_TXRX: return "Transciever_TXRX";
-            default: return "Unknown";
+            Transciever_None,
+            Transciever_TX,
+            Transciever_RX,
+            Transciever_TXRX
+        };
+
+        // Function to convert enum to string
+        static String ToString(Value transciever)
+        {
+            switch (transciever)
+            {
+                case Transciever_None: return "Transciever_None";
+                case Transciever_TX: return "Transciever_TX";
+                case Transciever_RX: return "Transciever_RX";
+                case Transciever_TXRX: return "Transciever_TXRX";
+                default: return "Unknown";
+            }
         }
-    }
 
-    // Function to convert string to enum
-    static Value FromString(const String& str)
-    {
-        if (str == "Transciever_None") return Transciever_None;
-        if (str == "Transciever_TX") return Transciever_TX;
-        if (str == "Transciever_RX") return Transciever_RX;
-        if (str == "Transciever_TXRX") return Transciever_TXRX;
+        // Function to convert string to enum
+        static Value FromString(const String& str)
+        {
+            if (str == "Transciever_None") return Transciever_None;
+            if (str == "Transciever_TX") return Transciever_TX;
+            if (str == "Transciever_RX") return Transciever_RX;
+            if (str == "Transciever_TXRX") return Transciever_TXRX;
+            
+            return Transciever_None; // Default or error value
+        }
+
+        // Overload the insertion operator
+        friend std::istream& operator>>(std::istream& is, Transciever::Value& value) 
+        {
+            std::string token;
+            is >> token;
+            value = Transciever::FromString(token.c_str());
+            return is;
+        }
         
-        return Transciever_None; // Default or error value
-    }
+        // Overload the extraction operator
+        friend std::ostream& operator<<(std::ostream& os, const Transciever::Value& value) {
+            os << Transciever::ToString(value);
+            return os;
+        }
 
-    // Overload the insertion operator
-	friend std::istream& operator>>(std::istream& is, Transciever::Value& value) 
-	{
-		std::string token;
-		is >> token;
-		value = Transciever::FromString(token.c_str());
-		return is;
-	}
-    
-    // Overload the extraction operator
-    friend std::ostream& operator<<(std::ostream& os, const Transciever::Value& value) {
-        os << Transciever::ToString(value);
-        return os;
-    }
+        // Implicit conversion operator to std::string
+        operator String() const
+        {
+            return ToString(value);
+        }
+    private:
+        Value value;
 };
 typedef Transciever::Value Transciever_t;
 
@@ -821,6 +861,14 @@ public:
         os << ConnectionStatus::ToString(value);
         return os;
     }
+
+    // Implicit conversion operator to std::string
+    operator String() const
+    {
+        return ToString(value);
+    }
+private:
+    Value value;
 };
 typedef ConnectionStatus::Value ConnectionStatus_t;
 

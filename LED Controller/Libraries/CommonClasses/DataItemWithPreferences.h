@@ -77,9 +77,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save
-									   , LocalDataItem<T, COUNT>::GetName().c_str()
-									   , LocalDataItem<T, COUNT>::GetValueAsString().c_str()
-									   , LocalDataItem<T, COUNT>::GetInitialValueAsString().c_str()
+									   , this->m_Name.c_str()
+									   , this->GetValueAsString().c_str()
+									   , this->GetInitialValueAsString().c_str()
 									   , NULL );
 			}
 			return result;

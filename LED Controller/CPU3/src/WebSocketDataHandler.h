@@ -54,7 +54,7 @@ class WebSocketDataProcessor
                           : m_WebServer(webServer)
                           , m_WebSocket(webSocket)
     {
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   100000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
     }
     virtual ~WebSocketDataProcessor()
     {
