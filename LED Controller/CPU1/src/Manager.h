@@ -89,6 +89,8 @@ class Manager: public NamedItem
       "DISCONNECTING"
     };
 
+    ValidValues_t validBoolValues = {"0", "1"};
+
     struct CallbackArguments 
     {
       void* arg1;
@@ -136,7 +138,8 @@ class Manager: public NamedItem
                                                                                                                       , 0
                                                                                                                       , &m_Preferences
                                                                                                                       , m_CPU3SerialPortMessageManager
-                                                                                                                      , &m_SoundInputSource_Callback );
+                                                                                                                      , &m_SoundInputSource_Callback
+                                                                                                                      , NULL );
     static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -194,7 +197,8 @@ class Manager: public NamedItem
                                                                                            , 0
                                                                                            , &m_Preferences
                                                                                            , m_CPU3SerialPortMessageManager
-                                                                                           , NULL);
+                                                                                           , NULL
+                                                                                           , &validBoolValues );
     static void SinkAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -281,7 +285,8 @@ class Manager: public NamedItem
                                                                                              , 0
                                                                                              , &m_Preferences
                                                                                              , m_CPU3SerialPortMessageManager
-                                                                                             , NULL);
+                                                                                             , NULL
+                                                                                             , &validBoolValues );
 
     //Bluetooth Sink Connection Status
     const ConnectionStatus_t m_SinkConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;

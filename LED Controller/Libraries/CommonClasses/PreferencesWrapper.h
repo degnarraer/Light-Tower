@@ -4,7 +4,9 @@
 #define TIMER_TIME 10000UL
 #define TIMER_BUFFER 1000UL
 
-template <typename T, size_t COUNT>
+typedef const std::vector<String> ValidValues_t;
+
+template <size_t COUNT>
 class PreferencesWrapper : public DataTypeFunctions
 {
 public:
@@ -19,10 +21,10 @@ public:
 
     struct PreferencesWrapperTimerArgs
     {
-        PreferencesWrapperTimerArgs(PreferencesWrapper<T, COUNT>* preferenceWrapper, const String& name, String value, const String& initialValue)
+        PreferencesWrapperTimerArgs(PreferencesWrapper<COUNT>* preferenceWrapper, const String& name, String value, const String& initialValue)
             : PreferenceWrapper(preferenceWrapper), Name(name), Value(value), InitialValue(initialValue) {}
 
-        PreferencesWrapper<T, COUNT>* PreferenceWrapper;
+        PreferencesWrapper<COUNT>* PreferenceWrapper;
         String Name;
         String Value;
         String InitialValue;
@@ -30,6 +32,14 @@ public:
 
     PreferencesWrapper(Preferences* preferences)
         : mp_Preferences(preferences)
+		, mp_TimerArgs(nullptr)
+		, m_PreferenceTimer(nullptr)
+		, m_Preferences_Last_Update(0)
+		, m_PreferenceTimerActive(false) {}
+
+    PreferencesWrapper(Preferences* preferences, ValidValues_t *validValues)
+        : mp_Preferences(preferences)
+        , mp_ValidValues(validValues)
 		, mp_TimerArgs(nullptr)
 		, m_PreferenceTimer(nullptr)
 		, m_Preferences_Last_Update(0)
@@ -46,7 +56,7 @@ public:
     static void Static_Update_Preference(void* arg)
     {
         PreferencesWrapperTimerArgs* timerArgsPtr = static_cast<PreferencesWrapperTimerArgs*>(arg);
-        PreferencesWrapper<T, COUNT>* aPreferenceWrapper = timerArgsPtr->PreferenceWrapper;
+        PreferencesWrapper<COUNT>* aPreferenceWrapper = timerArgsPtr->PreferenceWrapper;
         if (aPreferenceWrapper)
         {
             aPreferenceWrapper->Update_Preference(PreferenceUpdateType::Timer, timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue, nullptr);
@@ -137,15 +147,28 @@ protected:
     void HandleLoad(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
     {
         String loadedValue = mp_Preferences->getString(key.c_str(), initialValue.c_str());
+        bool validValue = true;
         if (loadedValueCallback)
         {
-            if (loadedValueCallback(loadedValue))
+            if(mp_ValidValues)
             {
-                ESP_LOGI("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                auto it = std::find(mp_ValidValues->begin(), mp_ValidValues->end(), loadedValue);
+                if (mp_ValidValues->end() == it) validValue = false;
+            }
+            if(validValue)
+            {
+                if (loadedValueCallback(loadedValue))
+                {
+                    ESP_LOGI("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                }
+                else
+                {
+                    ESP_LOGE("HandleLoad", "Failed to Load Value!");
+                }
             }
             else
             {
-                ESP_LOGE("HandleLoad", "Failed to Load Value!");
+                ESP_LOGE("HandleLoad", "Invalid Value!");
             }
         }
         else
@@ -163,6 +186,7 @@ protected:
 
 private:
     Preferences* mp_Preferences;
+    ValidValues_t *mp_ValidValues;
     PreferencesWrapperTimerArgs* mp_TimerArgs;
     esp_timer_handle_t m_PreferenceTimer;
     uint64_t m_Preferences_Last_Update;

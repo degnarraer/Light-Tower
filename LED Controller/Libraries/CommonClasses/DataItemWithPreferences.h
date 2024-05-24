@@ -4,7 +4,7 @@
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
-							 , public PreferencesWrapper<T, COUNT>
+							 , public PreferencesWrapper<COUNT>
 {
 	public:
 		DataItemWithPreferences( const String name
@@ -22,7 +22,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback )
-							   , PreferencesWrapper<T, COUNT>(preferences)
+							   , PreferencesWrapper<COUNT>(preferences)
 
 		{
 		}
@@ -42,7 +42,50 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , rate
 												   , serialPortMessageManager
 												   , namedCallback )
-							   , PreferencesWrapper<T, COUNT>(preferences)
+							   , PreferencesWrapper<COUNT>(preferences)
+		{
+		}
+
+		DataItemWithPreferences( const String name
+							   , const T* initialValue
+							   , const RxTxType_t rxTxType
+							   , const UpdateStoreType_t updateStoreType
+							   , const uint16_t rate
+							   , Preferences *preferences
+							   , SerialPortMessageManager &serialPortMessageManager
+							   , NamedCallback_t *namedCallback
+							   , ValidValues_t *validValues )
+							   : DataItem<T, COUNT>( name
+							   					   , initialValue
+							   					   , rxTxType
+							   					   , updateStoreType
+							   					   , rate
+							   					   , serialPortMessageManager
+							   					   , namedCallback )
+							   , PreferencesWrapper<COUNT>(preferences, validValues)
+							   , mp_ValidValues(validValues)
+
+		{
+		}
+							   
+		DataItemWithPreferences( const String name
+							   , const T& initialValue
+							   , const RxTxType_t rxTxType
+							   , const UpdateStoreType_t updateStoreType
+							   , const uint16_t rate
+							   , Preferences *preferences
+							   , SerialPortMessageManager &serialPortMessageManager
+							   , NamedCallback_t *namedCallback
+							   , ValidValues_t *validValues )
+							   : DataItem<T, COUNT>( name
+												   , initialValue
+												   , rxTxType
+												   , updateStoreType
+												   , rate
+												   , serialPortMessageManager
+												   , namedCallback )
+							   , PreferencesWrapper<COUNT>(preferences, validValues)
+							   , mp_ValidValues(validValues)
 		{
 		}
 		virtual ~DataItemWithPreferences()
@@ -63,7 +106,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference( PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save
+				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save
 									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
@@ -76,7 +119,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference( PreferencesWrapper<T, COUNT>::PreferenceUpdateType::Save
+				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save
 									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
@@ -84,10 +127,12 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			}
 			return result;
 		}
+	private:
+		ValidValues_t *mp_ValidValues;
 };
 
 class LocalStringDataItemWithPreferences: public LocalStringDataItem
-							 			, public PreferencesWrapper<char, DATAITEM_STRING_LENGTH>
+							 			, public PreferencesWrapper<DATAITEM_STRING_LENGTH>
 {
 	public:
 		LocalStringDataItemWithPreferences( const String name
@@ -96,7 +141,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 						   , SetupCallerInterface *setupCallerInterface
 					 	   , NamedCallback_t *namedCallback )
 						   : LocalStringDataItem( name, initialValue, namedCallback)
-						   , PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
+						   , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
 		{
 			setupCallerInterface->RegisterForSetupCall(this);
 		}
@@ -107,7 +152,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 						   				  , SetupCallerInterface *setupCallerInterface
 					 	   				  , NamedCallback_t *namedCallback )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback)
-						   				  , PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
+						   				  , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
 		{
 			setupCallerInterface->RegisterForSetupCall(this);
 		}
@@ -120,7 +165,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
+			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
 							   											   , GetInitialValueAsString().c_str()
 							   											   , NULL );
 			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
@@ -131,7 +176,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			bool result = LocalStringDataItem::SetValue(Value, Count);
 			if(result)
 			{
-				this->Update_Preference( PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::PreferenceUpdateType::Save
+				this->Update_Preference( PreferencesWrapper<DATAITEM_STRING_LENGTH>::PreferenceUpdateType::Save
 									   , m_Name.c_str()
 									   , GetValueAsString()
 									   , GetInitialValueAsString().c_str()
@@ -141,7 +186,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		}
 };
 
-class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_STRING_LENGTH>
+class StringDataItemWithPreferences: public PreferencesWrapper<DATAITEM_STRING_LENGTH>
 								   , public StringDataItem
 {
 	public:
@@ -153,7 +198,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager
 									 , NamedCallback_t *namedCallback )
-								     : PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
+								     : PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
 									 , StringDataItem( name
 													 , initialValue
 													 , rxTxType
@@ -172,7 +217,7 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager 
 									 , NamedCallback_t *namedCallback)
-								     : PreferencesWrapper<char, DATAITEM_STRING_LENGTH>(preferences)
+								     : PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
 									 , StringDataItem( name
 													 , initialValue
 													 , rxTxType
@@ -192,9 +237,9 @@ class StringDataItemWithPreferences: public PreferencesWrapper<char, DATAITEM_ST
 		void Setup()
 		{
 			StringDataItem::Setup();
-			PreferencesWrapper<char, DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
-																		   , GetInitialValueAsString().c_str()
-																		   , NULL );
+			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
+																	 , GetInitialValueAsString().c_str()
+																	 , NULL );
 			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
 		}
 

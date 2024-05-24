@@ -147,6 +147,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       void* arg1;
       void* arg2;
     };
+
+    ValidValues_t validBoolValues = {"0", "1"};
     
     //WIFI SSID
     CallbackArguments m_SSID_CallbackArgs = { this };
@@ -223,7 +225,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Sink Enable Web Socket Handler", "BT_Sink_Enable", m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
 
 
@@ -231,12 +233,12 @@ class SettingsWebServerManager: public SetupCallerInterface
     const String m_SinkName_InitialValue = "LED Tower of Power";  
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
     WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( "Sink Name Web Socket Handler", "Sink_Name", m_WebSocketDataProcessor, true, true, m_SinkName, false );
-/*
+
     //Source Name
     const String m_SourceName_InitialValue = "";  
     StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue.c_str(), RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
     WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( "Sink Name Web Socket Handler", "Source_Name", m_WebSocketDataProcessor, true, true, m_SourceName, false );
-*/
+
     //Sink Connection State
     const ConnectionStatus_t m_SinkConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SinkConnectionState = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State", m_SinkConnectionState_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, m_CPU1SerialPortMessageManager, NULL);
@@ -244,12 +246,12 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Source Enable Web Socket Handler", "BT_Sink_Auto_ReConnect", m_WebSocketDataProcessor, true, true, m_BluetoothSinkAutoReConnect, false );
     
     //Bluetooth Source Enable
     const bool m_BluetoothSourceEnable_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Source Enable Web Socket Handler", "BT_Source_Enable", m_WebSocketDataProcessor, true, true, m_BluetoothSourceEnable, false );
 
     //Target Device
@@ -382,7 +384,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Bluetooth Source Auto Reconnect Web Socket Handler", "BT_Source_Auto_Reconnect", m_WebSocketDataProcessor, true, true, m_BluetoothSourceAutoReConnect, false );
 
     //Source Connection State
@@ -392,7 +394,7 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Source Reset
     const bool m_SourceReset_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
+    DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( "Source Reset Web Socket Handler", "BT_Source_Reset", m_WebSocketDataProcessor, true, true, m_SourceReset, false );    
     
     void HandleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
