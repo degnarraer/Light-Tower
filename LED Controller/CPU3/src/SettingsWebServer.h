@@ -18,8 +18,7 @@
 #pragma once
 #include "WebSocketDataHandler.h"
 #include "SPIFFS.h"
-#include "DataItem.h"
-#include "DataItemWithPreferences.h"
+#include "DataItem/DataItems.h"
 
 class SettingsWebServerManager: public SetupCallerInterface
 {  
@@ -148,8 +147,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       void* arg2;
     };
 
-    ValidValues_t validBoolValues = {"0", "1"};
-    
+    const ValidStringValues_t validBoolValues = { "0", "1" };
+
     //WIFI SSID
     CallbackArguments m_SSID_CallbackArgs = { this };
     NamedCallback_t m_SSID_Callback = { "SSID Callback"
@@ -172,6 +171,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
         char* pSSID = static_cast<char*>(object);
         ESP_LOGI("SSID_ValueChanged", "SSID Changed: %s", pSSID);
+        //TBD THIS NEED COMPLETED
       }
     }
 
@@ -225,7 +225,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, NULL);
     WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Sink Enable Web Socket Handler", "BT_Sink_Enable", m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
 
 
@@ -246,12 +246,12 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, NULL);
     WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( "Source Enable Web Socket Handler", "BT_Sink_Auto_ReConnect", m_WebSocketDataProcessor, true, true, m_BluetoothSinkAutoReConnect, false );
     
     //Bluetooth Source Enable
     const bool m_BluetoothSourceEnable_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, NULL);
     WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Source Enable Web Socket Handler", "BT_Source_Enable", m_WebSocketDataProcessor, true, true, m_BluetoothSourceEnable, false );
 
     //Target Device

@@ -4,10 +4,9 @@
 #define TIMER_TIME 10000UL
 #define TIMER_BUFFER 1000UL
 
-typedef const std::vector<String> ValidValues_t;
-
 template <size_t COUNT>
 class PreferencesWrapper : public DataTypeFunctions
+				         , public ValidValueChecker
 {
 public:
 	bool (*loadedValueCallback)(const String&);
@@ -31,15 +30,16 @@ public:
     };
 
     PreferencesWrapper(Preferences* preferences)
-        : mp_Preferences(preferences)
+        : ValidValueChecker()
+        , mp_Preferences(preferences)
 		, mp_TimerArgs(nullptr)
 		, m_PreferenceTimer(nullptr)
 		, m_Preferences_Last_Update(0)
 		, m_PreferenceTimerActive(false) {}
 
-    PreferencesWrapper(Preferences* preferences, ValidValues_t *validValues)
-        : mp_Preferences(preferences)
-        , mp_ValidValues(validValues)
+    PreferencesWrapper(Preferences* preferences, const ValidStringValues_t *validStringValues)
+        : ValidValueChecker(validStringValues)
+        , mp_Preferences(preferences)
 		, mp_TimerArgs(nullptr)
 		, m_PreferenceTimer(nullptr)
 		, m_Preferences_Last_Update(0)
@@ -147,28 +147,16 @@ protected:
     void HandleLoad(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
     {
         String loadedValue = mp_Preferences->getString(key.c_str(), initialValue.c_str());
-        bool validValue = true;
-        if (loadedValueCallback)
+
+        if (loadedValueCallback && this->IsValidValue(loadedValue))
         {
-            if(mp_ValidValues)
+            if (loadedValueCallback(loadedValue))
             {
-                auto it = std::find(mp_ValidValues->begin(), mp_ValidValues->end(), loadedValue);
-                if (mp_ValidValues->end() == it) validValue = false;
-            }
-            if(validValue)
-            {
-                if (loadedValueCallback(loadedValue))
-                {
-                    ESP_LOGI("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
-                }
-                else
-                {
-                    ESP_LOGE("HandleLoad", "Failed to Load Value!");
-                }
+                ESP_LOGI("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
             }
             else
             {
-                ESP_LOGE("HandleLoad", "Invalid Value!");
+                ESP_LOGE("HandleLoad", "Failed to Load Value!");
             }
         }
         else
@@ -186,7 +174,6 @@ protected:
 
 private:
     Preferences* mp_Preferences;
-    ValidValues_t *mp_ValidValues;
     PreferencesWrapperTimerArgs* mp_TimerArgs;
     esp_timer_handle_t m_PreferenceTimer;
     uint64_t m_Preferences_Last_Update;

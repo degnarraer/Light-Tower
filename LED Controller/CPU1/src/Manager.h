@@ -89,7 +89,7 @@ class Manager: public NamedItem
       "DISCONNECTING"
     };
 
-    ValidValues_t validBoolValues = {"0", "1"};
+    ValidStringValues_t validBoolValues = {"0", "1"};
 
     struct CallbackArguments 
     {
