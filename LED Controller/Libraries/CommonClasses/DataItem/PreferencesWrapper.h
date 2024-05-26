@@ -9,7 +9,7 @@ class PreferencesWrapper : public DataTypeFunctions
 				         , public ValidValueChecker
 {
 public:
-	bool (*loadedValueCallback)(const String&);
+	typedef bool (*LoadedValueCallback_t)(const String&, void* object);
     enum class PreferenceUpdateType
     {
         Initialize,
@@ -59,7 +59,7 @@ public:
         PreferencesWrapper<COUNT>* aPreferenceWrapper = timerArgsPtr->PreferenceWrapper;
         if (aPreferenceWrapper)
         {
-            aPreferenceWrapper->Update_Preference(PreferenceUpdateType::Timer, timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue, nullptr);
+            aPreferenceWrapper->Update_Preference(PreferenceUpdateType::Timer, timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue, nullptr, nullptr);
         }
     }
 
@@ -67,7 +67,8 @@ public:
 						  , const String& name
 						  , const String& saveValue
 						  , const String& initialValue
-						  , bool (*loadedValueCallback)(const String&))
+						  , LoadedValueCallback_t callback
+                          , void* object)
     {
         if (!mp_Preferences) return;
 
@@ -99,7 +100,7 @@ public:
             break;
         case PreferenceUpdateType::Load:
             ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", name.c_str());
-            HandleLoad(name, initialValue, loadedValueCallback);
+            HandleLoad(name, initialValue, callback, object);
             break;
         case PreferenceUpdateType::Save:
             ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", name.c_str());
@@ -123,19 +124,19 @@ protected:
         esp_timer_create(&timerArgs, &m_PreferenceTimer);
     }
 
-    void InitializeNVM(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
+    void InitializeNVM(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
         if (mp_Preferences)
         {
             if (mp_Preferences->isKey(key.c_str()))
             {
                 ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", key.c_str());
-                Update_Preference(PreferenceUpdateType::Load, key, initialValue, initialValue, loadedValueCallback);
+                Update_Preference(PreferenceUpdateType::Load, key, initialValue, initialValue, callback, object);
             }
             else
             {
                 ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", key.c_str());
-                Update_Preference(PreferenceUpdateType::Initialize, key, initialValue, initialValue, loadedValueCallback);
+                Update_Preference(PreferenceUpdateType::Initialize, key, initialValue, initialValue, callback, object);
             }
         }
         else
@@ -144,13 +145,13 @@ protected:
         }
     }
 
-    void HandleLoad(const String& key, const String& initialValue, bool (*loadedValueCallback)(const String&))
+    void HandleLoad(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
         String loadedValue = mp_Preferences->getString(key.c_str(), initialValue.c_str());
 
-        if (loadedValueCallback && this->IsValidValue(loadedValue))
+        if (callback && object && this->IsValidValue(loadedValue))
         {
-            if (loadedValueCallback(loadedValue))
+            if (callback(loadedValue, object))
             {
                 ESP_LOGI("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
             }
@@ -161,7 +162,7 @@ protected:
         }
         else
         {
-            ESP_LOGE("HandleLoad", "Null Callback Pointer!");
+            ESP_LOGE("HandleLoad", "Null Callback Pointers!");
         }
     }
 

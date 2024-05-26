@@ -201,7 +201,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
 			SetValue(Value, Count);
 		}
-
+		
+		bool SetValueFromString(const String& stringValue)
+		{
+			return LocalDataItem<T, COUNT>::SetValueFromString(stringValue);
+		}
+		
 		bool SetValue(const T *value, size_t count)
 		{
 			bool valueChanged = LocalDataItem<T, COUNT>::SetValue(value, count);

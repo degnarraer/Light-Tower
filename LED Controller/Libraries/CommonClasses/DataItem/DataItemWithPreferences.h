@@ -117,7 +117,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			DataItem<T, COUNT>::Setup();
 			this->InitializeNVM( this->m_Name.c_str()
 							   , this->GetInitialValueAsString().c_str()
-							   , NULL );
+							   , this->StaticSetValueFromString
+							   , this );
 			this->CreatePreferencesTimer(this->m_Name.c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
 		}
 	protected:
@@ -131,6 +132,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
+									   , NULL
 									   , NULL );
 			}
 			return result;
@@ -145,6 +147,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
+									   , NULL
 									   , NULL );
 			}
 			return result;

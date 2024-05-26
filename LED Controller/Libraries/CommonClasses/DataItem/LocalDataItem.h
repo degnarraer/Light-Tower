@@ -246,6 +246,26 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return value;
 		}
 
+		static bool StaticSetValueFromString(const String& stringValue, void* objectptr)
+		{
+			if(objectptr)
+			{
+				LocalDataItem<T, COUNT>* object = static_cast<LocalDataItem<T, COUNT>*>(objectptr);
+				if(object)
+				{
+					return object->SetValueFromString(stringValue);
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+            	ESP_LOGE("StaticSetValueFromString", "Null objectptr!");
+			}
+		}
+
 		bool SetValueFromString(const String& stringValue)
 		{
 			T value[COUNT];

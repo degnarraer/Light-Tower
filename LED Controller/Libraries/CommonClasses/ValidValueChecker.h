@@ -36,13 +36,19 @@ public:
     virtual ~ValidValueChecker() {}
 
     bool IsValidValue(String value) {
-        if (mp_ValidStrings) {
-            for (const String& validValue : *mp_ValidStrings) {
-                if (value.equals(validValue)) {
+        if (mp_ValidStrings)
+        {
+            for (const String& validValue : *mp_ValidStrings)
+            {
+                if (value.equals(validValue))
+                {
                     return true;
                 }
             }
-        } else {
+            return false;
+        } 
+        else
+        {
             return true;
         }
     }

@@ -59,7 +59,8 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			LocalStringDataItem::Setup();
 			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
 							   											   , GetInitialValueAsString().c_str()
-							   											   , NULL );
+							   											   , NULL
+																		   , NULL );
 			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
 		}
 		
@@ -72,6 +73,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 									   , m_Name.c_str()
 									   , GetValueAsString()
 									   , GetInitialValueAsString().c_str()
+									   , NULL
 									   , NULL );
 			}
 			return result;
@@ -131,6 +133,7 @@ class StringDataItemWithPreferences: public StringDataItem
 			StringDataItem::Setup();
 			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
 																	 , GetInitialValueAsString().c_str()
+																	 , NULL 
 																	 , NULL );
 			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
 		}
@@ -144,6 +147,7 @@ class StringDataItemWithPreferences: public StringDataItem
 									   , m_Name.c_str()
 									   , GetValueAsString().c_str()
 									   , GetInitialValueAsString().c_str()
+									   , NULL
 									   , NULL );
 			}
 			return result;
@@ -158,6 +162,7 @@ class StringDataItemWithPreferences: public StringDataItem
 									   , m_Name.c_str()
 									   , GetValueAsString().c_str()
 									   , GetInitialValueAsString().c_str()
+									   , NULL
 									   , NULL );
 			}
 			return result;
