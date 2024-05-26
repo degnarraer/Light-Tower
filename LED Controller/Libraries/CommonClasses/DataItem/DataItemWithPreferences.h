@@ -83,7 +83,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , namedCallback
 												   , validStringValues )
 							   , PreferencesWrapper<COUNT>(preferences, validStringValues)
-
 		{
 		}
 							   
