@@ -27,8 +27,7 @@
 #include "AudioBuffer.h"
 #include <Preferences.h>
 #include "HardwareSerial.h"
-#include "DataItem.h"
-#include "DataItemWithPreferences.h"
+#include "DataItem/DataItems.h"
 
 class Manager: public NamedItem
              , public I2S_Device_Callback

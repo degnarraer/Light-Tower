@@ -262,7 +262,8 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-            	ESP_LOGE("StaticSetValueFromString", "Null objectptr!");
+            	ESP_LOGE("StaticSetValueFromString", "Null Object Pointer!");
+				return false;
 			}
 		}
 
@@ -272,17 +273,24 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			std::vector<String> substrings;
 			size_t start = 0;
 			size_t end = stringValue.indexOf(ENCODE_DIVIDER);
-			while (end != -1)
+			 if (end == -1)
 			{
-				substrings.push_back(stringValue.substring(start, end - start));
-				start = end + 1;
-				end = stringValue.indexOf(ENCODE_DIVIDER, start);
+				substrings.push_back(stringValue);
+			}
+			else
+			{
+				while (end != -1)
+				{
+					substrings.push_back(stringValue.substring(start, end - start));
+					start = end + 1;
+					end = stringValue.indexOf(ENCODE_DIVIDER, start);
+				}
 			}
 			assert(substrings.size() == COUNT && "String did not parse to expected length");
 			for (size_t i = 0; i < COUNT; ++i)
 			{
 				ESP_LOGI("SetValueFromString"
-						, "\"%s\": SetValueFromString: %s"
+						, "\"%s\": String Value: \"%s\""
 						, m_Name.c_str()
 						, substrings[i].c_str());
 				

@@ -73,8 +73,8 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 									   , m_Name.c_str()
 									   , GetValueAsString()
 									   , GetInitialValueAsString().c_str()
-									   , NULL
-									   , NULL );
+									   , this->StaticSetValueFromString
+									   , this );
 			}
 			return result;
 		}
@@ -147,8 +147,8 @@ class StringDataItemWithPreferences: public StringDataItem
 									   , m_Name.c_str()
 									   , GetValueAsString().c_str()
 									   , GetInitialValueAsString().c_str()
-									   , NULL
-									   , NULL );
+									   , this->StaticSetValueFromString
+									   , this );
 			}
 			return result;
 		}
@@ -162,8 +162,8 @@ class StringDataItemWithPreferences: public StringDataItem
 									   , m_Name.c_str()
 									   , GetValueAsString().c_str()
 									   , GetInitialValueAsString().c_str()
-									   , NULL
-									   , NULL );
+									   , this->StaticSetValueFromString
+									   , this );
 			}
 			return result;
 		}

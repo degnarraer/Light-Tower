@@ -27,6 +27,8 @@ public:
         String Name;
         String Value;
         String InitialValue;
+        LoadedValueCallback_t Callback;
+        void* Object;
     };
 
     PreferencesWrapper(Preferences* preferences)
@@ -68,7 +70,7 @@ public:
 						  , const String& saveValue
 						  , const String& initialValue
 						  , LoadedValueCallback_t callback
-                          , void* object)
+                          , void* object )
     {
         if (!mp_Preferences) return;
 
@@ -157,12 +159,12 @@ protected:
             }
             else
             {
-                ESP_LOGE("HandleLoad", "Failed to Load Value!");
+                ESP_LOGE("HandleLoad", "\"%s\" Failed to Load Value!", key.c_str());
             }
         }
         else
         {
-            ESP_LOGE("HandleLoad", "Null Callback Pointers!");
+            ESP_LOGE("HandleLoad", "\"%s\" Null Callback Pointers!", key.c_str());
         }
     }
 

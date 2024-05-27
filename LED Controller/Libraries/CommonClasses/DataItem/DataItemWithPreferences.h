@@ -132,8 +132,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
-									   , NULL
-									   , NULL );
+									   , this->StaticSetValueFromString
+									   , this );
 			}
 			return result;
 		}
@@ -147,8 +147,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 									   , this->m_Name.c_str()
 									   , this->GetValueAsString().c_str()
 									   , this->GetInitialValueAsString().c_str()
-									   , NULL
-									   , NULL );
+									   , this->StaticSetValueFromString
+									   , this );
 			}
 			return result;
 		}
