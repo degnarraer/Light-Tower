@@ -24,37 +24,19 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 {
 	public:
 		StringDataItem( const String name
-					  , const char* initialValue
+					  , const String &initialValue
 					  , const RxTxType_t rxTxType
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
 					  , SerialPortMessageManager &serialPortMessageManager
 					  , NamedCallback_t *namedCallback )
 					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
-															  , initialValue
+															  , initialValue.c_str()
 															  , rxTxType
 															  , updateStoreType
 															  , rate
 															  , serialPortMessageManager
 															  , namedCallback )
-		{
-		  
-		}
-		
-		StringDataItem( const String name
-					  , const char& initialValue
-					  , const RxTxType_t rxTxType
-					  , const UpdateStoreType_t updateStoreType
-					  , const uint16_t rate
-					  , SerialPortMessageManager &serialPortMessageManager
-					  , NamedCallback_t *namedCallback )
-					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
-										     				  , initialValue
-										     				  , rxTxType
-										     				  , updateStoreType
-										     				  , rate
-										     				  , serialPortMessageManager
-										     				  , namedCallback )
 		{
 		  
 		}
@@ -64,13 +46,59 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("StringDataItem::~StringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
-		bool SetValue(const char* Value, size_t Count)
+		virtual bool GetStringValue(String &stringValue) override
 		{
-			assert(Value != nullptr && "Value must not be null");
+			if(mp_Value)
+			{
+				stringValue = String(mp_Value);
+				ESP_LOGD("GetStringValue"
+						, "\"%s\": GetStringValue: %s"
+						, m_Name.c_str()
+						, stringValue.c_str());
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		virtual String& GetValueString() override
+		{
+			if(!GetStringValue(m_StringValue))
+			{
+				m_StringValue = "";
+			}
+			return m_StringValue;
+		}
+
+		virtual String GetValueAsString() override
+		{
+			String value;
+			if(!GetStringValue(value))
+			{
+				value = "";
+			}
+			return value;
+		}
+
+		virtual bool SetValueFromString(const String& stringValue) override
+		{
+			assert(stringValue.length() <= DATAITEM_STRING_LENGTH && "String too long!");
+			ESP_LOGE("StringDataItem::SetValueFromString"
+					, "\"%s\": String Value: \"%s\""
+					, m_Name.c_str()
+					, stringValue.c_str());
+			return SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
+		}
+
+		virtual bool SetValue(const char* value, size_t count) override
+		{
+			assert(value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
-			String NewValue = String(Value);
+			String NewValue = String(value);
 			String CurrentValue = String(mp_TxValue);
-			assert(NewValue.length() <= Count);
+			assert(NewValue.length() <= count);
 			bool ValueChanged = !NewValue.equals(CurrentValue);
 			if(ValueChanged)
 			{	
@@ -79,11 +107,12 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 						, m_Name.c_str()
 						, NewValue.c_str() );
 				this->ZeroOutCharArray(mp_TxValue);
-				strcpy(mp_TxValue, Value);
+				strcpy(mp_TxValue, value);
 				this->DataItem_Try_TX_On_Change();
 			}
 			return ValueChanged;
 		}
+
 	protected:
 		bool DataItem_TX_Now()
 		{
@@ -98,7 +127,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 						strcpy(mp_Value, mp_TxValue);
 						ValueUpdated = true;
 						++m_ValueChangeCount;
-						CallCallbacks(m_Name.c_str(), mp_Value);
+						CallCallbacks(m_Name, mp_Value);
 					}
 				}
 				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
@@ -110,10 +139,10 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			return ValueUpdated;
 		}
 
-		bool NewRXValueReceived(void* Object, size_t Count)
+		bool NewRXValueReceived(void* object, size_t count)
 		{ 
 			bool ValueUpdated = false;
-			char* receivedValue = (char*)Object;
+			char* receivedValue = (char*)object;
 			if(strcmp(mp_RxValue, receivedValue) != 0)
 			{
 				ZeroOutCharArray(mp_RxValue);
@@ -129,7 +158,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					strcpy(mp_Value, mp_RxValue);
 					++m_ValueChangeCount;
 					ValueUpdated = true;
-					CallCallbacks(m_Name.c_str(), mp_Value);
+					CallCallbacks(m_Name, mp_Value);
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)

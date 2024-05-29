@@ -82,7 +82,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , serialPortMessageManager
 							   					   , namedCallback
 												   , validStringValues )
-							   , PreferencesWrapper<COUNT>(preferences, validStringValues)
+							   , PreferencesWrapper<COUNT>(preferences)
 		{
 		}
 							   
@@ -103,7 +103,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , serialPortMessageManager
 												   , namedCallback
 												   , validStringValues )
-							   , PreferencesWrapper<COUNT>(preferences, validStringValues)
+							   , PreferencesWrapper<COUNT>(preferences)
 		{
 		}
 
@@ -115,11 +115,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		void Setup()
 		{
 			DataItem<T, COUNT>::Setup();
-			this->InitializeNVM( this->m_Name.c_str()
-							   , this->GetInitialValueAsString().c_str()
-							   , this->StaticSetValueFromString
-							   , this );
-			this->CreatePreferencesTimer(this->m_Name.c_str(), this->GetValueAsString().c_str(), this->GetInitialValueAsString().c_str());
+			this->InitializeAndLoadPreference( this->m_Name
+							   				 , this->GetInitialValueAsString()
+							   				 , this->StaticSetValueFromString
+							   				 , this );
+			this->CreatePreferencesTimer(this->m_Name, this->GetValueAsString(), this->GetInitialValueAsString());
 		}
 	protected:
 

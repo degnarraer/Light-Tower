@@ -42,13 +42,16 @@ public:
             {
                 if (value.equals(validValue))
                 {
+                    ESP_LOGE("TEST", "\"%s\" IsValidValue VALID VALUE: \"%s\"", value.c_str(), validValue.c_str() );
                     return true;
                 }
             }
+            ESP_LOGE("TEST", "IsValidValue INVALID VALUE!" );
             return false;
         } 
         else
         {
+            ESP_LOGE("TEST", "IsValidValue NULL POINTER!" );
             return true;
         }
     }

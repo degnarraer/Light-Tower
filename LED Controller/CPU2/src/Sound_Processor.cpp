@@ -21,11 +21,13 @@
 Sound_Processor::Sound_Processor( String Title
                                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
                                 , SerialPortMessageManager &CPU1SerialPortMessageManager
-                                , SerialPortMessageManager &CPU3SerialPortMessageManager)
+                                , SerialPortMessageManager &CPU3SerialPortMessageManager
+                                , Preferences& preferences )
                                 : NamedItem(Title)
                                 , m_AudioBuffer(AudioBuffer)
                                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                                 , m_CPU3SerialPortMessageManager(CPU3SerialPortMessageManager)
+                                , m_Preferences(preferences)
 {
 }
 Sound_Processor::~Sound_Processor()
@@ -36,8 +38,14 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::SetupSoundProcessor()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessFFTTask,          0 );
-  xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessSoundPowerTask,   1 );
+  if( xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessFFTTask,          0 ) != pdTRUE )
+  {
+    ESP_LOGE("Setup", "Error creating task!");
+  }
+  if( xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessSoundPowerTask,   1 ) != pdTRUE )
+  {
+    ESP_LOGE("Setup", "Error creating task!");
+  }
 }
 
 void Sound_Processor::Static_Calculate_FFTs(void * parameter)

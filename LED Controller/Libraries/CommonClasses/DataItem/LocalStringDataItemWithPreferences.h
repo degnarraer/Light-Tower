@@ -28,18 +28,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 {
 	public:
 		LocalStringDataItemWithPreferences( const String name
-					 	   , const char* initialValue
-						   , Preferences *preferences
-						   , SetupCallerInterface *setupCallerInterface
-					 	   , NamedCallback_t *namedCallback )
-						   : LocalStringDataItem( name, initialValue, namedCallback)
-						   , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
-		{
-			setupCallerInterface->RegisterForSetupCall(this);
-		}
-		
-		LocalStringDataItemWithPreferences( const String name
-										  , const char& initialValue
+					 	   				  , const String &initialValue
 						   				  , Preferences *preferences
 						   				  , SetupCallerInterface *setupCallerInterface
 					 	   				  , NamedCallback_t *namedCallback )
@@ -57,22 +46,32 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
-							   											   , GetInitialValueAsString().c_str()
-							   											   , NULL
-																		   , NULL );
-			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
+			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeAndLoadPreference( m_Name
+																	 			   , GetInitialValueAsString()
+																	 			   , this->StaticSetValueFromString
+																	 			   , this );
+			CreatePreferencesTimer(m_Name, GetValueAsString(), GetInitialValueAsString());
+		}
+
+		virtual bool SetValueFromString(const String& stringValue) override
+		{
+			assert(stringValue.length() <= DATAITEM_STRING_LENGTH && "String too long!");
+			ESP_LOGE("LocalStringDataItemWithPreferences::SetValueFromString"
+					, "\"%s\": String Value: \"%s\""
+					, m_Name.c_str()
+					, stringValue.c_str());
+			return SetValue(stringValue.c_str(), stringValue.length());
 		}
 		
-		bool SetValue(const char* Value, size_t Count)
+		virtual bool SetValue(const char* value, size_t count) override
 		{
-			bool result = LocalStringDataItem::SetValue(Value, Count);
+			bool result = LocalStringDataItem::SetValue(value, count);
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<DATAITEM_STRING_LENGTH>::PreferenceUpdateType::Save
-									   , m_Name.c_str()
+									   , m_Name
 									   , GetValueAsString()
-									   , GetInitialValueAsString().c_str()
+									   , GetInitialValueAsString()
 									   , this->StaticSetValueFromString
 									   , this );
 			}
@@ -85,7 +84,7 @@ class StringDataItemWithPreferences: public StringDataItem
 {
 	public:
 		StringDataItemWithPreferences( const String name
-								     , const char* initialValue
+								     , const String &initialValue
 								     , const RxTxType_t rxTxType
 								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
@@ -100,27 +99,7 @@ class StringDataItemWithPreferences: public StringDataItem
 													 , serialPortMessageManager
 													 , namedCallback )
 									 , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
-		{
-			
-		}
-		StringDataItemWithPreferences( const String name
-								     , const char& initialValue
-								     , const RxTxType_t rxTxType
-								     , const UpdateStoreType_t updateStoreType
-								     , const uint16_t rate
-								     , Preferences *preferences
-								     , SerialPortMessageManager &serialPortMessageManager 
-									 , NamedCallback_t *namedCallback)
-									 : StringDataItem( name
-													 , initialValue
-													 , rxTxType
-													 , updateStoreType
-													 , rate
-													 , serialPortMessageManager
-													 , namedCallback )
-									 , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)	
-		{
-			
+		{	
 		}
 		
 		virtual ~StringDataItemWithPreferences()
@@ -131,11 +110,11 @@ class StringDataItemWithPreferences: public StringDataItem
 		void Setup()
 		{
 			StringDataItem::Setup();
-			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeNVM( m_Name.c_str()
-																	 , GetInitialValueAsString().c_str()
-																	 , NULL 
-																	 , NULL );
-			CreatePreferencesTimer(m_Name.c_str(), GetValueAsString().c_str(), GetInitialValueAsString().c_str());
+			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeAndLoadPreference( m_Name
+																	 			   , GetInitialValueAsString()
+																	 			   , this->StaticSetValueFromString
+																	 			   , this );
+			CreatePreferencesTimer(m_Name, GetValueAsString(), GetInitialValueAsString());
 		}
 
 		bool DataItem_TX_Now()
@@ -144,24 +123,24 @@ class StringDataItemWithPreferences: public StringDataItem
 			if(result)
 			{
 				this->Update_Preference( PreferenceUpdateType::Save
-									   , m_Name.c_str()
-									   , GetValueAsString().c_str()
-									   , GetInitialValueAsString().c_str()
+									   , m_Name
+									   , GetValueAsString()
+									   , GetInitialValueAsString()
 									   , this->StaticSetValueFromString
 									   , this );
 			}
 			return result;
 		}
 
-		bool NewRXValueReceived(void* Object, size_t Count)
+		bool NewRXValueReceived(void* object, size_t count)
 		{
-			bool result = StringDataItem::NewRXValueReceived(Object, Count);
+			bool result = StringDataItem::NewRXValueReceived(object, count);
 			if(result) 
 			{
 				this->Update_Preference( PreferenceUpdateType::Save
-									   , m_Name.c_str()
-									   , GetValueAsString().c_str()
-									   , GetInitialValueAsString().c_str()
+									   , m_Name
+									   , GetValueAsString()
+									   , GetInitialValueAsString()
 									   , this->StaticSetValueFromString
 									   , this );
 			}

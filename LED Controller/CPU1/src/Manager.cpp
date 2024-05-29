@@ -240,5 +240,3 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
     break;
   }
 }
-
-    

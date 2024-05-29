@@ -6,7 +6,6 @@
 
 template <size_t COUNT>
 class PreferencesWrapper : public DataTypeFunctions
-				         , public ValidValueChecker
 {
 public:
 	typedef bool (*LoadedValueCallback_t)(const String&, void* object);
@@ -32,16 +31,7 @@ public:
     };
 
     PreferencesWrapper(Preferences* preferences)
-        : ValidValueChecker()
-        , mp_Preferences(preferences)
-		, mp_TimerArgs(nullptr)
-		, m_PreferenceTimer(nullptr)
-		, m_Preferences_Last_Update(0)
-		, m_PreferenceTimerActive(false) {}
-
-    PreferencesWrapper(Preferences* preferences, const ValidStringValues_t *validStringValues)
-        : ValidValueChecker(validStringValues)
-        , mp_Preferences(preferences)
+        : mp_Preferences(preferences)
 		, mp_TimerArgs(nullptr)
 		, m_PreferenceTimer(nullptr)
 		, m_Preferences_Last_Update(0)
@@ -61,7 +51,12 @@ public:
         PreferencesWrapper<COUNT>* aPreferenceWrapper = timerArgsPtr->PreferenceWrapper;
         if (aPreferenceWrapper)
         {
-            aPreferenceWrapper->Update_Preference(PreferenceUpdateType::Timer, timerArgsPtr->Name, timerArgsPtr->Value, timerArgsPtr->InitialValue, nullptr, nullptr);
+            aPreferenceWrapper->Update_Preference( PreferenceUpdateType::Timer
+                                                 , timerArgsPtr->Name
+                                                 , timerArgsPtr->Value
+                                                 , timerArgsPtr->InitialValue
+                                                 , timerArgsPtr->Callback
+                                                 , timerArgsPtr->Object );
         }
     }
 
@@ -126,40 +121,44 @@ protected:
         esp_timer_create(&timerArgs, &m_PreferenceTimer);
     }
 
-    void InitializeNVM(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
+    void InitializeAndLoadPreference(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
         if (mp_Preferences)
         {
             if (mp_Preferences->isKey(key.c_str()))
             {
-                ESP_LOGI("InitializeNVM", "Preference Found: \"%s\"", key.c_str());
+                ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\"", key.c_str());
                 Update_Preference(PreferenceUpdateType::Load, key, initialValue, initialValue, callback, object);
             }
             else
             {
-                ESP_LOGE("InitializeNVM", "Preference Not Found: \"%s\"", key.c_str());
+                ESP_LOGE("InitializeAndLoadPreference", "Preference Not Found: \"%s\"", key.c_str());
                 Update_Preference(PreferenceUpdateType::Initialize, key, initialValue, initialValue, callback, object);
             }
         }
         else
         {
-            ESP_LOGE("PreferencesWrapper: InitializeNVM", "Null Preferences Pointer!");
+            ESP_LOGE("PreferencesWrapper: InitializeAndLoadPreference", "Null Preferences Pointer!");
         }
     }
 
     void HandleLoad(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
-        String loadedValue = mp_Preferences->getString(key.c_str(), initialValue.c_str());
+        String loadedValue = mp_Preferences->getString(key.c_str(), initialValue);
 
-        if (callback && object && this->IsValidValue(loadedValue))
+        if (callback && object)
         {
-            if (callback(loadedValue, object))
+            if(!callback(loadedValue, object))
             {
-                ESP_LOGI("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                ESP_LOGE("HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
+                if(!callback(initialValue, object))
+                {
+                    ESP_LOGE("HandleLoad", "\"%s\" Failed to Load default value: \"%s\"", key.c_str(), initialValue.c_str());
+                }
             }
             else
             {
-                ESP_LOGE("HandleLoad", "\"%s\" Failed to Load Value!", key.c_str());
+                ESP_LOGE("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
             }
         }
         else
@@ -170,9 +169,16 @@ protected:
 
     void HandleSave(const String& key, const String& saveValue)
     {
-        assert(saveValue.length() && "Save Value must be provided");
-        mp_Preferences->putString(key.c_str(), saveValue);
-        ESP_LOGI("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Value: \"%s\"", key.c_str(), saveValue.c_str());
+        ESP_LOGE("PreferencesWrapper: HandleSave", "Saving Key: \"%s\" Value: \"%s\"", key.c_str(), saveValue.c_str());
+        size_t saveLength = mp_Preferences->putString(key.c_str(), saveValue);
+        if(saveValue.length() != saveLength)
+        {
+            ESP_LOGE("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Value: \"%s\" Did Not Save Properly", key.c_str(), saveValue.c_str());   
+        }
+        else
+        {
+            ESP_LOGE("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Value Saved: \"%s\"", key.c_str(), saveValue.c_str());
+        }
     }
 
 private:

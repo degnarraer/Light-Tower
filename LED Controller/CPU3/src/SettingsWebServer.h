@@ -44,8 +44,8 @@ class SettingsWebServerManager: public SetupCallerInterface
     void SetupSettingsWebServerManager()
     {
       InitializePreferences();
-      SetupAllSetupCallees();
       InitFileSystem();
+      SetupAllSetupCallees();
     }
 
     void SetupWifi()
@@ -64,7 +64,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         ESP_LOGI("InitializePreferences", "NVS Initialized");
         ESP.restart();
       }
-      else if(m_Preferences.getBool("Pref_Reset", true))
+      else if(true) //m_Preferences.getBool("Pref_Reset", true))
       {
         m_Preferences.clear();
         ESP_LOGI("InitializePreferences", "Preferences Cleared!");
@@ -156,7 +156,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                       , &m_SSID_CallbackArgs };
     const String m_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_SSID = LocalStringDataItemWithPreferences( "SSID"
-                                                                                  , m_SSID_InitialValue.c_str()
+                                                                                  , m_SSID_InitialValue
                                                                                   , &m_Preferences
                                                                                   , this
                                                                                   , &m_SSID_Callback );
@@ -182,7 +182,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                           , &m_Password_CallbackArgs };
     const String m_Password_InitialValue = "LEDs Rock";
     LocalStringDataItemWithPreferences m_Password = LocalStringDataItemWithPreferences( "Password"
-                                                                                      , m_Password_InitialValue.c_str()
+                                                                                      , m_Password_InitialValue
                                                                                       , &m_Preferences
                                                                                       , this
                                                                                       , &m_Password_Callback );
@@ -214,13 +214,15 @@ class SettingsWebServerManager: public SetupCallerInterface
     //TBD
 
     //Input Source
+    const ValidStringValues_t validInputSourceValues = { "OFF", "Microphone", "Bluetooth" };
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::OFF;
-    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, &validInputSourceValues);
     WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( "Sound Input Source Web Socket Handler", "Sound_Input_Source", m_WebSocketDataProcessor, true, true, m_SoundInputSource, false );
     
     //Output Source
+    const ValidStringValues_t validOutputSourceValues = { "OFF", "Bluetooth" };
     const SoundOutputSource_t m_SoundOuputSource_InitialValue = SoundOutputSource_t::OFF;
-    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
+    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, &validOutputSourceValues);
     WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( "Sound Output Source Web Socket Handler", "Sound_Output_Source", m_WebSocketDataProcessor, true, true, m_SoundOuputSource, false );
     
     //Bluetooth Sink Enable
@@ -228,15 +230,14 @@ class SettingsWebServerManager: public SetupCallerInterface
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, NULL);
     WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( "Sink Enable Web Socket Handler", "BT_Sink_Enable", m_WebSocketDataProcessor, true, true, m_BluetoothSinkEnable, false );
 
-
     //Sink Name
     const String m_SinkName_InitialValue = "LED Tower of Power";  
-    StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue.c_str(), RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
+    StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL);
     WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( "Sink Name Web Socket Handler", "Sink_Name", m_WebSocketDataProcessor, true, true, m_SinkName, false );
 
     //Source Name
     const String m_SourceName_InitialValue = "";  
-    StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue.c_str(), RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
+    StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU2SerialPortMessageManager, NULL);
     WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( "Sink Name Web Socket Handler", "Source_Name", m_WebSocketDataProcessor, true, true, m_SourceName, false );
 
     //Sink Connection State

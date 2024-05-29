@@ -69,24 +69,6 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
 		{}
-
-		LocalDataItem( const String name
-					 , const T* initialValue
-					 , NamedCallback_t *namedCallback
-					 , bool printDelimited )
-					 : m_Name(name)
-					 , mp_InitialValuePtr(initialValue)
-					 , m_PrintDelimited(printDelimited)
-		{}
-
-		LocalDataItem( const String name
-					 , const T& initialValue
-					 , NamedCallback_t *namedCallback
-					 , bool printDelimited )
-					 : m_Name(name)
-					 , mp_InitialValuePtr(&initialValue)
-					 , m_PrintDelimited(printDelimited)
-		{}
 		
 		virtual ~LocalDataItem()
 		{
@@ -118,6 +100,9 @@ class LocalDataItem: public NamedCallbackInterface<T>
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
+					ESP_LOGE( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
+							, m_Name.c_str()
+							, GetInitialValueAsString().c_str());
 				}
 				else
 				{
@@ -127,10 +112,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 					}
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
+					ESP_LOGE( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
+							, m_Name.c_str()
+							, GetInitialValueAsString().c_str());
 				}
-				ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsString().c_str());
 			}
 			else
 			{
@@ -186,7 +171,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		bool GetStringInitialValue(String &stringValue)
+		virtual bool GetStringInitialValue(String &stringValue)
 		{
 			stringValue = String(*mp_InitialValue);
 			return true;
@@ -202,7 +187,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return value;
 		}
 
-		bool GetStringValue(String &stringValue)
+		virtual bool GetStringValue(String &stringValue)
 		{
 			if (COUNT == 0) return false;
 
@@ -217,7 +202,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			for (size_t i = 0; i < valueStrings.size() - 1; ++i)
 			{
 				stringValue += valueStrings[i];
-				if(m_PrintDelimited) stringValue += ENCODE_DIVIDER;
+				stringValue += ENCODE_DIVIDER;
 			}
 			stringValue += valueStrings[COUNT - 1];
 			ESP_LOGD("GetStringValue"
@@ -227,7 +212,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return true;
 		}
 
-		String& GetValueString()
+		virtual String& GetValueString()
 		{
 			if(!GetStringValue(m_StringValue))
 			{
@@ -236,7 +221,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return m_StringValue;
 		}
 
-		String GetValueAsString()
+		virtual String GetValueAsString()
 		{
 			String value;
 			if(!GetStringValue(value))
@@ -267,35 +252,50 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		bool SetValueFromString(const String& stringValue)
+		virtual bool SetValueFromString(const String& stringValue)
 		{
 			T value[COUNT];
 			std::vector<String> substrings;
 			size_t start = 0;
 			size_t end = stringValue.indexOf(ENCODE_DIVIDER);
-			 if (end == -1)
+
+			// Split the input string by ENCODE_DIVIDER
+			while (end != -1) 
 			{
-				substrings.push_back(stringValue);
+				Serial.println(stringValue.substring(start, end).c_str());
+				substrings.push_back(stringValue.substring(start, end));
+				start = end + 1;
+				end = stringValue.indexOf(ENCODE_DIVIDER, start);
 			}
-			else
+			substrings.push_back(stringValue.substring(start));
+			Serial.println(stringValue.substring(start).c_str());
+
+			// Check if the number of substrings matches the expected COUNT
+			if (substrings.size() != COUNT) 
 			{
-				while (end != -1)
+				ESP_LOGE("SetValueFromString",
+						"Expected %zu substrings but got %zu in string: \"%s\"",
+						COUNT, substrings.size(), stringValue.c_str());
+				return false;
+			}
+
+			// Decode each substring and store it in the value array
+			for (size_t i = 0; i < COUNT; ++i) 
+			{
+				ESP_LOGE("SetValueFromString",
+						"\"%s\": Set Value From String: \"%s\"",
+						m_Name.c_str(), substrings[i].c_str());
+				if(IsValidValue(substrings[i]))
 				{
-					substrings.push_back(stringValue.substring(start, end - start));
-					start = end + 1;
-					end = stringValue.indexOf(ENCODE_DIVIDER, start);
+					value[i] = decodeFromString(substrings[i]);
+				}
+				else
+				{
+					return false;
 				}
 			}
-			assert(substrings.size() == COUNT && "String did not parse to expected length");
-			for (size_t i = 0; i < COUNT; ++i)
-			{
-				ESP_LOGI("SetValueFromString"
-						, "\"%s\": String Value: \"%s\""
-						, m_Name.c_str()
-						, substrings[i].c_str());
-				
-				value[i] = decodeFromString(substrings[i]);
-			}
+
+			// Set the decoded values
 			return SetValue(value, COUNT);
 		}
 
@@ -318,7 +318,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return String(oss.str().c_str());
 		}
 
-		bool SetValue(const T *value, size_t count)
+		virtual bool SetValue(const T *value, size_t count)
 		{
 			assert(value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
@@ -334,8 +334,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			{
 				for(int i = 0; i< COUNT; ++i)
 				{
-					if(!this->IsValidValue( encodeToString(mp_Value[i]) ) )
+					String stringValue = encodeToString(mp_Value[i]);
+					if(!this->IsValidValue( stringValue ) )
 					{
+						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
 						validValue = false;
 					}
 				}
@@ -374,13 +376,12 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		}
 	protected:
 		const String m_Name;
-		const T *mp_InitialValuePtr;
+		const T* const mp_InitialValuePtr;
 		T *mp_Value;
 		String m_StringValue;
 		T *mp_InitialValue;
 		NamedCallback_t *mp_NamedCallback = NULL;
 		size_t m_ValueChangeCount = 0;
-		bool m_PrintDelimited = true;
 	private:
 		size_t m_Count = COUNT;
 };

@@ -26,31 +26,68 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 {
 	public:
 		LocalStringDataItem( const String name
-					 	   , const char* initialValue
+					 	   , const String &initialValue
 					 	   , NamedCallback_t *namedCallback )
-						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue, namedCallback, false )
+						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue.c_str(), namedCallback, NULL )
 						   {
-
 						   }
-		
-		LocalStringDataItem( const String name
-					 	   , const char& initialValue
-					 	   , NamedCallback_t *namedCallback )
-						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue, namedCallback, false )
-						   {
 
-						   }
 		virtual ~LocalStringDataItem()
 		{
 			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
-		bool SetValue(const char* value, size_t count)
+		virtual bool GetStringValue(String &stringValue) override
+		{
+			if(mp_Value)
+			{
+				stringValue = String(mp_Value);
+				ESP_LOGD("GetStringValue"
+						, "\"%s\": GetStringValue: %s"
+						, m_Name.c_str()
+						, stringValue.c_str());
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		virtual String& GetValueString() override
+		{
+			if(!GetStringValue(m_StringValue))
+			{
+				m_StringValue = "";
+			}
+			return m_StringValue;
+		}
+
+		virtual String GetValueAsString() override
+		{
+			String value;
+			if(!GetStringValue(value))
+			{
+				value = "";
+			}
+			return value;
+		}
+
+		virtual bool SetValueFromString(const String& stringValue) override
+		{
+			ESP_LOGE("LocalStringDataItem::SetValueFromString"
+					, "\"%s\": String Value: \"%s\""
+					, m_Name.c_str()
+					, stringValue.c_str());
+			return SetValue(stringValue.c_str(), stringValue.length());
+		}
+
+		virtual bool SetValue(const char* value, size_t count)
 		{
 			assert(value != nullptr && "Value must not be null");
 			assert(mp_Value != nullptr && "mp_Value must not be null");
+			assert(count <= DATAITEM_STRING_LENGTH && "String too long");
 			String newValue = String(value);
-			assert(newValue.length() <= count);
 			ESP_LOGI( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()

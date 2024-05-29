@@ -59,7 +59,8 @@ SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManag
 Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
                                                   , m_AudioBuffer
                                                   , m_CPU1SerialPortMessageManager
-                                                  , m_CPU3SerialPortMessageManager );                                            
+                                                  , m_CPU3SerialPortMessageManager
+                                                  , m_Preferences );                                            
 
 Manager m_Manager = Manager( "Manager"
                            , m_SoundProcessor

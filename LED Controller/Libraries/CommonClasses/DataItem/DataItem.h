@@ -202,7 +202,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			SetValue(Value, Count);
 		}
 		
-		bool SetValueFromString(const String& stringValue)
+		virtual bool SetValueFromString(const String& stringValue) override
 		{
 			return LocalDataItem<T, COUNT>::SetValueFromString(stringValue);
 		}

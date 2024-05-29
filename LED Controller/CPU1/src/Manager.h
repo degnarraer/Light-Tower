@@ -159,7 +159,7 @@ class Manager: public NamedItem
                                           , &m_SinkName_CallbackArgs };
     const String m_SinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
-                                                                            , m_SinkName_InitialValue.c_str()
+                                                                            , m_SinkName_InitialValue
                                                                             , RxTxType_Rx_Echo_Value
                                                                             , UpdateStoreType_On_Rx
                                                                             , 0
