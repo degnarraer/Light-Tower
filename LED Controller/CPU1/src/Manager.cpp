@@ -40,6 +40,7 @@ Manager::~Manager()
 void Manager::Setup()
 {
   InitializePreferences();
+  SetupAllSetupCallees();
   SetupSerialPortManager();
   SetupBlueTooth();
   SetupI2S();

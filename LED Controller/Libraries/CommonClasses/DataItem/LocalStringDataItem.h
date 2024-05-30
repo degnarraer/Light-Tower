@@ -38,6 +38,21 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
+		virtual bool GetStringInitialValue(String &stringValue) override
+		{
+			if(mp_InitialValue)
+			{
+				stringValue = String(mp_InitialValue);
+				ESP_LOGE("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				return true;
+			}
+			else
+			{
+				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				return false;
+			}
+		}
+
 		virtual bool GetStringValue(String &stringValue) override
 		{
 			if(mp_Value)

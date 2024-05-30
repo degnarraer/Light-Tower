@@ -137,9 +137,7 @@ void setup()
   Serial2.flush();
 
   TestPSRam();
-
   InitializePreferences();
-  
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   m_SoundProcessor.SetupSoundProcessor(); 

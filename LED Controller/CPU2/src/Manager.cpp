@@ -50,6 +50,7 @@ void Manager::Setup()
   {
     ESP_LOGE("Setup", "Error creating task!");
   }
+  SetupAllSetupCallees();
 }
 
 void Manager::StartBluetooth()
