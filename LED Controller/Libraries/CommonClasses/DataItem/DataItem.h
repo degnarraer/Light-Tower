@@ -49,8 +49,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
-				, NamedCallback_t *namedCallback )
-				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback)
+				, NamedCallback_t *namedCallback
+				, SetupCallerInterface *setupCallerInterface )
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
@@ -58,7 +59,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			CreateTxTimer();
-			m_SerialPortMessageManager.RegisterForSetupCall(this);
 		}
 
 		DataItem( const String name
@@ -67,8 +67,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
-				, NamedCallback_t *namedCallback )
-				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback)
+				, NamedCallback_t *namedCallback
+				, SetupCallerInterface *setupCallerInterface )
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
@@ -77,7 +78,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				
 		{
 			CreateTxTimer();
-			m_SerialPortMessageManager.RegisterForSetupCall(this);
 		}
 		
 		DataItem( const String name
@@ -87,8 +87,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
 				, NamedCallback_t *namedCallback
+				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
-				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, validStringValues)
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
@@ -96,7 +97,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			CreateTxTimer();
-			m_SerialPortMessageManager.RegisterForSetupCall(this);
 		}
 
 		DataItem( const String name
@@ -106,8 +106,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
 				, NamedCallback_t *namedCallback
+				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
-				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, validStringValues)
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
@@ -115,7 +116,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)	
 		{
 			CreateTxTimer();
-			m_SerialPortMessageManager.RegisterForSetupCall(this);
 		}
 
 		DataItem( const String name
@@ -124,9 +124,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
-				, NamedCallback_t *namedCallback 
+				, NamedCallback_t *namedCallback
+				, SetupCallerInterface *setupCallerInterface
 				, bool printDelimited )
-				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, printDelimited)
+				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, printDelimited)
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
@@ -134,7 +135,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			CreateTxTimer();
-			m_SerialPortMessageManager.RegisterForSetupCall(this);
 		}
 		
 		virtual ~DataItem()
@@ -144,7 +144,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 			heap_caps_free(mp_TxValue);
 			esp_timer_stop(m_TxTimer);
 			esp_timer_delete(m_TxTimer);
-			m_SerialPortMessageManager.DeRegisterForSetupCall(this);
 		}
 		void Setup()
 		{

@@ -163,7 +163,6 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
 	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
-	SetupAllSetupCallees();
 }
 
 bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count)

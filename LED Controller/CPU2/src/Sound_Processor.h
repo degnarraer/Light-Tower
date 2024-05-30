@@ -56,7 +56,7 @@ class Sound_Processor: public NamedItem
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     Preferences& m_Preferences;
 
-    const float m_Amplitude_Gain_InitialValue = 1.0;
+    const float m_Amplitude_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_Amplitude_Gain = DataItemWithPreferences<float, 1>( "Amp_Gain"
                                                                                           , m_Amplitude_Gain_InitialValue
                                                                                           , RxTxType_Rx_Echo_Value
@@ -64,9 +64,10 @@ class Sound_Processor: public NamedItem
                                                                                           , 5000
                                                                                           , &m_Preferences
                                                                                           , m_CPU3SerialPortMessageManager
-                                                                                          , NULL );
+                                                                                          , NULL
+                                                                                          , this );
 
-    const float m_FFT_Gain_InitialValue = 1.0;
+    const float m_FFT_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_FFT_Gain = DataItemWithPreferences<float, 1>( "FFT_Gain"
                                                                                     , m_FFT_Gain_InitialValue
                                                                                     , RxTxType_Rx_Echo_Value
@@ -74,7 +75,8 @@ class Sound_Processor: public NamedItem
                                                                                     , 5000
                                                                                     , &m_Preferences
                                                                                     , m_CPU3SerialPortMessageManager
-                                                                                    , NULL );
+                                                                                    , NULL
+                                                                                    , this );
     
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA

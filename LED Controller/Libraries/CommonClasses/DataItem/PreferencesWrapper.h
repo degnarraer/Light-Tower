@@ -128,12 +128,12 @@ protected:
             if (mp_Preferences->isKey(key.c_str()))
             {
                 ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\"", key.c_str());
-                Update_Preference(PreferenceUpdateType::Load, key, initialValue, initialValue, callback, object);
+                Update_Preference(PreferenceUpdateType::Load, key, "", initialValue, callback, object);
             }
             else
             {
                 ESP_LOGE("InitializeAndLoadPreference", "Preference Not Found: \"%s\"", key.c_str());
-                Update_Preference(PreferenceUpdateType::Initialize, key, initialValue, initialValue, callback, object);
+                Update_Preference(PreferenceUpdateType::Initialize, key, "", initialValue, callback, object);
             }
         }
         else

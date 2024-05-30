@@ -234,7 +234,6 @@ class NewRxTxVoidObjectCallerInterface
 };
 
 class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
-							  , public SetupCallerInterface
 {
 	public:
 		SerialPortMessageManager( const String& Name

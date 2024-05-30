@@ -29,14 +29,16 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
 					  , SerialPortMessageManager &serialPortMessageManager
-					  , NamedCallback_t *namedCallback )
+					  , NamedCallback_t *namedCallback
+					  , SetupCallerInterface *setupCallerInterface )
 					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
 															  , initialValue.c_str()
 															  , rxTxType
 															  , updateStoreType
 															  , rate
 															  , serialPortMessageManager
-															  , namedCallback )
+															  , namedCallback
+															  , setupCallerInterface )
 		{
 		  
 		}

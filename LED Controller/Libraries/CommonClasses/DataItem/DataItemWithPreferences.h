@@ -53,14 +53,16 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const uint16_t rate
 							   , Preferences *preferences
 							   , SerialPortMessageManager &serialPortMessageManager
-							   , NamedCallback_t *namedCallback )
+							   , NamedCallback_t *namedCallback
+							   , SetupCallerInterface *setupCallerInterface )
 							   : DataItem<T, COUNT>( name
 												   , initialValue
 												   , rxTxType
 												   , updateStoreType
 												   , rate
 												   , serialPortMessageManager
-												   , namedCallback )
+												   , namedCallback
+												   , setupCallerInterface )
 							   , PreferencesWrapper<COUNT>(preferences)
 		{
 		}
@@ -73,6 +75,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , Preferences *preferences
 							   , SerialPortMessageManager &serialPortMessageManager
 							   , NamedCallback_t *namedCallback
+							   , SetupCallerInterface *setupCallerInterface
 							   , const ValidStringValues_t *validStringValues )
 							   : DataItem<T, COUNT>( name
 							   					   , initialValue
@@ -81,7 +84,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback
-												   , validStringValues )
+												   , validStringValues
+												   , setupCallerInterface )
 							   , PreferencesWrapper<COUNT>(preferences)
 		{
 		}
@@ -94,6 +98,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , Preferences *preferences
 							   , SerialPortMessageManager &serialPortMessageManager
 							   , NamedCallback_t *namedCallback
+							   , SetupCallerInterface *setupCallerInterface
 							   , const ValidStringValues_t *validStringValues )
 							   : DataItem<T, COUNT>( name
 												   , initialValue
@@ -102,6 +107,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , rate
 												   , serialPortMessageManager
 												   , namedCallback
+												   , setupCallerInterface
 												   , validStringValues )
 							   , PreferencesWrapper<COUNT>(preferences)
 		{
@@ -129,9 +135,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save
-									   , this->m_Name.c_str()
-									   , this->GetValueAsString().c_str()
-									   , this->GetInitialValueAsString().c_str()
+									   , this->m_Name
+									   , this->GetValueAsString()
+									   , this->GetInitialValueAsString()
 									   , this->StaticSetValueFromString
 									   , this );
 			}
@@ -144,9 +150,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save
-									   , this->m_Name.c_str()
-									   , this->GetValueAsString().c_str()
-									   , this->GetInitialValueAsString().c_str()
+									   , this->m_Name
+									   , this->GetValueAsString()
+									   , this->GetInitialValueAsString()
 									   , this->StaticSetValueFromString
 									   , this );
 			}

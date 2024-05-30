@@ -27,8 +27,9 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 	public:
 		LocalStringDataItem( const String name
 					 	   , const String &initialValue
-					 	   , NamedCallback_t *namedCallback )
-						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue.c_str(), namedCallback, NULL )
+					 	   , NamedCallback_t *namedCallback
+					 	   , SetupCallerInterface *setupCallerInterface )
+						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue.c_str(), namedCallback, setupCallerInterface, NULL )
 						   {
 						   }
 

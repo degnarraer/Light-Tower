@@ -35,23 +35,24 @@ public:
 
     virtual ~ValidValueChecker() {}
 
-    bool IsValidValue(String value) {
+    bool IsValidStringValue(String value) {
         if (mp_ValidStrings)
         {
             for (const String& validValue : *mp_ValidStrings)
             {
+                ESP_LOGE("TEST", "IsValidStringValue Match Check between: \"%s\" and \"%s\"", value.c_str(), validValue.c_str() );
                 if (value.equals(validValue))
                 {
-                    ESP_LOGE("TEST", "\"%s\" IsValidValue VALID VALUE: \"%s\"", value.c_str(), validValue.c_str() );
+                    ESP_LOGE("TEST", "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", value.c_str(), validValue.c_str() );
                     return true;
                 }
             }
-            ESP_LOGE("TEST", "IsValidValue INVALID VALUE!" );
+            ESP_LOGE("TEST", "IsValidStringValue INVALID VALUE!" );
             return false;
         } 
         else
         {
-            ESP_LOGE("TEST", "IsValidValue NULL POINTER!" );
+            ESP_LOGE("TEST", "IsValidStringValue NULL POINTER!" );
             return true;
         }
     }

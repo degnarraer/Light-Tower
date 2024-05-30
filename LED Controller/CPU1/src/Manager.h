@@ -36,6 +36,7 @@ class Manager: public NamedItem
              , public BluetoothConnectionStateCallee
              , public CommonUtils
              , public QueueController
+             , public SetupCallerInterface
 {
   public:
     Manager( String Title
@@ -138,6 +139,7 @@ class Manager: public NamedItem
                                                                                                                       , &m_Preferences
                                                                                                                       , m_CPU3SerialPortMessageManager
                                                                                                                       , &m_SoundInputSource_Callback
+                                                                                                                      , this
                                                                                                                       , NULL );
     static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
@@ -165,7 +167,8 @@ class Manager: public NamedItem
                                                                             , 0
                                                                             , &m_Preferences
                                                                             , m_CPU3SerialPortMessageManager
-                                                                            , &m_SinkName_Callback );
+                                                                            , &m_SinkName_Callback
+                                                                            , this );
     static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkName_ValueChanged", "CALLED");
@@ -197,6 +200,7 @@ class Manager: public NamedItem
                                                                                            , &m_Preferences
                                                                                            , m_CPU3SerialPortMessageManager
                                                                                            , NULL
+                                                                                           , this
                                                                                            , &validBoolValues );
     static void SinkAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
@@ -227,7 +231,8 @@ class Manager: public NamedItem
                                                        , UpdateStoreType_On_Rx
                                                        , 0
                                                        , m_CPU3SerialPortMessageManager
-                                                       , &m_SinkConnect_Callback );
+                                                       , &m_SinkConnect_Callback
+                                                       , this );
     static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -258,7 +263,8 @@ class Manager: public NamedItem
                                                           , UpdateStoreType_On_Rx
                                                           , 0
                                                           , m_CPU3SerialPortMessageManager
-                                                          , &m_SinkDisconnect_Callback);
+                                                          , &m_SinkDisconnect_Callback
+                                                          , this );
     static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -285,6 +291,7 @@ class Manager: public NamedItem
                                                                                              , &m_Preferences
                                                                                              , m_CPU3SerialPortMessageManager
                                                                                              , NULL
+                                                                                             , this
                                                                                              , &validBoolValues );
 
     //Bluetooth Sink Connection Status
@@ -295,6 +302,7 @@ class Manager: public NamedItem
                                                                                                      , UpdateStoreType_On_Rx
                                                                                                      , 5000
                                                                                                      , m_CPU3SerialPortMessageManager
-                                                                                                     , NULL);
+                                                                                                     , NULL
+                                                                                                     , this );
 
 };

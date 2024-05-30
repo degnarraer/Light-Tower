@@ -513,7 +513,8 @@ class SoundOutputSource
         }
         
         // Overload the extraction operator
-        friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
+        friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value)
+        {
             os << SoundOutputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
             return os;
         }

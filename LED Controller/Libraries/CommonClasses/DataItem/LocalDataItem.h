@@ -38,37 +38,53 @@ class LocalDataItem: public NamedCallbackInterface<T>
 	public:
 		LocalDataItem( const String name
 					 , const T* initialValue
-					 , NamedCallback_t *namedCallback )
+					 , NamedCallback_t *namedCallback
+					 , SetupCallerInterface *setupCallerInterface )
 					 : ValidValueChecker()
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
-		{}
+					 , mp_SetupCallerInterface(setupCallerInterface)
+		{
+			mp_SetupCallerInterface->RegisterForSetupCall(this);
+		}
 		
 		LocalDataItem( const String name
 					 , const T& initialValue
-					 , NamedCallback_t *namedCallback )
+					 , NamedCallback_t *namedCallback
+					 , SetupCallerInterface *setupCallerInterface )
 					 : ValidValueChecker()
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
-		{}
+					 , mp_SetupCallerInterface(setupCallerInterface)
+		{
+			mp_SetupCallerInterface->RegisterForSetupCall(this);
+		}
 
 		LocalDataItem( const String name
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback
+					 , SetupCallerInterface *setupCallerInterface
 					 , const ValidStringValues_t *validStringValues )
 					 : ValidValueChecker(validStringValues)
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
-		{}
+					 , mp_SetupCallerInterface(setupCallerInterface)
+		{
+			mp_SetupCallerInterface->RegisterForSetupCall(this);
+		}
 		
 		LocalDataItem( const String name
 					 , const T& initialValue
 					 , NamedCallback_t *namedCallback
+					 , SetupCallerInterface *setupCallerInterface
 					 , const ValidStringValues_t *validStringValues )
 					 : ValidValueChecker(validStringValues)
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
-		{}
+					 , mp_SetupCallerInterface(setupCallerInterface)
+		{
+			mp_SetupCallerInterface->RegisterForSetupCall(this);
+		}
 		
 		virtual ~LocalDataItem()
 		{
@@ -173,8 +189,17 @@ class LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool GetStringInitialValue(String &stringValue)
 		{
-			stringValue = String(*mp_InitialValue);
-			return true;
+			if(mp_InitialValue)
+			{
+				stringValue = encodeToString(*mp_InitialValue);
+				ESP_LOGE("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				return true;
+			}
+			else
+			{
+				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				return false;
+			}
 		}
 		
 		String GetInitialValueAsString()
@@ -189,27 +214,32 @@ class LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool GetStringValue(String &stringValue)
 		{
-			if (COUNT == 0) return false;
-
-			std::vector<String> valueStrings;
-			for (size_t i = 0; i < COUNT; ++i)
-			{
-				valueStrings.push_back(String(mp_Value[i]).c_str());
-			}
-
 			stringValue = "";
-			
-			for (size_t i = 0; i < valueStrings.size() - 1; ++i)
+			if (mp_Value && COUNT > 0)
 			{
-				stringValue += valueStrings[i];
-				stringValue += ENCODE_DIVIDER;
+				std::vector<String> valueStrings;
+				for (size_t i = 0; i < COUNT; ++i)
+				{
+					valueStrings.push_back(encodeToString(mp_Value[i]));
+				}
+				
+				for (size_t i = 0; i < COUNT - 1; ++i)
+				{
+					stringValue += valueStrings[i];
+					stringValue += ENCODE_DIVIDER;
+				}
+				stringValue += valueStrings[COUNT - 1];
+				ESP_LOGD("GetStringValue"
+						, "\"%s\": Get String Value: %s"
+						, m_Name.c_str()
+						, stringValue.c_str());
+				return true;
 			}
-			stringValue += valueStrings[COUNT - 1];
-			ESP_LOGD("GetStringValue"
-					, "\"%s\": GetStringValue: %s"
-					, m_Name.c_str()
-					, stringValue.c_str());
-			return true;
+			else
+			{
+				ESP_LOGE("GetStringValue", "\"%s\": NULL Pointer!", m_Name.c_str());
+				return false;
+			}
 		}
 
 		virtual String& GetValueString()
@@ -262,13 +292,11 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			// Split the input string by ENCODE_DIVIDER
 			while (end != -1) 
 			{
-				Serial.println(stringValue.substring(start, end).c_str());
 				substrings.push_back(stringValue.substring(start, end));
 				start = end + 1;
 				end = stringValue.indexOf(ENCODE_DIVIDER, start);
 			}
 			substrings.push_back(stringValue.substring(start));
-			Serial.println(stringValue.substring(start).c_str());
 
 			// Check if the number of substrings matches the expected COUNT
 			if (substrings.size() != COUNT) 
@@ -285,12 +313,13 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				ESP_LOGE("SetValueFromString",
 						"\"%s\": Set Value From String: \"%s\"",
 						m_Name.c_str(), substrings[i].c_str());
-				if(IsValidValue(substrings[i]))
+				if(IsValidStringValue(substrings[i]))
 				{
 					value[i] = decodeFromString(substrings[i]);
 				}
 				else
 				{
+					ESP_LOGE("SetValueFromString", "\"%s\" Set Invalid Value From String \"%s\"", m_Name.c_str(), substrings[i].c_str());
 					return false;
 				}
 			}
@@ -335,7 +364,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				for(int i = 0; i< COUNT; ++i)
 				{
 					String stringValue = encodeToString(mp_Value[i]);
-					if(!this->IsValidValue( stringValue ) )
+					if(!this->IsValidStringValue( stringValue ) )
 					{
 						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
 						validValue = false;
@@ -383,5 +412,6 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		NamedCallback_t *mp_NamedCallback = NULL;
 		size_t m_ValueChangeCount = 0;
 	private:
+		SetupCallerInterface *mp_SetupCallerInterface;
 		size_t m_Count = COUNT;
 };

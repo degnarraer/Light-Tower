@@ -30,9 +30,9 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		LocalStringDataItemWithPreferences( const String name
 					 	   				  , const String &initialValue
 						   				  , Preferences *preferences
-						   				  , SetupCallerInterface *setupCallerInterface
-					 	   				  , NamedCallback_t *namedCallback )
-						   				  : LocalStringDataItem( name, initialValue, namedCallback)
+					 	   				  , NamedCallback_t *namedCallback
+						   				  , SetupCallerInterface *setupCallerInterface )
+						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
 						   				  , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
 		{
 			setupCallerInterface->RegisterForSetupCall(this);
@@ -90,14 +90,16 @@ class StringDataItemWithPreferences: public StringDataItem
 								     , const uint16_t rate
 								     , Preferences *preferences
 								     , SerialPortMessageManager &serialPortMessageManager
-									 , NamedCallback_t *namedCallback )
+									 , NamedCallback_t *namedCallback
+									 , SetupCallerInterface *setupCallerInterface )
 								     : StringDataItem( name
 													 , initialValue
 													 , rxTxType
 													 , updateStoreType
 													 , rate
 													 , serialPortMessageManager
-													 , namedCallback )
+													 , namedCallback
+													 , setupCallerInterface )
 									 , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
 		{	
 		}
