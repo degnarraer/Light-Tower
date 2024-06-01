@@ -272,6 +272,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				}
 				else
 				{
+            		ESP_LOGE("StaticSetValueFromString", "Null Object!");
 					return false;
 				}
 			}

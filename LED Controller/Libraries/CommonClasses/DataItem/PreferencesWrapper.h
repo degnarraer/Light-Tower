@@ -151,17 +151,21 @@ protected:
             String loadedValue = mp_Preferences->getString(key.c_str(), initialValue);
             if (callback && object)
             {
-                if(!callback(loadedValue, object))
+                if(callback(loadedValue, object))
                 {
-                    ESP_LOGW("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
-                    if(!callback(initialValue, object))
-                    {
-                        ESP_LOGW("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load default value: \"%s\"", key.c_str(), initialValue.c_str());
-                    }
+                    ESP_LOGI("PreferencesWrapper: HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
                 }
                 else
                 {
-                    ESP_LOGI("PreferencesWrapper: HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                    ESP_LOGW("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
+                    if(callback(initialValue, object))
+                    {
+                        ESP_LOGI("PreferencesWrapper: HandleLoad", "Successfully Loaded Key: \"%s\" Default Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                    }
+                    else
+                    {
+                        ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load Default Value!: \"%s\"", key.c_str(), initialValue.c_str());
+                    }
                 }
             }
             else

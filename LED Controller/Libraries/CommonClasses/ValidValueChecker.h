@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <vector>
 #include <sstream>
+#include "Streaming.h"
 
 typedef enum LogicType_t {
     And,
@@ -43,10 +44,10 @@ public:
 
     bool IsConfigured() const
     {
-        return (mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
+        return false; //(mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
     }
 
-    bool IsValidStringValue(String stringValue)
+    bool IsValidStringValue(String stringValue) const
     {
         if (mp_ValidStrings)
         {
