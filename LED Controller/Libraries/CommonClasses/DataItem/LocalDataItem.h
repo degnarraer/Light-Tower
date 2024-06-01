@@ -95,7 +95,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		}
 		virtual void Setup()
 		{
-			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
 			mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
@@ -116,7 +116,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
-					ESP_LOGE( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
+					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 				}
@@ -128,7 +128,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 					}
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
-					ESP_LOGE( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
+					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 				}
@@ -192,7 +192,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			if(mp_InitialValue)
 			{
 				stringValue = encodeToString(*mp_InitialValue);
-				ESP_LOGE("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGD("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -202,8 +202,6 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-
-		
 		String GetInitialValueAsString()
 		{
 			String value;
@@ -312,10 +310,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			// Decode each substring and store it in the value array
 			for (size_t i = 0; i < COUNT; ++i) 
 			{
-				ESP_LOGE("SetValueFromString",
+				ESP_LOGD("SetValueFromString",
 						"\"%s\": Set Value From String: \"%s\"",
 						m_Name.c_str(), substrings[i].c_str());
-				if(IsValidStringValue(substrings[i]))
+				if(!(m_ValidValueChecker.IsConfigured() && !this->IsValidStringValue( substrings[i] )))
 				{
 					value[i] = decodeFromString(substrings[i]);
 				}

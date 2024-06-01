@@ -53,7 +53,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			if(mp_InitialValue)
 			{
 				stringValue = String(mp_InitialValue);
-				ESP_LOGE("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGD("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -103,7 +103,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH && "String too long!");
-			ESP_LOGE("StringDataItem::SetValueFromString"
+			ESP_LOGD("StringDataItem::SetValueFromString"
 					, "\"%s\": String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());
@@ -120,7 +120,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			bool valueChanged = !newValue.equals(currentValue);
 			if(valueChanged)
 			{	
-				ESP_LOGI( "DataItem: SetValue"
+				ESP_LOGD( "DataItem: SetValue"
 						, "\"%s\" Set Value: \"%s\""
 						, m_Name.c_str()
 						, newValue.c_str() );

@@ -202,13 +202,41 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Amplitude Gain
     const float m_AmplitudeGain_InitialValue = 2.0;
-    DataItemWithPreferences <float, 1> m_AmplitudeGain = DataItemWithPreferences<float, 1>( "Amp_Gain", m_AmplitudeGain_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, this);
-    WebSocketDataHandler<float, 1> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float, 1>( "Amplitude Gain Web Socket Handler", "Amplitude_Gain", m_WebSocketDataProcessor, true, true, m_AmplitudeGain, false );    
+    DataItemWithPreferences <float, 1> m_AmplitudeGain = DataItemWithPreferences<float, 1>( "Amp_Gain"
+                                                                                          , m_AmplitudeGain_InitialValue
+                                                                                          , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                          , UpdateStoreType_On_Rx
+                                                                                          , 5000
+                                                                                          , &m_Preferences
+                                                                                          , m_CPU2SerialPortMessageManager
+                                                                                          , NULL
+                                                                                          , this );
+    WebSocketDataHandler<float, 1> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float, 1>( "Amplitude Gain Web Socket Handler"
+                                                                                                , "Amplitude_Gain"
+                                                                                                , m_WebSocketDataProcessor
+                                                                                                , true
+                                                                                                , true
+                                                                                                , m_AmplitudeGain
+                                                                                                , false );    
     
     //FFT Gain
     const float m_FFTGain_InitialValue = 2.0;
-    DataItemWithPreferences <float, 1> m_FFTGain = DataItemWithPreferences<float, 1>( "FFT_Gain", m_FFTGain_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU2SerialPortMessageManager, NULL, this);
-    WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( "FFT Gain Web Socket Handler", "FFT_Gain", m_WebSocketDataProcessor, true, true, m_FFTGain, false );
+    DataItemWithPreferences <float, 1> m_FFTGain = DataItemWithPreferences<float, 1>( "FFT_Gain"
+                                                                                    , m_FFTGain_InitialValue
+                                                                                    , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                    , UpdateStoreType_On_Rx
+                                                                                    , 5000
+                                                                                    , &m_Preferences
+                                                                                    , m_CPU2SerialPortMessageManager
+                                                                                    , NULL
+                                                                                    , this );
+    WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( "FFT Gain Web Socket Handler"
+                                                                                          , "FFT_Gain"
+                                                                                          , m_WebSocketDataProcessor
+                                                                                          , true
+                                                                                          , true
+                                                                                          , m_FFTGain
+                                                                                          , false );
 
     //Microphone Enable
     //TBD
@@ -216,8 +244,23 @@ class SettingsWebServerManager: public SetupCallerInterface
     //Input Source
     const ValidStringValues_t validInputSourceValues = { "OFF", "Microphone", "Bluetooth" };
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::OFF;
-    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", m_SoundInputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_Preferences, m_CPU1SerialPortMessageManager, NULL, this, &validInputSourceValues);
-    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( "Sound Input Source Web Socket Handler", "Sound_Input_Source", m_WebSocketDataProcessor, true, true, m_SoundInputSource, false );
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
+                                                                                                                      , m_SoundInputSource_InitialValue
+                                                                                                                      , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                                                      , UpdateStoreType_On_Rx
+                                                                                                                      , 5000
+                                                                                                                      , &m_Preferences
+                                                                                                                      , m_CPU1SerialPortMessageManager
+                                                                                                                      , NULL
+                                                                                                                      , this
+                                                                                                                      , &validInputSourceValues );
+    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( "Sound Input Source Web Socket Handler"
+                                                                                                                            , "Sound_Input_Source"
+                                                                                                                            , m_WebSocketDataProcessor
+                                                                                                                            , true
+                                                                                                                            , true
+                                                                                                                            , m_SoundInputSource
+                                                                                                                            , false );
     
     //Output Source
     const ValidStringValues_t validOutputSourceValues = { "OFF", "Bluetooth" };

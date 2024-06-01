@@ -86,21 +86,21 @@ public:
         switch (updateType)
         {
         case PreferenceUpdateType::Timer:
-            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", name.c_str());
+            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", name.c_str());
             HandleSave(name, saveValue);
             m_PreferenceTimerActive = false;
             m_Preferences_Last_Update = currentMillis;
             break;
         case PreferenceUpdateType::Initialize:
-            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", name.c_str());
+            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", name.c_str());
             HandleSave(name, initialValue);
             break;
         case PreferenceUpdateType::Load:
-            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", name.c_str());
+            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", name.c_str());
             HandleLoad(name, initialValue, callback, object);
             break;
         case PreferenceUpdateType::Save:
-            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", name.c_str());
+            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", name.c_str());
             HandleSave(name, saveValue);
             m_Preferences_Last_Update = currentMillis;
             break;
@@ -132,7 +132,7 @@ protected:
             }
             else
             {
-                ESP_LOGE("InitializeAndLoadPreference", "Preference Not Found: \"%s\"", key.c_str());
+                ESP_LOGI("InitializeAndLoadPreference", "Preference Not Found: \"%s\"", key.c_str());
                 Update_Preference(PreferenceUpdateType::Initialize, key, "", initialValue, callback, object);
             }
         }
@@ -147,21 +147,21 @@ protected:
         
         if(mp_Preferences)
         {
-            ESP_LOGE("PreferencesWrapper: HandleLoad", "Loading Key: \"%s\"", key.c_str());
+            ESP_LOGD("PreferencesWrapper: HandleLoad", "Loading Key: \"%s\"", key.c_str());
             String loadedValue = mp_Preferences->getString(key.c_str(), initialValue);
             if (callback && object)
             {
                 if(!callback(loadedValue, object))
                 {
-                    ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
+                    ESP_LOGW("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
                     if(!callback(initialValue, object))
                     {
-                        ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load default value: \"%s\"", key.c_str(), initialValue.c_str());
+                        ESP_LOGW("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load default value: \"%s\"", key.c_str(), initialValue.c_str());
                     }
                 }
                 else
                 {
-                    ESP_LOGE("PreferencesWrapper: HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                    ESP_LOGI("PreferencesWrapper: HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
                 }
             }
             else

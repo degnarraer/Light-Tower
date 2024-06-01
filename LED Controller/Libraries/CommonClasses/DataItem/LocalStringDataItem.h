@@ -43,7 +43,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			if(mp_InitialValue)
 			{
 				stringValue = String(mp_InitialValue);
-				ESP_LOGE("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGD("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -91,7 +91,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			ESP_LOGE("LocalStringDataItem::SetValueFromString"
+			ESP_LOGD("LocalStringDataItem::SetValueFromString"
 					, "\"%s\": String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());
@@ -104,7 +104,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			assert(mp_Value != nullptr && "mp_Value must not be null");
 			assert(count <= DATAITEM_STRING_LENGTH && "String too long");
 			String newValue = String(value);
-			ESP_LOGI( "DataItem: SetValue"
+			ESP_LOGD( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, newValue.c_str() );
