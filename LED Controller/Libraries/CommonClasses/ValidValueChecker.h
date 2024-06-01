@@ -34,27 +34,27 @@ public:
                      , mp_ValidValueComparators(validValueComparators) {}
 
     virtual ~ValidValueChecker() {}
+    
+    bool IsConfigured() const
+    {
+        return (mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
+    }
 
     bool IsValidStringValue(String value) {
         if (mp_ValidStrings)
         {
             for (const String& validValue : *mp_ValidStrings)
             {
-                ESP_LOGE("TEST", "IsValidStringValue Match Check between: \"%s\" and \"%s\"", value.c_str(), validValue.c_str() );
+                ESP_LOGE("ValidValueChecker:IsValidStringValue", "IsValidStringValue Match Check between: \"%s\" and \"%s\"", value.c_str(), validValue.c_str() );
                 if (value.equals(validValue))
                 {
-                    ESP_LOGE("TEST", "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", value.c_str(), validValue.c_str() );
+                    ESP_LOGE("ValidValueChecker:IsValidStringValue", "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", value.c_str(), validValue.c_str() );
                     return true;
                 }
             }
-            ESP_LOGE("TEST", "IsValidStringValue INVALID VALUE!" );
+            ESP_LOGE("ValidValueChecker:IsValidStringValue", "IsValidStringValue INVALID VALUE!" );
             return false;
         } 
-        else
-        {
-            ESP_LOGE("TEST", "IsValidStringValue NULL POINTER!" );
-            return true;
-        }
     }
 
 private:

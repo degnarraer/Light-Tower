@@ -86,21 +86,21 @@ public:
         switch (updateType)
         {
         case PreferenceUpdateType::Timer:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", name.c_str());
+            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", name.c_str());
             HandleSave(name, saveValue);
             m_PreferenceTimerActive = false;
             m_Preferences_Last_Update = currentMillis;
             break;
         case PreferenceUpdateType::Initialize:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", name.c_str());
+            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", name.c_str());
             HandleSave(name, initialValue);
             break;
         case PreferenceUpdateType::Load:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", name.c_str());
+            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", name.c_str());
             HandleLoad(name, initialValue, callback, object);
             break;
         case PreferenceUpdateType::Save:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", name.c_str());
+            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", name.c_str());
             HandleSave(name, saveValue);
             m_Preferences_Last_Update = currentMillis;
             break;
@@ -144,40 +144,56 @@ protected:
 
     void HandleLoad(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
-        String loadedValue = mp_Preferences->getString(key.c_str(), initialValue);
-
-        if (callback && object)
+        
+        if(mp_Preferences)
         {
-            if(!callback(loadedValue, object))
+            ESP_LOGE("PreferencesWrapper: HandleLoad", "Loading Key: \"%s\"", key.c_str());
+            String loadedValue = mp_Preferences->getString(key.c_str(), initialValue);
+            if (callback && object)
             {
-                ESP_LOGE("HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
-                if(!callback(initialValue, object))
+                if(!callback(loadedValue, object))
                 {
-                    ESP_LOGE("HandleLoad", "\"%s\" Failed to Load default value: \"%s\"", key.c_str(), initialValue.c_str());
+                    ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", key.c_str(), initialValue.c_str());
+                    if(!callback(initialValue, object))
+                    {
+                        ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Failed to Load default value: \"%s\"", key.c_str(), initialValue.c_str());
+                    }
+                }
+                else
+                {
+                    ESP_LOGE("PreferencesWrapper: HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
                 }
             }
             else
             {
-                ESP_LOGE("PreferencesWrapper: HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", key.c_str(), loadedValue.c_str());
+                ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Null Callback Pointers!", key.c_str());
             }
         }
         else
         {
-            ESP_LOGE("HandleLoad", "\"%s\" Null Callback Pointers!", key.c_str());
+            ESP_LOGE("PreferencesWrapper: HandleLoad", "\"%s\" Null Pointer!", key.c_str());
         }
     }
 
-    void HandleSave(const String& key, const String& saveValue)
+    void HandleSave(const String& key, const String& string)
     {
-        ESP_LOGE("PreferencesWrapper: HandleSave", "Saving Key: \"%s\" Value: \"%s\"", key.c_str(), saveValue.c_str());
-        size_t saveLength = mp_Preferences->putString(key.c_str(), saveValue);
-        if(saveValue.length() != saveLength)
+        ESP_LOGE("PreferencesWrapper: HandleSave", "Saving Key: \"%s\" Value: \"%s\"", key.c_str(), string.c_str());
+        if(mp_Preferences)
         {
-            ESP_LOGE("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Value: \"%s\" Did Not Save Properly", key.c_str(), saveValue.c_str());   
+            mp_Preferences->putString(key.c_str(), string);
+            String savedString = mp_Preferences->getString(key.c_str(),"");
+            if(!string.equals(savedString))
+            {
+                ESP_LOGE("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", key.c_str(), string.c_str(), savedString.c_str());   
+            }
+            else
+            {
+                ESP_LOGE("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" String Saved: \"%s\"", key.c_str(), savedString.c_str());
+            }
         }
         else
         {
-            ESP_LOGE("PreferencesWrapper: HandleSave", "Saved Key: \"%s\" Value Saved: \"%s\"", key.c_str(), saveValue.c_str());
+            ESP_LOGE("PreferencesWrapper: HandleSave", "\"%s\" Null Pointer!", key.c_str());
         }
     }
 

@@ -43,8 +43,8 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     void SetupSettingsWebServerManager()
     {
-      SetupAllSetupCallees();
       InitializePreferences();
+      SetupAllSetupCallees();
       InitFileSystem();
     }
 
@@ -64,7 +64,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         ESP_LOGI("InitializePreferences", "NVS Initialized");
         ESP.restart();
       }
-      else if(true) //m_Preferences.getBool("Pref_Reset", true))
+      else if(m_Preferences.getBool("Pref_Reset", true))
       {
         m_Preferences.clear();
         ESP_LOGI("InitializePreferences", "Preferences Cleared!");

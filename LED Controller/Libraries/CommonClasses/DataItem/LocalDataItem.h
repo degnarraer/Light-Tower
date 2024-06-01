@@ -40,7 +40,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface )
-					 : ValidValueChecker()
+					 : m_ValidValueChecker(ValidValueChecker())
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
@@ -52,7 +52,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , const T& initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface )
-					 : ValidValueChecker()
+					 : m_ValidValueChecker(ValidValueChecker())
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
@@ -65,7 +65,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface
 					 , const ValidStringValues_t *validStringValues )
-					 : ValidValueChecker(validStringValues)
+					 : m_ValidValueChecker(ValidValueChecker(validStringValues))
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
@@ -78,7 +78,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface
 					 , const ValidStringValues_t *validStringValues )
-					 : ValidValueChecker(validStringValues)
+					 : m_ValidValueChecker(ValidValueChecker(validStringValues))
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
@@ -201,6 +201,8 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				return false;
 			}
 		}
+
+
 		
 		String GetInitialValueAsString()
 		{
@@ -364,7 +366,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				for(int i = 0; i< COUNT; ++i)
 				{
 					String stringValue = encodeToString(mp_Value[i]);
-					if(!this->IsValidStringValue( stringValue ) )
+					if(m_ValidValueChecker.IsConfigured() && !this->IsValidStringValue( stringValue ) )
 					{
 						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
 						validValue = false;
@@ -403,6 +405,8 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			assert(Count == COUNT && "Counts must equal");
 			return (memcmp(mp_Value, Object, Count) == 0);
 		}
+	private:
+		const ValidValueChecker &m_ValidValueChecker;
 	protected:
 		const String m_Name;
 		const T* const mp_InitialValuePtr;
