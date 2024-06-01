@@ -313,15 +313,15 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				ESP_LOGD("SetValueFromString",
 						"\"%s\": Set Value From String: \"%s\"",
 						m_Name.c_str(), substrings[i].c_str());
-				if(!(m_ValidValueChecker.IsConfigured() && !this->IsValidStringValue( substrings[i] )))
+				
+				if(m_ValidValueChecker.IsConfigured())
 				{
-					value[i] = decodeFromString(substrings[i]);
+					if(!this->IsValidStringValue( substrings[i] ) )
+					{
+						return false;
+					}
 				}
-				else
-				{
-					ESP_LOGE("SetValueFromString", "\"%s\" Set Invalid Value From String \"%s\"", m_Name.c_str(), substrings[i].c_str());
-					return false;
-				}
+				value[i] = decodeFromString(substrings[i]);
 			}
 
 			// Set the decoded values
@@ -364,10 +364,13 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				for(int i = 0; i< COUNT; ++i)
 				{
 					String stringValue = encodeToString(mp_Value[i]);
-					if(m_ValidValueChecker.IsConfigured() && !this->IsValidStringValue( stringValue ) )
+					if(m_ValidValueChecker.IsConfigured())
 					{
-						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
-						validValue = false;
+						if(!this->IsValidStringValue( stringValue ) )
+						{
+							ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
+							validValue = false;
+						}
 					}
 				}
 				if(validValue)

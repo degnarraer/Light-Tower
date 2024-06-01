@@ -19,7 +19,7 @@ typedef enum ComparatorType_t {
 
 typedef struct ValidValueComparator_t {
     const ComparatorType_t ComparatorType;
-    const String Value;
+    const String StringValue;
 } ValidValueComparator_t;
 
 typedef const std::vector<String> ValidStringValues_t;
@@ -31,11 +31,11 @@ public:
         : mp_ValidStrings(nullptr)
         , mp_ValidValueComparators(nullptr) {}
 
-    ValidValueChecker(ValidStringValues_t* validStrings)
+    ValidValueChecker(const ValidStringValues_t* const validStrings)
         : mp_ValidStrings(validStrings)
         , mp_ValidValueComparators(nullptr) {}
 
-    ValidValueChecker(ValidValueComparators_t* validValueComparators)
+    ValidValueChecker(const ValidValueComparators_t* const validValueComparators)
         : mp_ValidStrings(nullptr)
         , mp_ValidValueComparators(validValueComparators) {}
 
@@ -46,7 +46,7 @@ public:
         return (mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
     }
 
-    bool IsValidStringValue(String value)
+    bool IsValidStringValue(String stringValue)
     {
         if (mp_ValidStrings)
         {
@@ -54,12 +54,12 @@ public:
             {
                 ESP_LOGD("ValidValueChecker:IsValidStringValue", 
                          "IsValidStringValue Match Check between: \"%s\" and \"%s\"", 
-                         value.c_str(), validValue.c_str());
-                if (value.equals(validValue))
+                         stringValue.c_str(), validValue.c_str());
+                if (stringValue.equals(validValue))
                 {
                     ESP_LOGI("ValidValueChecker:IsValidStringValue", 
                              "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", 
-                             value.c_str(), validValue.c_str());
+                             stringValue.c_str(), validValue.c_str());
                     return true;
                 }
             }
@@ -67,10 +67,10 @@ public:
         } 
         else if (mp_ValidValueComparators)
         {
-            float numericValue = value.toFloat();  // Convert the string to a float
+            float numericValue = stringValue.toFloat();  // Convert the string to a float
             for (const ValidValueComparator_t& comparator : *mp_ValidValueComparators)
             {
-                float comparatorValue = comparator.Value.toFloat();  // Convert comparator value to float
+                float comparatorValue = comparator.StringValue.toFloat();  // Convert comparator value to float
                 bool isValid = false;
                 switch (comparator.ComparatorType) 
                 {
@@ -94,7 +94,7 @@ public:
                 {
                     ESP_LOGI("ValidValueChecker:IsValidStringValue", 
                              "\"%s\" IsValidStringValue VALID VALUE: \"%s\" with comparator %d", 
-                             value.c_str(), comparator.Value.c_str(), comparator.ComparatorType);
+                             stringValue.c_str(), comparator.StringValue.c_str(), comparator.ComparatorType);
                     return true;
                 }
             }
@@ -108,6 +108,6 @@ public:
     }
 
 private:
-    const ValidStringValues_t* mp_ValidStrings;
-    const ValidValueComparators_t* mp_ValidValueComparators;
+    const ValidStringValues_t* const mp_ValidStrings;
+    const ValidValueComparators_t* const mp_ValidValueComparators;
 };
