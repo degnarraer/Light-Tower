@@ -26,6 +26,7 @@
 #include <esp_heap_caps.h>
 #include "SerialMessageManager.h"
 #include "ValidValueChecker.h"
+#include "StringEncoderDecoder.h"
 
 #define ENCODE_DIVIDER "|"
 
@@ -34,6 +35,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				   , public SetupCalleeInterface
 				   , public DataTypeFunctions
 				   , public ValidValueChecker
+				   , public StringEncoderDecoder<T>
 {
 	public:
 		LocalDataItem( const String name
@@ -191,7 +193,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		{
 			if(mp_InitialValue)
 			{
-				stringValue = encodeToString(*mp_InitialValue);
+				stringValue = StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue);
 				ESP_LOGD("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
@@ -220,7 +222,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				std::vector<String> valueStrings;
 				for (size_t i = 0; i < COUNT; ++i)
 				{
-					valueStrings.push_back(encodeToString(mp_Value[i]));
+					valueStrings.push_back(StringEncoderDecoder<T>::EncodeToString(mp_Value[i]));
 				}
 				
 				for (size_t i = 0; i < COUNT - 1; ++i)
@@ -322,30 +324,11 @@ class LocalDataItem: public NamedCallbackInterface<T>
 						return false;
 					}
 				}
-				value[i] = decodeFromString(substrings[i]);
+				value[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
 			}
 
 			// Set the decoded values
 			return SetValue(value, COUNT);
-		}
-
-		T decodeFromString(String str) {
-			std::string stdStr = str.c_str();
-			std::istringstream iss(stdStr);
-			T value;
-			iss >> value;
-			return value;
-		}
-
-		String encodeToString(T value)
-		{
-			std::ostringstream oss;
-			oss << value;
-			if (oss.fail())
-			{
-				assert(false && "Failed to encode value to string");
-			}
-			return String(oss.str().c_str());
 		}
 
 		virtual bool SetValue(const T *value, size_t count)
@@ -364,7 +347,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			{
 				for(int i = 0; i< COUNT; ++i)
 				{
-					String stringValue = encodeToString(mp_Value[i]);
+					String stringValue = StringEncoderDecoder<T>::EncodeToString(mp_Value[i]);
 					if(m_ValidValueChecker.IsConfigured())
 					{
 						if(!this->IsValidStringValue( stringValue ) )

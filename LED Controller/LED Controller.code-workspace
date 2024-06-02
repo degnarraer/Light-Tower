@@ -73,7 +73,8 @@
 			"regex": "cpp",
 			"utility": "cpp",
 			"typeinfo": "cpp",
-			"*.tpp": "cpp"
+			"*.tpp": "cpp",
+			"any": "cpp"
 		}
 	}
 }

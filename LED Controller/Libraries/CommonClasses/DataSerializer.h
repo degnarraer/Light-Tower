@@ -15,14 +15,11 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
 
-#ifndef DataSerializer_H
-#define DataSerializer_H
-#include <stdlib.h>
-#include <Arduino.h>
-#include <Helpers.h>
-#include "Streaming.h"
 #include "Arduino_JSON.h"
+#include "Helpers.h"
+#include "Streaming.h"
 
 class DataSerializer: public CommonUtils
 					, public QueueController
@@ -179,6 +176,3 @@ class DataSerializer: public CommonUtils
 		String m_DataTypeTag = "Type";
 		String m_TotalByteCountTag = "Bytes";
 };
-
-
-#endif

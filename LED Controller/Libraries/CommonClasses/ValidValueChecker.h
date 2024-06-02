@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Arduino.h>
 #include <vector>
 #include <sstream>
 #include "Streaming.h"
@@ -44,7 +43,7 @@ public:
 
     bool IsConfigured() const
     {
-        return false; //(mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
+        return (mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
     }
 
     bool IsValidStringValue(String stringValue) const

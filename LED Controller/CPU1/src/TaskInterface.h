@@ -17,7 +17,6 @@
 */
 
 #pragma once
-#include <Arduino.h>
 #include <vector>
 #include "Streaming.h"
 #include "Tunes.h"

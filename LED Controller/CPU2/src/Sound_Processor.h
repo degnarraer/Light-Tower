@@ -16,10 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef SOUND_PROCESSOR_H
-#define SOUND_PROCESSOR_H
+#pragma once
 
-#include <Arduino.h>
 #include "arduinoFFT.h"
 #include "FFT_Calculator.h"
 #include "Amplitude_Calculator.h"
@@ -100,5 +98,3 @@ class Sound_Processor: public NamedItem
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;
 };
-
-#endif

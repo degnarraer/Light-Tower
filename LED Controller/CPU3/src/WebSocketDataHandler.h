@@ -17,7 +17,6 @@
 */
 #pragma once
 
-#include "Arduino.h"
 #include <freertos/portmacro.h>
 #include "Streaming.h"
 #include "Helpers.h"
