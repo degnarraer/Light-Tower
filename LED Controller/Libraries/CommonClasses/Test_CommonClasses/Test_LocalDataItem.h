@@ -25,30 +25,72 @@
 
 using ::testing::_;
 using ::testing::NotNull;
+using namespace testing;
 
-TEST(LocalDataItemTest, Registered_With_Setup_Caller)
+// Test Fixture for LocalDataItemTest
+class LocalDataItemSetupCallerTest : public Test
 {
-    MockSetupCallerInterface* mockSetupCaller = new MockSetupCallerInterface();
-    EXPECT_CALL(*mockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
+protected:
+    MockSetupCallerInterface* mockSetupCaller;
     const int32_t initialValue = 10;
+
+    void SetUp() override
+    {
+        mockSetupCaller = new MockSetupCallerInterface();
+    }
+
+    void TearDown() override
+    {
+        delete mockSetupCaller;
+    }
+};
+
+TEST_F(LocalDataItemSetupCallerTest, Registered_With_Setup_Caller)
+{
+    EXPECT_CALL(*mockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
     LocalDataItem<int32_t, 1> *dataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
     delete dataItem;
-    delete mockSetupCaller;
 }
 
-
-TEST(LocalDataItemTest, DeRegistered_With_Setup_Caller_On_Deletion)
+TEST_F(LocalDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
 {
-    MockSetupCallerInterface* mockSetupCaller = new MockSetupCallerInterface();
     EXPECT_CALL(*mockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
-    const int32_t initialValue = 10;
     LocalDataItem<int32_t, 1> *dataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
     delete dataItem;
-    delete mockSetupCaller;
+}
+
+// Test Fixture for LocalDataItemTest
+class LocalDataItemTest : public Test
+{
+protected:
+    MockSetupCallerInterface* mockSetupCaller;
+    const int32_t initialValue = 10;
+    LocalDataItem<int32_t, 1> *dataItem;
+    const String name = "Test Name";
+
+    void SetUp() override
+    {
+        mockSetupCaller = new MockSetupCallerInterface();
+        LocalDataItem<int32_t, 1> *dataItem = new LocalDataItem<int32_t, 1>( name 
+                                                                           , initialValue
+                                                                           , NULL
+                                                                           , mockSetupCaller );
+    }
+
+    void TearDown() override
+    {
+        delete mockSetupCaller;
+        delete dataItem;
+    }
+};
+
+TEST_F(LocalDataItemTest, Name_Is_Set)
+{
+    EXPECT_EQ(name, dataItem->GetName()); 
 }

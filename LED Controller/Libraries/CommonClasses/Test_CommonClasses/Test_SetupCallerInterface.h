@@ -25,6 +25,7 @@
 using ::testing::_;
 using ::testing::NotNull;
 using namespace testing;
+
 // Test Fixture for SetupCallerInterface
 class SetupCallerInterfaceTest : public Test
                                , public SetupCallerInterface
