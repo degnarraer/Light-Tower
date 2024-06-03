@@ -438,9 +438,9 @@ class QueueManager: public CommonUtils
 		}
 		
 	private:
-		DataItem_t* m_DataItem;
-		String m_Title;
-		size_t m_DataItemCount;
+		DataItem_t* m_DataItem = nullptr;
+		String m_Title = "";
+		size_t m_DataItemCount = 0;
 		bool m_MemoryAllocated = false;
 		void AllocateMemory(){
 			m_DataItemCount = GetDataItemConfigCount();

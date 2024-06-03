@@ -146,7 +146,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         Callback2Arguments* arguments = static_cast<Callback2Arguments*>(arg);
-        assert(arguments->arg1 && arguments->arg2 && "Null Pointers!");
+        assert((arguments->arg1 && arguments->arg2) && "Null Pointers!");
         Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
         CompatibleDevice_t *pTargetDevice = static_cast<CompatibleDevice_t*>(arguments->arg2);
         bool connect = *static_cast<bool*>(object);
@@ -178,7 +178,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert(arguments->arg1 && "Null Pointer!");
+        assert((arguments->arg1) && "Null Pointer!");
         Bluetooth_Source *BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
         bool disconnect = *static_cast<bool*>(object);
         if(BT_Out && disconnect)
@@ -240,7 +240,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert(arguments->arg1 && "Null Pointer!");
+        assert((arguments->arg1) && "Null Pointer!");
         Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
         bool autoReconnect = *static_cast<bool*>(object);
         ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Auto Reconnect Value Changed Value Changed: %i", autoReconnect);
@@ -258,7 +258,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert(arguments->arg1 && "Null Pointer!");
+        assert((arguments->arg1) && "Null Pointer!");
         Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
         bool resetBLE = *static_cast<bool*>(object);
         ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Reset Value Changed Value Changed: %i", resetBLE);
@@ -284,7 +284,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert(arguments->arg1 && "Null Pointer!");
+        assert((arguments->arg1) && "Null Pointer!");
         Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
         bool resetNVS = *static_cast<bool*>(object);
         ESP_LOGI("Manager::BluetoothSourceResetNVS_ValueChanged", "Bluetooth Source Reset NVS Value Changed: %i", resetNVS);
@@ -303,7 +303,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert(arguments->arg1 && "Null Pointer!");
+        assert((arguments->arg1) && "Null Pointer!");
         CompatibleDevice_t* targetCompatibleDevice = static_cast<CompatibleDevice_t*>(object);
         Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
         if(BT_Out && targetCompatibleDevice)
@@ -333,7 +333,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert(arguments->arg1 && "Null Pointer!");
+        assert((arguments->arg1) && "Null Pointer!");
         Manager* manager = static_cast<Manager*>(arguments->arg1);
         SoundOutputSource_t& soundOutputSource = *static_cast<SoundOutputSource_t*>(object);
         ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: %i", soundOutputSource);

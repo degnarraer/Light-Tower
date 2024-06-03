@@ -20,7 +20,7 @@ class StringEncoderDecoder
             oss << value;
             if (oss.fail())
             {
-                assert(false && "Failed to encode value to string");
+                assert((false) && "Failed to encode value to string");
             }
             return String(oss.str().c_str());
         }

@@ -100,9 +100,9 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValue(const char* value, size_t count)
 		{
-			assert(value != nullptr && "Value must not be null");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
-			assert(count <= DATAITEM_STRING_LENGTH && "String too long");
+			assert(value != nullptr);
+			assert(mp_Value != nullptr);
+			assert(count <= DATAITEM_STRING_LENGTH);
 			String newValue = String(value);
 			ESP_LOGD( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""

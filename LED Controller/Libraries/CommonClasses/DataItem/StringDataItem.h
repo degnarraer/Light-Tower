@@ -102,7 +102,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			assert(stringValue.length() <= DATAITEM_STRING_LENGTH && "String too long!");
+			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("StringDataItem::SetValueFromString"
 					, "\"%s\": String Value: \"%s\""
 					, m_Name.c_str()
@@ -112,8 +112,8 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValue(const char* value, size_t count) override
 		{
-			assert(value != nullptr && "Value must not be null");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
+			assert(value != nullptr);
+			assert(mp_Value != nullptr);
 			String newValue = String(value);
 			String currentValue = String(mp_TxValue);
 			assert(newValue.length() <= count);

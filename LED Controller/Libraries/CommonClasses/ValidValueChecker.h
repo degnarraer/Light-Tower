@@ -31,22 +31,22 @@ public:
         : mp_ValidStrings(nullptr)
         , mp_ValidValueComparators(nullptr) {}
 
-    ValidValueChecker(const ValidStringValues_t* const validStrings)
+    explicit ValidValueChecker(const ValidStringValues_t* const validStrings)
         : mp_ValidStrings(validStrings)
         , mp_ValidValueComparators(nullptr) {}
 
-    ValidValueChecker(const ValidValueComparators_t* const validValueComparators)
+    explicit ValidValueChecker(const ValidValueComparators_t* const validValueComparators)
         : mp_ValidStrings(nullptr)
         , mp_ValidValueComparators(validValueComparators) {}
 
     virtual ~ValidValueChecker() {}
 
-    bool IsConfigured() const
+    virtual bool IsConfigured() const
     {
         return (mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
     }
 
-    bool IsValidStringValue(String stringValue) const
+    virtual bool IsValidStringValue(String stringValue) const
     {
         if (mp_ValidStrings)
         {

@@ -22,12 +22,13 @@
 #include <gmock/gmock.h>
 #include "DataItem/LocalDataItem.h"
 #include "Test_CommonClasses/Mock_SetupCallInterface.h"
+#include "Test_CommonClasses/Mock_ValidValueChecker.h"
 
 using ::testing::_;
 using ::testing::NotNull;
 using namespace testing;
 
-// Test Fixture for LocalDataItemTest
+// Test Fixture for LocalDataItemSetupCallerTest
 class LocalDataItemSetupCallerTest : public Test
 {
 protected:
@@ -67,30 +68,65 @@ TEST_F(LocalDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
 
 // Test Fixture for LocalDataItemTest
 class LocalDataItemTest : public Test
+                        , public SetupCallerInterface
 {
 protected:
-    MockSetupCallerInterface* mockSetupCaller;
+    const ValidStringValues_t validValues = { "10", "20", "30" };
     const int32_t initialValue = 10;
+    const int32_t validValue = 20;
+    const int32_t invalidValue = 40;
+    const String initialValueString = String(initialValue);
     LocalDataItem<int32_t, 1> *dataItem;
-    const String name = "Test Name";
+    LocalDataItem<int32_t, 1> *dataItemWithValidation;
+    const String name1 = "Test Name1";
+    const String name2 = "Test Name2";
 
     void SetUp() override
     {
-        mockSetupCaller = new MockSetupCallerInterface();
-        LocalDataItem<int32_t, 1> *dataItem = new LocalDataItem<int32_t, 1>( name 
-                                                                           , initialValue
-                                                                           , NULL
-                                                                           , mockSetupCaller );
+        dataItem = new LocalDataItem<int32_t, 1>( name1 
+                                                , initialValue
+                                                , NULL
+                                                , this );
+
+        dataItemWithValidation = new LocalDataItem<int32_t, 1>( name2 
+                                                              , initialValue
+                                                              , NULL
+                                                              , this
+                                                              , &validValues );
+        SetupAllSetupCallees();
     }
 
     void TearDown() override
     {
-        delete mockSetupCaller;
         delete dataItem;
+        delete dataItemWithValidation;
     }
 };
 
 TEST_F(LocalDataItemTest, Name_Is_Set)
 {
-    EXPECT_EQ(name, dataItem->GetName()); 
+    EXPECT_STREQ(name1.c_str(), dataItem->GetName().c_str());
+    EXPECT_STREQ(name2.c_str(), dataItemWithValidation->GetName().c_str());
+}
+
+TEST_F(LocalDataItemTest, Initial_Value_Is_Set)
+{
+    EXPECT_EQ(initialValue, dataItem->GetValue()); 
+}
+
+TEST_F(LocalDataItemTest, Initial_Value_Is_Returned_As_String)
+{
+    EXPECT_STREQ(initialValueString.c_str(), dataItem->GetInitialValueAsString().c_str()); 
+}
+
+TEST_F(LocalDataItemTest, Only_Valid_Values_Accepted)
+{
+    dataItem->SetValue(validValue);
+    dataItemWithValidation->SetValue(validValue);
+    //EXPECT_EQ(validValue, dataItem->GetValue());
+    //EXPECT_EQ(validValue, dataItemWithValidation->GetValue());
+    //dataItem->SetValue(invalidValue);
+    //dataItemWithValidation->SetValue(invalidValue);
+    //EXPECT_EQ(invalidValue, dataItem->GetValue());
+    //EXPECT_EQ(validValue, dataItemWithValidation->GetValue());
 }

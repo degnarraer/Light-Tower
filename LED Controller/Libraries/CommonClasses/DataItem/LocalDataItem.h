@@ -32,7 +32,8 @@
 #define ENCODE_DIVIDER "|"
 
 template <typename T, size_t COUNT>
-class LocalDataItem: public NamedCallbackInterface<T>
+class 
+LocalDataItem: public NamedCallbackInterface<T>
 				   , public SetupCalleeInterface
 				   , public DataTypeFunctions
 				   , public ValidValueChecker
@@ -169,7 +170,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 		}
 		void GetValue(void* Object, size_t Count)
 		{
-			assert(Count == COUNT && "Counts must be equal");
+			assert((Count == COUNT) && "Counts must be equal");
 			if(mp_Value)
 			{
 				memcpy(Object, mp_Value, sizeof(T)*Count);
@@ -192,7 +193,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 
 		T GetValue()
 		{
-			assert(1 == COUNT && "Count must 1 to use this function");
+			assert((1 == COUNT) && "Count must 1 to use this function");
 			if(mp_Value)
 			{
 				return static_cast<T>(*mp_Value);
@@ -334,7 +335,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 				
 				if(m_ValidValueChecker.IsConfigured())
 				{
-					if(!this->IsValidStringValue( substrings[i] ) )
+					if(!m_ValidValueChecker.IsValidStringValue(substrings[i]) )
 					{
 						return false;
 					}
@@ -348,10 +349,10 @@ class LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValue(const T *value, size_t count)
 		{
-			assert(value != nullptr && "Value must not be null");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
-			assert(COUNT > 0 && "COUNT must be a valid index range for mp_Value");
-			assert(COUNT == count && "Counts must match");
+			assert((value != nullptr) && "Value must not be null");
+			assert((mp_Value != nullptr) && "mp_Value must not be null");
+			assert((COUNT > 0) && "COUNT must be a valid index range for mp_Value");
+			assert((COUNT == count) && "Counts must match");
 			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
@@ -365,7 +366,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					String stringValue = StringEncoderDecoder<T>::EncodeToString(mp_Value[i]);
 					if(m_ValidValueChecker.IsConfigured())
 					{
-						if(!this->IsValidStringValue( stringValue ) )
+						if(!m_ValidValueChecker.IsValidStringValue(stringValue))
 						{
 							ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
 							validValue = false;
@@ -382,33 +383,40 @@ class LocalDataItem: public NamedCallbackInterface<T>
 			return valueChanged;
 		}
 
-		virtual bool SetValue(T Value)
+		virtual bool SetValue(T value)
 		{
-			assert(COUNT == 1 && "COUNT must be 1 to use this");
-			assert(mp_Value != nullptr && "mp_Value must not be null");
-			ESP_LOGD( "LocalDataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
-					, this->m_Name.c_str()
-					, this->GetStringValue().c_str());
-			
-			bool ValueChanged = (memcmp(mp_Value, &Value, sizeof(T) * COUNT) != 0);
-			if(ValueChanged)
+			assert(COUNT == 1);
+			assert(mp_Value != nullptr);	
+			bool valueChanged = (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0);
+			bool validValue = true;
+
+			String stringValue = StringEncoderDecoder<T>::EncodeToString(value);
+			if(m_ValidValueChecker.IsConfigured() && !m_ValidValueChecker.IsValidStringValue( stringValue ))
 			{
-				memcpy(mp_Value, &Value, sizeof(T) * COUNT);
-				++this->m_ValueChangeCount;
-				this->CallCallbacks(this->m_Name.c_str(), mp_Value);
+				validValue = false;
 			}
-			return ValueChanged;
+			if(valueChanged && validValue)
+			{	
+				memcpy(mp_Value, &value, sizeof(T) * COUNT);
+				++m_ValueChangeCount;	
+				ESP_LOGD( "LocalDataItem: SetValue"
+						, "\"%s\" Set Value: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsString().c_str());	
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
+			}
+			return (valueChanged && validValue);
 		}
+
 		bool EqualsValue(T *Object, size_t Count)
 		{
-			assert(Count == COUNT && "Counts must equal");
+			assert((Count == COUNT) && "Counts must equal");
 			return (memcmp(mp_Value, Object, Count) == 0);
 		}
 	private:
 		const ValidValueChecker &m_ValidValueChecker;
 	protected:
-		const String m_Name;
+		String m_Name;
 		const T* const mp_InitialValuePtr;
 		T *mp_Value = nullptr;
 		String m_StringValue;

@@ -167,7 +167,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       if(arg && object)
       {
         CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
-        assert(pArguments->arg1 && "Null Pointers!");
+        assert((pArguments->arg1) && "Null Pointers!");
         SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
         char* pSSID = static_cast<char*>(object);
         ESP_LOGI("SSID_ValueChanged", "SSID Changed: %s", pSSID);
@@ -193,7 +193,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       if(arg && object)
       {
         CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
-        assert(pArguments->arg1 && "Null Pointers!");
+        assert((pArguments->arg1) && "Null Pointers!");
         SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
         char* pPassword = static_cast<char*>(object);
         ESP_LOGI("Password_ValueChanged", "Password Changed: %s", pPassword);
