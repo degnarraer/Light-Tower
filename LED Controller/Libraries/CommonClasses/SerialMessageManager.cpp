@@ -18,46 +18,6 @@
 
 #include "SerialMessageManager.h"
 
-void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* NewCallee)
-{
-	ESP_LOGD("RegisterForSetupCall", "Try Registering Callee");
-	bool IsFound = false;
-	for (SetupCalleeInterface* callee : m_SetupCallees)
-	{
-		if(NewCallee == callee)
-		{
-			ESP_LOGE("RegisterForSetupCall", "A callee with this name already exists!");
-			IsFound = true;
-			break;
-		}
-	}
-	if(false == IsFound)
-	{
-		ESP_LOGD("RegisterForSetupCall", "Callee Registered");
-		m_SetupCallees.push_back(NewCallee);
-	}
-}
-void SetupCallerInterface::DeRegisterForSetupCall(SetupCalleeInterface* Callee)
-{
-	auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), Callee);
-	if (it != m_SetupCallees.end())
-	{
-		m_SetupCallees.erase(it);
-	}
-}
-
-void SetupCallerInterface::SetupAllSetupCallees()
-{
-	ESP_LOGD("SetupCallerInterface", "Setup All Setup Callees");
-	for (SetupCalleeInterface* callee : m_SetupCallees)
-	{
-		if (callee) 
-		{
-			callee->Setup();
-		}
-	}
-}
-
 void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
 {
 	ESP_LOGD("RegisterForNewValueNotification", "Try Registering Callee");

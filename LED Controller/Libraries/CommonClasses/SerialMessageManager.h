@@ -24,26 +24,6 @@
 #define MaxQueueCount 10
 #define MaxMessageLength 500
 
-class SetupCalleeInterface
-{
-	public:
-		SetupCalleeInterface(){}
-		virtual ~SetupCalleeInterface(){}
-		virtual void Setup() = 0;
-};
-class SetupCallerInterface
-{
-	public:
-		SetupCallerInterface(){}
-		virtual ~SetupCallerInterface(){}
-		void RegisterForSetupCall(SetupCalleeInterface* NewCallee);
-		void DeRegisterForSetupCall(SetupCalleeInterface* Callee);
-	protected:
-		void SetupAllSetupCallees();
-	private:
-		std::vector<SetupCalleeInterface*> m_SetupCallees = std::vector<SetupCalleeInterface*>();
-};
-
 template <typename T>
 class NewRxTxValueCalleeInterface
 {

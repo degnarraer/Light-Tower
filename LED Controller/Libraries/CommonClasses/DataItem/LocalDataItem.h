@@ -25,6 +25,7 @@
 #include <Arduino.h>
 #include <esp_heap_caps.h>
 #include "SerialMessageManager.h"
+#include "SetupCallInterfaces.h"
 #include "ValidValueChecker.h"
 #include "StringEncoderDecoder.h"
 
@@ -47,7 +48,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , mp_InitialValuePtr(initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			mp_SetupCallerInterface->RegisterForSetupCall(this);
+			RegisterForSetup();
 		}
 		
 		LocalDataItem( const String name
@@ -59,7 +60,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , mp_InitialValuePtr(&initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			mp_SetupCallerInterface->RegisterForSetupCall(this);
+			RegisterForSetup();
 		}
 
 		LocalDataItem( const String name
@@ -72,7 +73,7 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , mp_InitialValuePtr(initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			mp_SetupCallerInterface->RegisterForSetupCall(this);
+			RegisterForSetup();
 		}
 		
 		LocalDataItem( const String name
@@ -85,16 +86,30 @@ class LocalDataItem: public NamedCallbackInterface<T>
 					 , mp_InitialValuePtr(&initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			mp_SetupCallerInterface->RegisterForSetupCall(this);
+			RegisterForSetup();
 		}
 		
 		virtual ~LocalDataItem()
 		{
 			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Freeing Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
-			heap_caps_free(mp_Value);
-			heap_caps_free(mp_InitialValue);
+			if(mp_Value) heap_caps_free(mp_Value);
+			if(mp_InitialValue) heap_caps_free(mp_InitialValue);
+			if(mp_SetupCallerInterface) mp_SetupCallerInterface->DeRegisterForSetupCall(this);
 		}
+
+		void RegisterForSetup()
+		{
+			if(mp_SetupCallerInterface)
+			{
+				mp_SetupCallerInterface->RegisterForSetupCall(this);
+			}
+			else
+			{
+				ESP_LOGW("LocalDataItem()", "Unable to register for Setup, NULL POINTER!");
+			}
+		}
+
 		virtual void Setup()
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
@@ -395,9 +410,9 @@ class LocalDataItem: public NamedCallbackInterface<T>
 	protected:
 		const String m_Name;
 		const T* const mp_InitialValuePtr;
-		T *mp_Value;
+		T *mp_Value = nullptr;
 		String m_StringValue;
-		T *mp_InitialValue;
+		T *mp_InitialValue = nullptr;
 		NamedCallback_t *mp_NamedCallback = NULL;
 		size_t m_ValueChangeCount = 0;
 	private:

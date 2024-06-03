@@ -1,12 +1,10 @@
-#ifndef DataTypes_H
-#define DataTypes_H
+#pragma once
 
-#include "Arduino.h"
-#include "Streaming.h"
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <type_traits>
+#include "Streaming.h"
 
 #define BT_NAME_LENGTH 50
 #define BT_ADDRESS_LENGTH 18
@@ -1067,5 +1065,3 @@ class DataTypeFunctions
 			return result;
 		}
 };
-
-#endif
