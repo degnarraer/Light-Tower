@@ -6,7 +6,8 @@ class StringEncoderDecoder
         StringEncoderDecoder(){}
         virtual ~StringEncoderDecoder(){}
 
-        T DecodeFromString(String str) {
+        T DecodeFromString(String str) const
+        {
             std::string stdStr = str.c_str();
             std::istringstream iss(stdStr);
             T value;
@@ -14,7 +15,7 @@ class StringEncoderDecoder
             return value;
         }
 
-        String EncodeToString(T value)
+        String EncodeToString(T value) const
         {
             std::ostringstream oss;
             oss << value;

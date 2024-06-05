@@ -105,7 +105,6 @@ void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* o
         if (namedCallback->Callback) 
         {
             namedCallback->Callback(namedCallback->Name, object, namedCallback->Arg);
-			break;
         }
     }
 }

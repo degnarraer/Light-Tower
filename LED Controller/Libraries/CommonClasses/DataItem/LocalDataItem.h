@@ -49,6 +49,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 , mp_InitialValuePtr(initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
 			RegisterForSetup();
 		}
 		
@@ -61,6 +62,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 , mp_InitialValuePtr(&initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
 			RegisterForSetup();
 		}
 
@@ -68,12 +70,13 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface
-					 , const ValidStringValues_t *validStringValues )
+					 , const ValidStringValues_t* const validStringValues )
 					 : m_ValidValueChecker(ValidValueChecker(validStringValues))
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
 			RegisterForSetup();
 		}
 		
@@ -81,12 +84,13 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 , const T& initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface
-					 , const ValidStringValues_t *validStringValues )
+					 , const ValidStringValues_t* const validStringValues )
 					 : m_ValidValueChecker(ValidValueChecker(validStringValues))
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
 			RegisterForSetup();
 		}
 		
@@ -94,9 +98,9 @@ LocalDataItem: public NamedCallbackInterface<T>
 		{
 			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Freeing Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
+			if(mp_SetupCallerInterface) mp_SetupCallerInterface->DeRegisterForSetupCall(this);
 			if(mp_Value) heap_caps_free(mp_Value);
 			if(mp_InitialValue) heap_caps_free(mp_InitialValue);
-			if(mp_SetupCallerInterface) mp_SetupCallerInterface->DeRegisterForSetupCall(this);
 		}
 
 		void RegisterForSetup()
@@ -113,7 +117,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual void Setup()
 		{
-			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
 			mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
@@ -134,7 +138,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
-					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
+					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 				}
@@ -145,10 +149,10 @@ LocalDataItem: public NamedCallbackInterface<T>
 						memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
 						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 					}
-					this->CallCallbacks(m_Name.c_str(), mp_Value);
-					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
+					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
+					this->CallCallbacks(m_Name.c_str(), mp_Value);
 				}
 			}
 			else
@@ -156,19 +160,19 @@ LocalDataItem: public NamedCallbackInterface<T>
 				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
 			}
 		}
-		String GetName()
+		String GetName() const
 		{
 			return m_Name;
 		}
-		size_t GetCount()
+		size_t GetCount() const
 		{
 			return m_Count;
 		}
-		size_t GetChangeCount()
+		size_t GetChangeCount() const
 		{
 			return m_ValueChangeCount;
 		}
-		void GetValue(void* Object, size_t Count)
+		void GetValue(void* Object, size_t Count) const
 		{
 			assert((Count == COUNT) && "Counts must be equal");
 			if(mp_Value)
@@ -182,7 +186,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		T* GetValuePointer()
+		T* GetValuePointer() const
 		{
 			if(!mp_Value)
 			{
@@ -191,7 +195,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			return mp_Value;
 		}
 
-		T GetValue()
+		T GetValue() const
 		{
 			assert((1 == COUNT) && "Count must 1 to use this function");
 			if(mp_Value)
@@ -205,32 +209,34 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		virtual bool GetStringInitialValue(String &stringValue)
+		virtual bool GetStringInitialValue(String &stringValue) const
 		{
 			if(mp_InitialValue)
 			{
 				stringValue = StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue);
-				ESP_LOGD("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGI("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
 			{
+				stringValue = "";
 				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
 				return false;
 			}
 		}
 
-		String GetInitialValueAsString()
+		String GetInitialValueAsString() const
 		{
 			String value;
 			if(!GetStringInitialValue(value))
 			{
+				ESP_LOGE("GetStringInitialValue", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
 				value = "";
 			}
 			return value;
 		}
 
-		virtual bool GetStringValue(String &stringValue)
+		virtual bool GetStringValue(String &stringValue) const
 		{
 			stringValue = "";
 			if (mp_Value && COUNT > 0)
@@ -247,7 +253,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					stringValue += ENCODE_DIVIDER;
 				}
 				stringValue += valueStrings[COUNT - 1];
-				ESP_LOGD("GetStringValue"
+				ESP_LOGI("GetStringValue"
 						, "\"%s\": Get String Value: %s"
 						, m_Name.c_str()
 						, stringValue.c_str());
@@ -269,7 +275,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			return m_StringValue;
 		}
 
-		virtual String GetValueAsString()
+		virtual String GetValueAsString() const
 		{
 			String value;
 			if(!GetStringValue(value))
@@ -303,6 +309,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValueFromString(const String& stringValue)
 		{
+			ESP_LOGI("SetValue", "SetValueFromString(const String& stringValue) Called");
 			T value[COUNT];
 			std::vector<String> substrings;
 			size_t start = 0;
@@ -329,7 +336,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			// Decode each substring and store it in the value array
 			for (size_t i = 0; i < COUNT; ++i) 
 			{
-				ESP_LOGD("SetValueFromString",
+				ESP_LOGI("SetValueFromString",
 						"\"%s\": Set Value From String: \"%s\"",
 						m_Name.c_str(), substrings[i].c_str());
 				
@@ -337,6 +344,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 				{
 					if(!m_ValidValueChecker.IsValidStringValue(substrings[i]) )
 					{
+						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), substrings[i].c_str() );
 						return false;
 					}
 				}
@@ -349,19 +357,16 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValue(const T *value, size_t count)
 		{
-			assert((value != nullptr) && "Value must not be null");
-			assert((mp_Value != nullptr) && "mp_Value must not be null");
-			assert((COUNT > 0) && "COUNT must be a valid index range for mp_Value");
-			assert((COUNT == count) && "Counts must match");
-			ESP_LOGD( "LocalDataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
-					, m_Name.c_str()
-					, GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-			bool valueChanged = (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0);
+			ESP_LOGI("SetValue", "SetValue(const T *value, size_t count) Called");
+			assert(value != nullptr);
+			assert(mp_Value != nullptr);
+			assert(COUNT > 0);
+			assert(COUNT == count);
+			bool valueChanged = (memcmp(mp_Value, value, sizeof(T) * COUNT) != 0);
 			bool validValue = true;
 			if(valueChanged)
 			{
-				for(int i = 0; i< COUNT; ++i)
+				for(int i = 0; i < COUNT; ++i)
 				{
 					String stringValue = StringEncoderDecoder<T>::EncodeToString(mp_Value[i]);
 					if(m_ValidValueChecker.IsConfigured())
@@ -375,8 +380,12 @@ LocalDataItem: public NamedCallbackInterface<T>
 				}
 				if(validValue)
 				{
-					memcpy(mp_Value, &value, sizeof(T) * COUNT);
+					memcpy(mp_Value, value, sizeof(T) * COUNT);
 					++m_ValueChangeCount;
+					ESP_LOGI( "LocalDataItem: SetValue"
+							, "\"%s\" Set Value: \"%s\""
+							, m_Name.c_str()
+							, GetValueString().c_str());
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
 				}
 			}
@@ -385,26 +394,27 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValue(T value)
 		{
+			ESP_LOGI("SetValue", "SetValue(T value) Called");
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
-			bool valueChanged = (memcmp(mp_Value, &value, sizeof(T) * COUNT) != 0);
+			bool valueChanged = (*mp_Value != value);
 			bool validValue = true;
-
-			String stringValue = StringEncoderDecoder<T>::EncodeToString(value);
-			if(m_ValidValueChecker.IsConfigured() && !m_ValidValueChecker.IsValidStringValue( stringValue ))
+			const String stringValue = StringEncoderDecoder<T>::EncodeToString(value);
+			if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(stringValue))
 			{
 				validValue = false;
 			}
-			if(valueChanged && validValue)
-			{	
-				memcpy(mp_Value, &value, sizeof(T) * COUNT);
-				++m_ValueChangeCount;	
+			if(true == valueChanged && true == validValue)
+			{
+				*mp_Value = value;
+				++m_ValueChangeCount;
 				ESP_LOGD( "LocalDataItem: SetValue"
 						, "\"%s\" Set Value: \"%s\""
 						, m_Name.c_str()
-						, GetValueAsString().c_str());	
+						, GetValueAsString().c_str());
 				this->CallCallbacks(m_Name.c_str(), mp_Value);
 			}
+			ESP_LOGI("SetValue", "SetValue(T value) Return");
 			return (valueChanged && validValue);
 		}
 
@@ -414,7 +424,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			return (memcmp(mp_Value, Object, Count) == 0);
 		}
 	private:
-		const ValidValueChecker &m_ValidValueChecker;
+		ValidValueChecker m_ValidValueChecker;
 	protected:
 		String m_Name;
 		const T* const mp_InitialValuePtr;

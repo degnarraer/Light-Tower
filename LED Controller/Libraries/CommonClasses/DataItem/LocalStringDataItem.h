@@ -38,7 +38,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
-		virtual bool GetStringInitialValue(String &stringValue) override
+		virtual bool GetStringInitialValue(String &stringValue) const override
 		{
 			if(mp_InitialValue)
 			{
@@ -53,7 +53,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			}
 		}
 
-		virtual bool GetStringValue(String &stringValue) override
+		virtual bool GetStringValue(String &stringValue) const override
 		{
 			if(mp_Value)
 			{
@@ -79,7 +79,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return m_StringValue;
 		}
 
-		virtual String GetValueAsString() override
+		virtual String GetValueAsString() const override
 		{
 			String value;
 			if(!GetStringValue(value))

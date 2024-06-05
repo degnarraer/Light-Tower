@@ -33,26 +33,33 @@ public:
 
     explicit ValidValueChecker(const ValidStringValues_t* const validStrings)
         : mp_ValidStrings(validStrings)
-        , mp_ValidValueComparators(nullptr) {}
+        , mp_ValidValueComparators(nullptr)
+        {
+            m_IsConfigured = true;
+        }
+
 
     explicit ValidValueChecker(const ValidValueComparators_t* const validValueComparators)
         : mp_ValidStrings(nullptr)
-        , mp_ValidValueComparators(validValueComparators) {}
+        , mp_ValidValueComparators(validValueComparators)
+        {
+            m_IsConfigured = true;
+        }
 
     virtual ~ValidValueChecker() {}
 
     virtual bool IsConfigured() const
     {
-        return (mp_ValidStrings != nullptr || mp_ValidValueComparators != nullptr);
+        return m_IsConfigured;
     }
 
-    virtual bool IsValidStringValue(String stringValue) const
+    virtual bool IsValidStringValue(const String &stringValue) const
     {
         if (mp_ValidStrings)
         {
             for (const String& validValue : *mp_ValidStrings)
             {
-                ESP_LOGD("ValidValueChecker:IsValidStringValue", 
+                ESP_LOGE("ValidValueChecker:IsValidStringValue", 
                          "IsValidStringValue Match Check between: \"%s\" and \"%s\"", 
                          stringValue.c_str(), validValue.c_str());
                 if (stringValue.equals(validValue))
@@ -110,4 +117,5 @@ public:
 private:
     const ValidStringValues_t* const mp_ValidStrings;
     const ValidValueComparators_t* const mp_ValidValueComparators;
+    bool m_IsConfigured = false;
 };

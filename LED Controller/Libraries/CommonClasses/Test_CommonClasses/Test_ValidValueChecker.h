@@ -20,7 +20,7 @@
 #include <gmock/gmock.h>
 #include "ValidValueChecker.h"
 
-TEST(ValidValueCheckerTest, PositiveValueTest)
+TEST(ValidValueCheckerTest, Positive_Value_Test)
 {
     String validValue = "A String";
     ValidStringValues_t validStrings = {validValue};
@@ -28,7 +28,7 @@ TEST(ValidValueCheckerTest, PositiveValueTest)
     EXPECT_TRUE(valueChecker.IsValidStringValue(validValue));
 }
 
-TEST(ValidValueCheckerTest, NegativeValueTest)
+TEST(ValidValueCheckerTest, Negative_Value_Test)
 {
     String validValue = "A String";
     String invalidValue = "B String";
@@ -37,7 +37,7 @@ TEST(ValidValueCheckerTest, NegativeValueTest)
     EXPECT_FALSE(valueChecker.IsValidStringValue(invalidValue));
 }
 
-TEST(ValidValueCheckerTest, IsConfigured)
+TEST(ValidValueCheckerTest, Is_Configured)
 {
     String validValue = "A String";
     String invalidValue = "B String";
@@ -46,7 +46,7 @@ TEST(ValidValueCheckerTest, IsConfigured)
     EXPECT_TRUE(valueChecker.IsConfigured());
 }
 
-TEST(ValidValueCheckerTest, IsNotConfigured)
+TEST(ValidValueCheckerTest, Is_Not_Configured)
 {
     String validValue = "A String";
     String invalidValue = "B String";
