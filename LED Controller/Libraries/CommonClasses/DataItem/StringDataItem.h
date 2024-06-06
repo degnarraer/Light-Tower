@@ -63,20 +63,31 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 		}
 
+		String GetInitialValueAsString() const override
+		{
+			String value;
+			if(!GetInitialValueAsString(value))
+			{
+				ESP_LOGE("GetInitialValueAsString", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
+				value = "";
+			}
+			return value;
+		}
+
 		virtual bool GetValueAsString(String &stringValue) const override
 		{
 			if(mp_Value)
 			{
 				stringValue = String(mp_Value);
-				ESP_LOGD("GetStringValue"
-						, "\"%s\": GetStringValue: %s"
+				ESP_LOGD("GetValueAsString"
+						, "\"%s\": GetValueAsString: %s"
 						, m_Name.c_str()
 						, stringValue.c_str());
 				return true;
 			}
 			else
 			{
-				ESP_LOGE("GetStringValue", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
 				return false;
 			}
 		}

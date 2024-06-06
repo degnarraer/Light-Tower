@@ -225,7 +225,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		String GetInitialValueAsString() const
+		virtual String GetInitialValueAsString() const
 		{
 			String value;
 			if(!GetInitialValueAsString(value))
@@ -253,7 +253,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					stringValue += ENCODE_DIVIDER;
 				}
 				stringValue += valueStrings[COUNT - 1];
-				ESP_LOGI("GetStringValue"
+				ESP_LOGI("GetValueAsString"
 						, "\"%s\": Get String Value: %s"
 						, m_Name.c_str()
 						, stringValue.c_str());
@@ -261,7 +261,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("GetStringValue", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
 				return false;
 			}
 		}

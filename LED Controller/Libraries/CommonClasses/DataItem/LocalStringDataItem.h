@@ -53,13 +53,24 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			}
 		}
 
+		virtual String GetInitialValueAsString() const
+		{
+			String value;
+			if(!GetInitialValueAsString(value))
+			{
+				ESP_LOGE("GetInitialValueAsString", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
+				value = "";
+			}
+			return value;
+		}
+
 		virtual bool GetValueAsString(String &stringValue) const override
 		{
 			if(mp_Value)
 			{
 				stringValue = String(mp_Value);
-				ESP_LOGD("GetStringValue"
-						, "\"%s\": GetStringValue: %s"
+				ESP_LOGD("GetValueAsString"
+						, "\"%s\": GetValueAsString: %s"
 						, m_Name.c_str()
 						, stringValue.c_str());
 				return true;
