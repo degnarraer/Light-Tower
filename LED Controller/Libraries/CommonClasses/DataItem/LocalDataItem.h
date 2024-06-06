@@ -209,12 +209,12 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		virtual bool GetStringInitialValue(String &stringValue) const
+		virtual bool GetInitialValueAsString(String &stringValue) const
 		{
 			if(mp_InitialValue)
 			{
 				stringValue = StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue);
-				ESP_LOGI("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGI("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -228,15 +228,15 @@ LocalDataItem: public NamedCallbackInterface<T>
 		String GetInitialValueAsString() const
 		{
 			String value;
-			if(!GetStringInitialValue(value))
+			if(!GetInitialValueAsString(value))
 			{
-				ESP_LOGE("GetStringInitialValue", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
+				ESP_LOGE("GetInitialValueAsString", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
 				value = "";
 			}
 			return value;
 		}
 
-		virtual bool GetStringValue(String &stringValue) const
+		virtual bool GetValueAsString(String &stringValue) const
 		{
 			stringValue = "";
 			if (mp_Value && COUNT > 0)
@@ -266,19 +266,10 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		virtual String& GetValueString()
-		{
-			if(!GetStringValue(m_StringValue))
-			{
-				m_StringValue = "";
-			}
-			return m_StringValue;
-		}
-
 		virtual String GetValueAsString() const
 		{
 			String value;
-			if(!GetStringValue(value))
+			if(!GetValueAsString(value))
 			{
 				value = "";
 			}
@@ -340,13 +331,10 @@ LocalDataItem: public NamedCallbackInterface<T>
 						"\"%s\": Set Value From String: \"%s\"",
 						m_Name.c_str(), substrings[i].c_str());
 				
-				if(m_ValidValueChecker.IsConfigured())
+				if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
-					if(!m_ValidValueChecker.IsValidStringValue(substrings[i]) )
-					{
-						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), substrings[i].c_str() );
-						return false;
-					}
+					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), substrings[i].c_str() );
+					return false;
 				}
 				value[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
 			}
@@ -364,32 +352,29 @@ LocalDataItem: public NamedCallbackInterface<T>
 			assert(COUNT == count);
 			bool valueChanged = (memcmp(mp_Value, value, sizeof(T) * COUNT) != 0);
 			bool validValue = true;
-			if(valueChanged)
+			if(true == valueChanged)
 			{
 				for(int i = 0; i < COUNT; ++i)
 				{
-					String stringValue = StringEncoderDecoder<T>::EncodeToString(mp_Value[i]);
-					if(m_ValidValueChecker.IsConfigured())
+					String stringValue = StringEncoderDecoder<T>::EncodeToString(value[i]);
+					if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(stringValue))
 					{
-						if(!m_ValidValueChecker.IsValidStringValue(stringValue))
-						{
-							ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
-							validValue = false;
-						}
+						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
+						validValue = false;
 					}
 				}
-				if(validValue)
+				if(true == validValue)
 				{
 					memcpy(mp_Value, value, sizeof(T) * COUNT);
 					++m_ValueChangeCount;
 					ESP_LOGI( "LocalDataItem: SetValue"
 							, "\"%s\" Set Value: \"%s\""
 							, m_Name.c_str()
-							, GetValueString().c_str());
+							, GetValueAsString().c_str());
 					this->CallCallbacks(m_Name.c_str(), mp_Value);
 				}
 			}
-			return valueChanged;
+			return (valueChanged && validValue);
 		}
 
 		virtual bool SetValue(T value)
@@ -400,7 +385,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			bool valueChanged = (*mp_Value != value);
 			bool validValue = true;
 			const String stringValue = StringEncoderDecoder<T>::EncodeToString(value);
-			if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(stringValue))
+			if(true == valueChanged && true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(stringValue))
 			{
 				validValue = false;
 			}
@@ -429,7 +414,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 		String m_Name;
 		const T* const mp_InitialValuePtr;
 		T *mp_Value = nullptr;
-		String m_StringValue;
 		T *mp_InitialValue = nullptr;
 		NamedCallback_t *mp_NamedCallback = NULL;
 		size_t m_ValueChangeCount = 0;

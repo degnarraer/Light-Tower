@@ -48,12 +48,12 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("StringDataItem::~StringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
-		virtual bool GetStringInitialValue(String &stringValue) const override
+		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
 			if(mp_InitialValue)
 			{
 				stringValue = String(mp_InitialValue);
-				ESP_LOGD("GetStringInitialValue", "\"%s\": GetStringInitialValue: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -63,7 +63,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 		}
 
-		virtual bool GetStringValue(String &stringValue) const override
+		virtual bool GetValueAsString(String &stringValue) const override
 		{
 			if(mp_Value)
 			{
@@ -81,19 +81,10 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 		}
 
-		virtual String& GetValueString() override
-		{
-			if(!GetStringValue(m_StringValue))
-			{
-				m_StringValue = "";
-			}
-			return m_StringValue;
-		}
-
 		virtual String GetValueAsString() const override
 		{
 			String value;
-			if(!GetStringValue(value))
+			if(!GetValueAsString(value))
 			{
 				value = "";
 			}

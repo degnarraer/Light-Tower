@@ -169,7 +169,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       KVP signalValue;
       signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value) )
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
       {
         ESP_LOGI( "WebSocketDataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
@@ -233,7 +233,7 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     { 
       KVP signalValue;
       signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetStringValue(signalValue.Value) )
+      if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
       {
         ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
