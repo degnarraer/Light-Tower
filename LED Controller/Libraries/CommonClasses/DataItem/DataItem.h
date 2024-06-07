@@ -145,13 +145,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 		virtual ~DataItem()
 		{
 			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", this->GetName().c_str());
+			esp_timer_stop(m_TxTimer);
+			//esp_timer_delete(m_TxTimer);
 			if(mp_RxValue) heap_caps_free(mp_RxValue);
 			if(mp_TxValue) heap_caps_free(mp_TxValue);
-			if(m_TxTimer)
-			{
-				esp_timer_stop(m_TxTimer);
-				esp_timer_delete(m_TxTimer);
-			}
 		}
 		void Setup()
 		{
@@ -361,14 +358,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 	private:
 		bool m_DataLinkEnabled = true;
 		esp_timer_handle_t m_TxTimer;
+		esp_timer_create_args_t timerArgs;
 		void CreateTxTimer()
 		{
-			esp_timer_create_args_t timerArgs;
 			timerArgs.callback = &StaticDataItem_Periodic_TX;
 			timerArgs.arg = this;
 			timerArgs.name = "Tx_Timer";
-
-			// Create the timer
 			esp_timer_create(&timerArgs, &m_TxTimer);
 		}
 		void DataItem_Periodic_TX()
