@@ -134,9 +134,9 @@ class StringDataItemWithPreferences: public StringDataItem
 			return result;
 		}
 
-		bool NewRXValueReceived(void* object, size_t count)
+		virtual bool NewRxValueReceived(void* object, size_t count) override
 		{
-			bool result = StringDataItem::NewRXValueReceived(object, count);
+			bool result = StringDataItem::NewRxValueReceived(object, count);
 			if(result) 
 			{
 				this->Update_Preference( PreferenceUpdateType::Save

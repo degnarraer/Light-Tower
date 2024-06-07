@@ -144,9 +144,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return result;
 		}
 
-		bool NewRXValueReceived(void* Object, size_t Count)
+		virtual bool NewRxValueReceived(void* Object, size_t Count) override
 		{
-			bool result = DataItem<T, COUNT>::NewRXValueReceived(Object, Count);
+			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
 			if(result)
 			{
 				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save

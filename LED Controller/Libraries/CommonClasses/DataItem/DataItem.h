@@ -58,6 +58,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
+			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
 			CreateTxTimer();
 		}
 
@@ -77,6 +78,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 				
 		{
+			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
 			CreateTxTimer();
 		}
 		
@@ -96,6 +98,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
+			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
 			CreateTxTimer();
 		}
 
@@ -115,6 +118,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)	
 		{
+			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
 			CreateTxTimer();
 		}
 
@@ -134,16 +138,20 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_Rate(rate)
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
+			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
 			CreateTxTimer();
 		}
 		
 		virtual ~DataItem()
 		{
-			ESP_LOGI("DataItem::~DataItem()", "\"%s\": Freeing Memory", this->GetName().c_str());
-			heap_caps_free(mp_RxValue);
-			heap_caps_free(mp_TxValue);
-			esp_timer_stop(m_TxTimer);
-			esp_timer_delete(m_TxTimer);
+			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", this->GetName().c_str());
+			if(mp_RxValue) heap_caps_free(mp_RxValue);
+			if(mp_TxValue) heap_caps_free(mp_TxValue);
+			if(m_TxTimer)
+			{
+				esp_timer_stop(m_TxTimer);
+				esp_timer_delete(m_TxTimer);
+			}
 		}
 		void Setup()
 		{
@@ -298,7 +306,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 						ValueUpdated = true;		
 					}
 				}
-				ESP_LOGI( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
+				ESP_LOGD( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
 						, this->m_SerialPortMessageManager.GetName().c_str()
 						, this->m_Name.c_str()
 						, this->GetValueAsString().c_str() );
@@ -309,11 +317,11 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			return ValueUpdated;
 		}
-		bool NewRXValueReceived(void* Object, size_t Count)
+		virtual bool NewRxValueReceived(void* Object, size_t Count) override
 		{	
 			bool ValueUpdated = false;
 			T* receivedValue = static_cast<T*>(Object);
-			ESP_LOGI( "DataItem: NewRXValueReceived"
+			ESP_LOGD( "DataItem: NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
 					, this->m_SerialPortMessageManager.GetName().c_str()
 					, this->m_Name.c_str()
@@ -321,7 +329,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
-				ESP_LOGD( "DataItem: NewRXValueReceived"
+				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, this->m_Name.c_str()
 						, this->GetValueAsString().c_str());
@@ -334,7 +342,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			if(RxTxType_Rx_Echo_Value == this->m_RxTxType)
 			{
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
-				ESP_LOGD( "DataItem: NewRXValueReceived"
+				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, this->m_Name.c_str()
 						, this->GetValueAsString().c_str());

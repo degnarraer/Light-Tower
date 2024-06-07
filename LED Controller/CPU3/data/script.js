@@ -87,7 +87,7 @@ function onload(event)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = 'BT_Sink_Auto_ReConnect';
-		Root.SignalValue.Value = String(sink_BT_Auto_ReConnect_Toggle_Button.checked);
+		Root.SignalValue.Value = sink_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0";
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	});
@@ -98,7 +98,7 @@ function onload(event)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = 'BT_Source_Reset';
-		Root.SignalValue.Value = String(source_BT_Reset_Toggle_Button.checked);
+		Root.SignalValue.Value = source_BT_Reset_Toggle_Button.checked? "1" : "0";
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	});
@@ -109,7 +109,7 @@ function onload(event)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = 'BT_Source_Auto_Reconnect';
-		Root.SignalValue.Value = String(source_BT_Auto_ReConnect_Toggle_Button.checked);
+		Root.SignalValue.Value = source_BT_Auto_ReConnect_Toggle_Button.checked ? "1" : "0";
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	});
@@ -207,7 +207,7 @@ function sink_Connect(element, isPressed)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed.toString();
+		Root.SignalValue.Value = isPressed ? "1" : "0";
 		websocket.send(JSON.stringify(Root));
 	}
 }
@@ -222,7 +222,7 @@ function sink_Disconnect(element, isPressed)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed.toString();
+		Root.SignalValue.Value = isPressed ? "1" : "0";
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -238,7 +238,7 @@ function source_Connect(element, isPressed)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed.toString();
+		Root.SignalValue.Value = isPressed ? "1" : "0";
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -254,7 +254,7 @@ function source_Disconnect(element, isPressed)
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed.toString();
+		Root.SignalValue.Value = isPressed ? "1" : "0";
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
 	}
@@ -668,7 +668,7 @@ function handleBTSinkAutoReConnect(id, value) {
 		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Sink_Auto_ReConnect"]');
 		elementsWithDataValue.forEach(function(element){
 			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(value == 'true'){
+				if(value == '1'){
 					element.checked = true;
 				}else{
 					element.checked = false;
@@ -687,7 +687,7 @@ function handleBTSourceAutoReconnect(id, value) {
 		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Auto_ReConnect"]');
 		elementsWithDataValue.forEach(function(element){
 			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(value == 'true'){
+				if(value == '1'){
 					element.checked = true;
 				}else{
 					element.checked = false;
@@ -720,7 +720,7 @@ function handleBTSourceReset(id, value) {
 		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Reset"]');
 		elementsWithDataValue.forEach(function(element){
 			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(value == 'true'){
+				if(value == '1'){
 					element.checked = true;
 				}else{
 					element.checked = false;

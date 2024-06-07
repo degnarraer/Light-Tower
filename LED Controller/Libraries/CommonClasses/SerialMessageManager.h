@@ -17,6 +17,8 @@
 */
 
 #pragma once
+#include <HardwareSerial.h>
+#include <Arduino.h>
 #include <vector>
 #include "Helpers.h"
 #include "DataSerializer.h"
@@ -38,7 +40,7 @@ class NewRxTxValueCalleeInterface
 		}
 		virtual bool NewRxValueReceived(T* object, size_t count) = 0;
 		virtual String GetName() = 0;
-		size_t GetCount(){ return m_Count;}
+		virtual size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
 };
@@ -55,7 +57,7 @@ class NamedCallbackInterface
 		{
 			
 		}
-		void RegisterNamedCallback(NamedCallback_t *namedCallback)
+		virtual void RegisterNamedCallback(NamedCallback_t *namedCallback)
 		{
 			ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
 			NamedCallback_t* newNamedCallback = new NamedCallback_t(*namedCallback);
@@ -76,7 +78,7 @@ class NamedCallbackInterface
 				m_NamedCallbacks.push_back(newNamedCallback);
 			}	
 		}
-		void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
+		virtual void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
 		{
 			// Find the iterator pointing to the element
 			auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
@@ -88,7 +90,7 @@ class NamedCallbackInterface
 			}
 		}
 	protected:
-		void CallCallbacks(const String& name, T* object)
+		virtual void CallCallbacks(const String& name, T* object)
 		{
 			ESP_LOGD("NotifyCallee", "CallCallbacks");
 			for (NamedCallback_t* namedCallback : m_NamedCallbacks)
@@ -119,7 +121,7 @@ class NewRxTxValueCallerInterface
 			
 		}
 		virtual void SetNewTxValue(const T* object, const size_t count) = 0;
-		void RegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* NewCallee)
+		virtual void RegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* NewCallee)
 		{
 			ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
 			bool IsFound = false;
@@ -138,7 +140,7 @@ class NewRxTxValueCallerInterface
 				m_NewValueCallees.push_back(NewCallee);
 			}
 		}
-		void DeRegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* Callee)
+		virtual void DeRegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* Callee)
 		{
 			// Find the iterator pointing to the element
 			auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
@@ -150,7 +152,7 @@ class NewRxTxValueCallerInterface
 		}
 		
 	protected:
-		void NotifyCallee(const String& name, T* object)
+		virtual void NotifyCallee(const String& name, T* object)
 		{
 			ESP_LOGD("NotifyCallee", "Notify Callees");
 			for (NewRxTxValueCalleeInterface<T>* callee : m_NewValueCallees)
@@ -159,7 +161,7 @@ class NewRxTxValueCallerInterface
 				{
 					if (callee->GetName().equals(name))
 					{
-						callee->NewRXValueReceived(object, callee->GetCount());
+						callee->NewRxValueReceived(object, callee->GetCount());
 						break;
 					}
 				}
@@ -181,9 +183,9 @@ class NewRxTxVoidObjectCalleeInterface
 		{
 			
 		}
-		virtual bool NewRXValueReceived(void* object, size_t Count) = 0;
+		virtual bool NewRxValueReceived(void* object, size_t Count) = 0;
 		virtual String GetName() = 0;
-		size_t GetCount(){ return m_Count;}
+		virtual size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
 };
@@ -199,15 +201,13 @@ class NewRxTxVoidObjectCallerInterface
 		{
 			
 		}
-		
-		void RegisterForTXNotification(NewRxTxVoidObjectCalleeInterface* NewCallee, size_t Rate);
-		void RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee);
-		void DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee);
-		void RegisterNamedCallback(NamedCallback_t* NamedCallback);
-		void DeRegisterNamedCallback(NamedCallback_t* NamedCallback);
+		virtual void RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee);
+		virtual void DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee);
+		virtual void RegisterNamedCallback(NamedCallback_t* NamedCallback);
+		virtual void DeRegisterNamedCallback(NamedCallback_t* NamedCallback);
 	protected:
-		void NotifyCallee(const String& name, void* object);
-		void CallCallbacks(const String& name, void* object);
+		virtual void NotifyCallee(const String& name, void* object);
+		virtual void CallCallbacks(const String& name, void* object);
 	private:
 		std::vector<NewRxTxVoidObjectCalleeInterface*> m_NewValueCallees = std::vector<NewRxTxVoidObjectCalleeInterface*>();
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
@@ -228,21 +228,23 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		}
 		virtual ~SerialPortMessageManager()
 		{
-			if(m_RXTaskHandle)
+			if(m_RXTaskHandle && eTaskGetState(m_RXTaskHandle) != eDeleted)
 			{
-				ESP_LOGI("~SerialPortMessageManager", "Deleted the RX Task.");
+				ESP_LOGI("~SerialPortMessageManager", "Deleting RX Task.");
 				vTaskDelete(m_RXTaskHandle);
+        		m_RXTaskHandle = NULL;
 			}
-			if(m_TXTaskHandle)
+			if(m_TXTaskHandle && eTaskGetState(m_TXTaskHandle) != eDeleted)
 			{
-				ESP_LOGI("~SerialPortMessageManager", "Deleted the TX Task.");
+				ESP_LOGI("~SerialPortMessageManager", "Deleting TX Task.");
 				vTaskDelete(m_TXTaskHandle);
+        		m_TXTaskHandle = NULL;
 			}
 		}
-		void SetupSerialPortMessageManager();
-		bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
-		bool QueueMessage(const String& message);
-		String GetName()
+		virtual void SetupSerialPortMessageManager();
+		virtual bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
+		virtual bool QueueMessage(const String& message);
+		virtual String GetName()
 		{
 			return m_Name;
 		}
@@ -260,11 +262,11 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
 			aSerialPortMessageManager->SerialPortMessageManager_RxTask();
 		}
-		void SerialPortMessageManager_RxTask();
+		virtual void SerialPortMessageManager_RxTask();
 		static void StaticSerialPortMessageManager_TxTask(void *Parameters)
 		{
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
 			aSerialPortMessageManager->SerialPortMessageManager_TxTask();
 		}
-		void SerialPortMessageManager_TxTask();
+		virtual void SerialPortMessageManager_TxTask();
 };

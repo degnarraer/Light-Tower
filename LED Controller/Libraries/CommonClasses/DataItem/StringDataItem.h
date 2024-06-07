@@ -159,7 +159,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			return valueUpdated;
 		}
 
-		bool NewRXValueReceived(void* object, size_t count)
+		virtual bool NewRxValueReceived(void* object, size_t count) override
 		{ 
 			bool valueUpdated = false;
 			char* receivedValue = (char*)object;
@@ -167,7 +167,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			{
 				ZeroOutCharArray(mp_RxValue);
 				strcpy(mp_RxValue, receivedValue);
-				ESP_LOGI( "DataItem: NewRXValueReceived"
+				ESP_LOGI( "DataItem: NewRxValueReceived"
 						, "\"%s\" New RX Value Received: \"%s\""
 						, m_Name.c_str()
 						, receivedValue );

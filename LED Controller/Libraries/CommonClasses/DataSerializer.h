@@ -28,12 +28,12 @@ class DataSerializer: public CommonUtils
 	public:
 		DataSerializer(){}
 		virtual ~DataSerializer(){}
-		void SetDataSerializerDataItems(DataItem_t& DataItem, size_t DataItemCount)
+		virtual void SetDataSerializerDataItems(DataItem_t& DataItem, size_t DataItemCount)
 		{
 			m_DataItems = &DataItem;
 			m_DataItemsCount = DataItemCount;
 		}
-		String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
+		virtual String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
 		{
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
@@ -62,7 +62,7 @@ class DataSerializer: public CommonUtils
 			m_SerializeDoc[m_CheckSumTag] = CheckSum;
 			return JSON.stringify(m_SerializeDoc);
 		}
-		bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
+		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 			bool deserialized = false;
@@ -134,7 +134,7 @@ class DataSerializer: public CommonUtils
 			FailPercentage();
 			return deserialized;
 		}
-		void FailPercentage()
+		virtual void FailPercentage()
 		{
 			m_CurrentTime = millis();
 			++m_TotalCount;
@@ -146,7 +146,7 @@ class DataSerializer: public CommonUtils
 				m_TotalCount = 0;
 			}	
 		}
-		bool AllTagsExist(JSONVar &jsonObject)
+		virtual bool AllTagsExist(JSONVar &jsonObject)
 		{
 			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
 			bool result = true;
