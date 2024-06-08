@@ -42,33 +42,33 @@ protected:
 
     void TearDown() override
     {
-        delete mockSetupCaller;
+        free(mockSetupCaller);
     }
 };
 
 TEST_F(LocalDataItemSetupCallerTest, Registered_With_Setup_Caller)
 {
     EXPECT_CALL(*mockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
-    LocalDataItem<int32_t, 1> *dataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
+    LocalDataItem<int32_t, 1> *mp_DataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
-    delete dataItem;
+    free(mp_DataItem);
 }
 
 TEST_F(LocalDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
 {
     EXPECT_CALL(*mockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
-    LocalDataItem<int32_t, 1> *dataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
+    LocalDataItem<int32_t, 1> *mp_DataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
-    delete dataItem;
+    free(mp_DataItem);
 }
 
 // Test Fixture for LocalDataItemTest
-class LocalDataItemTest : public Test
-                        , public SetupCallerInterface
+class LocalDataItemTest: public Test
+                       , public SetupCallerInterface
 {
 protected:
     const ValidStringValues_t validValues = { "10", "20", "30" };
@@ -88,10 +88,10 @@ protected:
     const String validValue1ArrayString = "20|20|20|20|20|20|20|20|20|20";
     const String validValue2ArrayString = "30|30|30|30|30|30|30|30|30|30";
     const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
-    LocalDataItem<int32_t, 1> *dataItem;
-    LocalDataItem<int32_t, 10> *dataItemArray;
-    LocalDataItem<int32_t, 1> *dataItemWithValidation;
-    LocalDataItem<int32_t, 10> *dataItemArrayWithValidation;
+    LocalDataItem<int32_t, 1> *mp_DataItem;
+    LocalDataItem<int32_t, 10> *mp_DataItemArray;
+    LocalDataItem<int32_t, 1> *mp_DataItemWithValidation;
+    LocalDataItem<int32_t, 10> *mp_DataItemArrayWithValidation;
     const String name1 = "Test Name1";
     const String name2 = "Test Name2";
     const String name3 = "Test Name3";
@@ -99,224 +99,226 @@ protected:
 
     void SetUp() override
     {
-        dataItem = new LocalDataItem<int32_t, 1>( name1 
-                                                , initialValue
-                                                , nullptr
-                                                , this );
+        mp_DataItem = new LocalDataItem<int32_t, 1>( name1 
+                                                   , initialValue
+                                                   , nullptr
+                                                   , this );
 
-        dataItemArray = new LocalDataItem<int32_t, 10>( name2 
+        mp_DataItemArray = new LocalDataItem<int32_t, 10>( name2 
                                                       , initialValue
                                                       , nullptr
                                                       , this );
 
-        dataItemWithValidation = new LocalDataItem<int32_t, 1>( name3 
-                                                              , initialValue
-                                                              , nullptr
-                                                              , this
-                                                              , &validValues );
+        mp_DataItemWithValidation = new LocalDataItem<int32_t, 1>( name3 
+                                                                 , initialValue
+                                                                 , nullptr
+                                                                 , this
+                                                                 , &validValues );
 
-        dataItemArrayWithValidation = new LocalDataItem<int32_t, 10>( name4 
-                                                                    , initialValue
-                                                                    , nullptr
-                                                                    , this
-                                                                    , &validValues );
+        mp_DataItemArrayWithValidation = new LocalDataItem<int32_t, 10>( name4 
+                                                                       , initialValue
+                                                                       , nullptr
+                                                                       , this
+                                                                       , &validValues );
         SetupAllSetupCallees();
     }
 
     void TearDown() override
     {
-        delete dataItem;
-        delete dataItemWithValidation;
+        free(mp_DataItem);
+        free(mp_DataItemArray);
+        free(mp_DataItemWithValidation);
+        free(mp_DataItemArrayWithValidation);
     }
 };
 
 TEST_F(LocalDataItemTest, dataItem_Name_Is_Set)
 {
-    EXPECT_STREQ(name1.c_str(), dataItem->GetName().c_str());
+    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemArray_Name_Is_Set)
 {
-    EXPECT_STREQ(name2.c_str(), dataItemArray->GetName().c_str());
+    EXPECT_STREQ(name2.c_str(), mp_DataItemArray->GetName().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Name_Is_Set)
 {
-    EXPECT_STREQ(name3.c_str(), dataItemWithValidation->GetName().c_str());
+    EXPECT_STREQ(name3.c_str(), mp_DataItemWithValidation->GetName().c_str());
 }
 
 TEST_F(LocalDataItemTest, dataItem_Initial_Value_Is_Set)
 {
-    EXPECT_EQ(initialValue, dataItem->GetValue());
+    EXPECT_EQ(initialValue, mp_DataItem->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemArray_Initial_Value_Is_Set)
 {
-    EXPECT_EQ(initialValue, dataItemWithValidation->GetValue());
+    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Initial_Value_Is_Set)
 {
-    EXPECT_EQ(initialValue, dataItemWithValidation->GetValue());
+    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
 
 TEST_F(LocalDataItemTest, dataItem_Initial_Value_Is_Returned_As_String)
 {
-    EXPECT_STREQ(initialValueString.c_str(), dataItem->GetInitialValueAsString().c_str());
+    EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemArray_Initial_Value_Is_Returned_As_String)
 {
-    EXPECT_STREQ(initialValueString.c_str(), dataItemArray->GetInitialValueAsString().c_str());
+    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemArray->GetInitialValueAsString().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
 {
-    EXPECT_STREQ(initialValueString.c_str(), dataItemWithValidation->GetInitialValueAsString().c_str());
+    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetInitialValueAsString().c_str());
 }
 
 TEST_F(LocalDataItemTest, dataItem_Value_Is_Returned_As_String)
 {
-    EXPECT_STREQ(initialValueString.c_str(), dataItem->GetValueAsString().c_str());
+    EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetValueAsString().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemArray_Value_Is_Returned_As_String)
 {
-    EXPECT_STREQ(initialValueArrayString.c_str(), dataItemArray->GetValueAsString().c_str());
+    EXPECT_STREQ(initialValueArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Value_Is_Returned_As_String)
 {
-    EXPECT_STREQ(initialValueString.c_str(), dataItemWithValidation->GetValueAsString().c_str());
+    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str());
 }
 
 TEST_F(LocalDataItemTest, dataItem_Set_Value_From_Value_Converts_To_String)
 {
-    dataItem->SetValue(validValue1);
-    EXPECT_STREQ(validValue1String.c_str(), dataItem->GetValueAsString().c_str());
+    mp_DataItem->SetValue(validValue1);
+    EXPECT_STREQ(validValue1String.c_str(), mp_DataItem->GetValueAsString().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemArray_Set_Value_From_Value_Converts_To_String)
 {
-    dataItemArray->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
-    EXPECT_STREQ(validValue1ArrayString.c_str(), dataItemArray->GetValueAsString().c_str());
+    mp_DataItemArray->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
+    EXPECT_STREQ(validValue1ArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    dataItemWithValidation->SetValue(validValue1);
-    EXPECT_STREQ(validValue1String.c_str(), dataItemWithValidation->GetValueAsString().c_str()); 
+    mp_DataItemWithValidation->SetValue(validValue1);
+    EXPECT_STREQ(validValue1String.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str()); 
 }
 
 TEST_F(LocalDataItemTest, dataItem_Set_Value_From_String_Converts_To_Value)
 {
-    dataItem->SetValueFromString(validValue1String);
-    EXPECT_EQ(validValue1, dataItem->GetValue());
+    mp_DataItem->SetValueFromString(validValue1String);
+    EXPECT_EQ(validValue1, mp_DataItem->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemArray_Set_Value_From_String_Converts_To_Value)
 {
-    dataItemArray->SetValueFromString(validValue1ArrayString);
-    for(size_t i = 0; i < dataItemArray->GetCount(); ++i)
+    mp_DataItemArray->SetValueFromString(validValue1ArrayString);
+    for(size_t i = 0; i < mp_DataItemArray->GetCount(); ++i)
     {
-        EXPECT_EQ(validValue1Array[i], dataItemArray->GetValuePointer()[i]);
+        EXPECT_EQ(validValue1Array[i], mp_DataItemArray->GetValuePointer()[i]);
     }
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    dataItemWithValidation->SetValueFromString(validValue1String);
-    EXPECT_EQ(validValue1, dataItemWithValidation->GetValue()); 
+    mp_DataItemWithValidation->SetValueFromString(validValue1String);
+    EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue()); 
 }
 
 TEST_F(LocalDataItemTest, dataItem_Valid_Values_Accepted_When_Validation_Is_Used)
 {
-    dataItem->SetValue(validValue1);
-    EXPECT_EQ(validValue1, dataItem->GetValue());
+    mp_DataItem->SetValue(validValue1);
+    EXPECT_EQ(validValue1, mp_DataItem->GetValue());
 
-    dataItem->SetValueFromString(validValue2String);
-    EXPECT_EQ(validValue2, dataItem->GetValue());
+    mp_DataItem->SetValueFromString(validValue2String);
+    EXPECT_EQ(validValue2, mp_DataItem->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
 {
-    dataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(validValue1, dataItemWithValidation->GetValue());
+    mp_DataItemWithValidation->SetValue(validValue1);
+    EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue());
 
-    dataItemWithValidation->SetValueFromString(validValue2String);
-    EXPECT_EQ(validValue2, dataItemWithValidation->GetValue());
+    mp_DataItemWithValidation->SetValueFromString(validValue2String);
+    EXPECT_EQ(validValue2, mp_DataItemWithValidation->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemArrayWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
 {
-    dataItemArrayWithValidation->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
-    for(size_t i = 0; i < dataItemArrayWithValidation->GetCount(); ++i)
+    mp_DataItemArrayWithValidation->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
+    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
     {
-        EXPECT_EQ(validValue1Array[i], dataItemArrayWithValidation->GetValuePointer()[i]);
+        EXPECT_EQ(validValue1Array[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
     }
 
-    dataItemArrayWithValidation->SetValue(validValue2Array, sizeof(validValue2Array)/sizeof(validValue2Array[0]));
-    for(size_t i = 0; i < dataItemArrayWithValidation->GetCount(); ++i)
+    mp_DataItemArrayWithValidation->SetValue(validValue2Array, sizeof(validValue2Array)/sizeof(validValue2Array[0]));
+    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
     {
-        EXPECT_EQ(validValue2Array[i], dataItemArrayWithValidation->GetValuePointer()[i]);
+        EXPECT_EQ(validValue2Array[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
     }
 }
 
 TEST_F(LocalDataItemTest, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
-    dataItem->SetValue(invalidValue);
-    EXPECT_EQ(invalidValue, dataItem->GetValue());
+    mp_DataItem->SetValue(invalidValue);
+    EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
     
-    dataItem->SetValue(initialValue);
-    EXPECT_EQ(initialValue, dataItem->GetValue());
+    mp_DataItem->SetValue(initialValue);
+    EXPECT_EQ(initialValue, mp_DataItem->GetValue());
     
-    dataItem->SetValueFromString(invalidValueString);
-    EXPECT_EQ(invalidValue, dataItem->GetValue());
+    mp_DataItem->SetValueFromString(invalidValueString);
+    EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
-    dataItemWithValidation->SetValue(invalidValue);
-    EXPECT_NE(invalidValue, dataItemWithValidation->GetValue());
+    mp_DataItemWithValidation->SetValue(invalidValue);
+    EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
 
-    dataItemWithValidation->SetValue(initialValue);
-    EXPECT_EQ(initialValue, dataItemWithValidation->GetValue());
+    mp_DataItemWithValidation->SetValue(initialValue);
+    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 
-    dataItemWithValidation->SetValueFromString(invalidValueString);
-    EXPECT_NE(invalidValue, dataItemWithValidation->GetValue());
+    mp_DataItemWithValidation->SetValueFromString(invalidValueString);
+    EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
 }
 TEST_F(LocalDataItemTest, dataItemArrayWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
-    dataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
-    for(size_t i = 0; i < dataItemArrayWithValidation->GetCount(); ++i)
+    mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
+    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
     {
-        EXPECT_NE(invalidValueArray[i], dataItemArrayWithValidation->GetValuePointer()[i]);
+        EXPECT_NE(invalidValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
     }
     
-    dataItemArrayWithValidation->SetValue(initialValueArray, sizeof(initialValueArray)/sizeof(initialValueArray[0]));
-    for(size_t i = 0; i < dataItemArrayWithValidation->GetCount(); ++i)
+    mp_DataItemArrayWithValidation->SetValue(initialValueArray, sizeof(initialValueArray)/sizeof(initialValueArray[0]));
+    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
     {
-        EXPECT_EQ(initialValueArray[i], dataItemArrayWithValidation->GetValuePointer()[i]);
+        EXPECT_EQ(initialValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
     }
     
-    dataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
-    for(size_t i = 0; i < dataItemArrayWithValidation->GetCount(); ++i)
+    mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
+    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
     {
-        EXPECT_NE(invalidValueArray[i], dataItemArrayWithValidation->GetValuePointer()[i]);
+        EXPECT_NE(invalidValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
     }
 }
 
 TEST_F(LocalDataItemTest, Previous_Value_Retained_When_Value_Rejected)
 {
-    dataItemWithValidation->SetValue(invalidValue);
-    EXPECT_EQ(initialValue, dataItemWithValidation->GetValue());
+    mp_DataItemWithValidation->SetValue(invalidValue);
+    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
 
 TEST_F(LocalDataItemTest, Change_Count_Changes_Properly)
 {
-    EXPECT_EQ(0, dataItemWithValidation->GetChangeCount());
-    dataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(1, dataItemWithValidation->GetChangeCount());
-    dataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(1, dataItemWithValidation->GetChangeCount());
-    dataItemWithValidation->SetValue(validValue2);
-    EXPECT_EQ(2, dataItemWithValidation->GetChangeCount());
-    dataItemWithValidation->SetValue(validValue2);
-    EXPECT_EQ(2, dataItemWithValidation->GetChangeCount());
-    dataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(3, dataItemWithValidation->GetChangeCount());
-    dataItemWithValidation->SetValue(invalidValue);
-    EXPECT_EQ(3, dataItemWithValidation->GetChangeCount());
+    EXPECT_EQ(0, mp_DataItemWithValidation->GetChangeCount());
+    mp_DataItemWithValidation->SetValue(validValue1);
+    EXPECT_EQ(1, mp_DataItemWithValidation->GetChangeCount());
+    mp_DataItemWithValidation->SetValue(validValue1);
+    EXPECT_EQ(1, mp_DataItemWithValidation->GetChangeCount());
+    mp_DataItemWithValidation->SetValue(validValue2);
+    EXPECT_EQ(2, mp_DataItemWithValidation->GetChangeCount());
+    mp_DataItemWithValidation->SetValue(validValue2);
+    EXPECT_EQ(2, mp_DataItemWithValidation->GetChangeCount());
+    mp_DataItemWithValidation->SetValue(validValue1);
+    EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
+    mp_DataItemWithValidation->SetValue(invalidValue);
+    EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
 }
 
 TEST_F(LocalDataItemTest, Count_Reflects_DataItem_Count)
 {
-    EXPECT_EQ(1, dataItem->GetCount());
-    EXPECT_EQ(10, dataItemArray->GetCount());
-    EXPECT_EQ(1, dataItemWithValidation->GetCount());
+    EXPECT_EQ(1, mp_DataItem->GetCount());
+    EXPECT_EQ(10, mp_DataItemArray->GetCount());
+    EXPECT_EQ(1, mp_DataItemWithValidation->GetCount());
 }

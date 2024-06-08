@@ -146,7 +146,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{
 			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", this->GetName().c_str());
 			esp_timer_stop(m_TxTimer);
-			//esp_timer_delete(m_TxTimer);
+			esp_timer_delete(m_TxTimer);
 			if(mp_RxValue) heap_caps_free(mp_RxValue);
 			if(mp_TxValue) heap_caps_free(mp_TxValue);
 		}
@@ -198,6 +198,11 @@ class DataItem: public LocalDataItem<T, COUNT>
 		String GetName()
 		{
 			return LocalDataItem<T, COUNT>::GetName();
+		}
+
+		size_t GetCount() const
+		{
+			return LocalDataItem<T, COUNT>::GetCount();
 		}
 
 		void SetNewTxValue(const T* Value, const size_t Count)
