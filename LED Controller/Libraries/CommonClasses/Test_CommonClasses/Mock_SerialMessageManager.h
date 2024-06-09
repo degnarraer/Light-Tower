@@ -139,4 +139,12 @@ public:
     MOCK_METHOD(String, GetName, (), (override));
     MOCK_METHOD(void, SerialPortMessageManager_RxTask, (), (override));
     MOCK_METHOD(void, SerialPortMessageManager_TxTask, (), (override));
+
+    //NewRxTxValueCallerInterface
+    MOCK_METHOD(void, RegisterForNewValueNotification, (NewRxTxVoidObjectCalleeInterface* NewCallee), (override));	
+    MOCK_METHOD(void, DeRegisterForNewValueNotification, (NewRxTxVoidObjectCalleeInterface* Callee), (override));
+    MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));	
+    MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));
+    MOCK_METHOD(void, NotifyCallee, (const String& name, void* object), (override));
+    MOCK_METHOD(void, CallCallbacks, (const String& name, void* object), (override));
 };

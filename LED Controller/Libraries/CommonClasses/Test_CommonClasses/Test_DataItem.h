@@ -20,6 +20,8 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <thread>
+#include <chrono>
 #include "DataItem/DataItem.h"
 #include "Test_CommonClasses/Mock_SetupCallInterface.h"
 #include "Test_CommonClasses/Mock_ValidValueChecker.h"
@@ -29,13 +31,12 @@ using ::testing::_;
 using ::testing::NotNull;
 using namespace testing;
 
-// Test Fixture for LocalDataItemSetupCallerTest
-class DataItemSetupCallerTest : public Test
+// Test Fixture for DataItemFunctionCallTests
+class DataItemFunctionCallTests : public Test
 {
 protected:
     const int32_t initialValue = 10;
     const String name1 = "Test Name1";
-    const String name2 = "Test Name2";
     MockSetupCallerInterface *mp_MockSetupCaller;
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
@@ -49,15 +50,14 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-
     }
-    void CreateDataItem()
+    void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
         mp_DataItem = new DataItem<int32_t, 1>( name1 
                                               , initialValue
-                                              , RxTxType_Rx_Only
-                                              , UpdateStoreType_On_Rx
-                                              , 0
+                                              , rxTxType
+                                              , updateStoreType
+                                              , rate
                                               , *mp_MockSerialPortMessageManager
                                               , NULL
                                               , mp_MockSetupCaller );
@@ -67,27 +67,122 @@ protected:
     {
         free(mp_MockSerialPortMessageManager);
         free(mp_MockSetupCaller);
+        DestroyDataItem();
     }
     void DestroyDataItem()
     {
-        free(mp_DataItem);
+        if(mp_DataItem)
+        {
+            free(mp_DataItem);
+            mp_DataItem = nullptr;
+        }
     }
 };
 
-TEST_F(DataItemSetupCallerTest, Registered_With_Setup_Caller)
+TEST_F(DataItemFunctionCallTests, Registered_With_Setup_Caller)
 {
     EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
+    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
 }
 
-TEST_F(DataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
+TEST_F(DataItemFunctionCallTests, DeRegistered_With_Setup_Caller_On_Deletion)
 {
+    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
     EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
+    DestroyDataItem();
 }
 
+TEST_F(DataItemFunctionCallTests, Registers_For_New_Value_Notification_For_Rx_Only)
+{
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
+    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+}
+TEST_F(DataItemFunctionCallTests, Registers_For_New_Value_Notification_For_Rx_Echo_Value)
+{
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
+    CreateDataItem(RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0);
+}
 
+TEST_F(DataItemFunctionCallTests, DeRegisters_For_New_Value_Notification_For_Rx_At_Deletion)
+{
+    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
+    DestroyDataItem();
+    CreateDataItem(RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
+    DestroyDataItem();
+}
 
-// Test Fixture for DataItemTest
-class DataItemTest : public Test
+TEST_F(DataItemFunctionCallTests, Does_Not_Register_Or_Deregister_For_New_Value_Notification_For_Tx)
+{
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(0);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(0);
+    CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 0);
+    DestroyDataItem();
+    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0);
+    DestroyDataItem();
+    CreateDataItem(RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 0);
+    DestroyDataItem();
+}
+
+// Test Fixture for DataItem Rx Tx Tests
+class DataItemRxTxTests : public Test
+                        , public SetupCallerInterface
+{
+protected:
+    const int32_t initialValue = 10;
+    const String name1 = "Test Name1";
+    MockHardwareSerial m_MockHardwareSerial;
+    MockDataSerializer m_MockDataSerializer;
+    MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+    DataItem<int32_t, 1> *mp_DataItem;
+
+    void SetUp() override
+    {
+        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name1
+                                                                          , m_MockHardwareSerial
+                                                                          , m_MockDataSerializer
+                                                                          , 0 );
+    }
+    void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
+    {
+        mp_DataItem = new DataItem<int32_t, 1>( name1 
+                                              , initialValue
+                                              , rxTxType
+                                              , updateStoreType
+                                              , rate
+                                              , *mp_MockSerialPortMessageManager
+                                              , NULL
+                                              , this );
+        SetupAllSetupCallees();
+    }
+
+    void TearDown() override
+    {
+        free(mp_MockSerialPortMessageManager);
+        DestroyDataItem();
+    }
+    void DestroyDataItem()
+    {
+        if(mp_DataItem)
+        {
+            free(mp_DataItem);
+            mp_DataItem = nullptr;
+        }
+    }
+};
+
+TEST_F(DataItemRxTxTests, Tx_Called_Periodically)
+{
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10)
+        .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
+    CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 100);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1050));
+}
+
+// Test Fixture for DataItemGetAndSetValueTests
+class DataItemGetAndSetValueTests : public Test
                    , public SetupCallerInterface
 {
 protected:
@@ -126,7 +221,8 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-                                                                          mp_DataItem = new DataItem<int32_t, 1>( name1 
+                                                                          
+        mp_DataItem = new DataItem<int32_t, 1>( name1 
                                               , initialValue
                                               , RxTxType_Rx_Only
                                               , UpdateStoreType_On_Rx
@@ -164,7 +260,6 @@ protected:
                                                                   , this
                                                                   , &validValues );
         SetupAllSetupCallees();
-
     }
 
     void TearDown() override
@@ -177,80 +272,80 @@ protected:
     }
 };
 
-TEST_F(DataItemTest, dataItem_Name_Is_Set)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Name_Is_Set)
 {
     EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
 }
-TEST_F(DataItemTest, dataItemArray_Name_Is_Set)
+TEST_F(DataItemGetAndSetValueTests, dataItemArray_Name_Is_Set)
 {
     EXPECT_STREQ(name2.c_str(), mp_DataItemArray->GetName().c_str());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Name_Is_Set)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Name_Is_Set)
 {
     EXPECT_STREQ(name3.c_str(), mp_DataItemWithValidation->GetName().c_str());
 }
 
-TEST_F(DataItemTest, dataItem_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Set)
 {
     EXPECT_EQ(initialValue, mp_DataItem->GetValue());
 }
-TEST_F(DataItemTest, dataItemArray_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTests, dataItemArray_Initial_Value_Is_Set)
 {
     EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Initial_Value_Is_Set)
 {
     EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
 
-TEST_F(DataItemTest, dataItem_Initial_Value_Is_Returned_As_String)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
 }
-TEST_F(DataItemTest, dataItemArray_Initial_Value_Is_Returned_As_String)
+TEST_F(DataItemGetAndSetValueTests, dataItemArray_Initial_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItemArray->GetInitialValueAsString().c_str());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetInitialValueAsString().c_str());
 }
 
-TEST_F(DataItemTest, dataItem_Value_Is_Returned_As_String)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetValueAsString().c_str());
 }
-TEST_F(DataItemTest, dataItemArray_Value_Is_Returned_As_String)
+TEST_F(DataItemGetAndSetValueTests, dataItemArray_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Value_Is_Returned_As_String)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str());
 }
 
-TEST_F(DataItemTest, dataItem_Set_Value_From_Value_Converts_To_String)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Set_Value_From_Value_Converts_To_String)
 {
     mp_DataItem->SetValue(validValue1);
     EXPECT_STREQ(validValue1String.c_str(), mp_DataItem->GetValueAsString().c_str());
 }
-TEST_F(DataItemTest, dataItemArray_Set_Value_From_Value_Converts_To_String)
+TEST_F(DataItemGetAndSetValueTests, dataItemArray_Set_Value_From_Value_Converts_To_String)
 {
     mp_DataItemArray->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
     EXPECT_STREQ(validValue1ArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
 {
     mp_DataItemWithValidation->SetValue(validValue1);
     EXPECT_STREQ(validValue1String.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str());
 }
 
-TEST_F(DataItemTest, dataItem_Set_Value_From_String_Converts_To_Value)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Set_Value_From_String_Converts_To_Value)
 {
     mp_DataItem->SetValueFromString(validValue1String);
     EXPECT_EQ(validValue1, mp_DataItem->GetValue());
 }
-TEST_F(DataItemTest, dataItemArray_Set_Value_From_String_Converts_To_Value)
+TEST_F(DataItemGetAndSetValueTests, dataItemArray_Set_Value_From_String_Converts_To_Value)
 {
     mp_DataItemArray->SetValueFromString(validValue1ArrayString);
     for(size_t i = 0; i < mp_DataItemArray->GetCount(); ++i)
@@ -258,13 +353,13 @@ TEST_F(DataItemTest, dataItemArray_Set_Value_From_String_Converts_To_Value)
         EXPECT_EQ(validValue1Array[i], mp_DataItemArray->GetValuePointer()[i]);
     }
 }
-TEST_F(DataItemTest, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
 {
     mp_DataItemWithValidation->SetValueFromString(validValue1String);
     EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue());
 }
 
-TEST_F(DataItemTest, dataItem_Valid_Values_Accepted_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Valid_Values_Accepted_When_Validation_Is_Used)
 {
     mp_DataItem->SetValue(validValue1);
     EXPECT_EQ(validValue1, mp_DataItem->GetValue());
@@ -272,7 +367,7 @@ TEST_F(DataItemTest, dataItem_Valid_Values_Accepted_When_Validation_Is_Used)
     mp_DataItem->SetValueFromString(validValue2String);
     EXPECT_EQ(validValue2, mp_DataItem->GetValue());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
 {
     mp_DataItemWithValidation->SetValue(validValue1);
     EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue());
@@ -280,7 +375,7 @@ TEST_F(DataItemTest, dataItemWithValidation_Valid_Values_Accepted_When_Validatio
     mp_DataItemWithValidation->SetValueFromString(validValue2String);
     EXPECT_EQ(validValue2, mp_DataItemWithValidation->GetValue());
 }
-TEST_F(DataItemTest, dataItemArrayWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
 {
     mp_DataItemArrayWithValidation->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
     for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
@@ -295,7 +390,7 @@ TEST_F(DataItemTest, dataItemArrayWithValidation_Valid_Values_Accepted_When_Vali
     }
 }
 
-TEST_F(DataItemTest, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTests, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
     mp_DataItem->SetValue(invalidValue);
     EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
@@ -306,7 +401,7 @@ TEST_F(DataItemTest, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
     mp_DataItem->SetValueFromString(invalidValueString);
     EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
 }
-TEST_F(DataItemTest, dataItemWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
     mp_DataItemWithValidation->SetValue(invalidValue);
     EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
@@ -317,7 +412,7 @@ TEST_F(DataItemTest, dataItemWithValidation_Invalid_Values_Rejected_When_Validat
     mp_DataItemWithValidation->SetValueFromString(invalidValueString);
     EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
 }
-TEST_F(DataItemTest, dataItemArrayWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
     mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
     for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
@@ -338,13 +433,13 @@ TEST_F(DataItemTest, dataItemArrayWithValidation_Invalid_Values_Rejected_When_Va
     }
 }
 
-TEST_F(DataItemTest, Previous_Value_Retained_When_Value_Rejected)
+TEST_F(DataItemGetAndSetValueTests, Previous_Value_Retained_When_Value_Rejected)
 {
     mp_DataItemWithValidation->SetValue(invalidValue);
     EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
 
-TEST_F(DataItemTest, Change_Count_Changes_Properly)
+TEST_F(DataItemGetAndSetValueTests, Change_Count_Changes_Properly)
 {
     EXPECT_EQ(0, mp_DataItemWithValidation->GetChangeCount());
     mp_DataItemWithValidation->SetValue(validValue1);
@@ -361,9 +456,14 @@ TEST_F(DataItemTest, Change_Count_Changes_Properly)
     EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
 }
 
-TEST_F(DataItemTest, Count_Reflects_DataItem_Count)
+TEST_F(DataItemGetAndSetValueTests, Count_Reflects_DataItem_Count)
 {
     EXPECT_EQ(1, mp_DataItem->GetCount());
     EXPECT_EQ(10, mp_DataItemArray->GetCount());
     EXPECT_EQ(1, mp_DataItemWithValidation->GetCount());
+}
+
+TEST_F(DataItemGetAndSetValueTests, New_Value_Triggers_Tx)
+{
+
 }
