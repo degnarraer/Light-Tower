@@ -59,7 +59,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
-			CreateTxTimer();
 		}
 
 		DataItem( const String name
@@ -79,7 +78,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
-			CreateTxTimer();
 		}
 		
 		DataItem( const String name
@@ -99,7 +97,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
-			CreateTxTimer();
 		}
 
 		DataItem( const String name
@@ -119,7 +116,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)	
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
-			CreateTxTimer();
 		}
 
 		DataItem( const String name
@@ -139,59 +135,37 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_SerialPortMessageManager(serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
-			CreateTxTimer();
 		}
 		
 		virtual ~DataItem()
 		{
-			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", this->GetName().c_str());
-			esp_timer_stop(m_TxTimer);
-			esp_timer_delete(m_TxTimer);
+			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());
+			SetDataLinkEnabled(false);
 			if(mp_RxValue) heap_caps_free(mp_RxValue);
 			if(mp_TxValue) heap_caps_free(mp_TxValue);
 		}
-		void Setup()
+		virtual void Setup() override
 		{
-			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalDataItem<T,COUNT>::GetName().c_str());
 			LocalDataItem<T, COUNT>::Setup();
 			mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			if (mp_RxValue && mp_TxValue && this->mp_InitialValuePtr)
+			if(this->mp_Value)
 			{
-				if (std::is_same<T, char>::value)
+				if (mp_RxValue && mp_TxValue)
 				{
-					String InitialValue = String((char*)this->mp_InitialValuePtr);
-					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
-							, this->m_Name.c_str()
-							, InitialValue.c_str());
-					for (size_t i = 0; i < COUNT; ++i)
-					{
-						char value;
-						memcpy(&value, this->mp_InitialValuePtr+i, sizeof(char));
-						if (i >= InitialValue.length())
-						{
-							value = '\0';
-						}
-						memcpy(mp_RxValue+i, &value, sizeof(char));
-						memcpy(mp_TxValue+i, &value, sizeof(char));
-					}
+					memcpy(mp_RxValue, this->mp_Value, sizeof(T)*COUNT);
+					memcpy(mp_TxValue, this->mp_Value, sizeof(T)*COUNT);
+					SetDataLinkEnabled(true);
 				}
 				else
 				{
-					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Setting initial value: \"%s\""
-							, m_Name.c_str()
-							, GetValueAsStringForDataType(mp_InitialValuePtr, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
-					for (size_t i = 0; i < COUNT; ++i)
-					{
-						memcpy(mp_RxValue+i, this->mp_InitialValuePtr, sizeof(T));
-						memcpy(mp_TxValue+i, this->mp_InitialValuePtr, sizeof(T));
-					}
+					ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
 				}
-				SetDataLinkEnabled(true);
 			}
 			else
 			{
-				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
+				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Null Pointer!");
 			}
 		}
 
@@ -207,7 +181,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		void SetNewTxValue(const T* Value, const size_t Count)
 		{
-			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", m_Name.c_str(), GetValueAsStringForDataType(Value, GetDataTypeFromTemplateType<T>(), COUNT, ""));
+			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", LocalDataItem<T,COUNT>::GetName().c_str(), this->GetValueAsString().c_str());
 			SetValue(Value, Count);
 		}
 		
@@ -260,30 +234,33 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				if(enablePeriodicTX)
 				{
-					esp_timer_start_periodic(m_TxTimer, m_Rate * 1000);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", m_Name.c_str());
+					StartTimer();
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", LocalDataItem<T,COUNT>::GetName().c_str());
 				}
 				else
 				{
-					esp_timer_stop(m_TxTimer);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", m_Name.c_str());
+					StopTimer();
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", LocalDataItem<T,COUNT>::GetName().c_str());
 				}
 				if(enablePeriodicRX)
 				{
 					m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
 				}
 				else
 				{
 					m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", m_Name.c_str());
+					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
 				}
 			}
 			else
 			{
-				esp_timer_stop(m_TxTimer);
+				if(ESP_OK != esp_timer_stop(m_TxTimer))
+				{
+					ESP_LOGE("SetDataLinkEnabled", "Error Stopping Timer!");
+				}
 				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", m_Name.c_str());
+				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", LocalDataItem<T,COUNT>::GetName().c_str());
 			}
 		}
 	protected:
@@ -291,14 +268,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 		const UpdateStoreType_t m_UpdateStoreType;
 		const uint16_t m_Rate;
 		SerialPortMessageManager &m_SerialPortMessageManager;
-
-		T *mp_RxValue;
-		T *mp_TxValue;
+		T *mp_RxValue = nullptr;
+		T *mp_TxValue = nullptr;
 		
 		bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
-			if(m_SerialPortMessageManager.QueueMessageFromData(this->GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
+			if(m_SerialPortMessageManager.QueueMessageFromData(LocalDataItem<T,COUNT>::GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
 			{				
 				if(memcmp(this->mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0)
 				{
@@ -310,12 +286,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				ESP_LOGD( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
 						, this->m_SerialPortMessageManager.GetName().c_str()
-						, this->m_Name.c_str()
+						, LocalDataItem<T,COUNT>::GetName().c_str()
 						, this->GetValueAsString().c_str() );
 			}
 			else
 			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", this->m_Name.c_str());
+				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", LocalDataItem<T,COUNT>::GetName().c_str());
 			}
 			return ValueUpdated;
 		}
@@ -326,14 +302,14 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGD( "DataItem: NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
 					, this->m_SerialPortMessageManager.GetName().c_str()
-					, this->m_Name.c_str()
+					, LocalDataItem<T,COUNT>::GetName().c_str()
 					, this->GetValueAsString().c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
-						, this->m_Name.c_str()
+						, LocalDataItem<T,COUNT>::GetName().c_str()
 						, this->GetValueAsString().c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
@@ -346,7 +322,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
-						, this->m_Name.c_str()
+						, LocalDataItem<T,COUNT>::GetName().c_str()
 						, this->GetValueAsString().c_str());
 				DataItem_TX_Now();
 			}
@@ -354,7 +330,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 		}
 		void DataItem_Try_TX_On_Change()
 		{
-			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", this->m_Name.c_str());
+			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", LocalDataItem<T,COUNT>::GetName().c_str());
 			if(this->m_RxTxType == RxTxType_Tx_On_Change || this->m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				DataItem_TX_Now();
@@ -362,14 +338,105 @@ class DataItem: public LocalDataItem<T, COUNT>
 		}
 	private:
 		bool m_DataLinkEnabled = true;
-		esp_timer_handle_t m_TxTimer;
+		esp_timer_handle_t m_TxTimer = nullptr;
 		esp_timer_create_args_t timerArgs;
-		void CreateTxTimer()
+		bool CreateTxTimer()
 		{
+			ESP_LOGD("CreateTxTimer", "Creating Timer");
 			timerArgs.callback = &StaticDataItem_Periodic_TX;
 			timerArgs.arg = this;
 			timerArgs.name = "Tx_Timer";
-			esp_timer_create(&timerArgs, &m_TxTimer);
+			if (!m_TxTimer)
+			{
+				if (ESP_OK == esp_timer_create(&timerArgs, &m_TxTimer))
+				{
+					ESP_LOGD("CreateTxTimer", "Timer Created");
+					return true;
+				}
+				else
+				{
+					ESP_LOGE("CreateTxTimer", "Error Creating Timer");
+					return false;
+				}
+			}
+			else
+			{
+				ESP_LOGD("CreateTxTimer", "Timer already exists");
+			}
+			return false;
+		}
+
+		bool DestroyTimer()
+		{
+			ESP_LOGD("DestroyTimer", "Destroying Timer");
+			if (m_TxTimer)
+			{
+				if (StopTimer())
+				{
+					if (ESP_OK == esp_timer_delete(m_TxTimer))
+					{
+						ESP_LOGD("DestroyTimer", "Timer deleted");
+						m_TxTimer = nullptr;
+						return true;
+					}
+					else
+					{
+						ESP_LOGE("DestroyTimer", "Error Deleting Timer");
+					}
+				}
+				else
+				{
+					ESP_LOGE("DestroyTimer", "Error Stopping Timer");
+				}
+			}
+			else
+			{
+				ESP_LOGD("DestroyTimer", "Timer does not exist");
+			}
+			return false;
+		}
+
+		bool StartTimer()
+		{
+			if (m_TxTimer || CreateTxTimer())
+			{
+				ESP_LOGD("StartTimer", "Starting Timer");
+				if (ESP_OK == esp_timer_start_periodic(m_TxTimer, m_Rate * 1000))
+				{
+					ESP_LOGD("StartTimer", "Timer Started");
+					return true;
+				}
+				else
+				{
+					ESP_LOGE("StartTimer", "Error Starting Timer!");
+				}
+			}
+			else
+			{
+				ESP_LOGE("StartTimer", "Timer creation failed, cannot start timer");
+			}
+			return false;
+		}
+
+		bool StopTimer()
+		{
+			if (m_TxTimer)
+			{
+				if (ESP_OK == esp_timer_stop(m_TxTimer))
+				{
+					ESP_LOGD("StopTimer", "Timer Stopped!");
+					return true;
+				}
+				else
+				{
+					ESP_LOGE("StopTimer", "Error Stopping Timer!");
+				}
+			}
+			else
+			{
+				ESP_LOGD("StopTimer", "Timer does not exist");
+			}
+			return false;
 		}
 		void DataItem_Periodic_TX()
 		{

@@ -28,26 +28,42 @@ void setup()
     Serial.begin(500000);
     ::testing::InitGoogleMock();
     ::testing::InitGoogleTest();
+    ::testing::GTEST_FLAG(break_on_failure) = true;
 }
 
 void loop()
 {
-  if (RUN_ALL_TESTS())
-  ;
+    try
+    {
+        if (RUN_ALL_TESTS())
+        {
+            ESP_LOGE("Run All Tests", "All Tests Passes!");
+        }
+        else
+        {
+            ESP_LOGE("Run All Tests", "Testing Failed!");
+        }
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 
-  delay(1000);
+    // Ensure all serial output is transmitted
+    Serial.flush();
+    delay(1000);  // Optional delay between test runs
 }
 
 #else
 int main(int argc, char **argv)
 {
-    ::testing::InitGoogleMock();
+    ::testing::InitGoogleMock(&argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
+    ::testing::GTEST_FLAG(break_on_failure) = true;
 
-    if (RUN_ALL_TESTS())
-    ;
+    int result = RUN_ALL_TESTS();
 
     // Always return zero-code and allow PlatformIO to parse results
-    return 0;
+    return result;
 }
 #endif

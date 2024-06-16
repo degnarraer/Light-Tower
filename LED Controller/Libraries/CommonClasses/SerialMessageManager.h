@@ -59,24 +59,25 @@ class NamedCallbackInterface
 		}
 		virtual void RegisterNamedCallback(NamedCallback_t *namedCallback)
 		{
-			ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
-			NamedCallback_t* newNamedCallback = new NamedCallback_t(*namedCallback);
-			
+			ESP_LOGD("RegisterNamedCallback", "Try Registering callback");			
 			bool IsFound = false;
-			for (NamedCallback_t* callback : m_NamedCallbacks)
+			if(namedCallback)
 			{
-				if(*newNamedCallback == *callback)
+				for (NamedCallback_t* callback : m_NamedCallbacks)
 				{
-					ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
-					IsFound = true;
-					break;
+					if(*namedCallback == *callback)
+					{
+						ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
+						IsFound = true;
+						break;
+					}
+				}
+				if(false == IsFound)
+				{
+					ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
+					m_NamedCallbacks.push_back(namedCallback);
 				}
 			}
-			if(false == IsFound)
-			{
-				ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
-				m_NamedCallbacks.push_back(newNamedCallback);
-			}	
 		}
 		virtual void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
 		{
@@ -95,13 +96,11 @@ class NamedCallbackInterface
 			ESP_LOGD("NotifyCallee", "CallCallbacks");
 			for (NamedCallback_t* namedCallback : m_NamedCallbacks)
 			{
-				if (namedCallback->Callback) 
-				{
-					void (*aCallback)(const String&, void*, void*);
-					aCallback = namedCallback->Callback;
-					void* arg = namedCallback->Arg;
-					aCallback(namedCallback->Name, object, arg);
-				}
+				ESP_LOGD("NotifyCallee", "Calling Callback %s", namedCallback->Name.c_str());
+				void (*aCallback)(const String&, void*, void*);
+				aCallback = namedCallback->Callback;
+				void* arg = namedCallback->Arg;
+				aCallback(namedCallback->Name, object, arg);
 			}
 		}
 	private:
@@ -232,13 +231,11 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 			{
 				ESP_LOGI("~SerialPortMessageManager", "Deleting RX Task.");
 				vTaskDelete(m_RXTaskHandle);
-        		m_RXTaskHandle = NULL;
 			}
 			if(m_TXTaskHandle && eTaskGetState(m_TXTaskHandle) != eDeleted)
 			{
 				ESP_LOGI("~SerialPortMessageManager", "Deleting TX Task.");
 				vTaskDelete(m_TXTaskHandle);
-        		m_TXTaskHandle = NULL;
 			}
 		}
 		virtual void SetupSerialPortMessageManager();
@@ -254,8 +251,8 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		DataSerializer &m_DataSerializer;
 		BaseType_t  m_CoreId = 1;
 		String m_message;
-		TaskHandle_t m_RXTaskHandle;
-		TaskHandle_t m_TXTaskHandle;
+		TaskHandle_t m_RXTaskHandle = nullptr;
+		TaskHandle_t m_TXTaskHandle = nullptr;
 		QueueHandle_t m_TXQueue;
 		static void StaticSerialPortMessageManager_RxTask(void *Parameters)
 		{

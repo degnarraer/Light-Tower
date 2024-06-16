@@ -34,10 +34,10 @@
 template <typename T, size_t COUNT>
 class 
 LocalDataItem: public NamedCallbackInterface<T>
-				   , public SetupCalleeInterface
-				   , public DataTypeFunctions
-				   , public ValidValueChecker
-				   , public StringEncoderDecoder<T>
+			 , public SetupCalleeInterface
+			 , public DataTypeFunctions
+			 , public ValidValueChecker
+			 , public StringEncoderDecoder<T>
 {
 	public:
 		LocalDataItem( const String name
@@ -47,6 +47,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 : m_ValidValueChecker(ValidValueChecker())
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
+					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
 			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
@@ -60,6 +61,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 : m_ValidValueChecker(ValidValueChecker())
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
+					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
 			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
@@ -74,6 +76,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 : m_ValidValueChecker(ValidValueChecker(validStringValues))
 					 , m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
+					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
 			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
@@ -88,6 +91,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					 : m_ValidValueChecker(ValidValueChecker(validStringValues))
 					 , m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
+					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
 			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
@@ -97,10 +101,10 @@ LocalDataItem: public NamedCallbackInterface<T>
 		virtual ~LocalDataItem()
 		{
 			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": LocalDataItem Freeing Memory", m_Name.c_str());
+			if(mp_SetupCallerInterface) mp_SetupCallerInterface->DeRegisterForSetupCall(this);
+			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
 			if(mp_Value) heap_caps_free(mp_Value);
 			if(mp_InitialValue) heap_caps_free(mp_InitialValue);
-			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
-			if(mp_SetupCallerInterface) mp_SetupCallerInterface->DeRegisterForSetupCall(this);
 		}
 
 		virtual void RegisterForSetup()
@@ -214,7 +218,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 			if(mp_InitialValue)
 			{
 				stringValue = StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue);
-				ESP_LOGI("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -253,10 +256,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 					stringValue += ENCODE_DIVIDER;
 				}
 				stringValue += valueStrings[COUNT - 1];
-				ESP_LOGI("GetValueAsString"
-						, "\"%s\": Get String Value: %s"
-						, m_Name.c_str()
-						, stringValue.c_str());
 				return true;
 			}
 			else
@@ -300,7 +299,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValueFromString(const String& stringValue)
 		{
-			ESP_LOGI("SetValue", "SetValueFromString(const String& stringValue) Called");
 			T value[COUNT];
 			std::vector<String> substrings;
 			size_t start = 0;
@@ -326,11 +324,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 			// Decode each substring and store it in the value array
 			for (size_t i = 0; i < COUNT; ++i) 
-			{
-				ESP_LOGI("SetValueFromString",
-						"\"%s\": Set Value From String: \"%s\"",
-						m_Name.c_str(), substrings[i].c_str());
-				
+			{				
 				if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
 					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), substrings[i].c_str() );
@@ -345,7 +339,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValue(const T *value, size_t count)
 		{
-			ESP_LOGI("SetValue", "SetValue(const T *value, size_t count) Called");
 			assert(value != nullptr);
 			assert(mp_Value != nullptr);
 			assert(COUNT > 0);
@@ -379,7 +372,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValue(T value)
 		{
-			ESP_LOGI("SetValue", "SetValue(T value) Called");
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
 			bool valueChanged = (*mp_Value != value);
@@ -415,9 +407,9 @@ LocalDataItem: public NamedCallbackInterface<T>
 		const T* const mp_InitialValuePtr;
 		T *mp_Value = nullptr;
 		T *mp_InitialValue = nullptr;
-		NamedCallback_t *mp_NamedCallback = NULL;
+		NamedCallback_t *mp_NamedCallback = nullptr;
 		size_t m_ValueChangeCount = 0;
 	private:
-		SetupCallerInterface *mp_SetupCallerInterface;
+		SetupCallerInterface *mp_SetupCallerInterface = nullptr;
 		size_t m_Count = COUNT;
 };

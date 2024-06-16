@@ -50,15 +50,23 @@ void InitWebSocket()
   MyWebServer.addHandler(&MyWebSocket);
 }
 
+void ClearSerialBuffers(HardwareSerial &serial)
+{
+    serial.flush();
+    while (serial.available() > 0) {
+        serial.read();
+    }
+}
 void SetupSerialPorts()
 {
-  Serial.flush();
-  Serial.begin(500000, SERIAL_8N1);
-  Serial1.flush();
+  ClearSerialBuffers(Serial);
+  ClearSerialBuffers(Serial1);
+  ClearSerialBuffers(Serial2);
+  delay(500);
+  Serial.begin(500000, SERIAL_8O2);
   Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial2.flush();
   Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
+  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
 }
 

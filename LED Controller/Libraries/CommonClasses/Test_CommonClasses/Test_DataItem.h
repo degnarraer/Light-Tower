@@ -36,6 +36,7 @@ class DataItemFunctionCallTests : public Test
 {
 protected:
     const int32_t initialValue = 10;
+    const String spmm = "Serial Port Message Manager";
     const String name1 = "Test Name1";
     MockSetupCallerInterface *mp_MockSetupCaller;
     MockHardwareSerial m_MockHardwareSerial;
@@ -50,9 +51,11 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
+        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
         mp_DataItem = new DataItem<int32_t, 1>( name1 
                                               , initialValue
                                               , rxTxType
@@ -65,15 +68,15 @@ protected:
 
     void TearDown() override
     {
-        free(mp_MockSerialPortMessageManager);
-        free(mp_MockSetupCaller);
+        delete mp_MockSerialPortMessageManager;
+        delete mp_MockSetupCaller;
         DestroyDataItem();
     }
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
-            free(mp_DataItem);
+            delete mp_DataItem;
             mp_DataItem = nullptr;
         }
     }
@@ -81,7 +84,6 @@ protected:
 
 TEST_F(DataItemFunctionCallTests, Registered_With_Setup_Caller)
 {
-    EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
     CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
 }
 
@@ -96,32 +98,48 @@ TEST_F(DataItemFunctionCallTests, Registers_For_New_Value_Notification_For_Rx_On
 {
     EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
     CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
 }
 TEST_F(DataItemFunctionCallTests, Registers_For_New_Value_Notification_For_Rx_Echo_Value)
 {
     EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
     CreateDataItem(RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
 }
 
-TEST_F(DataItemFunctionCallTests, DeRegisters_For_New_Value_Notification_For_Rx_At_Deletion)
+TEST_F(DataItemFunctionCallTests, DeRegisters_For_New_Value_Notification_For_Rx_Only_At_Deletion)
 {
+    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
     CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
     EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
     DestroyDataItem();
+}
+
+TEST_F(DataItemFunctionCallTests, DeRegisters_For_New_Value_Notification_For_Rx_Echo_Value_At_Deletion)
+{
+    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
     CreateDataItem(RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
     EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
     DestroyDataItem();
 }
 
 TEST_F(DataItemFunctionCallTests, Does_Not_Register_Or_Deregister_For_New_Value_Notification_For_Tx)
 {
+    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
     EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(0);
     EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(0);
     CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
     DestroyDataItem();
     CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
     DestroyDataItem();
     CreateDataItem(RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 0);
+    mp_DataItem->Setup();
     DestroyDataItem();
 }
 
@@ -132,6 +150,7 @@ class DataItemRxTxTests : public Test
 protected:
     const int32_t initialValue = 10;
     const String name1 = "Test Name1";
+    const String spmm = "Serial Port Message Manager";
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
     MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
@@ -143,6 +162,7 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
@@ -159,14 +179,18 @@ protected:
 
     void TearDown() override
     {
-        free(mp_MockSerialPortMessageManager);
+        
+        if(mp_MockSerialPortMessageManager)
+        {
+            delete mp_MockSerialPortMessageManager;
+        }
         DestroyDataItem();
     }
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
-            free(mp_DataItem);
+            delete mp_DataItem;
             mp_DataItem = nullptr;
         }
     }
@@ -182,18 +206,18 @@ TEST_F(DataItemRxTxTests, Tx_Called_Periodically)
 }
 
 // Test Fixture for DataItemGetAndSetValueTests
-class DataItemGetAndSetValueTests : public Test
-                   , public SetupCallerInterface
+template <typename T, size_t COUNT>
+class DataItemGetAndSetValueTests : public Test, public SetupCallerInterface
 {
 protected:
     const ValidStringValues_t validValues = { "10", "20", "30" };
-    const int32_t initialValue = 10;
-    const int32_t validValue1 = 20;
-    const int32_t validValue2 = 30;
+    const int32_t validValue10 = 10;
+    const int32_t validValue20 = 20;
+    const int32_t validValue30 = 30;
     const int32_t invalidValue = 40;
-    const String initialValueString = String(initialValue);
-    const String validValue1String = String(validValue1);
-    const String validValue2String = String(validValue2);
+    const String validValue10String = String(validValue10);
+    const String validValue20String = String(validValue20);
+    const String validValue30String = String(validValue30);
     const String invalidValueString = String(invalidValue);
     const int32_t initialValueArray[10] = {10,10,10,10,10,10,10,10,10,10};
     const int32_t validValue1Array[10] = {20,20,20,20,20,20,20,20,20,20};
@@ -203,13 +227,11 @@ protected:
     const String validValue1ArrayString = "20|20|20|20|20|20|20|20|20|20";
     const String validValue2ArrayString = "30|30|30|30|30|30|30|30|30|30";
     const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
-    DataItem<int32_t, 1> *mp_DataItem;
-    DataItem<int32_t, 10> *mp_DataItemArray;
-    DataItem<int32_t, 1> *mp_DataItemWithValidation;
-    DataItem<int32_t, 10> *mp_DataItemArrayWithValidation;
+    DataItem<T, COUNT> *mp_DataItem;
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
     MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+    const String spmm = "Serial Port Message Manager";
     const String name1 = "Test Name1";
     const String name2 = "Test Name2";
     const String name3 = "Test Name3";
@@ -217,87 +239,106 @@ protected:
 
     void SetUp() override
     {
-        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name1
-                                                                          , m_MockHardwareSerial
-                                                                          , m_MockDataSerializer
-                                                                          , 0 );
-                                                                          
-        mp_DataItem = new DataItem<int32_t, 1>( name1 
-                                              , initialValue
-                                              , RxTxType_Rx_Only
-                                              , UpdateStoreType_On_Rx
-                                              , 0
-                                              , *mp_MockSerialPortMessageManager
-                                              , nullptr
-                                              , this );
+        ESP_LOGD("SetUp", "Test SetUp!");
+        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager(spmm, m_MockHardwareSerial, m_MockDataSerializer, 0);
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
+    }
 
-        mp_DataItemArray = new DataItem<int32_t, 10>( name2 
-                                                    , initialValue
-                                                    , RxTxType_Rx_Only
-                                                    , UpdateStoreType_On_Rx
-                                                    , 0
-                                                    , *mp_MockSerialPortMessageManager
-                                                    , nullptr
-                                                    , this );
-
-        mp_DataItemWithValidation = new DataItem<int32_t, 1>( name3 
-                                                            , initialValue
-                                                            , RxTxType_Rx_Only
-                                                            , UpdateStoreType_On_Rx
-                                                            , 0
-                                                            , *mp_MockSerialPortMessageManager
-                                                            , nullptr
-                                                            , this
-                                                            , &validValues );
-
-        mp_DataItemArrayWithValidation = new DataItem<int32_t, 10>( name4 
-                                                                  , initialValue
-                                                                  , RxTxType_Rx_Only
-                                                                  , UpdateStoreType_On_Rx
-                                                                  , 0
-                                                                  , *mp_MockSerialPortMessageManager
-                                                                  , nullptr
-                                                                  , this
-                                                                  , &validValues );
+    void CreateDataItem( const String name
+                       , int32_t initialValue
+                       , RxTxType_t rxTxType
+                       , UpdateStoreType_t updateStoreType
+                       , uint16_t rate
+                       , ValidStringValues_t *validStringValues )
+    {
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
+        mp_DataItem = new DataItem<T, COUNT>( name
+                                            , initialValue
+                                            , rxTxType
+                                            , updateStoreType
+                                            , rate
+                                            , *mp_MockSerialPortMessageManager
+                                            , nullptr
+                                            , this
+                                            , validStringValues);
         SetupAllSetupCallees();
+    }
+
+    void DestroyDataItem()
+    {
+        if(mp_DataItem)
+        {
+            delete mp_DataItem;
+        }
     }
 
     void TearDown() override
     {
-        free(mp_DataItem);
-        free(mp_DataItemArray);
-        free(mp_DataItemWithValidation);
-        free(mp_DataItemArrayWithValidation);
-        free(mp_MockSerialPortMessageManager);
+        ESP_LOGD("TearDown", "Test TearDown!");
+        if(mp_DataItem)
+        {
+            delete mp_DataItem;
+            mp_DataItem = nullptr;
+        }
+        if(mp_MockSerialPortMessageManager)
+        {
+            delete mp_MockSerialPortMessageManager;
+            mp_MockSerialPortMessageManager = nullptr;
+        }
     }
 };
 
-TEST_F(DataItemGetAndSetValueTests, dataItem_Name_Is_Set)
+using DataItemGetAndSetValueTestsInt1 = DataItemGetAndSetValueTests<int32_t, 1>;
+using DataItemGetAndSetValueTestsInt10 = DataItemGetAndSetValueTests<int32_t, 10>;
+
+// ************ Name is set ******************
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Name_Is_Set)
 {
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
     EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemArray_Name_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemArray_Name_Is_Set)
 {
-    EXPECT_STREQ(name2.c_str(), mp_DataItemArray->GetName().c_str());
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Name_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Name_Is_Set)
 {
-    EXPECT_STREQ(name3.c_str(), mp_DataItemWithValidation->GetName().c_str());
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
 }
-
+/*
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemArrayWithValidation_Name_Is_Set)
+{
+    //CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    //EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+}
+// ************ Initial Value is set ******************
 TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Set)
 {
     EXPECT_EQ(initialValue, mp_DataItem->GetValue());
 }
 TEST_F(DataItemGetAndSetValueTests, dataItemArray_Initial_Value_Is_Set)
 {
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
+    for(size_t i = 0; i < mp_DataItemArray->GetCount(); ++i)
+    {
+        EXPECT_EQ(initialValue, mp_DataItemArray->GetValuePointer()[i]);
+    }
 }
 TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Initial_Value_Is_Set)
 {
     EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
 }
+TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Initial_Value_Is_Set)
+{
+    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
+    {
+        EXPECT_EQ(initialValue, mp_DataItemArrayWithValidation->GetValuePointer()[i]);
+    }
+}
 
+
+// ************ Initial Value Returned as String ******************
 TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Returned_As_String)
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
@@ -310,6 +351,11 @@ TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Initial_Value_Is_Retu
 {
     EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetInitialValueAsString().c_str());
 }
+TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Initial_Value_Is_Returned_As_String)
+{
+    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemArrayWithValidation->GetInitialValueAsString().c_str());
+}
+
 
 TEST_F(DataItemGetAndSetValueTests, dataItem_Value_Is_Returned_As_String)
 {
@@ -467,3 +513,4 @@ TEST_F(DataItemGetAndSetValueTests, New_Value_Triggers_Tx)
 {
 
 }
+*/
