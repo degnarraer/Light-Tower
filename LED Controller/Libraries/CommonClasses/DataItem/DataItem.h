@@ -215,24 +215,24 @@ class DataItem: public LocalDataItem<T, COUNT>
 			m_DataLinkEnabled = enable;
 			if(m_DataLinkEnabled)
 			{
-				bool enablePeriodicTX = false;
-				bool enablePeriodicRX = false;
+				bool enableTX = false;
+				bool enableRX = false;
 				switch(m_RxTxType)
 				{
 					case RxTxType_Tx_Periodic:
 					case RxTxType_Tx_On_Change_With_Heartbeat:
-						enablePeriodicTX = true;
-						enablePeriodicRX = true;
+						enableTX = true;
+						enableRX = true;
 						break;
 					case RxTxType_Tx_On_Change:
 					case RxTxType_Rx_Only:
 					case RxTxType_Rx_Echo_Value:
-						enablePeriodicRX = true;
+						enableRX = true;
 						break;
 					default:
 					break;
 				}
-				if(enablePeriodicTX)
+				if(enableTX)
 				{
 					StartTimer();
 					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", LocalDataItem<T,COUNT>::GetName().c_str());
@@ -242,7 +242,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 					StopTimer();
 					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", LocalDataItem<T,COUNT>::GetName().c_str());
 				}
-				if(enablePeriodicRX)
+				if(enableRX)
 				{
 					m_SerialPortMessageManager.RegisterForNewValueNotification(this);
 					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());

@@ -29,7 +29,9 @@
 
 using ::testing::_;
 using ::testing::NotNull;
+using ::testing::InvokeWithoutArgs;
 using namespace testing;
+
 
 // Test Fixture for DataItemFunctionCallTests
 class DataItemFunctionCallTests : public Test
@@ -43,7 +45,6 @@ protected:
     MockDataSerializer m_MockDataSerializer;
     MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
     DataItem<int32_t, 1> *mp_DataItem;
-
     void SetUp() override
     {
         mp_MockSetupCaller = new MockSetupCallerInterface();
@@ -51,11 +52,15 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
+        ON_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
+        ON_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
+        ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
+        ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
+        ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
-        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
         mp_DataItem = new DataItem<int32_t, 1>( name1 
                                               , initialValue
                                               , rxTxType
@@ -65,7 +70,6 @@ protected:
                                               , NULL
                                               , mp_MockSetupCaller );
     }
-
     void TearDown() override
     {
         delete mp_MockSerialPortMessageManager;
@@ -80,68 +84,69 @@ protected:
             mp_DataItem = nullptr;
         }
     }
+    void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
+    {
+        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(callTimes);
+        CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
+    }
+    void TestSetupCallDeregistration(RxTxType_t rxtxtype, size_t callTimes)
+    {    
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
+        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(callTimes);
+        DestroyDataItem();
+    }
+    void TestNewValueNotificationRegistration(RxTxType_t rxtxtype, size_t callTimes)
+    {
+        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull()));
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(callTimes);
+        CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
+        mp_DataItem->Setup();
+    }
+    void TestNewValueNotificationDeregistration(RxTxType_t rxtxtype, size_t callTimes)
+    {
+        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(callTimes);
+        DestroyDataItem();
+    }
+
 };
 
-TEST_F(DataItemFunctionCallTests, Registered_With_Setup_Caller)
+TEST_F(DataItemFunctionCallTests, Registration_With_Setup_Caller)
 {
-    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+    TestSetupCallRegistration(RxTxType_Tx_Periodic, 1);
+    TestSetupCallDeregistration(RxTxType_Tx_Periodic, 1);
+
+    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
+    TestSetupCallDeregistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
+
+    TestSetupCallRegistration(RxTxType_Tx_On_Change, 1);
+    TestSetupCallDeregistration(RxTxType_Tx_On_Change, 1);
+
+    TestSetupCallRegistration(RxTxType_Rx_Only, 1);
+    TestSetupCallDeregistration(RxTxType_Rx_Only, 1);
+
+    TestSetupCallRegistration(RxTxType_Rx_Echo_Value, 1);
+    TestSetupCallDeregistration(RxTxType_Rx_Echo_Value, 1);
 }
 
-TEST_F(DataItemFunctionCallTests, DeRegistered_With_Setup_Caller_On_Deletion)
+TEST_F(DataItemFunctionCallTests, Registration_For_New_Value_Notification)
 {
-    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
-    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
-    DestroyDataItem();
+    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic, 1);
+    TestNewValueNotificationDeregistration(RxTxType_Tx_Periodic, 1);
+
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
+    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
+
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change, 1);
+    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change, 1);
+
+    TestNewValueNotificationRegistration(RxTxType_Rx_Only, 1);
+    TestNewValueNotificationDeregistration(RxTxType_Rx_Only, 1);
+
+    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value, 1);    
+    TestNewValueNotificationDeregistration(RxTxType_Rx_Echo_Value, 1);
 }
 
-TEST_F(DataItemFunctionCallTests, Registers_For_New_Value_Notification_For_Rx_Only)
-{
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
-    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-}
-TEST_F(DataItemFunctionCallTests, Registers_For_New_Value_Notification_For_Rx_Echo_Value)
-{
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
-    CreateDataItem(RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-}
-
-TEST_F(DataItemFunctionCallTests, DeRegisters_For_New_Value_Notification_For_Rx_Only_At_Deletion)
-{
-    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
-    CreateDataItem(RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
-    DestroyDataItem();
-}
-
-TEST_F(DataItemFunctionCallTests, DeRegisters_For_New_Value_Notification_For_Rx_Echo_Value_At_Deletion)
-{
-    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
-    CreateDataItem(RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
-    DestroyDataItem();
-}
-
-TEST_F(DataItemFunctionCallTests, Does_Not_Register_Or_Deregister_For_New_Value_Notification_For_Tx)
-{
-    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(0);
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(0);
-    CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-    DestroyDataItem();
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-    DestroyDataItem();
-    CreateDataItem(RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 0);
-    mp_DataItem->Setup();
-    DestroyDataItem();
-}
 
 // Test Fixture for DataItem Rx Tx Tests
 class DataItemRxTxTests : public Test
@@ -162,7 +167,10 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
+        ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
+        ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
+        ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
@@ -286,6 +294,31 @@ protected:
             mp_MockSerialPortMessageManager = nullptr;
         }
     }
+
+    void TestNameIsSet( const String name
+                      , int32_t initialValue
+                      , RxTxType_t rxTxType
+                      , UpdateStoreType_t updateStoreType
+                      , uint16_t rate
+                      , ValidStringValues_t *validStringValues)
+    {
+        CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    }
+
+    void TestInitialValueIsSet( const String name
+                              , int32_t initialValue
+                              , RxTxType_t rxTxType
+                              , UpdateStoreType_t updateStoreType
+                              , uint16_t rate
+                              , ValidStringValues_t *validStringValues)
+    {
+        CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        for(size_t i = 0; i < mp_DataItem->GetCount(); ++i)
+        {
+            EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
+        }
+    }
 };
 
 using DataItemGetAndSetValueTestsInt1 = DataItemGetAndSetValueTests<int32_t, 1>;
@@ -294,50 +327,43 @@ using DataItemGetAndSetValueTestsInt10 = DataItemGetAndSetValueTests<int32_t, 10
 // ************ Name is set ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Name_Is_Set)
 {
-    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
-    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
-TEST_F(DataItemGetAndSetValueTestsInt1, dataItemArray_Name_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Name_Is_Set)
 {
-    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
-    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Name_Is_Set)
 {
-    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
-    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
-/*
-TEST_F(DataItemGetAndSetValueTestsInt1, dataItemArrayWithValidation_Name_Is_Set)
+
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Name_Is_Set)
 {
-    //CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
-    //EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
+
+
 // ************ Initial Value is set ******************
-TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Initial_Value_Is_Set)
 {
-    EXPECT_EQ(initialValue, mp_DataItem->GetValue());
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemArray_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Initial_Value_Is_Set)
 {
-    for(size_t i = 0; i < mp_DataItemArray->GetCount(); ++i)
-    {
-        EXPECT_EQ(initialValue, mp_DataItemArray->GetValuePointer()[i]);
-    }
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Initial_Value_Is_Set)
 {
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Initial_Value_Is_Set)
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Value_Is_Set)
 {
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(initialValue, mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
 
+/*
 // ************ Initial Value Returned as String ******************
 TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Returned_As_String)
 {
