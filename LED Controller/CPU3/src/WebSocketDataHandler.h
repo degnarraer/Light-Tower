@@ -145,7 +145,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         ValueChanged = true;
         ESP_LOGD( "WebSocketDataHandler: NewRxValueReceived"
                 , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
-                , m_DataItem.GetValueAsString(""));
+                , m_DataItem.GetValueAsString());
       }
       return ValueChanged;
     }

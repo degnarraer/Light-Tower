@@ -150,7 +150,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 						CallCallbacks(m_Name, mp_Value);
 					}
 				}
-				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsStringForDataType(mp_TxValue, GetDataTypeFromTemplateType<T>(), COUNT, "").c_str());
+				ESP_LOGD("DataItem: DataItem_TX_Now", "TX: \"%s\" Value: \"%s\"", this->m_Name.c_str(), GetValueAsString().c_str());
 			}
 			else
 			{

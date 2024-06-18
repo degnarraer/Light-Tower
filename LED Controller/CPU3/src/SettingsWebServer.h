@@ -481,7 +481,7 @@ class SettingsWebServerManager: public SetupCallerInterface
               }
               else
               {
-                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", signalValue["Id"].as<char*>());
+                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", JSON.stringify(signalValue).c_str());
               }
             }
             else if(jsonObject.hasOwnProperty("JSONValue"))
@@ -502,7 +502,7 @@ class SettingsWebServerManager: public SetupCallerInterface
               else
               
               {
-                ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", jSONValue.as<String>());
+                ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", JSON.stringify(jSONValue).c_str());
               }
             }
             else
