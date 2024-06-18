@@ -23,9 +23,9 @@
 #include <thread>
 #include <chrono>
 #include "DataItem/DataItem.h"
-#include "Test_CommonClasses/Mock_SetupCallInterface.h"
-#include "Test_CommonClasses/Mock_ValidValueChecker.h"
-#include "Test_CommonClasses/Mock_SerialMessageManager.h"
+#include "tests/Mock_SetupCallInterface.h"
+#include "tests/Mock_ValidValueChecker.h"
+#include "tests/Mock_SerialMessageManager.h"
 
 using ::testing::_;
 using ::testing::NotNull;

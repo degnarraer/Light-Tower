@@ -20,7 +20,7 @@
 #if defined(ARDUINO)
 #include <Arduino.h>
 
-#include "Test_CommonClasses/AllTests.h"
+#include "tests/AllTests.h"
 
 
 void setup()
