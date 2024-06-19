@@ -252,23 +252,10 @@ protected:
         EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
     }
 
-    void CreateDataItem( const String name
-                       , int32_t initialValue
-                       , RxTxType_t rxTxType
-                       , UpdateStoreType_t updateStoreType
-                       , uint16_t rate
-                       , ValidStringValues_t *validStringValues )
+    void CreateDataItem( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
-        mp_DataItem = new DataItem<T, COUNT>( name
-                                            , initialValue
-                                            , rxTxType
-                                            , updateStoreType
-                                            , rate
-                                            , *mp_MockSerialPortMessageManager
-                                            , nullptr
-                                            , this
-                                            , validStringValues);
+        mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, *mp_MockSerialPortMessageManager, nullptr, this, validStringValues);
         SetupAllSetupCallees();
     }
 
@@ -277,17 +264,14 @@ protected:
         if(mp_DataItem)
         {
             delete mp_DataItem;
+            mp_DataItem = nullptr;
         }
     }
 
     void TearDown() override
     {
         ESP_LOGD("TearDown", "Test TearDown!");
-        if(mp_DataItem)
-        {
-            delete mp_DataItem;
-            mp_DataItem = nullptr;
-        }
+        DestroyDataItem();
         if(mp_MockSerialPortMessageManager)
         {
             delete mp_MockSerialPortMessageManager;
@@ -295,29 +279,33 @@ protected:
         }
     }
 
-    void TestNameIsSet( const String name
-                      , int32_t initialValue
-                      , RxTxType_t rxTxType
-                      , UpdateStoreType_t updateStoreType
-                      , uint16_t rate
-                      , ValidStringValues_t *validStringValues)
+    void TestNameIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
     {
         CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
     }
 
-    void TestInitialValueIsSet( const String name
-                              , int32_t initialValue
-                              , RxTxType_t rxTxType
-                              , UpdateStoreType_t updateStoreType
-                              , uint16_t rate
-                              , ValidStringValues_t *validStringValues)
+    void TestInitialValueIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
     {
         CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         for(size_t i = 0; i < mp_DataItem->GetCount(); ++i)
         {
             EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
         }
+    }
+
+    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
+    {
+        CreateDataItem(name1, validValue10, rxTxType, updateStoreType, rate, validStringValues);
+        EXPECT_STREQ(validValue10String.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
+    }
+
+    void TestSetValueFromValueConvertsToString( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
+    {
+        //assert(COUNT == 1);
+        CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        mp_DataItem->SetValue(validValue20);
+        EXPECT_STREQ(validValue20String.c_str(), mp_DataItem->GetValueAsString().c_str());
     }
 };
 
@@ -362,57 +350,36 @@ TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Val
     TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
+// ************ Initial Value Returned as String ******************
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Initial_Value_Is_Returned_As_String)
+{
+    TestInitialValueReturnedAsString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Initial_Value_Is_Returned_As_String)
+{
+    TestInitialValueReturnedAsString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+}
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
+{
+    TestInitialValueReturnedAsString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Value_Is_Returned_As_String)
+{
+    TestInitialValueReturnedAsString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+}
+
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_Value_Converts_To_String)
+{
+    TestSetValueFromValueConvertsToString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+}
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
+{
+    TestSetValueFromValueConvertsToString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+}
+
 
 /*
-// ************ Initial Value Returned as String ******************
-TEST_F(DataItemGetAndSetValueTests, dataItem_Initial_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemArray_Initial_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemArray->GetInitialValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetInitialValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Initial_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemArrayWithValidation->GetInitialValueAsString().c_str());
-}
-
-
-TEST_F(DataItemGetAndSetValueTests, dataItem_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemArray_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str());
-}
-
-TEST_F(DataItemGetAndSetValueTests, dataItem_Set_Value_From_Value_Converts_To_String)
-{
-    mp_DataItem->SetValue(validValue1);
-    EXPECT_STREQ(validValue1String.c_str(), mp_DataItem->GetValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemArray_Set_Value_From_Value_Converts_To_String)
-{
-    mp_DataItemArray->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
-    EXPECT_STREQ(validValue1ArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
-{
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_STREQ(validValue1String.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str());
-}
-
-TEST_F(DataItemGetAndSetValueTests, dataItem_Set_Value_From_String_Converts_To_Value)
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItem_Set_Value_From_String_Converts_To_Value)
 {
     mp_DataItem->SetValueFromString(validValue1String);
     EXPECT_EQ(validValue1, mp_DataItem->GetValue());

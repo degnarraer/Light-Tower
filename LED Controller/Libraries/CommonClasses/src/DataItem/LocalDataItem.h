@@ -325,7 +325,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			// Decode each substring and store it in the value array
 			for (size_t i = 0; i < COUNT; ++i) 
 			{				
-				if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
+				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
 					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), substrings[i].c_str() );
 					return false;
@@ -350,7 +350,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 				for(int i = 0; i < COUNT; ++i)
 				{
 					String stringValue = StringEncoderDecoder<T>::EncodeToString(value[i]);
-					if(true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(stringValue))
+					if(false == m_ValidValueChecker.IsValidStringValue(stringValue))
 					{
 						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
 						validValue = false;
@@ -377,7 +377,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			bool valueChanged = (*mp_Value != value);
 			bool validValue = true;
 			const String stringValue = StringEncoderDecoder<T>::EncodeToString(value);
-			if(true == valueChanged && true == m_ValidValueChecker.IsConfigured() && false == m_ValidValueChecker.IsValidStringValue(stringValue))
+			if(true == valueChanged && false == m_ValidValueChecker.IsValidStringValue(stringValue))
 			{
 				validValue = false;
 			}

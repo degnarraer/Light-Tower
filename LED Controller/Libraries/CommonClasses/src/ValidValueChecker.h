@@ -43,15 +43,11 @@ public:
         : mp_ValidStrings(nullptr)
         , mp_ValidValueComparators(validValueComparators)
         {
+            
             m_IsConfigured = true;
         }
 
     virtual ~ValidValueChecker() {}
-
-    virtual bool IsConfigured() const
-    {
-        return m_IsConfigured;
-    }
 
     virtual bool IsValidStringValue(const String &stringValue) const
     {
@@ -109,13 +105,13 @@ public:
         } 
         else 
         {
-            ESP_LOGE("ValidValueChecker:IsValidStringValue", "NULL Pointer!");
+            return true;
         }
         return false;
     }
 
 private:
-    const ValidStringValues_t* const mp_ValidStrings;
-    const ValidValueComparators_t* const mp_ValidValueComparators;
+    ValidStringValues_t* const mp_ValidStrings;
+    ValidValueComparators_t* const mp_ValidValueComparators;
     bool m_IsConfigured = false;
 };

@@ -37,20 +37,12 @@ TEST(ValidValueCheckerTest, Negative_Value_Test)
     EXPECT_FALSE(valueChecker.IsValidStringValue(invalidValue));
 }
 
-TEST(ValidValueCheckerTest, Is_Configured)
-{
-    String validValue = "A String";
-    String invalidValue = "B String";
-    ValidStringValues_t validStrings = {validValue};
-    ValidValueChecker valueChecker = ValidValueChecker(&validStrings);
-    EXPECT_TRUE(valueChecker.IsConfigured());
-}
-
 TEST(ValidValueCheckerTest, Is_Not_Configured)
 {
     String validValue = "A String";
     String invalidValue = "B String";
     ValidStringValues_t validStrings = {validValue};
     ValidValueChecker valueChecker = ValidValueChecker();
-    EXPECT_FALSE(valueChecker.IsConfigured());
+    EXPECT_TRUE(valueChecker.IsValidStringValue(validValue));
+    EXPECT_TRUE(valueChecker.IsValidStringValue(invalidValue));
 }
