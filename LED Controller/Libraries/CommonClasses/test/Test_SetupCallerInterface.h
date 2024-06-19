@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "tests/Mock_SetupCallInterface.h"
+#include "Mock_SetupCallInterface.h"
 
 using ::testing::_;
 using ::testing::NotNull;

@@ -21,8 +21,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "DataItem/LocalDataItem.h"
-#include "tests/Mock_SetupCallInterface.h"
-#include "tests/Mock_ValidValueChecker.h"
+#include "Mock_SetupCallInterface.h"
+#include "Mock_ValidValueChecker.h"
 
 using ::testing::_;
 using ::testing::NotNull;

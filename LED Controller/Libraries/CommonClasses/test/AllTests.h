@@ -18,7 +18,7 @@
 
 #pragma once
 
-//#include "Test_CommonClasses/Test_LocalDataItem.h"
-#include "tests/Test_DataItem.h"
-//#include "Test_CommonClasses/Test_SetupCallerInterface.h"
-//#include "Test_CommonClasses/Test_ValidValueChecker.h"
+#include "Test_LocalDataItem.h"
+#include "Test_DataItem.h"
+#include "Test_SetupCallerInterface.h"
+#include "Test_ValidValueChecker.h"
