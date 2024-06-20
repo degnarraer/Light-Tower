@@ -227,13 +227,13 @@ protected:
     const String validValue20String = String(validValue20);
     const String validValue30String = String(validValue30);
     const String invalidValueString = String(invalidValue);
-    const int32_t initialValueArray[10] = {10,10,10,10,10,10,10,10,10,10};
-    const int32_t validValue1Array[10] = {20,20,20,20,20,20,20,20,20,20};
-    const int32_t validValue2Array[10] = {30,30,30,30,30,30,30,30,30,30};
+    const int32_t validValue10Array[10] = {10,10,10,10,10,10,10,10,10,10};
+    const int32_t validValue20Array[10] = {20,20,20,20,20,20,20,20,20,20};
+    const int32_t validValue30Array[10] = {30,30,30,30,30,30,30,30,30,30};
     const int32_t invalidValueArray[10] = {40,40,40,40,40,40,40,40,40,40};
-    const String initialValueArrayString = "10|10|10|10|10|10|10|10|10|10";
-    const String validValue1ArrayString = "20|20|20|20|20|20|20|20|20|20";
-    const String validValue2ArrayString = "30|30|30|30|30|30|30|30|30|30";
+    const String validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
+    const String validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
+    const String validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
     const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
     DataItem<T, COUNT> *mp_DataItem;
     MockHardwareSerial m_MockHardwareSerial;
@@ -279,13 +279,13 @@ protected:
         }
     }
 
-    void TestNameIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
+    void TestNameIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
     }
 
-    void TestInitialValueIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
+    void TestInitialValueIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         for(size_t i = 0; i < mp_DataItem->GetCount(); ++i)
@@ -294,18 +294,57 @@ protected:
         }
     }
 
-    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
+    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, validValue10, rxTxType, updateStoreType, rate, validStringValues);
         EXPECT_STREQ(validValue10String.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
     }
 
-    void TestSetValueFromValueConvertsToString( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues)
+    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const String resultString, const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        //assert(COUNT == 1);
         CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        mp_DataItem->SetValue(validValue20);
-        EXPECT_STREQ(validValue20String.c_str(), mp_DataItem->GetValueAsString().c_str());
+        mp_DataItem->SetValue(testValue, COUNT);
+        EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
+    }
+
+    void TestSetValueFromStringConvertsToValue( const String testString, const int32_t* resultValue, const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
+    {
+        CreateDataItem(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        mp_DataItem->SetValueFromString(testString);
+        for(size_t i = 0; i < COUNT; ++i)
+        {
+            EXPECT_EQ(resultValue[i], mp_DataItem->GetValuePointer()[i]);
+        }
+    }
+
+    void TestSettingValue(const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectEqual)
+    {
+        CreateDataItem(name1, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+        mp_DataItem->SetValue(testValue, COUNT);
+        for(size_t i = 0; i < COUNT; ++i)
+        {
+            if(expectEqual)
+            {
+                EXPECT_EQ(testValue[i], mp_DataItem->GetValuePointer()[i]);
+            }
+            else
+            {
+                EXPECT_NE(testValue[i], mp_DataItem->GetValuePointer()[i]);
+            }
+        }
+
+        mp_DataItem->SetValueFromString(testValueString);
+        for(size_t i = 0; i < COUNT; ++i)
+        {
+            if(expectEqual)
+            {
+                EXPECT_EQ(testValue[i], mp_DataItem->GetValuePointer()[i]);
+            }
+            else
+            {
+                EXPECT_NE(testValue[i], mp_DataItem->GetValuePointer()[i]);
+            }
+        }
     }
 };
 
@@ -368,67 +407,55 @@ TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Val
     TestInitialValueReturnedAsString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
+// ************ Set Value From Value Converts To String ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Value_From_Value_Converts_To_String)
+{
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_From_Value_Converts_To_String)
+{
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
+
+// ************ Set Value From String Converts To Value ******************
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+}
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+}
+
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Values_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, &validValue20, validValue20String, true);
+    TestSettingValue(validValue10, &invalidValue, validValue20String, false);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Values_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, validValue20Array, validValue20ArrayString, true);
+    TestSettingValue(validValue10, invalidValueArray, invalidValueArrayString, false);
+}
 
 /*
-TEST_F(DataItemGetAndSetValueTestsInt10, dataItem_Set_Value_From_String_Converts_To_Value)
-{
-    mp_DataItem->SetValueFromString(validValue1String);
-    EXPECT_EQ(validValue1, mp_DataItem->GetValue());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemArray_Set_Value_From_String_Converts_To_Value)
-{
-    mp_DataItemArray->SetValueFromString(validValue1ArrayString);
-    for(size_t i = 0; i < mp_DataItemArray->GetCount(); ++i)
-    {
-        EXPECT_EQ(validValue1Array[i], mp_DataItemArray->GetValuePointer()[i]);
-    }
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
-{
-    mp_DataItemWithValidation->SetValueFromString(validValue1String);
-    EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue());
-}
-
-TEST_F(DataItemGetAndSetValueTests, dataItem_Valid_Values_Accepted_When_Validation_Is_Used)
-{
-    mp_DataItem->SetValue(validValue1);
-    EXPECT_EQ(validValue1, mp_DataItem->GetValue());
-
-    mp_DataItem->SetValueFromString(validValue2String);
-    EXPECT_EQ(validValue2, mp_DataItem->GetValue());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
-{
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue());
-
-    mp_DataItemWithValidation->SetValueFromString(validValue2String);
-    EXPECT_EQ(validValue2, mp_DataItemWithValidation->GetValue());
-}
-TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
-{
-    mp_DataItemArrayWithValidation->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(validValue1Array[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-
-    mp_DataItemArrayWithValidation->SetValue(validValue2Array, sizeof(validValue2Array)/sizeof(validValue2Array[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(validValue2Array[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-}
-
 TEST_F(DataItemGetAndSetValueTests, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
 {
     mp_DataItem->SetValue(invalidValue);
