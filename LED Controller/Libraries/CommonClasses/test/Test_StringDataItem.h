@@ -147,21 +147,19 @@ TEST_F(StringDataItemFunctionCallTests, Registration_For_New_Value_Notification)
     TestNewValueNotificationDeregistration(RxTxType_Rx_Echo_Value, 1);
 }
 
-/*
-// Test Fixture for LocalDataItemTest
-class StringDataItemTest: public Test
-                        , public SetupCallerInterface
+
+// Test Fixture for DataItem Rx Tx Tests
+class StringDataItemRxTxTests : public Test
+                              , public SetupCallerInterface
 {
 protected:
+    const String initialValue = "Initial Value";
+    const String name = "Name";
+    const String spmm = "Serial Port Message Manager";
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
     MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
-    const String spmm = "Serial Port Message Manager";
-    const String initialValue = "Initial Value";
-    const String value1 = "Value 1";
-    const String value2 = "Value 2";
     StringDataItem *mp_DataItem;
-    const String name = "Name";
 
     void SetUp() override
     {
@@ -184,16 +182,9 @@ protected:
                                         , *mp_MockSerialPortMessageManager
                                         , NULL
                                         , this );
+        SetupAllSetupCallees();
     }
 
-    void DestroyDataItem()
-    {
-        if(mp_DataItem)
-        {
-            delete mp_DataItem;
-            mp_DataItem = nullptr;
-        }
-    }
     void TearDown() override
     {
         if(mp_MockSerialPortMessageManager)
@@ -202,40 +193,21 @@ protected:
         }
         DestroyDataItem();
     }
+    void DestroyDataItem()
+    {
+        if(mp_DataItem)
+        {
+            delete mp_DataItem;
+            mp_DataItem = nullptr;
+        }
+    }
 };
 
-TEST_F(LocalStringDataItemTest, dataItem_Name_Is_Set)
+TEST_F(StringDataItemRxTxTests, Tx_Called_Periodically)
 {
-    EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10)
+        .WillRepeatedly(Return(true));
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
+    CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 100);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }
-/*
-TEST_F(LocalStringDataItemTest, dataItem_Initial_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValue.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
-    EXPECT_STREQ(initialValue.c_str(), mp_DataItem->GetValueAsString().c_str());
-}
-
-TEST_F(LocalStringDataItemTest, dataItem_Set_Value_From_Char_Pointer_Converts_To_String)
-{
-    mp_DataItem->SetValue(value1.c_str(), value1.length());
-    EXPECT_STREQ(value1.c_str(), mp_DataItem->GetValueAsString().c_str());
-}
-
-TEST_F(LocalStringDataItemTest, Change_Count_Changes_Properly)
-{
-    EXPECT_EQ(0, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value1.c_str(), value1.length());
-    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value1.c_str(), value1.length());
-    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value2.c_str(), value1.length());
-    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value2.c_str(), value1.length());
-    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
-}
-
-TEST_F(LocalStringDataItemTest, Count_Reflects_DataItem_Count)
-{
-    EXPECT_EQ(50, mp_DataItem->GetCount());
-}
-*/
