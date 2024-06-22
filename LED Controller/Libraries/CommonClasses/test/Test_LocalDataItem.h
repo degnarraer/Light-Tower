@@ -42,7 +42,7 @@ protected:
 
     void TearDown() override
     {
-        free(mockSetupCaller);
+        delete mockSetupCaller;
     }
 };
 
@@ -53,7 +53,7 @@ TEST_F(LocalDataItemSetupCallerTest, Registered_With_Setup_Caller)
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
-    free(mp_DataItem);
+    delete mp_DataItem;
 }
 
 TEST_F(LocalDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
@@ -63,7 +63,7 @@ TEST_F(LocalDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
-    free(mp_DataItem);
+    delete mp_DataItem;
 }
 
 // Test Fixture for LocalDataItemTest
@@ -125,10 +125,10 @@ protected:
 
     void TearDown() override
     {
-        free(mp_DataItem);
-        free(mp_DataItemArray);
-        free(mp_DataItemWithValidation);
-        free(mp_DataItemArrayWithValidation);
+        delete mp_DataItem;
+        delete mp_DataItemArray;
+        delete mp_DataItemWithValidation;
+        delete mp_DataItemArrayWithValidation;
     }
 };
 

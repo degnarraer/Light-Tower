@@ -187,7 +187,6 @@ protected:
 
     void TearDown() override
     {
-        
         if(mp_MockSerialPortMessageManager)
         {
             delete mp_MockSerialPortMessageManager;
@@ -330,6 +329,7 @@ protected:
             else
             {
                 EXPECT_NE(testValue[i], mp_DataItem->GetValuePointer()[i]);
+                EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
             }
         }
 
@@ -343,6 +343,7 @@ protected:
             else
             {
                 EXPECT_NE(testValue[i], mp_DataItem->GetValuePointer()[i]);
+                EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
             }
         }
     }
@@ -444,93 +445,47 @@ TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_F
     TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
-TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Values_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Valid_Values_When_Validation_Is_Used)
 {
     TestSettingValue(validValue10, &validValue20, validValue20String, true);
-    TestSettingValue(validValue10, &invalidValue, validValue20String, false);
 }
-TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Values_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Reject_Invalid_Value_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, &invalidValue, invalidValueString, false);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Valid_Array_Values_When_Validation_Is_Used)
 {
     TestSettingValue(validValue10, validValue20Array, validValue20ArrayString, true);
+}
+TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Reject_Invalid_Array_Values_When_Validation_Is_Used)
+{
     TestSettingValue(validValue10, invalidValueArray, invalidValueArrayString, false);
 }
 
-/*
-TEST_F(DataItemGetAndSetValueTests, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
+TEST_F(DataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Used)
 {
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    EXPECT_EQ(0, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
     mp_DataItem->SetValue(invalidValue);
-    EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
-    
-    mp_DataItem->SetValue(initialValue);
-    EXPECT_EQ(initialValue, mp_DataItem->GetValue());
-    
-    mp_DataItem->SetValueFromString(invalidValueString);
-    EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue30);
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
+
+TEST_F(DataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Not_Used)
 {
-    mp_DataItemWithValidation->SetValue(invalidValue);
-    EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
-
-    mp_DataItemWithValidation->SetValue(initialValue);
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
-
-    mp_DataItemWithValidation->SetValueFromString(invalidValueString);
-    EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    EXPECT_EQ(0, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(invalidValue);
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue30);
+    EXPECT_EQ(3, mp_DataItem->GetChangeCount());
 }
-TEST_F(DataItemGetAndSetValueTests, dataItemArrayWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
-{
-    mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_NE(invalidValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-    
-    mp_DataItemArrayWithValidation->SetValue(initialValueArray, sizeof(initialValueArray)/sizeof(initialValueArray[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(initialValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-    
-    mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_NE(invalidValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-}
-
-TEST_F(DataItemGetAndSetValueTests, Previous_Value_Retained_When_Value_Rejected)
-{
-    mp_DataItemWithValidation->SetValue(invalidValue);
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
-}
-
-TEST_F(DataItemGetAndSetValueTests, Change_Count_Changes_Properly)
-{
-    EXPECT_EQ(0, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(1, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(1, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue2);
-    EXPECT_EQ(2, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue2);
-    EXPECT_EQ(2, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(invalidValue);
-    EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
-}
-
-TEST_F(DataItemGetAndSetValueTests, Count_Reflects_DataItem_Count)
-{
-    EXPECT_EQ(1, mp_DataItem->GetCount());
-    EXPECT_EQ(10, mp_DataItemArray->GetCount());
-    EXPECT_EQ(1, mp_DataItemWithValidation->GetCount());
-}
-
-TEST_F(DataItemGetAndSetValueTests, New_Value_Triggers_Tx)
-{
-
-}
-*/

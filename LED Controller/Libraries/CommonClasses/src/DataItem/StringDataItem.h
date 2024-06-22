@@ -19,6 +19,7 @@
 #pragma once
 
 #include "DataItem/DataItem.h"
+#include "DataItem/LocalStringDataItem.h"
 
 class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 {
@@ -134,7 +135,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		}
 
 	protected:
-		bool DataItem_TX_Now()
+		virtual bool DataItem_TX_Now()
 		{
 			bool valueUpdated = false;
 			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
