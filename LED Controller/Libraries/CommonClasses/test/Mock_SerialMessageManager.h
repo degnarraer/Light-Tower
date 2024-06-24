@@ -131,7 +131,10 @@ class MockSerialPortMessageManager : public SerialPortMessageManager {
 public:
     MockSerialPortMessageManager(const String& Name, HardwareSerial &Serial, DataSerializer &DataSerializer, BaseType_t coreId = 1)
         : SerialPortMessageManager(Name, Serial, DataSerializer, coreId) {}
-    virtual ~MockSerialPortMessageManager() {}
+    virtual ~MockSerialPortMessageManager() override 
+    {
+        ESP_LOGD("MockSerialPortMessageManager", "Deleting MockSerialPortMessageManager");
+    }
     
     MOCK_METHOD(void, SetupSerialPortMessageManager, (), (override));
     MOCK_METHOD(bool, QueueMessageFromData, (const String& Name, DataType_t DataType, void* Object, size_t Count), (override));

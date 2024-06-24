@@ -3,6 +3,7 @@
 void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* newCallee)
 {
 	ESP_LOGD("RegisterForSetupCall", "Try Registering Callee");
+	std::lock_guard<std::mutex> lock(m_Mutex);
 	bool isFound = false;
 	for (SetupCalleeInterface* callee : m_SetupCallees)
 	{
@@ -21,6 +22,7 @@ void SetupCallerInterface::RegisterForSetupCall(SetupCalleeInterface* newCallee)
 }
 void SetupCallerInterface::DeRegisterForSetupCall(SetupCalleeInterface* callee)
 {
+	std::lock_guard<std::mutex> lock(m_Mutex);
 	auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), callee);
 	if (it != m_SetupCallees.end())
 	{
@@ -31,6 +33,7 @@ void SetupCallerInterface::DeRegisterForSetupCall(SetupCalleeInterface* callee)
 void SetupCallerInterface::SetupAllSetupCallees()
 {
 	ESP_LOGD("SetupCallerInterface", "Setup All Setup Callees");
+	std::lock_guard<std::mutex> lock(m_Mutex);
 	for (SetupCalleeInterface* callee : m_SetupCallees)
 	{
 		if (callee) 

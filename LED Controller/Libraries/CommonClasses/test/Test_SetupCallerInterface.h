@@ -41,7 +41,7 @@ protected:
 
     void TearDown() override
     {
-        free(mockCallee);
+        delete mockCallee;
     }
 };
 

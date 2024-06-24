@@ -227,16 +227,31 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		}
 		virtual ~SerialPortMessageManager()
 		{
-			if(m_RXTaskHandle && eTaskGetState(m_RXTaskHandle) != eDeleted)
+			ESP_LOGD("~SerialPortMessageManager", "Deleting SerialPortMessageManager");
+			if(m_RXTaskHandle)
 			{
-				ESP_LOGI("~SerialPortMessageManager", "Deleting RX Task.");
-				vTaskDelete(m_RXTaskHandle);
+				ESP_LOGD("~SerialPortMessageManager", "RX Task Exists.");
+				if(eTaskGetState(m_RXTaskHandle) != eDeleted)
+				{
+					ESP_LOGD("~SerialPortMessageManager", "Deleting RX Task.");
+					vTaskDelete(m_RXTaskHandle);
+				}
 			}
-			if(m_TXTaskHandle && eTaskGetState(m_TXTaskHandle) != eDeleted)
+			if(m_TXTaskHandle)
 			{
-				ESP_LOGI("~SerialPortMessageManager", "Deleting TX Task.");
-				vTaskDelete(m_TXTaskHandle);
+				ESP_LOGD("~SerialPortMessageManager", "TX Task Exists.");
+				if(eTaskGetState(m_TXTaskHandle) != eDeleted)
+				{
+					ESP_LOGD("~SerialPortMessageManager", "Deleting TX Task.");
+					vTaskDelete(m_TXTaskHandle);
+				}
 			}
+			if(m_TXQueue)
+			{
+				ESP_LOGD("~SerialPortMessageManager", "Deleting Queue");
+				vQueueDelete(m_TXQueue);
+			}
+			ESP_LOGD("~SerialPortMessageManager", "SerialPortMessageManager Deleted");
 		}
 		virtual void SetupSerialPortMessageManager();
 		virtual bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
@@ -253,7 +268,7 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		String m_message;
 		TaskHandle_t m_RXTaskHandle = nullptr;
 		TaskHandle_t m_TXTaskHandle = nullptr;
-		QueueHandle_t m_TXQueue;
+		QueueHandle_t m_TXQueue = nullptr;
 		static void StaticSerialPortMessageManager_RxTask(void *Parameters)
 		{
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;

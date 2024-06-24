@@ -39,29 +39,29 @@ class DataItemFunctionCallTests : public Test
 protected:
     const int32_t initialValue = 10;
     const String spmm = "Serial Port Message Manager";
-    const String name1 = "Test Name1";
-    MockSetupCallerInterface *mp_MockSetupCaller;
+    const String name = "Test Name1";
+    MockSetupCallerInterface *mp_MockSetupCaller = nullptr;
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
-    MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+    MockSerialPortMessageManager *mp_MockSerialPortMessageManager = nullptr;;
     DataItem<int32_t, 1> *mp_DataItem;
     void SetUp() override
     {
+        ESP_LOGD("SetUp", "Setting up test");
         mp_MockSetupCaller = new MockSetupCallerInterface();
-        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name1
+        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-        ON_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
+        ESP_LOGD("SetUp", "Test setup");
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
-        mp_DataItem = new DataItem<int32_t, 1>( name1 
+        ESP_LOGD("CreateDataItem", "Creating Data Item");
+		EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull()));
+        mp_DataItem = new DataItem<int32_t, 1>( name 
                                               , initialValue
                                               , rxTxType
                                               , updateStoreType
@@ -69,82 +69,66 @@ protected:
                                               , *mp_MockSerialPortMessageManager
                                               , NULL
                                               , mp_MockSetupCaller );
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
+        mp_DataItem->Setup();
+        ESP_LOGD("CreateDataItem", "Data Item Created");
     }
     void TearDown() override
     {
+        ESP_LOGD("TearDown", "Tearing down test");
+        DestroyDataItem();
         delete mp_MockSerialPortMessageManager;
         delete mp_MockSetupCaller;
-        DestroyDataItem();
+        ESP_LOGD("TearDown", "Test tore down");
     }
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
+            ESP_LOGD("DestroyDataItem", "Destroying Data Item");
+            EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
             delete mp_DataItem;
             mp_DataItem = nullptr;
+            ESP_LOGD("DestroyDataItem", "Data Item Destroyed");
+        }
+        else
+        {
+            ESP_LOGD("DestroyDataItem", "No Data Item to Destroy");
         }
     }
     void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
     {
         EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(callTimes);
         CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
-    }
-    void TestSetupCallDeregistration(RxTxType_t rxtxtype, size_t callTimes)
-    {    
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
         EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(callTimes);
         DestroyDataItem();
     }
     void TestNewValueNotificationRegistration(RxTxType_t rxtxtype, size_t callTimes)
     {
-        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull()));
         EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(callTimes);
         CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
-        mp_DataItem->Setup();
-    }
-    void TestNewValueNotificationDeregistration(RxTxType_t rxtxtype, size_t callTimes)
-    {
-        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
         EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(callTimes);
         DestroyDataItem();
     }
-
 };
 
 TEST_F(DataItemFunctionCallTests, Registration_With_Setup_Caller)
 {
     TestSetupCallRegistration(RxTxType_Tx_Periodic, 1);
-    TestSetupCallDeregistration(RxTxType_Tx_Periodic, 1);
-
     TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-    TestSetupCallDeregistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-
     TestSetupCallRegistration(RxTxType_Tx_On_Change, 1);
-    TestSetupCallDeregistration(RxTxType_Tx_On_Change, 1);
-
     TestSetupCallRegistration(RxTxType_Rx_Only, 1);
-    TestSetupCallDeregistration(RxTxType_Rx_Only, 1);
-
     TestSetupCallRegistration(RxTxType_Rx_Echo_Value, 1);
-    TestSetupCallDeregistration(RxTxType_Rx_Echo_Value, 1);
 }
 
 TEST_F(DataItemFunctionCallTests, Registration_For_New_Value_Notification)
 {
     TestNewValueNotificationRegistration(RxTxType_Tx_Periodic, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_Periodic, 1);
-
     TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-
     TestNewValueNotificationRegistration(RxTxType_Tx_On_Change, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change, 1);
-
     TestNewValueNotificationRegistration(RxTxType_Rx_Only, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Rx_Only, 1);
-
-    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value, 1);    
-    TestNewValueNotificationDeregistration(RxTxType_Rx_Echo_Value, 1);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value, 1);
 }
 
 
@@ -154,7 +138,7 @@ class DataItemRxTxTests : public Test
 {
 protected:
     const int32_t initialValue = 10;
-    const String name1 = "Test Name1";
+    const String name = "Test Name1";
     const String spmm = "Serial Port Message Manager";
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
@@ -163,18 +147,17 @@ protected:
 
     void SetUp() override
     {
-        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name1
+        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( spmm
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-        ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
+
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
-        mp_DataItem = new DataItem<int32_t, 1>( name1 
+        mp_DataItem = new DataItem<int32_t, 1>( name 
                                               , initialValue
                                               , rxTxType
                                               , updateStoreType
@@ -182,24 +165,25 @@ protected:
                                               , *mp_MockSerialPortMessageManager
                                               , NULL
                                               , this );
+                                              
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
         SetupAllSetupCallees();
     }
 
-    void TearDown() override
-    {
-        if(mp_MockSerialPortMessageManager)
-        {
-            delete mp_MockSerialPortMessageManager;
-        }
-        DestroyDataItem();
-    }
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }
+    }
+
+    void TearDown() override
+    {
+        DestroyDataItem();
+        delete mp_MockSerialPortMessageManager;
     }
 };
 
@@ -253,7 +237,7 @@ protected:
 
     void CreateDataItem( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
         mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, *mp_MockSerialPortMessageManager, nullptr, this, validStringValues);
         SetupAllSetupCallees();
     }
@@ -262,6 +246,7 @@ protected:
     {
         if(mp_DataItem)
         {
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }
@@ -271,11 +256,7 @@ protected:
     {
         ESP_LOGD("TearDown", "Test TearDown!");
         DestroyDataItem();
-        if(mp_MockSerialPortMessageManager)
-        {
-            delete mp_MockSerialPortMessageManager;
-            mp_MockSerialPortMessageManager = nullptr;
-        }
+        delete mp_MockSerialPortMessageManager;
     }
 
     void TestNameIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )

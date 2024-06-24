@@ -75,15 +75,16 @@ protected:
     {
         if(mp_DataItem)
         {
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }
     }
     void TearDown() override
     {
-        delete mp_MockSerialPortMessageManager;
-        delete mp_MockSetupCaller;
         DestroyDataItem();
+        delete mp_MockSerialPortMessageManager;
+        //delete mp_MockSetupCaller;
     }
     void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
     {
@@ -187,16 +188,17 @@ protected:
 
     void TearDown() override
     {
+        DestroyDataItem();
         if(mp_MockSerialPortMessageManager)
         {
             delete mp_MockSerialPortMessageManager;
         }
-        DestroyDataItem();
     }
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }

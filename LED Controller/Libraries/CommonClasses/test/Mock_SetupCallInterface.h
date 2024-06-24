@@ -25,12 +25,28 @@
 class MockSetupCalleeInterface : public SetupCalleeInterface
 {
 public:
+    MockSetupCalleeInterface()
+    {
+        ESP_LOGD("MockSetupCalleeInterface", "Constructing MockSetupCalleeInterface");
+    }
+    virtual ~MockSetupCalleeInterface() override
+    {
+        ESP_LOGD("MockSetupCalleeInterface", "Deleting MockSetupCalleeInterface");
+    }
     MOCK_METHOD(void, Setup, (), (override));
 };
 
 class MockSetupCallerInterface : public SetupCallerInterface
 {
 public:
+    MockSetupCallerInterface()
+    {
+        ESP_LOGD("MockSetupCallerInterface", "Constructing MockSetupCallerInterface");
+    }
+    virtual ~MockSetupCallerInterface() override
+    {
+        ESP_LOGD("MockSetupCallerInterface", "Deleting MockSetupCallerInterface");
+    }
     MOCK_METHOD(void, RegisterForSetupCall, (SetupCalleeInterface* callee), (override));
     MOCK_METHOD(void, DeRegisterForSetupCall, (SetupCalleeInterface* callee), (override));
     MOCK_METHOD(void, SetupAllSetupCallees, (), (override));

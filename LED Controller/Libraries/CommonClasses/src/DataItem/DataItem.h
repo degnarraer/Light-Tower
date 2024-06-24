@@ -255,10 +255,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			else
 			{
-				if(ESP_OK != esp_timer_stop(m_TxTimer))
-				{
-					ESP_LOGE("SetDataLinkEnabled", "Error Stopping Timer!");
-				}
+				
+				StopTimer();
 				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
 				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", LocalDataItem<T,COUNT>::GetName().c_str());
 			}

@@ -53,16 +53,7 @@ TEST_F(LocalDataItemSetupCallerTest, Registered_With_Setup_Caller)
                                                                        , initialValue
                                                                        , NULL
                                                                        , mockSetupCaller );
-    delete mp_DataItem;
-}
-
-TEST_F(LocalDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
-{
-    EXPECT_CALL(*mockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
-    LocalDataItem<int32_t, 1> *mp_DataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
-                                                                       , initialValue
-                                                                       , NULL
-                                                                       , mockSetupCaller );
+    EXPECT_CALL(*mockSetupCaller, DeRegisterForSetupCall(NotNull()));
     delete mp_DataItem;
 }
 

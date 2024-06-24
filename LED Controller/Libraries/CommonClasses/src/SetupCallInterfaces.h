@@ -18,24 +18,41 @@
 
 #pragma once
 #include <vector>
+#include <mutex>
 #include "Streaming.h"
 
 class SetupCalleeInterface
 {
 	public:
-		SetupCalleeInterface(){}
-		virtual ~SetupCalleeInterface(){}
+		SetupCalleeInterface()
+		{
+        	ESP_LOGD("SetupCalleeInterface", "Constructing SetupCalleeInterface");
+		}
+		virtual ~SetupCalleeInterface()
+		{
+        	ESP_LOGD("SetupCalleeInterface", "Deleting SetupCalleeInterface");
+		}
 		virtual void Setup() = 0;
 };
 class SetupCallerInterface
 {
 	public:
-		SetupCallerInterface(){}
-		virtual ~SetupCallerInterface(){}
+		SetupCallerInterface()
+		{
+        	ESP_LOGD("SetupCallerInterface", "Constructing SetupCallerInterface");
+		}
+		virtual ~SetupCallerInterface()
+		{
+        	ESP_LOGD("SetupCallerInterface", "Deleting SetupCallerInterface");
+			std::lock_guard<std::mutex> lock(m_Mutex);
+			m_SetupCallees.clear();
+        	ESP_LOGD("SetupCallerInterface", "SetupCallerInterface Deleted");
+		}
 		virtual void RegisterForSetupCall(SetupCalleeInterface* Callee);
 		virtual void DeRegisterForSetupCall(SetupCalleeInterface* Callee);
 	protected:
 		virtual void SetupAllSetupCallees();
 	private:
 		std::vector<SetupCalleeInterface*> m_SetupCallees = std::vector<SetupCalleeInterface*>();
+		std::mutex m_Mutex;
 };

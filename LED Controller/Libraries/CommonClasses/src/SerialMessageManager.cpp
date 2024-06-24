@@ -120,7 +120,7 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Task Created.");
 	
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
-	if(NULL == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
+	if(nullptr == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
 }
 

@@ -101,16 +101,33 @@ LocalDataItem: public NamedCallbackInterface<T>
 		virtual ~LocalDataItem()
 		{
 			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": LocalDataItem Freeing Memory", m_Name.c_str());
-			if(mp_SetupCallerInterface) mp_SetupCallerInterface->DeRegisterForSetupCall(this);
-			if(mp_NamedCallback) this->DeRegisterNamedCallback(mp_NamedCallback);
-			if(mp_Value) heap_caps_free(mp_Value);
-			if(mp_InitialValue) heap_caps_free(mp_InitialValue);
+			if(mp_SetupCallerInterface)
+			{
+        		ESP_LOGD("~LocalDataItem", "DeRegistering for Setup Call");
+				mp_SetupCallerInterface->DeRegisterForSetupCall(this);
+			}
+			if(mp_NamedCallback)
+			{
+        		ESP_LOGD("~LocalDataItem", "DeRegistering Named Callback");
+				this->DeRegisterNamedCallback(mp_NamedCallback);
+			}
+			if(mp_Value)
+			{
+        		ESP_LOGD("~LocalDataItem", "freeing mp_Value Memory");
+				heap_caps_free(mp_Value);
+			}
+			if(mp_InitialValue) 
+			{
+        		ESP_LOGD("~LocalDataItem", "freeing mp_InitialValue Memory");
+				heap_caps_free(mp_InitialValue);
+			}
 		}
 
 		virtual void RegisterForSetup()
 		{
 			if(mp_SetupCallerInterface)
 			{
+        		ESP_LOGD("RegisterForSetup", "Registering for Setup Call");
 				mp_SetupCallerInterface->RegisterForSetupCall(this);
 			}
 			else

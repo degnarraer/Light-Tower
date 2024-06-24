@@ -54,16 +54,7 @@ TEST_F(LocalStringDataItemSetupCallerTest, Registered_With_Setup_Caller)
                                                               , initialValue
                                                               , NULL
                                                               , mockSetupCaller );
-    delete mp_DataItem;
-}
-
-TEST_F(LocalStringDataItemSetupCallerTest, DeRegistered_With_Setup_Caller_On_Deletion)
-{
     EXPECT_CALL(*mockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
-    LocalStringDataItem *mp_DataItem = new LocalStringDataItem( name 
-                                                              , initialValue
-                                                              , NULL
-                                                              , mockSetupCaller );
     delete mp_DataItem;
 }
 
@@ -90,7 +81,10 @@ protected:
 
     void TearDown() override
     {
-        delete mp_DataItem;
+        if(mp_DataItem)
+        {
+            delete mp_DataItem;
+        }
     }
 };
 
