@@ -29,7 +29,6 @@
 
 using ::testing::_;
 using ::testing::NotNull;
-using ::testing::InvokeWithoutArgs;
 using ::testing::NiceMock;
 using namespace testing;
 
@@ -40,8 +39,8 @@ class DataItemFunctionCallTests : public Test
         const int32_t initialValue = 10;
         const String spmm = "Serial Port Message Manager";
         const String name = "Test Name";
-        MockSetupCallerInterface *mp_MockSetupCaller;
-        MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+        NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
+        NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
         MockHardwareSerial m_MockHardwareSerial;
         MockDataSerializer m_MockDataSerializer;
         DataItem<int32_t, 1> *mp_DataItem;
@@ -52,8 +51,8 @@ class DataItemFunctionCallTests : public Test
         {}
         void SetUp() override
         {
-            mp_MockSetupCaller = new MockSetupCallerInterface();
-            mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+            mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
+            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
             ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         }
@@ -136,7 +135,7 @@ class DataItemRxTxTests : public Test
         const String spmm = "Serial Port Message Manager";
         MockHardwareSerial m_MockHardwareSerial;
         MockDataSerializer m_MockDataSerializer;
-        MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+        NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
         DataItem<int32_t, 1> *mp_DataItem;
         DataItemRxTxTests()
             : mp_MockSerialPortMessageManager(nullptr)
@@ -145,7 +144,7 @@ class DataItemRxTxTests : public Test
 
         void SetUp() override
         {
-            mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
             ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         }
@@ -217,7 +216,7 @@ protected:
     DataItem<T, COUNT> *mp_DataItem;
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
-    MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+    NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     const String spmm = "Serial Port Message Manager";
     const String name1 = "Test Name1";
     const String name2 = "Test Name2";
@@ -227,7 +226,7 @@ protected:
     void SetUp() override
     {
         ESP_LOGD("SetUp", "Test SetUp!");
-        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager(spmm, m_MockHardwareSerial, m_MockDataSerializer, 0);
+        mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( spmm, m_MockHardwareSerial, m_MockDataSerializer, 0 );
         EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
     }
 

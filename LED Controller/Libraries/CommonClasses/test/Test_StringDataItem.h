@@ -36,10 +36,10 @@ using namespace testing;
 class StringDataItemFunctionCallTests : public Test
 {
 protected:
-    MockSetupCallerInterface *mp_MockSetupCaller;
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
-    MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+    NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
+    NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     StringDataItem *mp_DataItem;
     const String spmm = "Serial Port Message Manager";
     const String name = "name";
@@ -47,11 +47,8 @@ protected:
 
     void SetUp() override
     {
-        mp_MockSetupCaller = new MockSetupCallerInterface();
-        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name
-                                                                          , m_MockHardwareSerial
-                                                                          , m_MockDataSerializer
-                                                                          , 0 );
+        mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
+        mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
@@ -154,15 +151,12 @@ protected:
     const String spmm = "Serial Port Message Manager";
     MockHardwareSerial m_MockHardwareSerial;
     MockDataSerializer m_MockDataSerializer;
-    MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
+    NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     StringDataItem *mp_DataItem;
 
     void SetUp() override
     {
-        mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name
-                                                                          , m_MockHardwareSerial
-                                                                          , m_MockDataSerializer
-                                                                          , 0 );
+        mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
         ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
         ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));

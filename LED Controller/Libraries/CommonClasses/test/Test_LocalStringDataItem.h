@@ -32,29 +32,29 @@ using namespace testing;
 class LocalStringDataItemSetupCallerTest : public Test
 {
 protected:
-    MockSetupCallerInterface* mockSetupCaller;
+    NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
     const String name = "name";
     const String initialValue = "Initial Value";
 
     void SetUp() override
     {
-        mockSetupCaller = new MockSetupCallerInterface();
+        mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
     }
 
     void TearDown() override
     {
-        delete mockSetupCaller;
+        delete mp_MockSetupCaller;
     }
 };
 
 TEST_F(LocalStringDataItemSetupCallerTest, Registered_With_Setup_Caller)
 {
-    EXPECT_CALL(*mockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
+    EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
     LocalStringDataItem *mp_DataItem = new LocalStringDataItem( name 
                                                               , initialValue
                                                               , NULL
-                                                              , mockSetupCaller );
-    EXPECT_CALL(*mockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
+                                                              , mp_MockSetupCaller );
+    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
     delete mp_DataItem;
 }
 
