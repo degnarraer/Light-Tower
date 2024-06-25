@@ -20,16 +20,17 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "Streaming.h"
 #include "SetupCallInterfaces.h"
 
 class MockSetupCalleeInterface : public SetupCalleeInterface
 {
 public:
-    MockSetupCalleeInterface()
+    MockSetupCalleeInterface() : SetupCalleeInterface()
     {
         ESP_LOGD("MockSetupCalleeInterface", "Constructing MockSetupCalleeInterface");
     }
-    virtual ~MockSetupCalleeInterface() override
+    ~MockSetupCalleeInterface() override
     {
         ESP_LOGD("MockSetupCalleeInterface", "Deleting MockSetupCalleeInterface");
     }
@@ -38,16 +39,16 @@ public:
 
 class MockSetupCallerInterface : public SetupCallerInterface
 {
-public:
-    MockSetupCallerInterface()
-    {
-        ESP_LOGD("MockSetupCallerInterface", "Constructing MockSetupCallerInterface");
-    }
-    virtual ~MockSetupCallerInterface() override
-    {
-        ESP_LOGD("MockSetupCallerInterface", "Deleting MockSetupCallerInterface");
-    }
-    MOCK_METHOD(void, RegisterForSetupCall, (SetupCalleeInterface* callee), (override));
-    MOCK_METHOD(void, DeRegisterForSetupCall, (SetupCalleeInterface* callee), (override));
-    MOCK_METHOD(void, SetupAllSetupCallees, (), (override));
+    public:
+        MockSetupCallerInterface() : SetupCallerInterface()
+        {
+            ESP_LOGD("MockSetupCallerInterface", "Constructing MockSetupCallerInterface");
+        }
+        ~MockSetupCallerInterface() override
+        {
+            ESP_LOGD("MockSetupCallerInterface", "Deleting MockSetupCallerInterface");
+        }
+        MOCK_METHOD(void, RegisterForSetupCall, (SetupCalleeInterface* callee), (override));
+        MOCK_METHOD(void, DeRegisterForSetupCall, (SetupCalleeInterface* callee), (override));
+        MOCK_METHOD(void, SetupAllSetupCallees, (), (override));
 };

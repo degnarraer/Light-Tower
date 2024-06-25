@@ -28,20 +28,24 @@ using namespace testing;
 
 // Test Fixture for SetupCallerInterface
 class SetupCallerInterfaceTest : public Test
-                               , public SetupCallerInterface
 {
 protected:
-    SetupCallerInterface* setupCaller;
-    MockSetupCalleeInterface* mockCallee;
+    SetupCallerInterface *setupCaller;
+    MockSetupCalleeInterface *mockCallee1;
+    MockSetupCalleeInterface *mockCallee2;
 
     void SetUp() override
     {
-        mockCallee = new MockSetupCalleeInterface();
+        setupCaller = new SetupCallerInterface();
+        mockCallee1 = new MockSetupCalleeInterface();
+        mockCallee2 = new MockSetupCalleeInterface();
     }
 
     void TearDown() override
     {
-        delete mockCallee;
+        delete mockCallee1;
+        delete mockCallee2;
+        delete setupCaller;
     }
 };
 
@@ -49,23 +53,26 @@ protected:
 TEST_F(SetupCallerInterfaceTest, RegisterCallee)
 {
     // Expect the mock callee to be registered
-    EXPECT_CALL(*mockCallee, Setup()).Times(0);
+    EXPECT_CALL(*mockCallee1, Setup()).Times(0);
+    EXPECT_CALL(*mockCallee2, Setup()).Times(0);
 
-    RegisterForSetupCall(mockCallee);
+    setupCaller->RegisterForSetupCall(mockCallee1);
+    setupCaller->RegisterForSetupCall(mockCallee2);
 
     // Call SetupAllSetupCallees and expect Setup to be called on the mock callee
-    EXPECT_CALL(*mockCallee, Setup()).Times(1);
-    SetupAllSetupCallees();
+    EXPECT_CALL(*mockCallee1, Setup()).Times(1);
+    EXPECT_CALL(*mockCallee2, Setup()).Times(1);
+    setupCaller->SetupAllSetupCallees();
 }
 
 // Test Deregistration
 TEST_F(SetupCallerInterfaceTest, DeRegisterCallee)
 {
     // Register and then deregister the mock callee
-    RegisterForSetupCall(mockCallee);
-    DeRegisterForSetupCall(mockCallee);
+    setupCaller->RegisterForSetupCall(mockCallee1);
+    setupCaller->DeRegisterForSetupCall(mockCallee1);
 
     // Call SetupAllSetupCallees and expect Setup not to be called on the mock callee
-    EXPECT_CALL(*mockCallee, Setup()).Times(0);
-    SetupAllSetupCallees();
+    EXPECT_CALL(*mockCallee1, Setup()).Times(0);
+    setupCaller->SetupAllSetupCallees();
 }

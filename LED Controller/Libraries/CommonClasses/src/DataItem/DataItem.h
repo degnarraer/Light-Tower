@@ -141,8 +141,17 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{
 			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());
 			SetDataLinkEnabled(false);
-			if(mp_RxValue) heap_caps_free(mp_RxValue);
-			if(mp_TxValue) heap_caps_free(mp_TxValue);
+			if(mp_RxValue)
+			{
+        		ESP_LOGD("~DataItem", "freeing mp_RxValue Memory");
+				heap_caps_free(mp_RxValue);
+			}
+			if(mp_TxValue)
+			{
+        		ESP_LOGD("~DataItem", "freeing mp_TxValue Memory");
+				heap_caps_free(mp_TxValue);	
+			}
+				
 		}
 		virtual void Setup() override
 		{

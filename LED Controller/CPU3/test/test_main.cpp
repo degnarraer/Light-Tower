@@ -29,27 +29,11 @@ void setup()
     Serial.begin(500000);
     ::testing::InitGoogleMock();
     ::testing::InitGoogleTest();
-    ::testing::GTEST_FLAG(break_on_failure) = true;
 }
 
 void loop()
 {
-    try
-    {
-        if (RUN_ALL_TESTS())
-        {
-            ESP_LOGE("Run All Tests", "All Tests Passes!");
-        }
-        else
-        {
-            ESP_LOGE("Run All Tests", "Testing Failed!");
-        }
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-
+    RUN_ALL_TESTS();
     // Ensure all serial output is transmitted
     Serial.flush();
     delay(1000);  // Optional delay between test runs
@@ -60,7 +44,6 @@ int main(int argc, char **argv)
 {
     ::testing::InitGoogleMock(&argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
-    ::testing::GTEST_FLAG(break_on_failure) = true;
 
     int result = RUN_ALL_TESTS();
 

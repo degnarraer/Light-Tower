@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "Streaming.h"
 #include "SerialMessageManager.h"
 
 template <typename T>
@@ -129,8 +130,11 @@ public:
 // Mock for SerialPortMessageManager, if needed, inheriting the mock caller interface
 class MockSerialPortMessageManager : public SerialPortMessageManager {
 public:
-    MockSerialPortMessageManager(const String& Name, HardwareSerial &Serial, DataSerializer &DataSerializer, BaseType_t coreId = 1)
-        : SerialPortMessageManager(Name, Serial, DataSerializer, coreId) {}
+    MockSerialPortMessageManager( const String& Name, HardwareSerial &Serial, DataSerializer &DataSerializer, BaseType_t coreId = 1 )
+                                : SerialPortMessageManager(Name, Serial, DataSerializer, coreId)
+    {
+
+    }
     virtual ~MockSerialPortMessageManager() override 
     {
         ESP_LOGD("MockSerialPortMessageManager", "Deleting MockSerialPortMessageManager");
