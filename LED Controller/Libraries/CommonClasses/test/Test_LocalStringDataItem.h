@@ -33,6 +33,7 @@ class LocalStringDataItemSetupCallerTest : public Test
 {
 protected:
     NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
+    LocalStringDataItem *mp_DataItem;
     const String name = "name";
     const String initialValue = "Initial Value";
 
@@ -50,11 +51,11 @@ protected:
 TEST_F(LocalStringDataItemSetupCallerTest, Registered_With_Setup_Caller)
 {
     EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
-    LocalStringDataItem *mp_DataItem = new LocalStringDataItem( name 
-                                                              , initialValue
-                                                              , NULL
-                                                              , mp_MockSetupCaller );
-    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
+    mp_DataItem = new LocalStringDataItem( name 
+                                         , initialValue
+                                         , nullptr
+                                         , mp_MockSetupCaller );
+    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(mp_DataItem)).Times(1);
     delete mp_DataItem;
 }
 

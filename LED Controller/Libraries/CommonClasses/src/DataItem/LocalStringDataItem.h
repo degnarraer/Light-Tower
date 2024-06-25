@@ -29,11 +29,11 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 					 	   , const String &initialValue
 					 	   , NamedCallback_t *namedCallback
 					 	   , SetupCallerInterface *setupCallerInterface )
-						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue.c_str(), namedCallback, setupCallerInterface, NULL )
+						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue.c_str(), namedCallback, setupCallerInterface )
 						   {
 						   }
 
-		virtual ~LocalStringDataItem()
+		virtual ~LocalStringDataItem() override
 		{
 			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}

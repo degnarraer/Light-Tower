@@ -163,6 +163,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			{
 				if (mp_RxValue && mp_TxValue)
 				{
+					ESP_LOGD("DataItem<T, COUNT>::Setup()", "Setting Initial Tx/Rx Values");
 					memcpy(mp_RxValue, this->mp_Value, sizeof(T)*COUNT);
 					memcpy(mp_TxValue, this->mp_Value, sizeof(T)*COUNT);
 					SetDataLinkEnabled(true);

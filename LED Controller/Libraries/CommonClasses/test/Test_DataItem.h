@@ -58,14 +58,16 @@ class DataItemFunctionCallTests : public Test
         }
         void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
         {
+            EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
             mp_DataItem = new DataItem<int32_t, 1>( name 
-                                                , initialValue
-                                                , rxTxType
-                                                , updateStoreType
-                                                , rate
-                                                , *mp_MockSerialPortMessageManager
-                                                , nullptr
-                                                , mp_MockSetupCaller );
+                                                  , initialValue
+                                                  , rxTxType
+                                                  , updateStoreType
+                                                  , rate
+                                                  , *mp_MockSerialPortMessageManager
+                                                  , nullptr
+                                                  , mp_MockSetupCaller );
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
             mp_DataItem->Setup();
         }
         void TearDown() override
@@ -86,42 +88,40 @@ class DataItemFunctionCallTests : public Test
         {
             if(mp_DataItem)
             {
+                EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(mp_DataItem)).Times(1);
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItem)).Times(1);
                 delete mp_DataItem;
                 mp_DataItem = nullptr;
             }
         }
-        void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
+        void TestSetupCallRegistration(RxTxType_t rxtxtype)
         {
-            EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(callTimes);
             CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
-            EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(callTimes);
             DestroyDataItem();
         }
-        void TestNewValueNotificationRegistration(RxTxType_t rxtxtype, size_t callTimes)
+        void TestNewValueNotificationRegistration(RxTxType_t rxtxtype)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(callTimes);
             CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(callTimes);
             DestroyDataItem();
         }
 };
 
 TEST_F(DataItemFunctionCallTests, Registration_With_Setup_Caller)
 {
-    TestSetupCallRegistration(RxTxType_Tx_Periodic, 1);
-    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-    TestSetupCallRegistration(RxTxType_Tx_On_Change, 1);
-    TestSetupCallRegistration(RxTxType_Rx_Only, 1);
-    TestSetupCallRegistration(RxTxType_Rx_Echo_Value, 1);
+    TestSetupCallRegistration(RxTxType_Tx_Periodic);
+    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestSetupCallRegistration(RxTxType_Tx_On_Change);
+    TestSetupCallRegistration(RxTxType_Rx_Only);
+    TestSetupCallRegistration(RxTxType_Rx_Echo_Value);
 }
 
 TEST_F(DataItemFunctionCallTests, Registration_For_New_Value_Notification)
 {
-    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic, 1);
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change, 1);
-    TestNewValueNotificationRegistration(RxTxType_Rx_Only, 1);
-    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value, 1);
+    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic);
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Only);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value);
 }
 
 
@@ -145,7 +145,6 @@ class DataItemRxTxTests : public Test
         void SetUp() override
         {
             mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
-            ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         }
 
@@ -157,7 +156,7 @@ class DataItemRxTxTests : public Test
                                                 , updateStoreType
                                                 , rate
                                                 , *mp_MockSerialPortMessageManager
-                                                , NULL
+                                                , nullptr
                                                 , this );
             SetupAllSetupCallees();
         }
@@ -166,7 +165,6 @@ class DataItemRxTxTests : public Test
         {
             if(mp_DataItem)
             {
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
                 delete mp_DataItem;
                 mp_DataItem = nullptr;
             }
@@ -225,7 +223,6 @@ protected:
 
     void SetUp() override
     {
-        ESP_LOGD("SetUp", "Test SetUp!");
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( spmm, m_MockHardwareSerial, m_MockDataSerializer, 0 );
         EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
     }
@@ -247,7 +244,6 @@ protected:
 
     void TearDown() override
     {
-        ESP_LOGD("TearDown", "Test TearDown!");
         DestroyDataItem();
         delete mp_MockSerialPortMessageManager;
     }

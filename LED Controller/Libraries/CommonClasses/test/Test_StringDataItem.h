@@ -78,66 +78,63 @@ protected:
         delete mp_MockSerialPortMessageManager;
         delete mp_MockSetupCaller;
     }
-    void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
+    void TestSetupCallRegistration(RxTxType_t rxtxtype)
     {
-        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(callTimes);
+        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
         CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
     }
-    void TestSetupCallDeregistration(RxTxType_t rxtxtype, size_t callTimes)
-    {    
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
-        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(callTimes);
+    void TestSetupCallDeregistration(RxTxType_t rxtxtype)
+    {
+        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
         DestroyDataItem();
     }
-    void TestNewValueNotificationRegistration(RxTxType_t rxtxtype, size_t callTimes)
+    void TestNewValueNotificationRegistration(RxTxType_t rxtxtype)
     {
-        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull()));
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(callTimes);
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
         CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
         mp_DataItem->Setup();
     }
-    void TestNewValueNotificationDeregistration(RxTxType_t rxtxtype, size_t callTimes)
+    void TestNewValueNotificationDeregistration(RxTxType_t rxtxtype)
     {
-        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(callTimes);
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
         DestroyDataItem();
     }
 };
 
 TEST_F(StringDataItemFunctionCallTests, Registration_With_Setup_Caller)
 {
-    TestSetupCallRegistration(RxTxType_Tx_Periodic, 1);
-    TestSetupCallDeregistration(RxTxType_Tx_Periodic, 1);
+    TestSetupCallRegistration(RxTxType_Tx_Periodic);
+    TestSetupCallDeregistration(RxTxType_Tx_Periodic);
 
-    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-    TestSetupCallDeregistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
+    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestSetupCallDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
 
-    TestSetupCallRegistration(RxTxType_Tx_On_Change, 1);
-    TestSetupCallDeregistration(RxTxType_Tx_On_Change, 1);
+    TestSetupCallRegistration(RxTxType_Tx_On_Change);
+    TestSetupCallDeregistration(RxTxType_Tx_On_Change);
 
-    TestSetupCallRegistration(RxTxType_Rx_Only, 1);
-    TestSetupCallDeregistration(RxTxType_Rx_Only, 1);
+    TestSetupCallRegistration(RxTxType_Rx_Only);
+    TestSetupCallDeregistration(RxTxType_Rx_Only);
 
-    TestSetupCallRegistration(RxTxType_Rx_Echo_Value, 1);
-    TestSetupCallDeregistration(RxTxType_Rx_Echo_Value, 1);
+    TestSetupCallRegistration(RxTxType_Rx_Echo_Value);
+    TestSetupCallDeregistration(RxTxType_Rx_Echo_Value);
 }
 
 TEST_F(StringDataItemFunctionCallTests, Registration_For_New_Value_Notification)
 {
-    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_Periodic, 1);
+    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic);
+    TestNewValueNotificationDeregistration(RxTxType_Tx_Periodic);
 
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat, 1);
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
 
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change, 1);
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change);
+    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change);
 
-    TestNewValueNotificationRegistration(RxTxType_Rx_Only, 1);
-    TestNewValueNotificationDeregistration(RxTxType_Rx_Only, 1);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Only);
+    TestNewValueNotificationDeregistration(RxTxType_Rx_Only);
 
-    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value, 1);    
-    TestNewValueNotificationDeregistration(RxTxType_Rx_Echo_Value, 1);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value);    
+    TestNewValueNotificationDeregistration(RxTxType_Rx_Echo_Value);
 }
 
 
@@ -157,9 +154,6 @@ protected:
     void SetUp() override
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
-        ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
@@ -172,6 +166,7 @@ protected:
                                         , *mp_MockSerialPortMessageManager
                                         , NULL
                                         , this );
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
         SetupAllSetupCallees();
     }
 
@@ -187,7 +182,7 @@ protected:
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItem)).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }
@@ -198,7 +193,6 @@ TEST_F(StringDataItemRxTxTests, Tx_Called_Periodically)
 {
     EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10)
         .WillRepeatedly(Return(true));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
     CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 100);
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }
