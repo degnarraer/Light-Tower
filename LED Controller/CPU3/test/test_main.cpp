@@ -29,14 +29,14 @@ void setup()
     Serial.begin(500000);
     ::testing::InitGoogleMock();
     ::testing::InitGoogleTest();
+    ::testing::GTEST_FLAG(break_on_failure) = false;
 }
 
 void loop()
 {
     RUN_ALL_TESTS();
-    // Ensure all serial output is transmitted
     Serial.flush();
-    delay(1000);  // Optional delay between test runs
+    delay(1000);
 }
 
 #else
@@ -44,10 +44,7 @@ int main(int argc, char **argv)
 {
     ::testing::InitGoogleMock(&argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
-
     int result = RUN_ALL_TESTS();
-
-    // Always return zero-code and allow PlatformIO to parse results
     return result;
 }
 #endif

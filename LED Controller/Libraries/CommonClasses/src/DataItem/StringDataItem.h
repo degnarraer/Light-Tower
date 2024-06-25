@@ -44,7 +44,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		  
 		}
 
-		virtual ~StringDataItem()
+		virtual ~StringDataItem() override
 		{
 			ESP_LOGI("StringDataItem::~StringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}

@@ -137,7 +137,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
 		}
 		
-		virtual ~DataItem()
+		virtual ~DataItem() override
 		{
 			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());
 			SetDataLinkEnabled(false);

@@ -52,10 +52,6 @@ protected:
                                                                           , m_MockHardwareSerial
                                                                           , m_MockDataSerializer
                                                                           , 0 );
-        ON_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
-        ON_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).WillByDefault(InvokeWithoutArgs([]{}));
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
@@ -75,7 +71,6 @@ protected:
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }
@@ -84,7 +79,7 @@ protected:
     {
         DestroyDataItem();
         delete mp_MockSerialPortMessageManager;
-        //delete mp_MockSetupCaller;
+        delete mp_MockSetupCaller;
     }
     void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
     {

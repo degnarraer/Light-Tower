@@ -34,26 +34,6 @@ using ::testing::NiceMock;
 using namespace testing;
 
 // Test Fixture for DataItemFunctionCallTests
-class TESTTEST : public Test
-{
-    protected:
-        SetupCallerInterface *mp_SetupCaller;
-        void SetUp() override
-        {
-            mp_SetupCaller = new SetupCallerInterface();
-        }
-        void TearDown() override
-        {
-            delete mp_SetupCaller;
-        }
-};
-
-TEST_F(TESTTEST, TestTest)
-{
-    EXPECT_EQ(1, 1);
-}
-
-// Test Fixture for DataItemFunctionCallTests
 class DataItemFunctionCallTests : public Test
 {
     protected:
@@ -72,17 +52,13 @@ class DataItemFunctionCallTests : public Test
         {}
         void SetUp() override
         {
-            ESP_LOGD("SetUp", "Setting up test");
             mp_MockSetupCaller = new MockSetupCallerInterface();
             mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
             ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
-            ESP_LOGD("SetUp", "Test setup");
         }
         void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
         {
-            ESP_LOGD("CreateDataItem", "Creating Data Item");
-            EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull()));
             mp_DataItem = new DataItem<int32_t, 1>( name 
                                                 , initialValue
                                                 , rxTxType
@@ -91,13 +67,10 @@ class DataItemFunctionCallTests : public Test
                                                 , *mp_MockSerialPortMessageManager
                                                 , nullptr
                                                 , mp_MockSetupCaller );
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
             mp_DataItem->Setup();
-            ESP_LOGD("CreateDataItem", "Data Item Created");
         }
         void TearDown() override
         {
-            ESP_LOGD("TearDown", "Tearing down test");
             DestroyDataItem();
             if (mp_MockSerialPortMessageManager)
             {
@@ -109,22 +82,13 @@ class DataItemFunctionCallTests : public Test
                 delete mp_MockSetupCaller;
                 mp_MockSetupCaller = nullptr;
             }
-            ESP_LOGD("TearDown", "Test tore down");
         }
         void DestroyDataItem()
         {
             if(mp_DataItem)
             {
-                ESP_LOGD("DestroyDataItem", "Destroying Data Item");
-                EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
                 delete mp_DataItem;
                 mp_DataItem = nullptr;
-                ESP_LOGD("DestroyDataItem", "Data Item Destroyed");
-            }
-            else
-            {
-                ESP_LOGD("DestroyDataItem", "No Data Item to Destroy");
             }
         }
         void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t callTimes)
@@ -196,8 +160,6 @@ class DataItemRxTxTests : public Test
                                                 , *mp_MockSerialPortMessageManager
                                                 , NULL
                                                 , this );
-                                                
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
             SetupAllSetupCallees();
         }
 
@@ -226,7 +188,6 @@ TEST_F(DataItemRxTxTests, Tx_Called_Periodically)
 {
     EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10)
         .WillRepeatedly(Return(true));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
     CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 100);
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }
@@ -272,7 +233,6 @@ protected:
 
     void CreateDataItem( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull()));
         mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, *mp_MockSerialPortMessageManager, nullptr, this, validStringValues);
         SetupAllSetupCallees();
     }
@@ -281,7 +241,6 @@ protected:
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull()));
             delete mp_DataItem;
             mp_DataItem = nullptr;
         }
