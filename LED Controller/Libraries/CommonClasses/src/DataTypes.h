@@ -698,6 +698,9 @@ typedef Transciever::Value Transciever_t;
 struct __attribute__((packed)) Frame_t {
   int16_t channel1;
   int16_t channel2;
+  bool operator==(const Frame_t& other) const {
+        return channel1 == other.channel1 && channel2 == other.channel2;
+    }
 };
 
 enum BitLength_t
