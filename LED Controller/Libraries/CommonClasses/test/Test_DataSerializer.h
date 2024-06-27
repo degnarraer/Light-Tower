@@ -16,12 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include "DataSerializer.h"
 
-#include "Test_AudioBuffer.h"
-#include "Test_SetupCallerInterface.h"
-#include "Test_ValidValueChecker.h"
-#include "Test_LocalDataItem.h"
-#include "Test_LocalStringDataItem.h"
-#include "Test_DataItem.h"
-#include "Test_StringDataItem.h"
+TEST(ValidValueCheckerTest, Positive_Value_Test)
+{
+    String validValue = "A String";
+    ValidStringValues_t validStrings = {validValue};
+    ValidValueChecker valueChecker = ValidValueChecker(&validStrings);
+    EXPECT_TRUE(valueChecker.IsValidStringValue(validValue));
+}

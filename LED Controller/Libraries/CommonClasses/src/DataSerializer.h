@@ -20,9 +20,10 @@
 #include "Arduino_JSON.h"
 #include "Helpers.h"
 #include "Streaming.h"
+#include "DataTypes.h"
 
 class DataSerializer: public CommonUtils
-					, public QueueController
+					, public DataTypeFunctions
 
 {
 	public:
