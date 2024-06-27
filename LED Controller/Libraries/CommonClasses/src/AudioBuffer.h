@@ -132,7 +132,7 @@ class AudioBuffer
 };
 
 
-template <uint32_t T>
+template <uint32_t COUNT>
 class ContinuousAudioBuffer
 {
   public:
@@ -156,7 +156,7 @@ class ContinuousAudioBuffer
 	void AllocateMemory()
     {
         ESP_LOGD("AllocateMemory", "Allocating memory");
-        size_t CircleBuffSize = sizeof(CircularBuffer<Frame_t, T>);
+        size_t CircleBuffSize = sizeof(CircularBuffer<Frame_t, COUNT>);
         void* CircularBuffer_Raw = heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
 
         if (CircularBuffer_Raw == nullptr) {
@@ -164,13 +164,13 @@ class ContinuousAudioBuffer
             return;
         }
 
-        m_CircularAudioBuffer = new(CircularBuffer_Raw) CircularBuffer<Frame_t, T>;
+        m_CircularAudioBuffer = new(CircularBuffer_Raw) CircularBuffer<Frame_t, COUNT>;
     }
 
 	void FreeMemory()
 	{
 		if (m_CircularAudioBuffer != nullptr) {
-            m_CircularAudioBuffer->~CircularBuffer<Frame_t, T>();
+            m_CircularAudioBuffer->~CircularBuffer<Frame_t, COUNT>();
             heap_caps_free(m_CircularAudioBuffer);
             m_CircularAudioBuffer = nullptr;
         }
@@ -205,8 +205,10 @@ class ContinuousAudioBuffer
 		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
-			m_CircularAudioBuffer->push(Frame[i]);
-			++Result;
+			if(m_CircularAudioBuffer->push(Frame[i]))
+			{
+				++Result;
+			}
 		}
 		pthread_mutex_unlock(&m_Lock);
 		return Result;
@@ -227,8 +229,11 @@ class ContinuousAudioBuffer
 		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
-			Frame[i] = m_CircularAudioBuffer->pop();
-			++Result;
+			if(0 < COUNT - m_CircularAudioBuffer->available())
+			{
+				Frame[i] = m_CircularAudioBuffer->pop();
+				++Result;
+			}
 		}
 		pthread_mutex_unlock(&m_Lock);
 		return Result;
@@ -249,13 +254,9 @@ class ContinuousAudioBuffer
 		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
-			if( true == m_CircularAudioBuffer->unshift(Frame[i]) )
+			if( m_CircularAudioBuffer->unshift(Frame[i]) )
 			{
 				++Result;
-			}
-			else
-			{
-				break;
 			}
 		}
 		pthread_mutex_unlock(&m_Lock);
@@ -277,8 +278,11 @@ class ContinuousAudioBuffer
 		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
-			Frame[i] = m_CircularAudioBuffer->shift();
-			++Result;
+			if( 0 < COUNT - m_CircularAudioBuffer->available() )
+			{
+				Frame[i] = m_CircularAudioBuffer->shift();
+				++Result;
+			}
 		}
 		pthread_mutex_unlock(&m_Lock);
 		return Result;
@@ -327,7 +331,7 @@ class ContinuousAudioBuffer
 		pthread_mutex_unlock(&m_Lock);
 	}
 	  private:
-		CircularBuffer<Frame_t, T> *m_CircularAudioBuffer = nullptr;
+		CircularBuffer<Frame_t, COUNT> *m_CircularAudioBuffer = nullptr;
 		pthread_mutex_t m_Lock;
 };
 
