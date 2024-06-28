@@ -19,11 +19,39 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include "DataSerializer.h"
+#include "Mock_DataItem.h"
 
-TEST(ValidValueCheckerTest, Positive_Value_Test)
+TEST(DataSerializerInstantiation, Instantion_Destruction)
 {
-    String validValue = "A String";
-    ValidStringValues_t validStrings = {validValue};
-    ValidValueChecker valueChecker = ValidValueChecker(&validStrings);
-    EXPECT_TRUE(valueChecker.IsValidStringValue(validValue));
+    DataSerializer *dataSerializer = new DataSerializer();
+    delete dataSerializer;
+}
+
+// Test Fixture for DataSerializerTests
+class DataSerializerTests : public Test
+{
+    protected:
+        const int32_t initialValue = 10;
+        const String name = "Test Name";
+        DataSerializer *mp_dataSerializer;
+  
+        MockDataItem<int32_t, 1> *mp_mockDataItem;
+        void SetUp() override
+        {
+            mp_dataSerializer = new DataSerializer();
+            //mp_mockDataItem = new MockDataItem<int32_t, 1>(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+
+        }
+        void TearDown() override 
+        {
+            delete mp_dataSerializer;
+            delete mp_mockDataItem;
+        }
+};
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Correctly)
+{
+    int32_t testValue = 10;
+    String resultString = mp_dataSerializer->SerializeDataToJson(name, DataType_Int32_t, &testValue, 1);
+    EXPECT_STREQ(resultString.c_str(), "test");
 }

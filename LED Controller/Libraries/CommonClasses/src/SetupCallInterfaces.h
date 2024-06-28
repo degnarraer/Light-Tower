@@ -29,6 +29,7 @@ class SetupCalleeInterface
         {
             ESP_LOGD("SetupCalleeInterface", "Constructing SetupCalleeInterface");
         }
+
         virtual ~SetupCalleeInterface()
         {
             ESP_LOGD("SetupCalleeInterface", "Deleting SetupCalleeInterface");

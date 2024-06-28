@@ -131,7 +131,7 @@ public:
 class MockSerialPortMessageManager : public SerialPortMessageManager {
 public:
     MockSerialPortMessageManager( const String& Name, HardwareSerial &Serial, DataSerializer &DataSerializer, BaseType_t coreId = 1 )
-                                : SerialPortMessageManager(Name, Serial, DataSerializer, coreId)
+                                : SerialPortMessageManager()
     {
 
     }

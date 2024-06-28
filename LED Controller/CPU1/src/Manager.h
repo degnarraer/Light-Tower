@@ -44,6 +44,11 @@ class Manager: public NamedItem
            , Bluetooth_Sink &BT_In
            , I2S_Device &Mic_In
            , I2S_Device &I2S_Out );
+
+    // Delete copy constructor and copy assignment operator
+    Manager(const Manager&) = delete;
+    Manager& operator=(const Manager&) = delete;
+    
     virtual ~Manager();
     void Setup();
 
@@ -73,8 +78,8 @@ class Manager: public NamedItem
     DataSerializer m_DataSerializer;
 
     void SetupSerialPortManager();
-    SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
-    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
+    SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
+    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
     
     void SetupTasks();
     TaskHandle_t m_Manager_20mS_Task;

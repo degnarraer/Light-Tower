@@ -19,6 +19,7 @@
 #pragma once
 
 #include "Test_AudioBuffer.h"
+#include "Test_DataSerializer.h"
 #include "Test_SetupCallerInterface.h"
 #include "Test_ValidValueChecker.h"
 #include "Test_LocalDataItem.h"

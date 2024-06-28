@@ -46,6 +46,11 @@ class Manager: public NamedItem
            , I2S_Device &I2S_Out
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
            , Preferences& preferences );
+    
+    // Delete copy constructor and copy assignment operator
+    Manager(const Manager&) = delete;
+    Manager& operator=(const Manager&) = delete;
+    
     virtual ~Manager();
     void Setup();
     void StartBluetooth();

@@ -86,10 +86,11 @@ VisualizationPlayer m_VisualizationPlayer = VisualizationPlayer(m_StatisticalEng
 CalculateFPS m_CalculateFPS("Main Loop", 1000);
 TaskScheduler m_Scheduler;
 
-Manager m_Manager = Manager("Manager", m_StatisticalEngine
-                           , m_BT_In
-                           , m_Mic_In
-                           , m_I2S_Out);
+Manager m_Manager( "Manager"
+                 , m_StatisticalEngine
+                 , m_BT_In
+                 , m_Mic_In
+                 , m_I2S_Out );
 
 
 void InitLocalVariables()

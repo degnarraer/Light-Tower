@@ -47,6 +47,28 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
+				, const uint16_t rate )
+				: LocalDataItem<T, COUNT>(name, initialValue)
+				, NewRxTxVoidObjectCalleeInterface(COUNT)
+				, m_RxTxType(rxTxType)
+				, m_UpdateStoreType(updateStoreType)
+				, m_Rate(rate)
+				, m_SerialPortMessageManager(SerialPortMessageManager()){}
+		DataItem( const String name
+				, const T& initialValue
+				, const RxTxType_t rxTxType
+				, const UpdateStoreType_t updateStoreType
+				, const uint16_t rate )
+				: LocalDataItem<T, COUNT>(name, initialValue)
+				, NewRxTxVoidObjectCalleeInterface(COUNT)
+				, m_RxTxType(rxTxType)
+				, m_UpdateStoreType(updateStoreType)
+				, m_Rate(rate)
+				, m_SerialPortMessageManager(SerialPortMessageManager()){}
+		DataItem( const String name
+				, const T* initialValue
+				, const RxTxType_t rxTxType
+				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager &serialPortMessageManager
 				, NamedCallback_t *namedCallback

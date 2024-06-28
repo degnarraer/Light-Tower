@@ -52,24 +52,24 @@ Bluetooth_Source m_BT_Out( "Bluetooth Source", a2dp_source );
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 
 DataSerializer m_DataSerializer;
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", Serial1, m_DataSerializer);
-SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", Serial2, m_DataSerializer);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
 
 
-Sound_Processor m_SoundProcessor = Sound_Processor( "Sound Processor"
-                                                  , m_AudioBuffer
-                                                  , m_CPU1SerialPortMessageManager
-                                                  , m_CPU3SerialPortMessageManager
-                                                  , m_Preferences );                                            
+Sound_Processor m_SoundProcessor ( "Sound Processor"
+                                 , m_AudioBuffer
+                                 , m_CPU1SerialPortMessageManager
+                                 , m_CPU3SerialPortMessageManager
+                                 , m_Preferences );                                            
 
-Manager m_Manager = Manager( "Manager"
-                           , m_SoundProcessor
-                           , m_CPU1SerialPortMessageManager
-                           , m_CPU3SerialPortMessageManager
-                           , m_BT_Out
-                           , m_I2S_In
-                           , m_AudioBuffer
-                           , m_Preferences);
+Manager m_Manager( "Manager"
+                 , m_SoundProcessor
+                 , m_CPU1SerialPortMessageManager
+                 , m_CPU3SerialPortMessageManager
+                 , m_BT_Out
+                 , m_I2S_In
+                 , m_AudioBuffer
+                 , m_Preferences);
 
 
 int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
