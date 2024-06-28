@@ -52,8 +52,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
-				, m_Rate(rate)
-				, m_SerialPortMessageManager(SerialPortMessageManager()){}
+				, m_Rate(rate){}
 		DataItem( const String name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
@@ -63,14 +62,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, NewRxTxVoidObjectCalleeInterface(COUNT)
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
-				, m_Rate(rate)
-				, m_SerialPortMessageManager(SerialPortMessageManager()){}
+				, m_Rate(rate){}
 		DataItem( const String name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager
+				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
@@ -78,7 +76,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
-				, m_SerialPortMessageManager(serialPortMessageManager)
+				, mp_SerialPortMessageManager(serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
 		}
@@ -88,7 +86,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager
+				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
@@ -96,7 +94,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
-				, m_SerialPortMessageManager(serialPortMessageManager)
+				, mp_SerialPortMessageManager(serialPortMessageManager)
 				
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
@@ -107,7 +105,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager
+				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
@@ -116,7 +114,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
-				, m_SerialPortMessageManager(serialPortMessageManager)
+				, mp_SerialPortMessageManager(serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
 		}
@@ -126,7 +124,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager
+				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
@@ -135,7 +133,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
-				, m_SerialPortMessageManager(serialPortMessageManager)	
+				, mp_SerialPortMessageManager(serialPortMessageManager)	
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
 		}
@@ -145,7 +143,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const RxTxType_t rxTxType
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
-				, SerialPortMessageManager &serialPortMessageManager
+				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface
 				, bool printDelimited )
@@ -154,7 +152,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, m_RxTxType(rxTxType)
 				, m_UpdateStoreType(updateStoreType)
 				, m_Rate(rate)
-				, m_SerialPortMessageManager(serialPortMessageManager)
+				, mp_SerialPortMessageManager(serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
 		}
@@ -276,35 +274,56 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				if(enableRX)
 				{
-					m_SerialPortMessageManager.RegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
+					if(mp_SerialPortMessageManager)
+					{
+						mp_SerialPortMessageManager->RegisterForNewValueNotification(this);
+						ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
+					}
+					else
+					{
+						ESP_LOGE("SetDataLinkEnabled", "Error Null POinter!");
+					}
 				}
 				else
 				{
-					m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
+					if(mp_SerialPortMessageManager)
+					{
+						mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
+						ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
+					}
+					else
+					{
+						ESP_LOGE("SetDataLinkEnabled", "Error Null POinter!");
+					}
 				}
 			}
 			else
 			{
 				
 				StopTimer();
-				m_SerialPortMessageManager.DeRegisterForNewValueNotification(this);
-				ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", LocalDataItem<T,COUNT>::GetName().c_str());
+				if(mp_SerialPortMessageManager)
+				{
+					mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
+					ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", LocalDataItem<T,COUNT>::GetName().c_str());
+				}
+				else
+				{
+					ESP_LOGE("SetDataLinkEnabled", "Error Null POinter!");
+				}
 			}
 		}
 	protected:
 		const RxTxType_t m_RxTxType;
 		const UpdateStoreType_t m_UpdateStoreType;
 		const uint16_t m_Rate;
-		SerialPortMessageManager &m_SerialPortMessageManager;
+		SerialPortMessageManager *mp_SerialPortMessageManager = nullptr;
 		T *mp_RxValue = nullptr;
 		T *mp_TxValue = nullptr;
 		
 		bool DataItem_TX_Now()
 		{
 			bool ValueUpdated = false;
-			if(m_SerialPortMessageManager.QueueMessageFromData(LocalDataItem<T,COUNT>::GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
+			if(mp_SerialPortMessageManager->QueueMessageFromData(LocalDataItem<T,COUNT>::GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), mp_TxValue, COUNT))
 			{				
 				if(memcmp(this->mp_Value, mp_TxValue, sizeof(T) * COUNT) != 0)
 				{
@@ -315,7 +334,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 					}
 				}
 				ESP_LOGD( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
-						, this->m_SerialPortMessageManager.GetName().c_str()
+						, this->mp_SerialPortMessageManager->GetName().c_str()
 						, LocalDataItem<T,COUNT>::GetName().c_str()
 						, this->GetValueAsString().c_str() );
 			}
@@ -331,7 +350,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			T* receivedValue = static_cast<T*>(Object);
 			ESP_LOGD( "DataItem: NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
-					, this->m_SerialPortMessageManager.GetName().c_str()
+					, this->mp_SerialPortMessageManager->GetName().c_str()
 					, LocalDataItem<T,COUNT>::GetName().c_str()
 					, this->GetValueAsString().c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)

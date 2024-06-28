@@ -39,7 +39,7 @@ class DataSerializerTests : public Test
         void SetUp() override
         {
             mp_dataSerializer = new DataSerializer();
-            //mp_mockDataItem = new MockDataItem<int32_t, 1>(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
+            mp_mockDataItem = new MockDataItem<int32_t, 1>(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
 
         }
         void TearDown() override 
@@ -53,5 +53,5 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Correctly)
 {
     int32_t testValue = 10;
     String resultString = mp_dataSerializer->SerializeDataToJson(name, DataType_Int32_t, &testValue, 1);
-    EXPECT_STREQ(resultString.c_str(), "test");
+    EXPECT_STREQ(resultString.c_str(), "{\"Name\":\"Test Name\",\"Count\":1,\"Type\":\"Int32_t\",\"Bytes\":4,\"Data\":[\"0A000000\"],\"Sum\":10}");
 }

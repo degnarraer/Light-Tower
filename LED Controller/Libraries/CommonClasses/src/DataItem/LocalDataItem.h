@@ -47,7 +47,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 		LocalDataItem( const String name
 					 , const T& initialValue )
 					 : m_Name(name)
-					 , mp_InitialValuePtr(*initialValue){}
+					 , mp_InitialValuePtr(&initialValue){}
 		LocalDataItem( const String name
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback

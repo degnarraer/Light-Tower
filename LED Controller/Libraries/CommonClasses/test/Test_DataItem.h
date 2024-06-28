@@ -64,7 +64,7 @@ class DataItemFunctionCallTests : public Test
                                                   , rxTxType
                                                   , updateStoreType
                                                   , rate
-                                                  , *mp_MockSerialPortMessageManager
+                                                  , mp_MockSerialPortMessageManager
                                                   , nullptr
                                                   , mp_MockSetupCaller );
             EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
@@ -155,7 +155,7 @@ class DataItemRxTxTests : public Test
                                                 , rxTxType
                                                 , updateStoreType
                                                 , rate
-                                                , *mp_MockSerialPortMessageManager
+                                                , mp_MockSerialPortMessageManager
                                                 , nullptr
                                                 , this );
             SetupAllSetupCallees();
@@ -229,7 +229,7 @@ protected:
 
     void CreateDataItem( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, *mp_MockSerialPortMessageManager, nullptr, this, validStringValues);
+        mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, mp_MockSerialPortMessageManager, nullptr, this, validStringValues);
         SetupAllSetupCallees();
     }
 

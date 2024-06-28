@@ -29,7 +29,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					  , const RxTxType_t rxTxType
 					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
-					  , SerialPortMessageManager &serialPortMessageManager
+					  , SerialPortMessageManager *serialPortMessageManager
 					  , NamedCallback_t *namedCallback
 					  , SetupCallerInterface *setupCallerInterface )
 					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
@@ -138,7 +138,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool DataItem_TX_Now()
 		{
 			bool valueUpdated = false;
-			if(m_SerialPortMessageManager.QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
+			if(mp_SerialPortMessageManager->QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
 			{
 				if(strcmp(mp_Value, mp_TxValue) != 0)
 				{

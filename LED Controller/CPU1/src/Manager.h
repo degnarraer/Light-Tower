@@ -142,7 +142,7 @@ class Manager: public NamedItem
                                                                                                                       , UpdateStoreType_On_Rx
                                                                                                                       , 0
                                                                                                                       , &m_Preferences
-                                                                                                                      , m_CPU3SerialPortMessageManager
+                                                                                                                      , &m_CPU3SerialPortMessageManager
                                                                                                                       , &m_SoundInputSource_Callback
                                                                                                                       , this
                                                                                                                       , NULL );
@@ -171,7 +171,7 @@ class Manager: public NamedItem
                                                                             , UpdateStoreType_On_Rx
                                                                             , 0
                                                                             , &m_Preferences
-                                                                            , m_CPU3SerialPortMessageManager
+                                                                            , &m_CPU3SerialPortMessageManager
                                                                             , &m_SinkName_Callback
                                                                             , this );
     static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
@@ -203,7 +203,7 @@ class Manager: public NamedItem
                                                                                            , UpdateStoreType_On_Rx
                                                                                            , 0
                                                                                            , &m_Preferences
-                                                                                           , m_CPU3SerialPortMessageManager
+                                                                                           , &m_CPU3SerialPortMessageManager
                                                                                            , NULL
                                                                                            , this
                                                                                            , &validBoolValues );
@@ -235,7 +235,7 @@ class Manager: public NamedItem
                                                        , RxTxType_Rx_Echo_Value
                                                        , UpdateStoreType_On_Rx
                                                        , 0
-                                                       , m_CPU3SerialPortMessageManager
+                                                       , &m_CPU3SerialPortMessageManager
                                                        , &m_SinkConnect_Callback
                                                        , this );
     static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
@@ -267,7 +267,7 @@ class Manager: public NamedItem
                                                           , RxTxType_Rx_Echo_Value
                                                           , UpdateStoreType_On_Rx
                                                           , 0
-                                                          , m_CPU3SerialPortMessageManager
+                                                          , &m_CPU3SerialPortMessageManager
                                                           , &m_SinkDisconnect_Callback
                                                           , this );
     static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
@@ -294,7 +294,7 @@ class Manager: public NamedItem
                                                                                              , UpdateStoreType_On_Rx
                                                                                              , 0
                                                                                              , &m_Preferences
-                                                                                             , m_CPU3SerialPortMessageManager
+                                                                                             , &m_CPU3SerialPortMessageManager
                                                                                              , NULL
                                                                                              , this
                                                                                              , &validBoolValues );
@@ -306,7 +306,7 @@ class Manager: public NamedItem
                                                                                                      , RxTxType_Tx_On_Change_With_Heartbeat
                                                                                                      , UpdateStoreType_On_Rx
                                                                                                      , 5000
-                                                                                                     , m_CPU3SerialPortMessageManager
+                                                                                                     , &m_CPU3SerialPortMessageManager
                                                                                                      , NULL
                                                                                                      , this );
 

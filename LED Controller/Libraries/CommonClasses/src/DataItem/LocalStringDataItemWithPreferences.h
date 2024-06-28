@@ -89,7 +89,7 @@ class StringDataItemWithPreferences: public StringDataItem
 								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
 								     , Preferences *preferences
-								     , SerialPortMessageManager &serialPortMessageManager
+								     , SerialPortMessageManager *serialPortMessageManager
 									 , NamedCallback_t *namedCallback
 									 , SetupCallerInterface *setupCallerInterface )
 								     : StringDataItem( name

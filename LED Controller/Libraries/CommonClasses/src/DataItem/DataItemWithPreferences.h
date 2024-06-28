@@ -32,7 +32,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager
+							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback )
 							   : DataItem<T, COUNT>( name
 							   					   , initialValue
@@ -52,7 +52,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager
+							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface )
 							   : DataItem<T, COUNT>( name
@@ -73,7 +73,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager
+							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface
 							   , const ValidStringValues_t *validStringValues )
@@ -96,7 +96,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , Preferences *preferences
-							   , SerialPortMessageManager &serialPortMessageManager
+							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface
 							   , const ValidStringValues_t *validStringValues )

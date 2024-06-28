@@ -59,7 +59,7 @@ protected:
                                         , rxTxType
                                         , updateStoreType
                                         , rate
-                                        , *mp_MockSerialPortMessageManager
+                                        , mp_MockSerialPortMessageManager
                                         , NULL
                                         , mp_MockSetupCaller );
     }
@@ -163,7 +163,7 @@ protected:
                                         , rxTxType
                                         , updateStoreType
                                         , rate
-                                        , *mp_MockSerialPortMessageManager
+                                        , mp_MockSerialPortMessageManager
                                         , NULL
                                         , this );
         EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
