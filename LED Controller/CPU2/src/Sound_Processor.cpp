@@ -22,7 +22,7 @@ Sound_Processor::Sound_Processor( String Title
                                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
                                 , SerialPortMessageManager &CPU1SerialPortMessageManager
                                 , SerialPortMessageManager &CPU3SerialPortMessageManager
-                                , Preferences& preferences )
+                                , IPreferences& preferences )
                                 : NamedItem(Title)
                                 , m_AudioBuffer(AudioBuffer)
                                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)

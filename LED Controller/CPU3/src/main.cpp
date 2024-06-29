@@ -21,6 +21,7 @@
 #define SERIAL_RX_BUFFER_SIZE 2048
 
 Preferences m_Preferences;
+PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
 DataSerializer m_DataSerializer;  
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
 SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial2, &m_DataSerializer);
@@ -35,7 +36,7 @@ AsyncWebSocket MyWebSocket("/ws");
 SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager"
                                                    , MyWebSocket
                                                    , MyWebServer
-                                                   , m_Preferences
+                                                   , m_PreferencesWrapper
                                                    , m_CPU1SerialPortMessageManager
                                                    , m_CPU2SerialPortMessageManager );
 void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)

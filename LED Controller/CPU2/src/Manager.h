@@ -45,7 +45,7 @@ class Manager: public NamedItem
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
            , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
-           , Preferences& preferences );
+           , IPreferences& preferencesInterface );
     
     // Delete copy constructor and copy assignment operator
     Manager(const Manager&) = delete;
@@ -73,8 +73,7 @@ class Manager: public NamedItem
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
-    Preferences& m_Preferences;
-    
+    IPreferences& m_PreferencesInterface;    
     TaskHandle_t m_Manager_20mS_Task;
     TaskHandle_t m_Manager_1000mS_Task;
     TaskHandle_t m_Manager_300000mS_Task;
@@ -213,7 +212,7 @@ class Manager: public NamedItem
                                                                                                , RxTxType_Rx_Echo_Value
                                                                                                , UpdateStoreType_On_Rx
                                                                                                , 0
-                                                                                               , &m_Preferences
+                                                                                               , &m_PreferencesInterface
                                                                                                , &m_CPU3SerialPortMessageManager
                                                                                                , &m_BluetoothSourceEnable_Callback
                                                                                                , this
@@ -236,7 +235,7 @@ class Manager: public NamedItem
                                                                                                       , RxTxType_Rx_Echo_Value
                                                                                                       , UpdateStoreType_On_Rx
                                                                                                       , 0
-                                                                                                      , &m_Preferences
+                                                                                                      , &m_PreferencesInterface
                                                                                                       , &m_CPU3SerialPortMessageManager
                                                                                                       , &m_BluetoothSourceAutoReConnect_Callback
                                                                                                       , this
@@ -258,7 +257,7 @@ class Manager: public NamedItem
     CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_BluetoothReset_Callback = {"Bluetooth Reset Callback", &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
     const bool m_BluetoothReset_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
     static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -329,7 +328,7 @@ class Manager: public NamedItem
                                                                                                                          , RxTxType_Rx_Echo_Value
                                                                                                                          , UpdateStoreType_On_Rx
                                                                                                                          , 0
-                                                                                                                         , &m_Preferences
+                                                                                                                         , &m_PreferencesInterface
                                                                                                                          , &m_CPU3SerialPortMessageManager
                                                                                                                          , &m_SoundOutputSource_Callback
                                                                                                                          , this

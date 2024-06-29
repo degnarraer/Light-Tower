@@ -12,10 +12,8 @@ class IPreferences
 
         virtual bool begin(const char* name, bool readOnly = false, const char* partition_label = nullptr) = 0;
         virtual void end() = 0;
-
         virtual bool clear() = 0;
         virtual bool remove(const char* key) = 0;
-
         virtual size_t putChar(const char* key, int8_t value) = 0;
         virtual size_t putUChar(const char* key, uint8_t value) = 0;
         virtual size_t putShort(const char* key, int16_t value) = 0;
@@ -32,7 +30,6 @@ class IPreferences
         virtual size_t putString(const char* key, const char* value) = 0;
         virtual size_t putString(const char* key, String value) = 0;
         virtual size_t putBytes(const char* key, const void* value, size_t len) = 0;
-
         virtual bool isKey(const char* key) = 0;
         virtual PreferenceType getType(const char* key) = 0;
         virtual int8_t getChar(const char* key, int8_t defaultValue = 0) = 0;
@@ -64,168 +61,207 @@ class PreferencesWrapper : public IPreferences
     public:
         bool begin(const char* name, bool readOnly = false, const char* partition_label = nullptr) override
         {
+            assert(mp_preferences);
             return mp_preferences->begin(name, readOnly, partition_label);
         }
         void end() override
         {
+            assert(mp_preferences);
             mp_preferences->end();
         }
         bool clear() override
         {
+            assert(mp_preferences);
             return mp_preferences->clear();
         }
         bool remove(const char* key) override
         {
+            assert(mp_preferences);
             return mp_preferences->remove(key);
         }
         size_t putChar(const char* key, int8_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putChar(key, value);
         }
         size_t putUChar(const char* key, uint8_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putUChar(key, value);
         }
         size_t putShort(const char* key, int16_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putShort(key, value);
         }
         size_t putUShort(const char* key, uint16_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putUShort(key, value);
         }
         size_t putInt(const char* key, int32_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putInt(key, value);
         }
         size_t putUInt(const char* key, uint32_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putUInt(key, value);
         }
         size_t putLong(const char* key, int32_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putLong(key, value);
         }
         size_t putULong(const char* key, uint32_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putULong(key, value);
         }
         size_t putLong64(const char* key, int64_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putLong64(key, value);
         }
         size_t putULong64(const char* key, uint64_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putULong64(key, value);
         }
         size_t putFloat(const char* key, float_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putFloat(key, value);
         }
         size_t putDouble(const char* key, double_t value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putDouble(key, value);
         }
         size_t putBool(const char* key, bool value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putBool(key, value);
         }
         size_t putString(const char* key, const char* value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putString(key, value);
         }
         size_t putString(const char* key, String value) override
         {
+            assert(mp_preferences);
             return mp_preferences->putString(key, value);
         }
         size_t putBytes(const char* key, const void* value, size_t len) override
         {
+            assert(mp_preferences);
             return mp_preferences->putBytes(key, value, len);
         }
         bool isKey(const char* key) override
         {
+            assert(mp_preferences);
             return mp_preferences->isKey(key);
         }
         PreferenceType getType(const char* key) override
         {
+            assert(mp_preferences);
             return mp_preferences->getType(key);
         }
         int8_t getChar(const char* key, int8_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getChar(key, defaultValue);
         }
         uint8_t getUChar(const char* key, uint8_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getUChar(key, defaultValue);
         }
         int16_t getShort(const char* key, int16_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getShort(key, defaultValue);
         }
         uint16_t getUShort(const char* key, uint16_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getUShort(key, defaultValue);
         }
         int32_t getInt(const char* key, int32_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getInt(key, defaultValue);
         }
         uint32_t getUInt(const char* key, uint32_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getUInt(key, defaultValue);
         }
         int32_t getLong(const char* key, int32_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getLong(key, defaultValue);
         }
         uint32_t getULong(const char* key, uint32_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getULong(key, defaultValue);
         }
         int64_t getLong64(const char* key, int64_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getLong64(key, defaultValue);
         }
         uint64_t getULong64(const char* key, uint64_t defaultValue = 0) override
         {
+            assert(mp_preferences);
             return mp_preferences->getULong64(key, defaultValue);
         }
         float_t getFloat(const char* key, float_t defaultValue = NAN) override
         {
+            assert(mp_preferences);
             return mp_preferences->getFloat(key, defaultValue);
         }
         double_t getDouble(const char* key, double_t defaultValue = NAN) override
         {
+            assert(mp_preferences);
             return mp_preferences->getDouble(key, defaultValue);
         }
         bool getBool(const char* key, bool defaultValue = false) override
         {
+            assert(mp_preferences);
             return mp_preferences->getBool(key, defaultValue);
         }
         size_t getString(const char* key, char* value, size_t maxLen) override
         {
+            assert(mp_preferences);
             return mp_preferences->getString(key, value, maxLen);
         }
         String getString(const char* key, String defaultValue = String()) override
         {
+            assert(mp_preferences);
             return mp_preferences->getString(key, defaultValue);
         }
         size_t getBytesLength(const char* key) override
         {
+            assert(mp_preferences);
             return mp_preferences->getBytesLength(key);
         }
         size_t getBytes(const char* key, void* buf, size_t maxLen) override
         {
+            assert(mp_preferences);
             return mp_preferences->getBytes(key, buf, maxLen);
         }
         size_t freeEntries() override
         {
+            assert(mp_preferences);
             return mp_preferences->freeEntries();
         }
 };
 
-class PreferencesManager : public PreferencesWrapper
-                         , public DataTypeFunctions 
+class PreferencesManager : public DataTypeFunctions 
 {
 public:
 	typedef bool (*LoadedValueCallback_t)(const String&, void* object);
@@ -256,9 +292,8 @@ public:
                                    , InitialValue(initialValue) {}
     };
 
-    PreferencesManager(Preferences* preferences)
-        : PreferencesWrapper(preferences)
-        , mp_Preferences(preferences)
+    PreferencesManager(IPreferences* preferencesInterface)
+        : mp_PreferencesInterface(preferencesInterface)
 		, mp_TimerArgs(nullptr)
 		, m_PreferenceTimer(nullptr)
 		, m_Preferences_Last_Update(0)
@@ -294,7 +329,7 @@ public:
 						  , LoadedValueCallback_t callback
                           , void* object )
     {
-        if (!mp_Preferences) return;
+        if (!mp_PreferencesInterface) return;
 
         unsigned long currentMillis = millis();
         unsigned long elapsedTime = currentMillis - m_Preferences_Last_Update;
@@ -350,9 +385,9 @@ protected:
 
     void InitializeAndLoadPreference(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
-        if (mp_Preferences)
+        if (mp_PreferencesInterface)
         {
-            if (mp_Preferences->isKey(key.c_str()))
+            if (mp_PreferencesInterface->isKey(key.c_str()))
             {
                 ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\"", key.c_str());
                 Update_Preference(PreferenceUpdateType::Load, key, "", initialValue, callback, object);
@@ -372,10 +407,10 @@ protected:
     void HandleLoad(const String& key, const String& initialValue, LoadedValueCallback_t callback, void* object)
     {
         
-        if(mp_Preferences)
+        if(mp_PreferencesInterface)
         {
             ESP_LOGD("PreferencesManager: HandleLoad", "Loading Key: \"%s\"", key.c_str());
-            String loadedValue = mp_Preferences->getString(key.c_str(), initialValue);
+            String loadedValue = mp_PreferencesInterface->getString(key.c_str(), initialValue);
             if (callback && object)
             {
                 if(callback(loadedValue, object))
@@ -409,10 +444,10 @@ protected:
     void HandleSave(const String& key, const String& string)
     {
         ESP_LOGE("PreferencesManager: HandleSave", "Saving Key: \"%s\" Value: \"%s\"", key.c_str(), string.c_str());
-        if(mp_Preferences)
+        if(mp_PreferencesInterface)
         {
-            mp_Preferences->putString(key.c_str(), string);
-            String savedString = mp_Preferences->getString(key.c_str(),"");
+            mp_PreferencesInterface->putString(key.c_str(), string);
+            String savedString = mp_PreferencesInterface->getString(key.c_str(),"");
             if(!string.equals(savedString))
             {
                 ESP_LOGE("PreferencesManager: HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", key.c_str(), string.c_str(), savedString.c_str());   
@@ -429,7 +464,7 @@ protected:
     }
 
 private:
-    Preferences* mp_Preferences;
+    IPreferences* mp_PreferencesInterface;
     PreferencesManagerTimerArgs* mp_TimerArgs;
     esp_timer_handle_t m_PreferenceTimer;
     uint64_t m_Preferences_Last_Update;

@@ -38,7 +38,7 @@ class Sound_Processor: public NamedItem
                    , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
                    , SerialPortMessageManager &CPU1SerialPortMessageManager
                    , SerialPortMessageManager &CPU3SerialPortMessageManager
-                   , Preferences& preferences );
+                   , IPreferences& preferences );
     virtual ~Sound_Processor();
     void SetupSoundProcessor();
     
@@ -52,7 +52,7 @@ class Sound_Processor: public NamedItem
     
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-    Preferences& m_Preferences;
+    IPreferences& m_Preferences;
 
     const float m_Amplitude_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_Amplitude_Gain = DataItemWithPreferences<float, 1>( "Amp_Gain"

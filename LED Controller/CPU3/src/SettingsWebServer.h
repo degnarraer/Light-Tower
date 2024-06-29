@@ -26,7 +26,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     SettingsWebServerManager( String Title
                             , AsyncWebSocket &WebSocket
                             , AsyncWebServer &WebServer
-                            , Preferences &Preferences
+                            , IPreferences &Preferences
                             , SerialPortMessageManager &CPU1SerialPortMessageManager
                             , SerialPortMessageManager &CPU2SerialPortMessageManager)
                             : m_WebSocket(WebSocket)
@@ -136,7 +136,7 @@ class SettingsWebServerManager: public SetupCallerInterface
   private:
     AsyncWebSocket &m_WebSocket;
     AsyncWebServer &m_WebServer;
-    Preferences &m_Preferences;
+    IPreferences &m_Preferences; 
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU2SerialPortMessageManager;
     WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebServer, m_WebSocket);

@@ -29,7 +29,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 	public:
 		LocalStringDataItemWithPreferences( const String name
 					 	   				  , const String &initialValue
-						   				  , Preferences *preferences
+						   				  , IPreferences *preferences
 					 	   				  , NamedCallback_t *namedCallback
 						   				  , SetupCallerInterface *setupCallerInterface )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
@@ -88,7 +88,7 @@ class StringDataItemWithPreferences: public StringDataItem
 								     , const RxTxType_t rxTxType
 								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
-								     , Preferences *preferences
+								     , IPreferences *preferences
 								     , SerialPortMessageManager *serialPortMessageManager
 									 , NamedCallback_t *namedCallback
 									 , SetupCallerInterface *setupCallerInterface )

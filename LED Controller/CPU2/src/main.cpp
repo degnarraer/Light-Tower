@@ -23,7 +23,7 @@
 #define SERIAL_RX_BUFFER_SIZE 2048
 
 Preferences m_Preferences;
-
+PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
 TaskHandle_t ProcessSPI_CPU1_TXTask;
 uint32_t ProcessSPI_CPU1_TXTaskLoopCount = 0;
 
@@ -60,7 +60,7 @@ Sound_Processor m_SoundProcessor ( "Sound Processor"
                                  , m_AudioBuffer
                                  , m_CPU1SerialPortMessageManager
                                  , m_CPU3SerialPortMessageManager
-                                 , m_Preferences );                                            
+                                 , m_PreferencesWrapper );                                            
 
 Manager m_Manager( "Manager"
                  , m_SoundProcessor
@@ -69,7 +69,7 @@ Manager m_Manager( "Manager"
                  , m_BT_Out
                  , m_I2S_In
                  , m_AudioBuffer
-                 , m_Preferences);
+                 , m_PreferencesWrapper);
 
 
 int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)

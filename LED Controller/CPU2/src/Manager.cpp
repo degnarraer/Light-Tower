@@ -25,9 +25,9 @@ Manager::Manager( String Title
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In
                 , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
-                , Preferences& preferences)
+                , IPreferences& preferencesInterface)
                 : NamedItem(Title)
-                , m_Preferences(preferences)
+                , m_PreferencesInterface(preferencesInterface)
                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                 , m_CPU3SerialPortMessageManager(CPU3SerialPortMessageManager)
                 , m_SoundProcessor(SoundProcessor)

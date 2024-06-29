@@ -18,18 +18,15 @@
 
 #pragma once;
 #include "gmock/gmock.h"
+#include "DataItem/PreferencesWrapper.h"
 #include <Arduino.h>
 
-/*
-
-class MockPreferences : public Preferences {
+class MockPreferences : public IPreferences {
 public:
     MOCK_METHOD(bool, begin, (const char* name, bool readOnly, const char* partition_label), (override));
     MOCK_METHOD(void, end, (), (override));
-
     MOCK_METHOD(bool, clear, (), (override));
     MOCK_METHOD(bool, remove, (const char* key), (override));
-
     MOCK_METHOD(size_t, putChar, (const char* key, int8_t value), (override));
     MOCK_METHOD(size_t, putUChar, (const char* key, uint8_t value), (override));
     MOCK_METHOD(size_t, putShort, (const char* key, int16_t value), (override));
@@ -46,7 +43,6 @@ public:
     MOCK_METHOD(size_t, putString, (const char* key, const char* value), (override));
     MOCK_METHOD(size_t, putString, (const char* key, String value), (override));
     MOCK_METHOD(size_t, putBytes, (const char* key, const void* value, size_t len), (override));
-
     MOCK_METHOD(bool, isKey, (const char* key), (override));
     MOCK_METHOD(PreferenceType, getType, (const char* key), (override));
     MOCK_METHOD(int8_t, getChar, (const char* key, int8_t defaultValue), (override));
@@ -68,5 +64,3 @@ public:
     MOCK_METHOD(size_t, getBytes, (const char* key, void* buf, size_t maxLen), (override));
     MOCK_METHOD(size_t, freeEntries, (), (override));
 };
-
-*/

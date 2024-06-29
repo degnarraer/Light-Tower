@@ -23,11 +23,11 @@
 #include "DataItem/PreferencesWrapper.h"
 #include "Mock_Preferences.h"
 
-/*
+
 TEST(PreferencesWrapperInstantiation, Instantion_Destruction)
 {
     MockPreferences *mockPreferences = new MockPreferences();
-    PreferencesWrapper *preferencesWrapper = new PreferencesWrapper(mockPreferences);
-    delete preferencesWrapper;
+    PreferencesManager *preferencesManager = new PreferencesManager(mockPreferences);
+    delete mockPreferences;
+    delete preferencesManager;
 }
-*/
