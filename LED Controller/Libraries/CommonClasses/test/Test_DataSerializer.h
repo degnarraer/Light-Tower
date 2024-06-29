@@ -31,6 +31,78 @@ using ::testing::_;
 using ::testing::NotNull;
 using ::testing::NiceMock;
 using namespace testing;
+// Test Fixture for DataSerializer Parse Failure Tests
+class DataSerializerParsingFailureTests : public Test
+{
+    protected:
+        const String name = "Test Name";
+        DataSerializer *mp_dataSerializer;
+        void SetUp() override
+        {
+            mp_dataSerializer = new DataSerializer();
+        }
+        void TearDown() override 
+        {
+            delete mp_dataSerializer;
+        }
+        void TestParseFailure(String jsonString)
+        {
+            NamedObject_t namedObject;
+            EXPECT_EQ(false, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+        }
+};
+
+TEST_F(DataSerializerParsingFailureTests, Data_Serializer_Parse_Mal_Formed_Failure_Test)
+{
+    // Correct JSON: "{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}"
+    TestParseFailure("\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\",\"Sum\":1}");
+    TestParseFailure("{\"Name\"\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\",\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\"\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\"1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\"\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\"\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\"1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\"[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"]\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\"1}");
+    TestParseFailure("");
+}
+
+TEST_F(DataSerializerParsingFailureTests, Data_Serializer_Parse_Tags_Failure_Test)
+{
+    // Correct JSON: "{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}"
+    TestParseFailure("{\"Nam\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Coun\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Typ\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Byte\":1,\"Data\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Dat\":[\"01\"],\"Sum\":1}");
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Su\":1}");
+}
+
+TEST_F(DataSerializerParsingFailureTests, Data_Serializer_Parse_Checksum_Failure_Test)
+{
+    // Correct JSON: "{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}"
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":2}");
+}
+
+TEST_F(DataSerializerParsingFailureTests, Data_Serializer_Parse_Byte_Count_Failure_Test)
+{
+    // Correct JSON: "{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}"
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":2,\"Data\":[\"01\"],\"Sum\":1}");
+}
+
+TEST_F(DataSerializerParsingFailureTests, Data_Serializer_Parse_Data_Type_Failure_Test)
+{
+    // Correct JSON: "{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bool_t\",\"Bytes\":1,\"Data\":[\"01\"],\"Sum\":1}"
+    TestParseFailure("{\"Name\":\"Object Name\",\"Count\":1,\"Type\":\"Bol_t\",\"Bytes\":2,\"Data\":[\"01\"],\"Sum\":1}");
+}
+
+
 // Test Fixture for DataSerializerTests
 class DataSerializerTests : public Test
 {
@@ -286,17 +358,57 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ProcessedSou
     ProcessedSoundData_t channel2 = { NormalizedPower2, Minimum2, Maximum2};
     ProcessedSoundFrame_t testValue = { channel1, channel2 };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Frame_t, &testValue, 1);
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ProcessedSoundFrame_t, &testValue, 1);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(ProcessedSoundFrame_t*)namedObject.Object);
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
 
-/*
-  "String_t",
-  "SoundState_t",
-  "ConnectionStatus_t",
-  "SoundInputSource_t",
-  "SoundOutputSource_t",
-  */
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundState_Correctly)
+{
+    String objectName = "Object Name";
+    SoundState_t testValue = SoundState::Sound_Level9_Detected;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_SoundState_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(SoundState_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ConnectionStatus_Correctly)
+{
+    String objectName = "Object Name";
+    ConnectionStatus_t testValue = ConnectionStatus::Disconnecting;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ConnectionStatus_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(ConnectionStatus_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundInputSource_Correctly)
+{
+    String objectName = "Object Name";
+    SoundInputSource_t testValue = SoundInputSource_t::Microphone;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ConnectionStatus_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(SoundInputSource_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundOutputSource_Correctly)
+{
+    String objectName = "Object Name";
+    SoundOutputSource_t testValue = SoundOutputSource_t::Bluetooth;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_SoundOutputSource_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(SoundOutputSource_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
