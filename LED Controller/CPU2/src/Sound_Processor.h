@@ -61,7 +61,7 @@ class Sound_Processor: public NamedItem
                                                                                           , UpdateStoreType_On_Rx
                                                                                           , 5000
                                                                                           , &m_Preferences
-                                                                                          , m_CPU3SerialPortMessageManager
+                                                                                          , &m_CPU3SerialPortMessageManager
                                                                                           , NULL
                                                                                           , this );
 
@@ -72,7 +72,7 @@ class Sound_Processor: public NamedItem
                                                                                     , UpdateStoreType_On_Rx
                                                                                     , 5000
                                                                                     , &m_Preferences
-                                                                                    , m_CPU3SerialPortMessageManager
+                                                                                    , &m_CPU3SerialPortMessageManager
                                                                                     , NULL
                                                                                     , this );
     

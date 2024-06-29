@@ -24,7 +24,7 @@
 #include "DataItem/PreferencesWrapper.h"
 
 class LocalStringDataItemWithPreferences: public LocalStringDataItem
-							 			, public PreferencesWrapper<DATAITEM_STRING_LENGTH>
+							 			, public PreferencesManager
 {
 	public:
 		LocalStringDataItemWithPreferences( const String name
@@ -33,7 +33,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 					 	   				  , NamedCallback_t *namedCallback
 						   				  , SetupCallerInterface *setupCallerInterface )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
-						   				  , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
+						   				  , PreferencesManager(preferences)
 		{
 			setupCallerInterface->RegisterForSetupCall(this);
 		}
@@ -46,7 +46,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeAndLoadPreference( m_Name
+			PreferencesManager::InitializeAndLoadPreference( m_Name
 																	 			   , GetInitialValueAsString()
 																	 			   , this->StaticSetValueFromString
 																	 			   , this );
@@ -68,7 +68,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			bool result = LocalStringDataItem::SetValue(value, count);
 			if(result)
 			{
-				this->Update_Preference( PreferencesWrapper<DATAITEM_STRING_LENGTH>::PreferenceUpdateType::Save
+				this->Update_Preference( PreferencesManager::PreferenceUpdateType::Save
 									   , m_Name
 									   , GetValueAsString()
 									   , GetInitialValueAsString()
@@ -80,7 +80,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 };
 
 class StringDataItemWithPreferences: public StringDataItem
-								   , public PreferencesWrapper<DATAITEM_STRING_LENGTH>
+								   , public PreferencesManager
 {
 	public:
 		StringDataItemWithPreferences( const String name
@@ -100,7 +100,7 @@ class StringDataItemWithPreferences: public StringDataItem
 													 , serialPortMessageManager
 													 , namedCallback
 													 , setupCallerInterface )
-									 , PreferencesWrapper<DATAITEM_STRING_LENGTH>(preferences)
+									 , PreferencesManager(preferences)
 		{	
 		}
 		
@@ -112,7 +112,7 @@ class StringDataItemWithPreferences: public StringDataItem
 		void Setup()
 		{
 			StringDataItem::Setup();
-			PreferencesWrapper<DATAITEM_STRING_LENGTH>::InitializeAndLoadPreference( m_Name
+			PreferencesManager::InitializeAndLoadPreference( m_Name
 																	 			   , GetInitialValueAsString()
 																	 			   , this->StaticSetValueFromString
 																	 			   , this );

@@ -126,8 +126,8 @@ class Manager: public NamedItem
                                                                                         , RxTxType_Tx_On_Change_With_Heartbeat
                                                                                         , UpdateStoreType_On_Tx
                                                                                         , 5000
-                                                                                        , m_CPU3SerialPortMessageManager
-                                                                                        , NULL
+                                                                                        , &m_CPU3SerialPortMessageManager
+                                                                                        , nullptr
                                                                                         , this );
     
     //Output Source Connect
@@ -141,7 +141,7 @@ class Manager: public NamedItem
                                                               , RxTxType_Rx_Only
                                                               , UpdateStoreType_On_Rx
                                                               , 0
-                                                              , m_CPU3SerialPortMessageManager
+                                                              , &m_CPU3SerialPortMessageManager
                                                               , &m_OuputSourceConnect_Callback
                                                               , this
                                                               , &validBoolValues);
@@ -173,7 +173,7 @@ class Manager: public NamedItem
                                                                  , RxTxType_Rx_Only
                                                                  , UpdateStoreType_On_Rx
                                                                  , 0
-                                                                 , m_CPU3SerialPortMessageManager
+                                                                 , &m_CPU3SerialPortMessageManager
                                                                  , &m_OuputSourceDisconnect_Callback
                                                                  , this
                                                                  , &validBoolValues );
@@ -200,7 +200,7 @@ class Manager: public NamedItem
                                                                                                 , RxTxType_Tx_On_Change
                                                                                                 , UpdateStoreType_On_Tx
                                                                                                 , 0
-                                                                                                , m_CPU3SerialPortMessageManager
+                                                                                                , &m_CPU3SerialPortMessageManager
                                                                                                 , NULL
                                                                                                 , this );
     
@@ -214,7 +214,7 @@ class Manager: public NamedItem
                                                                                                , UpdateStoreType_On_Rx
                                                                                                , 0
                                                                                                , &m_Preferences
-                                                                                               , m_CPU3SerialPortMessageManager
+                                                                                               , &m_CPU3SerialPortMessageManager
                                                                                                , &m_BluetoothSourceEnable_Callback
                                                                                                , this
                                                                                                , &validBoolValues );
@@ -236,7 +236,8 @@ class Manager: public NamedItem
                                                                                                       , RxTxType_Rx_Echo_Value
                                                                                                       , UpdateStoreType_On_Rx
                                                                                                       , 0
-                                                                                                      , &m_Preferences, m_CPU3SerialPortMessageManager
+                                                                                                      , &m_Preferences
+                                                                                                      , &m_CPU3SerialPortMessageManager
                                                                                                       , &m_BluetoothSourceAutoReConnect_Callback
                                                                                                       , this
                                                                                                       , &validBoolValues);
@@ -257,7 +258,7 @@ class Manager: public NamedItem
     CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_BluetoothReset_Callback = {"Bluetooth Reset Callback", &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
     const bool m_BluetoothReset_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_Preferences, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
     static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -280,7 +281,7 @@ class Manager: public NamedItem
                                                              , RxTxType_Rx_Echo_Value
                                                              , UpdateStoreType_On_Rx
                                                              , 0
-                                                             , m_CPU3SerialPortMessageManager
+                                                             , &m_CPU3SerialPortMessageManager
                                                              , &m_BluetoothResetNVS_Callback
                                                              , this
                                                              , &validBoolValues );
@@ -301,7 +302,7 @@ class Manager: public NamedItem
     CallbackArguments m_TargetCompatibleDevice_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_TargetCompatibleDevice_Callback = {"Target Compatible Device Callback", &TargetCompatibleDevice_ValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
     const CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, m_CPU3SerialPortMessageManager, &m_TargetCompatibleDevice_Callback, this);
+    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_CPU3SerialPortMessageManager, &m_TargetCompatibleDevice_Callback, this);
     static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
@@ -329,7 +330,7 @@ class Manager: public NamedItem
                                                                                                                          , UpdateStoreType_On_Rx
                                                                                                                          , 0
                                                                                                                          , &m_Preferences
-                                                                                                                         , m_CPU3SerialPortMessageManager
+                                                                                                                         , &m_CPU3SerialPortMessageManager
                                                                                                                          , &m_SoundOutputSource_Callback
                                                                                                                          , this
                                                                                                                          , &validSoundOutputSourceValues );

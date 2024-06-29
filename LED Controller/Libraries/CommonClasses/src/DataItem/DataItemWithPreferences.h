@@ -23,7 +23,7 @@
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
-							 , public PreferencesWrapper<COUNT>
+							 , public PreferencesManager
 {
 	public:
 		DataItemWithPreferences( const String name
@@ -41,7 +41,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback )
-							   , PreferencesWrapper<COUNT>(preferences)
+							   , PreferencesManager(preferences)
 
 		{
 		}
@@ -63,7 +63,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , serialPortMessageManager
 												   , namedCallback
 												   , setupCallerInterface )
-							   , PreferencesWrapper<COUNT>(preferences)
+							   , PreferencesManager(preferences)
 		{
 		}
 
@@ -86,7 +86,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , namedCallback
 												   , validStringValues
 												   , setupCallerInterface )
-							   , PreferencesWrapper<COUNT>(preferences)
+							   , PreferencesManager(preferences)
 		{
 		}
 							   
@@ -109,7 +109,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , namedCallback
 												   , setupCallerInterface
 												   , validStringValues )
-							   , PreferencesWrapper<COUNT>(preferences)
+							   , PreferencesManager(preferences)
 		{
 		}
 
@@ -134,7 +134,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save
+				this->Update_Preference( PreferencesManager::PreferenceUpdateType::Save
 									   , this->m_Name
 									   , this->GetValueAsString()
 									   , this->GetInitialValueAsString()
@@ -149,7 +149,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference( PreferencesWrapper<COUNT>::PreferenceUpdateType::Save
+				this->Update_Preference( PreferencesManager::PreferenceUpdateType::Save
 									   , this->m_Name
 									   , this->GetValueAsString()
 									   , this->GetInitialValueAsString()
