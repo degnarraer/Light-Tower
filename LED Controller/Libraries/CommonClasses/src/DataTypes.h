@@ -909,12 +909,20 @@ struct ProcessedSoundData_t
 	float NormalizedPower;
 	int32_t Minimum;
 	int32_t Maximum;
+    bool operator==(const ProcessedSoundData_t& other) const
+    {
+        return this->NormalizedPower == other.NormalizedPower && this->Minimum == other.Minimum && this->Maximum == other.Maximum;
+    }
 };
 
 struct ProcessedSoundFrame_t
 {
 	ProcessedSoundData_t Channel1;
 	ProcessedSoundData_t Channel2;
+    bool operator==(const ProcessedSoundFrame_t& other) const
+    {
+        return this->Channel1 == other.Channel1 && this->Channel2 == other.Channel2;
+    }
 };
 
 struct MaxBandSoundData_t
@@ -922,6 +930,10 @@ struct MaxBandSoundData_t
 	float MaxBandNormalizedPower;
 	int16_t MaxBandIndex;
 	int16_t TotalBands;
+    bool operator==(const MaxBandSoundData_t& other) const
+    {
+        return this->MaxBandNormalizedPower == other.MaxBandNormalizedPower && this->MaxBandIndex == other.MaxBandIndex && this->TotalBands == other.TotalBands;
+    }
 };
 
 
