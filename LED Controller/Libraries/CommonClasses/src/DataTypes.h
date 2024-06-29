@@ -95,6 +95,13 @@ struct BT_Device_Info
 			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
 			rssi = rssi_In;
 		}
+		bool operator==(const BT_Device_Info& other) const
+		{
+			if( strcmp(this->name, other.name) == 0 &&
+				strcmp(this->address, other.address) == 0 &&
+				this->rssi == other.rssi) return true;
+			else return false;
+		}
 };
 typedef BT_Device_Info BT_Device_Info_t;
 
@@ -750,7 +757,7 @@ static const char* DataTypeStrings[] =
   "Char_t",
   "String_t",
   "BT_Device_Info_t",
-  "BT_Info_With_LastUpdateTime_t",
+  "BT_Device_Info_With_Time_Since_Update_t",
   "CompatibleDevice_t",
   "ActiveCompatibleDevice_t",
   "Float_t",

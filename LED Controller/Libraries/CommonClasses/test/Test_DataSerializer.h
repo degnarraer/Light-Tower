@@ -27,31 +27,172 @@ TEST(DataSerializerInstantiation, Instantion_Destruction)
     delete dataSerializer;
 }
 
+using ::testing::_;
+using ::testing::NotNull;
+using ::testing::NiceMock;
+using namespace testing;
 // Test Fixture for DataSerializerTests
 class DataSerializerTests : public Test
 {
     protected:
-        const int32_t initialValue = 10;
         const String name = "Test Name";
         DataSerializer *mp_dataSerializer;
-  
-        MockDataItem<int32_t, 1> *mp_mockDataItem;
         void SetUp() override
         {
             mp_dataSerializer = new DataSerializer();
-            mp_mockDataItem = new MockDataItem<int32_t, 1>(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0);
-
         }
         void TearDown() override 
         {
             delete mp_dataSerializer;
-            delete mp_mockDataItem;
         }
 };
 
-TEST_F(DataSerializerTests, Data_Serializer_Serializes_Correctly)
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Bool_t_Correctly)
 {
-    int32_t testValue = 10;
-    String resultString = mp_dataSerializer->SerializeDataToJson(name, DataType_Int32_t, &testValue, 1);
-    EXPECT_STREQ(resultString.c_str(), "{\"Name\":\"Test Name\",\"Count\":1,\"Type\":\"Int32_t\",\"Bytes\":4,\"Data\":[\"0A000000\"],\"Sum\":10}");
+    String objectName = "Object Name";
+    bool testValue = true;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Bool_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(bool*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint8_t_Correctly)
+{
+    String objectName = "Object Name";
+    uint8_t testValue = 10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Uint8_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(uint8_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint16_t_Correctly)
+{
+    String objectName = "Object Name";
+    uint16_t testValue = 10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Uint16_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(uint16_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint32_t_Correctly)
+{
+    String objectName = "Object Name";
+    uint32_t testValue = 10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Uint32_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(uint32_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int8_t_Correctly)
+{
+    String objectName = "Object Name";
+    int8_t testValue = -10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Int8_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(int8_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int16_t_Correctly)
+{
+    String objectName = "Object Name";
+    int16_t testValue = -10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Int16_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(int16_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int32_t_Correctly)
+{
+    String objectName = "Object Name";
+    int32_t testValue = -10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Int32_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(int32_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Double_t_Correctly)
+{
+    String objectName = "Object Name";
+    double testValue = 10.10;
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Double_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(double*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Bt_Device_Info_Correctly)
+{
+    String objectName = "Object Name";
+    char name[BT_NAME_LENGTH] = "LED Tower of Power";
+	char address[BT_ADDRESS_LENGTH] = "AA:BB:CC:DD:EE:FF";
+	int32_t rssi = 100;
+    BT_Device_Info_t testValue = { name, address, rssi };
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_BT_Device_Info_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(BT_Device_Info_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_BT_Device_Info_With_Time_Since_Update_Correctly)
+{
+    String objectName = "Object Name";
+    char name[BT_NAME_LENGTH] = "LED Tower of Power";
+	char address[BT_ADDRESS_LENGTH] = "AA:BB:CC:DD:EE:FF";
+	int32_t rssi = 100;
+    uint32_t timeSinceUdpate = 200;
+    BT_Device_Info_With_Time_Since_Update_t testValue = { name, address, rssi, timeSinceUdpate };
+    NamedObject_t namedObject;
+    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_BT_Device_Info_With_Time_Since_Update_t, &testValue, 1);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(BT_Device_Info_With_Time_Since_Update_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+/*
+  "Int8_t",
+  "Int16_t",
+  "Uint8_t",
+  "Uint16_t",
+  "Char_t",
+  "String_t",
+  "BT_Device_Info_t",
+  "BT_Info_With_LastUpdateTime_t",
+  "CompatibleDevice_t",
+  "ActiveCompatibleDevice_t",
+  "Float_t",
+  "Double_t",
+  "ProcessedSoundData_t",
+  "MaxBandSoundData_t",
+  "Frame_t",
+  "ProcessedSoundFrame_t",
+  "SoundState_t",
+  "ConnectionStatus_t",
+  "SoundInputSource_t",
+  "SoundOutputSource_t",
+  */

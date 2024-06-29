@@ -80,14 +80,21 @@ class DataSerializer: public CommonUtils
 				if(AllTagsExist(m_DeserializeDoc))
 				{
 					const String DocName = m_DeserializeDoc[m_NameTag];
+					ESP_LOGD("DeSerializeJsonToNamedObject", "DocName: %s", DocName.c_str());
 					NamedObject.Name = DocName;
 					size_t CheckSumCalc = 0;
 					size_t CheckSumIn = m_DeserializeDoc[m_CheckSumTag];
+					ESP_LOGD("DeSerializeJsonToNamedObject", "CheckSumIn: %i", CheckSumIn);
 					size_t CountIn = m_DeserializeDoc[m_CountTag];
+					ESP_LOGD("DeSerializeJsonToNamedObject", "CountIn: %i", CountIn);
 					size_t ByteCountIn = m_DeserializeDoc[m_TotalByteCountTag];
+					ESP_LOGD("DeSerializeJsonToNamedObject", "ByteCountIn: %i", ByteCountIn);
 					size_t ActualDataCount = m_DeserializeDoc[m_DataTag].length();
+					ESP_LOGD("DeSerializeJsonToNamedObject", "ActualDataCount: %i", ActualDataCount);
 					DataType_t DataType = GetDataTypeFromString(m_DeserializeDoc[m_DataTypeTag]);
+					ESP_LOGD("DeSerializeJsonToNamedObject", "DataType: %i", DataType);
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
+					ESP_LOGD("DeSerializeJsonToNamedObject", "ObjectByteCount: %i", ObjectByteCount);
 					//This memory needs deleted by caller of function.
 					uint8_t *Buffer = (uint8_t*)heap_caps_malloc(sizeof(uint8_t)* ByteCountIn, MALLOC_CAP_SPIRAM);								
 					if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
@@ -104,14 +111,18 @@ class DataSerializer: public CommonUtils
 								CheckSumCalc += decValue;
 								Buffer[j * ObjectByteCount + k] = decValue;
 							}
+							ESP_LOGD("DeSerializeJsonToNamedObject", "CheckSumCalc: %i", CheckSumCalc);
 						}
 						if(CheckSumCalc == CheckSumIn)
 						{
+							ESP_LOGD("DeSerializeJsonToNamedObject", "Setting Buffer");
 							NamedObject.Object = Buffer;
 							deserialized = true;
+							ESP_LOGD("DeSerializeJsonToNamedObject", "Buffer Set");
 						}
 						else
 						{
+							ESP_LOGD("DeSerializeJsonToNamedObject", "CheckSumCalc Did Not Match!");
 							heap_caps_free(Buffer);
 							NamedObject.Object = nullptr;
 							++m_FailCount;
