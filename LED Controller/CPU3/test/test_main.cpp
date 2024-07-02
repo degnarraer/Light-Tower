@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 {
     ::testing::InitGoogleMock(&argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
-    int result = RUN_ALL_TESTS();
+    RUN_ALL_TESTS();
     return result;
 }
 #endif

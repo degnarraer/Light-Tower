@@ -237,7 +237,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_BT_Device_In
 	char address[BT_ADDRESS_LENGTH] = "AA:BB:CC:DD:EE:FF";
 	int32_t rssi = 100;
     uint32_t timeSinceUdpate = 200;
-    BT_Device_Info_With_Time_Since_Update_t testValue = { name, address, rssi, timeSinceUdpate };
+    BT_Device_Info_With_Time_Since_Update_t testValue = { name, address, timeSinceUdpate, rssi };
     NamedObject_t namedObject;
     String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_BT_Device_Info_With_Time_Since_Update_t, &testValue, 1);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));

@@ -360,7 +360,7 @@ public:
         }
         else
         {
-            ESP_LOGE("PreferencesManager: InitializeAndLoadPreference", "Null Preferences Pointer!");
+            ESP_LOGE("InitializeAndLoadPreference", "Null Preferences Pointer!");
         }
     }
 
@@ -398,29 +398,29 @@ public:
     void Update_Preference( const PreferenceUpdateType updateType
 						  , const String &saveValue )
     {
-        ESP_LOGD("SetDataLinkEnabled: Update_Preference", "Update Prefernce for: \"%s\"", m_Key.c_str());
+        ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\"", m_Key.c_str());
         if (!mp_PreferencesInterface) return;
         switch (updateType)
         {
         case PreferenceUpdateType::Timer:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
-            m_PreferenceTimerActive == false;
+            ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
+            m_PreferenceTimerActive = false;
             HandleSave(saveValue);
             break;
         case PreferenceUpdateType::Initialize:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
+            ESP_LOGD("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
             HandleSave(saveValue);
             break;
         case PreferenceUpdateType::Load:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
+            ESP_LOGD("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
             HandleLoad();
             break;
         case PreferenceUpdateType::Save:
-            ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
+            ESP_LOGD("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
             HandleSave(saveValue);
             break;
         default:
-            ESP_LOGE("SetDataLinkEnabled: Update_Preference", "\"%s\": Unsupported Update Type", m_Key.c_str());
+            ESP_LOGE("Update_Preference", "\"%s\": Unsupported Update Type", m_Key.c_str());
             break;
         }
     }
@@ -466,7 +466,7 @@ private:
     }
     void DelaySaveValue(const String &saveValue, unsigned long elapsedTime)
     {        
-        ESP_LOGD("CleanUpTimer", "Entering DelaySaveValue for Key: \"%s\"", m_Key.c_str());
+        ESP_LOGD("DelaySaveValue", "Entering DelaySaveValue for Key: \"%s\"", m_Key.c_str());
         CleanUpTimer();
         mp_TimerArgs = new PreferenceManagerTimerArgs(this, saveValue);
         if(mp_TimerArgs)
@@ -517,41 +517,41 @@ private:
     {
         if(mp_PreferencesInterface)
         {
-            ESP_LOGD("PreferencesManager: HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
+            ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
             String loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
             if (m_Callback && mp_Object)
             {
                 if(m_Callback(loadedValue, mp_Object))
                 {
-                    ESP_LOGI("PreferencesManager: HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                    ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
                 }
                 else
                 {
-                    ESP_LOGW("PreferencesManager: HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+                    ESP_LOGW("HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
                     if(m_Callback(m_InitialValue, mp_Object))
                     {
-                        ESP_LOGI("PreferencesManager: HandleLoad", "Successfully Loaded Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                        ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
                     }
                     else
                     {
-                        ESP_LOGE("PreferencesManager: HandleLoad", "\"%s\" Failed to Load Default Value!: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+                        ESP_LOGE("HandleLoad", "\"%s\" Failed to Load Default Value!: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
                     }
                 }
             }
             else
             {
-                ESP_LOGE("PreferencesManager: HandleLoad", "\"%s\" Null Callback Pointers!", m_Key.c_str());
+                ESP_LOGE("HandleLoad", "\"%s\" Null Callback Pointers!", m_Key.c_str());
             }
         }
         else
         {
-            ESP_LOGE("PreferencesManager: HandleLoad", "\"%s\" Null Pointer!", m_Key.c_str());
+            ESP_LOGE("HandleLoad", "\"%s\" Null Pointer!", m_Key.c_str());
         }
     }
 
     void HandleSave(const String &saveString)
     {
-        ESP_LOGD("PreferencesManager: HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
+        ESP_LOGD("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
         if(mp_PreferencesInterface)
         {
             unsigned long currentMillis = millis();
@@ -566,15 +566,15 @@ private:
             }
             if (elapsedTime <= TIMER_TIME)
             {
-                ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Too early to save preference", m_Key.c_str());
+                ESP_LOGD("HandleSave", "\"%s\": Too early to save preference", m_Key.c_str());
                 if (!m_PreferenceTimerActive)
                 {
-                    ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": Started NVM Update Timer", m_Key.c_str());
+                    ESP_LOGD("HandleSave", "\"%s\": Started NVM Update Timer", m_Key.c_str());
                     DelaySaveValue(saveString, elapsedTime);
                 }
                 else
                 {
-                    ESP_LOGD("SetDataLinkEnabled: Update_Preference", "\"%s\": NVM Update Timer already running, injecting new value to save", m_Key.c_str());
+                    ESP_LOGD("HandleSave", "\"%s\": NVM Update Timer already running, injecting new value to save", m_Key.c_str());
                     DelaySaveValue(saveString, elapsedTime);
                 }
             }
@@ -584,18 +584,18 @@ private:
                 String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                 if(!saveString.equals(savedString))
                 {
-                    ESP_LOGE("PreferencesManager: HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
+                    ESP_LOGE("HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
                 }
                 else
                 {
-                    ESP_LOGE("PreferencesManager: HandleSave", "Saved Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                    ESP_LOGE("HandleSave", "Saved Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
                 }
                 m_Preferences_Last_Update = currentMillis;
             }
         }
         else
         {
-            ESP_LOGE("PreferencesManager: HandleSave", "\"%s\" Null Pointer!", m_Key.c_str());
+            ESP_LOGE("HandleSave", "\"%s\" Null Pointer!", m_Key.c_str());
         }
     }
 

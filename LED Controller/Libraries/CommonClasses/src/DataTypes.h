@@ -110,8 +110,8 @@ struct BT_Device_Info_With_Time_Since_Update
 	public:
 		char name[BT_NAME_LENGTH] = "\0";
 		char address[BT_ADDRESS_LENGTH] = "\0";
-		int32_t rssi = 0;
 		uint32_t timeSinceUdpate = 0;
+		int32_t rssi = 0;
 
 		BT_Device_Info_With_Time_Since_Update(){}
 		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)

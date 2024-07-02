@@ -63,7 +63,7 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Popping_To_Empty)
     Frame_t resultingBuffer[bufferSize];
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
-    for(size_t i = 0; i < bufferSize+1; ++i)
+    for(int16_t i = 0; i < bufferSize+1; ++i)
     {
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
@@ -144,7 +144,7 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Shifting_To_Empty)
     Frame_t resultingBuffer[bufferSize];
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
-    for(size_t i = 0; i < bufferSize+1; ++i)
+    for(int16_t i = 0; i < bufferSize+1; ++i)
     {
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
@@ -191,7 +191,7 @@ TEST_F(ContinuousAudioBufferTests, Unshift_To_Full_Popping_To_Empty)
     Frame_t resultingBuffer[bufferSize];
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
-    for(size_t i = 0; i < bufferSize+1; ++i)
+    for(int16_t i = 0; i < bufferSize+1; ++i)
     {
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
@@ -272,7 +272,7 @@ TEST_F(ContinuousAudioBufferTests, Unshift_To_Full_Shift_To_Empty)
     Frame_t resultingBuffer[bufferSize];
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
-    for(size_t i = 0; i < bufferSize+1; ++i)
+    for(int16_t i = 0; i < bufferSize+1; ++i)
     {
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
