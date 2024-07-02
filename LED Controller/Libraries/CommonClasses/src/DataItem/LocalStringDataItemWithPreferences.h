@@ -29,11 +29,11 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 	public:
 		LocalStringDataItemWithPreferences( const String name
 					 	   				  , const String &initialValue
-						   				  , IPreferences *preferences
+						   				  , IPreferences *preferencesInterface
 					 	   				  , NamedCallback_t *namedCallback
 						   				  , SetupCallerInterface *setupCallerInterface )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
-						   				  , PreferencesManager(preferences)
+						   				  , PreferencesManager(preferencesInterface)
 		{
 			setupCallerInterface->RegisterForSetupCall(this);
 		}
@@ -47,10 +47,9 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		{
 			LocalStringDataItem::Setup();
 			PreferencesManager::InitializeAndLoadPreference( m_Name
-																	 			   , GetInitialValueAsString()
-																	 			   , this->StaticSetValueFromString
-																	 			   , this );
-			CreatePreferencesTimer(m_Name, GetValueAsString(), GetInitialValueAsString());
+														   , GetInitialValueAsString()
+														   , this->StaticSetValueFromString
+														   , this );
 		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
@@ -88,7 +87,7 @@ class StringDataItemWithPreferences: public StringDataItem
 								     , const RxTxType_t rxTxType
 								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
-								     , IPreferences *preferences
+								     , IPreferences *preferencesInterface
 								     , SerialPortMessageManager *serialPortMessageManager
 									 , NamedCallback_t *namedCallback
 									 , SetupCallerInterface *setupCallerInterface )
@@ -100,7 +99,7 @@ class StringDataItemWithPreferences: public StringDataItem
 													 , serialPortMessageManager
 													 , namedCallback
 													 , setupCallerInterface )
-									 , PreferencesManager(preferences)
+									 , PreferencesManager(preferencesInterface)
 		{	
 		}
 		
@@ -113,10 +112,9 @@ class StringDataItemWithPreferences: public StringDataItem
 		{
 			StringDataItem::Setup();
 			PreferencesManager::InitializeAndLoadPreference( m_Name
-																	 			   , GetInitialValueAsString()
-																	 			   , this->StaticSetValueFromString
-																	 			   , this );
-			CreatePreferencesTimer(m_Name, GetValueAsString(), GetInitialValueAsString());
+														   , GetInitialValueAsString()
+														   , this->StaticSetValueFromString
+														   , this );
 		}
 
 		bool DataItem_TX_Now()

@@ -31,7 +31,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferences
+							   , IPreferences *preferenceInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback )
 							   : DataItem<T, COUNT>( name
@@ -41,7 +41,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback )
-							   , PreferencesManager(preferences)
+							   , PreferencesManager(preferenceInterface)
 
 		{
 		}
@@ -51,7 +51,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferences
+							   , IPreferences *preferenceInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface )
@@ -63,7 +63,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , serialPortMessageManager
 												   , namedCallback
 												   , setupCallerInterface )
-							   , PreferencesManager(preferences)
+							   , PreferencesManager(preferenceInterface)
 		{
 		}
 
@@ -72,7 +72,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferences
+							   , IPreferences *preferenceInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface
@@ -86,7 +86,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , namedCallback
 												   , validStringValues
 												   , setupCallerInterface )
-							   , PreferencesManager(preferences)
+							   , PreferencesManager(preferenceInterface)
 		{
 		}
 							   
@@ -95,7 +95,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferences
+							   , IPreferences *preferenceInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface
@@ -109,7 +109,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , namedCallback
 												   , setupCallerInterface
 												   , validStringValues )
-							   , PreferencesManager(preferences)
+							   , PreferencesManager(preferenceInterface)
 		{
 		}
 

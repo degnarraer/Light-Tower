@@ -75,6 +75,7 @@ class Manager: public NamedItem
     
   private:
     Preferences m_Preferences;
+    PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
     DataSerializer m_DataSerializer;
 
     void SetupSerialPortManager();
@@ -141,7 +142,7 @@ class Manager: public NamedItem
                                                                                                                       , RxTxType_Rx_Echo_Value
                                                                                                                       , UpdateStoreType_On_Rx
                                                                                                                       , 0
-                                                                                                                      , &m_Preferences
+                                                                                                                      , &m_PreferencesWrapper
                                                                                                                       , &m_CPU3SerialPortMessageManager
                                                                                                                       , &m_SoundInputSource_Callback
                                                                                                                       , this
@@ -170,7 +171,7 @@ class Manager: public NamedItem
                                                                             , RxTxType_Rx_Echo_Value
                                                                             , UpdateStoreType_On_Rx
                                                                             , 0
-                                                                            , &m_Preferences
+                                                                            , &m_PreferencesWrapper
                                                                             , &m_CPU3SerialPortMessageManager
                                                                             , &m_SinkName_Callback
                                                                             , this );
@@ -202,7 +203,7 @@ class Manager: public NamedItem
                                                                                            , RxTxType_Rx_Echo_Value
                                                                                            , UpdateStoreType_On_Rx
                                                                                            , 0
-                                                                                           , &m_Preferences
+                                                                                           , &m_PreferencesWrapper
                                                                                            , &m_CPU3SerialPortMessageManager
                                                                                            , NULL
                                                                                            , this
@@ -293,7 +294,7 @@ class Manager: public NamedItem
                                                                                              , RxTxType_Rx_Echo_Value
                                                                                              , UpdateStoreType_On_Rx
                                                                                              , 0
-                                                                                             , &m_Preferences
+                                                                                             , &m_PreferencesWrapper
                                                                                              , &m_CPU3SerialPortMessageManager
                                                                                              , NULL
                                                                                              , this
