@@ -580,8 +580,8 @@ private:
             }
             else
             {
-                mp_PreferencesInterface->putString(m_Key.c_str(), saveString.c_str());
-                String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue.c_str());
+                mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
+                String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                 if(!saveString.equals(savedString))
                 {
                     ESP_LOGE("PreferencesManager: HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
