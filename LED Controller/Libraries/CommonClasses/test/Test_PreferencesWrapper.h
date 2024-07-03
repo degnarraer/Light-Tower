@@ -23,6 +23,7 @@
 #include <chrono>
 #include "DataItem/PreferencesWrapper.h"
 #include "Mock_Preferences.h"
+#include "Mock_PreferenceCallback.h"
 
 #define TIMEOUT_TIME 100UL
 
@@ -41,22 +42,6 @@ using ::testing::NotNull;
 using ::testing::NiceMock;
 using ::testing::Return;
 using namespace testing;
-
-
-class MockPreferenceCallback
-{
-    public:
-        MOCK_METHOD(bool, CallbackFunction, (const String&, void* object));
-};
-static MockPreferenceCallback mockPreferenceCallback;
-class PreferenceCallback
-{
-    protected:
-        static bool CallbackFunction(const String& str, void* object)
-        {
-            return mockPreferenceCallback.CallbackFunction(str, object);  
-        }
-};
 
 // Test Fixture for PreferenceManager
 class PreferenceManagerTests : public Test
@@ -113,7 +98,7 @@ TEST_F(PreferenceManagerTests, Initialization_of_New_Key_Not_Immediately_Saved)
     EXPECT_EQ(true, preferenceManagerWithCallback->InitializeAndLoadPreference()); 
 }
 
-TEST_F(PreferenceManagerTests, Initialize_New_Key_Saved_After_TIMER_TIME_ms)
+TEST_F(PreferenceManagerTests, Initialize_Of_New_Key_Saved_After_TIMEOUT_TIME_ms)
 {
     EXPECT_CALL(*mockPreferences, isKey( StrEq(key1.c_str()) )).Times(1).WillOnce(Return(false));
     EXPECT_CALL(*mockPreferences, putString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(validInitialValueLength));
@@ -123,7 +108,7 @@ TEST_F(PreferenceManagerTests, Initialize_New_Key_Saved_After_TIMER_TIME_ms)
     std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
 }
 
-TEST_F(PreferenceManagerTests, Timer_Not_Called_When_Preference_Manager_Deleted)
+TEST_F(PreferenceManagerTests, Active_Timer_Canceled_When_Preference_Manager_Deleted)
 {
     EXPECT_CALL(*mockPreferences, isKey( StrEq(key1.c_str()) )).Times(1).WillOnce(Return(false));
     EXPECT_CALL(*mockPreferences, putString( StrEq(key1.c_str()), initialValue )).Times(0);
@@ -135,7 +120,7 @@ TEST_F(PreferenceManagerTests, Timer_Not_Called_When_Preference_Manager_Deleted)
     std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
 }
 
-TEST_F(PreferenceManagerTests, Initialize_Already_Existing_Key_Triggers_Loading_Of_Preference)
+TEST_F(PreferenceManagerTests, Initialize_Of_Existing_Key_Triggers_Loading_Of_Preference)
 {
     EXPECT_CALL(*mockPreferences, isKey( StrEq(key1.c_str() ))).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*mockPreferences, getString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue));
@@ -143,7 +128,7 @@ TEST_F(PreferenceManagerTests, Initialize_Already_Existing_Key_Triggers_Loading_
     EXPECT_EQ(true, preferenceManagerWithCallback->InitializeAndLoadPreference());
 }
 
-TEST_F(PreferenceManagerTests, Load_Preference_Calls_Callback_When_Provided)
+TEST_F(PreferenceManagerTests, Loading_Preference_Calls_Callback_When_Provided)
 {
     EXPECT_CALL(*mockPreferences, getString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue));
     EXPECT_CALL(mockPreferenceCallback, CallbackFunction(_,_)).Times(1);
