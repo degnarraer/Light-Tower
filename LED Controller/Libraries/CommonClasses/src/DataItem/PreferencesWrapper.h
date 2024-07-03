@@ -341,8 +341,9 @@ public:
     {
         CleanUpTimer();
     }
-    void InitializeAndLoadPreference()
+    bool InitializeAndLoadPreference()
     {
+        bool result = false;
         m_Preferences_Last_Update = millis();
         ESP_LOGD("InitializeAndLoadPreference", "Initializing Preference: \"%s\" with Initial Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
         if (mp_PreferencesInterface)
@@ -350,18 +351,19 @@ public:
             if (mp_PreferencesInterface->isKey(m_Key.c_str()))
             {
                 ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\"", m_Key.c_str());
-                Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
+                result = Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
             }
             else
             {
                 ESP_LOGI("InitializeAndLoadPreference", "Preference Not Found: \"%s\"", m_Key.c_str());
-                Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
+                result = Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
             }
         }
         else
         {
             ESP_LOGE("InitializeAndLoadPreference", "Null Preferences Pointer!");
         }
+        return result;
     }
 
     static void Static_Update_Preference(void* arg)
@@ -395,34 +397,35 @@ public:
         }
     }
 
-    void Update_Preference( const PreferenceUpdateType updateType
+    bool Update_Preference( const PreferenceUpdateType updateType
 						  , const String &saveValue )
     {
         ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\"", m_Key.c_str());
-        if (!mp_PreferencesInterface) return;
+        bool result = false;
+        if (!mp_PreferencesInterface) return result;
         switch (updateType)
         {
         case PreferenceUpdateType::Timer:
             ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
-            m_PreferenceTimerActive = false;
-            HandleSave(saveValue);
+            result = HandleSave(saveValue);
             break;
         case PreferenceUpdateType::Initialize:
             ESP_LOGD("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
-            HandleSave(saveValue);
+            result = HandleSave(saveValue);
             break;
         case PreferenceUpdateType::Load:
             ESP_LOGD("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
-            HandleLoad();
+            result = HandleLoad();
             break;
         case PreferenceUpdateType::Save:
             ESP_LOGD("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
-            HandleSave(saveValue);
+            result = HandleSave(saveValue);
             break;
         default:
             ESP_LOGE("Update_Preference", "\"%s\": Unsupported Update Type", m_Key.c_str());
             break;
         }
+        return result;
     }
 private:
     bool CleanUpTimer()
@@ -464,8 +467,9 @@ private:
         m_PreferenceTimerActive = false;
         return result;
     }
-    void DelaySaveValue(const String &saveValue, unsigned long elapsedTime)
-    {        
+    bool DelaySaveValue(const String &saveValue, unsigned long elapsedTime)
+    {
+        bool result = false;
         ESP_LOGD("DelaySaveValue", "Entering DelaySaveValue for Key: \"%s\"", m_Key.c_str());
         CleanUpTimer();
         mp_TimerArgs = new PreferenceManagerTimerArgs(this, saveValue);
@@ -484,7 +488,7 @@ private:
                     mp_TimerArgs = nullptr;
                     delete mp_PreferenceTimerCreateArgs;
                     mp_PreferenceTimerCreateArgs = nullptr;
-                    return;
+                    return result;
                 }
                 unsigned long delayTime = (m_TimeoutTime - elapsedTime) * 1000;
                 esp_err_t timerStartErr = esp_timer_start_once(m_PreferenceTimer, delayTime);
@@ -497,10 +501,11 @@ private:
                     mp_TimerArgs = nullptr;
                     delete mp_PreferenceTimerCreateArgs;
                     mp_PreferenceTimerCreateArgs = nullptr;
-                    return;
+                    return result;
                 }
                 ESP_LOGD("DelaySaveValue", "Delayed Save Timer Started for Key: \"%s\" for %lu uS", m_Key.c_str(), delayTime);
                 m_PreferenceTimerActive = true;
+                result = true;
             }
             else
             {
@@ -511,10 +516,12 @@ private:
         {
             ESP_LOGE("DelaySaveValue", "Null TimerArg Pointer!");
         }
+        return result;
     }
 
-    void HandleLoad()
+    bool HandleLoad()
     {
+        bool result = false;
         if(mp_PreferencesInterface)
         {
             ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
@@ -524,6 +531,7 @@ private:
                 if(m_Callback(loadedValue, mp_Object))
                 {
                     ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                    result = true;
                 }
                 else
                 {
@@ -531,6 +539,7 @@ private:
                     if(m_Callback(m_InitialValue, mp_Object))
                     {
                         ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                        result = true;
                     }
                     else
                     {
@@ -547,10 +556,12 @@ private:
         {
             ESP_LOGE("HandleLoad", "\"%s\" Null Pointer!", m_Key.c_str());
         }
+        return result;
     }
 
-    void HandleSave(const String &saveString)
+    bool HandleSave(const String &saveString)
     {
+        bool result = false;
         ESP_LOGD("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
         if(mp_PreferencesInterface)
         {
@@ -570,33 +581,42 @@ private:
                 if (!m_PreferenceTimerActive)
                 {
                     ESP_LOGD("HandleSave", "\"%s\": Started NVM Update Timer", m_Key.c_str());
-                    DelaySaveValue(saveString, elapsedTime);
+                    result = DelaySaveValue(saveString, elapsedTime);
                 }
                 else
                 {
                     ESP_LOGD("HandleSave", "\"%s\": NVM Update Timer already running, injecting new value to save", m_Key.c_str());
-                    DelaySaveValue(saveString, elapsedTime);
+                    result = DelaySaveValue(saveString, elapsedTime);
                 }
             }
             else
             {
-                mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
-                String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                if(!saveString.equals(savedString))
+                size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
+                if(saveString.length() == saveLength)
                 {
-                    ESP_LOGE("HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
+                    String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                    if(!saveString.equals(savedString))
+                    {
+                        ESP_LOGE("HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
+                    }
+                    else
+                    {
+                        ESP_LOGD("HandleSave", "Saved Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                        m_Preferences_Last_Update = currentMillis;
+                        result = true;
+                    }
                 }
                 else
                 {
-                    ESP_LOGE("HandleSave", "Saved Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                    ESP_LOGD("HandleSave", "Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
                 }
-                m_Preferences_Last_Update = currentMillis;
             }
         }
         else
         {
             ESP_LOGE("HandleSave", "\"%s\" Null Pointer!", m_Key.c_str());
         }
+        return result;
     }
 
 private:

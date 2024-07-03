@@ -24,7 +24,7 @@
 #include "DataItem/PreferencesWrapper.h"
 #include "Mock_Preferences.h"
 
-#define TIMEOUT_TIME 500UL
+#define TIMEOUT_TIME 100UL
 
 TEST(PreferencesWrapperInstantiation, Instantion_Destruction)
 {
@@ -50,7 +50,13 @@ class PreferenceManagerTests : public Test
     protected:
         const String key = "key1";
         const String testValue = "Key 1 Value";
+        const String invalidTestValue = "Key 1 Vslue";
+        const size_t validTestValueLength = testValue.length();
+        const size_t invalidTestValueLength = testValue.length()+1;
         const String initialValue = "Initial Value";
+        const String invalidInitialValue = "Initibl Value";
+        const size_t validInitialValueLength = initialValue.length();
+        const size_t invalidInitialValueLength = initialValue.length()+1;
         void SetUp() override
         {
             mockPreferences = new MockPreferences();
@@ -58,31 +64,78 @@ class PreferenceManagerTests : public Test
         }
         void TearDown() override 
         {
-            delete mockPreferences;
-            delete preferenceManager;
+            if(mockPreferences)
+            {
+                delete mockPreferences;
+                mockPreferences = nullptr;
+            }
+            if(preferenceManager)
+            {
+                delete preferenceManager;
+                preferenceManager = nullptr;
+            }
         }
 };
 
 TEST_F(PreferenceManagerTests, Initialization_of_New_Key_Not_Immediately_Saved)
 {
-    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str()) )).WillOnce(Return(false));
+    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str()) )).Times(1).WillOnce(Return(false));
     EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), A<String>() )).Times(0);
     EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), A<String>() )).Times(0);
-    preferenceManager->InitializeAndLoadPreference(); 
+    EXPECT_EQ(true, preferenceManager->InitializeAndLoadPreference()); 
 }
 
 TEST_F(PreferenceManagerTests, Initialize_New_Key_Saved_After_TIMER_TIME_ms)
 {
-    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str()) )).WillOnce(Return(false));
-    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), A<String>() )).WillOnce(Return(strlen(key.c_str())));
-    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), A<String>() )).Times(1);
-    preferenceManager->InitializeAndLoadPreference();
+    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str()) )).Times(1).WillOnce(Return(false));
+    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), initialValue )).Times(1).WillOnce(Return(validInitialValueLength));
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(1).WillOnce(Return("initialValue"));
+    EXPECT_EQ(true, preferenceManager->InitializeAndLoadPreference()); 
+    std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
+}
+
+TEST_F(PreferenceManagerTests, Timer_Not_Called_When_Preference_Manager_Deleted)
+{
+    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str()) )).Times(1).WillOnce(Return(false));
+    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), initialValue )).Times(0);
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(0);
+    EXPECT_EQ(true, preferenceManager->InitializeAndLoadPreference());
+    delete preferenceManager;
+    preferenceManager = nullptr;
     std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
 }
 
 TEST_F(PreferenceManagerTests, Initialize_Existing_Key_Loaded)
 {
-    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str() ))).WillOnce(Return(true));
-    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), A<String>() )).Times(1); 
+    EXPECT_CALL(*mockPreferences, isKey( StrEq(key.c_str() ))).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue)); 
     preferenceManager->InitializeAndLoadPreference(); 
+}
+
+TEST_F(PreferenceManagerTests, Save_Preference_Saved_Correctly)
+{
+    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), testValue )).Times(1).WillOnce(Return(validTestValueLength));
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(1).WillOnce(Return(testValue));
+    EXPECT_EQ(true, preferenceManager->Update_Preference(PreferenceManager::PreferenceUpdateType::Save, testValue));
+}
+
+TEST_F(PreferenceManagerTests, Save_Preference_Save_Failure_Due_to_Save_Length_Error)
+{
+    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), testValue )).Times(1).WillOnce(Return(invalidTestValueLength));
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(0);
+    EXPECT_EQ(false, preferenceManager->Update_Preference(PreferenceManager::PreferenceUpdateType::Save, testValue));
+}
+
+TEST_F(PreferenceManagerTests, Save_Preference_Save_Failure_Due_to_Failed_String_Compare)
+{
+    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), testValue )).Times(1).WillOnce(Return(validTestValueLength));
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(1).WillOnce(Return(invalidTestValue));
+    EXPECT_EQ(false, preferenceManager->Update_Preference(PreferenceManager::PreferenceUpdateType::Save, testValue));
+}
+
+TEST_F(PreferenceManagerTests, Save_Preference_Save_Failure_Due_to_Invalid_Recalled_Value)
+{
+    EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), testValue )).Times(1).WillOnce(Return(validTestValueLength));
+    EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), initialValue )).Times(1).WillOnce(Return(invalidTestValue));
+    EXPECT_EQ(false, preferenceManager->Update_Preference(PreferenceManager::PreferenceUpdateType::Save, testValue));
 }
