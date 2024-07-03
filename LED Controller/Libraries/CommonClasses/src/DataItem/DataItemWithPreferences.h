@@ -20,6 +20,7 @@
 
 #include "DataItem/DataItem.h"
 #include "DataItem/PreferencesWrapper.h"
+#define PREFERENCE_TIMEOUT 5000UL
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
@@ -44,6 +45,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , PreferenceManager( preferencesInterface
 							   					  , this->m_Name
 							   				 	  , this->GetInitialValueAsString()
+												  , PREFERENCE_TIMEOUT
 							   				 	  , this->StaticSetValueFromString
 							   				 	  , this )
 
@@ -69,6 +71,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , PreferenceManager( preferencesInterface
 							   					  , this->m_Name
 							   				 	  , this->GetInitialValueAsString()
+												  , PREFERENCE_TIMEOUT
 							   				 	  , this->StaticSetValueFromString
 							   				 	  , this )
 		{
@@ -96,6 +99,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , PreferenceManager( preferencesInterface
 							   					  , this->m_Name
 							   				 	  , this->GetInitialValueAsString()
+												  , PREFERENCE_TIMEOUT
 							   				 	  , this->StaticSetValueFromString
 							   				 	  , this )
 		{
@@ -123,6 +127,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , PreferenceManager( preferencesInterface
 							   					  , this->m_Name
 							   				 	  , this->GetInitialValueAsString()
+												  , PREFERENCE_TIMEOUT
 							   				 	  , this->StaticSetValueFromString
 							   				 	  , this )
 		{

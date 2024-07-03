@@ -24,13 +24,14 @@
 #include "DataItem/PreferencesWrapper.h"
 #include "Mock_Preferences.h"
 
+#define TIMEOUT_TIME 500UL
 
 TEST(PreferencesWrapperInstantiation, Instantion_Destruction)
 {
     const String key = "key1";
     const String testValue = "Key 1 Value";
     MockPreferences *mockPreferences = new MockPreferences();
-    PreferenceManager *preferenceManager = new PreferenceManager(mockPreferences, key, testValue, nullptr, nullptr);
+    PreferenceManager *preferenceManager = new PreferenceManager(mockPreferences, key, testValue, TIMEOUT_TIME, nullptr, nullptr);
     delete mockPreferences;
     delete preferenceManager;
 }
@@ -53,7 +54,7 @@ class PreferenceManagerTests : public Test
         void SetUp() override
         {
             mockPreferences = new MockPreferences();
-            preferenceManager = new PreferenceManager(mockPreferences, key, initialValue, nullptr, nullptr);
+            preferenceManager = new PreferenceManager(mockPreferences, key, initialValue, TIMEOUT_TIME, nullptr, nullptr);
         }
         void TearDown() override 
         {
@@ -76,7 +77,7 @@ TEST_F(PreferenceManagerTests, Initialize_New_Key_Saved_After_TIMER_TIME_ms)
     EXPECT_CALL(*mockPreferences, putString( StrEq(key.c_str()), A<String>() )).WillOnce(Return(strlen(key.c_str())));
     EXPECT_CALL(*mockPreferences, getString( StrEq(key.c_str()), A<String>() )).Times(1);
     preferenceManager->InitializeAndLoadPreference();
-    std::this_thread::sleep_for(std::chrono::milliseconds(TIMER_TIME + 50));
+    std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
 }
 
 TEST_F(PreferenceManagerTests, Initialize_Existing_Key_Loaded)

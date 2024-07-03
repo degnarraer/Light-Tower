@@ -22,6 +22,7 @@
 #include "DataItem/LocalStringDataItem.h"
 #include "DataItem/StringDataItem.h"
 #include "DataItem/PreferencesWrapper.h"
+#define PREFERENCE_TIMEOUT 5000UL
 
 class LocalStringDataItemWithPreferences: public LocalStringDataItem
 							 			, public PreferenceManager
@@ -36,6 +37,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 										  , PreferenceManager( preferencesInterface
 											  				 , this->m_Name
 											  				 , this->GetInitialValueAsString()
+												  			 , PREFERENCE_TIMEOUT
 											  				 , this->StaticSetValueFromString
 											  				 , this )
 		{
@@ -99,6 +101,7 @@ class StringDataItemWithPreferences: public StringDataItem
 									 , PreferenceManager( preferencesInterface
 									 					, this->m_Name
 									 					, this->GetInitialValueAsString()
+														, PREFERENCE_TIMEOUT
 									 					, this->StaticSetValueFromString
 									 					, this )
 		{	

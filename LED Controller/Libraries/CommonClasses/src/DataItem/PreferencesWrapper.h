@@ -2,8 +2,6 @@
 #include "DataTypes.h"
 #include "Preferences.h"
 
-#define TIMER_TIME 1000UL
-
 class IPreferences
 {
     public:
@@ -327,11 +325,13 @@ public:
     PreferenceManager( IPreferences* preferencesInterface
                      , const String &key
                      , const String &initialValue
+                     , const unsigned long timeoutTime
                      , LoadedValueCallback_t callback
                      , void* object)
                      : mp_PreferencesInterface(preferencesInterface)
                      , m_Key(key)
                      , m_InitialValue(initialValue)
+                     , m_TimeoutTime(timeoutTime)
                      , m_Callback(callback)
                      , mp_Object(object)
     {
@@ -486,7 +486,7 @@ private:
                     mp_PreferenceTimerCreateArgs = nullptr;
                     return;
                 }
-                unsigned long delayTime = (TIMER_TIME - elapsedTime) * 1000;
+                unsigned long delayTime = (m_TimeoutTime - elapsedTime) * 1000;
                 esp_err_t timerStartErr = esp_timer_start_once(m_PreferenceTimer, delayTime);
                 if (timerStartErr != ESP_OK)
                 {
@@ -564,7 +564,7 @@ private:
             {
                 elapsedTime = (ULONG_MAX - m_Preferences_Last_Update + 1) + currentMillis;
             }
-            if (elapsedTime <= TIMER_TIME)
+            if (elapsedTime <= m_TimeoutTime)
             {
                 ESP_LOGD("HandleSave", "\"%s\": Too early to save preference", m_Key.c_str());
                 if (!m_PreferenceTimerActive)
@@ -603,6 +603,7 @@ private:
     IPreferences* mp_PreferencesInterface = nullptr;
     const String m_Key;
     const String m_InitialValue;
+    const unsigned long m_TimeoutTime;
     LoadedValueCallback_t m_Callback;
     void* mp_Object;
     PreferenceManagerTimerArgs* mp_TimerArgs = nullptr;
