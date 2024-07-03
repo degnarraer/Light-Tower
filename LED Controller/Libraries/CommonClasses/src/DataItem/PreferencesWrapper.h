@@ -550,6 +550,7 @@ private:
             else
             {
                 ESP_LOGE("HandleLoad", "\"%s\" Null Callback Pointers!", m_Key.c_str());
+                result = true;
             }
         }
         else
