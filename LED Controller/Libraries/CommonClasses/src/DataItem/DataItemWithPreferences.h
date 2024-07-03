@@ -23,7 +23,7 @@
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
-							 , public PreferencesManager
+							 , public PreferenceManager
 {
 	public:
 		DataItemWithPreferences( const String name
@@ -31,7 +31,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferenceInterface
+							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback )
 							   : DataItem<T, COUNT>( name
@@ -41,17 +41,20 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback )
-							   , PreferencesManager(preferenceInterface)
+							   , PreferenceManager( preferencesInterface
+							   					  , this->m_Name
+							   				 	  , this->GetInitialValueAsString()
+							   				 	  , this->StaticSetValueFromString
+							   				 	  , this )
 
 		{
-		}
-							   
+		}		   
 		DataItemWithPreferences( const String name
 							   , const T& initialValue
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferenceInterface
+							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface )
@@ -63,7 +66,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , serialPortMessageManager
 												   , namedCallback
 												   , setupCallerInterface )
-							   , PreferencesManager(preferenceInterface)
+							   , PreferenceManager( preferencesInterface
+							   					  , this->m_Name
+							   				 	  , this->GetInitialValueAsString()
+							   				 	  , this->StaticSetValueFromString
+							   				 	  , this )
 		{
 		}
 
@@ -72,7 +79,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferenceInterface
+							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface
@@ -86,7 +93,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , namedCallback
 												   , validStringValues
 												   , setupCallerInterface )
-							   , PreferencesManager(preferenceInterface)
+							   , PreferenceManager( preferencesInterface
+							   					  , this->m_Name
+							   				 	  , this->GetInitialValueAsString()
+							   				 	  , this->StaticSetValueFromString
+							   				 	  , this )
 		{
 		}
 							   
@@ -95,7 +106,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , const RxTxType_t rxTxType
 							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
-							   , IPreferences *preferenceInterface
+							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
 							   , NamedCallback_t *namedCallback
 							   , SetupCallerInterface *setupCallerInterface
@@ -109,7 +120,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , namedCallback
 												   , setupCallerInterface
 												   , validStringValues )
-							   , PreferencesManager(preferenceInterface)
+							   , PreferenceManager( preferencesInterface
+							   					  , this->m_Name
+							   				 	  , this->GetInitialValueAsString()
+							   				 	  , this->StaticSetValueFromString
+							   				 	  , this )
 		{
 		}
 
@@ -121,11 +136,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		void Setup()
 		{
 			DataItem<T, COUNT>::Setup();
-			this->InitializeAndLoadPreference( this->m_Name
-							   				 , this->GetInitialValueAsString()
-							   				 , this->StaticSetValueFromString
-							   				 , this );
-			this->CreatePreferencesTimer(this->m_Name, this->GetValueAsString(), this->GetInitialValueAsString());
+			this->InitializeAndLoadPreference();
 		}
 	protected:
 
@@ -134,12 +145,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference( PreferencesManager::PreferenceUpdateType::Save
-									   , this->m_Name
-									   , this->GetValueAsString()
-									   , this->GetInitialValueAsString()
-									   , this->StaticSetValueFromString
-									   , this );
+				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+									   , this->GetValueAsString() );
 			}
 			return result;
 		}
@@ -149,12 +156,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference( PreferencesManager::PreferenceUpdateType::Save
-									   , this->m_Name
-									   , this->GetValueAsString()
-									   , this->GetInitialValueAsString()
-									   , this->StaticSetValueFromString
-									   , this );
+				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+									   , this->GetValueAsString() );
 			}
 			return result;
 		}

@@ -24,7 +24,7 @@
 #include "DataItem/PreferencesWrapper.h"
 
 class LocalStringDataItemWithPreferences: public LocalStringDataItem
-							 			, public PreferencesManager
+							 			, public PreferenceManager
 {
 	public:
 		LocalStringDataItemWithPreferences( const String name
@@ -33,7 +33,11 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 					 	   				  , NamedCallback_t *namedCallback
 						   				  , SetupCallerInterface *setupCallerInterface )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
-						   				  , PreferencesManager(preferencesInterface)
+										  , PreferenceManager( preferencesInterface
+											  				 , this->m_Name
+											  				 , this->GetInitialValueAsString()
+											  				 , this->StaticSetValueFromString
+											  				 , this )
 		{
 			setupCallerInterface->RegisterForSetupCall(this);
 		}
@@ -46,10 +50,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual void Setup() override
 		{
 			LocalStringDataItem::Setup();
-			PreferencesManager::InitializeAndLoadPreference( m_Name
-														   , GetInitialValueAsString()
-														   , this->StaticSetValueFromString
-														   , this );
+			PreferenceManager::InitializeAndLoadPreference();
 		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
@@ -67,19 +68,15 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			bool result = LocalStringDataItem::SetValue(value, count);
 			if(result)
 			{
-				this->Update_Preference( PreferencesManager::PreferenceUpdateType::Save
-									   , m_Name
-									   , GetValueAsString()
-									   , GetInitialValueAsString()
-									   , this->StaticSetValueFromString
-									   , this );
+				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+									   , GetValueAsString() );
 			}
 			return result;
 		}
 };
 
 class StringDataItemWithPreferences: public StringDataItem
-								   , public PreferencesManager
+								   , public PreferenceManager
 {
 	public:
 		StringDataItemWithPreferences( const String name
@@ -99,7 +96,11 @@ class StringDataItemWithPreferences: public StringDataItem
 													 , serialPortMessageManager
 													 , namedCallback
 													 , setupCallerInterface )
-									 , PreferencesManager(preferencesInterface)
+									 , PreferenceManager( preferencesInterface
+									 					, this->m_Name
+									 					, this->GetInitialValueAsString()
+									 					, this->StaticSetValueFromString
+									 					, this )
 		{	
 		}
 		
@@ -111,10 +112,7 @@ class StringDataItemWithPreferences: public StringDataItem
 		void Setup()
 		{
 			StringDataItem::Setup();
-			PreferencesManager::InitializeAndLoadPreference( m_Name
-														   , GetInitialValueAsString()
-														   , this->StaticSetValueFromString
-														   , this );
+			PreferenceManager::InitializeAndLoadPreference();
 		}
 
 		bool DataItem_TX_Now()
@@ -123,11 +121,7 @@ class StringDataItemWithPreferences: public StringDataItem
 			if(result)
 			{
 				this->Update_Preference( PreferenceUpdateType::Save
-									   , m_Name
-									   , GetValueAsString()
-									   , GetInitialValueAsString()
-									   , this->StaticSetValueFromString
-									   , this );
+									   , GetValueAsString() );
 			}
 			return result;
 		}
@@ -138,11 +132,7 @@ class StringDataItemWithPreferences: public StringDataItem
 			if(result) 
 			{
 				this->Update_Preference( PreferenceUpdateType::Save
-									   , m_Name
-									   , GetValueAsString()
-									   , GetInitialValueAsString()
-									   , this->StaticSetValueFromString
-									   , this );
+									   , GetValueAsString() );
 			}
 			return result;
 		}
