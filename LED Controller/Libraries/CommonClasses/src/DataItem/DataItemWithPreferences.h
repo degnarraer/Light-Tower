@@ -24,7 +24,6 @@
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
-							 , public PreferenceManager
 {
 	public:
 		DataItemWithPreferences( const String name
@@ -42,13 +41,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback )
-							   , PreferenceManager( preferencesInterface
-							   					  , this->m_Name
-							   				 	  , this->GetInitialValueAsString()
-												  , PREFERENCE_TIMEOUT
-							   				 	  , this->StaticSetValueFromString
-							   				 	  , this )
-
+							   , mp_preferencesInterface(preferencesInterface)
+							   , mp_PreferenceManager(nullptr)
 		{
 		}		   
 		DataItemWithPreferences( const String name
@@ -68,12 +62,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , serialPortMessageManager
 												   , namedCallback
 												   , setupCallerInterface )
-							   , PreferenceManager( preferencesInterface
-							   					  , this->m_Name
-							   				 	  , this->GetInitialValueAsString()
-												  , PREFERENCE_TIMEOUT
-							   				 	  , this->StaticSetValueFromString
-							   				 	  , this )
+							   , mp_preferencesInterface(preferencesInterface)
+							   , mp_PreferenceManager(nullptr)
 		{
 		}
 
@@ -96,12 +86,8 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   					   , namedCallback
 												   , validStringValues
 												   , setupCallerInterface )
-							   , PreferenceManager( preferencesInterface
-							   					  , this->m_Name
-							   				 	  , this->GetInitialValueAsString()
-												  , PREFERENCE_TIMEOUT
-							   				 	  , this->StaticSetValueFromString
-							   				 	  , this )
+							   , mp_preferencesInterface(preferencesInterface)
+							   , mp_PreferenceManager(nullptr)
 		{
 		}
 							   
@@ -124,24 +110,31 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 												   , namedCallback
 												   , setupCallerInterface
 												   , validStringValues )
-							   , PreferenceManager( preferencesInterface
-							   					  , this->m_Name
-							   				 	  , this->GetInitialValueAsString()
-												  , PREFERENCE_TIMEOUT
-							   				 	  , this->StaticSetValueFromString
-							   				 	  , this )
+							   , mp_preferencesInterface(preferencesInterface)
+							   , mp_PreferenceManager(nullptr)
 		{
 		}
 
 		virtual ~DataItemWithPreferences()
 		{
 			ESP_LOGI("DataItemWithPreferences::~DataItemWithPreferences()", "\"%s\": Freeing Memory", this->m_Name.c_str());
+			if(mp_PreferenceManager)
+			{
+				delete mp_PreferenceManager;
+				mp_PreferenceManager = nullptr;
+			}
 		}
 
 		void Setup()
 		{
 			DataItem<T, COUNT>::Setup();
-			this->InitializeAndLoadPreference();
+			mp_PreferenceManager = new PreferenceManager( mp_preferencesInterface
+							   					  		, this->m_Name
+							   				 	  		, this->GetInitialValueAsString()
+												  		, PREFERENCE_TIMEOUT
+							   				 	  		, this->StaticSetValueFromString
+							   				 	  		, this );
+			mp_PreferenceManager->InitializeAndLoadPreference();
 		}
 	protected:
 
@@ -150,7 +143,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
 			if(result)
 			{
-				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   , this->GetValueAsString() );
 			}
 			return result;
@@ -161,9 +154,12 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
 			if(result)
 			{
-				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   , this->GetValueAsString() );
 			}
 			return result;
 		}
+	private:
+		IPreferences *mp_preferencesInterface = nullptr;
+		PreferenceManager *mp_PreferenceManager = nullptr;
 };

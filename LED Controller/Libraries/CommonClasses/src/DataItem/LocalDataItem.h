@@ -240,15 +240,26 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool GetInitialValueAsString(String &stringValue) const
 		{
-			if(mp_InitialValue)
+			stringValue = "";
+			if (mp_InitialValue && COUNT > 0)
 			{
-				stringValue = StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue);
+				std::vector<String> valueStrings;
+				for (size_t i = 0; i < COUNT; ++i)
+				{
+					valueStrings.push_back(StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue));
+				}
+				
+				for (size_t i = 0; i < COUNT - 1; ++i)
+				{
+					stringValue += valueStrings[i];
+					stringValue += ENCODE_DIVIDER;
+				}
+				stringValue += valueStrings[COUNT - 1];
 				return true;
 			}
 			else
 			{
-				stringValue = "";
-				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetInitialValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
 				return false;
 			}
 		}
