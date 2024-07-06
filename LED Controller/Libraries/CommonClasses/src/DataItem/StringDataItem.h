@@ -117,19 +117,11 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		{
 			assert(value != nullptr);
 			assert(mp_Value != nullptr);
-			String newValue = String(value);
-			String currentValue = String(mp_TxValue);
-			assert(newValue.length() <= count);
-			bool valueChanged = !newValue.equals(currentValue);
+			assert(count <= DATAITEM_STRING_LENGTH);
+			bool valueChanged = LocalDataItem<char, DATAITEM_STRING_LENGTH>::SetValue(value, DATAITEM_STRING_LENGTH);
 			if(valueChanged)
-			{	
-				ESP_LOGD( "DataItem: SetValue"
-						, "\"%s\" Set Value: \"%s\""
-						, m_Name.c_str()
-						, newValue.c_str() );
-				this->ZeroOutCharArray(mp_TxValue);
-				strcpy(mp_TxValue, value);
-				this->DataItem_Try_TX_On_Change();
+			{
+				DataItem_Try_TX_On_Change();
 			}
 			return valueChanged;
 		}

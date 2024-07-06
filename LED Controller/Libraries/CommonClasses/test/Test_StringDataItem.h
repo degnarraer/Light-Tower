@@ -263,7 +263,7 @@ TEST_F(StringDataItemTest, StringDataItem_Set_Value_From_Char_Pointer_Converts_T
 
 TEST_F(StringDataItemTest, Change_Count_Changes_Properly)
 {
-    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_));
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(2);
     EXPECT_EQ(0, mp_DataItem->GetChangeCount());
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());

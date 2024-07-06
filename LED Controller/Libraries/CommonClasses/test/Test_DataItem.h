@@ -514,3 +514,45 @@ TEST_F(DataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Valid
     mp_DataItem->SetValue(validValue30);
     EXPECT_EQ(3, mp_DataItem->GetChangeCount());
 }
+
+TEST_F(DataItemGetAndSetValueTestsInt1, Callback_Only_Called_For_New_Valid_Values_When_Validation_Used)
+{
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);
+    mp_DataItem->SetValue(invalidValue);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue30);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+}
+
+TEST_F(DataItemGetAndSetValueTestsInt1, Callback_Only_Called_For_New_Values_When_Validation_Not_Used)
+{
+    CreateDataItem(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(invalidValue);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue30);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+}
