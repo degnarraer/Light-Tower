@@ -23,7 +23,7 @@
 #include <chrono>
 #include "DataItem/PreferencesWrapper.h"
 #include "Mock_Preferences.h"
-#include "Mock_PreferenceCallback.h"
+#include "Mock_Callbacks.h"
 
 #define TIMEOUT_TIME 100UL
 

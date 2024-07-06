@@ -861,35 +861,36 @@ struct NamedObject_t
 
 struct NamedCallback_t
 {
-    String Name;
-    void (*Callback)(const String& name, void* callback, void* arg);
-    void* Arg;
-	NamedCallback_t(){}
-    NamedCallback_t(String name, void (*callback)(const String& name, void* callback, void* arg), void* arg = nullptr)
-        : Name(name), Callback(callback), Arg(arg)
-    {
-    }
+    public:
+        String Name;
+        void (*Callback)(const String& name, void* callback, void* arg);
+        void* Arg;
+        NamedCallback_t(){}
+        NamedCallback_t(String name, void (*callback)(const String& name, void* callback, void* arg), void* arg = nullptr)
+            : Name(name), Callback(callback), Arg(arg)
+        {
+        }
 
-    NamedCallback_t(const NamedCallback_t& other)
-        : Name(other.Name), Callback(other.Callback), Arg(other.Arg)
-    {
-    }
+        NamedCallback_t(const NamedCallback_t& other)
+            : Name(other.Name), Callback(other.Callback), Arg(other.Arg)
+        {
+        }
 
-    bool operator==(const NamedCallback_t& other) const
-    {
-        return this->Name.equals(other.Name) && this->Callback == other.Callback && this->Arg == other.Arg;
-    }
+        bool operator==(const NamedCallback_t& other) const
+        {
+            return this->Name.equals(other.Name) && this->Callback == other.Callback && this->Arg == other.Arg;
+        }
 
-    NamedCallback_t& operator=(const NamedCallback_t& other)
-    {
-        if (this != &other)
-		{
-			Name = other.Name;
-			Callback = other.Callback;
-			Arg = other.Arg;
-		}
-		return *this;
-    }
+        NamedCallback_t& operator=(const NamedCallback_t& other)
+        {
+            if (this != &other)
+            {
+                Name = other.Name;
+                Callback = other.Callback;
+                Arg = other.Arg;
+            }
+            return *this;
+        }
 };
 
 struct DataItem_t

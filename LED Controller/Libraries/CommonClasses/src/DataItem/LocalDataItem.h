@@ -352,9 +352,9 @@ LocalDataItem: public NamedCallbackInterface<T>
 			// Check if the number of substrings matches the expected COUNT
 			if (substrings.size() != COUNT) 
 			{
-				ESP_LOGE("SetValueFromString",
-						"Expected %zu substrings but got %zu in string: \"%s\"",
-						COUNT, substrings.size(), stringValue.c_str());
+				ESP_LOGE( "SetValueFromString",
+						  "Expected %zu substrings but got %zu in string: \"%s\"",
+						  COUNT, substrings.size(), stringValue.c_str());
 				return false;
 			}
 

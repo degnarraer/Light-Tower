@@ -19,6 +19,7 @@
 #pragma once
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include "DataTypes.h"
 
 class MockPreferenceCallback
 {
@@ -32,5 +33,33 @@ class PreferenceCallback
         static bool CallbackFunction(const String& str, void* object)
         {
             return mockPreferenceCallback.CallbackFunction(str, object);  
+        }
+};
+
+class MockNamedCallback_Callback
+{
+    public:
+        MOCK_METHOD(void, CallbackFunction, (const String& name, void* callback, void* arg));
+};
+static MockNamedCallback_Callback mockNamedCallback_Callback;
+class MockNamedCallback: public NamedCallback_t
+{
+    protected:
+        static void CallbackFunction(const String& name, void* callback, void* arg)
+        {
+            mockNamedCallback_Callback.CallbackFunction(name, callback, arg);  
+        }
+    public:
+        MockNamedCallback(): NamedCallback_t("", CallbackFunction, nullptr)
+        {
+            ESP_LOGD("MockNamedCallback", "MockNamedCallback Default Constructor called");
+        }
+        MockNamedCallback(const String& name, void* arg): NamedCallback_t(name, CallbackFunction, arg)
+        {
+            ESP_LOGD("MockNamedCallback", "MockNamedCallback Constructor1 called. Name: \"%s\"", name);
+        }
+        virtual ~MockNamedCallback()
+        {
+            ESP_LOGD("MockNamedCallback", "~MockNamedCallback Name: \"%s\"", Name.c_str()); 
         }
 };

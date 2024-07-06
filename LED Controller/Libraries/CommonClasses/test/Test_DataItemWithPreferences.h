@@ -27,7 +27,7 @@
 #include "Mock_ValidValueChecker.h"
 #include "Mock_SerialMessageManager.h"
 #include "Mock_Preferences.h"
-#include "Mock_PreferenceCallback.h"
+#include "Mock_Callbacks.h"
 
 using ::testing::_;
 using ::testing::NotNull;
@@ -43,6 +43,7 @@ class DataItemWithPreferencesFunctionCallTests : public Test
         const String name = "Test Name";
         NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
         NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
+        MockNamedCallback *mp_mockNamedCallback;
         MockHardwareSerial m_MockHardwareSerial;
         MockDataSerializer m_MockDataSerializer;
         MockPreferences *mp_mockPreferences;
@@ -54,11 +55,14 @@ class DataItemWithPreferencesFunctionCallTests : public Test
         {}
         void SetUp() override
         {
+            ESP_LOGD("SetUp", "Setting Up");
             mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
             mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
             mp_mockPreferences = new MockPreferences();
+            mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
             ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
+            ESP_LOGD("SetUp", "SetUp Complete");
         }
         void CreateDataItemWithPreferences(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
         {
@@ -70,14 +74,25 @@ class DataItemWithPreferencesFunctionCallTests : public Test
                                                                                 , rate
                                                                                 , mp_mockPreferences
                                                                                 , mp_MockSerialPortMessageManager
-                                                                                , nullptr
+                                                                                , mp_mockNamedCallback
                                                                                 , mp_MockSetupCaller );
             EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItemWithPreferences)).Times(1);
             mp_DataItemWithPreferences->Setup();
         }
         void TearDown() override
         {
+            ESP_LOGD("TearDown", "Tearing Down");
             DestroyDataItemWithPreferences();
+            if (mp_mockNamedCallback)
+            {
+                delete mp_mockNamedCallback;
+                mp_mockNamedCallback = nullptr;
+            }
+            if (mp_mockPreferences)
+            {
+                delete mp_mockPreferences;
+                mp_mockPreferences = nullptr;
+            }
             if (mp_MockSerialPortMessageManager)
             {
                 delete mp_MockSerialPortMessageManager;
@@ -88,11 +103,7 @@ class DataItemWithPreferencesFunctionCallTests : public Test
                 delete mp_MockSetupCaller;
                 mp_MockSetupCaller = nullptr;
             }
-            if (mp_mockPreferences)
-            {
-                delete mp_mockPreferences;
-                mp_mockPreferences = nullptr;
-            }
+            ESP_LOGD("TearDown", "TearDown Complete");
         }
         void DestroyDataItemWithPreferences()
         {
@@ -145,6 +156,7 @@ class DataItemWithPreferencesRxTxTests : public Test
         MockHardwareSerial m_MockHardwareSerial;
         MockDataSerializer m_MockDataSerializer;
         NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
+        MockNamedCallback *mp_mockNamedCallback;
         MockPreferences *mp_mockPreferences;
         DataItemWithPreferences<int32_t, 1> *mp_DataItemWithPreferences;
         DataItemWithPreferencesRxTxTests()
@@ -161,15 +173,16 @@ class DataItemWithPreferencesRxTxTests : public Test
 
         void CreateDataItemWithPreferences(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
         {
+            mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
             mp_DataItemWithPreferences = new DataItemWithPreferences<int32_t, 1>( name 
-                                                , initialValue
-                                                , rxTxType
-                                                , updateStoreType
-                                                , rate
-                                                , mp_mockPreferences
-                                                , mp_MockSerialPortMessageManager
-                                                , nullptr
-                                                , this );
+                                                                                , initialValue
+                                                                                , rxTxType
+                                                                                , updateStoreType
+                                                                                , rate
+                                                                                , mp_mockPreferences
+                                                                                , mp_MockSerialPortMessageManager
+                                                                                , mp_mockNamedCallback
+                                                                                , this );
             SetupAllSetupCallees();
         }
 
@@ -185,15 +198,20 @@ class DataItemWithPreferencesRxTxTests : public Test
         void TearDown() override
         {
             DestroyDataItemWithPreferences();
-            if (mp_MockSerialPortMessageManager)
+            if (mp_mockNamedCallback)
             {
-                delete mp_MockSerialPortMessageManager;
-                mp_MockSerialPortMessageManager = nullptr;
+                delete mp_mockNamedCallback;
+                mp_mockNamedCallback = nullptr;
             }
             if (mp_mockPreferences)
             {
                 delete mp_mockPreferences;
                 mp_mockPreferences = nullptr;
+            }
+            if (mp_MockSerialPortMessageManager)
+            {
+                delete mp_MockSerialPortMessageManager;
+                mp_MockSerialPortMessageManager = nullptr;
             }
         }
 };
@@ -232,6 +250,7 @@ protected:
     MockDataSerializer m_MockDataSerializer;
     MockPreferences *mp_mockPreferences;
     NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
+    MockNamedCallback *mp_mockNamedCallback;
     DataItemWithPreferences<T, COUNT> *mp_DataItemWithPreferences;
     const String spmm = "Serial Port Message Manager";
     const String name1 = "Test Name1";
@@ -248,7 +267,8 @@ protected:
 
     void CreateDataItemWithPreferences( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        mp_DataItemWithPreferences = new DataItemWithPreferences<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, mp_mockPreferences, mp_MockSerialPortMessageManager, nullptr, this, validStringValues);
+        mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
+        mp_DataItemWithPreferences = new DataItemWithPreferences<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, mp_mockPreferences, mp_MockSerialPortMessageManager, mp_mockNamedCallback, this, validStringValues);
         SetupAllSetupCallees();
     }
 
@@ -259,34 +279,41 @@ protected:
             delete mp_DataItemWithPreferences;
             mp_DataItemWithPreferences = nullptr;
         }
+        if (mp_mockNamedCallback)
+        {
+            delete mp_mockNamedCallback;
+            mp_mockNamedCallback = nullptr;
+        }
     }
 
     void TearDown() override
     {
         DestroyDataItemWithPreferences();
-        if (mp_MockSerialPortMessageManager)
-        {
-            delete mp_MockSerialPortMessageManager;
-            mp_MockSerialPortMessageManager = nullptr;
-        }
         if (mp_mockPreferences)
         {
             delete mp_mockPreferences;
             mp_mockPreferences = nullptr;
         }
+        if (mp_MockSerialPortMessageManager)
+        {
+            delete mp_MockSerialPortMessageManager;
+            mp_MockSerialPortMessageManager = nullptr;
+        }
     }
 
-    void TestNameIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestNameIsSet( const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        CreateDataItemWithPreferences(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        EXPECT_STREQ(name1.c_str(), mp_DataItemWithPreferences->GetName().c_str());
+        EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        CreateDataItemWithPreferences(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        EXPECT_STREQ(name.c_str(), mp_DataItemWithPreferences->GetName().c_str());
     }
 
     void TestInitialValueIsSet( const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
         EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
-        CreateDataItemWithPreferences(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        CreateDataItemWithPreferences(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         for(size_t i = 0; i < mp_DataItemWithPreferences->GetCount(); ++i)
         {
             EXPECT_EQ(initialValue, mp_DataItemWithPreferences->GetValuePointer()[i]);
@@ -295,19 +322,25 @@ protected:
 
     void TestInitialValueReturnedAsString( const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        CreateDataItemWithPreferences(name1, validValue10, rxTxType, updateStoreType, rate, validStringValues);
+        EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        CreateDataItemWithPreferences(name, validValue10, rxTxType, updateStoreType, rate, validStringValues);
         EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithPreferences->GetInitialValueAsString().c_str());
     }
 
-    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const String resultString, const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const String resultString, const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
-        CreateDataItemWithPreferences(name1, initialValue, rxTxType, updateStoreType, rate, validStringValues);
+        EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        CreateDataItemWithPreferences(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         mp_DataItemWithPreferences->SetValue(testValue, COUNT);
         EXPECT_STREQ(resultString.c_str(), mp_DataItemWithPreferences->GetValueAsString().c_str());
     }
 
-    void TestSetValueFromStringConvertsToValue( const String testString, const int32_t* resultValue, const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestSetValueFromStringConvertsToValue( const String testString, const int32_t* resultValue, const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
+        EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         mp_DataItemWithPreferences->SetValueFromString(testString);
         for(size_t i = 0; i < COUNT; ++i)
@@ -316,9 +349,11 @@ protected:
         }
     }
 
-    void TestSettingValue(const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectEqual)
+    void TestSettingValue(const String name, const int32_t initialValue, String initialValueString, const int32_t* testValue, const String testValueString, bool expectEqual)
     {
-        CreateDataItemWithPreferences(name1, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+        EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        CreateDataItemWithPreferences(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
         mp_DataItemWithPreferences->SetValue(testValue, COUNT);
         for(size_t i = 0; i < COUNT; ++i)
         {
@@ -355,20 +390,20 @@ using DataItemWithPreferencesGetAndSetValueTestsInt10 = DataItemWithPreferencesG
 // ************ Name is set ******************
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Name_Is_Set)
 {
-    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Name_Is_Set)
 {
-    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferencesWithValidation_Name_Is_Set)
 {
-    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestNameIsSet(name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArrayWithValidation_Name_Is_Set)
 {
-    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestNameIsSet(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
 
@@ -411,55 +446,55 @@ TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesA
 // ************ Set Value From Value Converts To String ******************
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferencesWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArrayWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
 
 // ************ Set Value From String Converts To Value ******************
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferencesWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArrayWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
 }
 
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Set_Valid_Values_When_Validation_Is_Used)
 {
-    TestSettingValue(validValue10, &validValue20, validValue20String, true);
+    TestSettingValue(name1, validValue10, validValue10String, &validValue20, validValue20String, true);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Reject_Invalid_Value_When_Validation_Is_Used)
 {
-    TestSettingValue(validValue10, &invalidValue, invalidValueString, false);
+    TestSettingValue(name1, validValue10, validValue10String, &invalidValue, invalidValueString, false);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Set_Valid_Array_Values_When_Validation_Is_Used)
 {
-    TestSettingValue(validValue10, validValue20Array, validValue20ArrayString, true);
+    TestSettingValue(name1, validValue10, validValue10ArrayString, validValue20Array, validValue20ArrayString, true);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Reject_Invalid_Array_Values_When_Validation_Is_Used)
 {
-    TestSettingValue(validValue10, invalidValueArray, invalidValueArrayString, false);
+    TestSettingValue(name1, validValue10, validValue10ArrayString, invalidValueArray, invalidValueArrayString, false);
 }
 
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Used)

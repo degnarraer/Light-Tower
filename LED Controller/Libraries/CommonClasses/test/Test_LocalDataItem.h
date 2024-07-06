@@ -20,69 +20,95 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <thread>
+#include <chrono>
 #include "DataItem/LocalDataItem.h"
 #include "Mock_SetupCallInterface.h"
 #include "Mock_ValidValueChecker.h"
+#include "Mock_SerialMessageManager.h"
+#include "Mock_Callbacks.h"
 
 using ::testing::_;
 using ::testing::NotNull;
+using ::testing::NiceMock;
 using namespace testing;
 
-// Test Fixture for LocalDataItemSetupCallerTest
-class LocalDataItemSetupCallerTest : public Test
+// Test Fixture for DataItemFunctionCallTests
+class LocalDataItemFunctionCallTests : public Test
 {
-protected:
-    NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
-    const int32_t initialValue = 10;
-
-    void SetUp() override
-    {
-        mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
-    }
-
-    void TearDown() override
-    {
-        delete mp_MockSetupCaller;
-    }
+    protected:
+        const int32_t initialValue = 10;
+        const String spmm = "Serial Port Message Manager";
+        const String name = "Test Name";
+        NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
+        LocalDataItem<int32_t, 1> *mp_DataItem;
+        LocalDataItemFunctionCallTests(): mp_MockSetupCaller(nullptr), mp_DataItem(nullptr)
+        {}
+        void SetUp() override
+        {
+            mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
+        }
+        void CreateDataItem()
+        {
+            EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
+            mp_DataItem = new LocalDataItem<int32_t, 1>( name 
+                                                       , initialValue
+                                                       , nullptr
+                                                       , mp_MockSetupCaller );
+            mp_DataItem->Setup();
+            ::testing::Mock::VerifyAndClear(&mp_MockSetupCaller);
+        }
+        void TearDown() override
+        {
+            DestroyDataItem();
+            if (mp_MockSetupCaller)
+            {
+                delete mp_MockSetupCaller;
+                mp_MockSetupCaller = nullptr;
+            }
+        }
+        void DestroyDataItem()
+        {
+            if(mp_DataItem)
+            {
+                EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(mp_DataItem)).Times(1);
+                delete mp_DataItem;
+                mp_DataItem = nullptr;
+                ::testing::Mock::VerifyAndClear(&mp_MockSetupCaller);
+            }
+        }
 };
 
-TEST_F(LocalDataItemSetupCallerTest, Registered_With_Setup_Caller)
+TEST_F(LocalDataItemFunctionCallTests, Registration_With_Setup_Caller)
 {
-    EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
-    LocalDataItem<int32_t, 1> *mp_DataItem = new LocalDataItem<int32_t, 1>( "Test Name" 
-                                                                       , initialValue
-                                                                       , NULL
-                                                                       , mp_MockSetupCaller );
-    EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull()));
-    delete mp_DataItem;
+    CreateDataItem();
+    DestroyDataItem();
 }
 
-// Test Fixture for LocalDataItemTest
-class LocalDataItemTest: public Test
-                       , public SetupCallerInterface
+// Test Fixture for DataItemGetAndSetValueTests
+template <typename T, size_t COUNT>
+class LocalDataItemGetAndSetValueTests : public Test, public SetupCallerInterface
 {
 protected:
     const ValidStringValues_t validValues = { "10", "20", "30" };
-    const int32_t initialValue = 10;
-    const int32_t validValue1 = 20;
-    const int32_t validValue2 = 30;
+    const int32_t validValue10 = 10;
+    const int32_t validValue20 = 20;
+    const int32_t validValue30 = 30;
     const int32_t invalidValue = 40;
-    const String initialValueString = String(initialValue);
-    const String validValue1String = String(validValue1);
-    const String validValue2String = String(validValue2);
+    const String validValue10String = String(validValue10);
+    const String validValue20String = String(validValue20);
+    const String validValue30String = String(validValue30);
     const String invalidValueString = String(invalidValue);
-    const int32_t initialValueArray[10] = {10,10,10,10,10,10,10,10,10,10};
-    const int32_t validValue1Array[10] = {20,20,20,20,20,20,20,20,20,20};
-    const int32_t validValue2Array[10] = {30,30,30,30,30,30,30,30,30,30};
+    const int32_t validValue10Array[10] = {10,10,10,10,10,10,10,10,10,10};
+    const int32_t validValue20Array[10] = {20,20,20,20,20,20,20,20,20,20};
+    const int32_t validValue30Array[10] = {30,30,30,30,30,30,30,30,30,30};
     const int32_t invalidValueArray[10] = {40,40,40,40,40,40,40,40,40,40};
-    const String initialValueArrayString = "10|10|10|10|10|10|10|10|10|10";
-    const String validValue1ArrayString = "20|20|20|20|20|20|20|20|20|20";
-    const String validValue2ArrayString = "30|30|30|30|30|30|30|30|30|30";
+    const String validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
+    const String validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
+    const String validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
     const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
-    LocalDataItem<int32_t, 1> *mp_DataItem;
-    LocalDataItem<int32_t, 10> *mp_DataItemArray;
-    LocalDataItem<int32_t, 1> *mp_DataItemWithValidation;
-    LocalDataItem<int32_t, 10> *mp_DataItemArrayWithValidation;
+    MockNamedCallback *mp_mockNamedCallback;
+    LocalDataItem<T, COUNT> *mp_DataItem;
     const String name1 = "Test Name1";
     const String name2 = "Test Name2";
     const String name3 = "Test Name3";
@@ -90,226 +116,319 @@ protected:
 
     void SetUp() override
     {
-        mp_DataItem = new LocalDataItem<int32_t, 1>( name1 
-                                                   , initialValue
-                                                   , nullptr
-                                                   , this );
+    }
 
-        mp_DataItemArray = new LocalDataItem<int32_t, 10>( name2 
-                                                      , initialValue
-                                                      , nullptr
-                                                      , this );
-
-        mp_DataItemWithValidation = new LocalDataItem<int32_t, 1>( name3 
-                                                                 , initialValue
-                                                                 , nullptr
-                                                                 , this
-                                                                 , &validValues );
-
-        mp_DataItemArrayWithValidation = new LocalDataItem<int32_t, 10>( name4 
-                                                                       , initialValue
-                                                                       , nullptr
-                                                                       , this
-                                                                       , &validValues );
+    void CreateDataItem( const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    {
+        mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
+        mp_DataItem = new LocalDataItem<T, COUNT>( name, initialValue, mp_mockNamedCallback, this, validStringValues);
+        EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
         SetupAllSetupCallees();
+        ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    }
+
+    void DestroyDataItem()
+    {
+        if(mp_DataItem)
+        {
+            delete mp_DataItem;
+            mp_DataItem = nullptr;
+        }
     }
 
     void TearDown() override
     {
-        delete mp_DataItem;
-        delete mp_DataItemArray;
-        delete mp_DataItemWithValidation;
-        delete mp_DataItemArrayWithValidation;
+        DestroyDataItem();
+    }
+
+    void TestNameIsSet( const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    {
+        CreateDataItem(name1, initialValue, validStringValues);
+        EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    }
+
+    void TestInitialValueIsSet( const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    {
+        CreateDataItem(name1, initialValue, validStringValues);
+        for(size_t i = 0; i < mp_DataItem->GetCount(); ++i)
+        {
+            EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
+        }
+    }
+
+    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, String resultString, ValidStringValues_t *validStringValues )
+    {
+        CreateDataItem(name1, validValue10, validStringValues);
+        EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
+    }
+
+    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const String resultString, const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    {
+        CreateDataItem(name1, initialValue, validStringValues);
+        EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+        mp_DataItem->SetValue(testValue, COUNT);
+        EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
+    }
+
+    void TestSetValueFromStringConvertsToValue( const String testString, const int32_t* resultValue, const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    {
+        CreateDataItem(name1, initialValue, validStringValues);
+        EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+        mp_DataItem->SetValueFromString(testString);
+        for(size_t i = 0; i < COUNT; ++i)
+        {
+            EXPECT_EQ(resultValue[i], mp_DataItem->GetValuePointer()[i]);
+        }
+    }
+
+    void TestSettingValue(const int32_t initialValue, const int32_t* testValue, bool expectValueAccepted)
+    {
+        CreateDataItem(name1, initialValue, &validValues);
+        if(expectValueAccepted)
+        {
+            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+        }
+        else
+        {
+            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(0);
+        }
+        mp_DataItem->SetValue(testValue, COUNT);
+        for(size_t i = 0; i < COUNT; ++i)
+        {
+            if(expectValueAccepted)
+            {
+                EXPECT_EQ(testValue[i], mp_DataItem->GetValuePointer()[i]);
+            }
+            else
+            {
+                EXPECT_NE(testValue[i], mp_DataItem->GetValuePointer()[i]);
+                EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
+            }
+        }
+        ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    }
+    
+    void TestSettingStringValue(const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectValueAccepted)
+    {
+        CreateDataItem(name1, initialValue, &validValues);
+        if(expectValueAccepted)
+        {
+            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+        }
+        else
+        {
+            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(0);
+        }
+        mp_DataItem->SetValueFromString(testValueString);
+        for(size_t i = 0; i < COUNT; ++i)
+        {
+            if(expectValueAccepted)
+            {
+                EXPECT_EQ(testValue[i], mp_DataItem->GetValuePointer()[i]);
+            }
+            else
+            {
+                EXPECT_NE(testValue[i], mp_DataItem->GetValuePointer()[i]);
+                EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
+            }
+        }
+        ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     }
 };
 
-TEST_F(LocalDataItemTest, dataItem_Name_Is_Set)
+using LocalDataItemGetAndSetValueTestsInt1 = LocalDataItemGetAndSetValueTests<int32_t, 1>;
+using LocalDataItemGetAndSetValueTestsInt10 = LocalDataItemGetAndSetValueTests<int32_t, 10>;
+
+// ************ Name is set ******************
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Name_Is_Set)
 {
-    EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+    TestNameIsSet(name1, validValue10, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemArray_Name_Is_Set)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Name_Is_Set)
 {
-    EXPECT_STREQ(name2.c_str(), mp_DataItemArray->GetName().c_str());
+    TestNameIsSet(name1, validValue10, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemWithValidation_Name_Is_Set)
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItemWithValidation_Name_Is_Set)
 {
-    EXPECT_STREQ(name3.c_str(), mp_DataItemWithValidation->GetName().c_str());
+    TestNameIsSet(name1, validValue10, &validValues);
 }
 
-TEST_F(LocalDataItemTest, dataItem_Initial_Value_Is_Set)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Name_Is_Set)
 {
-    EXPECT_EQ(initialValue, mp_DataItem->GetValue());
-}
-TEST_F(LocalDataItemTest, dataItemArray_Initial_Value_Is_Set)
-{
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
-}
-TEST_F(LocalDataItemTest, dataItemWithValidation_Initial_Value_Is_Set)
-{
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
+    TestNameIsSet(name1, validValue10, &validValues);
 }
 
-TEST_F(LocalDataItemTest, dataItem_Initial_Value_Is_Returned_As_String)
+// ************ Initial Value is set ******************
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Initial_Value_Is_Set)
 {
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
+    TestInitialValueIsSet(name1, validValue10, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemArray_Initial_Value_Is_Returned_As_String)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Initial_Value_Is_Set)
 {
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemArray->GetInitialValueAsString().c_str());
+    TestInitialValueIsSet(name1, validValue10, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItemWithValidation_Initial_Value_Is_Set)
 {
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetInitialValueAsString().c_str());
+    TestInitialValueIsSet(name1, validValue10, &validValues);
 }
-
-TEST_F(LocalDataItemTest, dataItem_Value_Is_Returned_As_String)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Value_Is_Set)
 {
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItem->GetValueAsString().c_str());
-}
-TEST_F(LocalDataItemTest, dataItemArray_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
-}
-TEST_F(LocalDataItemTest, dataItemWithValidation_Value_Is_Returned_As_String)
-{
-    EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str());
+    TestInitialValueIsSet(name1, validValue10, &validValues);
 }
 
-TEST_F(LocalDataItemTest, dataItem_Set_Value_From_Value_Converts_To_String)
+// ************ Initial Value Returned as String ******************
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Initial_Value_Is_Returned_As_String)
 {
-    mp_DataItem->SetValue(validValue1);
-    EXPECT_STREQ(validValue1String.c_str(), mp_DataItem->GetValueAsString().c_str());
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemArray_Set_Value_From_Value_Converts_To_String)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Initial_Value_Is_Returned_As_String)
 {
-    mp_DataItemArray->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
-    EXPECT_STREQ(validValue1ArrayString.c_str(), mp_DataItemArray->GetValueAsString().c_str());
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
 {
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_STREQ(validValue1String.c_str(), mp_DataItemWithValidation->GetValueAsString().c_str()); 
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, &validValues);
 }
-
-TEST_F(LocalDataItemTest, dataItem_Set_Value_From_String_Converts_To_Value)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Value_Is_Returned_As_String)
 {
-    mp_DataItem->SetValueFromString(validValue1String);
-    EXPECT_EQ(validValue1, mp_DataItem->GetValue());
-}
-TEST_F(LocalDataItemTest, dataItemArray_Set_Value_From_String_Converts_To_Value)
-{
-    mp_DataItemArray->SetValueFromString(validValue1ArrayString);
-    for(size_t i = 0; i < mp_DataItemArray->GetCount(); ++i)
-    {
-        EXPECT_EQ(validValue1Array[i], mp_DataItemArray->GetValuePointer()[i]);
-    }
-}
-TEST_F(LocalDataItemTest, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
-{
-    mp_DataItemWithValidation->SetValueFromString(validValue1String);
-    EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue()); 
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, &validValues);
 }
 
-TEST_F(LocalDataItemTest, dataItem_Valid_Values_Accepted_When_Validation_Is_Used)
+// ************ Set Value From Value Converts To String ******************
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_Value_Converts_To_String)
 {
-    mp_DataItem->SetValue(validValue1);
-    EXPECT_EQ(validValue1, mp_DataItem->GetValue());
-
-    mp_DataItem->SetValueFromString(validValue2String);
-    EXPECT_EQ(validValue2, mp_DataItem->GetValue());
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, nullptr);
 }
-TEST_F(LocalDataItemTest, dataItemWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(validValue1, mp_DataItemWithValidation->GetValue());
-
-    mp_DataItemWithValidation->SetValueFromString(validValue2String);
-    EXPECT_EQ(validValue2, mp_DataItemWithValidation->GetValue());
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, &validValues);
 }
-TEST_F(LocalDataItemTest, dataItemArrayWithValidation_Valid_Values_Accepted_When_Validation_Is_Used)
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Set_Value_From_Value_Converts_To_String)
 {
-    mp_DataItemArrayWithValidation->SetValue(validValue1Array, sizeof(validValue1Array)/sizeof(validValue1Array[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(validValue1Array[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-
-    mp_DataItemArrayWithValidation->SetValue(validValue2Array, sizeof(validValue2Array)/sizeof(validValue2Array[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(validValue2Array[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, nullptr);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_From_Value_Converts_To_String)
+{
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, &validValues);
 }
 
-TEST_F(LocalDataItemTest, dataItem_Invalid_Values_Rejected_When_Validation_Is_Used)
+// ************ Set Value From String Converts To Value ******************
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_String_Converts_To_Value)
 {
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, nullptr);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, &validValues);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, nullptr);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_From_String_Converts_To_Value)
+{
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, &validValues);
+}
+
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Set_Valid_Values_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, &validValue20, true);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Reject_Invalid_Value_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, &invalidValue, false);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Set_Valid_Array_Values_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, validValue20Array, true);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Reject_Invalid_Array_Values_When_Validation_Is_Used)
+{
+    TestSettingValue(validValue10, invalidValueArray, false);
+}
+
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Set_Valid_String_Value_When_Validation_Is_Used)
+{
+    TestSettingStringValue(validValue10, &validValue20, validValue20String, true);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, dataItem_Reject_Invalid_String_Value_When_Validation_Is_Used)
+{
+    TestSettingStringValue(validValue10, &invalidValue, invalidValueString, false);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Set_Valid_Array_String_Value_When_Validation_Is_Used)
+{
+    TestSettingStringValue(validValue10, validValue20Array, validValue20ArrayString, true);
+}
+TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Reject_Invalid_Array_String_Value_When_Validation_Is_Used)
+{
+    TestSettingStringValue(validValue10, invalidValueArray, invalidValueArrayString, false);
+}
+
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Used)
+{
+    CreateDataItem(name1, validValue10, &validValues);
+    EXPECT_EQ(0, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
     mp_DataItem->SetValue(invalidValue);
-    EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue30);
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+}
+
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Not_Used)
+{
+    CreateDataItem(name1, validValue10, nullptr);
+    EXPECT_EQ(0, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue20);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(invalidValue);
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(validValue30);
+    EXPECT_EQ(3, mp_DataItem->GetChangeCount());
+}
+
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, Callback_Only_Called_For_New_Valid_Values_When_Validation_Used)
+{
+    CreateDataItem(name1, validValue10, &validValues);
     
-    mp_DataItem->SetValue(initialValue);
-    EXPECT_EQ(initialValue, mp_DataItem->GetValue());
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(0);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
-    mp_DataItem->SetValueFromString(invalidValueString);
-    EXPECT_EQ(invalidValue, mp_DataItem->GetValue());
-}
-TEST_F(LocalDataItemTest, dataItemWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
-{
-    mp_DataItemWithValidation->SetValue(invalidValue);
-    EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
-
-    mp_DataItemWithValidation->SetValue(initialValue);
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
-
-    mp_DataItemWithValidation->SetValueFromString(invalidValueString);
-    EXPECT_NE(invalidValue, mp_DataItemWithValidation->GetValue());
-}
-TEST_F(LocalDataItemTest, dataItemArrayWithValidation_Invalid_Values_Rejected_When_Validation_Is_Used)
-{
-    mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_NE(invalidValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(0);
+    mp_DataItem->SetValue(invalidValue);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
-    mp_DataItemArrayWithValidation->SetValue(initialValueArray, sizeof(initialValueArray)/sizeof(initialValueArray[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_EQ(initialValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
-    
-    mp_DataItemArrayWithValidation->SetValue(invalidValueArray, sizeof(invalidValueArray)/sizeof(invalidValueArray[0]));
-    for(size_t i = 0; i < mp_DataItemArrayWithValidation->GetCount(); ++i)
-    {
-        EXPECT_NE(invalidValueArray[i], mp_DataItemArrayWithValidation->GetValuePointer()[i]);
-    }
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue30);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 }
 
-TEST_F(LocalDataItemTest, Previous_Value_Retained_When_Value_Rejected)
+TEST_F(LocalDataItemGetAndSetValueTestsInt1, Callback_Only_Called_For_New_Values_When_Validation_Not_Used)
 {
-    mp_DataItemWithValidation->SetValue(invalidValue);
-    EXPECT_EQ(initialValue, mp_DataItemWithValidation->GetValue());
-}
+    CreateDataItem(name1, validValue10, nullptr);
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-TEST_F(LocalDataItemTest, Change_Count_Changes_Properly)
-{
-    EXPECT_EQ(0, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(1, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(1, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue2);
-    EXPECT_EQ(2, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue2);
-    EXPECT_EQ(2, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(validValue1);
-    EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
-    mp_DataItemWithValidation->SetValue(invalidValue);
-    EXPECT_EQ(3, mp_DataItemWithValidation->GetChangeCount());
-}
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(0);
+    mp_DataItem->SetValue(validValue20);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-TEST_F(LocalDataItemTest, Count_Reflects_DataItem_Count)
-{
-    EXPECT_EQ(1, mp_DataItem->GetCount());
-    EXPECT_EQ(10, mp_DataItemArray->GetCount());
-    EXPECT_EQ(1, mp_DataItemWithValidation->GetCount());
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(invalidValue);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(_,_,_)).Times(1);
+    mp_DataItem->SetValue(validValue30);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 }

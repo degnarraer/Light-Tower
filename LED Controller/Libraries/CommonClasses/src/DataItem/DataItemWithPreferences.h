@@ -144,7 +144,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			if(result)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
-									   , this->GetValueAsString() );
+									   				   , this->GetValueAsString() );
 			}
 			return result;
 		}
@@ -155,7 +155,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			if(result)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
-									   , this->GetValueAsString() );
+									   				   , this->GetValueAsString() );
 			}
 			return result;
 		}

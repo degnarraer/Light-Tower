@@ -81,12 +81,9 @@ class NamedCallbackInterface
 		}
 		virtual void DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
 		{
-			// Find the iterator pointing to the element
 			auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
-
-			// Check if the element was found before erasing
-			if (it != m_NamedCallbacks.end()) {
-				delete *it;
+			if (it != m_NamedCallbacks.end())
+			{
 				m_NamedCallbacks.erase(it);
 			}
 		}
