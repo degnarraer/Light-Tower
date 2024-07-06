@@ -435,7 +435,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				else
 				{
-					ESP_LOGE("DestroyTimer", "Error Stopping Timer");
+					ESP_LOGW("DestroyTimer", "Error Stopping Timer");
 				}
 			}
 			else
@@ -469,12 +469,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		bool StopTimer()
 		{
+			bool result = false;
 			if (m_TxTimer)
 			{
 				if (ESP_OK == esp_timer_stop(m_TxTimer))
 				{
 					ESP_LOGD("StopTimer", "Timer Stopped!");
-					return true;
+					result = true;
 				}
 				else
 				{
@@ -484,8 +485,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 			else
 			{
 				ESP_LOGD("StopTimer", "Timer does not exist");
+				result = true;
 			}
-			return false;
+			return result;
 		}
 		void DataItem_Periodic_TX()
 		{

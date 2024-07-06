@@ -518,7 +518,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     void InitWiFiClient()
     {
       ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Client");
-      if(m_SSID.GetValueAsString().length(), m_Password.GetValueAsString().length())
+      if(0 == m_SSID.GetValueAsString().length() || 0 == m_Password.GetValueAsString().length())
       {
         //WiFi.disconnect();
         WiFi.mode(WIFI_STA);

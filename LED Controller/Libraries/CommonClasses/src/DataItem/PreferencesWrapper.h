@@ -341,6 +341,7 @@ public:
     {
         CleanUpTimer();
     }
+
     bool InitializeAndLoadPreference()
     {
         bool result = false;
@@ -366,37 +367,6 @@ public:
         return result;
     }
 
-    static void Static_Update_Preference(void* arg)
-    {
-        if(arg)
-        {
-            ESP_LOGD("Static_Update_Preference", "Static_Update_Preference Function Called");
-            PreferenceManagerTimerArgs* timerArgsPtr = static_cast<PreferenceManagerTimerArgs*>(arg);
-            if(timerArgsPtr)
-            {
-                PreferenceManager* preferenceManager = timerArgsPtr->PreferenceManagerInstance;
-                if (preferenceManager)
-                {
-                    ESP_LOGD("Static_Update_Preference", "Updating Preference");
-                    preferenceManager->Update_Preference( PreferenceUpdateType::Timer
-                                                        , timerArgsPtr->Value );
-                }
-                else
-                {
-                    ESP_LOGE("Static_Update_Preference", "Null PreferenceManagerInstance Pointer!");
-                }
-            }
-            else
-            {
-                ESP_LOGE("Static_Update_Preference", "Null timerArgsPtr Pointer!");
-            }
-        }
-        else
-        {
-            ESP_LOGE("Static_Update_Preference", "Null arg Pointer!");
-        }
-    }
-
     bool Update_Preference( const PreferenceUpdateType updateType
 						  , const String &saveValue )
     {
@@ -407,6 +377,7 @@ public:
         {
         case PreferenceUpdateType::Timer:
             ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
+            m_PreferenceTimerActive = false;
             result = HandleSave(saveValue);
             break;
         case PreferenceUpdateType::Initialize:
@@ -433,7 +404,7 @@ private:
         bool result = true;
         if (m_PreferenceTimer)
         {
-            ESP_LOGD("CleanUpTimer", "Deleting existing timer for Key: \"%s\"", m_Key.c_str());
+            ESP_LOGD("CleanUpTimer", "Destroying timer for Key: \"%s\"", m_Key.c_str());
             esp_err_t stop_err = esp_timer_stop(m_PreferenceTimer);
             if (m_PreferenceTimerActive == true && stop_err != ESP_OK)
             {
@@ -448,7 +419,7 @@ private:
             }
             else
             {
-                ESP_LOGD("CleanUpTimer", "Timer Deleted");
+                ESP_LOGD("CleanUpTimer", "Timer Destroyed");
                 m_PreferenceTimer = nullptr;
             }
         }
@@ -478,7 +449,7 @@ private:
             mp_PreferenceTimerCreateArgs = new esp_timer_create_args_t;
             if(mp_PreferenceTimerCreateArgs)
             {
-                *(mp_PreferenceTimerCreateArgs) = {&Static_Update_Preference, mp_TimerArgs, esp_timer_dispatch_t::ESP_TIMER_TASK, "Preferences_Timer"};
+                *(mp_PreferenceTimerCreateArgs) = {&Static_Update_Preference_Timer_Call, mp_TimerArgs, esp_timer_dispatch_t::ESP_TIMER_TASK, "Preferences_Timer"};
                 ESP_LOGD("DelaySaveValue", "Creating Delayed Save Timer for Key: \"%s\"", m_Key.c_str());    
                 esp_err_t timerCreateErr = esp_timer_create(mp_PreferenceTimerCreateArgs, &m_PreferenceTimer);
                 if (timerCreateErr != ESP_OK)
@@ -549,21 +520,21 @@ private:
             }
             else
             {
-                ESP_LOGE("HandleLoad", "\"%s\" Null Callback Pointers!", m_Key.c_str());
+                ESP_LOGD("HandleLoad", "\"%s\" No Callback Pointers", m_Key.c_str());
                 result = true;
             }
         }
         else
         {
-            ESP_LOGE("HandleLoad", "\"%s\" Null Pointer!", m_Key.c_str());
+            ESP_LOGE("HandleLoad", "\"%s\" Null PreferencesInterface Pointer!", m_Key.c_str());
         }
         return result;
     }
 
     bool HandleSave(const String &saveString)
     {
+        ESP_LOGE("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
         bool result = false;
-        ESP_LOGD("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
         if(mp_PreferencesInterface)
         {
             unsigned long currentMillis = millis();
@@ -592,17 +563,18 @@ private:
             }
             else
             {
+                ESP_LOGE("HandleSave", "Key: \"%s\" String to Save: \"%s\"", m_Key.c_str(), saveString.c_str());
                 size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
                 if(saveString.length() == saveLength)
                 {
                     String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                     if(!saveString.equals(savedString))
                     {
-                        ESP_LOGE("HandleSave", "Saved Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
+                        ESP_LOGW("HandleSave", "Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
                     }
                     else
                     {
-                        ESP_LOGD("HandleSave", "Saved Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                        ESP_LOGD("HandleSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
                         m_Preferences_Last_Update = currentMillis;
                         result = true;
                     }
@@ -632,4 +604,35 @@ private:
     esp_timer_handle_t m_PreferenceTimer = nullptr;
     uint64_t m_Preferences_Last_Update = 0;
     bool m_PreferenceTimerActive = false;
+
+    static void Static_Update_Preference_Timer_Call(void* arg)
+    {
+        if(arg)
+        {
+            ESP_LOGD("Static_Update_Preference_Timer_Call", "Static_Update_Preference Function Called");
+            PreferenceManagerTimerArgs* timerArgsPtr = static_cast<PreferenceManagerTimerArgs*>(arg);
+            if(timerArgsPtr)
+            {
+                PreferenceManager* preferenceManager = timerArgsPtr->PreferenceManagerInstance;
+                if (preferenceManager)
+                {
+                    ESP_LOGD("Static_Update_Preference_Timer_Call", "Updating Preference");
+                    preferenceManager->Update_Preference( PreferenceUpdateType::Timer
+                                                        , timerArgsPtr->Value );
+                }
+                else
+                {
+                    ESP_LOGE("Static_Update_Preference_Timer_Call", "Null PreferenceManagerInstance Pointer!");
+                }
+            }
+            else
+            {
+                ESP_LOGE("Static_Update_Preference_Timer_Call", "Null timerArgsPtr Pointer!");
+            }
+        }
+        else
+        {
+            ESP_LOGE("Static_Update_Preference_Timer_Call", "Null arg Pointer!");
+        }
+    }
 };

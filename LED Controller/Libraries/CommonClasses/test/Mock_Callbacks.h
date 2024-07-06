@@ -24,15 +24,15 @@
 class MockPreferenceCallback
 {
     public:
-        MOCK_METHOD(bool, CallbackFunction, (const String&, void* object));
+        MOCK_METHOD(bool, LoadValueCallbackFunction, (const String&, void* object));
 };
 static MockPreferenceCallback mockPreferenceCallback;
 class PreferenceCallback
 {
     protected:
-        static bool CallbackFunction(const String& str, void* object)
+        static bool LoadValueCallbackFunction(const String& str, void* object)
         {
-            return mockPreferenceCallback.CallbackFunction(str, object);  
+            return mockPreferenceCallback.LoadValueCallbackFunction(str, object);  
         }
 };
 
