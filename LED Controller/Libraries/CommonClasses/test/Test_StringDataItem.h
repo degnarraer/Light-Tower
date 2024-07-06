@@ -196,3 +196,105 @@ TEST_F(StringDataItemRxTxTests, Tx_Called_Periodically)
     CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 100);
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }
+
+// Test Fixture for StringDataItemTest
+class StringDataItemTest: public Test
+                        , public SetupCallerInterface
+{
+protected:
+    const String initialValue = "Initial Value";
+    const String value1 = "Value 1";
+    const String value2 = "Value 2";
+    const String name = "Name";
+    const String spmm = "Serial Port Message Manager";
+    MockHardwareSerial m_MockHardwareSerial;
+    MockDataSerializer m_MockDataSerializer;
+    NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
+    MockNamedCallback *mp_mockNamedCallback;
+    StringDataItem *mp_DataItem;
+
+    void SetUp() override
+    {
+        mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+        ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
+        mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
+        mp_DataItem = new StringDataItem( name 
+                                        , initialValue
+                                        , RxTxType_Rx_Only
+					                    , UpdateStoreType_On_Rx
+					                    , 0
+					                    , mp_MockSerialPortMessageManager
+                                        , mp_mockNamedCallback
+                                        , this );
+
+        EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+        SetupAllSetupCallees();
+
+        ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    }
+
+    void TearDown() override
+    {
+        if(mp_DataItem)
+        {
+            delete mp_DataItem;
+        }
+    }
+};
+
+TEST_F(StringDataItemTest, StringDataItem_Name_Is_Set)
+{
+    EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
+}
+
+TEST_F(StringDataItemTest, StringDataItem_Initial_Value_Is_Returned_As_String)
+{
+    EXPECT_STREQ(initialValue.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
+    EXPECT_STREQ(initialValue.c_str(), mp_DataItem->GetValueAsString().c_str());
+}
+
+TEST_F(StringDataItemTest, StringDataItem_Set_Value_From_Char_Pointer_Converts_To_String)
+{
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+    mp_DataItem->SetValue(value1.c_str(), value1.length());
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    EXPECT_STREQ(value1.c_str(), mp_DataItem->GetValueAsString().c_str());
+}
+
+TEST_F(StringDataItemTest, Change_Count_Changes_Properly)
+{
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_));
+    EXPECT_EQ(0, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(value1.c_str(), value1.length());
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(value1.c_str(), value1.length());
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(value2.c_str(), value1.length());
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+    mp_DataItem->SetValue(value2.c_str(), value1.length());
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+}
+
+TEST_F(StringDataItemTest, Callback_Only_Called_For_New_Values)
+{
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+    mp_DataItem->SetValue(value1.c_str(), value1.length());
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
+    mp_DataItem->SetValue(value1.c_str(), value1.length());
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+    mp_DataItem->SetValue(value2.c_str(), value1.length());
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
+    mp_DataItem->SetValue(value2.c_str(), value1.length());
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+}
+
+TEST_F(StringDataItemTest, Count_Reflects_DataItem_Count)
+{
+    EXPECT_EQ(50, mp_DataItem->GetCount());
+}

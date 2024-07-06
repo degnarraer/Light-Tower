@@ -39,22 +39,22 @@ class PreferenceCallback
 class MockNamedCallback_Callback
 {
     public:
-        MOCK_METHOD(void, CallbackFunction, (const String& name, void* callback, void* arg));
+        MOCK_METHOD(void, NewValueCallbackFunction, (const String& name, void* callback, void* arg));
 };
 static MockNamedCallback_Callback mockNamedCallback_Callback;
 class MockNamedCallback: public NamedCallback_t
 {
     protected:
-        static void CallbackFunction(const String& name, void* callback, void* arg)
+        static void NewValueCallbackFunction(const String& name, void* callback, void* arg)
         {
-            mockNamedCallback_Callback.CallbackFunction(name, callback, arg);  
+            mockNamedCallback_Callback.NewValueCallbackFunction(name, callback, arg);  
         }
     public:
-        MockNamedCallback(): NamedCallback_t("", CallbackFunction, nullptr)
+        MockNamedCallback(): NamedCallback_t("", NewValueCallbackFunction, nullptr)
         {
             ESP_LOGD("MockNamedCallback", "MockNamedCallback Default Constructor called");
         }
-        MockNamedCallback(const String& name, void* arg): NamedCallback_t(name, CallbackFunction, arg)
+        MockNamedCallback(const String& name, void* arg): NamedCallback_t(name, NewValueCallbackFunction, arg)
         {
             ESP_LOGD("MockNamedCallback", "MockNamedCallback Constructor1 called. Name: \"%s\"", name);
         }

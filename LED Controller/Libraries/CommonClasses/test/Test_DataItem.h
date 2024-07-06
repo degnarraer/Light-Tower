@@ -236,7 +236,7 @@ protected:
     {
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
         mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, mp_MockSerialPortMessageManager, mp_mockNamedCallback, this, validStringValues);
-        EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(1);
+        EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         SetupAllSetupCallees();
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     }
@@ -284,7 +284,7 @@ protected:
     void TestSetValueFromValueConvertsToString( const String name, const int32_t* testValue, const String resultString, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(1);
+        EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         mp_DataItem->SetValue(testValue, COUNT);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
@@ -293,7 +293,7 @@ protected:
     void TestSetValueFromStringConvertsToValue( const String name, const String testString, const int32_t* resultValue, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(1);
+        EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         mp_DataItem->SetValueFromString(testString);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         for(size_t i = 0; i < COUNT; ++i)
@@ -307,11 +307,11 @@ protected:
         CreateDataItem(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
         if(expectValueAccepted)
         {
-            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(1);
+            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         }
         else
         {
-            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(0);
+            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
         }
         mp_DataItem->SetValue(testValue, COUNT);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
@@ -334,11 +334,11 @@ protected:
         CreateDataItem(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
         if(expectValueAccepted)
         {
-            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(1);
+            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         }
         else
         {
-            EXPECT_CALL(mockNamedCallback_Callback, CallbackFunction(name,_,_)).Times(0);
+            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
         }
         mp_DataItem->SetValueFromString(testValueString);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
