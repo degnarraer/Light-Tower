@@ -32,6 +32,7 @@ class PreferenceCallback
     protected:
         static bool LoadValueCallbackFunction(const String& value, void* object)
         {
+            ESP_LOGD("LoadValueCallbackFunction", "Load Value Callback called with Value: \"%s\"", value.c_str());
             return mockPreferenceCallback.LoadValueCallbackFunction(value, object);  
         }
 };

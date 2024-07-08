@@ -358,12 +358,12 @@ public:
             bool isKey = mp_PreferencesInterface->isKey(m_Key.c_str());
             if (isKey)
             {
-                ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\"", m_Key.c_str());
+                ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\" Loading saved value", m_Key.c_str());
                 result = Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
             }
             else
             {
-                ESP_LOGE("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
+                ESP_LOGI("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
                 result = Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
             }
         }
@@ -376,9 +376,9 @@ public:
     }
 
     bool Update_Preference( const PreferenceUpdateType updateType
-						  , const String &saveValue )
+						  , const String saveValue )
     {
-        ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\"", m_Key.c_str());
+        ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\" to new value: \"%s\"", m_Key.c_str(), saveValue.c_str());
         bool result = false;
         if (!mp_PreferencesInterface)
         {
@@ -577,12 +577,7 @@ private:
             }
             else
             {
-                ESP_LOGE("HandleSave", "Key: \"%s\" String to Save: \"%s\"", m_Key.c_str(), saveString.c_str());
-                // Added logging for recursive call
-                static int recursiveDepth = 0;
-                recursiveDepth++;
-                ESP_LOGE("HandleSave", "Recursive call depth: %d", recursiveDepth);
-                ESP_LOGE("HandleSave", "Attempting to take the mutex for key: \"%s\"", m_Key.c_str());
+                ESP_LOGD("HandleSave", "Key: \"%s\" String to Save: \"%s\"", m_Key.c_str(), saveString.c_str());
                 xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
                 size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
                 if(saveString.length() == saveLength)
@@ -590,22 +585,20 @@ private:
                     String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                     if(!saveString.equals(savedString))
                     {
-                        ESP_LOGW("HandleSave", "Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
+                        ESP_LOGE("HandleSave", "Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
                     }
                     else
                     {
-                        ESP_LOGD("HandleSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                        ESP_LOGI("HandleSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
                         m_Preferences_Last_Update = currentMillis;
                         result = true;
                     }
                 }
                 else
                 {
-                    ESP_LOGD("HandleSave", "Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
+                    ESP_LOGE("HandleSave", "Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
                 }
                 xSemaphoreGiveRecursive(m_PreferencesMutex);
-                recursiveDepth--;
-                ESP_LOGE("HandleSave", "Recursive call depth after release: %d", recursiveDepth);
             }
         }
         else
