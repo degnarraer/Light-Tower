@@ -191,12 +191,19 @@ class ContinuousAudioBuffer
 	
 	bool Push(Frame_t Frame)
 	{
-		bool Result = false;
+		bool result = false;
 		pthread_mutex_lock(&m_Lock);
-		ESP_LOGD("Push", "Pushing %i|%i", Frame.channel1, Frame.channel2);
-		Result = m_CircularAudioBuffer->push(Frame);
+		result = m_CircularAudioBuffer->push(Frame);
+		if(result)
+		{
+			ESP_LOGD("Push", "Pushed %i|%i", Frame.channel1, Frame.channel2);
+		}
+		else
+		{
+			ESP_LOGD("Push", "Pushed and overwrote %i|%i", Frame.channel1, Frame.channel2);
+		}
 		pthread_mutex_unlock(&m_Lock);
-		return Result;
+		return result;
 	}
 
 	size_t Push(Frame_t *Frame, size_t Count)
@@ -207,7 +214,12 @@ class ContinuousAudioBuffer
 		{
 			if(m_CircularAudioBuffer->push(Frame[i]))
 			{
+				ESP_LOGD("Push", "Pushed %i|%i", Frame[i].channel1, Frame[i].channel2);
 				++Result;
+			}
+			else
+			{
+				ESP_LOGD("Push", "Pushed and overwrote %i|%i", Frame[i].channel1, Frame[i].channel2);
 			}
 		}
 		pthread_mutex_unlock(&m_Lock);
@@ -232,6 +244,7 @@ class ContinuousAudioBuffer
 			if(0 < COUNT - m_CircularAudioBuffer->available())
 			{
 				Frame[i] = m_CircularAudioBuffer->pop();
+				ESP_LOGD("Pop", "Popped %i|%i", Frame[i].channel1, Frame[i].channel2);
 				++Result;
 			}
 		}
@@ -241,11 +254,19 @@ class ContinuousAudioBuffer
 
 	bool Unshift(Frame_t Frame)
 	{
-		bool Result = false;
+		bool result = false;
 		pthread_mutex_lock(&m_Lock);
-		Result = m_CircularAudioBuffer->unshift(Frame);
+		result = m_CircularAudioBuffer->unshift(Frame);
+		if(result)
+		{
+			ESP_LOGD("Push", "Unshifted %i|%i", Frame.channel1, Frame.channel2);
+		}
+		else
+		{
+			ESP_LOGD("Push", "Unshifted and overwrote %i|%i", Frame.channel1, Frame.channel2);
+		}
 		pthread_mutex_unlock(&m_Lock);
-		return Result;
+		return result;
 	}
 
 	size_t Unshift(Frame_t *Frame, size_t Count)
@@ -256,7 +277,12 @@ class ContinuousAudioBuffer
 		{
 			if( m_CircularAudioBuffer->unshift(Frame[i]) )
 			{
+				ESP_LOGD("Unshift", "Unshifted %i|%i", Frame[i].channel1, Frame[i].channel2);
 				++Result;
+			}
+			else
+			{
+				ESP_LOGD("Unshift", "Unshifted and Overwrote %i|%i", Frame[i].channel1, Frame[i].channel2);
 			}
 		}
 		pthread_mutex_unlock(&m_Lock);
