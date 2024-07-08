@@ -30,9 +30,9 @@ static MockPreferenceCallback mockPreferenceCallback;
 class PreferenceCallback
 {
     protected:
-        static bool LoadValueCallbackFunction(const String& str, void* object)
+        static bool LoadValueCallbackFunction(const String& value, void* object)
         {
-            return mockPreferenceCallback.LoadValueCallbackFunction(str, object);  
+            return mockPreferenceCallback.LoadValueCallbackFunction(value, object);  
         }
 };
 

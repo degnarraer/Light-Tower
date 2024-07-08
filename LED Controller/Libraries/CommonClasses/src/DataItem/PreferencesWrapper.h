@@ -317,7 +317,7 @@ public:
         PreferenceManager* PreferenceManagerInstance;
         const String Value;
         PreferenceManagerTimerArgs( PreferenceManager* preferenceManagerInstance
-                                  , const String &value )
+                                  , const String value )
                                   : PreferenceManagerInstance(preferenceManagerInstance)
                                   , Value(value) {}
     };
@@ -335,11 +335,16 @@ public:
                      , m_Callback(callback)
                      , mp_Object(object)
     {
+        m_PreferencesMutex = xSemaphoreCreateRecursiveMutex();
     }
 
     virtual ~PreferenceManager()
     {
         CleanUpTimer();
+        if (m_PreferencesMutex)
+        {
+            vSemaphoreDelete(m_PreferencesMutex);
+        }
     }
 
     bool InitializeAndLoadPreference()
@@ -347,16 +352,18 @@ public:
         bool result = false;
         m_Preferences_Last_Update = millis();
         ESP_LOGD("InitializeAndLoadPreference", "Initializing Preference: \"%s\" with Initial Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+        xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);   
         if (mp_PreferencesInterface)
         {
-            if (mp_PreferencesInterface->isKey(m_Key.c_str()))
+            bool isKey = mp_PreferencesInterface->isKey(m_Key.c_str());
+            if (isKey)
             {
                 ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\"", m_Key.c_str());
                 result = Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
             }
             else
             {
-                ESP_LOGI("InitializeAndLoadPreference", "Preference Not Found: \"%s\"", m_Key.c_str());
+                ESP_LOGE("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
                 result = Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
             }
         }
@@ -364,6 +371,7 @@ public:
         {
             ESP_LOGE("InitializeAndLoadPreference", "Null Preferences Pointer!");
         }
+        xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
     }
 
@@ -372,29 +380,33 @@ public:
     {
         ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\"", m_Key.c_str());
         bool result = false;
-        if (!mp_PreferencesInterface) return result;
+        if (!mp_PreferencesInterface)
+        {
+            ESP_LOGE("Update_Preference", "\"%s\": Null PreferenceInterface Pointer!", m_Key.c_str());
+            return result;
+        }
         switch (updateType)
         {
-        case PreferenceUpdateType::Timer:
-            ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
-            m_PreferenceTimerActive = false;
-            result = HandleSave(saveValue);
-            break;
-        case PreferenceUpdateType::Initialize:
-            ESP_LOGD("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
-            result = HandleSave(saveValue);
-            break;
-        case PreferenceUpdateType::Load:
-            ESP_LOGD("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
-            result = HandleLoad();
-            break;
-        case PreferenceUpdateType::Save:
-            ESP_LOGD("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
-            result = HandleSave(saveValue);
-            break;
-        default:
-            ESP_LOGE("Update_Preference", "\"%s\": Unsupported Update Type", m_Key.c_str());
-            break;
+            case PreferenceUpdateType::Timer:
+                ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
+                m_PreferenceTimerActive = false;
+                result = HandleSave(saveValue);
+                break;
+            case PreferenceUpdateType::Initialize:
+                ESP_LOGD("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
+                result = HandleSave(saveValue);
+                break;
+            case PreferenceUpdateType::Load:
+                ESP_LOGD("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
+                result = HandleLoad();
+                break;
+            case PreferenceUpdateType::Save:
+                ESP_LOGD("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
+                result = HandleSave(saveValue);
+                break;
+            default:
+                ESP_LOGE("Update_Preference", "\"%s\": Unsupported Update Type!", m_Key.c_str());
+                break;
         }
         return result;
     }
@@ -492,6 +504,7 @@ private:
 
     bool HandleLoad()
     {
+        xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
         bool result = false;
         if(mp_PreferencesInterface)
         {
@@ -528,12 +541,13 @@ private:
         {
             ESP_LOGE("HandleLoad", "\"%s\" Null PreferencesInterface Pointer!", m_Key.c_str());
         }
+        xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
     }
 
     bool HandleSave(const String &saveString)
     {
-        ESP_LOGE("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
+        ESP_LOGD("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
         bool result = false;
         if(mp_PreferencesInterface)
         {
@@ -564,6 +578,12 @@ private:
             else
             {
                 ESP_LOGE("HandleSave", "Key: \"%s\" String to Save: \"%s\"", m_Key.c_str(), saveString.c_str());
+                // Added logging for recursive call
+                static int recursiveDepth = 0;
+                recursiveDepth++;
+                ESP_LOGE("HandleSave", "Recursive call depth: %d", recursiveDepth);
+                ESP_LOGE("HandleSave", "Attempting to take the mutex for key: \"%s\"", m_Key.c_str());
+                xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
                 size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
                 if(saveString.length() == saveLength)
                 {
@@ -583,6 +603,9 @@ private:
                 {
                     ESP_LOGD("HandleSave", "Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
                 }
+                xSemaphoreGiveRecursive(m_PreferencesMutex);
+                recursiveDepth--;
+                ESP_LOGE("HandleSave", "Recursive call depth after release: %d", recursiveDepth);
             }
         }
         else
@@ -604,6 +627,7 @@ private:
     esp_timer_handle_t m_PreferenceTimer = nullptr;
     uint64_t m_Preferences_Last_Update = 0;
     bool m_PreferenceTimerActive = false;
+    SemaphoreHandle_t m_PreferencesMutex;
 
     static void Static_Update_Preference_Timer_Call(void* arg)
     {
