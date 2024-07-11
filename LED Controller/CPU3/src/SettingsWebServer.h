@@ -64,7 +64,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         ESP_LOGI("InitializePreferences", "NVS Initialized");
         ESP.restart();
       }
-      else if(true)//m_preferenceInterface.getBool("Pref_Reset", true))
+      else if(m_preferenceInterface.getBool("Pref_Reset", true))
       {
         m_preferenceInterface.clear();
         ESP_LOGI("InitializePreferences", "Preferences Cleared!");
