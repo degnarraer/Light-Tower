@@ -323,8 +323,8 @@ public:
     };
 
     PreferenceManager( IPreferences* preferencesInterface
-                     , const String &key
-                     , const String &initialValue
+                     , const String key
+                     , const String initialValue
                      , const unsigned long timeoutTime
                      , LoadedValueCallback_t callback
                      , void* object)
@@ -510,6 +510,7 @@ private:
         {
             ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
             String loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+            ESP_LOGI("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
             if (m_Callback && mp_Object)
             {
                 if(m_Callback(loadedValue, mp_Object))
@@ -585,7 +586,8 @@ private:
                     String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                     if(!saveString.equals(savedString))
                     {
-                        ESP_LOGE("HandleSave", "Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());   
+                        ESP_LOGE("HandleSave", "Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());
+                        mp_PreferencesInterface->remove(m_Key.c_str());
                     }
                     else
                     {
@@ -597,6 +599,7 @@ private:
                 else
                 {
                     ESP_LOGE("HandleSave", "Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
+                    mp_PreferencesInterface->remove(m_Key.c_str());
                 }
                 xSemaphoreGiveRecursive(m_PreferencesMutex);
             }

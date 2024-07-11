@@ -36,7 +36,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
 										  , PreferenceManager( preferencesInterface
 											  				 , this->m_Name
-											  				 , this->GetInitialValueAsString()
+											  				 , initialValue
 												  			 , PREFERENCE_TIMEOUT
 											  				 , this->StaticSetValueFromString
 											  				 , this )

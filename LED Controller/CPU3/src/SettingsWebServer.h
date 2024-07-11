@@ -64,7 +64,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         ESP_LOGI("InitializePreferences", "NVS Initialized");
         ESP.restart();
       }
-      else if(m_preferenceInterface.getBool("Pref_Reset", true))
+      else if(true)//m_preferenceInterface.getBool("Pref_Reset", true))
       {
         m_preferenceInterface.clear();
         ESP_LOGI("InitializePreferences", "Preferences Cleared!");
@@ -154,9 +154,8 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SSID_Callback = { "SSID Callback"
                                       , &SSID_ValueChanged
                                       , &m_SSID_CallbackArgs };
-    const String m_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_SSID = LocalStringDataItemWithPreferences( "SSID"
-                                                                                  , m_SSID_InitialValue
+                                                                                  , "LED Tower of Power"
                                                                                   , &m_preferenceInterface
                                                                                   , &m_SSID_Callback
                                                                                   , this );
