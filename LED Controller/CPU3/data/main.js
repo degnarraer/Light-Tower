@@ -1,3 +1,6 @@
+import { SoundInputSource } from './modules/SoundInputSource.js';
+//import { SoundOutputSource } from './scripts/SoundOutputSource.js';
+
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
 var speakerImages = new Array();
@@ -7,11 +10,14 @@ var sink_Name_Value_Changed = false;
 var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
+var CurrentSoundInputSource = SoundInputSource.Value.OFF;
+//var CurrentSoundOutputSource = SoundOutputSource.Value.OFF;
 
 //Toggle Buttons
 var source_BT_Reset_Toggle_Button;
 var source_BT_Reset_Toggle_Button;
 var source_BT_Auto_ReConnect_Toggle_Button;
+var sink_BT_Auto_ReConnect_Toggle_Button;
 
 //Compatible Devices
 var compatibleDevices = [
@@ -143,17 +149,16 @@ function onError(event)
     setTimeout(initWebSocket, 5000);
 }
 
-// Menu Functions
+window.openNav = openNav;
 function openNav() 
 {
   document.getElementById('leftSideNavigationMenu').style.width = '200px';
-  document.getElementById('MainContentArea').style.marginLeft = '200px';
 }
 
+window.closeNav = closeNav;
 function closeNav()
 {
   document.getElementById('leftSideNavigationMenu').style.width = '0';
-  document.getElementById('MainContentArea').style.marginLeft = '0';
 }
 
 //Text Box
@@ -512,44 +517,45 @@ function handleTargetDeviceItemClick(device) {
 }
 
 function handleSoundInputSource(id, value) {
-	if(id && value)
-	{
-		console.log('Received Sound Input Source!');
-		switch(parseInt(value))
-		{
-			case 0:
-				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
-			break;
-			case 1:
-				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
-			break;
-			case 2:
-				showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
-			break;
-			default:
-				console.log('Undefined Input Source!');
-			break;
-		}
+	if(id && value){
+		console.log('Received Sound Input Source! ID:' + id + ' Value: ' + value );
+		CurrentSoundInputSource = SoundInputSource.FromString(value);
+		switch (CurrentSoundInputSource){
+            case SoundInputSource.OFF:
+                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
+                break;
+            case SoundInputSource.Microphone:
+                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
+                break;
+            case SoundInputSource.Bluetooth:
+                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
+                break;
+            default:
+                console.log('Undefined Input Source!');
+                break;
+        }
 	}
 }
 
 function handleSoundOutputSource(id, value) {
-	if(id && value)
-	{
-		console.log('Received Sound Output Source!');
-		switch(parseInt(value))
-		{
-			case 0:
-				showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
-			break;
-			case 1:
-				showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
-			break;
-			default:
-				console.log('Undefined Output Source!');
-			break;
-		}
-	}
+    if (id && value) {
+        console.log('Received Sound Output Source! ID: ' + id + ' Value: ' + value);
+
+        // Convert value to SoundOutputSource using the new class method
+        CurrentSoundOutputSource = SoundOutputSource.FromString(value);
+
+        switch (CurrentSoundOutputSource) {
+            case SoundOutputSource.OFF:
+                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
+                break;
+            case SoundOutputSource.Bluetooth:
+                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
+                break;
+            default:
+                console.log('Undefined Output Source!');
+                break;
+        }
+    }
 }
 
 function handleSpeakerImage(id, value) {
@@ -732,7 +738,8 @@ function handleBTSourceReset(id, value) {
 	}
 }
 
-function showContent(classId, contentId, updateWebSocket = false) {
+window.showContent = showContent;
+function showContent(classId, contentId) {
 	// Hide all tab contents
 	var tabContents = document.querySelectorAll('.' + classId);
 	tabContents.forEach(function (tabContent) {
@@ -743,16 +750,18 @@ function showContent(classId, contentId, updateWebSocket = false) {
 	
 	// Show the selected tab content
 	document.getElementById(contentId).classList.add('active');
-	
-	var signal = classToSignal[classId.toString()];
-	var value = contentIdToValue[contentId.toString()];
-	if(updateWebSocket && signal && value)
-	{
+}
+
+function Update_Signal_Value_To_Web_Socket(signal, value)
+{
+	if(signal && value) {
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = signal.toString();
 		Root.SignalValue.Value = value.toString();
 		var Message = JSON.stringify(Root);
 		websocket.send(Message);
+	} else {
+		console.log('Invalid Call to Update_Signal_Value_To_Web_Socket!');
 	}
 }

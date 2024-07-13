@@ -76,5 +76,15 @@
 			"*.tpp": "cpp",
 			"any": "cpp"
 		}
+	},
+	"launch": {
+		"configurations": [
+			{
+				"type": "msedge",
+				"name": "http://127.0.0.1:3000/data/index.html",
+				"request": "launch",
+				"url": "http://127.0.0.1:3000/data/index.html"
+			}
+		]
 	}
 }

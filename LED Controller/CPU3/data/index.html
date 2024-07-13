@@ -8,18 +8,18 @@
 	<link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-	<script src="script.js"></script>
+	<script type="module" src="main.js"></script>
 	<!-- Tab links -->
 	<div id= "MainScreen" class = "MainScreen">
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
 			<a href="javascript:void(0)"  class="CloseButton" onclick="closeNav()">&times;</a>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Speaker Status')">Speaker Status</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Wifi')">Wifi</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Input')">Sound Input</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Output')">Sound Output</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Real Time FFT')">Real Time FFT</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Gains')">Signal Gains</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Visualization')">Visualization</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Speaker Status'); closeNav();">Speaker Status</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Wifi'); closeNav();">Wifi</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Input'); closeNav();">Sound Input</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Output'); closeNav();">Sound Output</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Real Time FFT'); closeNav();">Real Time FFT</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Gains'); closeNav();">Signal Gains</button>
+			<button class="Tablinks" onclick="showContent('menu-content', 'Visualization'); closeNav();">Visualization</button>
 		</div>
 		<div id="MainContentArea" class="MainContentArea">
 			<div class="mainMenu">
@@ -73,9 +73,9 @@
 			</div>
 			<div class="menu-content" id="Sound Input">
 				<div class="selection_tabs">
-					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF', true)">OFF</div>
-					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone', true)">Microphone</div>
-					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth', true)">Bluetooth</div>
+					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF')">OFF</div>
+					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone')">Microphone</div>
+					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth')">Bluetooth</div>
 				</div>
 				<div class="selection_tab_content_input_source" id="Sound_Input_Selection_OFF">
 					<h2>Off</h2>
@@ -167,8 +167,8 @@
 				<div class="menu-content" id="Sound Output">
 				
 					<div class="selection_tabs">
-						<div class="selection_tab" onclick="showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF', true)">OFF</div>
-						<div class="selection_tab" onclick="showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth', true)">Bluetooth</div>
+						<div class="selection_tab" onclick="showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF')">OFF</div>
+						<div class="selection_tab" onclick="showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth')">Bluetooth</div>
 					</div>
 					<div class="selection_tab_content_output_source" id="Sound_Output_Selection_OFF">
 						<h2>Off</h2>

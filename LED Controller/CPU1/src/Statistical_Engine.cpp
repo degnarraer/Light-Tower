@@ -267,12 +267,12 @@ void StatisticalEngine::UpdateSoundState()
     if(true == debugSilenceIntegrator) Serial << "Power Db: " << m_PowerDb << "\tDelta Time Gain: " << deltaTimeScalar << "\tGain: " << gain << "\tDelta: " << delta << "\tSilence Integrator: " << m_silenceIntegrator << "\tSound State: " << m_soundState << "\n";
     if(false == m_SoundDetected && m_silenceIntegrator >= m_soundDetectedThreshold)
     {
-      ESP_LOGE("Statistical_Engine", "Sound Detected.");
+      ESP_LOGI("Statistical_Engine", "Sound Detected.");
       m_SoundDetected = true;
     }
     else if(true == m_SoundDetected && m_silenceIntegrator <= m_silenceDetectedThreshold)
     {
-      ESP_LOGE("Statistical_Engine", "Silence Detected.");
+      ESP_LOGI("Statistical_Engine", "Silence Detected.");
       m_SoundDetected = false;
       m_soundState = SoundState_t::SilenceDetected;
       m_silenceStartTime = millis();
@@ -280,7 +280,7 @@ void StatisticalEngine::UpdateSoundState()
     }
     else if(m_soundState == SoundState_t::SilenceDetected && millis() - m_silenceStartTime >= lastingSilenceTImeout)
     {
-      ESP_LOGE("Statistical_Engine", "Lasting Silence Detected.");
+      ESP_LOGI("Statistical_Engine", "Lasting Silence Detected.");
       m_soundState = SoundState_t::LastingSilenceDetected;
       SendNewValueNotificationToUsers(m_soundState);
     }

@@ -241,7 +241,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     //TBD
 
     //Input Source
-    const ValidStringValues_t validInputSourceValues = { "OFF", "Microphone", "Bluetooth" };
+    const ValidStringValues_t validInputSourceValues = { "0", "1", "2", "OFF", "Microphone", "Bluetooth" };
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::OFF;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
                                                                                                                       , m_SoundInputSource_InitialValue
