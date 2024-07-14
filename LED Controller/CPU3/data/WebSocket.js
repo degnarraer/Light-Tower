@@ -11,7 +11,7 @@ export class WebSocketManager {
             this.websocket = new WebSocket(this.gateway);
             this.websocket.onopen = this.onOpen.bind(this);
             this.websocket.onclose = this.onClose.bind(this);
-            this.websocket.onmessage = handleMessage;
+            this.websocket.onmessage = this.handleMessage.bind(this);
             this.websocket.onerror = this.onError.bind(this);
         } catch (error) {
             console.error('WebSocket initialization error:', error.message);
@@ -50,6 +50,7 @@ export class WebSocketManager {
 
     // Method to set an external message handler
     onMessage(handler) {
+        console.log('Handler Set:', handler);
         this.messageHandler = handler;
     }
 }

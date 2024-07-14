@@ -283,6 +283,7 @@ function source_Disconnect(element, isPressed)
 }
 
 // slider Functions
+window.updatesliderValue = updatesliderValue;
 function updatesliderValue(element)
 {
 	clearTimeout(sliderTimeoutHandle);
