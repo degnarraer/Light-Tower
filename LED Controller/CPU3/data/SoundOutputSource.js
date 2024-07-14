@@ -1,4 +1,4 @@
-class SoundOutputSource {
+export class SoundOutputSource {
     static Value = {
         OFF: 'OFF',
         Bluetooth: 'Bluetooth',
@@ -31,5 +31,3 @@ class SoundOutputSource {
         }
     }
 }
-
-export default SoundOutputSource;

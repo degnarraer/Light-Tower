@@ -1,8 +1,28 @@
-import { SoundInputSource } from './modules/SoundInputSource.js';
-//import { SoundOutputSource } from './scripts/SoundOutputSource.js';
+import { SoundInputSource } from './SoundInputSource.js';
+import { SoundOutputSource } from './SoundOutputSource.js';
+import { WebSocketManager } from './WebSocket.js';
 
-var gateway = `ws://${window.location.hostname}/ws`;
-var websocket;
+const wsManager = new WebSocketManager();
+wsManager.onMessage(onWebSocketMessage);
+function onWebSocketMessage(event) {
+	console.log('Message received:', event.data);
+	try {
+		const myObj = JSON.parse(event.data);
+		const keys = Object.keys(myObj);
+		keys.forEach(key => {
+			const { Id, Value } = myObj[key];
+			const messageHandler = messageHandlers[Id];
+			if (messageHandler) {
+				messageHandler(Id, Value);
+			} else {
+				console.warn('No handler found for message type:', Id);
+			}
+		});
+	} catch (error) {
+		console.error('Error parsing message:', error);
+	}
+}
+
 var speakerImages = new Array();
 var sliderTouched = false;
 var sliderTimeoutHandle;
@@ -11,13 +31,7 @@ var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
 var CurrentSoundInputSource = SoundInputSource.Value.OFF;
-//var CurrentSoundOutputSource = SoundOutputSource.Value.OFF;
-
-//Toggle Buttons
-var source_BT_Reset_Toggle_Button;
-var source_BT_Reset_Toggle_Button;
-var source_BT_Auto_ReConnect_Toggle_Button;
-var sink_BT_Auto_ReConnect_Toggle_Button;
+var CurrentSoundOutputSource = SoundOutputSource.Value.OFF;
 
 //Compatible Devices
 var compatibleDevices = [
@@ -85,68 +99,71 @@ const contentIdToValue = {
 window.addEventListener('load', onload);
 function onload(event)
 {
-    initWebSocket();
-	// Toggle Switch Handlers
+	wsManager.initWebSocket();
+	var sink_BT_Auto_ReConnect_Toggle_Button;
 	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
 	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
 	{
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = 'BT_Sink_Auto_ReConnect';
-		Root.SignalValue.Value = sink_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0";
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		Update_Signal_Value_To_Web_Socket("BT_Sink_Auto_ReConnect", sink_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
 
+	var source_BT_Reset_Toggle_Button;
 	source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
 	source_BT_Reset_Toggle_Button.addEventListener('change', function()
 	{
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = 'BT_Source_Reset';
-		Root.SignalValue.Value = source_BT_Reset_Toggle_Button.checked? "1" : "0";
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		Update_Signal_Value_To_Web_Socket("BT_Source_Reset", source_BT_Reset_Toggle_Button.checked? "1" : "0");
 	});
 
+	var source_BT_Auto_ReConnect_Toggle_Button;
 	source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
 	Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
 	{
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = 'BT_Source_Auto_Reconnect';
-		Root.SignalValue.Value = source_BT_Auto_ReConnect_Toggle_Button.checked ? "1" : "0";
-		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		Update_Signal_Value_To_Web_Socket("BT_Source_Auto_Reconnect", source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
 }
 
-function initWebSocket()
-{
-    console.log('Trying to open a WebSocket connection…');
-    websocket = new WebSocket(gateway);
-    websocket.onopen = onOpen;
-    websocket.onclose = onClose;
-    websocket.onmessage = onMessage;
-	websocket.error = onError;
+function handleSoundInputSource(id, value) {
+	if(id && value){
+		console.log('Received Sound Input Source! ID:' + id + ' Value: ' + value );
+		CurrentSoundInputSource = SoundInputSource.FromString(value);
+		switch (CurrentSoundInputSource) {
+            case SoundInputSource.OFF:
+                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
+				Update_Signal_Value_To_Web_Socket(id, value);
+                break;
+            case SoundInputSource.Microphone:
+                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
+				Update_Signal_Value_To_Web_Socket(id, value);
+                break;
+            case SoundInputSource.Bluetooth:
+                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
+				Update_Signal_Value_To_Web_Socket(id, value);
+                break;
+            default:
+                console.log('Undefined Input Source!');
+                break;
+        }
+	}
 }
 
-function onOpen(event)
-{
-    console.log('Connection opened');
-	websocket.send('Hello I am here!');
-}
-
-function onClose(event)
-{
-    console.log('Connection closed');
-    setTimeout(initWebSocket, 5000);
-}
-
-function onError(event)
-{
-    console.log('Connection Error');
-    setTimeout(initWebSocket, 5000);
+function handleSoundOutputSource(id, value) {
+    if (id && value) {
+        console.log('Received Sound Output Source! ID: ' + id + ' Value: ' + value);
+        CurrentSoundOutputSource = SoundOutputSource.FromString(value);
+        switch (CurrentSoundOutputSource) {
+            case SoundOutputSource.OFF:
+                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
+				Update_Signal_Value_To_Web_Socket(id, value);
+                break;
+            case SoundOutputSource.Bluetooth:
+                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
+				Update_Signal_Value_To_Web_Socket(id, value);
+                break;
+            default:
+                console.log('Undefined Output Source!');
+                break;
+        }
+    }
 }
 
 window.openNav = openNav;
@@ -198,7 +215,7 @@ function submit_New_Value_From_TextBox(element)
 	Root.SignalValue.Id = TextboxElement.getAttribute("data-Signal");
 	Root.SignalValue.Value = TextboxElement.value;
 	console.log('Submit New Name: \"' + TextboxElement.value + '\" Signal: \"' + TextboxElement.getAttribute("data-Signal") + '\"');
-	websocket.send(JSON.stringify(Root));
+	wsManager.send(JSON.stringify(Root));
 	sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
 }
 
@@ -213,7 +230,7 @@ function sink_Connect(element, isPressed)
 		Root.SignalValue = {};
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
 		Root.SignalValue.Value = isPressed ? "1" : "0";
-		websocket.send(JSON.stringify(Root));
+		wsManager.send(JSON.stringify(Root));
 	}
 }
 
@@ -229,7 +246,7 @@ function sink_Disconnect(element, isPressed)
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
 		Root.SignalValue.Value = isPressed ? "1" : "0";
 		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		wsManager.send(Message);
 	}
 }
 
@@ -245,7 +262,7 @@ function source_Connect(element, isPressed)
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
 		Root.SignalValue.Value = isPressed ? "1" : "0";
 		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		wsManager.send(Message);
 	}
 }
 
@@ -261,7 +278,7 @@ function source_Disconnect(element, isPressed)
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
 		Root.SignalValue.Value = isPressed ? "1" : "0";
 		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		wsManager.send(Message);
 	}
 }
 
@@ -276,7 +293,7 @@ function updatesliderValue(element)
 	{
 		Root.SignalValue.Id = element.getAttribute("data-Signal");
 		Root.SignalValue.Value = element.value;
-		websocket.send(JSON.stringify(Root));
+		wsManager.send(JSON.stringify(Root));
 		sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
 	}
 }
@@ -380,27 +397,6 @@ const imageTwoPromise = new Promise((resolve, reject) => {
 		imageOneElement.src = imageOne.src;
 		imageTwoElement.src = imageTwo.src;
 	});
-}
-
-function onMessage(event)
-{
-	console.log(event.data);
-	var myObj = JSON.parse(event.data);
-	var keys = Object.keys(myObj);
-	for (var i = 0; i < keys.length; ++i)
-	{
-		var id = myObj[keys[i]]['Id'];
-		var value = myObj[keys[i]]['Value'];
-		const messageHandler = messageHandlers[id];
-		if (messageHandler) 
-		{
-			messageHandler(id, value);
-		}
-		else 
-		{
-		  console.log('No handler found for message type:', id);
-		}
-	}
 }
 
 function handleBTSourceTargetDevice(id, value)
@@ -513,49 +509,7 @@ function handleTargetDeviceItemClick(device) {
 	Root.JSONValue.Value.Address = device.address;
 	Root.JSONValue.Value.Name = device.name;
 	var Message = JSON.stringify(Root);
-	websocket.send(Message);
-}
-
-function handleSoundInputSource(id, value) {
-	if(id && value){
-		console.log('Received Sound Input Source! ID:' + id + ' Value: ' + value );
-		CurrentSoundInputSource = SoundInputSource.FromString(value);
-		switch (CurrentSoundInputSource){
-            case SoundInputSource.OFF:
-                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
-                break;
-            case SoundInputSource.Microphone:
-                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
-                break;
-            case SoundInputSource.Bluetooth:
-                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
-                break;
-            default:
-                console.log('Undefined Input Source!');
-                break;
-        }
-	}
-}
-
-function handleSoundOutputSource(id, value) {
-    if (id && value) {
-        console.log('Received Sound Output Source! ID: ' + id + ' Value: ' + value);
-
-        // Convert value to SoundOutputSource using the new class method
-        CurrentSoundOutputSource = SoundOutputSource.FromString(value);
-
-        switch (CurrentSoundOutputSource) {
-            case SoundOutputSource.OFF:
-                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
-                break;
-            case SoundOutputSource.Bluetooth:
-                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
-                break;
-            default:
-                console.log('Undefined Output Source!');
-                break;
-        }
-    }
+	wsManager.send(Message);
 }
 
 function handleSpeakerImage(id, value) {
@@ -760,7 +714,7 @@ function Update_Signal_Value_To_Web_Socket(signal, value)
 		Root.SignalValue.Id = signal.toString();
 		Root.SignalValue.Value = value.toString();
 		var Message = JSON.stringify(Root);
-		websocket.send(Message);
+		wsManager.send(Message);
 	} else {
 		console.log('Invalid Call to Update_Signal_Value_To_Web_Socket!');
 	}
