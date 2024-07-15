@@ -5,7 +5,7 @@ export class Boolean_Signal {
         this.value = initialValue;
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
-        this.setValue(initialValue);
+        this.setValue(initialValue, false);
     }
 
     static values = {
@@ -25,15 +25,17 @@ export class Boolean_Signal {
     onMessage(Value) {
         console.log("\"" + this.signalName + '\" Listener received value: \"' + Value + "\"");
     }
-
-    setValue(newValue) {
+    
+    setValue(newValue, updateWebsocket = true) {
         if (Object.values(Boolean_Signal.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
         } else {
             throw new Error('Invalid Value');
         }
-        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        if(updateWebsocket){
+            this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        }
     }
 
     getValue() {
@@ -42,12 +44,15 @@ export class Boolean_Signal {
 
     toString() {
         switch (this.value) {
-            case this.values.False:
+            case Boolean_Signal.values.False:
                 return '0';
-            case this.values.True:
+            break;
+            case Boolean_Signal.values.True:
                 return '1';
+            break;
             default:
                 return 'Unknown';
+            break;
         }
     }
 
@@ -56,18 +61,21 @@ export class Boolean_Signal {
             case '0':
             case 'false':
             case 'False':
-                this.setValue(this.values.False);
+                this.setValue(Boolean_Signal.values.False);
+            break;
             case '1':
             case 'true':
             case 'True':
-                this.setValue(this.values.True);
+                this.setValue(Boolean_Signal.values.True);
+            break;
             default:
-                this.setValue(this.values.False);
+                this.setValue(Boolean_Signal.values.False);
+            break;
         }
     }
     
     updateHTML(){
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '"\"]');
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '\"]');
 		elementsWithDataValue.forEach(function(element){
 			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
 				if(this.value == this.values.True){

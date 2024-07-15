@@ -41,16 +41,20 @@ export class WebSocketManager {
 
     Send_Signal_Value_To_Web_Socket(signal, value)
     {
-        if(signal && value) {
+        if(this.websocket) {
+            if(signal && value) {
             console.log('Updating Signal: \'' + signal + '\' to value: \'' + value + '\'');
             var Root = {};
             Root.SignalValue = {};
             Root.SignalValue.Id = signal.toString();
             Root.SignalValue.Value = value.toString();
             var Message = JSON.stringify(Root);
-            wsManager.send(Message);
+            this.websocket.send(Message);
+            } else {
+                console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+            }
         } else {
-            console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+            console.error('Null Web_Socket!');
         }
     }
 
@@ -83,12 +87,20 @@ export class WebSocketManager {
     }
 
     send(message){
-        this.websocket.send(message);
+        if(this.websocket) {
+            this.websocket.send(message);
+        } else {
+            console.error('Null Web_Socket!');
+        }
     }
 
     onOpen(event) {
-        console.log('Connection opened');
-        this.websocket.send('Hello I am here!');
+        if(this.websocket) {
+            console.log('Connection opened');
+            this.websocket.send('Hello I am here!');   
+        } else {
+            console.error('Null Web_Socket!');
+        }
     }
 
     onClose(event) {

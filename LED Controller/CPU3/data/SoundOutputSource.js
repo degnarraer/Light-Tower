@@ -5,7 +5,7 @@ export class SoundOutputSource_Signal {
         this.value = initialValue;
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
-        this.setValue(initialValue);
+        this.setValue(initialValue, false);
     }
 
     static values = {
@@ -27,14 +27,16 @@ export class SoundOutputSource_Signal {
         this.setValue(Value);
     }
     
-    setValue(newValue) {
+    setValue(newValue, updateWebsocket = true) {
         if (Object.values(SoundOutputSource_Signal.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
         } else {
             throw new Error('Invalid Value');
         }
-        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        if(updateWebsocket){
+            this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        }
     }
 
     getValue() {
@@ -43,30 +45,37 @@ export class SoundOutputSource_Signal {
 
     toString() {
         switch (this.value) {
-            case this.values.OFF:
+            case SoundOutputSource_Signal.values.OFF:
                 return 'OFF';
-            case this.values.Bluetooth:
+            break;
+            case SoundOutputSource_Signal.values.Bluetooth:
                 return 'Bluetooth';
-            case this.values.Count:
+            break;
+            case SoundOutputSource_Signal.values.Count:
                 return 'Count';
+            break;
             default:
                 return 'Unknown';
+            break;
         }
     }
 
     fromString(str) {
         switch (str) {
             case 'OFF':
-                this.setValue(this.values.OFF);
+                this.setValue(SoundOutputSource_Signal.values.OFF);
+            break;
             case 'Bluetooth':
-                this.setValue(this.values.Bluetooth);
+                this.setValue(SoundOutputSource_Signal.values.Bluetooth);
+            break;
             default:
-                this.setValue(this.values.OFF);
+                this.setValue(SoundOutputSource_Signal.values.OFF);
+            break;
         }
     }
     
     updateHTML(){
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '"\"]');
+		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '\"]');
 		elementsWithDataValue.forEach(function(element){
 			console.log('handleBTSourceReset Unsupported Element!');
 		});
