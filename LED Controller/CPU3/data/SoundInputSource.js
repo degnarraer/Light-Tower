@@ -26,11 +26,12 @@ export class SoundInputSource_Signal {
     onMessage(Value) {
         console.log("\"" + this.signalName + '\" Listener received value: \"' + Value + "\"");
     }
-    
+
     setValue(newValue, updateWebsocket = true) {
+        console.log('\"' + this.signalName + '\" Set Value: \"' + newValue + '\"');
         if (Object.values(SoundInputSource_Signal.values).includes(newValue)) {
             this.value = newValue;
-            this.updateHTML();
+            this.showSourceInputContent();
         } else {
             throw new Error('Invalid Value');
         }
@@ -80,10 +81,35 @@ export class SoundInputSource_Signal {
         }
     }
     
-    updateHTML(){
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '\"]');
-		elementsWithDataValue.forEach(function(element){
-			console.log('handleBTSourceReset Unsupported Element!');
-		});
+    showSourceInputContent() {
+        var contentId;
+        // Hide all tab contents
+        var tabContents = document.querySelectorAll('.selection_tab_content_input_source');
+        tabContents.forEach(function (tabContent) {
+            tabContent.classList.remove('active');
+        });
+        var validValue = true;
+        switch (this.value) {
+            case SoundInputSource_Signal.values.OFF:
+                console.log('\"' + this.signalName + '\" Show Source Input Content: \"OFF\"');
+                contentId = 'Sound_Input_Selection_OFF';
+            break;
+            case SoundInputSource_Signal.values.Microphone:
+                console.log('\"' + this.signalName + '\" Show Source Input Content: \"Microphone\"');
+                contentId = 'Sound_Input_Selection_Microphone';
+            break;
+            case SoundInputSource_Signal.values.Bluetooth:
+                console.log('\"' + this.signalName + '\" Show Source Input Content: \"Bluetooth\"');
+                contentId = 'Sound_Input_Selection_Bluetooth';
+            break;
+            default:
+                validValue = false;
+            break;
+        }
+        if(validValue) {
+            var heading = document.getElementById("mainMenu_Heading");
+            // Show the selected tab content
+            document.getElementById(contentId).classList.add('active');
+        }
     }
 }

@@ -73,9 +73,9 @@
 			</div>
 			<div class="menu-content" id="Sound Input">
 				<div class="selection_tabs">
-					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF'); Update_Signal_Value_To_Web_Socket('Input_Source', 'Off');">OFF</div>
-					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone'); Update_Signal_Value_To_Web_Socket('Input_Source', 'Microphone');">Microphone</div>
-					<div class="selection_tab" onclick="showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth'); Update_Signal_Value_To_Web_Socket('Input_Source', 'Bluetooth');">Bluetooth</div>
+					<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('OFF');">OFF</div>
+					<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Microphone');">Microphone</div>
+					<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Bluetooth');">Bluetooth</div>
 				</div>
 				<div class="selection_tab_content_input_source" id="Sound_Input_Selection_OFF">
 					<h2>Off</h2>
@@ -167,8 +167,8 @@
 				<div class="menu-content" id="Sound Output">
 				
 					<div class="selection_tabs">
-						<div class="selection_tab" onclick="showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF'); Update_Signal_Value_To_Web_Socket('Output_Source', 'Off');">OFF</div>
-						<div class="selection_tab" onclick="showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth'); Update_Signal_Value_To_Web_Socket('Output_Source', 'Bluetooth');">Bluetooth</div>
+						<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('OFF');">OFF</div>
+						<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">Bluetooth</div>
 					</div>
 					<div class="selection_tab_content_output_source" id="Sound_Output_Selection_OFF">
 						<h2>Off</h2>

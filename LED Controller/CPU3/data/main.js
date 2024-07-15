@@ -12,8 +12,13 @@ var sink_Name_Value_Changed = false;
 var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
+
 var CurrentSoundInputSource = new SoundInputSource_Signal("Sound_Input", SoundInputSource_Signal.values.OFF, wsManager);
+window.CurrentSoundInputSource = CurrentSoundInputSource;
+
 var CurrentSoundOutputSource = new SoundOutputSource_Signal("Sound_Output", SoundOutputSource_Signal.values.OFF, wsManager);
+window.CurrentSoundOutputSource = CurrentSoundOutputSource;
+
 var BT_SinkEnable = new Boolean_Signal("BT_Sink_Enable", Boolean_Signal.values.False, wsManager);
 var BT_SourceEnable = new Boolean_Signal("BT_Source_Enable", Boolean_Signal.values.False, wsManager);
 var Sink_Connect = new Boolean_Signal("Sink_Connect", Boolean_Signal.values.False, wsManager);
@@ -49,30 +54,19 @@ const ConnectionStateString =
 	3: 'Disconnecting'
 }
 
-const messageHandlers = {
-	'Amplitude_Gain': handleAmplitudeGain,
-	'FFT_Gain': handleFFTGain,
-	'Sound_Input_Source': handleSoundInputSource,
-	'Sound_Output_Source': handleSoundOutputSource,
-	'BT_Sink_Enable' : handleStubFunction,
-	'Sink_Name': handleBTSinkName,
-	'Source_Name' : handleStubFunction,
-	'SSID' : handleSSID,
-	'Password' : handlePassword,
-	'BT_Sink_Connection_State': handleBTSinkConnectionState,
-	'BT_Sink_Auto_ReConnect': handleBTSinkAutoReConnect,
-	'BT_Source_Enable' : handleStubFunction,
-	'BT_Source_Target_Device': handleBTSourceTargetDevice,
-	'Sink_Connect' : handleStubFunction,
-	'Sink_Disconnect' : handleStubFunction,
-	'Source_Connect' : handleStubFunction,
-	'Source_Disconnect' : handleStubFunction,
-	'BT_Source_Target_Devices': handleBTSourceTargetDevices,
-	'BT_Source_Auto_Reconnect': handleBTSourceAutoReconnect,
-	'BT_Source_Connection_State': handleBTSourceConnectionState,
-	'BT_Source_Reset': handleBTSourceReset,
-	'Speaker_Image': handleSpeakerImage,
-};
+window.showContent = showContent;
+function showContent(classId, contentId) {
+	// Hide all tab contents
+	var tabContents = document.querySelectorAll('.' + classId);
+	tabContents.forEach(function (tabContent) {
+		tabContent.classList.remove('active');
+	});
+	var heading = document.getElementById("mainMenu_Heading");
+	heading.innerText = contentId;
+	
+	// Show the selected tab content
+	document.getElementById(contentId).classList.add('active');
+}
 
 const classToSignal = {
 	'selection_tab_content_input_source': 'Sound_Input_Source',
@@ -96,21 +90,21 @@ function onload(event)
 	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
 	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
 	{
-		Update_Signal_Value_To_Web_Socket("BT_Sink_Auto_ReConnect", sink_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
+		Sink_Auto_Reconnect.setValue(sink_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
 
 	var source_BT_Reset_Toggle_Button;
 	source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
 	source_BT_Reset_Toggle_Button.addEventListener('change', function()
 	{
-		Update_Signal_Value_To_Web_Socket("BT_Source_Reset", source_BT_Reset_Toggle_Button.checked? "1" : "0");
+		Source_Reset.setValue(source_BT_Reset_Toggle_Button.checked? "1" : "0");
 	});
 
 	var source_BT_Auto_ReConnect_Toggle_Button;
 	source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
 	Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
 	{
-		Update_Signal_Value_To_Web_Socket("BT_Source_Auto_Reconnect", source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
+		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
 }
 
@@ -614,43 +608,7 @@ function handleBTSinkConnectionState(id, value) {
     }
 }
 	
-function handleBTSinkAutoReConnect(id, value) {
-	if(id && value)
-	{
-		console.log('Received the Bluetooth Sink Auto ReConnect!');
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Sink_Auto_ReConnect"]');
-		elementsWithDataValue.forEach(function(element){
-			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(value == '1'){
-					element.checked = true;
-				}else{
-					element.checked = false;
-				}
-			} else {
-				console.log('handleBTSinkAutoReConnect Unsupported Element!');
-			}
-		});
-	}
-}
 
-function handleBTSourceAutoReconnect(id, value) {
-	if(id && value)
-	{
-		console.log('Received Bluetooth Source Auto Reconnect!');
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Auto_ReConnect"]');
-		elementsWithDataValue.forEach(function(element){
-			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(value == '1'){
-					element.checked = true;
-				}else{
-					element.checked = false;
-				}
-			} else {
-				console.log('handleBTSourceAutoReconnect Unsupported Element!');
-			}
-		});
-	}
-}
 
 function handleBTSourceConnectionState(id, value) {
   if (id && value) {
@@ -664,53 +622,4 @@ function handleBTSourceConnectionState(id, value) {
 		}
 	});
   }
-}
-
-function handleBTSourceReset(id, value) {
-	if(id && value)
-	{
-		console.log('Received Bluetooth Source Reset!');
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Reset"]');
-		elementsWithDataValue.forEach(function(element){
-			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(value == '1'){
-					element.checked = true;
-				}else{
-					element.checked = false;
-				}
-			} else {
-				console.log('handleBTSourceReset Unsupported Element!');
-			}
-		});
-	}
-}
-
-window.showContent = showContent;
-function showContent(classId, contentId) {
-	// Hide all tab contents
-	var tabContents = document.querySelectorAll('.' + classId);
-	tabContents.forEach(function (tabContent) {
-		tabContent.classList.remove('active');
-	});
-	var heading = document.getElementById("mainMenu_Heading");
-	heading.innerText = contentId;
-	
-	// Show the selected tab content
-	document.getElementById(contentId).classList.add('active');
-}
-
-window.Update_Signal_Value_To_Web_Socket = Update_Signal_Value_To_Web_Socket;
-function Update_Signal_Value_To_Web_Socket(signal, value)
-{
-	if(signal && value) {
-		console.log('Updating Signal: \'' + signal + '\' to value: \'' + value + '\'');
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = signal.toString();
-		Root.SignalValue.Value = value.toString();
-		var Message = JSON.stringify(Root);
-		wsManager.send(Message);
-	} else {
-		console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
-	}
 }
