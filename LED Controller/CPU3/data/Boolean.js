@@ -1,4 +1,4 @@
-export class SoundInputSource_Signal {
+export class Boolean_Signal {
     
     constructor(signalName, initialValue, wsManager) {
         this.signalName = signalName;
@@ -9,9 +9,8 @@ export class SoundInputSource_Signal {
     }
 
     static values = {
-        OFF: 'OFF',
-        Microphone: 'Microphone',
-        Bluetooth: 'Bluetooth',
+        False: '0',
+        True: '1',
         Count: 'Count'
     };
 
@@ -26,9 +25,9 @@ export class SoundInputSource_Signal {
     onMessage(Value) {
         console.log("\"" + this.signalName + '\" Listener received value: \"' + Value + "\"");
     }
-    
+
     setValue(newValue) {
-        if (Object.values(SoundInputSource_Signal.values).includes(newValue)) {
+        if (Object.values(Boolean_Signal.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
         } else {
@@ -43,14 +42,10 @@ export class SoundInputSource_Signal {
 
     toString() {
         switch (this.value) {
-            case this.values.OFF:
-                return 'OFF';
-            case this.values.Microphone:
-                return 'Microphone';
-            case this.values.Bluetooth:
-                return 'Bluetooth';
-            case this.values.Count:
-                return 'Count';
+            case this.values.False:
+                return '0';
+            case this.values.True:
+                return '1';
             default:
                 return 'Unknown';
         }
@@ -58,21 +53,31 @@ export class SoundInputSource_Signal {
 
     fromString(str) {
         switch (str) {
-            case 'OFF':
-                this.setValue(this.values.OFF);
-            case 'Microphone':
-                this.setValue(this.values.Microphone);
-            case 'Bluetooth':
-                this.setValue(this.values.Bluetooth);
+            case '0':
+            case 'false':
+            case 'False':
+                this.setValue(this.values.False);
+            case '1':
+            case 'true':
+            case 'True':
+                this.setValue(this.values.True);
             default:
-                this.setValue(this.values.OFF);
+                this.setValue(this.values.False);
         }
     }
     
     updateHTML(){
 		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '"\"]');
 		elementsWithDataValue.forEach(function(element){
-			console.log('handleBTSourceReset Unsupported Element!');
+			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
+				if(this.value == this.values.True){
+					element.checked = true;
+				}else{
+					element.checked = false;
+				}
+			} else {
+				console.log('handleBTSourceReset Unsupported Element!');
+			}
 		});
     }
 }

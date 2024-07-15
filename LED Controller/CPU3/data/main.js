@@ -1,27 +1,9 @@
-import { SoundInputSource } from './SoundInputSource.js';
-import { SoundOutputSource } from './SoundOutputSource.js';
 import { WebSocketManager } from './WebSocket.js';
+import { SoundInputSource_Signal } from './SoundInputSource.js';
+import { SoundOutputSource_Signal } from './SoundOutputSource.js';
+import { Boolean_Signal } from './Boolean.js';
 
 const wsManager = new WebSocketManager();
-wsManager.onMessage(onWebSocketMessage);
-function onWebSocketMessage(event) {
-	console.log('Message received:', event.data);
-	try {
-		const myObj = JSON.parse(event.data);
-		const keys = Object.keys(myObj);
-		keys.forEach(key => {
-			const { Id, Value } = myObj[key];
-			const messageHandler = messageHandlers[Id];
-			if (messageHandler) {
-				messageHandler(Id, Value);
-			} else {
-				console.warn('No handler found for message type:', Id);
-			}
-		});
-	} catch (error) {
-		console.error('Error parsing message:', error);
-	}
-}
 
 var speakerImages = new Array();
 var sliderTouched = false;
@@ -30,8 +12,18 @@ var sink_Name_Value_Changed = false;
 var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
-var CurrentSoundInputSource = SoundInputSource.Value.OFF;
-var CurrentSoundOutputSource = SoundOutputSource.Value.OFF;
+var CurrentSoundInputSource = new SoundInputSource_Signal("Sound_Input", SoundInputSource_Signal.values.OFF, wsManager);
+var CurrentSoundOutputSource = new SoundOutputSource_Signal("Sound_Output", SoundOutputSource_Signal.values.OFF, wsManager);
+var BT_SinkEnable = new Boolean_Signal("BT_Sink_Enable", Boolean_Signal.values.False, wsManager);
+var BT_SourceEnable = new Boolean_Signal("BT_Source_Enable", Boolean_Signal.values.False, wsManager);
+var Sink_Connect = new Boolean_Signal("Sink_Connect", Boolean_Signal.values.False, wsManager);
+var Sink_Disconnect = new Boolean_Signal("Sink_Disconnect", Boolean_Signal.values.False, wsManager);
+var Sink_Auto_Reconnect = new Boolean_Signal("BT_Sink_Auto_Reconnect", Boolean_Signal.values.False, wsManager);
+var Source_Connect = new Boolean_Signal("Source_Connect", Boolean_Signal.values.False, wsManager);
+var Source_Disconnect = new Boolean_Signal("Source_Disconnect", Boolean_Signal.values.False, wsManager);
+var Source_Auto_Reconnect = new Boolean_Signal("BT_Source_Auto_Reconnect", Boolean_Signal.values.False, wsManager);
+var Source_Reset = new Boolean_Signal("BT_Source_Reset", Boolean_Signal.values.False, wsManager);
+
 
 //Compatible Devices
 var compatibleDevices = [
@@ -125,8 +117,8 @@ function onload(event)
 function handleSoundInputSource(id, value) {
 	if(id && value){
 		console.log('Received Sound Input Source! ID:' + id + ' Value: ' + value );
-		CurrentSoundInputSource = SoundInputSource.FromString(value);
-		switch (CurrentSoundInputSource) {
+		CurrentSoundInputSource.FromString(value);
+		switch (CurrentSoundInputSource.GetSource()) {
             case SoundInputSource.OFF:
                 showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
 				Update_Signal_Value_To_Web_Socket(id, value);
@@ -149,8 +141,8 @@ function handleSoundInputSource(id, value) {
 function handleSoundOutputSource(id, value) {
     if (id && value) {
         console.log('Received Sound Output Source! ID: ' + id + ' Value: ' + value);
-        CurrentSoundOutputSource = SoundOutputSource.FromString(value);
-        switch (CurrentSoundOutputSource) {
+		CurrentSoundOutputSource.FromString(value);
+		switch (CurrentSoundOutputSource.GetSource()) {
             case SoundOutputSource.OFF:
                 showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
 				Update_Signal_Value_To_Web_Socket(id, value);
@@ -707,9 +699,11 @@ function showContent(classId, contentId) {
 	document.getElementById(contentId).classList.add('active');
 }
 
+window.Update_Signal_Value_To_Web_Socket = Update_Signal_Value_To_Web_Socket;
 function Update_Signal_Value_To_Web_Socket(signal, value)
 {
 	if(signal && value) {
+		console.log('Updating Signal: \'' + signal + '\' to value: \'' + value + '\'');
 		var Root = {};
 		Root.SignalValue = {};
 		Root.SignalValue.Id = signal.toString();
@@ -717,6 +711,6 @@ function Update_Signal_Value_To_Web_Socket(signal, value)
 		var Message = JSON.stringify(Root);
 		wsManager.send(Message);
 	} else {
-		console.log('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+		console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
 	}
 }
