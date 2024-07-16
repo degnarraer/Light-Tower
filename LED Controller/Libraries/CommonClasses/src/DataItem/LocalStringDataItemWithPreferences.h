@@ -58,7 +58,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
-			ESP_LOGD("LocalStringDataItemWithPreferences::SetValueFromString"
+			ESP_LOGI("LocalStringDataItemWithPreferences::SetValueFromString"
 					, "\"%s\": String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());

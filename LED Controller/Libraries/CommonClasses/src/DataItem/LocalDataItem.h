@@ -292,6 +292,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					stringValue += ENCODE_DIVIDER;
 				}
 				stringValue += valueStrings[COUNT - 1];
+				ESP_LOGI("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -335,6 +336,10 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual bool SetValueFromString(const String& stringValue)
 		{
+			ESP_LOGI("LocalDataItem::SetValueFromString"
+					, "\"%s\": String Value: \"%s\""
+					, m_Name.c_str()
+					, stringValue.c_str());
 			T value[COUNT];
 			std::vector<String> substrings;
 			size_t start = 0;

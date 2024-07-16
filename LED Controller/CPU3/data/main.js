@@ -13,10 +13,10 @@ var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
 
-var CurrentSoundInputSource = new SoundInputSource_Signal("Sound_Input", SoundInputSource_Signal.values.OFF, wsManager);
+var CurrentSoundInputSource = new SoundInputSource_Signal("Input_Source", SoundInputSource_Signal.values.OFF, wsManager);
 window.CurrentSoundInputSource = CurrentSoundInputSource;
 
-var CurrentSoundOutputSource = new SoundOutputSource_Signal("Sound_Output", SoundOutputSource_Signal.values.OFF, wsManager);
+var CurrentSoundOutputSource = new SoundOutputSource_Signal("Output_Source", SoundOutputSource_Signal.values.OFF, wsManager);
 window.CurrentSoundOutputSource = CurrentSoundOutputSource;
 
 var BT_SinkEnable = new Boolean_Signal("BT_Sink_Enable", Boolean_Signal.values.False, wsManager);
@@ -28,7 +28,6 @@ var Source_Connect = new Boolean_Signal("Source_Connect", Boolean_Signal.values.
 var Source_Disconnect = new Boolean_Signal("Source_Disconnect", Boolean_Signal.values.False, wsManager);
 var Source_Auto_Reconnect = new Boolean_Signal("BT_Source_Auto_Reconnect", Boolean_Signal.values.False, wsManager);
 var Source_Reset = new Boolean_Signal("BT_Source_Reset", Boolean_Signal.values.False, wsManager);
-
 
 //Compatible Devices
 var compatibleDevices = [

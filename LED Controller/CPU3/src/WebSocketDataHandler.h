@@ -138,15 +138,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     bool NewRxValueReceived(T* Object, size_t Count)
     {
-      bool ValueChanged = false;
-      if(Object && false == m_DataItem.EqualsValue(Object, Count))
-      {
-        m_DataItem.SetValue(Object, Count);
-        ValueChanged = true;
-        ESP_LOGD( "WebSocketDataHandler: NewRxValueReceived"
-                , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
-                , m_DataItem.GetValueAsString());
-      }
+      bool ValueChanged = m_DataItem.SetValue(Object, Count);
+      ESP_LOGD( "WebSocketDataHandler: NewRxValueReceived"
+              , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
+              , m_DataItem.GetValueAsString());
       return ValueChanged;
     }
     
@@ -179,10 +174,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
-      m_DataItem.SetValueFromString(stringValue);
-      ESP_LOGD( "WebSocketDataHandler: HandleNewSignalValue"
-              , "Web Socket Value: %s"
+      ESP_LOGI( "WebSocketDataHandler: HandleNewSignalValue"
+              , "New Signal Value: \"%s\""
               , stringValue.c_str());
+      m_DataItem.SetValueFromString(stringValue);
     }
   protected:
     const String m_Name;
@@ -242,7 +237,10 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
-      m_DataItem.SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
+      ESP_LOGI( "WebSocketDataHandler: HandleNewSignalValue"
+              , "New Signal Value: \"%s\""
+              , stringValue.c_str());
+      m_DataItem.SetValueFromString(stringValue);
     }
 };
 
@@ -295,7 +293,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
     
     void HandleNewSignalValue(const String& stringValue) override
     {
-      ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleNewSignalValue", "New Web Socket Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
+      ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleNewSignalValue", "New Signal Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
       JSONVar jSONObject = JSON.parse(stringValue);
       if (JSON.typeof(jSONObject) == "undefined")
       {

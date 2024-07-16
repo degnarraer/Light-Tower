@@ -241,10 +241,9 @@ class SettingsWebServerManager: public SetupCallerInterface
     //TBD
 
     //Input Source
-    const ValidStringValues_t validInputSourceValues = { "0", "1", "2", "OFF", "Microphone", "Bluetooth" };
-    const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::OFF;
+    const ValidStringValues_t validInputSourceValues = { "OFF", "Microphone", "Bluetooth" };
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
-                                                                                                                      , m_SoundInputSource_InitialValue
+                                                                                                                      , SoundInputSource_t::OFF
                                                                                                                       , RxTxType_Tx_On_Change_With_Heartbeat
                                                                                                                       , UpdateStoreType_On_Rx
                                                                                                                       , 5000
@@ -254,7 +253,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                                                       , this
                                                                                                                       , &validInputSourceValues );
     WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( "Sound Input Source Web Socket Handler"
-                                                                                                                            , "Sound_Input_Source"
+                                                                                                                            , "Input_Source"
                                                                                                                             , m_WebSocketDataProcessor
                                                                                                                             , true
                                                                                                                             , true
@@ -263,9 +262,23 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     //Output Source
     const ValidStringValues_t validOutputSourceValues = { "OFF", "Bluetooth" };
-    const SoundOutputSource_t m_SoundOuputSource_InitialValue = SoundOutputSource_t::OFF;
-    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOuputSource_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, NULL, this, &validOutputSourceValues);
-    WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( "Sound Output Source Web Socket Handler", "Sound_Output_Source", m_WebSocketDataProcessor, true, true, m_SoundOuputSource, false );
+    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source"
+                                                                                                                        , SoundOutputSource_t::OFF
+                                                                                                                        , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                                                        , UpdateStoreType_On_Rx
+                                                                                                                        , 5000
+                                                                                                                        , &m_preferenceInterface
+                                                                                                                        , &m_CPU2SerialPortMessageManager
+                                                                                                                        , NULL
+                                                                                                                        , this
+                                                                                                                        , &validOutputSourceValues);
+    WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( "Sound Output Source Web Socket Handler"
+                                                                                                                              , "Output_Source"
+                                                                                                                              , m_WebSocketDataProcessor
+                                                                                                                              , true
+                                                                                                                              , true
+                                                                                                                              , m_SoundOuputSource
+                                                                                                                              , false );
     
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
@@ -473,7 +486,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                 ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Signal Value Data Received. Id: \"%s\" Value: \"%s\""
                         , Id.c_str()
                         , Value.c_str() );
-                if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
+                if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id, Value))
                 {
                   ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Signal Value Object: %s", Id.c_str());
                 }

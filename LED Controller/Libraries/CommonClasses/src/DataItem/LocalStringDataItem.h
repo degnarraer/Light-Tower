@@ -93,7 +93,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			ESP_LOGD("LocalStringDataItem::SetValueFromString"
+			ESP_LOGI("LocalStringDataItem::SetValueFromString"
 					, "\"%s\": String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());

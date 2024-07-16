@@ -33,7 +33,7 @@ export class SoundInputSource_Signal {
             this.value = newValue;
             this.showSourceInputContent();
         } else {
-            throw new Error('Invalid Value');
+            console.error("\"" + this.signalName + '\" Unknown Value: \"' + newValue + "\"");
         }
         if(updateWebsocket){
             this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());

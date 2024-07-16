@@ -28,11 +28,12 @@ export class SoundOutputSource_Signal {
     }
     
     setValue(newValue, updateWebsocket = true) {
+        console.log('\"' + this.signalName + '\" Set Value: \"' + newValue + '\"');
         if (Object.values(SoundOutputSource_Signal.values).includes(newValue)) {
             this.value = newValue;
             this.showSourceOutputContent();
         } else {
-            throw new Error('Invalid Value');
+            console.error("\"" + this.signalName + '\" Unknown Value: \"' + newValue + "\"");
         }
         if(updateWebsocket){
             this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
@@ -50,9 +51,6 @@ export class SoundOutputSource_Signal {
             break;
             case SoundOutputSource_Signal.values.Bluetooth:
                 return 'Bluetooth';
-            break;
-            case SoundOutputSource_Signal.values.Count:
-                return 'Count';
             break;
             default:
                 return 'Unknown';
