@@ -429,21 +429,20 @@ class SoundInputSource
     public:
         enum Value
         {
-            OFF,
-            Microphone,
-            Bluetooth,
-            Count
+            OFF = 0,
+            Microphone = 1,
+            Bluetooth = 2,
+            Count = 3
         };
 
         // Function to convert enum to string
-        static String ToString(Value source)
+        static String ToString(const Value &source)
         {
             switch (source)
             {
                 case OFF: return "OFF";
                 case Microphone: return "Microphone";
                 case Bluetooth: return "Bluetooth";
-                case Count: return "Count";
                 default: return "Unknown";
             }
         }
@@ -451,17 +450,17 @@ class SoundInputSource
         // Function to convert string to enum
         static Value FromString(const String& str)
         {
-            if (str == "OFF") return OFF;
-            if (str == "Microphone") return Microphone;
-            if (str == "Bluetooth") return Bluetooth;
-            if (str == "Count") return Count;
-            
+            if (str.equals("OFF")) return OFF;
+            if (str.equals("Microphone")) return Microphone;
+            if (str.equals("Bluetooth")) return Bluetooth;
             return OFF; // Default or error value
         }
 
         // Overload the insertion operator
         friend std::ostream& operator<<(std::ostream& os, const SoundInputSource::Value& value) {
-            os << SoundInputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
+            String result = SoundInputSource::ToString(value);
+            ESP_LOGD("SoundInputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result.c_str());
+            os << result.c_str();
             return os;
         }
         
@@ -471,6 +470,7 @@ class SoundInputSource
             std::string token;
             is >> token;
             value = SoundInputSource::FromString(token.c_str());
+            ESP_LOGD("SoundInputSource", "istream input value: \"%s\" Converted to: \"%i\"", token.c_str(), value);
             return is;
         }
 };
@@ -481,9 +481,9 @@ class SoundOutputSource
     public:
         enum Value
         {
-            OFF,
-            Bluetooth,
-            Count
+            OFF = 0,
+            Bluetooth = 1,
+            Count = 2
         };
 
         // Function to convert enum to string
@@ -493,7 +493,6 @@ class SoundOutputSource
             {
                 case OFF:         return "OFF";
                 case Bluetooth:   return "Bluetooth";
-                case Count:       return "Count";
                 default:          return "Unknown";
             }
         }
@@ -501,27 +500,27 @@ class SoundOutputSource
         // Function to convert string to enum
         static Value FromString(const String& str)
         {
-            if (str == "OFF") return OFF;
-            if (str == "Bluetooth") return Bluetooth;
-            if (str == "Count") return Count;
-            
+            if (str.equals("OFF")) return OFF;
+            if (str.equals("Bluetooth")) return Bluetooth;
             return OFF; // Default or error value
         }
 
         // Overload the insertion operator
+        friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
+            String result = SoundOutputSource::ToString(value);
+            ESP_LOGD("SoundOutputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result.c_str());
+            os << result.c_str();
+            return os;
+        }
+        
+        // Overload the extraction operator
         friend std::istream& operator>>(std::istream& is, SoundOutputSource::Value& value) 
         {
             std::string token;
             is >> token;
             value = SoundOutputSource::FromString(token.c_str());
+            ESP_LOGD("SoundOutputSource", "istream input value: \"%s\" Converted to: \"%i\"", token.c_str(), value);
             return is;
-        }
-        
-        // Overload the extraction operator
-        friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value)
-        {
-            os << SoundOutputSource::ToString(value); // Use toString to convert device to a string and write it to the stream
-            return os;
         }
 };
 typedef SoundOutputSource::Value SoundOutputSource_t;
@@ -947,7 +946,7 @@ class DataTypeFunctions
 			{
 				if(DataType.equals(DataTypeStrings[i]))return (DataType_t)i;
 			}
-			ESP_LOGE("DataTypes: GetDataTypeFromString: %s", "GetDataTypeFromString: \"%s\": Undefined Data Type", DataType.c_str());
+			ESP_LOGE("DataTypes: GetDataTypeFromString: %s", "ERROR! \"%s\": Undefined Data Type.", DataType.c_str());
 			return DataType_Undef;
 		}
 
@@ -979,7 +978,7 @@ class DataTypeFunctions
 			else if(std::is_same<T, SoundOutputSource_t>::value)						return DataType_SoundOutputSource_t;
 			else
 			{
-				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "Undefined Data Type");
+				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "ERROR! Undefined Data Type.");
 				return DataType_Undef;
 			}
 		}
@@ -1081,7 +1080,7 @@ class DataTypeFunctions
 				break;
 				
 				default:
-					ESP_LOGE("DataTypes: GetSizeOfDataType: %s", "GetSizeOfDataType: \"%s\": Undefined Data Type", DataTypeStrings[DataType]);
+					ESP_LOGE("DataTypes: GetSizeOfDataType: %s", "ERROR! \"%s\": Undefined Data Type.", DataTypeStrings[DataType]);
 					result = 0;
 				break;
 			}

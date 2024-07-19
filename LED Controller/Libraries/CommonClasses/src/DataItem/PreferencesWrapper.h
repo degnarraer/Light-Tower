@@ -369,7 +369,7 @@ public:
         }
         else
         {
-            ESP_LOGE("InitializeAndLoadPreference", "Null Preferences Pointer!");
+            ESP_LOGE("InitializeAndLoadPreference", "ERROR! Null Preferences Pointer.");
         }
         xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
@@ -382,7 +382,7 @@ public:
         bool result = false;
         if (!mp_PreferencesInterface)
         {
-            ESP_LOGE("Update_Preference", "\"%s\": Null PreferenceInterface Pointer!", m_Key.c_str());
+            ESP_LOGE("Update_Preference", "ERROR! \"%s\": NULL PreferenceInterface Pointer.", m_Key.c_str());
             return result;
         }
         switch (updateType)
@@ -405,7 +405,7 @@ public:
                 result = HandleSave(saveValue);
                 break;
             default:
-                ESP_LOGE("Update_Preference", "\"%s\": Unsupported Update Type!", m_Key.c_str());
+                ESP_LOGE("Update_Preference", "ERROR! \"%s\": Unsupported Update Type.", m_Key.c_str());
                 break;
         }
         return result;
@@ -420,13 +420,13 @@ private:
             esp_err_t stop_err = esp_timer_stop(m_PreferenceTimer);
             if (m_PreferenceTimerActive == true && stop_err != ESP_OK)
             {
-                ESP_LOGE("CleanUpTimer", "Error stopping timer: %s", esp_err_to_name(stop_err));
+                ESP_LOGE("CleanUpTimer", "ERROR! Unable to stop timer: %s.", esp_err_to_name(stop_err));
                 result = false;
             }
             esp_err_t delete_err = esp_timer_delete(m_PreferenceTimer);
             if (delete_err != ESP_OK)
             {
-                ESP_LOGE("CleanUpTimer", "Error deleting timer: %s", esp_err_to_name(delete_err));
+                ESP_LOGE("CleanUpTimer", "ERROR! Unable to delete timer: %s.", esp_err_to_name(delete_err));
                 result = false;
             }
             else
@@ -466,7 +466,7 @@ private:
                 esp_err_t timerCreateErr = esp_timer_create(mp_PreferenceTimerCreateArgs, &m_PreferenceTimer);
                 if (timerCreateErr != ESP_OK)
                 {
-                    ESP_LOGE("DelaySaveValue", "Failed to create timer for Key: \"%s\", error: %d", m_Key.c_str(), timerCreateErr);
+                    ESP_LOGE("DelaySaveValue", "ERROR! Failed to create timer for Key: \"%s\", error: %d.", m_Key.c_str(), timerCreateErr);
                     delete mp_TimerArgs;
                     mp_TimerArgs = nullptr;
                     delete mp_PreferenceTimerCreateArgs;
@@ -477,7 +477,7 @@ private:
                 esp_err_t timerStartErr = esp_timer_start_once(m_PreferenceTimer, delayTime);
                 if (timerStartErr != ESP_OK)
                 {
-                    ESP_LOGE("DelaySaveValue", "Failed to start timer for Key: \"%s\", error: %d", m_Key.c_str(), timerStartErr);
+                    ESP_LOGE("DelaySaveValue", "ERROR! Failed to start timer for Key: \"%s\", error: %d.", m_Key.c_str(), timerStartErr);
                     esp_timer_delete(m_PreferenceTimer);
                     m_PreferenceTimer = nullptr;
                     delete mp_TimerArgs;
@@ -492,12 +492,12 @@ private:
             }
             else
             {
-                ESP_LOGE("DelaySaveValue", "Null TimerCreateArg Pointer!");
+                ESP_LOGE("DelaySaveValue", "ERROR! Null TimerCreateArg Pointer.");
             }
         }
         else
         {
-            ESP_LOGE("DelaySaveValue", "Null TimerArg Pointer!");
+            ESP_LOGE("DelaySaveValue", "ERROR! Null TimerArg Pointer.");
         }
         return result;
     }
@@ -528,7 +528,7 @@ private:
                     }
                     else
                     {
-                        ESP_LOGE("HandleLoad", "\"%s\" Failed to Load Default Value!: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+                        ESP_LOGE("HandleLoad", "ERROR! \"%s\" Failed to Load Default Value: \"%s\".", m_Key.c_str(), m_InitialValue.c_str());
                     }
                 }
             }
@@ -540,7 +540,7 @@ private:
         }
         else
         {
-            ESP_LOGE("HandleLoad", "\"%s\" Null PreferencesInterface Pointer!", m_Key.c_str());
+            ESP_LOGE("HandleLoad", "ERROR! \"%s\" Null PreferencesInterface Pointer.", m_Key.c_str());
         }
         xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
@@ -586,7 +586,7 @@ private:
                     String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                     if(!saveString.equals(savedString))
                     {
-                        ESP_LOGE("HandleSave", "Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\"", m_Key.c_str(), saveString.c_str(), savedString.c_str());
+                        ESP_LOGE("HandleSave", "ERROR! Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\".", m_Key.c_str(), saveString.c_str(), savedString.c_str());
                         mp_PreferencesInterface->remove(m_Key.c_str());
                     }
                     else
@@ -598,7 +598,7 @@ private:
                 }
                 else
                 {
-                    ESP_LOGE("HandleSave", "Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
+                    ESP_LOGE("HandleSave", "ERROR! Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
                     mp_PreferencesInterface->remove(m_Key.c_str());
                 }
                 xSemaphoreGiveRecursive(m_PreferencesMutex);
@@ -606,7 +606,7 @@ private:
         }
         else
         {
-            ESP_LOGE("HandleSave", "\"%s\" Null Pointer!", m_Key.c_str());
+            ESP_LOGE("HandleSave", "ERROR! \"%s\" Null Pointer.", m_Key.c_str());
         }
         return result;
     }
@@ -642,17 +642,17 @@ private:
                 }
                 else
                 {
-                    ESP_LOGE("Static_Update_Preference_Timer_Call", "Null PreferenceManagerInstance Pointer!");
+                    ESP_LOGE("Static_Update_Preference_Timer_Call", "ERROR! Null PreferenceManagerInstance Pointer.");
                 }
             }
             else
             {
-                ESP_LOGE("Static_Update_Preference_Timer_Call", "Null timerArgsPtr Pointer!");
+                ESP_LOGE("Static_Update_Preference_Timer_Call", "ERROR! Null timerArgsPtr Pointer.");
             }
         }
         else
         {
-            ESP_LOGE("Static_Update_Preference_Timer_Call", "Null arg Pointer!");
+            ESP_LOGE("Static_Update_Preference_Timer_Call", "ERROR! Null arg Pointer.");
         }
     }
 };

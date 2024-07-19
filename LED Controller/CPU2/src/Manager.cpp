@@ -48,7 +48,7 @@ void Manager::Setup()
   m_BT_Out.RegisterForActiveDeviceUpdate(this);
   if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
   {
-    ESP_LOGE("Setup", "Error creating task!");
+    ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
   SetupAllSetupCallees();
 }

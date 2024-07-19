@@ -67,7 +67,7 @@ class NamedCallbackInterface
 				{
 					if(*namedCallback == *callback)
 					{
-						ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
+						ESP_LOGE("RegisterNamedCallback", "ERROR! A callback with this name already exists.");
 						IsFound = true;
 						break;
 					}
@@ -125,14 +125,14 @@ class NewRxTxValueCallerInterface
 			{
 				if(NewCallee == callee)
 				{
-					ESP_LOGE("RegisterForNewValueNotification", "A callee with this name already exists!");
+					ESP_LOGE("RegisterForNewValueNotification", "ERROR! A callee with this name already exists.");
 					IsFound = true;
 					break;
 				}
 			}
 			if(false == IsFound)
 			{
-				ESP_LOGI("RegisterForNewValueNotification", "Callee Registered");
+				ESP_LOGD("RegisterForNewValueNotification", "Callee Registered");
 				m_NewValueCallees.push_back(NewCallee);
 			}
 		}

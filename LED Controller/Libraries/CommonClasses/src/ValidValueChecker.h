@@ -55,18 +55,18 @@ public:
         {
             for (const String& validValue : *mp_ValidStrings)
             {
-                ESP_LOGD("ValidValueChecker:IsValidStringValue", 
+                ESP_LOGI("ValidValueChecker:IsValidStringValue", 
                          "IsValidStringValue Match Check between: \"%s\" and \"%s\"", 
                          stringValue.c_str(), validValue.c_str());
                 if (stringValue.equals(validValue))
                 {
-                    ESP_LOGD("ValidValueChecker:IsValidStringValue", 
+                    ESP_LOGI("ValidValueChecker:IsValidStringValue", 
                              "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", 
                              stringValue.c_str(), validValue.c_str());
                     return true;
                 }
             }
-            ESP_LOGW("ValidValueChecker:IsValidStringValue", "IsValidStringValue INVALID VALUE!");
+            ESP_LOGW("ValidValueChecker:IsValidStringValue", "WARNING! IsValidStringValue INVALID VALUE");
         } 
         else if (mp_ValidValueComparators)
         {

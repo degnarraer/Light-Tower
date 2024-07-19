@@ -96,7 +96,7 @@ class QueueController: public DataTypeFunctions
 				size_t QueueCount = uxQueueMessagesWaiting(TakeFromQueue);
 				if(true == DebugMessage && QueueCount > 0)
 				{
-					ESP_LOGE("Helpers", "%s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i", DebugTitle.c_str(), QueueCount, TakeFromQueueByteCount);
+					ESP_LOGE("Helpers", "ERROR! %s: MoveDataFromQueueToQueue: Queue Messages Waiting: %i Byte Count: %i.", DebugTitle.c_str(), QueueCount, TakeFromQueueByteCount);
 				}
 				for (uint8_t i = 0; i < QueueCount; ++i)
 				{
@@ -105,7 +105,7 @@ class QueueController: public DataTypeFunctions
 					{
 						if(xQueueSend(GiveToQueue, DataBuffer, TicksToWait) != pdTRUE)
 						{
-							if(true == DebugMessage) ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value", DebugTitle.c_str());
+							if(true == DebugMessage) ESP_LOGE("Helpers", "ERROR! %s: Error Setting Queue Value.", DebugTitle.c_str());
 						}
 						else
 						{
@@ -336,7 +336,7 @@ class QueueManager: public CommonUtils
 							if(false == DataPullHasErrored)
 							{
 								DataPullHasErrored = true;
-								ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+								ESP_LOGE("CommonUtils", "ERROR! did not receive Queue.");
 							}
 						}
 					}
@@ -369,7 +369,7 @@ class QueueManager: public CommonUtils
 							if(false == DataPullHasErrored)
 							{
 								DataPullHasErrored = true;
-								ESP_LOGE("CommonUtils", "Error Receiving Queue!");
+								ESP_LOGE("CommonUtils", "ERROR! Unable to receive queue.");
 							}
 						}
 					}
@@ -377,7 +377,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s.", Name.c_str());
 			}
 			return Result;
 		}
@@ -397,7 +397,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s.", Name.c_str());
 			}
 		}
 		void PushValueToTXQueue(void* Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
@@ -433,7 +433,7 @@ class QueueManager: public CommonUtils
 			}
 			else
 			{
-				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s", Name.c_str());
+				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s.", Name.c_str());
 			}
 		}
 		
@@ -446,7 +446,7 @@ class QueueManager: public CommonUtils
 			m_DataItemCount = GetDataItemConfigCount();
 			size_t ConfigBytes = sizeof(struct DataItem_t) * m_DataItemCount;
 			DataItemConfig_t* ConfigFile = GetDataItemConfig();
-			ESP_LOGE("CommonUtils", "%s: Allocating %i DataItem's for a total of %i bytes of Memory", m_Title.c_str(), m_DataItemCount, ConfigBytes);
+			ESP_LOGE("CommonUtils", "ERROR! %s: Allocating %i DataItem's for a total of %i bytes of Memory.", m_Title.c_str(), m_DataItemCount, ConfigBytes);
 			
 			//Placement Allocation
 			void *DataItem_t_raw = heap_caps_malloc(sizeof(DataItem_t) * m_DataItemCount, MALLOC_CAP_SPIRAM);

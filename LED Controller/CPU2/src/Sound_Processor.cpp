@@ -40,11 +40,11 @@ void Sound_Processor::SetupSoundProcessor()
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   if( xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessFFTTask,          0 ) != pdTRUE )
   {
-    ESP_LOGE("Setup", "Error creating task!");
+    ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
   if( xTaskCreatePinnedToCore( Static_Calculate_Power,  "ProcessSoundPowerTask",  5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessSoundPowerTask,   1 ) != pdTRUE )
   {
-    ESP_LOGE("Setup", "Error creating task!");
+    ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
 }
 

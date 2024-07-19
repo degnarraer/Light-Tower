@@ -26,7 +26,7 @@ void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVo
 	{
 		if(NewCallee == callee)
 		{
-			ESP_LOGE("RegisterForNewValueNotification", "A callee with this name already exists!");
+			ESP_LOGE("RegisterForNewValueNotification", "ERROR! A callee with this name already exists.");
 			IsFound = true;
 			break;
 		}
@@ -57,7 +57,7 @@ void NewRxTxVoidObjectCallerInterface::RegisterNamedCallback(NamedCallback_t* Na
 	{
 		if(NamedCallback == callback)
 		{
-			ESP_LOGE("RegisterNamedCallback", "A callback with this name already exists!");
+			ESP_LOGE("RegisterNamedCallback", "ERROR! A callback with this name already exists.");
 			IsFound = true;
 			break;
 		}
@@ -120,7 +120,10 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Task Created.");
 	
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
-	if(nullptr == m_TXQueue) ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
+	if(nullptr == m_TXQueue)
+	{
+		ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
+	}
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
 }
 
@@ -129,7 +132,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
 	{
-		ESP_LOGE("QueueMessageFromData", "Error Invalid Data!");
+		ESP_LOGE("QueueMessageFromData", "ERROR! Invalid Data.");
 	}
 	else
 	{
@@ -141,7 +144,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 		}
 		else
 		{
-			ESP_LOGE("QueueMessageFromData", "Null Pointer!");
+			ESP_LOGE("QueueMessageFromData", "ERROR! Null Pointer.");
 		}
 	}
 	return result;
@@ -167,7 +170,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	}
 	else
 	{
-		ESP_LOGE("QueueMessage", "Error! NULL Queue!");
+		ESP_LOGE("QueueMessage", "ERROR! NULL Queue.");
 	}
 	return result;
 }
@@ -188,7 +191,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				m_message += character;
 				if(m_message.length() > MaxMessageLength)
 				{
-					ESP_LOGE("SerialPortMessageManager", "Message RX Overrun: \"%s\"", m_message.c_str());
+					ESP_LOGE("SerialPortMessageManager", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
 					m_message = "";
 				}
 				else if(m_message.charAt(m_message.length() - 1) == '\n')
@@ -203,7 +206,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					}
 					else
 					{
-						ESP_LOGW("SerialPortMessageManager", "\"%s\" DeSerialized Named object failed", m_Name.c_str());
+						ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
 					}
 					m_message = "";
 				}
@@ -211,7 +214,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 		}
 		else
 		{
-			ESP_LOGE("SerialPortMessageManager_RxTask", "Null Pointer!");
+			ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Null Pointer.");
 		}
 	}
 }

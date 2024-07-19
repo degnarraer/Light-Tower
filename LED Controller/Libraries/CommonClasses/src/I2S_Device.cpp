@@ -94,7 +94,7 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
 	size_t bytes_read = 0;
 	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, portMAX_DELAY ) != ESP_OK)
 	{
-		ESP_LOGE("i2S Device", "%s: Error Reading Samples\n", GetTitle().c_str());
+		ESP_LOGE("i2S Device", "%s: ERROR! Unable to read samples.", GetTitle().c_str());
 		return bytes_read;
 	}
 	return bytes_read;
@@ -120,7 +120,7 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
 	if(bytes_written != ByteCount)
 	{
-		ESP_LOGE("i2S Device", "%s: Error Writting All Bytes\n", GetTitle().c_str()); 
+		ESP_LOGE("i2S Device", "%s: ERROR! Unable to write all bytes.", GetTitle().c_str()); 
 	}
 	return bytes_written;
 }
@@ -161,24 +161,24 @@ void I2S_Device::InstallDevice()
   err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queue);
   if (err != ESP_OK)
   {
-	ESP_LOGE("i2S Device", "%s: Failed installing driver: %s", GetTitle().c_str(), err);
+	ESP_LOGE("i2S Device", "ERROR! %s: Failed installing driver: %s.", GetTitle().c_str(), err);
     ESP.restart();
   }
   if (NULL == m_i2s_event_queue)
   {
-	ESP_LOGE("i2S Device", "%s: Failed to setup event queue!", GetTitle().c_str());
+	ESP_LOGE("i2S Device", "ERROR! %s: Failed to setup event queue.", GetTitle().c_str());
 	ESP.restart();
   }
   err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
   if (err != ESP_OK)
   {
-	ESP_LOGE("i2S Device", "%s: Failed setting clock: %s", GetTitle().c_str(), err);
+	ESP_LOGE("i2S Device", "ERROR! %s: Failed setting clock: %s.", GetTitle().c_str(), err);
 	ESP.restart();
   }
   err = i2s_set_pin(m_I2S_PORT, &pin_config);
   if (err != ESP_OK)
   {
-	ESP_LOGE("i2S Device", "%s: Failed setting pin: %s", GetTitle().c_str(), err);
+	ESP_LOGE("i2S Device", "ERROR! %s: Failed setting pin: %s.", GetTitle().c_str(), err);
     ESP.restart();
   }
   ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
@@ -200,7 +200,7 @@ void I2S_Device::ProcessEventQueue()
 				switch (i2sEvent.type)
 				{
 					case I2S_EVENT_DMA_ERROR:
-						ESP_LOGE("i2S Device", "%s: I2S_EVENT_DMA_ERROR", GetTitle().c_str());
+						ESP_LOGE("i2S Device", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
 						break;
 					case I2S_EVENT_TX_DONE:
 						ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());

@@ -57,7 +57,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     {
       if(!m_preferenceInterface.begin("Settings", false))
       {
-        ESP_LOGE("InitializePreferences", "Unable to initialize preferences! Resseting Device to Factory Defaults");
+        ESP_LOGE("InitializePreferences", "ERROR! Unable to initialize preferences. Resseting Device to Factory Defaults.");
         nvs_flash_erase();
         ESP_LOGI("InitializePreferences", "NVS Cleared!");
         nvs_flash_init();
@@ -99,7 +99,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       else
       {
-        ESP_LOGE("Settings_Web_Server", "An error has occurred while mounting SPIFFS");
+        ESP_LOGE("Settings_Web_Server", "ERROR! Unable to mount SPIFFS.");
       }
     }
 
@@ -386,7 +386,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         }
         else
         {
-          ESP_LOGE("SourceConnect_ValueChanged", "Invalid Pointer!");
+          ESP_LOGE("SourceConnect_ValueChanged", "ERROR! Invalid Pointer.");
         }
       }
     }
@@ -418,7 +418,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         }
         else
         {
-          ESP_LOGE("OuputSourceDisconnect_ValueChanged", "Invalid Pointer!");
+          ESP_LOGE("OuputSourceDisconnect_ValueChanged", "ERROR! Invalid Pointer.");
         }
       }
     }
@@ -472,7 +472,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           JSONVar jsonObject = JSON.parse(WebSocketData);
           if (JSON.typeof(jsonObject) == "undefined")
           {
-            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Parsing failed for Input: %s", WebSocketData.c_str());
+            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Parsing failed for Input: %s.", WebSocketData.c_str());
           }
           else
           {
@@ -488,12 +488,12 @@ class SettingsWebServerManager: public SetupCallerInterface
                         , Value.c_str() );
                 if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id, Value))
                 {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Signal Value Object: %s", Id.c_str());
+                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown Signal Value Object: %s.", Id.c_str());
                 }
               }
               else
               {
-                  ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", JSON.stringify(signalValue).c_str());
+                ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", JSON.stringify(signalValue).c_str());
               }
             }
             else if(jsonObject.hasOwnProperty("JSONValue"))
@@ -508,7 +508,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                         , Value.c_str());
                 if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
                 {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", Id.c_str());
+                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown JSON Object: %s.", Id.c_str());
                 }
               }
               else
@@ -519,7 +519,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             }
             else
             {
-              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "Unknown Web Socket Message: %s", WebSocketData.c_str());
+              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown Web Socket Message: %s.", WebSocketData.c_str());
             }
           }
         }
@@ -555,13 +555,13 @@ class SettingsWebServerManager: public SetupCallerInterface
         else
         {
           ESP_LOGE( "SettingsWebServer: InitWifiClient"
-                  , "Wifi failed to start!");
+                  , "ERROR! Wifi failed to start.");
         }
       }
       else
       {
           ESP_LOGE( "SettingsWebServer: InitWifiClient"
-                  , "Null Pointers!");
+                  , "ERROR! Null Pointers.");
       }
     }
     
@@ -592,13 +592,13 @@ class SettingsWebServerManager: public SetupCallerInterface
         else
         {
           ESP_LOGE( "SettingsWebServer: InitWifiClient"
-                  , "Wifi failed to start!");
+                  , "ERROR! Wifi failed to start.");
         }
       }
       else
       {
           ESP_LOGE( "SettingsWebServer: InitWifiClient"
-                  , "Null Pointers!");
+                  , "ERROR! Null Pointers.");
       }
     }
 };

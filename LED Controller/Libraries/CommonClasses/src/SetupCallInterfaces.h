@@ -66,7 +66,7 @@ class SetupCallerInterface
 			{
 				if(newCallee == callee)
 				{
-					ESP_LOGE("SetupCallerInterface", "A callee with this name already exists!");
+					ESP_LOGE("SetupCallerInterface", "ERROR! A callee with this name already exists.");
 					isFound = true;
 					break;
 				}
@@ -101,7 +101,7 @@ class SetupCallerInterface
 				}
 				else
 				{
-					ESP_LOGW("SetupCallerInterface", "Null callee encountered in list");
+					ESP_LOGW("SetupCallerInterface", "WARNING! Null callee encountered in list");
 				}
 			}
 		}

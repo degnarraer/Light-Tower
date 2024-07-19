@@ -147,7 +147,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     void SetNewTxValue(T* Object, size_t Count)
     {
-      ESP_LOGE( "WebSocketDataHandler: SetNewTxValue", "THIS IS NOT HANDLED YET");
+      ESP_LOGE( "WebSocketDataHandler: SetNewTxValue", "ERROR! this function is not handled yet.");
     }
 
     String GetSignal()
@@ -175,7 +175,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
       ESP_LOGI( "WebSocketDataHandler: HandleNewSignalValue"
-              , "New Signal Value: \"%s\""
+              , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
+              , m_Name.c_str()
+              , m_Signal.c_str()
               , stringValue.c_str());
       m_DataItem.SetValueFromString(stringValue);
     }
@@ -238,7 +240,9 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
       ESP_LOGI( "WebSocketDataHandler: HandleNewSignalValue"
-              , "New Signal Value: \"%s\""
+              , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
+              , m_Name.c_str()
+              , m_Signal.c_str()
               , stringValue.c_str());
       m_DataItem.SetValueFromString(stringValue);
     }
@@ -297,7 +301,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
       JSONVar jSONObject = JSON.parse(stringValue);
       if (JSON.typeof(jSONObject) == "undefined")
       {
-        ESP_LOGE("WebSocket_Compatible_Device_DataHandler: HandleNewSignalValue", "Error parsing JSON");
+        ESP_LOGE("WebSocket_Compatible_Device_DataHandler: HandleNewSignalValue", "ERROR! unable to parse JSON.");
       }
       String name = jSONObject["NAME"];
       String address = jSONObject["ADDRESS"];
@@ -434,7 +438,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     
     virtual void HandleNewSignalValue(const String& stringValue) override
     {
-      ESP_LOGE("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleNewSignalValue", "This function is not supported yet!");
+      ESP_LOGE("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleNewSignalValue", "ERROR! This function is not supported yet.");
     }
   private:
     //Datalink

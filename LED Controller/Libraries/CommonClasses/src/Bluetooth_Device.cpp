@@ -25,7 +25,7 @@ BluetoothConnectionStateCaller::BluetoothConnectionStateCaller( BluetoothA2DPCom
 {
 	if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStateCaller", 10000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
 	{	
-		ESP_LOGE("BluetoothConnectionStateCaller", "Error Creating Task!");
+		ESP_LOGE("BluetoothConnectionStateCaller", "ERROR! Unable to ceate task.");
 	}
 }
 
@@ -81,7 +81,7 @@ void Bluetooth_Source::InstallDevice()
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
 	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  10000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
 	{
-		ESP_LOGE("InstallDevice", "Error Creating Task!");
+		ESP_LOGE("InstallDevice", "ERROR! Unable to create task.");
 	}
 }
 

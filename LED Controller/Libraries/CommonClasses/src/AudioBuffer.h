@@ -42,7 +42,7 @@ class AudioBuffer
 		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
 		if(0 != pthread_mutex_init(&m_Lock, &Attr))
 		{   
-			ESP_LOGE("TestClass", "Failed to Create Lock");
+			ESP_LOGE("TestClass", "ERROR! Failed to Create Lock.");
 		}
 	}
 
@@ -149,7 +149,7 @@ class ContinuousAudioBuffer
 		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
 		if(0 != pthread_mutex_init(&m_Lock, &Attr))
 		{
-			ESP_LOGE("Initialize", "Failed to Create Lock");
+			ESP_LOGE("Initialize", "ERROR! Failed to Create Lock.");
 		}
 	}
 
@@ -160,7 +160,7 @@ class ContinuousAudioBuffer
         void* CircularBuffer_Raw = heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
 
         if (CircularBuffer_Raw == nullptr) {
-            ESP_LOGE("AllocateMemory", "Memory allocation failed");
+            ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
             return;
         }
 

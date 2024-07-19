@@ -9,10 +9,10 @@ export class SoundInputSource_Signal {
     }
 
     static values = {
-        OFF: 'OFF',
-        Microphone: 'Microphone',
-        Bluetooth: 'Bluetooth',
-        Count: 'Count'
+        OFF: 0,
+        Microphone: 1,
+        Bluetooth: 2,
+        Count: 3
     };
 
     cleanup() {

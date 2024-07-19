@@ -106,9 +106,9 @@ class StatisticalEngine : public NamedItem
         pthread_mutexattr_t Attr;
         pthread_mutexattr_init(&Attr);
         pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);
-        if(0 != pthread_mutex_init(&m_BandValuesLock, &Attr)){ ESP_LOGE("Statistical Engine", "Failed to Create Lock");}      
-        if(0 != pthread_mutex_init(&m_ProcessedSoundDataLock, &Attr)){ ESP_LOGE("Statistical Engine", "Failed to Create Lock");}
-        if(0 != pthread_mutex_init(&m_MaxBinSoundDataLock, &Attr)){ ESP_LOGE("Statistical Engine", "Failed to Create Lock");}
+        if(0 != pthread_mutex_init(&m_BandValuesLock, &Attr)){ ESP_LOGE("Statistical Engine", "ERROR! Failed to Create Lock.");}      
+        if(0 != pthread_mutex_init(&m_ProcessedSoundDataLock, &Attr)){ ESP_LOGE("Statistical Engine", "ERROR! Failed to Create Lock.");}
+        if(0 != pthread_mutex_init(&m_MaxBinSoundDataLock, &Attr)){ ESP_LOGE("Statistical Engine", "ERROR! Failed to Create Lock.");}
       }
     virtual ~StatisticalEngine()
     {

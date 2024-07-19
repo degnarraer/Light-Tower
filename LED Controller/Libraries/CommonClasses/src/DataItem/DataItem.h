@@ -190,12 +190,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				else
 				{
-					ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
+					ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Failed to allocate memory on SPI RAM.");
 				}
 			}
 			else
 			{
-				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Null Pointer!");
+				ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Null Pointer.");
 			}
 		}
 
@@ -281,7 +281,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 					}
 					else
 					{
-						ESP_LOGE("SetDataLinkEnabled", "Error Null POinter!");
+						ESP_LOGE("SetDataLinkEnabled", "ERROR!  Null Pointer.");
 					}
 				}
 				else
@@ -293,7 +293,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 					}
 					else
 					{
-						ESP_LOGE("SetDataLinkEnabled", "Error Null POinter!");
+						ESP_LOGE("SetDataLinkEnabled", "ERROR! Null Pointer.");
 					}
 				}
 			}
@@ -308,7 +308,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				else
 				{
-					ESP_LOGE("SetDataLinkEnabled", "Error Null POinter!");
+					ESP_LOGE("SetDataLinkEnabled", "ERROR! Null Pointer.");
 				}
 			}
 		}
@@ -340,7 +340,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			else
 			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", LocalDataItem<T,COUNT>::GetName().c_str());
+				ESP_LOGE("DataItem: DataItem_TX_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", LocalDataItem<T,COUNT>::GetName().c_str());
 			}
 			return ValueUpdated;
 		}
@@ -404,13 +404,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				else
 				{
-					ESP_LOGE("CreateTxTimer", "Error Creating Timer");
+					ESP_LOGE("CreateTxTimer", "ERROR! Unable to create timer.");
 					return false;
 				}
 			}
 			else
 			{
-				ESP_LOGD("CreateTxTimer", "Timer already exists");
+				ESP_LOGD("CreateTxTimer", "ERROR! Timer already exists.");
 			}
 			return false;
 		}
@@ -430,12 +430,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 					}
 					else
 					{
-						ESP_LOGE("DestroyTimer", "Error Deleting Timer");
+						ESP_LOGE("DestroyTimer", "ERROR! Unable to delete Timer.");
 					}
 				}
 				else
 				{
-					ESP_LOGW("DestroyTimer", "Error Stopping Timer");
+					ESP_LOGW("DestroyTimer", "WARNING! Unable to stop Timer.");
 				}
 			}
 			else
@@ -457,12 +457,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				else
 				{
-					ESP_LOGE("StartTimer", "Error Starting Timer!");
+					ESP_LOGE("StartTimer", "ERROR! Unable to start timer.");
 				}
 			}
 			else
 			{
-				ESP_LOGE("StartTimer", "Timer creation failed, cannot start timer");
+				ESP_LOGE("StartTimer", "ERROR! Unable to create timer.");
 			}
 			return false;
 		}
@@ -479,7 +479,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				}
 				else
 				{
-					ESP_LOGE("StopTimer", "Error Stopping Timer!");
+					ESP_LOGE("StopTimer", "ERROR! Unable to stop timer.");
 				}
 			}
 			else

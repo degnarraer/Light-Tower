@@ -72,7 +72,7 @@ class DataSerializer: public CommonUtils
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
-				ESP_LOGE("DeSerializeJsonToNamedObject", "Parsing failed for Input: %s", json.c_str());
+				ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Parsing failed for Input: %s", json.c_str());
 				return deserialized;
 			}
 			else
@@ -126,21 +126,21 @@ class DataSerializer: public CommonUtils
 							heap_caps_free(Buffer);
 							NamedObject.Object = nullptr;
 							++m_FailCount;
-							ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Checksum Error\" Value: \"(%i != %i)\"", CheckSumCalc, CheckSumIn);
+							ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Checksum Error\" Value: \"(%i != %i)\"", CheckSumCalc, CheckSumIn);
 						}
 					}
 					else
 					{
 						++m_FailCount;
 						NamedObject.Object = nullptr;
-						ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
+						ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
 					}
 				}
 				else
 				{
 					++m_FailCount;
 					NamedObject.Object = nullptr;
-					ESP_LOGE("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Missing Tags\" Input: \"%s\"", json.c_str());
+					ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Missing Tags\" Input: \"%s\"", json.c_str());
 				}
 			}
 			FailPercentage();
@@ -164,7 +164,7 @@ class DataSerializer: public CommonUtils
 			bool result = true;
 			for (const String& tag : tags) {
 				if (!jsonObject.hasOwnProperty(tag)) {
-					ESP_LOGE("AllTagsExist", "Missing Tag: \"%s\"", tag.c_str());
+					ESP_LOGW("AllTagsExist", "WARNING! Missing Tag: \"%s\"", tag.c_str());
 					result = false;
 				}
 			}

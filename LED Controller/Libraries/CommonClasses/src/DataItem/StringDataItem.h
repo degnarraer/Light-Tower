@@ -59,7 +59,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
 				return false;
 			}
 		}
@@ -69,7 +69,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			String value;
 			if(!GetInitialValueAsString(value))
 			{
-				ESP_LOGE("GetInitialValueAsString", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
+				ESP_LOGE("GetInitialValueAsString", "ERROR! \"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
 				value = "";
 			}
 			return value;
@@ -88,7 +88,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
 				return false;
 			}
 		}
@@ -107,7 +107,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGI("StringDataItem::SetValueFromString"
-					, "\"%s\": String Value: \"%s\""
+					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());
 			return SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
@@ -147,7 +147,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 			else
 			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "Data Item: \"%s\": Unable to Tx Message", m_Name.c_str());
+				ESP_LOGE("DataItem: DataItem_TX_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", m_Name.c_str());
 			}
 			return valueUpdated;
 		}

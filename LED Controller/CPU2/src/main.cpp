@@ -86,7 +86,7 @@ void InitializePreferences()
 {
   if(!m_Preferences.begin("Settings", false))
   {
-    ESP_LOGE("Preferences", "Unable to initialize preferences! Resseting Device to Factory Defaults");
+    ESP_LOGE("Preferences", "ERROR! Unable to initialize preferences! Resseting Device to Factory Defaults.");
     nvs_flash_erase();
     ESP_LOGI("Preferences", "NVS Cleared!");
     nvs_flash_init();

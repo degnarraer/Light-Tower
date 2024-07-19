@@ -140,7 +140,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGW("LocalDataItem()", "Unable to register for Setup, NULL POINTER!");
+				ESP_LOGE("LocalDataItem()", "ERROR! Unable to register for Setup, NULL pointer.");
 			}
 		}
 
@@ -186,7 +186,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on SPI RAM");
+				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on spi ram.");
 			}
 		}
 		String GetName() const
@@ -210,7 +210,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "NULL Pointer!");
+				ESP_LOGE("GetValueAsString", "ERROR! NULL Pointer.");
 				*reinterpret_cast<T**>(Object) = nullptr;
 			}
 		}
@@ -219,7 +219,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 		{
 			if(!mp_Value)
 			{
-				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
 			}
 			return mp_Value;
 		}
@@ -233,7 +233,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
 				return T();
 			}
 		}
@@ -259,7 +259,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("GetInitialValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetInitialValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
 				return false;
 			}
 		}
@@ -269,7 +269,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			String value;
 			if(!GetInitialValueAsString(value))
 			{
-				ESP_LOGE("GetInitialValueAsString", "\"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
+				ESP_LOGE("GetInitialValueAsString", "ERROR! \"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
 				value = "";
 			}
 			return value;
@@ -297,7 +297,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "\"%s\": NULL Pointer!", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
 				return false;
 			}
 		}
@@ -323,21 +323,21 @@ LocalDataItem: public NamedCallbackInterface<T>
 				}
 				else
 				{
-            		ESP_LOGE("StaticSetValueFromString", "Null Object!");
+            		ESP_LOGE("StaticSetValueFromString", "ERROR! Null Object.");
 					return false;
 				}
 			}
 			else
 			{
-            	ESP_LOGE("StaticSetValueFromString", "Null Object Pointer!");
+            	ESP_LOGE("StaticSetValueFromString", "ERROR! Null Object Pointer.");
 				return false;
 			}
 		}
 
 		virtual bool SetValueFromString(const String& stringValue)
 		{
-			ESP_LOGI("LocalDataItem::SetValueFromString"
-					, "\"%s\": String Value: \"%s\""
+			ESP_LOGD("LocalDataItem::SetValueFromString"
+					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());
 			T value[COUNT];
@@ -348,27 +348,32 @@ LocalDataItem: public NamedCallbackInterface<T>
 			// Split the input string by ENCODE_DIVIDER
 			while (end != -1) 
 			{
-				substrings.push_back(stringValue.substring(start, end));
+				String parsedString = stringValue.substring(start);
+				ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
+				substrings.push_back(parsedString);
 				start = end + 1;
 				end = stringValue.indexOf(ENCODE_DIVIDER, start);
 			}
-			substrings.push_back(stringValue.substring(start));
+			String parsedString = stringValue.substring(start);
+			ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
+			substrings.push_back(parsedString);
 
 			// Check if the number of substrings matches the expected COUNT
 			if (substrings.size() != COUNT) 
 			{
 				ESP_LOGE( "SetValueFromString",
-						  "Expected %zu substrings but got %zu in string: \"%s\"",
+						  "Expected %zu substrings but got %zu in string: \"%s\".",
 						  COUNT, substrings.size(), stringValue.c_str());
 				return false;
 			}
 
 			// Decode each substring and store it in the value array
-			for (size_t i = 0; i < COUNT; ++i) 
-			{				
+			ESP_LOGD("SetValue", "\"%s\" Parsed %i Strings.", m_Name.c_str(), substrings.size() );
+			for (size_t i = 0; i < substrings.size(); ++i) 
+			{
 				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
-					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), substrings[i].c_str() );
+					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
 					return false;
 				}
 				value[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
@@ -393,7 +398,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					String stringValue = StringEncoderDecoder<T>::EncodeToString(value[i]);
 					if(false == m_ValidValueChecker.IsValidStringValue(stringValue))
 					{
-						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\"", m_Name.c_str(), stringValue.c_str() );
+						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", m_Name.c_str(), stringValue.c_str() );
 						validValue = false;
 					}
 				}
@@ -401,7 +406,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 				{
 					memcpy(mp_Value, value, sizeof(T) * COUNT);
 					++m_ValueChangeCount;
-					ESP_LOGI( "LocalDataItem: SetValue"
+					ESP_LOGD( "LocalDataItem: SetValue"
 							, "\"%s\" Set Value: \"%s\""
 							, m_Name.c_str()
 							, GetValueAsString().c_str());
@@ -432,7 +437,6 @@ LocalDataItem: public NamedCallbackInterface<T>
 						, GetValueAsString().c_str());
 				this->CallCallbacks(m_Name.c_str(), mp_Value);
 			}
-			ESP_LOGI("SetValue", "SetValue(T value) Return");
 			return (valueChanged && validValue);
 		}
 

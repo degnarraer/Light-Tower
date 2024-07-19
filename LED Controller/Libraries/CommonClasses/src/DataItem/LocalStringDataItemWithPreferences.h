@@ -59,7 +59,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGI("LocalStringDataItemWithPreferences::SetValueFromString"
-					, "\"%s\": String Value: \"%s\""
+					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());
 			return SetValue(stringValue.c_str(), stringValue.length());
