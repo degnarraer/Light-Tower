@@ -136,6 +136,17 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   				 	  		, this );
 			mp_PreferenceManager->InitializeAndLoadPreference();
 		}
+		
+		virtual bool SetValueFromString(const String& stringValue) override
+		{
+			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);
+			if(result)
+			{
+				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+									   				   , this->GetValueAsString() );
+			}
+			return result;
+		}
 	protected:
 
 		bool DataItem_TX_Now()
@@ -152,17 +163,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual bool NewRxValueReceived(void* Object, size_t Count) override
 		{
 			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
-			if(result)
-			{
-				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
-									   				   , this->GetValueAsString() );
-			}
-			return result;
-		}
-
-		virtual bool SetValueFromString(const String& stringValue) override
-		{
-			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);
 			if(result)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
