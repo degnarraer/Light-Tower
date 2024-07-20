@@ -388,20 +388,20 @@ public:
         switch (updateType)
         {
             case PreferenceUpdateType::Timer:
-                ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
+                ESP_LOGI("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
                 m_PreferenceTimerActive = false;
                 result = HandleSave(saveValue);
                 break;
             case PreferenceUpdateType::Initialize:
-                ESP_LOGD("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
+                ESP_LOGI("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
                 result = HandleSave(saveValue);
                 break;
             case PreferenceUpdateType::Load:
-                ESP_LOGD("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
+                ESP_LOGI("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
                 result = HandleLoad();
                 break;
             case PreferenceUpdateType::Save:
-                ESP_LOGD("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
+                ESP_LOGI("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
                 result = HandleSave(saveValue);
                 break;
             default:
@@ -486,7 +486,7 @@ private:
                     mp_PreferenceTimerCreateArgs = nullptr;
                     return result;
                 }
-                ESP_LOGD("DelaySaveValue", "Delayed Save Timer Started for Key: \"%s\" for %lu uS", m_Key.c_str(), delayTime);
+                ESP_LOGI("DelaySaveValue", "Delayed Save Timer Started for Key: \"%s\" for %lu uS", m_Key.c_str(), delayTime);
                 m_PreferenceTimerActive = true;
                 result = true;
             }

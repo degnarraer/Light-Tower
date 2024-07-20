@@ -213,7 +213,7 @@ void StatisticalEngine::RunMyScheduledTask()
 
 void StatisticalEngine::AllocateMemory()
 {
-  ESP_LOGI("Statistical_Engine", "%s: Allocating Memory.", GetTitle().c_str());
+  ESP_LOGD("Statistical_Engine", "%s: Allocating Memory.", GetTitle().c_str());
   m_MemoryIsAllocated = true;
 }
 

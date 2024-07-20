@@ -20,7 +20,7 @@
 
 #include "DataItem/DataItem.h"
 #include "DataItem/PreferencesWrapper.h"
-#define PREFERENCE_TIMEOUT 5000UL
+#define PREFERENCE_TIMEOUT 10000UL
 
 template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
@@ -152,6 +152,17 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		virtual bool NewRxValueReceived(void* Object, size_t Count) override
 		{
 			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
+			if(result)
+			{
+				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+									   				   , this->GetValueAsString() );
+			}
+			return result;
+		}
+
+		virtual bool SetValueFromString(const String& stringValue) override
+		{
+			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);
 			if(result)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save

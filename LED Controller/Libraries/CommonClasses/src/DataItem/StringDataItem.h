@@ -106,7 +106,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
-			ESP_LOGI("StringDataItem::SetValueFromString"
+			ESP_LOGD("StringDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());

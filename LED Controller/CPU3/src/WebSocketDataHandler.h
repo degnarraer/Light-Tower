@@ -35,13 +35,13 @@ class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void AppendCurrentSignalValue(std::vector<KVP> &signalValue, bool forceUpdate = false) = 0;
+    virtual void HandleWebSocketTx(std::vector<KVP> &signalValue, bool forceUpdate = false) = 0;
 };
 
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual void HandleNewSignalValue(const String& stringValue) = 0;
+    virtual void HandleWebSocketRx(const String& stringValue) = 0;
     virtual String GetSignal() = 0;
 };
 
@@ -160,21 +160,21 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return m_Name;
     }
 
-    virtual void AppendCurrentSignalValue(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     {
       KVP signalValue;
       signalValue.Key = m_Signal;
       if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
       {
-        ESP_LOGI( "WebSocketDataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
+        ESP_LOGI( "WebSocketDataHandler: HandleWebSocketTx", "\"%s\": Tx Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
         m_Last_Update_Time = millis();
       }
     }
     
-    virtual void HandleNewSignalValue(const String& stringValue) override
+    virtual void HandleWebSocketRx(const String& stringValue) override
     {
-      ESP_LOGI( "WebSocketDataHandler: HandleNewSignalValue"
+      ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
               , m_Name.c_str()
               , m_Signal.c_str()
@@ -226,20 +226,20 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     {
     }
   protected:
-    virtual void AppendCurrentSignalValue(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     { 
       KVP signalValue;
       signalValue.Key = m_Signal;
       if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
       {
-        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
+        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: HandleWebSocketTx", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
       }
     }
     
-    virtual void HandleNewSignalValue(const String& stringValue) override
+    virtual void HandleWebSocketRx(const String& stringValue) override
     {
-      ESP_LOGI( "WebSocketDataHandler: HandleNewSignalValue"
+      ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
               , m_Name.c_str()
               , m_Signal.c_str()
@@ -273,7 +273,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
     }
   protected:
   
-    virtual void AppendCurrentSignalValue(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     {
       if( forceUpdate || ValueChanged() )
       {
@@ -289,19 +289,19 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         signalValue.Value = Encode_Compatible_Device_To_JSON(compatibleDevices);
         if(signalValue.Value.length())
         {
-          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: AppendCurrentSignalValue", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
+          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: HandleWebSocketTx", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
           signalValues.push_back(signalValue);
         }
       }
     }
     
-    void HandleNewSignalValue(const String& stringValue) override
+    void HandleWebSocketRx(const String& stringValue) override
     {
-      ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleNewSignalValue", "New Signal Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
+      ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRx", "New Signal Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
       JSONVar jSONObject = JSON.parse(stringValue);
       if (JSON.typeof(jSONObject) == "undefined")
       {
-        ESP_LOGE("WebSocket_Compatible_Device_DataHandler: HandleNewSignalValue", "ERROR! unable to parse JSON.");
+        ESP_LOGE("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRx", "ERROR! unable to parse JSON.");
       }
       String name = jSONObject["NAME"];
       String address = jSONObject["ADDRESS"];
@@ -348,7 +348,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     }
 
   protected: 
-    virtual void AppendCurrentSignalValue(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     { 
       bool valueChanged = ValueChanged();
       unsigned long elapsedTime = 0;
@@ -403,7 +403,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         // Remove timed out device
         if(ACTIVE_NAME_TIMEOUT < m_ActiveCompatibleDevices[i].timeSinceUpdate)
         {
-            ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
+            ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketTx", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
             m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin() + i);
             --i;
             updated = true;
@@ -427,7 +427,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           }
           signalValue.Key = m_Signal;
           signalValue.Value = Encode_SSID_Values_To_JSON(activeCompatibleDevicesKVT);
-          ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue", "Encoding Result: \"%s\"", signalValue.Value.c_str());
+          ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketTx", "Encoding Result: \"%s\"", signalValue.Value.c_str());
           if(!signalValue.Value.isEmpty())
           {
               signalValues.push_back(signalValue);
@@ -436,9 +436,9 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       }
     }
     
-    virtual void HandleNewSignalValue(const String& stringValue) override
+    virtual void HandleWebSocketRx(const String& stringValue) override
     {
-      ESP_LOGE("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleNewSignalValue", "ERROR! This function is not supported yet.");
+      ESP_LOGE("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketRx", "ERROR! This function is not supported yet.");
     }
   private:
     //Datalink
@@ -459,7 +459,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     void LogDetails(ActiveCompatibleDevice_t &device, const String &context)
     {
       // Log device details
-      ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: AppendCurrentSignalValue",
+      ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketTx",
                 "%s: %s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i",
                 context.c_str(),
                 this->m_Name.c_str(),

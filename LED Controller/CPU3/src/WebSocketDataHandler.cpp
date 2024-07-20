@@ -6,7 +6,7 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   std::vector<KVP> signalValues = std::vector<KVP>();
   for(int i = 0; i < m_MySenders.size(); ++i)
   {
-    m_MySenders[i]->AppendCurrentSignalValue(signalValues, true);
+    m_MySenders[i]->HandleWebSocketTx(signalValues, true);
   }
   if(signalValues.size())
   {
@@ -26,7 +26,7 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     std::vector<KVP> signalValues = std::vector<KVP>();
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
-      m_MySenders[i]->AppendCurrentSignalValue(signalValues);
+      m_MySenders[i]->HandleWebSocketTx(signalValues);
     }
     if(signalValues.size())
     {
@@ -86,8 +86,8 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& s
     if(true == m_MyReceivers[i]->GetSignal().equals(signalId))
     {
       SignalFound = true;
-      ESP_LOGI("ProcessSignalValueAndSendToDatalink", "Sending Value to receiver: \"%s\"", value.c_str());
-      m_MyReceivers[i]->HandleNewSignalValue(value);
+      ESP_LOGI("ProcessSignalValueAndSendToDatalink", "Sending Value: \"%s\" to receiver.", value.c_str());
+      m_MyReceivers[i]->HandleWebSocketRx(value);
     }
   }
   return SignalFound;
@@ -126,7 +126,7 @@ void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sen
 {
   ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
   std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-  sender->AppendCurrentSignalValue(KeyValuePairs, forceUpdate);
+  sender->HandleWebSocketTx(KeyValuePairs, forceUpdate);
   if(KeyValuePairs.size())
   {
     String message;

@@ -154,15 +154,15 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SSID_Callback = { "SSID Callback"
                                       , &SSID_ValueChanged
                                       , &m_SSID_CallbackArgs };
+    const String m_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_SSID = LocalStringDataItemWithPreferences( "SSID"
-                                                                                  , "LED Tower of Power"
+                                                                                  , m_SSID_InitialValue
                                                                                   , &m_preferenceInterface
                                                                                   , &m_SSID_Callback
                                                                                   , this );
     WebSocket_String_DataHandler m_SSID_DataHandler = WebSocket_String_DataHandler( "SSID Web Socket Handler", "SSID", m_WebSocketDataProcessor, true, true, m_SSID, false );
     static void SSID_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("SSID_ValueChanged", "CALLED");
       if(arg && object)
       {
         CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
@@ -188,7 +188,6 @@ class SettingsWebServerManager: public SetupCallerInterface
     WebSocket_String_DataHandler m_Password_DataHandler = WebSocket_String_DataHandler( "Password Web Socket Handler", "Password", m_WebSocketDataProcessor, true, true, m_Password, false );
     static void Password_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("Password_ValueChanged", "CALLED");
       if(arg && object)
       {
         CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
@@ -476,56 +475,68 @@ class SettingsWebServerManager: public SetupCallerInterface
           }
           else
           {
-            if(jsonObject.hasOwnProperty("SignalValue"))
-            {
-              JSONVar signalValue = jsonObject["SignalValue"];
-              if (signalValue.hasOwnProperty("Id") && signalValue.hasOwnProperty("Value"))
-              {
-                const String Id = signalValue["Id"];
-                const String Value = signalValue["Value"];
-                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket Signal Value Data Received. Id: \"%s\" Value: \"%s\""
-                        , Id.c_str()
-                        , Value.c_str() );
-                if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id, Value))
-                {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown Signal Value Object: %s.", Id.c_str());
-                }
-              }
-              else
-              {
-                ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", JSON.stringify(signalValue).c_str());
-              }
-            }
-            else if(jsonObject.hasOwnProperty("JSONValue"))
-            {
-              JSONVar jSONValue = jsonObject["JSONValue"];
-              if (jSONValue.hasOwnProperty("Id") && jSONValue.hasOwnProperty("Value"))
-              {
-                const String Id = jSONValue["Id"];
-                const String Value = jSONValue["Value"];
-                ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
-                        , Id.c_str()
-                        , Value.c_str());
-                if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
-                {
-                  ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown JSON Object: %s.", Id.c_str());
-                }
-              }
-              else
-              
-              {
-                ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", JSON.stringify(jSONValue).c_str());
-              }
-            }
-            else
-            {
-              ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown Web Socket Message: %s.", WebSocketData.c_str());
-            }
+            if(HandleSignalValue(jsonObject)){}
+            else if(HandleJSONValue(jsonObject)){}
+            else ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown Web Socket Message: %s.", WebSocketData.c_str());
           }
         }
       }
     }
-        
+    
+    bool HandleSignalValue(JSONVar &jsonObject)
+    {
+      bool result = false;
+      if(jsonObject.hasOwnProperty("SignalValue"))
+      {
+        result = true;
+        JSONVar signalValue = jsonObject["SignalValue"];
+        if (signalValue.hasOwnProperty("Id") && signalValue.hasOwnProperty("Value"))
+        {
+          const String Id = signalValue["Id"];
+          const String Value = signalValue["Value"];
+          ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Signal Value Message Received. ID: \"%s\" Value: \"%s\""
+                  , Id.c_str()
+                  , Value.c_str() );
+          if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id, Value))
+          {
+            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown Signal Value Object: %s.", Id.c_str());
+          }
+        }
+        else
+        {
+          ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Unknown JSON Object: %s", JSON.stringify(signalValue).c_str());
+        }
+      }
+      return result;
+    }
+
+    bool HandleJSONValue(JSONVar &jsonObject)
+    {
+      bool result = false;
+      if(jsonObject.hasOwnProperty("JSONValue"))
+      {
+        result = true;
+        JSONVar jSONValue = jsonObject["JSONValue"];
+        if (jSONValue.hasOwnProperty("Id") && jSONValue.hasOwnProperty("Value"))
+        {
+          const String Id = jSONValue["Id"];
+          const String Value = jSONValue["Value"];
+          ESP_LOGI( "SettingsWebServer: HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
+                  , Id.c_str()
+                  , Value.c_str());
+          if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
+          {
+            ESP_LOGE("SettingsWebServer: HandleWebSocketMessage", "ERROR! Unknown JSON Object: %s.", Id.c_str());
+          }
+        }
+        else
+        {
+          ESP_LOGD("SettingsWebServer: HandleWebSocketMessage", "Known JSON Object: %s", JSON.stringify(jSONValue).c_str());
+        }
+      }
+      return result;
+    }
+
     // Initialize WiFi Client
     void InitWiFiClient()
     {

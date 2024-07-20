@@ -177,7 +177,6 @@ class Manager: public NamedItem
                                                                             , this );
     static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("SinkName_ValueChanged", "CALLED");
       if(arg && object)
       {
         Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);

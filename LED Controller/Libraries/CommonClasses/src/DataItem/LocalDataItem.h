@@ -146,7 +146,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 
 		virtual void Setup()
 		{
-			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
 			mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
@@ -292,7 +292,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 					stringValue += ENCODE_DIVIDER;
 				}
 				stringValue += valueStrings[COUNT - 1];
-				ESP_LOGI("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGD("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else

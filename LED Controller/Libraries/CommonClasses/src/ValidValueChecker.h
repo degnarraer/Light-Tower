@@ -55,12 +55,12 @@ public:
         {
             for (const String& validValue : *mp_ValidStrings)
             {
-                ESP_LOGI("ValidValueChecker:IsValidStringValue", 
+                ESP_LOGD("ValidValueChecker:IsValidStringValue", 
                          "IsValidStringValue Match Check between: \"%s\" and \"%s\"", 
                          stringValue.c_str(), validValue.c_str());
                 if (stringValue.equals(validValue))
                 {
-                    ESP_LOGI("ValidValueChecker:IsValidStringValue", 
+                    ESP_LOGD("ValidValueChecker:IsValidStringValue", 
                              "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", 
                              stringValue.c_str(), validValue.c_str());
                     return true;
