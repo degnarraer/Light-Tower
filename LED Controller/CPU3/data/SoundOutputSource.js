@@ -94,8 +94,6 @@ export class SoundOutputSource_Signal {
             break;
         }
         if(validValue) {
-            var heading = document.getElementById("mainMenu_Heading");
-            // Show the selected tab content
             document.getElementById(contentId).classList.add('active');
         }
     }

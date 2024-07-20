@@ -9,10 +9,10 @@ export class SoundInputSource_Signal {
     }
 
     static values = {
-        OFF: 0,
-        Microphone: 1,
-        Bluetooth: 2,
-        Count: 3
+        OFF: 'OFF',
+        Microphone: 'Microphone',
+        Bluetooth: 'Bluetooth',
+        Count: 'Count'
     };
 
     cleanup() {
@@ -25,6 +25,7 @@ export class SoundInputSource_Signal {
 
     onMessage(Value) {
         console.log("\"" + this.signalName + '\" Listener received value: \"' + Value + "\"");
+        this.setValue(Value);
     }
 
     setValue(newValue, updateWebsocket = true) {
@@ -107,8 +108,6 @@ export class SoundInputSource_Signal {
             break;
         }
         if(validValue) {
-            var heading = document.getElementById("mainMenu_Heading");
-            // Show the selected tab content
             document.getElementById(contentId).classList.add('active');
         }
     }
