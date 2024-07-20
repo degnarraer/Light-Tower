@@ -2,6 +2,8 @@ import { WebSocketManager } from './WebSocket.js';
 import { SoundInputSource_Signal } from './SoundInputSource.js';
 import { SoundOutputSource_Signal } from './SoundOutputSource.js';
 import { Boolean_Signal } from './Boolean.js';
+import { NumericalValue_Signal } from './NumericalValue.js';
+import { StringValue_Signal } from './StringValue.js';
 
 const wsManager = new WebSocketManager();
 
@@ -19,15 +21,23 @@ window.CurrentSoundInputSource = CurrentSoundInputSource;
 var CurrentSoundOutputSource = new SoundOutputSource_Signal("Output_Source", SoundOutputSource_Signal.values.OFF, wsManager);
 window.CurrentSoundOutputSource = CurrentSoundOutputSource;
 
-var BT_SinkEnable = new Boolean_Signal("BT_Sink_Enable", Boolean_Signal.values.False, wsManager);
-var BT_SourceEnable = new Boolean_Signal("BT_Source_Enable", Boolean_Signal.values.False, wsManager);
-var Sink_Connect = new Boolean_Signal("Sink_Connect", Boolean_Signal.values.False, wsManager);
-var Sink_Disconnect = new Boolean_Signal("Sink_Disconnect", Boolean_Signal.values.False, wsManager);
-var Sink_Auto_Reconnect = new Boolean_Signal("BT_Sink_Auto_Reconnect", Boolean_Signal.values.False, wsManager);
-var Source_Connect = new Boolean_Signal("Source_Connect", Boolean_Signal.values.False, wsManager);
-var Source_Disconnect = new Boolean_Signal("Source_Disconnect", Boolean_Signal.values.False, wsManager);
-var Source_Auto_Reconnect = new Boolean_Signal("BT_Source_Auto_Reconnect", Boolean_Signal.values.False, wsManager);
-var Source_Reset = new Boolean_Signal("BT_Source_Reset", Boolean_Signal.values.False, wsManager);
+var BT_SinkEnable = new Boolean_Signal('BT_Sink_Enable', Boolean_Signal.values.False, wsManager);
+var BT_SourceEnable = new Boolean_Signal('BT_Source_Enable', Boolean_Signal.values.False, wsManager);
+var Sink_Connect = new Boolean_Signal('Sink_Connect', Boolean_Signal.values.False, wsManager);
+var Sink_Disconnect = new Boolean_Signal('Sink_Disconnect', Boolean_Signal.values.False, wsManager);
+var Sink_Auto_Reconnect = new Boolean_Signal('BT_Sink_Auto_Reconnect', Boolean_Signal.values.False, wsManager);
+var Source_Connect = new Boolean_Signal('Source_Connect', Boolean_Signal.values.False, wsManager);
+var Source_Disconnect = new Boolean_Signal('Source_Disconnect', Boolean_Signal.values.False, wsManager);
+var Source_Auto_Reconnect = new Boolean_Signal('BT_Source_Auto_Reconnect', Boolean_Signal.values.False, wsManager);
+var Source_Reset = new Boolean_Signal('BT_Source_Reset', Boolean_Signal.values.False, wsManager);
+var Amplitude_Gain = new NumericalValue_Signal('Amplitude_Gain', 2.0, wsManager);
+window.Amplitude_Gain = Amplitude_Gain;
+var FFT_Gain = new NumericalValue_Signal('FFT_Gain', 2.0, wsManager);
+window.FFT_Gain = FFT_Gain;
+var SSID = new StringValue_Signal('SSID', 'LED Tower of Power', wsManager);
+var Password = new StringValue_Signal('Password', 'LEDs Rock', wsManager);
+var SinkName = new StringValue_Signal('Sink_Name', 'LED Tower of Power Rock', wsManager);
+var SourceName = new StringValue_Signal('Source_Name', '', wsManager);
 
 //Compatible Devices
 var compatibleDevices = [
@@ -107,49 +117,6 @@ function onload(event)
 	});
 }
 
-function handleSoundInputSource(id, value) {
-	if(id && value){
-		console.log('Received Sound Input Source! ID:' + id + ' Value: ' + value );
-		CurrentSoundInputSource.FromString(value);
-		switch (CurrentSoundInputSource.GetSource()) {
-            case SoundInputSource.OFF:
-                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_OFF');
-				Update_Signal_Value_To_Web_Socket(id, value);
-                break;
-            case SoundInputSource.Microphone:
-                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Microphone');
-				Update_Signal_Value_To_Web_Socket(id, value);
-                break;
-            case SoundInputSource.Bluetooth:
-                showContent('selection_tab_content_input_source', 'Sound_Input_Selection_Bluetooth');
-				Update_Signal_Value_To_Web_Socket(id, value);
-                break;
-            default:
-                console.log('Undefined Input Source!');
-                break;
-        }
-	}
-}
-
-function handleSoundOutputSource(id, value) {
-    if (id && value) {
-        console.log('Received Sound Output Source! ID: ' + id + ' Value: ' + value);
-		CurrentSoundOutputSource.FromString(value);
-		switch (CurrentSoundOutputSource.GetSource()) {
-            case SoundOutputSource.OFF:
-                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_OFF');
-				Update_Signal_Value_To_Web_Socket(id, value);
-                break;
-            case SoundOutputSource.Bluetooth:
-                showContent('selection_tab_content_output_source', 'Sound_Output_Selection_Bluetooth');
-				Update_Signal_Value_To_Web_Socket(id, value);
-                break;
-            default:
-                console.log('Undefined Output Source!');
-                break;
-        }
-    }
-}
 
 window.openNav = openNav;
 function openNav() 
@@ -265,28 +232,6 @@ function source_Disconnect(element, isPressed)
 		var Message = JSON.stringify(Root);
 		wsManager.send(Message);
 	}
-}
-
-// slider Functions
-window.updatesliderValue = updatesliderValue;
-function updatesliderValue(element)
-{
-	clearTimeout(sliderTimeoutHandle);
-    sliderTouched = true;
-    var Root = {};
-	Root.SignalValue = {};
-	if(element.getAttribute("data-Signal"))
-	{
-		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = element.value;
-		wsManager.send(JSON.stringify(Root));
-		sliderTimeoutHandle = setTimeout(sliderNotTouched, 5000);
-	}
-}
-
-function sliderNotTouched()
-{
-    sliderTouched = false;
 }
  
 function setSpeakerImage(value)
@@ -508,55 +453,6 @@ function handleSpeakerImage(id, value) {
 
 function handleStubFunction(id, value) {
 
-}
-
-function handleAmplitudeGain(id, value) {
-    if (id && value) {
-        console.log('Received Amplitude Gain:' + value);
-        var elementsWithDataValue = document.querySelectorAll('[data-Signal="Amplitude_Gain"]');
-        elementsWithDataValue.forEach(function (element) {
-            if (element.hasAttribute("value")) {
-                element.value = value;
-            } else if (element.childNodes.length > 0) {
-                element.innerHTML = value;
-            } else {
-                console.log('handleAmplitudeGain Unsupported Element: ' + element.id);
-            }
-        });
-    }
-}
-
-function handleFFTGain(id, value) {
-    if (id && value) {
-        console.log('Received FFT Gain: ' + value);
-        var elementsWithDataValue = document.querySelectorAll('[data-Signal="FFT_Gain"]');
-        elementsWithDataValue.forEach(function (element) {
-            if (element.hasAttribute("value")) {
-                element.value = value;
-            } else if (element.childNodes.length > 0) {
-                element.innerHTML = value;
-            } else {
-                console.log('handleAmplitudeGain Unsupported Element: ' + element.id);
-            }
-        });
-    }
-}
-
-function handleSSID(id, value){
-	if(id && value)
-	{
-		console.log('Received SSID!');
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="SSID"]');
-		elementsWithDataValue.forEach(function(element){
-			if (element.hasAttribute("value")) {
-				element.value = value;
-			} else if (element.childNodes.length > 0) {
-				element.innerHTML = value;
-			} else {
-				console.log('handleBTSinkName Unsupported Element: ' + element.id);
-			}
-		});
-	}
 }
 
 function handlePassword(id, value){

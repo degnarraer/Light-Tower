@@ -37,7 +37,7 @@
 					<div class="settingGroup_Horrizontal_Grid_slider">
 						<div class="settingGroup_Title">Input Gain</div>
 						<div class="settingGroup_Widget">
-							<label for="Amplitude_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
+							<label for="Amplitude_Gain_Slider1"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
 						<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider1_Value">10.0</span></div>
 					</div>
@@ -88,7 +88,7 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">Input Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
 							<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider2_Value">10.0</span> </div>
 						</div>
@@ -157,7 +157,7 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">Input Gain</div>
 								<div class="settingGroup_Widget">
-									<label for="Amplitude_Gain_Slider3"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider3" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
+									<label for="Amplitude_Gain_Slider3"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider3" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
 								</div>
 								<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider3_Value">10.0</span></div>
 							</div>
@@ -262,7 +262,7 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">FFT Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="FFT_Gain_Slider1"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="FFT_Gain" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="FFT_Gain_Slider1"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
 							<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_Slider1_Value">10.0</span> </div>
 						</div>
@@ -273,7 +273,7 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">Input Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider4" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider4" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
 							<div class="settingGroup_Value"><span data-Signal="Amplitude_Gain" id="Amplitude_Gain_Slider4_Value">10.0</span> </div>
 						</div>
@@ -282,42 +282,13 @@
 						<div class="settingGroup_Horrizontal_Grid_slider">
 							<div class="settingGroup_Title">FFT Gain</div>
 							<div class="settingGroup_Widget">
-								<label for="FFT_Gain_slider4"></label><input type="range" oninput="updatesliderValue(this)" data-Signal="FFT_Gain" data-Signal="FFT_Gain" id="FFT_Gain_slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
+								<label for="FFT_Gain_slider4"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" data-Signal="FFT_Gain" id="FFT_Gain_slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
 							</div>
 							<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_slider4_Value">10.0</span> </div>
 						</div>
 					</div>	
 				</div>
 				<div class="menu-content" id="Visualization">
-					<div class="Card-Grid-Vertical">
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_slider">
-								<div class="settingGroup_Title">Red Value</div>
-								<div class="settingGroup_Widget">
-									<label for="Red_Value_slider"></label><input type="range" oninput="updatesliderValue(this)" id="Red_Value_slider" min="0" max="254" step="1" value ="0" class="widget_slider">
-								</div>
-								<div class="settingGroup_Value"><span id="Red_Value_slider_Value"></span></div>
-							</div>
-						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_slider">
-								<div class="settingGroup_Title">Green Value</div>
-								<div class="settingGroup_Widget">
-									<label for="Green_Value_slider"></label><input type="range" oninput="updatesliderValue(this)" id="Green_Value_slider" min="0" max="254" step="1" value ="0" class="widget_slider">
-								</div>
-								<div class="settingGroup_Value"><span id="Green_Value_slider_Value"></span></div>
-							</div>
-						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_slider">
-								<div class="settingGroup_Title">Blue Value</div>
-								<div class="settingGroup_Widget">
-									<label for="Blue_Value_slider"></label><input type="range" oninput="updatesliderValue(this)" id="Blue_Value_slider" min="0" max="254" step="1" value ="0" class="widget_slider">
-								</div>
-								<div class="settingGroup_Value"><span id="Blue_Value_slider_Value"></span></div>
-							</div>
-						</div>
-					</div>
 				</div>
 			</div>
 		</div>

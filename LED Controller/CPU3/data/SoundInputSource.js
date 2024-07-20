@@ -23,18 +23,19 @@ export class SoundInputSource_Signal {
         return this.signalName;
     }
 
-    onMessage(Value) {
-        console.log("\"" + this.signalName + '\" Listener received value: \"' + Value + "\"");
-        this.setValue(Value);
+    onMessage(value) {
+        console.log(`"${this.signalName}" Listener received value: "${value}"`);
+        this.setValue(value);
     }
 
     setValue(newValue, updateWebsocket = true) {
-        console.log('\"' + this.signalName + '\" Set Value: \"' + newValue + '\"');
+        console.log(`"${this.signalName}" Set Value: "${newValue}"`);
         if (Object.values(SoundInputSource_Signal.values).includes(newValue)) {
             this.value = newValue;
             this.showSourceInputContent();
         } else {
-            console.error("\"" + this.signalName + '\" Unknown Value: \"' + newValue + "\"");
+            console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
+            throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
         if(updateWebsocket){
             this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());

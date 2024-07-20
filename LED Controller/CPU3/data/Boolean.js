@@ -22,16 +22,19 @@ export class Boolean_Signal {
         return this.signalName;
     }
 
-    onMessage(Value) {
-        console.log("\"" + this.signalName + '\" Listener received value: \"' + Value + "\"");
+    onMessage(value) {
+        console.log(`"${this.signalName}" Listener received value: "${value}"`);
+        this.setValue(value);
     }
     
     setValue(newValue, updateWebsocket = true) {
+        console.log(`"${this.signalName}" Set Value: "${newValue}"`);
         if (Object.values(Boolean_Signal.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
         } else {
-            throw new Error('Invalid Value');
+            console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
+            throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
         if(updateWebsocket){
             this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
