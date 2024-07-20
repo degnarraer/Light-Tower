@@ -16,13 +16,13 @@ export class StringValue_Signal {
         return this.signalName;
     }
 
-    onMessage(value) {
-        console.log(`"${this.signalName}" Listener received value: "${value}"`);
-        this.setValue(value);
+    onMessage(newValue) {
+        console.log(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
+        this.setValue(newValue);
     }
     
     setValue(newValue, updateWebsocket = true) {
-        console.log(`"${this.signalName}" Set Value: "${newValue}"`);
+        console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
         if (typeof newValue === 'string') {
             this.value = newValue;
             this.updateHTML();
