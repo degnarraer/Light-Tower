@@ -8,7 +8,44 @@
 	<link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-	<script type="module" src="main.js"></script>
+	<script type="module">
+		import { showContent, openNav, closeNav } from './main.js';
+        window.showContent = showContent;
+        window.openNav = openNav;
+        window.closeNav = closeNav;
+	</script>
+	<script type="module">
+		import { CurrentSoundInputSource
+			   , CurrentSoundOutputSource
+			   , Source_Connect
+			   , Sink_Connect
+			   , Sink_Disconnect
+			   , Source_Reset
+			   , Amplitude_Gain
+			   , FFT_Gain
+			   , BT_SinkEnable
+			   , Sink_Auto_Reconnect
+			   , Source_Auto_Reconnect
+			   , SSID
+			   , Password
+			   , SinkName
+			   , SourceName } from './main.js';
+        window.CurrentSoundInputSource = CurrentSoundInputSource;
+        window.CurrentSoundOutputSource = CurrentSoundOutputSource;
+        window.Source_Connect = Source_Connect;
+        window.Sink_Connect = Sink_Connect;
+        window.Sink_Disconnect = Sink_Disconnect;
+        window.Source_Reset = Source_Reset;
+        window.Amplitude_Gain = Amplitude_Gain;
+        window.FFT_Gain = FFT_Gain;
+        window.BT_SinkEnable = BT_SinkEnable;
+        window.Sink_Auto_Reconnect = Sink_Auto_Reconnect;
+        window.Source_Auto_Reconnect = Source_Auto_Reconnect;
+        window.SSID = SSID;
+        window.Password = Password;
+        window.SinkName = SinkName;
+        window.SourceName = SourceName;
+	</script>
 	<!-- Tab links -->
 	<div id= "MainScreen" class = "MainScreen">
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
@@ -123,12 +160,20 @@
 								Bluetooth Bridge Name
 							</div>
 							<div class="settingGroup_Textbox">
-								<label for="Sink_Name_Text_Box"></label><input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Name">
+								<label for="Sink_Name_Text_Box"></label>
+								<input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" value="Enter Name">
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
+								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="submitSinkName()">Submit</button>
 							</div>
 						</div>
+						<script type="module">
+							window.submitSinkName = function() {
+								const textBox = document.getElementById('Sink_Name_Text_Box');
+								const value = textBox.value;
+								SinkName.setValue(value);
+							};
+						</script>
 					</div>
 					<div class="settingGroup">
 						<div class="settingGroup_Horrizontal_Grid_Status">
@@ -205,7 +250,7 @@
 									Connect
 								</div>
 								<div class="settingGroup_Widget">
-									<button id="Source_Connect_Button" data-Signal="Source_Connect" onmousedown="source_Connect(this, true)" onmouseup="source_Connect(this, false)">Connect</button>
+									<button id="Source_Connect_Button" data-Signal="Source_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">Connect</button>
 								</div>
 							</div>
 						</div>

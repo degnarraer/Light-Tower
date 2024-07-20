@@ -15,29 +15,23 @@ var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
 
-var CurrentSoundInputSource = new SoundInputSource_Signal("Input_Source", SoundInputSource_Signal.values.OFF, wsManager);
-window.CurrentSoundInputSource = CurrentSoundInputSource;
-
-var CurrentSoundOutputSource = new SoundOutputSource_Signal("Output_Source", SoundOutputSource_Signal.values.OFF, wsManager);
-window.CurrentSoundOutputSource = CurrentSoundOutputSource;
-
-var BT_SinkEnable = new Boolean_Signal('BT_Sink_Enable', Boolean_Signal.values.False, wsManager);
-var BT_SourceEnable = new Boolean_Signal('BT_Source_Enable', Boolean_Signal.values.False, wsManager);
-var Sink_Connect = new Boolean_Signal('Sink_Connect', Boolean_Signal.values.False, wsManager);
-var Sink_Disconnect = new Boolean_Signal('Sink_Disconnect', Boolean_Signal.values.False, wsManager);
-var Sink_Auto_Reconnect = new Boolean_Signal('BT_Sink_Auto_Reconnect', Boolean_Signal.values.False, wsManager);
-var Source_Connect = new Boolean_Signal('Source_Connect', Boolean_Signal.values.False, wsManager);
-var Source_Disconnect = new Boolean_Signal('Source_Disconnect', Boolean_Signal.values.False, wsManager);
-var Source_Auto_Reconnect = new Boolean_Signal('BT_Source_Auto_Reconnect', Boolean_Signal.values.False, wsManager);
-var Source_Reset = new Boolean_Signal('BT_Source_Reset', Boolean_Signal.values.False, wsManager);
-var Amplitude_Gain = new NumericalValue_Signal('Amplitude_Gain', 2.0, wsManager);
-window.Amplitude_Gain = Amplitude_Gain;
-var FFT_Gain = new NumericalValue_Signal('FFT_Gain', 2.0, wsManager);
-window.FFT_Gain = FFT_Gain;
-var SSID = new StringValue_Signal('SSID', 'LED Tower of Power', wsManager);
-var Password = new StringValue_Signal('Password', 'LEDs Rock', wsManager);
-var SinkName = new StringValue_Signal('Sink_Name', 'LED Tower of Power Rock', wsManager);
-var SourceName = new StringValue_Signal('Source_Name', '', wsManager);
+export const CurrentSoundInputSource = new SoundInputSource_Signal('Input_Source', SoundInputSource_Signal.values.OFF, wsManager);
+export const CurrentSoundOutputSource = new SoundOutputSource_Signal('Output_Source', SoundOutputSource_Signal.values.OFF, wsManager);
+export const Source_Connect = new Boolean_Signal('Source_Connect', Boolean_Signal.values.False, wsManager);
+export const Source_Disconnect = new Boolean_Signal('Source_Disconnect', Boolean_Signal.values.False, wsManager);
+export const Sink_Connect = new Boolean_Signal('Sink_Connect', Boolean_Signal.values.False, wsManager);
+export const Sink_Disconnect = new Boolean_Signal('Sink_Disconnect', Boolean_Signal.values.False, wsManager);
+export const Source_Reset = new Boolean_Signal('BT_Source_Reset', Boolean_Signal.values.False, wsManager);
+export const Amplitude_Gain = new NumericalValue_Signal('Amplitude_Gain', 2.0, wsManager);
+export const FFT_Gain = new NumericalValue_Signal('FFT_Gain', 2.0, wsManager);
+export const BT_SinkEnable = new Boolean_Signal('BT_Sink_Enable', Boolean_Signal.values.False, wsManager);
+export const BT_SourceEnable = new Boolean_Signal('BT_Source_Enable', Boolean_Signal.values.False, wsManager);
+export const Sink_Auto_Reconnect = new Boolean_Signal('BT_Sink_AR', Boolean_Signal.values.False, wsManager);
+export const Source_Auto_Reconnect = new Boolean_Signal('BT_Source_Auto_Reconnect', Boolean_Signal.values.False, wsManager);
+export const SSID = new StringValue_Signal('SSID', 'LED Tower of Power', wsManager);
+export const Password = new StringValue_Signal('Password', 'LEDs Rock', wsManager);
+export const SinkName = new StringValue_Signal('Sink_Name', 'LED Tower of Power Rock', wsManager);
+export const SourceName = new StringValue_Signal('Source_Name', '', wsManager);
 
 //Compatible Devices
 var compatibleDevices = [
@@ -63,32 +57,41 @@ const ConnectionStateString =
 	3: 'Disconnecting'
 }
 
-window.showContent = showContent;
-function showContent(classId, contentId) {
-	// Hide all tab contents
-	var tabContents = document.querySelectorAll('.' + classId);
-	tabContents.forEach(function (tabContent) {
-		tabContent.classList.remove('active');
-	});
-	var heading = document.getElementById("mainMenu_Heading");
-	heading.innerText = contentId;
-	
-	// Show the selected tab content
-	document.getElementById(contentId).classList.add('active');
+export function showContent(classId, contentId) {
+    // Select all elements with the given classId
+    var tabContents = document.querySelectorAll('.' + classId);
+    
+    // Hide all tab contents
+    tabContents.forEach(function (tabContent) {
+        tabContent.classList.remove('active');
+    });
+    
+    // Update the main menu heading
+    var heading = document.getElementById("mainMenu_Heading");
+    if (heading) {
+        heading.innerText = contentId;
+    } else {
+        console.warn("Element with ID 'mainMenu_Heading' not found.");
+    }
+    
+    // Show the selected tab content
+    var selectedContent = document.getElementById(contentId);
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+    } else {
+        console.warn("Element with ID '" + contentId + "' not found.");
+    }
 }
 
-const classToSignal = {
-	'selection_tab_content_input_source': 'Sound_Input_Source',
-	'selection_tab_content_output_source': 'Sound_Output_Source',
-};
+export function openNav() 
+{
+  document.getElementById('leftSideNavigationMenu').style.width = '200px';
+}
 
-const contentIdToValue = {
-	'Sound_Input_Selection_OFF': '0',
-	'Sound_Input_Selection_Microphone': '1',
-	'Sound_Input_Selection_Bluetooth': '2',
-	'Sound_Output_Selection_OFF': '0',
-	'Sound_Output_Selection_Bluetooth': '1',
-};
+export function closeNav()
+{
+  document.getElementById('leftSideNavigationMenu').style.width = '0';
+}
 
 //Window and Web Socket Functions
 window.addEventListener('load', onload);
@@ -115,19 +118,6 @@ function onload(event)
 	{
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
-}
-
-
-window.openNav = openNav;
-function openNav() 
-{
-  document.getElementById('leftSideNavigationMenu').style.width = '200px';
-}
-
-window.closeNav = closeNav;
-function closeNav()
-{
-  document.getElementById('leftSideNavigationMenu').style.width = '0';
 }
 
 //Text Box
@@ -171,68 +161,6 @@ function submit_New_Value_From_TextBox(element)
 	sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
 }
 
-function sink_Connect(element, isPressed)
-{
-	var ButtonId = element.id;
-    if(ButtonId == 'Sink_Connect_Button')
-	{
-		if(isPressed)console.log('Sink Connect Button Pressed:');
-		if(!isPressed)console.log('Sink Connect Button Released:');
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed ? "1" : "0";
-		wsManager.send(JSON.stringify(Root));
-	}
-}
-
-function sink_Disconnect(element, isPressed)
-{
-	var ButtonId = element.id;
-    if(ButtonId == 'Sink_Disconnect_Button')
-	{
-		if(isPressed)console.log('Sink Disconnect Button Pressed:');
-		if(!isPressed)console.log('Sink Disconnect Button Released:');
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed ? "1" : "0";
-		var Message = JSON.stringify(Root);
-		wsManager.send(Message);
-	}
-}
-
-function source_Connect(element, isPressed)
-{
-	var ButtonId = element.id;
-    if(ButtonId == 'Source_Connect_Button')
-	{
-		if(isPressed)console.log('Source Connect Button Pressed:');
-		if(!isPressed)console.log('Source Connect Button Released:');
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed ? "1" : "0";
-		var Message = JSON.stringify(Root);
-		wsManager.send(Message);
-	}
-}
-
-function source_Disconnect(element, isPressed)
-{
-	var ButtonId = element.id;
-    if(ButtonId == 'Source_Disconnect_Button')
-	{
-		if(isPressed)console.log('Source Disconnect Button Pressed:');
-		if(!isPressed)console.log('Source Disconnect Button Released:');
-		var Root = {};
-		Root.SignalValue = {};
-		Root.SignalValue.Id = element.getAttribute("data-Signal");
-		Root.SignalValue.Value = isPressed ? "1" : "0";
-		var Message = JSON.stringify(Root);
-		wsManager.send(Message);
-	}
-}
  
 function setSpeakerImage(value)
 {   
@@ -503,8 +431,6 @@ function handleBTSinkConnectionState(id, value) {
     }
 }
 	
-
-
 function handleBTSourceConnectionState(id, value) {
   if (id && value) {
     console.log('Received Bluetooth Source Connection State!');
