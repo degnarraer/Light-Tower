@@ -121,7 +121,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                         , m_IsSender(isSender)
                         , m_DataItem(dataItem)
                         , m_Debug(debug)
-                        , m_Name(dataItem.GetName() + "Wed Socket Handler")
+                        , m_Name(dataItem.GetName() + " Web Socket")
                         , m_Signal(dataItem.GetName())
     {
       if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
@@ -137,7 +137,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     bool NewRxValueReceived(T* Object, size_t Count)
     {
       bool ValueChanged = m_DataItem.SetValue(Object, Count);
-      ESP_LOGD( "WebSocketDataHandler: NewRxValueReceived"
+      ESP_LOGD( "NewRxValueReceived"
               , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
               , m_DataItem.GetValueAsString());
       return ValueChanged;
@@ -145,7 +145,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     void SetNewTxValue(T* Object, size_t Count)
     {
-      ESP_LOGE( "WebSocketDataHandler: SetNewTxValue", "ERROR! this function is not handled yet.");
+      ESP_LOGE( "SetNewTxValue", "ERROR! this function is not handled yet.");
     }
 
     String GetSignal()
@@ -164,7 +164,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       signalValue.Key = m_Signal;
       if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
       {
-        ESP_LOGI( "WebSocketDataHandler: HandleWebSocketTx", "\"%s\": Tx Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
+        ESP_LOGI( "HandleWebSocketTx", "\"%s\": Tx \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
         m_Last_Update_Time = millis();
       }
@@ -226,19 +226,21 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
       signalValue.Key = m_Signal;
       if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
       {
-        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: HandleWebSocketTx", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
+        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: HandleWebSocketTx", "\"%s\" Tx: \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
         signalValues.push_back(signalValue);
       }
     }
     
     virtual void HandleWebSocketRx(const String& stringValue) override
     {
-      ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRx"
-              , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
-              , m_Name.c_str()
-              , m_Signal.c_str()
-              , stringValue.c_str());
-      m_DataItem.SetValueFromString(stringValue);
+      if(ValueChanged())
+      {
+        ESP_LOGI( "HandleWebSocketRx"
+                , "\"%s\" Rx: \"%s\""
+                , m_Name.c_str()
+                , stringValue.c_str());
+        m_DataItem.SetValueFromString(stringValue);
+      }
     }
 };
 
@@ -279,7 +281,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         signalValue.Value = Encode_Compatible_Device_To_JSON(compatibleDevices);
         if(signalValue.Value.length())
         {
-          ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: HandleWebSocketTx", "\"%s\": Pushing New Value \"%s\" to Web Socket",m_DataItem.GetName().c_str(), signalValue.Value.c_str());
+          ESP_LOGI( "HandleWebSocketTx", "\"%s\": Tx: \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
           signalValues.push_back(signalValue);
         }
       }
@@ -389,7 +391,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         // Remove timed out device
         if(ACTIVE_NAME_TIMEOUT < m_ActiveCompatibleDevices[i].timeSinceUpdate)
         {
-            ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketTx", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
+            ESP_LOGI("HandleWebSocketTx", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
             m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin() + i);
             --i;
             updated = true;
@@ -413,7 +415,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           }
           signalValue.Key = m_Signal;
           signalValue.Value = Encode_SSID_Values_To_JSON(activeCompatibleDevicesKVT);
-          ESP_LOGI("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketTx", "Encoding Result: \"%s\"", signalValue.Value.c_str());
+          ESP_LOGI("HandleWebSocketTx", "Encoding Result: \"%s\"", signalValue.Value.c_str());
           if(!signalValue.Value.isEmpty())
           {
               signalValues.push_back(signalValue);
@@ -424,7 +426,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     
     virtual void HandleWebSocketRx(const String& stringValue) override
     {
-      ESP_LOGE("WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketRx", "ERROR! This function is not supported yet.");
+      ESP_LOGE("HandleWebSocketRx", "ERROR! This function is not supported yet.");
     }
   private:
     //Datalink
@@ -445,7 +447,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     void LogDetails(ActiveCompatibleDevice_t &device, const String &context)
     {
       // Log device details
-      ESP_LOGI( "WebSocket_ActiveCompatibleDevice_ArrayDataHandler: HandleWebSocketTx",
+      ESP_LOGI( "HandleWebSocketTx",
                 "%s: %s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i",
                 context.c_str(),
                 this->m_Name.c_str(),

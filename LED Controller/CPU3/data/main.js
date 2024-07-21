@@ -93,7 +93,11 @@ export function closeNav()
   document.getElementById('leftSideNavigationMenu').style.width = '0';
 }
 
-//Window and Web Socket Functions
+document.addEventListener('DOMContentLoaded', (event) => {
+    console.log('DOM fully loaded and parsed');
+	wsManager.announceHere();
+});
+
 window.addEventListener('load', onload);
 function onload(event)
 {
@@ -119,48 +123,6 @@ function onload(event)
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
 }
-
-//Text Box
-function textBoxValueChanged(element)
-{
-	if(element.Id == 'Sink_Name_Text_Box')
-	{
-		clearTimeout(sink_Name_Changed_TimeoutHandle);
-		sink_Name_Value_Changed = true;
-		sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 60000);
-	}
-	else if(element.Id == 'Source_Name_Text_Box')
-	{
-		clearTimeout(source_Name_Changed_TimeoutHandle);
-		source_Name_Value_Changed = true;
-		source_Name_Changed_TimeoutHandle = setTimeout(Source_Name_Changed_Timeout, 60000);
-	}
-}
-
-function Sink_Name_Changed_Timeout()
-{
-	sink_Name_Value_Changed = false;
-}
-
-function Source_Name_Changed_Timeout()
-{
-	source_Name_Value_Changed = false;
-}
-
-function submit_New_Value_From_TextBox(element)
-{
-	clearTimeout(sink_Name_Changed_TimeoutHandle);
-	var TextboxId = element.getAttribute("for");
-	var TextboxElement = document.getElementById(TextboxId);
-	var Root = {};
-	Root.SignalValue = {};
-	Root.SignalValue.Id = TextboxElement.getAttribute("data-Signal");
-	Root.SignalValue.Value = TextboxElement.value;
-	console.log('Submit New Name: \"' + TextboxElement.value + '\" Signal: \"' + TextboxElement.getAttribute("data-Signal") + '\"');
-	wsManager.send(JSON.stringify(Root));
-	sink_Name_Changed_TimeoutHandle = setTimeout(Sink_Name_Changed_Timeout, 5000);
-}
-
  
 function setSpeakerImage(value)
 {   
@@ -379,44 +341,6 @@ function handleSpeakerImage(id, value) {
 	}
 }
 
-function handleStubFunction(id, value) {
-
-}
-
-function handlePassword(id, value){
-	if(id && value)
-	{
-		console.log('Received Password!');
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Password"]');
-		elementsWithDataValue.forEach(function(element){
-			if (element.hasAttribute("value")) {
-				element.value = value;
-			} else if (element.childNodes.length > 0) {
-				element.innerHTML = value;
-			} else {
-				console.log('handleBTSinkName Unsupported Element: ' + element.id);
-			}
-		});
-	}
-}
-
-function handleBTSinkName(id, value) {
-	if(id && value)
-	{
-		console.log('Received Bluetooth Sink Name!');
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Sink_Name"]');
-		elementsWithDataValue.forEach(function(element){
-			if (element.hasAttribute("value")) {
-				element.value = value;
-			} else if (element.childNodes.length > 0) {
-				element.innerHTML = value;
-			} else {
-				console.log('handleBTSinkName Unsupported Element: ' + element.id);
-			}
-		});
-	}
-}
-	
 function handleBTSinkConnectionState(id, value) {
     if (id && value) {
         console.log('Received Bluetooth Source Connection State!');
@@ -429,18 +353,4 @@ function handleBTSinkConnectionState(id, value) {
 			}
         });
     }
-}
-	
-function handleBTSourceConnectionState(id, value) {
-  if (id && value) {
-    console.log('Received Bluetooth Source Connection State!');
-	var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Connection_State"]');
-	elementsWithDataValue.forEach(function(element){
-		if(element.hasOwnProperty("textContent")){
-			element.textContent = ConnectionStateString[parseInt(value)].toString();
-		} else {
-			console.log('handleBTSourceConnectionState Unsupported Element!');
-		}
-	});
-  }
 }

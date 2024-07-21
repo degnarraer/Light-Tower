@@ -6,6 +6,8 @@ export class StringValue_Signal {
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
         this.setValue(initialValue, false);
+        this.debounceDelay = 1000;
+        this.updateWebSocketTimeout = null;
     }
 
     cleanup() {
@@ -17,7 +19,7 @@ export class StringValue_Signal {
     }
 
     onMessage(newValue) {
-        console.log(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
+        console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
     
@@ -31,8 +33,24 @@ export class StringValue_Signal {
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
         if(updateWebsocket){
-            this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+            this.scheduleWebSocketUpdate();
         }
+    }
+
+    scheduleWebSocketUpdate() {
+        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
+        if (!this.updateWebSocketTimeout) {
+            this.sendWebSocketUpdate();
+            this.updateWebSocketTimeout = setTimeout(() => {
+                this.sendWebSocketUpdate();
+                this.updateWebSocketTimeout = null;
+            }, this.debounceDelay);
+        }
+    }
+
+    sendWebSocketUpdate() {
+        console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
+        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
     }
 
     getValue() {
@@ -55,7 +73,7 @@ export class StringValue_Signal {
             } else if (element.childNodes.length > 0) {
                 element.innerHTML = this.value;
             } else {
-                console.log(`handleAmplitudeGain Unsupported Element: ${element.id}`);
+                console.error(`"${this.signalName}" Unsupported Element!`);
             }
         });
     }

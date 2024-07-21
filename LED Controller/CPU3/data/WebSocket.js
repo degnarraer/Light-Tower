@@ -35,7 +35,6 @@ export class WebSocketManager {
             this.websocket.onerror = this.onError.bind(this);
         } catch (error) {
             console.error('WebSocket initialization error:', error.message);
-            setTimeout(() => this.initWebSocket(), 5000);
         }
     }
 
@@ -43,7 +42,7 @@ export class WebSocketManager {
     {
         if(this.websocket) {
             if(signal && value) {
-            console.log('Web Socket Tx: \'' + signal + '\' Value: \'' + value + '\'');
+            console.log('Tx: \'' + signal + '\' Value: \'' + value + '\'');
             var Root = {};
             Root.SignalValue = {};
             Root.SignalValue.Id = signal.toString();
@@ -59,12 +58,13 @@ export class WebSocketManager {
     }
 
     onMessage(event) {
-        console.log('Web Socket Rx:', event.data);
+        console.log(`Rx: "${event.data}"`);
         try {
             const myObj = JSON.parse(event.data);
             const keys = Object.keys(myObj);
             keys.forEach(key => {
                 const { Id, Value } = myObj[key];
+                console.log(`Parsed Rx: ID:"${Id}" Value:"${Value}"`);
                 var found = false;
                 this.listeners.forEach(listener => {
                     if(typeof listener.onMessage === 'function'){
@@ -72,6 +72,7 @@ export class WebSocketManager {
                             if(Id == listener.getSignalName())
                             {
                                 found = true;
+                                console.log(`Found Listener Rx: ID:"${Id}" Value:"${Value}"`);
                                 listener.onMessage(Value);
                             }
                         }
@@ -86,6 +87,10 @@ export class WebSocketManager {
         }
     }
 
+    announceHere(){
+        this.websocket.send('Hello I am here!');
+    }
+
     send(message){
         if(this.websocket) {
             this.websocket.send(message);
@@ -97,7 +102,7 @@ export class WebSocketManager {
     onOpen(event) {
         if(this.websocket) {
             console.log('Connection opened');
-            this.websocket.send('Hello I am here!');   
+            this.announceHere();
         } else {
             console.error('Null Web_Socket!');
         }
@@ -105,12 +110,12 @@ export class WebSocketManager {
 
     onClose(event) {
         console.log('Connection closed');
-        setTimeout(() => this.initWebSocket(), 5000);
+        setTimeout(() => this.initWebSocket(), 1000);
     }
 
     onError(event) {
         console.error('Connection Error:', event);
-        setTimeout(() => this.initWebSocket(), 5000);
+        setTimeout(() => this.initWebSocket(), 1000);
     }
 
 }

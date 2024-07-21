@@ -6,6 +6,8 @@ export class SoundInputSource_Signal {
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
         this.setValue(initialValue, false);
+        this.debounceDelay = 1000;
+        this.updateWebSocketTimeout = null;
     }
 
     static values = {
@@ -24,7 +26,7 @@ export class SoundInputSource_Signal {
     }
 
     onMessage(newValue) {
-        console.log(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
+        console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
 
@@ -38,8 +40,24 @@ export class SoundInputSource_Signal {
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
         if(updateWebsocket){
-            this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+            this.scheduleWebSocketUpdate();
         }
+    }
+
+    scheduleWebSocketUpdate() {
+        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
+        if (!this.updateWebSocketTimeout) {
+            this.sendWebSocketUpdate();
+            this.updateWebSocketTimeout = setTimeout(() => {
+                this.sendWebSocketUpdate();
+                this.updateWebSocketTimeout = null;
+            }, this.debounceDelay);
+        }
+    }
+
+    sendWebSocketUpdate() {
+        console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
+        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
     }
 
     getValue() {
@@ -47,69 +65,37 @@ export class SoundInputSource_Signal {
     }
 
     toString() {
-        switch (this.value) {
-            case SoundInputSource_Signal.values.OFF:
-                return 'OFF';
-            break;
-            case SoundInputSource_Signal.values.Microphone:
-                return 'Microphone';
-            break;
-            case SoundInputSource_Signal.values.Bluetooth:
-                return 'Bluetooth';
-            break;
-            case SoundInputSource_Signal.values.Count:
-                return 'Count';
-            break;
-            default:
-                return 'Unknown';
-            break;
-        }
+        return this.value;
     }
 
     fromString(str) {
-        switch (str) {
-            case 'OFF':
-                this.setValue(SoundInputSource_Signal.values.OFF);
-            break;
-            case 'Microphone':
-                this.setValue(SoundInputSource_Signal.values.Microphone);
-            break;
-            case 'Bluetooth':
-                this.setValue(SoundInputSource_Signal.values.Bluetooth);
-            break;
-            default:
-                this.setValue(SoundInputSource_Signal.values.OFF);
-            break;
-        }
+        this.setValue(SoundInputSource_Signal.values[str] || SoundInputSource_Signal.values.OFF);
     }
     
     showSourceInputContent() {
-        var contentId;
-        // Hide all tab contents
-        var tabContents = document.querySelectorAll('.selection_tab_content_input_source');
-        tabContents.forEach(function (tabContent) {
-            tabContent.classList.remove('active');
-        });
-        var validValue = true;
-        switch (this.value) {
-            case SoundInputSource_Signal.values.OFF:
-                console.log('\"' + this.signalName + '\" Show Source Input Content: \"OFF\"');
-                contentId = 'Sound_Input_Selection_OFF';
-            break;
-            case SoundInputSource_Signal.values.Microphone:
-                console.log('\"' + this.signalName + '\" Show Source Input Content: \"Microphone\"');
-                contentId = 'Sound_Input_Selection_Microphone';
-            break;
-            case SoundInputSource_Signal.values.Bluetooth:
-                console.log('\"' + this.signalName + '\" Show Source Input Content: \"Bluetooth\"');
-                contentId = 'Sound_Input_Selection_Bluetooth';
-            break;
-            default:
-                validValue = false;
-            break;
-        }
-        if(validValue) {
+        const tabContents = document.querySelectorAll('.selection_tab_content_input_source');
+        tabContents.forEach(tabContent => tabContent.classList.remove('active'));
+
+        const contentId = this.getContentIdForValue(this.value);
+        if (contentId) {
             document.getElementById(contentId).classList.add('active');
+        }
+    }
+
+    getContentIdForValue(value) {
+        switch (value) {
+            case SoundInputSource_Signal.values.OFF:
+                console.debug(`"${this.signalName}" Show Source Input Content: "OFF"`);
+                return 'Sound_Input_Selection_OFF';
+            case SoundInputSource_Signal.values.Microphone:
+                console.debug(`"${this.signalName}" Show Source Input Content: "Microphone"`);
+                return 'Sound_Input_Selection_Microphone';
+            case SoundInputSource_Signal.values.Bluetooth:
+                console.debug(`"${this.signalName}" Show Source Input Content: "Bluetooth"`);
+                return 'Sound_Input_Selection_Bluetooth';
+            default:
+                console.error(`"${this.signalName}" Unknown value: "${value}"`);
+                return null;
         }
     }
 }

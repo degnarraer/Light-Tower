@@ -5,14 +5,16 @@ export class NumericalValue_Signal {
         this.value = initialValue;
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
-        this.setValue(initialValue, false);this.
-        debounceDelay = 500;
-        this.lastUpdate = 0;
+        this.setValue(initialValue, false);
+        this.debounceDelay = 250;
         this.updateWebSocketTimeout = null;
     }
 
     cleanup() {
         this.wsManager.unregisterListener(this);
+        if (this.updateWebSocketTimeout) {
+            clearTimeout(this.updateWebSocketTimeout);
+        }
     }
 
     getSignalName() {
@@ -33,19 +35,25 @@ export class NumericalValue_Signal {
             console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
-        if(updateWebsocket){
+        if (updateWebsocket) {
             this.scheduleWebSocketUpdate();
         }
     }
 
     scheduleWebSocketUpdate() {
+        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
         if (!this.updateWebSocketTimeout) {
-            this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+            this.sendWebSocketUpdate();
             this.updateWebSocketTimeout = setTimeout(() => {
-                this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+                this.sendWebSocketUpdate();
                 this.updateWebSocketTimeout = null;
             }, this.debounceDelay);
         }
+    }
+
+    sendWebSocketUpdate() {
+        console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
+        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
     }
 
     getValue() {
@@ -68,7 +76,7 @@ export class NumericalValue_Signal {
             } else if (element.childNodes.length > 0) {
                 element.innerHTML = this.value;
             } else {
-                console.log(`handleAmplitudeGain Unsupported Element: ${element.id}`);
+                console.error(`"${this.signalName}" Unsupported Element!`);
             }
         });
     }

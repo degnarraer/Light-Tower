@@ -6,6 +6,8 @@ export class Boolean_Signal {
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
         this.setValue(initialValue, false);
+        this.debounceDelay = 1000;
+        this.updateWebSocketTimeout = null;
     }
 
     static values = {
@@ -16,6 +18,9 @@ export class Boolean_Signal {
 
     cleanup() {
         this.wsManager.unregisterListener(this);
+        if (this.debounceTimer) {
+            clearInterval(this.debounceTimer);
+        }
     }
 
     getSignalName() {
@@ -23,7 +28,7 @@ export class Boolean_Signal {
     }
 
     onMessage(newValue) {
-        console.log(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
+        console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
     
@@ -37,8 +42,24 @@ export class Boolean_Signal {
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
         if(updateWebsocket){
-            this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+            this.scheduleWebSocketUpdate();
         }
+    }
+
+    scheduleWebSocketUpdate() {
+        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
+        if (!this.updateWebSocketTimeout) {
+            this.sendWebSocketUpdate();
+            this.updateWebSocketTimeout = setTimeout(() => {
+                this.sendWebSocketUpdate();
+                this.updateWebSocketTimeout = null;
+            }, this.debounceDelay);
+        }
+    }
+
+    sendWebSocketUpdate() {
+        console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
+        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
     }
 
     getValue() {
@@ -49,13 +70,10 @@ export class Boolean_Signal {
         switch (this.value) {
             case Boolean_Signal.values.False:
                 return '0';
-            break;
             case Boolean_Signal.values.True:
                 return '1';
-            break;
             default:
                 return 'Unknown';
-            break;
         }
     }
 
@@ -65,30 +83,31 @@ export class Boolean_Signal {
             case 'false':
             case 'False':
                 this.setValue(Boolean_Signal.values.False);
-            break;
+                break;
             case '1':
             case 'true':
             case 'True':
                 this.setValue(Boolean_Signal.values.True);
-            break;
+                break;
             default:
                 this.setValue(Boolean_Signal.values.False);
-            break;
+                break;
         }
     }
     
-    updateHTML(){
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal=\"' + this.getSignalName() + '\"]');
-		elementsWithDataValue.forEach(function(element){
-			if(element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox"){
-				if(this.value == this.values.True){
-					element.checked = true;
-				}else{
-					element.checked = false;
-				}
-			} else {
-				console.log('handleBTSourceReset Unsupported Element!');
-			}
-		});
+    updateHTML() {
+        console.log(`Updating HTML for Signal: "${this.signalName}"`);
+        var elementsWithDataValue = document.querySelectorAll(`[data-Signal="${this.signalName}"]`);
+        if(elementsWithDataValue.Count === 0){
+            console.error(`"${this.signalName}": No Signals Found!`);
+        }
+        elementsWithDataValue.forEach((element) => {
+            if (element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox") {
+                element.checked = this.value === Boolean_Signal.values.True;
+                console.log(`"${this.signalName}" Controlled CheckBox "${element.id}" Updated to: "${this.value}"`);
+            } else {
+                console.error(`"${this.signalName}" Unsupported Element!`);
+            }
+        });
     }
 }
