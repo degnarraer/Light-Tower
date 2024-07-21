@@ -86,7 +86,7 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& s
     if(true == m_MyReceivers[i]->GetSignal().equals(signalId))
     {
       SignalFound = true;
-      ESP_LOGI("ProcessSignalValueAndSendToDatalink", "Sending Value: \"%s\" to receiver.", value.c_str());
+      ESP_LOGD("ProcessSignalValueAndSendToDatalink", "Sending Value: \"%s\" to receiver.", value.c_str());
       m_MyReceivers[i]->HandleWebSocketRx(value);
     }
   }

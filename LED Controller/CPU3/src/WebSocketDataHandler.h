@@ -100,29 +100,28 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
     }
     WebSocketDataHandler( const WebSocketDataHandler &t )
-                        : m_Name(t.m_Name)
-                        , m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
+                        : m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
                         , m_IsReceiver(t.m_IsReceiver)
                         , m_IsSender(t.m_IsSender)
                         , m_DataItem(t.m_DataItem)
                         , m_Debug(t.m_Debug)
+                        , m_Name(t.m_Name)
                         , m_Signal(t.m_Signal)
     {
       if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
       if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
     }
-    WebSocketDataHandler( const String &name
-                        , WebSocketDataProcessor &webSocketDataProcessor
+    WebSocketDataHandler( WebSocketDataProcessor &webSocketDataProcessor
                         , const bool &isReceiver
                         , const bool &isSender
                         , LocalDataItem<T, COUNT> &dataItem
                         , const bool &debug )
-                        : m_Name(name)
-                        , m_WebSocketDataProcessor(webSocketDataProcessor)
+                        : m_WebSocketDataProcessor(webSocketDataProcessor)
                         , m_IsReceiver(isReceiver)
                         , m_IsSender(isSender)
                         , m_DataItem(dataItem)
                         , m_Debug(debug)
+                        , m_Name(dataItem.GetName() + "Wed Socket Handler")
                         , m_Signal(dataItem.GetName())
     {
       if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
@@ -181,12 +180,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_DataItem.SetValueFromString(stringValue);
     }
   protected:
-    const String m_Name;
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     const bool &m_IsReceiver;
     const bool &m_IsSender;
     LocalDataItem<T, COUNT> &m_DataItem;
     const bool &m_Debug;
+    const String m_Name;
     const String m_Signal;
     size_t m_ChangeCount = 0;
 
@@ -204,14 +203,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
 class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>
 {
   public:
-    WebSocket_String_DataHandler( const String &Name
-                                , WebSocketDataProcessor &WebSocketDataProcessor
+    WebSocket_String_DataHandler( WebSocketDataProcessor &WebSocketDataProcessor
                                 , const bool &IsReceiver
                                 , const bool &IsSender
                                 , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem
                                 , const bool Debug )
-                                : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( Name
-                                                                                    , WebSocketDataProcessor
+                                : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( WebSocketDataProcessor
                                                                                     , IsReceiver
                                                                                     , IsSender
                                                                                     , DataItem
@@ -248,14 +245,12 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
 class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<CompatibleDevice_t, 1>
 {
   public:
-    WebSocket_Compatible_Device_DataHandler( const String &Name
-                                           , WebSocketDataProcessor &WebSocketDataProcessor
+    WebSocket_Compatible_Device_DataHandler( WebSocketDataProcessor &WebSocketDataProcessor
                                            , const bool &IsReceiver
                                            , const bool &IsSender
                                            , DataItem<CompatibleDevice_t, 1> &DataItem
                                            , const bool Debug )
-                                           : WebSocketDataHandler<CompatibleDevice_t, 1>( Name
-                                                                                        , WebSocketDataProcessor
+                                           : WebSocketDataHandler<CompatibleDevice_t, 1>( WebSocketDataProcessor
                                                                                         , IsReceiver
                                                                                         , IsSender
                                                                                         , DataItem
@@ -321,14 +316,12 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
 class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHandler<ActiveCompatibleDevice_t, 1>
 {
   public:
-    WebSocket_ActiveCompatibleDevice_ArrayDataHandler( const String &Name
-                                                     , WebSocketDataProcessor &WebSocketDataProcessor
+    WebSocket_ActiveCompatibleDevice_ArrayDataHandler( WebSocketDataProcessor &WebSocketDataProcessor
                                                      , const bool &IsReceiver
                                                      , const bool &IsSender
                                                      , DataItem<ActiveCompatibleDevice_t, 1> &DataItem
                                                      , const bool Debug )
-                                                     : WebSocketDataHandler<ActiveCompatibleDevice_t, 1>( Name
-                                                                                                        , WebSocketDataProcessor
+                                                     : WebSocketDataHandler<ActiveCompatibleDevice_t, 1>( WebSocketDataProcessor
                                                                                                         , IsReceiver
                                                                                                         , IsSender
                                                                                                         , DataItem
