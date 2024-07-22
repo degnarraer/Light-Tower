@@ -1,9 +1,9 @@
 import { WebSocketManager } from './WebSocket.js';
-import { SoundInputSource_Signal } from './SoundInputSource.js';
-import { SoundOutputSource_Signal } from './SoundOutputSource.js';
-import { Boolean_Signal } from './Boolean.js';
-import { NumericalValue_Signal } from './NumericalValue.js';
-import { StringValue_Signal } from './StringValue.js';
+import { Model_InputSource } from './Model_InputSource.js';
+import { Model_OutputSource } from './Model_OutputSource.js';
+import { Model_Boolean } from './Model_Boolean.js';
+import { Model_Numeric } from './Model_Numeric.js';
+import { Model_Text } from './Model_Text.js';
 
 const wsManager = new WebSocketManager();
 
@@ -15,23 +15,23 @@ var sink_Name_Changed_TimeoutHandle;
 var source_Name_Value_Changed = false;
 var source_Name_Changed_TimeoutHandle;
 
-export const CurrentSoundInputSource = new SoundInputSource_Signal('Input_Source', SoundInputSource_Signal.values.OFF, wsManager);
-export const CurrentSoundOutputSource = new SoundOutputSource_Signal('Output_Source', SoundOutputSource_Signal.values.OFF, wsManager);
-export const Source_Connect = new Boolean_Signal('Src_Connect', Boolean_Signal.values.False, wsManager);
-export const Source_Disconnect = new Boolean_Signal('Src_Disconnect', Boolean_Signal.values.False, wsManager);
-export const Sink_Connect = new Boolean_Signal('Sink_Connect', Boolean_Signal.values.False, wsManager);
-export const Sink_Disconnect = new Boolean_Signal('Sink_Disconnect', Boolean_Signal.values.False, wsManager);
-export const Source_Reset = new Boolean_Signal('BT_Src_Reset', Boolean_Signal.values.False, wsManager);
-export const Amplitude_Gain = new NumericalValue_Signal('Amp_Gain', 2.0, wsManager);
-export const FFT_Gain = new NumericalValue_Signal('FFT_Gain', 2.0, wsManager);
-export const BT_SinkEnable = new Boolean_Signal('BT_Sink_En', Boolean_Signal.values.False, wsManager);
-export const BT_SourceEnable = new Boolean_Signal('BT_Source_En', Boolean_Signal.values.False, wsManager);
-export const Sink_Auto_Reconnect = new Boolean_Signal('BT_Sink_AR', Boolean_Signal.values.False, wsManager);
-export const Source_Auto_Reconnect = new Boolean_Signal('BT_Source_AR', Boolean_Signal.values.False, wsManager);
-export const SSID = new StringValue_Signal('SSID', 'LED Tower of Power', wsManager);
-export const Password = new StringValue_Signal('Password', 'LEDs Rock', wsManager);
-export const SinkName = new StringValue_Signal('Sink_Name', 'LED Tower of Power Rock', wsManager);
-export const SourceName = new StringValue_Signal('Source_Name', '', wsManager);
+export const CurrentSoundInputSource = new Model_InputSource('Input_Source', Model_InputSource.values.OFF, wsManager);
+export const CurrentSoundOutputSource = new Model_OutputSource('Output_Source', Model_OutputSource.values.OFF, wsManager);
+export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.values.False, wsManager);
+export const Source_Disconnect = new Model_Boolean('Src_Disconnect', Model_Boolean.values.False, wsManager);
+export const Sink_Connect = new Model_Boolean('Sink_Connect', Model_Boolean.values.False, wsManager);
+export const Sink_Disconnect = new Model_Boolean('Sink_Disconnect', Model_Boolean.values.False, wsManager);
+export const Source_Reset = new Model_Boolean('BT_Src_Reset', Model_Boolean.values.False, wsManager);
+export const Amplitude_Gain = new Model_Numeric('Amp_Gain', 2.0, wsManager);
+export const FFT_Gain = new Model_Numeric('FFT_Gain', 2.0, wsManager);
+export const BT_SinkEnable = new Model_Boolean('BT_Sink_En', Model_Boolean.values.False, wsManager);
+export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
+export const Sink_Auto_Reconnect = new Model_Boolean('BT_Sink_AR', Model_Boolean.values.False, wsManager);
+export const Source_Auto_Reconnect = new Model_Boolean('BT_Source_AR', Model_Boolean.values.False, wsManager);
+export const SSID = new Model_Text('SSID', 'LED Tower of Power', wsManager);
+export const Password = new Model_Text('Password', 'LEDs Rock', wsManager);
+export const SinkName = new Model_Text('Sink_Name', 'LED Tower of Power', wsManager);
+export const SourceName = new Model_Text('Source_Name', '', wsManager);
 
 //Compatible Devices
 var compatibleDevices = [
@@ -91,6 +91,18 @@ export function openNav()
 export function closeNav()
 {
   document.getElementById('leftSideNavigationMenu').style.width = '0';
+}
+
+export function GetElementValue(element) {
+	return element.value;
+}
+
+export function GetElementDataSignal(element) {
+	return element.data-Signal;
+}
+
+export function SendValueToWebSocket(signalName, value){
+	wsManager.Send_Signal_Value_To_Web_Socket(signalName, value);
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {

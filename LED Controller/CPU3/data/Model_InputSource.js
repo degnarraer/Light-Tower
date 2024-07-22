@@ -1,4 +1,4 @@
-export class Boolean_Signal {
+export class Model_InputSource {
     
     constructor(signalName, initialValue, wsManager) {
         this.signalName = signalName;
@@ -11,16 +11,14 @@ export class Boolean_Signal {
     }
 
     static values = {
-        False: '0',
-        True: '1',
+        OFF: 'OFF',
+        Microphone: 'Microphone',
+        Bluetooth: 'Bluetooth',
         Count: 'Count'
     };
 
     cleanup() {
         this.wsManager.unregisterListener(this);
-        if (this.debounceTimer) {
-            clearInterval(this.debounceTimer);
-        }
     }
 
     getSignalName() {
@@ -31,12 +29,12 @@ export class Boolean_Signal {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
-    
+
     setValue(newValue, updateWebsocket = true) {
         console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
-        if (Object.values(Boolean_Signal.values).includes(newValue)) {
+        if (Object.values(Model_InputSource.values).includes(newValue)) {
             this.value = newValue;
-            this.updateHTML();
+            this.showSourceInputContent();
         } else {
             console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
@@ -67,47 +65,37 @@ export class Boolean_Signal {
     }
 
     toString() {
-        switch (this.value) {
-            case Boolean_Signal.values.False:
-                return '0';
-            case Boolean_Signal.values.True:
-                return '1';
-            default:
-                return 'Unknown';
-        }
+        return this.value;
     }
 
     fromString(str) {
-        switch (str) {
-            case '0':
-            case 'false':
-            case 'False':
-                this.setValue(Boolean_Signal.values.False);
-                break;
-            case '1':
-            case 'true':
-            case 'True':
-                this.setValue(Boolean_Signal.values.True);
-                break;
-            default:
-                this.setValue(Boolean_Signal.values.False);
-                break;
-        }
+        this.setValue(Model_InputSource.values[str] || Model_InputSource.values.OFF);
     }
     
-    updateHTML() {
-        console.log(`Updating HTML for Signal: "${this.signalName}"`);
-        var elementsWithDataValue = document.querySelectorAll(`[data-Signal="${this.signalName}"]`);
-        if(elementsWithDataValue.Count === 0){
-            console.error(`"${this.signalName}": No Signals Found!`);
+    showSourceInputContent() {
+        const tabContents = document.querySelectorAll('.selection_tab_content_input_source');
+        tabContents.forEach(tabContent => tabContent.classList.remove('active'));
+
+        const contentId = this.getContentIdForValue(this.value);
+        if (contentId) {
+            document.getElementById(contentId).classList.add('active');
         }
-        elementsWithDataValue.forEach((element) => {
-            if (element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox") {
-                element.checked = this.value === Boolean_Signal.values.True;
-                console.log(`"${this.signalName}" Controlled CheckBox "${element.id}" Updated to: "${this.value}"`);
-            } else {
-                console.error(`"${this.signalName}" Unsupported Element!`);
-            }
-        });
+    }
+
+    getContentIdForValue(value) {
+        switch (value) {
+            case Model_InputSource.values.OFF:
+                console.debug(`"${this.signalName}" Show Source Input Content: "OFF"`);
+                return 'Sound_Input_Selection_OFF';
+            case Model_InputSource.values.Microphone:
+                console.debug(`"${this.signalName}" Show Source Input Content: "Microphone"`);
+                return 'Sound_Input_Selection_Microphone';
+            case Model_InputSource.values.Bluetooth:
+                console.debug(`"${this.signalName}" Show Source Input Content: "Bluetooth"`);
+                return 'Sound_Input_Selection_Bluetooth';
+            default:
+                console.error(`"${this.signalName}" Unknown value: "${value}"`);
+                return null;
+        }
     }
 }

@@ -1,4 +1,4 @@
-export class SoundOutputSource_Signal {
+export class Model_Text {
     
     constructor(signalName, initialValue, wsManager) {
         this.signalName = signalName;
@@ -9,12 +9,6 @@ export class SoundOutputSource_Signal {
         this.debounceDelay = 1000;
         this.updateWebSocketTimeout = null;
     }
-
-    static values = {
-        OFF: 'OFF',
-        Bluetooth: 'Bluetooth',
-        Count: 'Count'
-    };
 
     cleanup() {
         this.wsManager.unregisterListener(this);
@@ -31,9 +25,9 @@ export class SoundOutputSource_Signal {
     
     setValue(newValue, updateWebsocket = true) {
         console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
-        if (Object.values(SoundOutputSource_Signal.values).includes(newValue)) {
+        if (typeof newValue === 'string') {
             this.value = newValue;
-            this.showSourceOutputContent();
+            this.updateHTML();
         } else {
             console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
@@ -68,30 +62,19 @@ export class SoundOutputSource_Signal {
     }
 
     fromString(str) {
-        this.setValue(SoundOutputSource_Signal.values[str] || SoundOutputSource_Signal.values.OFF);
+        this.setValue(str);
     }
     
-    showSourceOutputContent() {
-        const tabContents = document.querySelectorAll('.selection_tab_content_output_source');
-        tabContents.forEach(tabContent => tabContent.classList.remove('active'));
-
-        const contentId = this.getContentIdForValue(this.value);
-        if (contentId) {
-            document.getElementById(contentId).classList.add('active');
-        }
-    }
-
-    getContentIdForValue(value) {
-        switch (value) {
-            case SoundOutputSource_Signal.values.OFF:
-                console.debug(`"${this.signalName}" Show Source Output Content: "OFF"`);
-                return 'Sound_Output_Selection_OFF';
-            case SoundOutputSource_Signal.values.Bluetooth:
-                console.debug(`"${this.signalName}" Show Source Output Content: "Bluetooth"`);
-                return 'Sound_Output_Selection_Bluetooth';
-            default:
-                console.error(`"${this.signalName}" Unknown value: "${value}"`);
-                return null;
-        }
+    updateHTML() {
+        const elementsWithDataValue = document.querySelectorAll(`[data-Signal="${this.signalName}"]`);
+        elementsWithDataValue.forEach(element => {
+            if (element.hasAttribute("value")) {
+                element.value = this.value;
+            } else if (element.childNodes.length > 0) {
+                element.innerHTML = this.value;
+            } else {
+                console.error(`"${this.signalName}" Unsupported Element!`);
+            }
+        });
     }
 }

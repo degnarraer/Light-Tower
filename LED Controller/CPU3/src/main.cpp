@@ -78,7 +78,7 @@ void InitLocalVariables()
   m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
   InitWebSocket();
-  m_SettingsWebServerManager.SetupWifi();
+  m_SettingsWebServerManager.StartWiFi();
 }
 
 void PrintMemory()

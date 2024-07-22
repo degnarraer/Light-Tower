@@ -106,7 +106,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			assert(mp_Value != nullptr);
 			assert(count <= DATAITEM_STRING_LENGTH);
 			String newValue = String(value);
-			ESP_LOGD( "DataItem: SetValue"
+			ESP_LOGI( "DataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, newValue.c_str() );

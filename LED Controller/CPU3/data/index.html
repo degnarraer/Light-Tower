@@ -9,10 +9,13 @@
 </head>
 <body>
 	<script type="module">
-		import { showContent, openNav, closeNav } from './main.js';
+		import { showContent, openNav, closeNav, GetElementValue, GetElementDataSignal, SendValueToWebSocket } from './main.js';
         window.showContent = showContent;
         window.openNav = openNav;
         window.closeNav = closeNav;
+		window.GetElementValue = GetElementValue;
+		window.GetElementDataSignal = GetElementDataSignal;
+		window.SendValueToWebSocket = SendValueToWebSocket;
 	</script>
 	<script type="module">
 		import { CurrentSoundInputSource
@@ -87,10 +90,10 @@
 							SSID
 						</div>
 						<div class="settingGroup_Textbox">
-							<label for="SSID_Text_Box"></label><input type="text" data-Signal="SSID" id="SSID_Text_Box" oninput="textBoxValueChanged(this)" value="Enter SSID">
+							<label for="SSID_Text_Box"></label><input type="text" data-Signal="SSID" id="SSID_Text_Box" oninput="SSID.setValue(this.value, false)" value="Enter SSID">
 						</div>
 						<div class="settingGroup_Widget">
-							<button id="SSID_Submit_Button" for="SSID_Text_Box" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
+							<button id="SSID_Submit_Button" for="SSID_Text_Box" onclick="SSID.scheduleWebSocketUpdate()">Submit</button>
 						</div>
 					</div>
 				</div>
@@ -100,10 +103,10 @@
 							Password
 						</div>
 						<div class="settingGroup_Textbox">
-							<label for="Password_Text_Box"></label><input type="text" data-Signal="Password" id="Password_Text_Box" oninput="textBoxValueChanged(this)" value="Enter Password">
+							<label for="Password_Text_Box"></label><input type="text" data-Signal="Password" id="Password_Text_Box" oninput="Password.setValue(this.value, false)" value="Enter Password">
 						</div>
 						<div class="settingGroup_Widget">
-							<button id="Password_Submit_Button" for="Password_Text_Box" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
+							<button id="Password_Submit_Button" for="Password_Text_Box" onclick="Password.scheduleWebSocketUpdate()">Submit</button>
 						</div>
 					</div>
 				</div>
@@ -161,19 +164,12 @@
 							</div>
 							<div class="settingGroup_Textbox">
 								<label for="Sink_Name_Text_Box"></label>
-								<input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" value="Enter Name">
+								<input type="text" data-Signal="Sink_Name" id="Sink_Name_Text_Box" oninput="SinkName.setValue(this.value, false)" value="Enter Name">
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="submitSinkName()">Submit</button>
+								<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="SinkName.scheduleWebSocketUpdate()">Submit</button>
 							</div>
 						</div>
-						<script type="module">
-							window.submitSinkName = function() {
-								const textBox = document.getElementById('Sink_Name_Text_Box');
-								const value = textBox.value;
-								SinkName.setValue(value);
-							};
-						</script>
 					</div>
 					<div class="settingGroup">
 						<div class="settingGroup_Horrizontal_Grid_Status">
@@ -237,10 +233,10 @@
 									Bluetooth Speaker Name
 								</div>
 								<div class="settingGroup_Textbox">
-									<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" value="Enter Name">
+									<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" oninput="SourceName.setValue(this.value, false)" value="Enter Name">
 								</div>
 								<div class="settingGroup_Widget">
-									<button id="Source_Name_Submit_Button" onclick="submit_New_Value_From_TextBox(this)">Submit</button>
+									<button id="Source_Name_Submit_Button" onclick="SourceName.scheduleWebSocketUpdate()">Submit</button>
 								</div>
 							</div>
 						</div>

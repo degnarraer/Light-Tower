@@ -48,9 +48,15 @@ class SettingsWebServerManager: public SetupCallerInterface
       InitFileSystem();
     }
 
-    void SetupWifi()
+    void StartWiFi()
     {
       InitWiFiAP();
+    }
+    
+    void EndWiFi()
+    {
+      EndWebServer();
+      WiFi.disconnect();
     }
 
     void InitializePreferences()
@@ -101,11 +107,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       {
         ESP_LOGE("Settings_Web_Server", "ERROR! Unable to mount SPIFFS.");
       }
-    }
-
-    void BeginWebServer()
-    {
-      m_WebServer.begin();
     }
 
     void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
@@ -568,6 +569,16 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
     }
     
+    void BeginWebServer()
+    {
+      m_WebServer.begin();
+    }
+
+    void EndWebServer()
+    {
+      m_WebServer.end();
+    }
+
     void InitWiFiAP()
     {
       ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Access Point");

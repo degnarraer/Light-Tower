@@ -38,6 +38,32 @@ enum UpdateStoreType_t
 };
 
 template <typename T, size_t COUNT>
+class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
+			  				  , public NewRxTxVoidObjectCalleeInterface
+{
+	public:
+		virtual void SetNewTxValue(const T* object, const size_t count) = 0;
+		virtual bool NewRxValueReceived(void* object, size_t Count) = 0;
+		virtual void DataItem_TX_Now() = 0;
+	protected:
+		void DataItem_Try_TX_On_Change()
+		{
+			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", LocalDataItem<T,COUNT>::GetName().c_str());
+			if(this->m_RxTxType == RxTxType_Tx_On_Change || this->m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
+			{
+				DataItem_TX_Now();
+			}
+		}
+	private:
+		const RxTxType_t m_RxTxType;
+		const UpdateStoreType_t m_UpdateStoreType;
+		const uint16_t m_Rate;
+		SerialPortMessageManager *mp_SerialPortMessageManager = nullptr;
+		T *mp_RxValue = nullptr;
+		T *mp_TxValue = nullptr;
+};
+
+template <typename T, size_t COUNT>
 class DataItem: public LocalDataItem<T, COUNT>
 			  , public NewRxTxValueCallerInterface<T>
 			  , public NewRxTxVoidObjectCalleeInterface

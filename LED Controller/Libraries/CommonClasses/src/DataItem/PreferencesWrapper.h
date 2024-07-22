@@ -580,27 +580,34 @@ private:
             {
                 ESP_LOGD("HandleSave", "Key: \"%s\" String to Save: \"%s\"", m_Key.c_str(), saveString.c_str());
                 xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
-                String stringToSave = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
-                if(saveString.length() == saveLength)
+                String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                if(!saveString.equals(savedString))
                 {
-                    String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                    if(!saveString.equals(savedString))
+                    size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
+                    if(saveString.length() == saveLength)
                     {
-                        ESP_LOGE("HandleSave", "ERROR! Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\".", m_Key.c_str(), saveString.c_str(), savedString.c_str());
-                        mp_PreferencesInterface->remove(m_Key.c_str());
+                        String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                        if(!saveString.equals(savedString))
+                        {
+                            ESP_LOGE("HandleSave", "ERROR! Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\".", m_Key.c_str(), saveString.c_str(), savedString.c_str());
+                            mp_PreferencesInterface->remove(m_Key.c_str());
+                        }
+                        else
+                        {
+                            ESP_LOGI("HandleSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                            m_Preferences_Last_Update = currentMillis;
+                            result = true;
+                        }
                     }
                     else
                     {
-                        ESP_LOGI("HandleSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
-                        m_Preferences_Last_Update = currentMillis;
-                        result = true;
+                        ESP_LOGE("HandleSave", "ERROR! Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
+                        mp_PreferencesInterface->remove(m_Key.c_str());
                     }
                 }
                 else
                 {
-                    ESP_LOGE("HandleSave", "ERROR! Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
-                    mp_PreferencesInterface->remove(m_Key.c_str());
+                  ESP_LOGI("HandleSave", "Key: \"%s\" No change save skipped for value: \"%s\"", m_Key.c_str(), savedString.c_str());        
                 }
                 xSemaphoreGiveRecursive(m_PreferencesMutex);
             }

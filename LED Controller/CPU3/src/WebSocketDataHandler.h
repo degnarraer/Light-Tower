@@ -233,14 +233,11 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     
     virtual void HandleWebSocketRx(const String& stringValue) override
     {
-      if(ValueChanged())
-      {
-        ESP_LOGI( "HandleWebSocketRx"
-                , "\"%s\" Rx: \"%s\""
-                , m_Name.c_str()
-                , stringValue.c_str());
-        m_DataItem.SetValueFromString(stringValue);
-      }
+      ESP_LOGI( "HandleWebSocketRx"
+              , "\"%s\" Rx: \"%s\""
+              , m_Name.c_str()
+              , stringValue.c_str());
+      m_DataItem.SetValueFromString(stringValue);
     }
 };
 

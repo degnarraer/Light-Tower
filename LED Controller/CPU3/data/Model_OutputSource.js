@@ -1,4 +1,4 @@
-export class NumericalValue_Signal {
+export class Model_OutputSource {
     
     constructor(signalName, initialValue, wsManager) {
         this.signalName = signalName;
@@ -6,15 +6,18 @@ export class NumericalValue_Signal {
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
         this.setValue(initialValue, false);
-        this.debounceDelay = 250;
+        this.debounceDelay = 1000;
         this.updateWebSocketTimeout = null;
     }
 
+    static values = {
+        OFF: 'OFF',
+        Bluetooth: 'Bluetooth',
+        Count: 'Count'
+    };
+
     cleanup() {
         this.wsManager.unregisterListener(this);
-        if (this.updateWebSocketTimeout) {
-            clearTimeout(this.updateWebSocketTimeout);
-        }
     }
 
     getSignalName() {
@@ -22,20 +25,20 @@ export class NumericalValue_Signal {
     }
 
     onMessage(newValue) {
-        console.log(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
+        console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
     
     setValue(newValue, updateWebsocket = true) {
         console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
-        if (!isNaN(newValue) && !isNaN(parseFloat(newValue))) {
+        if (Object.values(Model_OutputSource.values).includes(newValue)) {
             this.value = newValue;
-            this.updateHTML();
+            this.showSourceOutputContent();
         } else {
             console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
-        if (updateWebsocket) {
+        if(updateWebsocket){
             this.scheduleWebSocketUpdate();
         }
     }
@@ -61,23 +64,34 @@ export class NumericalValue_Signal {
     }
 
     toString() {
-        return this.value.toString();
+        return this.value;
     }
 
     fromString(str) {
-        this.setValue(Number(str));
+        this.setValue(Model_OutputSource.values[str] || Model_OutputSource.values.OFF);
     }
     
-    updateHTML() {
-        const elementsWithDataValue = document.querySelectorAll(`[data-Signal="${this.signalName}"]`);
-        elementsWithDataValue.forEach(element => {
-            if (element.hasAttribute("value")) {
-                element.value = this.value;
-            } else if (element.childNodes.length > 0) {
-                element.innerHTML = this.value;
-            } else {
-                console.error(`"${this.signalName}" Unsupported Element!`);
-            }
-        });
+    showSourceOutputContent() {
+        const tabContents = document.querySelectorAll('.selection_tab_content_output_source');
+        tabContents.forEach(tabContent => tabContent.classList.remove('active'));
+
+        const contentId = this.getContentIdForValue(this.value);
+        if (contentId) {
+            document.getElementById(contentId).classList.add('active');
+        }
+    }
+
+    getContentIdForValue(value) {
+        switch (value) {
+            case Model_OutputSource.values.OFF:
+                console.debug(`"${this.signalName}" Show Source Output Content: "OFF"`);
+                return 'Sound_Output_Selection_OFF';
+            case Model_OutputSource.values.Bluetooth:
+                console.debug(`"${this.signalName}" Show Source Output Content: "Bluetooth"`);
+                return 'Sound_Output_Selection_Bluetooth';
+            default:
+                console.error(`"${this.signalName}" Unknown value: "${value}"`);
+                return null;
+        }
     }
 }

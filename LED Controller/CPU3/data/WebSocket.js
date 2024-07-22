@@ -42,7 +42,7 @@ export class WebSocketManager {
     {
         if(this.websocket) {
             if(signal && value) {
-            console.log('Tx: \'' + signal + '\' Value: \'' + value + '\'');
+            console.log('Web Socket Tx: \'' + signal + '\' Value: \'' + value + '\'');
             var Root = {};
             Root.SignalValue = {};
             Root.SignalValue.Id = signal.toString();
@@ -58,7 +58,7 @@ export class WebSocketManager {
     }
 
     onMessage(event) {
-        console.log(`Rx: "${event.data}"`);
+        console.log(`Web Socket Rx: "${event.data}"`);
         try {
             const myObj = JSON.parse(event.data);
             const keys = Object.keys(myObj);
