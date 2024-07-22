@@ -20,8 +20,10 @@
 
 #include "DataItem/DataItem.h"
 #include "DataItem/LocalStringDataItem.h"
+#include "DataItem/SerialDataLinkInterface.h"
 
-class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
+class StringDataItem: public LocalStringDataItem
+			  		, public SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>
 {
 	public:
 		StringDataItem( const String name
@@ -32,14 +34,11 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 					  , SerialPortMessageManager *serialPortMessageManager
 					  , NamedCallback_t *namedCallback
 					  , SetupCallerInterface *setupCallerInterface )
-					  : DataItem<char, DATAITEM_STRING_LENGTH>( name
-															  , initialValue.c_str()
-															  , rxTxType
-															  , updateStoreType
-															  , rate
-															  , serialPortMessageManager
-															  , namedCallback
-															  , setupCallerInterface )
+					  : LocalStringDataItem( name
+										   , initialValue.c_str()
+										   , namedCallback
+										   , setupCallerInterface )
+					  , SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>(rxTxType, updateStoreType, rate, serialPortMessageManager)
 		{
 		  
 		}
@@ -49,17 +48,22 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("StringDataItem::~StringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
+		virtual String GetName() override
+		{
+			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetName();
+		}
+		
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
-			if(mp_InitialValue)
+			if(this->mp_InitialValue)
 			{
-				stringValue = String(mp_InitialValue);
-				ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				stringValue = String(this->mp_InitialValue);
+				ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", this->m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", this->m_Name.c_str());
 				return false;
 			}
 		}
@@ -77,9 +81,9 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool GetValueAsString(String &stringValue) const override
 		{
-			if(mp_Value)
+			if(this->mp_Value)
 			{
-				stringValue = String(mp_Value);
+				stringValue = String(this->mp_Value);
 				ESP_LOGD("GetValueAsString"
 						, "\"%s\": GetValueAsString: %s"
 						, m_Name.c_str()
@@ -88,7 +92,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", this->m_Name.c_str());
 				return false;
 			}
 		}
@@ -108,7 +112,7 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("StringDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
-					, m_Name.c_str()
+					, this->m_Name.c_str()
 					, stringValue.c_str());
 			return SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
 		}
@@ -116,28 +120,71 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool SetValue(const char* value, size_t count) override
 		{
 			assert(value != nullptr);
-			assert(mp_Value != nullptr);
+			assert(this->mp_Value != nullptr);
 			assert(count <= DATAITEM_STRING_LENGTH);
 			bool valueChanged = LocalDataItem<char, DATAITEM_STRING_LENGTH>::SetValue(value, DATAITEM_STRING_LENGTH);
 			if(valueChanged)
 			{
-				DataItem_Try_TX_On_Change();
+				this->DataItem_Try_TX_On_Change();
 			}
 			return valueChanged;
 		}
+		virtual void SetNewTxValue(const char* object, const size_t count)
+		{
+
+		}
+		virtual bool NewRxValueReceived(void* object, size_t count)
+		{ 
+			bool valueUpdated = false;
+			char* receivedValue = (char*)object;
+			if(strcmp(this->mp_RxValue, receivedValue) != 0)
+			{
+				ZeroOutCharArray(this->mp_RxValue);
+				strcpy(mp_RxValue, receivedValue);
+				ESP_LOGI( "DataItem: NewRxValueReceived"
+						, "\"%s\" New RX Value Received: \"%s\""
+						, m_Name.c_str()
+						, receivedValue );
+				if( UpdateStoreType_On_Rx == this->m_UpdateStoreType &&
+					strcmp(mp_Value, mp_RxValue) != 0 )
+				{
+					ZeroOutCharArray(mp_Value);
+					strcpy(mp_Value, mp_RxValue);
+					++m_ValueChangeCount;
+					valueUpdated = true;
+					CallCallbacks(m_Name, mp_Value);
+				}
+			}
+			if(RxTxType_Rx_Echo_Value == this->m_RxTxType)
+			{
+				ZeroOutCharArray(this->mp_TxValue);
+				strcpy(this->mp_TxValue, this->mp_RxValue);
+				DataItem_TX_Now();
+			}
+			return valueUpdated;
+		}
 
 	protected:
+		void DataItem_Try_TX_On_Change()
+		{
+			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetName().c_str());
+			if(this->m_RxTxType == RxTxType_Tx_On_Change || this->m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
+			{
+				DataItem_TX_Now();
+			}
+		}
+
 		virtual bool DataItem_TX_Now()
 		{
 			bool valueUpdated = false;
-			if(mp_SerialPortMessageManager->QueueMessageFromData(m_Name, DataType_Char_t, mp_TxValue, DATAITEM_STRING_LENGTH))
+			if(this->mp_SerialPortMessageManager->QueueMessageFromData(m_Name, DataType_Char_t, this->mp_TxValue, DATAITEM_STRING_LENGTH))
 			{
-				if(strcmp(mp_Value, mp_TxValue) != 0)
+				if(strcmp(mp_Value, this->mp_TxValue) != 0)
 				{
-					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
+					if(this->m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
 						ZeroOutCharArray(mp_Value);
-						strcpy(mp_Value, mp_TxValue);
+						strcpy(mp_Value, this->mp_TxValue);
 						valueUpdated = true;
 						++m_ValueChangeCount;
 						CallCallbacks(m_Name, mp_Value);
@@ -148,37 +195,6 @@ class StringDataItem: public DataItem<char, DATAITEM_STRING_LENGTH>
 			else
 			{
 				ESP_LOGE("DataItem: DataItem_TX_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", m_Name.c_str());
-			}
-			return valueUpdated;
-		}
-
-		virtual bool NewRxValueReceived(void* object, size_t count) override
-		{ 
-			bool valueUpdated = false;
-			char* receivedValue = (char*)object;
-			if(strcmp(mp_RxValue, receivedValue) != 0)
-			{
-				ZeroOutCharArray(mp_RxValue);
-				strcpy(mp_RxValue, receivedValue);
-				ESP_LOGI( "DataItem: NewRxValueReceived"
-						, "\"%s\" New RX Value Received: \"%s\""
-						, m_Name.c_str()
-						, receivedValue );
-				if( UpdateStoreType_On_Rx == m_UpdateStoreType &&
-					strcmp(mp_Value, mp_RxValue) != 0 )
-				{
-					ZeroOutCharArray(mp_Value);
-					strcpy(mp_Value, mp_RxValue);
-					++m_ValueChangeCount;
-					valueUpdated = true;
-					CallCallbacks(m_Name, mp_Value);
-				}
-			}
-			if(RxTxType_Rx_Echo_Value == m_RxTxType)
-			{
-				ZeroOutCharArray(mp_TxValue);
-				strcpy(mp_TxValue, mp_RxValue);
-				DataItem_TX_Now();
 			}
 			return valueUpdated;
 		}
