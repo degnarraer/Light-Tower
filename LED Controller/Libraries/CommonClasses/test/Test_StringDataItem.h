@@ -229,7 +229,6 @@ protected:
 
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         SetupAllSetupCallees();
-
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     }
 

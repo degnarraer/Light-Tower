@@ -52,7 +52,12 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetName();
 		}
-		
+
+		virtual size_t GetCount() override
+		{
+			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetCount();
+		}
+
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
 			if(this->mp_InitialValue)

@@ -376,9 +376,9 @@ public:
     }
 
     bool Update_Preference( const PreferenceUpdateType updateType
-						  , const String saveValue )
+						  , const String stringToSave )
     {
-        ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\" to new value: \"%s\"", m_Key.c_str(), saveValue.c_str());
+        ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\" with new value: \"%s\"", m_Key.c_str(), stringToSave.c_str());
         bool result = false;
         if (!mp_PreferencesInterface)
         {
@@ -390,11 +390,11 @@ public:
             case PreferenceUpdateType::Timer:
                 ESP_LOGD("Update_Preference", "\"%s\": Delayed Save", m_Key.c_str());
                 m_PreferenceTimerActive = false;
-                result = HandleSave(saveValue);
+                result = TrySave(stringToSave);
                 break;
             case PreferenceUpdateType::Initialize:
                 ESP_LOGD("Update_Preference", "\"%s\": Initializing Preference", m_Key.c_str());
-                result = HandleSave(saveValue);
+                result = PerformSave(stringToSave);
                 break;
             case PreferenceUpdateType::Load:
                 ESP_LOGD("Update_Preference: Update_Preference", "\"%s\": Loading Preference", m_Key.c_str());
@@ -402,7 +402,7 @@ public:
                 break;
             case PreferenceUpdateType::Save:
                 ESP_LOGD("Update_Preference", "\"%s\": Updating Preference", m_Key.c_str());
-                result = HandleSave(saveValue);
+                result = TrySave(stringToSave);
                 break;
             default:
                 ESP_LOGE("Update_Preference", "ERROR! \"%s\": Unsupported Update Type.", m_Key.c_str());
@@ -545,10 +545,39 @@ private:
         xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
     }
-
-    bool HandleSave(const String &saveString)
+    
+    bool PerformSave(const String &stringToSave)
     {
-        ESP_LOGD("HandleSave", "Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), saveString.c_str());
+        unsigned long currentMillis = millis();
+        bool result = false;
+        size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), stringToSave);
+        if(stringToSave.length() == saveLength)
+        {
+            String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+            ESP_LOGI("PerformSave", "Key: \"%s\" Comparing Strings: String to Save: \"%s\" Actual String Saved: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
+            if(savedString.equals(stringToSave))
+            {
+                ESP_LOGI("PerformSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
+                m_Preferences_Last_Update = currentMillis;
+                result = true;
+            }
+            else
+            {
+                ESP_LOGE("PerformSave", "ERROR! Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());
+                mp_PreferencesInterface->remove(m_Key.c_str());
+            }
+        }
+        else
+        {
+            ESP_LOGE("PerformSave", "ERROR! Save Error: \"%s\" Tried to save: \"%s\". Expected to save %i characters, but saved %i characters.", m_Key.c_str(), stringToSave.c_str(), stringToSave.length(), saveLength);
+            mp_PreferencesInterface->remove(m_Key.c_str());
+        }
+        return result;
+    }
+
+    bool TrySave(const String &stringToSave)
+    {
+        ESP_LOGD("TrySave", "Try Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), stringToSave.c_str());
         bool result = false;
         if(mp_PreferencesInterface)
         {
@@ -564,57 +593,38 @@ private:
             }
             if (elapsedTime <= m_TimeoutTime)
             {
-                ESP_LOGD("HandleSave", "\"%s\": Too early to save preference", m_Key.c_str());
+                ESP_LOGD("TrySave", "\"%s\": Too early to save preference", m_Key.c_str());
                 if (!m_PreferenceTimerActive)
                 {
-                    ESP_LOGD("HandleSave", "\"%s\": Started NVM Update Timer", m_Key.c_str());
-                    result = DelaySaveValue(saveString, elapsedTime);
+                    ESP_LOGD("TrySave", "\"%s\": Started NVM Update Timer", m_Key.c_str());
+                    result = DelaySaveValue(stringToSave, elapsedTime);
                 }
                 else
                 {
-                    ESP_LOGD("HandleSave", "\"%s\": NVM Update Timer already running, injecting new value to save", m_Key.c_str());
-                    result = DelaySaveValue(saveString, elapsedTime);
+                    ESP_LOGD("TrySave", "\"%s\": NVM Update Timer already running, injecting new value to save.", m_Key.c_str());
+                    result = DelaySaveValue(stringToSave, elapsedTime);
                 }
             }
             else
             {
-                ESP_LOGD("HandleSave", "Key: \"%s\" String to Save: \"%s\"", m_Key.c_str(), saveString.c_str());
                 xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
                 String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                if(!saveString.equals(savedString))
+                ESP_LOGI("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
+                if(stringToSave.equals(savedString))
                 {
-                    size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), saveString);
-                    if(saveString.length() == saveLength)
-                    {
-                        String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                        if(!saveString.equals(savedString))
-                        {
-                            ESP_LOGE("HandleSave", "ERROR! Key: \"%s\" Did Not Save Properly! String to save: \"%s\" Saved String: \"%s\".", m_Key.c_str(), saveString.c_str(), savedString.c_str());
-                            mp_PreferencesInterface->remove(m_Key.c_str());
-                        }
-                        else
-                        {
-                            ESP_LOGI("HandleSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
-                            m_Preferences_Last_Update = currentMillis;
-                            result = true;
-                        }
-                    }
-                    else
-                    {
-                        ESP_LOGE("HandleSave", "ERROR! Save Error: \"%s\" Tried to save: \"%s\" Expected to save %i characters, but saved %i characters.", m_Key.c_str(), saveString.c_str(), saveString.length(), saveLength);
-                        mp_PreferencesInterface->remove(m_Key.c_str());
-                    }
+                    ESP_LOGI("TrySave", "Key: \"%s\" Skipping save as String to Save: \"%s\" equals Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());       
                 }
                 else
                 {
-                  ESP_LOGI("HandleSave", "Key: \"%s\" No change save skipped for value: \"%s\"", m_Key.c_str(), savedString.c_str());        
+                    result = PerformSave(stringToSave);
                 }
+                
                 xSemaphoreGiveRecursive(m_PreferencesMutex);
             }
         }
         else
         {
-            ESP_LOGE("HandleSave", "ERROR! \"%s\" Null Pointer.", m_Key.c_str());
+            ESP_LOGE("TrySave", "ERROR! \"%s\" Null Pointer.", m_Key.c_str());
         }
         return result;
     }

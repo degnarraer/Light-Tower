@@ -348,7 +348,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			// Split the input string by ENCODE_DIVIDER
 			while (end != -1) 
 			{
-				String parsedString = stringValue.substring(start);
+				String parsedString = stringValue.substring(start, end);
 				ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
 				substrings.push_back(parsedString);
 				start = end + 1;

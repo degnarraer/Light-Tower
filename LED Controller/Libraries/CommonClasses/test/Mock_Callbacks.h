@@ -57,7 +57,7 @@ class MockNamedCallback: public NamedCallback_t
         }
         MockNamedCallback(const String& name, void* arg): NamedCallback_t(name, NewValueCallbackFunction, arg)
         {
-            ESP_LOGD("MockNamedCallback", "MockNamedCallback Constructor1 called. Name: \"%s\"", name);
+            ESP_LOGD("MockNamedCallback", "MockNamedCallback Constructor1 called. Name: \"%s\"", name.c_str());
         }
         virtual ~MockNamedCallback()
         {
