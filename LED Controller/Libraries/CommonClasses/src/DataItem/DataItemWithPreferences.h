@@ -125,7 +125,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			}
 		}
 
-		void Setup()
+		virtual void Setup() override
 		{
 			DataItem<T, COUNT>::Setup();
 			mp_PreferenceManager = new PreferenceManager( mp_preferencesInterface
@@ -137,6 +137,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			mp_PreferenceManager->InitializeAndLoadPreference();
 		}
 		
+		virtual size_t GetCount() const override
+		{
+			return DataItem<T, COUNT>::GetCount();
+		}
+
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
 			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);

@@ -38,6 +38,11 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			ESP_LOGI("LocalStringDataItem::~LocalStringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
 		}
 
+		virtual size_t GetCount() const override
+		{
+			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetCount();
+		}
+
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
 			if(mp_InitialValue)

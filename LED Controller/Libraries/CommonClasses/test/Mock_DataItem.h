@@ -44,8 +44,6 @@ class MockDataItem : public DataItem<T, COUNT> {
     protected:
         MOCK_METHOD(void, Setup, (), (override));
         MOCK_METHOD(bool, SetValueFromString, (const String& stringValue), (override));
-        MOCK_METHOD(void, SetNewTxValue, (const T* value, const size_t count));
-        MOCK_METHOD(void, SetDataLinkEnabled, (bool enable));
         MOCK_METHOD(bool, NewRxValueReceived, (void* Object, size_t Count), (override));
         MOCK_METHOD(bool, SetValue, (const T* value, size_t count));
         MOCK_METHOD(bool, SetValue, (T value));

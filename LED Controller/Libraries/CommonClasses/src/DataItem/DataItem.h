@@ -123,68 +123,44 @@ class DataItem: public LocalDataItem<T, COUNT>
 		
 		virtual ~DataItem() override
 		{
-			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());
-			SetDataLinkEnabled(false);
-			if(this->mp_RxValue)
-			{
-        		ESP_LOGD("~DataItem", "freeing mp_RxValue Memory");
-				heap_caps_free(this->mp_RxValue);
-			}
-			if(this->mp_TxValue)
-			{
-        		ESP_LOGD("~DataItem", "freeing mp_TxValue Memory");
-				heap_caps_free(this->mp_TxValue);	
-			}
-				
+			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());				
 		}
+
+		//SetupCalleeInterface
 		virtual void Setup() override
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalDataItem<T,COUNT>::GetName().c_str());
 			LocalDataItem<T, COUNT>::Setup();
-			this->mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			this->mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			if(this->mp_Value)
-			{
-				if (this->mp_RxValue && this->mp_TxValue)
-				{
-					ESP_LOGD("DataItem<T, COUNT>::Setup()", "Setting Initial Tx/Rx Values");
-					memcpy(this->mp_RxValue, this->mp_Value, sizeof(T)*COUNT);
-					memcpy(this->mp_TxValue, this->mp_Value, sizeof(T)*COUNT);
-					SetDataLinkEnabled(true);
-				}
-				else
-				{
-					ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Failed to allocate memory on SPI RAM.");
-				}
-			}
-			else
-			{
-				ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Null Pointer.");
-			}
+			SerialDataLinkIntertface<T, COUNT>::Setup();
 		}
 
-		String GetName()
-		{
-			return LocalDataItem<T, COUNT>::GetName();
-		}
-
-		size_t GetCount() const
+		//SerialDataLinkIntertface
+		virtual size_t GetCount() const override
 		{
 			return LocalDataItem<T, COUNT>::GetCount();
 		}
-
-		void SetNewTxValue(const T* Value, const size_t Count)
+		virtual T* GetValuePointer() const override
 		{
-			ESP_LOGD("DataItem: SetNewTxValue", "\"%s\" SetNewTxValue to: \"%s\"", LocalDataItem<T,COUNT>::GetName().c_str(), this->GetValueAsString().c_str());
-			SetValue(Value, Count);
+			return LocalDataItem<T, COUNT>::GetValuePointer();
+		}
+		virtual bool EqualsValue(T *object, size_t count) const override
+		{
+			return LocalDataItem<T, COUNT>::EqualsValue(object, count);
+		}
+		virtual String GetName() const override
+		{
+			return LocalDataItem<T, COUNT>::GetName();
+		}
+		virtual String GetValueAsString() const override
+		{
+			return LocalDataItem<T, COUNT>::GetValueAsString();
+		}
+		virtual DataType_t GetDataType() override
+		{
+			return LocalDataItem<T, COUNT>::GetDataType();
 		}
 		
-		virtual bool SetValueFromString(const String& stringValue) override
-		{
-			return LocalDataItem<T, COUNT>::SetValueFromString(stringValue);
-		}
-		
-		bool SetValue(const T *value, size_t count)
+		virtual bool SetValue(const T *value, size_t count) override
 		{
 			bool valueChanged = LocalDataItem<T, COUNT>::SetValue(value, count);
 			if(valueChanged)
@@ -194,7 +170,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return valueChanged;
 		}
 
-		bool SetValue(T value)
+		//Local DataItem Override
+		virtual bool SetValue(T value) override
 		{
 			bool valueChanged = LocalDataItem<T, COUNT>::SetValue(value);
 			if(valueChanged)
@@ -203,104 +180,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			return valueChanged;
 		}
+		
+		void Periodic_TX()
+		{
+			DataItem_TX_Now();
+		}
 
-		void SetDataLinkEnabled(bool enable)
-		{
-			m_DataLinkEnabled = enable;
-			if(m_DataLinkEnabled)
-			{
-				bool enableTX = false;
-				bool enableRX = false;
-				switch(this->m_RxTxType)
-				{
-					case RxTxType_Tx_Periodic:
-					case RxTxType_Tx_On_Change_With_Heartbeat:
-						enableTX = true;
-						enableRX = true;
-						break;
-					case RxTxType_Tx_On_Change:
-					case RxTxType_Rx_Only:
-					case RxTxType_Rx_Echo_Value:
-						enableRX = true;
-						break;
-					default:
-					break;
-				}
-				if(enableTX)
-				{
-					StartTimer();
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic TX", LocalDataItem<T,COUNT>::GetName().c_str());
-				}
-				else
-				{
-					StopTimer();
-					ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic TX", LocalDataItem<T,COUNT>::GetName().c_str());
-				}
-				if(enableRX)
-				{
-					if(this->mp_SerialPortMessageManager)
-					{
-						this->mp_SerialPortMessageManager->RegisterForNewValueNotification(this);
-						ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Enabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
-					}
-					else
-					{
-						ESP_LOGE("SetDataLinkEnabled", "ERROR!  Null Pointer.");
-					}
-				}
-				else
-				{
-					if(this->mp_SerialPortMessageManager)
-					{
-						this->mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
-						ESP_LOGD("DataItem: SetDataLinkEnabled", "Data Item: \"%s\": Disabled Periodic RX", LocalDataItem<T,COUNT>::GetName().c_str());
-					}
-					else
-					{
-						ESP_LOGE("SetDataLinkEnabled", "ERROR! Null Pointer.");
-					}
-				}
-			}
-			else
-			{
-				
-				StopTimer();
-				if(this->mp_SerialPortMessageManager)
-				{
-					this->mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
-					ESP_LOGD("SetDataLinkEnabled", "Data Item: \"%s\": Disabled Datalink", LocalDataItem<T,COUNT>::GetName().c_str());
-				}
-				else
-				{
-					ESP_LOGE("SetDataLinkEnabled", "ERROR! Null Pointer.");
-				}
-			}
-		}
-	protected:		
-		bool DataItem_TX_Now()
-		{
-			bool ValueUpdated = false;
-			if(this->mp_SerialPortMessageManager->QueueMessageFromData(LocalDataItem<T,COUNT>::GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), this->mp_TxValue, COUNT))
-			{				
-				if(memcmp(this->mp_Value, this->mp_TxValue, sizeof(T) * COUNT) != 0)
-				{
-					if(this->m_UpdateStoreType == UpdateStoreType_On_Tx)
-					{
-						LocalDataItem<T, COUNT>::SetValue(this->mp_TxValue, COUNT);						
-						ValueUpdated = true;		
-					}
-				}
-				ESP_LOGD( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
-						, this->mp_SerialPortMessageManager->GetName().c_str()
-						, LocalDataItem<T,COUNT>::GetName().c_str()
-						, this->GetValueAsString().c_str() );
-			}
-			else
-			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", LocalDataItem<T,COUNT>::GetName().c_str());
-			}
-			return ValueUpdated;
-		}
 		virtual bool NewRxValueReceived(void* Object, size_t Count) override
 		{	
 			bool ValueUpdated = false;
@@ -334,6 +219,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			return ValueUpdated;
 		}
+		
 		void DataItem_Try_TX_On_Change()
 		{
 			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", LocalDataItem<T,COUNT>::GetName().c_str());
@@ -342,120 +228,28 @@ class DataItem: public LocalDataItem<T, COUNT>
 				DataItem_TX_Now();
 			}
 		}
-	private:
-		bool m_DataLinkEnabled = true;
-		esp_timer_handle_t m_TxTimer = nullptr;
-		esp_timer_create_args_t timerArgs;
-		bool CreateTxTimer()
+		bool DataItem_TX_Now()
 		{
-			ESP_LOGD("CreateTxTimer", "Creating Timer");
-			timerArgs.callback = &StaticDataItem_Periodic_TX;
-			timerArgs.arg = this;
-			timerArgs.name = "Tx_Timer";
-			if (!m_TxTimer)
-			{
-				if (ESP_OK == esp_timer_create(&timerArgs, &m_TxTimer))
+			bool ValueUpdated = false;
+			if(this->mp_SerialPortMessageManager->QueueMessageFromData(LocalDataItem<T,COUNT>::GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), this->mp_TxValue, COUNT))
+			{				
+				if(memcmp(this->mp_Value, this->mp_TxValue, sizeof(T) * COUNT) != 0)
 				{
-					ESP_LOGD("CreateTxTimer", "Timer Created");
-					return true;
-				}
-				else
-				{
-					ESP_LOGE("CreateTxTimer", "ERROR! Unable to create timer.");
-					return false;
-				}
-			}
-			else
-			{
-				ESP_LOGD("CreateTxTimer", "ERROR! Timer already exists.");
-			}
-			return false;
-		}
-
-		bool DestroyTimer()
-		{
-			ESP_LOGD("DestroyTimer", "Destroying Timer");
-			if (m_TxTimer)
-			{
-				if (StopTimer())
-				{
-					if (ESP_OK == esp_timer_delete(m_TxTimer))
+					if(this->m_UpdateStoreType == UpdateStoreType_On_Tx)
 					{
-						ESP_LOGD("DestroyTimer", "Timer deleted");
-						m_TxTimer = nullptr;
-						return true;
-					}
-					else
-					{
-						ESP_LOGE("DestroyTimer", "ERROR! Unable to delete Timer.");
+						LocalDataItem<T, COUNT>::SetValue(this->mp_TxValue, COUNT);						
+						ValueUpdated = true;		
 					}
 				}
-				else
-				{
-					ESP_LOGW("DestroyTimer", "WARNING! Unable to stop Timer.");
-				}
+				ESP_LOGD( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
+						, this->mp_SerialPortMessageManager->GetName().c_str()
+						, LocalDataItem<T,COUNT>::GetName().c_str()
+						, this->GetValueAsString().c_str() );
 			}
 			else
 			{
-				ESP_LOGD("DestroyTimer", "Timer does not exist");
+				ESP_LOGE("DataItem: DataItem_TX_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", LocalDataItem<T,COUNT>::GetName().c_str());
 			}
-			return false;
-		}
-
-		bool StartTimer()
-		{
-			if (m_TxTimer || CreateTxTimer())
-			{
-				ESP_LOGD("StartTimer", "Starting Timer");
-				if (ESP_OK == esp_timer_start_periodic(m_TxTimer, this->m_Rate * 1000))
-				{
-					ESP_LOGD("StartTimer", "Timer Started");
-					return true;
-				}
-				else
-				{
-					ESP_LOGE("StartTimer", "ERROR! Unable to start timer.");
-				}
-			}
-			else
-			{
-				ESP_LOGE("StartTimer", "ERROR! Unable to create timer.");
-			}
-			return false;
-		}
-
-		bool StopTimer()
-		{
-			bool result = false;
-			if (m_TxTimer)
-			{
-				if (ESP_OK == esp_timer_stop(m_TxTimer))
-				{
-					ESP_LOGD("StopTimer", "Timer Stopped!");
-					result = true;
-				}
-				else
-				{
-					ESP_LOGE("StopTimer", "ERROR! Unable to stop timer.");
-				}
-			}
-			else
-			{
-				ESP_LOGD("StopTimer", "Timer does not exist");
-				result = true;
-			}
-			return result;
-		}
-		void DataItem_Periodic_TX()
-		{
-			DataItem_TX_Now();
-		}
-		static void StaticDataItem_Periodic_TX(void *arg)
-		{
-			DataItem *aDataItem = static_cast<DataItem*>(arg);
-			if(aDataItem)
-			{
-				aDataItem->DataItem_Periodic_TX();
-			}
+			return ValueUpdated;
 		}
 };

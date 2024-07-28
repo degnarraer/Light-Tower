@@ -117,7 +117,7 @@ class StringDataItemWithPreferences: public StringDataItem
 			StringDataItem::Setup();
 			PreferenceManager::InitializeAndLoadPreference();
 		}
-
+		
 		bool DataItem_TX_Now()
 		{
 			bool result = StringDataItem::DataItem_TX_Now();

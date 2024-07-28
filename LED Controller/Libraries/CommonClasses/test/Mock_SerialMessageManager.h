@@ -44,7 +44,6 @@ public:
 template <typename T>
 class MockNewRxTxValueCallerInterface : public NewRxTxValueCallerInterface<T> {
 public:
-    MOCK_METHOD(void, SetNewTxValue, (const T* object, const size_t count), (override));
     MOCK_METHOD(void, RegisterForNewValueNotification, (NewRxTxValueCalleeInterface<T>* NewCallee), (override));
     MOCK_METHOD(void, DeRegisterForNewValueNotification, (NewRxTxValueCalleeInterface<T>* Callee), (override));
     MOCK_METHOD(void, NotifyCallee, (const String& name, T* object), (override));
@@ -54,7 +53,7 @@ class MockNewRxTxVoidObjectCalleeInterface : public NewRxTxVoidObjectCalleeInter
 public:
     MockNewRxTxVoidObjectCalleeInterface(size_t Count) : NewRxTxVoidObjectCalleeInterface(Count) {}
     MOCK_METHOD(bool, NewRxValueReceived, (void* object, size_t Count), (override));
-    MOCK_METHOD(String, GetName, (), (override));
+    MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
 
@@ -143,7 +142,7 @@ public:
     MOCK_METHOD(void, SetupSerialPortMessageManager, (), (override));
     MOCK_METHOD(bool, QueueMessageFromData, (const String& Name, DataType_t DataType, void* Object, size_t Count), (override));
     MOCK_METHOD(bool, QueueMessage, (const String& message), (override));
-    MOCK_METHOD(String, GetName, (), (override));
+    MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(void, SerialPortMessageManager_RxTask, (), (override));
     MOCK_METHOD(void, SerialPortMessageManager_TxTask, (), (override));
 

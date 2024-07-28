@@ -18,12 +18,12 @@
 
 #pragma once
 
-#include <Helpers.h>
 #include <Preferences.h>
 #include <nvs_flash.h>
 #include <esp_timer.h>
 #include <Arduino.h>
 #include <esp_heap_caps.h>
+#include "DataItemInterface.h"
 #include "SerialMessageManager.h"
 #include "SetupCallInterfaces.h"
 #include "ValidValueChecker.h"
@@ -32,12 +32,12 @@
 #define ENCODE_DIVIDER "|"
 
 template <typename T, size_t COUNT>
-class 
-LocalDataItem: public NamedCallbackInterface<T>
-			 , public SetupCalleeInterface
-			 , public DataTypeFunctions
-			 , public ValidValueChecker
-			 , public StringEncoderDecoder<T>
+class LocalDataItem: public DataItemInterface<T, COUNT>
+				   , public NamedCallbackInterface<T>
+			 	   , public SetupCalleeInterface
+			 	   , public DataTypeFunctions
+			 	   , public ValidValueChecker
+			 	   , public StringEncoderDecoder<T>
 {
 	public:
 		LocalDataItem( const String name
@@ -131,20 +131,8 @@ LocalDataItem: public NamedCallbackInterface<T>
 			}
 		}
 
-		virtual void RegisterForSetup()
-		{
-			if(mp_SetupCallerInterface)
-			{
-        		ESP_LOGD("RegisterForSetup", "Registering for Setup Call");
-				mp_SetupCallerInterface->RegisterForSetupCall(this);
-			}
-			else
-			{
-				ESP_LOGE("LocalDataItem()", "ERROR! Unable to register for Setup, NULL pointer.");
-			}
-		}
-
-		virtual void Setup()
+		//SetupCalleeInterface
+		virtual void Setup() override
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
@@ -189,29 +177,52 @@ LocalDataItem: public NamedCallbackInterface<T>
 				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on spi ram.");
 			}
 		}
+		
+		virtual void RegisterForSetup()
+		{
+			if(mp_SetupCallerInterface)
+			{
+        		ESP_LOGD("RegisterForSetup", "Registering for Setup Call");
+				mp_SetupCallerInterface->RegisterForSetupCall(this);
+			}
+			else
+			{
+				ESP_LOGE("LocalDataItem()", "ERROR! Unable to register for Setup, NULL pointer.");
+			}
+		}
+
+		//DataItemInterface
 		String GetName() const
 		{
 			return m_Name;
 		}
-		size_t GetCount() const
+
+		virtual size_t GetCount() const
 		{
 			return m_Count;
 		}
+
 		size_t GetChangeCount() const
 		{
 			return m_ValueChangeCount;
 		}
-		void GetValue(void* Object, size_t Count) const
+
+		DataType_t GetDataType()
 		{
-			assert((Count == COUNT) && "Counts must be equal");
+			return GetDataTypeFromTemplateType<T>();
+		}
+
+		void GetValue(void* object, size_t count) const
+		{
+			assert((count == COUNT) && "Counts must be equal");
 			if(mp_Value)
 			{
-				memcpy(Object, mp_Value, sizeof(T)*Count);
+				memcpy(object, mp_Value, sizeof(T)*count);
 			}
 			else
 			{
 				ESP_LOGE("GetValueAsString", "ERROR! NULL Pointer.");
-				*reinterpret_cast<T**>(Object) = nullptr;
+				*reinterpret_cast<T**>(object) = nullptr;
 			}
 		}
 
@@ -224,7 +235,7 @@ LocalDataItem: public NamedCallbackInterface<T>
 			return mp_Value;
 		}
 
-		T GetValue() const
+		virtual T GetValue() const
 		{
 			assert((1 == COUNT) && "Count must 1 to use this function");
 			if(mp_Value)
@@ -440,10 +451,10 @@ LocalDataItem: public NamedCallbackInterface<T>
 			return (valueChanged && validValue);
 		}
 
-		bool EqualsValue(T *Object, size_t Count)
+		bool EqualsValue(T *object, size_t count) const
 		{
-			assert((Count == COUNT) && "Counts must equal");
-			return (memcmp(mp_Value, Object, Count) == 0);
+			assert((count == COUNT) && "Counts must equal");
+			return (memcmp(mp_Value, object, count) == 0);
 		}
 	private:
 		ValidValueChecker m_ValidValueChecker;

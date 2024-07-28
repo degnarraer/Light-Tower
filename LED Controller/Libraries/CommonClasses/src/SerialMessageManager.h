@@ -39,7 +39,7 @@ class NewRxTxValueCalleeInterface
 			
 		}
 		virtual bool NewRxValueReceived(T* object, size_t count) = 0;
-		virtual String GetName() = 0;
+		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
@@ -116,7 +116,6 @@ class NewRxTxValueCallerInterface
 		{
 			
 		}
-		virtual void SetNewTxValue(const T* object, const size_t count) = 0;
 		virtual void RegisterForNewValueNotification(NewRxTxValueCalleeInterface<T>* NewCallee)
 		{
 			ESP_LOGI("RegisterForNewValueNotification", "Try Registering Callee");
@@ -180,7 +179,7 @@ class NewRxTxVoidObjectCalleeInterface
 			
 		}
 		virtual bool NewRxValueReceived(void* object, size_t Count) = 0;
-		virtual String GetName() = 0;
+		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
@@ -254,7 +253,7 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 		virtual void SetupSerialPortMessageManager();
 		virtual bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
 		virtual bool QueueMessage(const String& message);
-		virtual String GetName()
+		virtual String GetName() const 
 		{
 			return m_Name;
 		}

@@ -54,6 +54,7 @@ protected:
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
     {
+        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
         mp_DataItem = new StringDataItem( name 
                                         , initialValue
                                         , rxTxType
@@ -62,14 +63,17 @@ protected:
                                         , mp_MockSerialPortMessageManager
                                         , NULL
                                         , mp_MockSetupCaller );
+        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSetupCaller);
     }
 
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
+            EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
+            ::testing::Mock::VerifyAndClearExpectations(&mp_MockSetupCaller);
         }
     }
     void TearDown() override
@@ -78,63 +82,39 @@ protected:
         delete mp_MockSerialPortMessageManager;
         delete mp_MockSetupCaller;
     }
-    void TestSetupCallRegistration(RxTxType_t rxtxtype)
+    void TestSetupCallRegistrationDeregistration(RxTxType_t rxtxtype)
     {
-        EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
         CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
-    }
-    void TestSetupCallDeregistration(RxTxType_t rxtxtype)
-    {
-        EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(NotNull())).Times(1);
         DestroyDataItem();
     }
-    void TestNewValueNotificationRegistration(RxTxType_t rxtxtype)
+    void TestNewValueNotificationRegistrationDeregistration(RxTxType_t rxtxtype)
     {
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
         CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
         mp_DataItem->Setup();
-    }
-    void TestNewValueNotificationDeregistration(RxTxType_t rxtxtype)
-    {
+        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
         EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
         DestroyDataItem();
+        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     }
 };
 
 TEST_F(StringDataItemFunctionCallTests, Registration_With_Setup_Caller)
 {
-    TestSetupCallRegistration(RxTxType_Tx_Periodic);
-    TestSetupCallDeregistration(RxTxType_Tx_Periodic);
-
-    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
-    TestSetupCallDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
-
-    TestSetupCallRegistration(RxTxType_Tx_On_Change);
-    TestSetupCallDeregistration(RxTxType_Tx_On_Change);
-
-    TestSetupCallRegistration(RxTxType_Rx_Only);
-    TestSetupCallDeregistration(RxTxType_Rx_Only);
-
-    TestSetupCallRegistration(RxTxType_Rx_Echo_Value);
-    TestSetupCallDeregistration(RxTxType_Rx_Echo_Value);
+    TestSetupCallRegistrationDeregistration(RxTxType_Tx_Periodic);
+    TestSetupCallRegistrationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestSetupCallRegistrationDeregistration(RxTxType_Tx_On_Change);
+    TestSetupCallRegistrationDeregistration(RxTxType_Rx_Only);
+    TestSetupCallRegistrationDeregistration(RxTxType_Rx_Echo_Value);
 }
 
 TEST_F(StringDataItemFunctionCallTests, Registration_For_New_Value_Notification)
 {
-    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_Periodic);
-
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
-
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change);
-    TestNewValueNotificationDeregistration(RxTxType_Tx_On_Change);
-
-    TestNewValueNotificationRegistration(RxTxType_Rx_Only);
-    TestNewValueNotificationDeregistration(RxTxType_Rx_Only);
-
-    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value);    
-    TestNewValueNotificationDeregistration(RxTxType_Rx_Echo_Value);
+    TestNewValueNotificationRegistrationDeregistration(RxTxType_Tx_Periodic);
+    TestNewValueNotificationRegistrationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestNewValueNotificationRegistrationDeregistration(RxTxType_Tx_On_Change);
+    TestNewValueNotificationRegistrationDeregistration(RxTxType_Rx_Only);
+    TestNewValueNotificationRegistrationDeregistration(RxTxType_Rx_Echo_Value);    
 }
 
 

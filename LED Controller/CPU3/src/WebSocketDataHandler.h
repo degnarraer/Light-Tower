@@ -143,17 +143,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return ValueChanged;
     }
     
-    void SetNewTxValue(T* Object, size_t Count)
-    {
-      ESP_LOGE( "SetNewTxValue", "ERROR! this function is not handled yet.");
-    }
-
     String GetSignal()
     {
       return m_Signal;
     }
 
-    String GetName()
+    virtual String GetName() const
     {
       return m_Name;
     }

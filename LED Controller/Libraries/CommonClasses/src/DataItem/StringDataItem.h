@@ -35,7 +35,7 @@ class StringDataItem: public LocalStringDataItem
 					  , NamedCallback_t *namedCallback
 					  , SetupCallerInterface *setupCallerInterface )
 					  : LocalStringDataItem( name
-										   , initialValue.c_str()
+										   , initialValue
 										   , namedCallback
 										   , setupCallerInterface )
 					  , SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>(rxTxType, updateStoreType, rate, serialPortMessageManager)
@@ -45,17 +45,52 @@ class StringDataItem: public LocalStringDataItem
 
 		virtual ~StringDataItem() override
 		{
-			ESP_LOGI("StringDataItem::~StringDataItem()", "\"%s\": Freeing Memory", m_Name.c_str());
+			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalStringDataItem::GetName().c_str());				
 		}
 
-		virtual String GetName() override
+		virtual void Setup() override
 		{
-			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetName();
+			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalStringDataItem::GetName().c_str());
+			LocalStringDataItem::Setup();
+			SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>::Setup();
 		}
 
-		virtual size_t GetCount() override
+		//DataItemInterface
+		virtual String GetName() const override
 		{
-			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetCount();
+			return LocalStringDataItem::GetName();
+		}
+		virtual size_t GetCount() const override
+		{
+			return LocalStringDataItem::GetCount();
+		}
+
+		//SerialDataLinkIntertface
+		virtual char* GetValuePointer() const override
+		{
+			return LocalStringDataItem::GetValuePointer();
+		}
+		virtual bool EqualsValue(char *object, size_t count) const override
+		{
+			return LocalStringDataItem::EqualsValue(object, count);
+		}
+		virtual String GetValueAsString() const override
+		{
+			return LocalStringDataItem::GetValueAsString();
+		}
+		virtual DataType_t GetDataType() override
+		{
+			return LocalStringDataItem::GetDataType();
+		}
+		
+		virtual bool SetValue(const char* value, size_t count) override
+		{
+			bool valueChanged = LocalStringDataItem::SetValue(value, count);
+			if(valueChanged)
+			{
+				DataItem_Try_TX_On_Change();
+			}
+			return valueChanged;
 		}
 
 		virtual bool GetInitialValueAsString(String &stringValue) const override
@@ -84,34 +119,6 @@ class StringDataItem: public LocalStringDataItem
 			return value;
 		}
 
-		virtual bool GetValueAsString(String &stringValue) const override
-		{
-			if(this->mp_Value)
-			{
-				stringValue = String(this->mp_Value);
-				ESP_LOGD("GetValueAsString"
-						, "\"%s\": GetValueAsString: %s"
-						, m_Name.c_str()
-						, stringValue.c_str());
-				return true;
-			}
-			else
-			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", this->m_Name.c_str());
-				return false;
-			}
-		}
-
-		virtual String GetValueAsString() const override
-		{
-			String value;
-			if(!GetValueAsString(value))
-			{
-				value = "";
-			}
-			return value;
-		}
-
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
@@ -121,23 +128,7 @@ class StringDataItem: public LocalStringDataItem
 					, stringValue.c_str());
 			return SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
 		}
-
-		virtual bool SetValue(const char* value, size_t count) override
-		{
-			assert(value != nullptr);
-			assert(this->mp_Value != nullptr);
-			assert(count <= DATAITEM_STRING_LENGTH);
-			bool valueChanged = LocalDataItem<char, DATAITEM_STRING_LENGTH>::SetValue(value, DATAITEM_STRING_LENGTH);
-			if(valueChanged)
-			{
-				this->DataItem_Try_TX_On_Change();
-			}
-			return valueChanged;
-		}
-		virtual void SetNewTxValue(const char* object, const size_t count)
-		{
-
-		}
+		
 		virtual bool NewRxValueReceived(void* object, size_t count)
 		{ 
 			bool valueUpdated = false;
@@ -170,6 +161,12 @@ class StringDataItem: public LocalStringDataItem
 		}
 
 	protected:
+	
+		void Periodic_TX()
+		{
+			DataItem_TX_Now();
+		}
+
 		void DataItem_Try_TX_On_Change()
 		{
 			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetName().c_str());
