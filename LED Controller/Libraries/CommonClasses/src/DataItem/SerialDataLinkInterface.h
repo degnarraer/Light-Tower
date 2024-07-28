@@ -269,7 +269,7 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 
 		bool StartTimer()
 		{
-			if (m_TxTimer && CreateTxTimer())
+			if (m_TxTimer || CreateTxTimer())
 			{
 				ESP_LOGD("StartTimer", "Starting Timer");
 				if (ESP_OK == esp_timer_start_periodic(m_TxTimer, this->m_Rate * 1000))
