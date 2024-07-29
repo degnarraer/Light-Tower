@@ -37,22 +37,23 @@ enum UpdateStoreType_t
 };
 
 template <typename T, size_t COUNT>
-class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
-			  				  , public NewRxTxVoidObjectCalleeInterface
+class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
+			  				 , public NewRxTxVoidObjectCalleeInterface
 {
 	public:
-		SerialDataLinkIntertface( const RxTxType_t rxTxType
-								, const UpdateStoreType_t updateStoreType
-								, const uint16_t rate
-								, SerialPortMessageManager *serialPortMessageManager = nullptr )
-								: NewRxTxVoidObjectCalleeInterface(COUNT)
-								, m_RxTxType(rxTxType)
-								, m_UpdateStoreType(updateStoreType)
-								, m_Rate(rate)
-								, mp_SerialPortMessageManager(serialPortMessageManager)
+		SerialDataLinkInterface(){}
+		SerialDataLinkInterface( RxTxType_t rxTxType
+							   , UpdateStoreType_t updateStoreType
+							   , uint16_t rate
+							   , SerialPortMessageManager *serialPortMessageManager = nullptr )
+							   : NewRxTxVoidObjectCalleeInterface(COUNT)
+							   , m_RxTxType(rxTxType)
+							   , m_UpdateStoreType(updateStoreType)
+							   , m_Rate(rate)
+							   , mp_SerialPortMessageManager(serialPortMessageManager)
         {
         }
-		virtual ~SerialDataLinkIntertface()
+		virtual ~SerialDataLinkInterface()
 		{
 			SetDataLinkEnabled(false);
 			if(mp_RxValue)
@@ -174,9 +175,9 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 		}		
 	protected:
 		bool m_DataLinkEnabled = true;
-		const RxTxType_t m_RxTxType;
-		const UpdateStoreType_t m_UpdateStoreType;
-		const uint16_t m_Rate;
+		RxTxType_t m_RxTxType;
+		UpdateStoreType_t m_UpdateStoreType;
+		uint16_t m_Rate;
 		SerialPortMessageManager *mp_SerialPortMessageManager = nullptr;
 		T *mp_RxValue = nullptr;
 		T *mp_TxValue = nullptr;
@@ -218,10 +219,10 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 
 		static void Static_Periodic_TX(void *arg)
 		{
-			SerialDataLinkIntertface *aSerialDataLinkIntertface = static_cast<SerialDataLinkIntertface*>(arg);
-			if(aSerialDataLinkIntertface)
+			SerialDataLinkInterface *aSerialDataLinkInterface = static_cast<SerialDataLinkInterface*>(arg);
+			if(aSerialDataLinkInterface)
 			{
-				aSerialDataLinkIntertface->Tx_Now();
+				aSerialDataLinkInterface->Tx_Now();
 			}
 		}
 

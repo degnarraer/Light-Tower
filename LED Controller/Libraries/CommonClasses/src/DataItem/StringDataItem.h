@@ -23,7 +23,7 @@
 #include "DataItem/SerialDataLinkInterface.h"
 
 class StringDataItem: public LocalStringDataItem
-			  		, public SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>
+			  		, public SerialDataLinkInterface<char, DATAITEM_STRING_LENGTH>
 {
 	public:
 		StringDataItem( const String name
@@ -38,7 +38,7 @@ class StringDataItem: public LocalStringDataItem
 										   , initialValue
 										   , namedCallback
 										   , setupCallerInterface )
-					  , SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+					  , SerialDataLinkInterface<char, DATAITEM_STRING_LENGTH>(rxTxType, updateStoreType, rate, serialPortMessageManager)
 		{
 		  
 		}
@@ -52,7 +52,7 @@ class StringDataItem: public LocalStringDataItem
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalStringDataItem::GetName().c_str());
 			LocalStringDataItem::Setup();
-			SerialDataLinkIntertface<char, DATAITEM_STRING_LENGTH>::Setup();
+			SerialDataLinkInterface<char, DATAITEM_STRING_LENGTH>::Setup();
 		}
 
 		//DataItemInterface
@@ -65,7 +65,7 @@ class StringDataItem: public LocalStringDataItem
 			return LocalStringDataItem::GetCount();
 		}
 
-		//SerialDataLinkIntertface
+		//SerialDataLinkInterface
 		virtual char* GetValuePointer() const override
 		{
 			return LocalStringDataItem::GetValuePointer();
