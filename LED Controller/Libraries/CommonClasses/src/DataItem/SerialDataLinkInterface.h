@@ -72,7 +72,40 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 		virtual String GetName() const = 0;
 		virtual String GetValueAsString() const = 0;
 		virtual DataType_t GetDataType() = 0;
-		virtual bool NewRxValueReceived(void* object, size_t Count) = 0;
+
+		virtual bool NewRxValueReceived(void* Object, size_t Count) override
+		{	
+			bool ValueUpdated = false;
+			T* receivedValue = static_cast<T*>(Object);
+			ESP_LOGD( "DataItem: NewRxValueReceived"
+					, "\"%s\" RX: \"%s\" Value: \"%s\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, LocalDataItem<T,COUNT>::GetName().c_str()
+					, this->GetValueAsString().c_str());
+			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
+			{
+				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
+				ESP_LOGD( "DataItem: NewRxValueReceived"
+						, "Value Changed for: \"%s\" to Value: \"%s\""
+						, LocalDataItem<T,COUNT>::GetName().c_str()
+						, this->GetValueAsString().c_str());
+				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
+				{
+					SetValue(mp_RxValue, COUNT);	
+					ValueUpdated = true;
+				}
+			}
+			if(RxTxType_Rx_Echo_Value == m_RxTxType)
+			{
+				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
+				ESP_LOGD( "DataItem: NewRxValueReceived"
+						, "RX Echo for: \"%s\" with Value: \"%s\""
+						, LocalDataItem<T,COUNT>::GetName().c_str()
+						, this->GetValueAsString().c_str());
+				Tx_Now();
+			}
+			return ValueUpdated;
+		}
 
 		void Setup()
 		{
@@ -97,11 +130,30 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 				ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Null Pointer.");
 			}
 		}
+
+		bool Set_Tx_Value(const T* newTxValue, size_t count)
+		{
+			assert(count == COUNT);
+			assert(mp_TxValue);
+			bool valueUpdated = false;
+			if(memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
+			{
+				return valueUpdated;
+			}
+			else
+			{
+				memcpy(mp_TxValue, newTxValue, sizeof(T)*count);
+				Try_TX_On_Change();
+				valueUpdated = true;
+			}
+			return valueUpdated;
+		}
+
 		bool Tx_Now()
 		{
 			bool ValueUpdated = false;
 			if(mp_SerialPortMessageManager->QueueMessageFromData(this->GetName(), this->GetDataType(), mp_TxValue, COUNT))
-			{				
+			{
 				if(!this->EqualsValue(mp_TxValue, COUNT))
 				{
 					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
@@ -139,7 +191,7 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 			{
 				bool enableTx = false;
 				bool enableRx = false;
-				switch(this->m_RxTxType)
+				switch(m_RxTxType)
 				{
 					case RxTxType_Tx_Periodic:
 					case RxTxType_Tx_On_Change_With_Heartbeat:
@@ -173,6 +225,15 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 			}
 		}
 
+		void Try_TX_On_Change()
+		{
+			ESP_LOGI("Try_TX_On_Change", "\"%s\": Try TX On Change", this->GetName().c_str());
+			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
+			{
+				Tx_Now();
+			}
+		}
+
 		void EnableTx(bool enableTX)
 		{
 			if(enableTX)
@@ -189,9 +250,9 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 		{
 			if(enableRX)
 			{
-				if(this->mp_SerialPortMessageManager)
+				if(mp_SerialPortMessageManager)
 				{
-					this->mp_SerialPortMessageManager->RegisterForNewValueNotification(this);
+					mp_SerialPortMessageManager->RegisterForNewValueNotification(this);
 				}
 				else
 				{
@@ -200,9 +261,9 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 			}
 			else
 			{
-				if(this->mp_SerialPortMessageManager)
+				if(mp_SerialPortMessageManager)
 				{
-					this->mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
+					mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
 				}
 				else
 				{
@@ -272,7 +333,7 @@ class SerialDataLinkIntertface: public NewRxTxValueCallerInterface<T>
 			if (m_TxTimer || CreateTxTimer())
 			{
 				ESP_LOGD("StartTimer", "Starting Timer");
-				if (ESP_OK == esp_timer_start_periodic(m_TxTimer, this->m_Rate * 1000))
+				if (ESP_OK == esp_timer_start_periodic(m_TxTimer, m_Rate * 1000))
 				{
 					ESP_LOGD("StartTimer", "Timer Started");
 					return true;

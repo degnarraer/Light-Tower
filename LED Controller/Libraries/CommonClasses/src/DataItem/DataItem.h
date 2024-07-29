@@ -162,94 +162,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 		
 		virtual bool SetValue(const T *value, size_t count) override
 		{
-			bool valueChanged = LocalDataItem<T, COUNT>::SetValue(value, count);
-			if(valueChanged)
-			{
-				DataItem_Try_TX_On_Change();
-			}
-			return valueChanged;
+			return this->Set_Tx_Value(value, count);
 		}
 
 		//Local DataItem Override
-		virtual bool SetValue(T value) override
+		virtual bool SetValue(const T value) override
 		{
-			bool valueChanged = LocalDataItem<T, COUNT>::SetValue(value);
-			if(valueChanged)
-			{
-				DataItem_Try_TX_On_Change();
-			}
-			return valueChanged;
-		}
-		
-		void Periodic_TX()
-		{
-			DataItem_TX_Now();
-		}
-
-		virtual bool NewRxValueReceived(void* Object, size_t Count) override
-		{	
-			bool ValueUpdated = false;
-			T* receivedValue = static_cast<T*>(Object);
-			ESP_LOGD( "DataItem: NewRxValueReceived"
-					, "\"%s\" RX: \"%s\" Value: \"%s\""
-					, this->mp_SerialPortMessageManager->GetName().c_str()
-					, LocalDataItem<T,COUNT>::GetName().c_str()
-					, this->GetValueAsString().c_str());
-			if(memcmp(this->mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
-			{
-				memcpy(this->mp_RxValue, receivedValue, sizeof(T) * COUNT);
-				ESP_LOGD( "DataItem: NewRxValueReceived"
-						, "Value Changed for: \"%s\" to Value: \"%s\""
-						, LocalDataItem<T,COUNT>::GetName().c_str()
-						, this->GetValueAsString().c_str());
-				if( UpdateStoreType_On_Rx == this->m_UpdateStoreType )
-				{
-					SetValue(this->mp_RxValue, COUNT);	
-					ValueUpdated = true;
-				}
-			}
-			if(RxTxType_Rx_Echo_Value == this->m_RxTxType)
-			{
-				memcpy(this->mp_TxValue, this->mp_RxValue, sizeof(T) * COUNT);
-				ESP_LOGD( "DataItem: NewRxValueReceived"
-						, "RX Echo for: \"%s\" with Value: \"%s\""
-						, LocalDataItem<T,COUNT>::GetName().c_str()
-						, this->GetValueAsString().c_str());
-				DataItem_TX_Now();
-			}
-			return ValueUpdated;
-		}
-		
-		void DataItem_Try_TX_On_Change()
-		{
-			ESP_LOGI("DataItem& DataItem_Try_TX_On_Change", "Data Item: \"%s\": Try TX On Change", LocalDataItem<T,COUNT>::GetName().c_str());
-			if(this->m_RxTxType == RxTxType_Tx_On_Change || this->m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
-			{
-				DataItem_TX_Now();
-			}
-		}
-		bool DataItem_TX_Now()
-		{
-			bool ValueUpdated = false;
-			if(this->mp_SerialPortMessageManager->QueueMessageFromData(LocalDataItem<T,COUNT>::GetName(), DataTypeFunctions::GetDataTypeFromTemplateType<T>(), this->mp_TxValue, COUNT))
-			{				
-				if(memcmp(this->mp_Value, this->mp_TxValue, sizeof(T) * COUNT) != 0)
-				{
-					if(this->m_UpdateStoreType == UpdateStoreType_On_Tx)
-					{
-						LocalDataItem<T, COUNT>::SetValue(this->mp_TxValue, COUNT);						
-						ValueUpdated = true;		
-					}
-				}
-				ESP_LOGD( "DataItem: DataItem_TX_Now", "\"%s\" TX: \"%s\" Value: \"%s\""
-						, this->mp_SerialPortMessageManager->GetName().c_str()
-						, LocalDataItem<T,COUNT>::GetName().c_str()
-						, this->GetValueAsString().c_str() );
-			}
-			else
-			{
-				ESP_LOGE("DataItem: DataItem_TX_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", LocalDataItem<T,COUNT>::GetName().c_str());
-			}
-			return ValueUpdated;
+			assert(COUNT == 1);
+			return this->Set_Tx_Value(&value, 1);
 		}
 };

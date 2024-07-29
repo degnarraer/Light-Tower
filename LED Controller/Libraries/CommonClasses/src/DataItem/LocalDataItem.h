@@ -417,7 +417,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				{
 					memcpy(mp_Value, value, sizeof(T) * COUNT);
 					++m_ValueChangeCount;
-					ESP_LOGD( "LocalDataItem: SetValue"
+					ESP_LOGI( "LocalDataItem: SetValue"
 							, "\"%s\" Set Value: \"%s\""
 							, m_Name.c_str()
 							, GetValueAsString().c_str());
@@ -427,28 +427,11 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return (valueChanged && validValue);
 		}
 
-		virtual bool SetValue(T value)
+		virtual bool SetValue(const T value)
 		{
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
-			bool valueChanged = (*mp_Value != value);
-			bool validValue = true;
-			const String stringValue = StringEncoderDecoder<T>::EncodeToString(value);
-			if(true == valueChanged && false == m_ValidValueChecker.IsValidStringValue(stringValue))
-			{
-				validValue = false;
-			}
-			if(true == valueChanged && true == validValue)
-			{
-				*mp_Value = value;
-				++m_ValueChangeCount;
-				ESP_LOGD( "LocalDataItem: SetValue"
-						, "\"%s\" Set Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsString().c_str());
-				this->CallCallbacks(m_Name.c_str(), mp_Value);
-			}
-			return (valueChanged && validValue);
+			return SetValue(&value, 1);
 		}
 
 		bool EqualsValue(T *object, size_t count) const
