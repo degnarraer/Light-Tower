@@ -51,14 +51,13 @@ template <typename T, size_t COUNT>
 class SerialDataLinkInterfaceTester: public SerialDataLinkInterface<T, COUNT>
 {
     public:
+        SerialDataLinkInterfaceTester( MockSerialPortMessageManager* mockSerialPortMessageManager )
+                                     : SerialDataLinkInterface<T, COUNT>( mockSerialPortMessageManager ){}
         SerialDataLinkInterfaceTester( RxTxType_t rxTxType
                                      , UpdateStoreType_t updateStoreType
                                      , uint16_t rate
                                      , MockSerialPortMessageManager* mockSerialPortMessageManager )
-                                     : SerialDataLinkInterface<T, COUNT>( rxTxType
-                                                                        , updateStoreType
-                                                                        , rate
-                                                                        , mockSerialPortMessageManager ){}
+                                     : SerialDataLinkInterface<T, COUNT>( mockSerialPortMessageManager ){}
         virtual T* GetValuePointer() const override
         {
             return m_MockSerialDataLinkInterface.GetValuePointer();
@@ -118,10 +117,7 @@ class SerialDataLinkInterfaceTests : public Test
         void SetUp() override
         {
             mp_MockSerialPortMessageManager = new MockSerialPortMessageManager(m_Name, m_MockHardwareSerial, m_MockDataSerializer, 0);
-            mp_SerialDataLinkInterfaceTester = new SerialDataLinkInterfaceTester<T, COUNT>( RxTxType_t::RxTxType_Rx_Only 
-                                                                                          , UpdateStoreType_t::UpdateStoreType_On_Rx
-                                                                                          , 0
-                                                                                          , mp_MockSerialPortMessageManager);
+            mp_SerialDataLinkInterfaceTester = new SerialDataLinkInterfaceTester<T, COUNT>( mp_MockSerialPortMessageManager);
 
         }
 

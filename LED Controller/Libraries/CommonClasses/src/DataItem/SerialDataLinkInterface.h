@@ -41,7 +41,8 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			  				 , public NewRxTxVoidObjectCalleeInterface
 {
 	public:
-		SerialDataLinkInterface(){}
+		SerialDataLinkInterface( SerialPortMessageManager *serialPortMessageManager = nullptr )
+							   : NewRxTxVoidObjectCalleeInterface(COUNT){}
 		SerialDataLinkInterface( RxTxType_t rxTxType
 							   , UpdateStoreType_t updateStoreType
 							   , uint16_t rate
