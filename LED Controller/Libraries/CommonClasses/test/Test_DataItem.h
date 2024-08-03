@@ -195,7 +195,8 @@ TEST_F(DataItemRxTxTests, Tx_Called_Periodically)
 
 // Test Fixture for DataItemGetAndSetValueTests
 template <typename T, size_t COUNT>
-class DataItemGetAndSetValueTests : public Test, public SetupCallerInterface
+class DataItemGetAndSetValueTests : public Test
+                                  , public SetupCallerInterface
 {
 protected:
     const ValidStringValues_t validValues = { "10", "20", "30" };

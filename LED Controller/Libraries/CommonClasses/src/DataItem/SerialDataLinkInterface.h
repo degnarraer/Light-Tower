@@ -74,6 +74,15 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 		virtual String GetValueAsString() const = 0;
 		virtual DataType_t GetDataType() = 0;
 
+		void Configure( RxTxType_t rxTxType
+					  , UpdateStoreType_t updateStoreType
+					  , uint16_t rate )
+		{
+			m_RxTxType = rxTxType;
+			m_UpdateStoreType =updateStoreType;
+			m_Rate = rate;
+		}
+
 		virtual bool NewRxValueReceived(void* Object, size_t Count) override
 		{	
 			bool ValueUpdated = false;
