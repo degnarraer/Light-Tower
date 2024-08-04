@@ -151,10 +151,10 @@ class SerialDataLinkInterfaceTests : public Test
 
         void SetupInterface()
         {
-            EXPECT_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetValuePointer());
-            EXPECT_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetName());
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName());
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_SerialDataLinkInterfaceTester));
+            EXPECT_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
+            EXPECT_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetValuePointer()).Times(3).WillRepeatedly(Return(m_value));
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_SerialDataLinkInterfaceTester)).Times(1);
             mp_SerialDataLinkInterfaceTester->Setup();
             ::testing::Mock::VerifyAndClearExpectations(&(mp_SerialDataLinkInterfaceTester->GetMock()));
             ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
@@ -177,6 +177,7 @@ TEST_F(SerialDataLinkInterfaceTests_int32_t_1, TEST1)
     Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
     SetupInterface();
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
+    ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
 }
 
 TEST_F(SerialDataLinkInterfaceTests_uint32_t_1, TEST2)
