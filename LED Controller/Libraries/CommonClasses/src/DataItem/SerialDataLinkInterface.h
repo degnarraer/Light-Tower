@@ -42,7 +42,8 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 {
 	public:
 		SerialDataLinkInterface( SerialPortMessageManager *serialPortMessageManager = nullptr )
-							   : NewRxTxVoidObjectCalleeInterface(COUNT){}
+							   : NewRxTxVoidObjectCalleeInterface(COUNT)
+							   , mp_SerialPortMessageManager(serialPortMessageManager){}
 		SerialDataLinkInterface( RxTxType_t rxTxType
 							   , UpdateStoreType_t updateStoreType
 							   , uint16_t rate
@@ -51,9 +52,8 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 							   , m_RxTxType(rxTxType)
 							   , m_UpdateStoreType(updateStoreType)
 							   , m_Rate(rate)
-							   , mp_SerialPortMessageManager(serialPortMessageManager)
-        {
-        }
+							   , mp_SerialPortMessageManager(serialPortMessageManager){}
+
 		virtual ~SerialDataLinkInterface()
 		{
 			SetDataLinkEnabled(false);
@@ -80,7 +80,7 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 					  , uint16_t rate )
 		{
 			m_RxTxType = rxTxType;
-			m_UpdateStoreType =updateStoreType;
+			m_UpdateStoreType = updateStoreType;
 			m_Rate = rate;
 		}
 
@@ -91,14 +91,14 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			ESP_LOGD( "DataItem: NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
-					, LocalDataItem<T,COUNT>::GetName().c_str()
+					, this->GetName().c_str()
 					, this->GetValueAsString().c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
 			{
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
-						, LocalDataItem<T,COUNT>::GetName().c_str()
+						, this->GetName().c_str()
 						, this->GetValueAsString().c_str());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
@@ -111,7 +111,7 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
-						, LocalDataItem<T,COUNT>::GetName().c_str()
+						, this->GetName().c_str()
 						, this->GetValueAsString().c_str());
 				Tx_Now();
 			}
@@ -120,8 +120,8 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 
 		void Setup()
 		{
-			mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			if(!mp_RxValue) mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			if(!mp_TxValue) mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
 			if(this->GetValuePointer())
 			{
 				if (mp_RxValue && mp_TxValue)
@@ -149,10 +149,16 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			bool valueUpdated = false;
 			if(memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
 			{
+				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for for: \"%s\": Did not change"
+						, mp_SerialPortMessageManager->GetName().c_str()
+						, this->GetName().c_str() );
 				return valueUpdated;
 			}
 			else
 			{
+				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for for: \"%s\": Changed"
+						, mp_SerialPortMessageManager->GetName().c_str()
+						, this->GetName().c_str() );
 				memcpy(mp_TxValue, newTxValue, sizeof(T)*count);
 				Try_TX_On_Change();
 				valueUpdated = true;
@@ -200,6 +206,9 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			m_DataLinkEnabled = enable;
 			if(m_DataLinkEnabled)
 			{
+				ESP_LOGD( "SetDataLinkEnabled", "\"%s\" Set Datalink Enabled for: \"%s\""
+						, mp_SerialPortMessageManager->GetName().c_str()
+						, this->GetName().c_str() );
 				bool enableTx = false;
 				bool enableRx = false;
 				switch(m_RxTxType)
@@ -222,6 +231,9 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			}
 			else
 			{
+				ESP_LOGD( "SetDataLinkEnabled", "\"%s\" Set Datalink Disabled for: \"%s\""
+						, mp_SerialPortMessageManager->GetName().c_str()
+						, this->GetName().c_str() );
 				EnableRx(false);
 				EnableTx(false);
 			}
@@ -232,13 +244,19 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			SerialDataLinkInterface *aSerialDataLinkInterface = static_cast<SerialDataLinkInterface*>(arg);
 			if(aSerialDataLinkInterface)
 			{
+				ESP_LOGD( "EnableTx", "\"%s\": Periodic Tx"
+						, aSerialDataLinkInterface->GetName().c_str() );
 				aSerialDataLinkInterface->Tx_Now();
+			}
+			else
+			{
+				ESP_LOGE( "SetDataLinkEnabled", "ERROR! Null Pointer." );
 			}
 		}
 
 		void Try_TX_On_Change()
 		{
-			ESP_LOGI("Try_TX_On_Change", "\"%s\": Try TX On Change", this->GetName().c_str());
+			ESP_LOGD("Try_TX_On_Change", "\"%s\": Try TX On Change", this->GetName().c_str());
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				Tx_Now();
@@ -249,10 +267,16 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 		{
 			if(enableTX)
 			{
+				ESP_LOGD( "EnableTx", "\"%s\" Enable Tx for: \"%s\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, this->GetName().c_str() );
 				StartTimer();
 			}
 			else
 			{
+				ESP_LOGD( "EnableTx", "\"%s\" Disable Tx for: \"%s\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, this->GetName().c_str() );
 				StopTimer();
 			}
 		}
@@ -263,6 +287,9 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			{
 				if(mp_SerialPortMessageManager)
 				{
+					ESP_LOGD( "EnableTx", "\"%s\" Enable Rx for: \"%s\""
+							, mp_SerialPortMessageManager->GetName().c_str()
+							, this->GetName().c_str() );
 					mp_SerialPortMessageManager->RegisterForNewValueNotification(this);
 				}
 				else
@@ -274,6 +301,9 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			{
 				if(mp_SerialPortMessageManager)
 				{
+					ESP_LOGD( "EnableTx", "\"%s\" Disable Rx for: \"%s\""
+							, mp_SerialPortMessageManager->GetName().c_str()
+							, this->GetName().c_str() );
 					mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
 				}
 				else
@@ -304,7 +334,7 @@ class SerialDataLinkInterface: public NewRxTxValueCallerInterface<T>
 			}
 			else
 			{
-				ESP_LOGD("CreateTxTimer", "ERROR! Timer already exists.");
+				ESP_LOGD("CreateTxTimer", "Timer already exists.");
 			}
 			return false;
 		}

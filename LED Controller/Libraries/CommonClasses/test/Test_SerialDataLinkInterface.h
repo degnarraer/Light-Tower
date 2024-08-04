@@ -22,6 +22,7 @@
 #include <gmock/gmock.h>
 #include <thread>
 #include <chrono>
+#include "DataTypes.h"
 #include "DataItem/SerialDataLinkInterface.h"
 #include "Mock_SerialMessageManager.h"
 #include "Mock_SetupCallInterface.h"
@@ -52,12 +53,20 @@ class SerialDataLinkInterfaceTester: public SerialDataLinkInterface<T, COUNT>
 {
     public:
         SerialDataLinkInterfaceTester( MockSerialPortMessageManager* mockSerialPortMessageManager )
-                                     : SerialDataLinkInterface<T, COUNT>( mockSerialPortMessageManager ){}
+                                     : SerialDataLinkInterface<T, COUNT>( mockSerialPortMessageManager )
+                                     {
+                                     }
         SerialDataLinkInterfaceTester( RxTxType_t rxTxType
                                      , UpdateStoreType_t updateStoreType
                                      , uint16_t rate
                                      , MockSerialPortMessageManager* mockSerialPortMessageManager )
-                                     : SerialDataLinkInterface<T, COUNT>( mockSerialPortMessageManager ){}
+                                     : SerialDataLinkInterface<T, COUNT>( mockSerialPortMessageManager )
+                                     {
+                                     }
+        MockSerialDataLinkInterface<T, COUNT>& GetMock()
+        {
+            return m_MockSerialDataLinkInterface;
+        }
         virtual T* GetValuePointer() const override
         {
             return m_MockSerialDataLinkInterface.GetValuePointer();
@@ -89,12 +98,19 @@ class SerialDataLinkInterfaceTester: public SerialDataLinkInterface<T, COUNT>
         {
             SerialDataLinkInterface<T, COUNT>::Configure(rxTxType, updateStoreType, rate);
         }
+
+        void Setup()
+        {
+            SerialDataLinkInterface<T, COUNT>::Setup();
+        }
     private:
+        T m_value[COUNT];
         MockSerialDataLinkInterface<T, COUNT> m_MockSerialDataLinkInterface;
 };
 
 template <typename T, size_t COUNT>
 class SerialDataLinkInterfaceTests : public Test
+                                   , public DataTypeFunctions
 {
     public:
         SerialDataLinkInterfaceTests()
@@ -109,16 +125,22 @@ class SerialDataLinkInterfaceTests : public Test
 
         }
     protected:
-        const String m_Name = "SPMM";
+        T m_value[COUNT];
+        const String m_SerialPortMessageManagerName = "SPMM";
         MockHardwareSerial m_MockHardwareSerial;
         MockDataSerializer m_MockDataSerializer;
         MockSerialPortMessageManager *mp_MockSerialPortMessageManager = nullptr;
         SerialDataLinkInterfaceTester<T, COUNT>* mp_SerialDataLinkInterfaceTester = nullptr;
+        const String m_SerialPortInterfaceName = "SPI";
         void SetUp() override
         {
-            mp_MockSerialPortMessageManager = new MockSerialPortMessageManager(m_Name, m_MockHardwareSerial, m_MockDataSerializer, 0);
-            mp_SerialDataLinkInterfaceTester = new SerialDataLinkInterfaceTester<T, COUNT>( mp_MockSerialPortMessageManager);
-
+            mp_MockSerialPortMessageManager = new MockSerialPortMessageManager( m_SerialPortMessageManagerName, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+            mp_SerialDataLinkInterfaceTester = new SerialDataLinkInterfaceTester<T, COUNT>( mp_MockSerialPortMessageManager );
+            ON_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetValuePointer()).WillByDefault(Return(m_value));
+            ON_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetName()).WillByDefault(Return(m_SerialPortInterfaceName));
+            ON_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetDataType()).WillByDefault(Return(GetDataTypeFromTemplateType<T>()));
+            ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
+            ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(m_SerialPortMessageManagerName));
         }
 
         void TearDown() override
@@ -127,9 +149,20 @@ class SerialDataLinkInterfaceTests : public Test
             delete mp_MockSerialPortMessageManager;
         }
 
+        void SetupInterface()
+        {
+            EXPECT_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetValuePointer());
+            EXPECT_CALL(mp_SerialDataLinkInterfaceTester->GetMock(), GetName());
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName());
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_SerialDataLinkInterfaceTester));
+            mp_SerialDataLinkInterfaceTester->Setup();
+            ::testing::Mock::VerifyAndClearExpectations(&(mp_SerialDataLinkInterfaceTester->GetMock()));
+            ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
+        }
+
         void Configure( RxTxType_t rxTxType
-                    , UpdateStoreType_t updateStoreType
-                    , uint16_t rate )
+                      , UpdateStoreType_t updateStoreType
+                      , uint16_t rate )
         {
             mp_SerialDataLinkInterfaceTester->Configure(rxTxType, updateStoreType, rate);
         }
@@ -140,8 +173,10 @@ using SerialDataLinkInterfaceTests_uint32_t_1 = SerialDataLinkInterfaceTests<uin
 
 TEST_F(SerialDataLinkInterfaceTests_int32_t_1, TEST1)
 {
-    Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000);
-    EXPECT_EQ(1, 1);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10);
+    Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
+    SetupInterface();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }
 
 TEST_F(SerialDataLinkInterfaceTests_uint32_t_1, TEST2)
