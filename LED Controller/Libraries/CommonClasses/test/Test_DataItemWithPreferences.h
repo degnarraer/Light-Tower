@@ -25,7 +25,7 @@
 #include "DataItem/DataItemWithPreferences.h"
 #include "Mock_SetupCallInterface.h"
 #include "Mock_ValidValueChecker.h"
-#include "Mock_SerialMessageManager.h"
+#include "Mock_SerialPortMessageManager.h"
 #include "Mock_Preferences.h"
 #include "Mock_Callbacks.h"
 
@@ -44,8 +44,6 @@ class DataItemWithPreferencesFunctionCallTests : public Test
         NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
         NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
         MockNamedCallback *mp_mockNamedCallback;
-        MockHardwareSerial m_MockHardwareSerial;
-        MockDataSerializer m_MockDataSerializer;
         MockPreferences *mp_mockPreferences;
         DataItemWithPreferences<int32_t, 1> *mp_DataItemWithPreferences;
         DataItemWithPreferencesFunctionCallTests(): mp_MockSetupCaller(nullptr)
@@ -57,7 +55,7 @@ class DataItemWithPreferencesFunctionCallTests : public Test
         {
             ESP_LOGD("SetUp", "Setting Up");
             mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
-            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
             mp_mockPreferences = new MockPreferences();
             mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
             ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
@@ -153,8 +151,6 @@ class DataItemWithPreferencesRxTxTests : public Test
         const int32_t initialValue = 10;
         const String name = "Test Name1";
         const String spmm = "Serial Port Message Manager";
-        MockHardwareSerial m_MockHardwareSerial;
-        MockDataSerializer m_MockDataSerializer;
         NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
         MockNamedCallback *mp_mockNamedCallback;
         MockPreferences *mp_mockPreferences;
@@ -166,7 +162,7 @@ class DataItemWithPreferencesRxTxTests : public Test
 
         void SetUp() override
         {
-            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( name, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
             mp_mockPreferences = new MockPreferences();
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         }
@@ -246,8 +242,6 @@ protected:
     const String validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
     const String validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
     const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
-    MockHardwareSerial m_MockHardwareSerial;
-    MockDataSerializer m_MockDataSerializer;
     MockPreferences *mp_mockPreferences;
     NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     MockNamedCallback *mp_mockNamedCallback;
@@ -260,7 +254,7 @@ protected:
 
     void SetUp() override
     {
-        mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>( spmm, m_MockHardwareSerial, m_MockDataSerializer, 0 );
+        mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
         mp_mockPreferences = new MockPreferences();
         EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(spmm));
     }

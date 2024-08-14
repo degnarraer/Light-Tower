@@ -29,8 +29,8 @@ class DataItemInterface
 		virtual size_t GetCount() const = 0;
 		virtual size_t GetChangeCount() const = 0;
 		virtual DataType_t GetDataType() = 0;
-        virtual void GetValue(void* object, size_t count) const = 0;
         virtual T* GetValuePointer() const = 0;
+        virtual void GetValue(void* object, size_t count) const = 0;
         virtual T GetValue() const = 0;
         virtual bool GetInitialValueAsString(String &stringValue) const = 0;
         virtual String GetInitialValueAsString() const = 0;

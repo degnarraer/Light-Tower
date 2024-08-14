@@ -129,10 +129,10 @@ public:
 // Mock for SerialPortMessageManager, if needed, inheriting the mock caller interface
 class MockSerialPortMessageManager : public SerialPortMessageManager {
 public:
-    MockSerialPortMessageManager( const String& Name, HardwareSerial &Serial, DataSerializer &DataSerializer, BaseType_t coreId = 1 )
+    MockSerialPortMessageManager()
                                 : SerialPortMessageManager()
     {
-
+        ESP_LOGD("MockSerialPortMessageManager", "Constructing MockSerialPortMessageManager");
     }
     virtual ~MockSerialPortMessageManager() override 
     {

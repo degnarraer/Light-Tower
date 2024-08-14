@@ -152,29 +152,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			}
 			return result;
 		}
-	protected:
 
-		bool DataItem_TX_Now()
-		{
-			bool result = DataItem<T, COUNT>::DataItem_TX_Now();
-			if(result)
-			{
-				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
-									   				   , this->GetValueAsString() );
-			}
-			return result;
-		}
-
-		virtual bool NewRxValueReceived(void* Object, size_t Count) override
-		{
-			bool result = DataItem<T, COUNT>::NewRxValueReceived(Object, Count);
-			if(result)
-			{
-				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
-									   				   , this->GetValueAsString() );
-			}
-			return result;
-		}
 	private:
 		IPreferences *mp_preferencesInterface = nullptr;
 		PreferenceManager *mp_PreferenceManager = nullptr;

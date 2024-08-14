@@ -25,7 +25,7 @@
 #include "DataItem/LocalDataItem.h"
 #include "Mock_SetupCallInterface.h"
 #include "Mock_ValidValueChecker.h"
-#include "Mock_SerialMessageManager.h"
+#include "Mock_SerialPortMessageManager.h"
 #include "Mock_Callbacks.h"
 
 using ::testing::_;

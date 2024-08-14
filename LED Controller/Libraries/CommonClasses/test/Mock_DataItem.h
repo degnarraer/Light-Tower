@@ -24,7 +24,7 @@
 #include "DataItem/DataItem.h"
 #include "Mock_SetupCallInterface.h"
 #include "Mock_ValidValueChecker.h"
-#include "Mock_SerialMessageManager.h"
+#include "Mock_SerialPortMessageManager.h"
 
 template <typename T, size_t COUNT>
 class MockDataItem : public DataItem<T, COUNT> {
@@ -47,6 +47,4 @@ class MockDataItem : public DataItem<T, COUNT> {
         MOCK_METHOD(bool, NewRxValueReceived, (void* Object, size_t Count), (override));
         MOCK_METHOD(bool, SetValue, (const T* value, size_t count));
         MOCK_METHOD(bool, SetValue, (T value));
-        MOCK_METHOD(bool, DataItem_TX_Now, ());
-        MOCK_METHOD(void, DataItem_Periodic_TX, ());
 };

@@ -117,26 +117,4 @@ class StringDataItemWithPreferences: public StringDataItem
 			StringDataItem::Setup();
 			PreferenceManager::InitializeAndLoadPreference();
 		}
-		
-		bool DataItem_TX_Now()
-		{
-			bool result = StringDataItem::DataItem_TX_Now();
-			if(result)
-			{
-				this->Update_Preference( PreferenceUpdateType::Save
-									   , GetValueAsString() );
-			}
-			return result;
-		}
-
-		virtual bool NewRxValueReceived(void* object, size_t count) override
-		{
-			bool result = StringDataItem::NewRxValueReceived(object, count);
-			if(result) 
-			{
-				this->Update_Preference( PreferenceUpdateType::Save
-									   , GetValueAsString() );
-			}
-			return result;
-		}
 };

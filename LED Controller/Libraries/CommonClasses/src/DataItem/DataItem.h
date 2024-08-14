@@ -19,11 +19,11 @@
 #pragma once
 
 #include "DataItem/LocalDataItem.h"
-#include "DataItem/SerialDataLinkInterface.h"
+#include "DataItem/SerialMessageInterface.h"
 
 template <typename T, size_t COUNT>
 class DataItem: public LocalDataItem<T, COUNT>
-			  , public SerialDataLinkInterface<T, COUNT>
+			  , public SerialMessageInterface<T, COUNT>
 {
 	public:
 		DataItem( const String name
@@ -32,7 +32,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate )
 				: LocalDataItem<T, COUNT>(name, initialValue)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate)
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 1");
 		}
@@ -43,7 +43,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate )
 				: LocalDataItem<T, COUNT>(name, initialValue)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate)
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 2");
 		}
@@ -57,7 +57,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
 		}
@@ -71,7 +71,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)				
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)				
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
 		}
@@ -86,7 +86,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
 		}
@@ -101,7 +101,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
 		}
@@ -116,7 +116,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 				, SetupCallerInterface *setupCallerInterface
 				, bool printDelimited )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, printDelimited)
-				, SerialDataLinkInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
 		}
@@ -131,10 +131,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalDataItem<T,COUNT>::GetName().c_str());
 			LocalDataItem<T, COUNT>::Setup();
-			SerialDataLinkInterface<T, COUNT>::Setup();
+			SerialMessageInterface<T, COUNT>::Setup();
 		}
 
-		//SerialDataLinkInterface
+		//SerialMessageInterface
 		virtual size_t GetCount() const override
 		{
 			return LocalDataItem<T, COUNT>::GetCount();

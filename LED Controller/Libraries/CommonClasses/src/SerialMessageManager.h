@@ -212,13 +212,13 @@ class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
 {
 	public:
 		SerialPortMessageManager(){}
-		SerialPortMessageManager( const String& Name
-								, HardwareSerial *Serial
-								, DataSerializer *DataSerializer
+		SerialPortMessageManager( const String& name
+								, HardwareSerial *serial
+								, DataSerializer *dataSerializer
 								, BaseType_t coreId = 1 )
-								: m_Name(Name)
-								, mp_Serial(Serial)
-								, mp_DataSerializer(DataSerializer)
+								: m_Name(name)
+								, mp_Serial(serial)
+								, mp_DataSerializer(dataSerializer)
 								, m_CoreId(coreId)
 		{
 		}
