@@ -164,11 +164,11 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::GetDataType();
 		}
 		
-		virtual String ConvertValueToString(T *pvalue, size_t count) const override
+		virtual String ConvertValueToString(const T *pvalue, size_t count) const override
 		{
 			return LocalDataItem<T, COUNT>::ConvertValueToString(pvalue, count);
 		}
-		
+
 		virtual bool SetValue(const T *value, size_t count) override
 		{
 			return this->Set_Tx_Value(value, count);

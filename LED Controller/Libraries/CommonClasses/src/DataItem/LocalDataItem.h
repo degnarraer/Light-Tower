@@ -429,8 +429,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			assert((count == COUNT) && "Counts must equal");
 			return (memcmp(mp_Value, object, count) == 0);
 		}
-		
-		virtual String ConvertValueToString(T *pvalue, size_t count) const
+
+		virtual String ConvertValueToString(const T *pvalue, size_t count) const
 		{
 			std::vector<String> valueStrings;
 			if(pvalue && count > 0)

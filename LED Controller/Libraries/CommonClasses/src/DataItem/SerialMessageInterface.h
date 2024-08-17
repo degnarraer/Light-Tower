@@ -87,7 +87,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 		virtual String GetName() const = 0;
 		virtual String GetValueAsString() const = 0;
 		virtual DataType_t GetDataType() = 0;
-		virtual String ConvertValueToString(T *pvalue, size_t count) const = 0;
+		virtual String ConvertValueToString(const T *pvalue, size_t count) const = 0;
 
 		void Configure( RxTxType_t rxTxType
 					  , UpdateStoreType_t updateStoreType
@@ -161,13 +161,11 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			assert(count == COUNT);
 			assert(mp_TxValue);
 			bool valueUpdated = false;
-			std::stringstream ss;
-    		ss << *newTxValue;
 			if(memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
 			{
 				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value: \"%s\" for: \"%s\": Did not change"
 						, mp_SerialPortMessageManager->GetName().c_str()
-						, ss.str().c_str()
+						, this->ConvertValueToString(newTxValue, count).c_str()
 						, this->GetName().c_str() );
 			}
 			else
