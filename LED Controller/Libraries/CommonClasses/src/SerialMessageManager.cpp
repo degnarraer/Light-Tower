@@ -40,11 +40,13 @@ void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVo
 
 void NewRxTxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee)
 {
+	ESP_LOGD("DeRegisterForNewValueNotification", "Try DeRegister For New Value Notification");
 	// Find the iterator pointing to the element
 	auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
 
 	// Check if the element was found before erasing
 	if (it != m_NewValueCallees.end()) {
+		ESP_LOGD("RegisterForNewValueNotification", "Callee DeRegistered");
 		m_NewValueCallees.erase(it);
 	}
 }

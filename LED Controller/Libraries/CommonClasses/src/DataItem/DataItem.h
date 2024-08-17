@@ -143,21 +143,30 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{
 			return LocalDataItem<T, COUNT>::GetValuePointer();
 		}
+
 		virtual bool EqualsValue(T *object, size_t count) const override
 		{
 			return LocalDataItem<T, COUNT>::EqualsValue(object, count);
 		}
+
 		virtual String GetName() const override
 		{
 			return LocalDataItem<T, COUNT>::GetName();
 		}
+
 		virtual String GetValueAsString() const override
 		{
 			return LocalDataItem<T, COUNT>::GetValueAsString();
 		}
+
 		virtual DataType_t GetDataType() override
 		{
 			return LocalDataItem<T, COUNT>::GetDataType();
+		}
+		
+		virtual String ConvertValueToString(T *pvalue, size_t count) const override
+		{
+			return LocalDataItem<T, COUNT>::ConvertValueToString(pvalue, count);
 		}
 		
 		virtual bool SetValue(const T *value, size_t count) override
@@ -165,10 +174,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return this->Set_Tx_Value(value, count);
 		}
 
-		//Local DataItem Override
 		virtual bool SetValue(const T value) override
 		{
 			assert(COUNT == 1);
 			return this->Set_Tx_Value(&value, 1);
 		}
+		
 };

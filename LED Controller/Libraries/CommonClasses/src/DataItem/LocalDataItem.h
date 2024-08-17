@@ -43,11 +43,19 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		LocalDataItem( const String name
 					 , const T* initialValue )
 					 : m_Name(name)
-					 , mp_InitialValuePtr(initialValue){}
+					 , mp_InitialValuePtr(initialValue)
+		{
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
+			CommonSetup();
+		}
 		LocalDataItem( const String name
 					 , const T& initialValue )
 					 : m_Name(name)
-					 , mp_InitialValuePtr(&initialValue){}
+					 , mp_InitialValuePtr(&initialValue)
+		{
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
+			CommonSetup();
+		}
 		LocalDataItem( const String name
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback
@@ -58,8 +66,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
-			RegisterForSetup();
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
+			CommonSetup();
 		}
 		
 		LocalDataItem( const String name
@@ -72,8 +80,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
-			RegisterForSetup();
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
+			CommonSetup();
 		}
 
 		LocalDataItem( const String name
@@ -87,8 +95,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
-			RegisterForSetup();
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 5");
+			CommonSetup();
 		}
 		
 		LocalDataItem( const String name
@@ -102,8 +110,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
-			RegisterForSetup();
+			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 6");
+			CommonSetup();
 		}
 		
 		virtual ~LocalDataItem()
@@ -131,6 +139,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
+		void CommonSetup()
+		{
+			RegisterForSetup();
+		}
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
@@ -254,18 +266,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			stringValue = "";
 			if (mp_InitialValue && COUNT > 0)
 			{
-				std::vector<String> valueStrings;
-				for (size_t i = 0; i < COUNT; ++i)
-				{
-					valueStrings.push_back(StringEncoderDecoder<T>::EncodeToString(*mp_InitialValue));
-				}
-				
-				for (size_t i = 0; i < COUNT - 1; ++i)
-				{
-					stringValue += valueStrings[i];
-					stringValue += ENCODE_DIVIDER;
-				}
-				stringValue += valueStrings[COUNT - 1];
+				stringValue = ConvertValueToString(mp_InitialValue, COUNT);
 				return true;
 			}
 			else
@@ -291,18 +292,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			stringValue = "";
 			if (mp_Value && COUNT > 0)
 			{
-				std::vector<String> valueStrings;
-				for (size_t i = 0; i < COUNT; ++i)
-				{
-					valueStrings.push_back(StringEncoderDecoder<T>::EncodeToString(mp_Value[i]));
-				}
-				
-				for (size_t i = 0; i < COUNT - 1; ++i)
-				{
-					stringValue += valueStrings[i];
-					stringValue += ENCODE_DIVIDER;
-				}
-				stringValue += valueStrings[COUNT - 1];
+				stringValue = ConvertValueToString(mp_Value, COUNT);
 				ESP_LOGD("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
@@ -439,6 +429,27 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			assert((count == COUNT) && "Counts must equal");
 			return (memcmp(mp_Value, object, count) == 0);
 		}
+		
+		virtual String ConvertValueToString(T *pvalue, size_t count) const
+		{
+			std::vector<String> valueStrings;
+			if(pvalue && count > 0)
+			{
+				for (size_t i = 0; i < count; ++i)
+				{
+					valueStrings.push_back(StringEncoderDecoder<T>::EncodeToString(pvalue[i]));
+				}
+			}
+			String stringValue = "";
+			for (size_t i = 0; i < count - 1; ++i)
+			{
+				stringValue += valueStrings[i];
+				stringValue += ENCODE_DIVIDER;
+			}
+			stringValue += valueStrings[COUNT - 1];
+			return stringValue;
+		}
+
 	private:
 		ValidValueChecker m_ValidValueChecker;
 	protected:

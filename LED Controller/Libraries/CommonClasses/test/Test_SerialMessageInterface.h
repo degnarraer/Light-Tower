@@ -45,6 +45,7 @@ class MockSerialMessageInterface
         MOCK_METHOD(String, GetName, (), (const));
         MOCK_METHOD(String, GetValueAsString, (), (const));
         MOCK_METHOD(DataType_t, GetDataType, (), (const));
+        MOCK_METHOD(String, ConvertValueToString, (T *object, size_t count), (const));
 };
 
 template <typename T, size_t COUNT>
@@ -87,6 +88,10 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
 		virtual DataType_t GetDataType() override
         {
             return m_MockSerialMessageInterface.GetDataType();
+        }
+        virtual String ConvertValueToString(T *pvalue, size_t count) const override
+        {
+            return m_MockSerialMessageInterface.ConvertValueToString(pvalue, count);
         }
 
         void Configure( RxTxType_t rxTxType
