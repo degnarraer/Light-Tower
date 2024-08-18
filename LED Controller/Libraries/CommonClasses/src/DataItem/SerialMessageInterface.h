@@ -304,6 +304,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str() );
 				StartTimer();
+				Tx_Now();
 			}
 			else
 			{
