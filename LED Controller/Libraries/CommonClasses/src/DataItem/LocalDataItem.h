@@ -461,9 +461,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return stringValue;
 		}
 
-	private:
-		ValidValueChecker m_ValidValueChecker;
 	protected:
+		ValidValueChecker m_ValidValueChecker;
 		String m_Name;
 		const T* const mp_InitialValuePtr;
 		T *mp_Value = nullptr;

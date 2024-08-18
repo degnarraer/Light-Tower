@@ -286,58 +286,115 @@ protected:
 
     void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, bool expectValueAccepted )
     {
+        bool loggedType = false;
         switch(rxTxType)
         {
             case RxTxType_Tx_Periodic:
-	        case RxTxType_Tx_On_Change:
-	        case RxTxType_Tx_On_Change_With_Heartbeat:
             {
-                ESP_LOGD( "SetRxTxCallExpectations", "Tx");
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1).WillRepeatedly(Return(true));
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL QueueMessageFromData x 1");
+                ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_Periodic");
+                if(expectValueAccepted)
+                {
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(2).WillRepeatedly(Return(true));
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
+                }
+                else
+                {
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                }
                 if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL NewValueCallbackFunction x 1");
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
                 }
                 else
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL NewValueCallbackFunction x 0");
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 0");
+                }
+                break;
+            }
+	        case RxTxType_Tx_On_Change:
+            {
+                ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change");
+                if(expectValueAccepted)
+                {
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1).WillRepeatedly(Return(true));
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
+                }
+                else
+                {
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                }
+                if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
+                }
+                else
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 0");
+                }
+                break;
+            }
+	        case RxTxType_Tx_On_Change_With_Heartbeat:
+            {
+                ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change_With_Heartbeat");
+                if(expectValueAccepted)
+                {
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(2).WillRepeatedly(Return(true));
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
+                }
+                else
+                {
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                }
+                if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
+                }
+                else
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 0");
                 }
                 break;
             }
             case RxTxType_Rx_Only:
             {
-                ESP_LOGD( "SetRxTxCallExpectations", "Rx_Only");
+                ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Only");
                 EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0);
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL QueueMessageFromData x 0");
+                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
                 if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL NewValueCallbackFunction x 1");
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
                 }
                 else
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL NewValueCallbackFunction x 0");
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 0");
                 }
                 break;
             }
 	        case RxTxType_Rx_Echo_Value:
             {
-                ESP_LOGD( "SetRxTxCallExpectations", "Rx_Echo_Value");
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1).WillRepeatedly(Return(true));
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL QueueMessageFromData x 1");
+                ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Echo_Value");
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0);
+                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
                 if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL NewValueCallbackFunction x 1");
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
                 }
                 else
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL NewValueCallbackFunction x 0");
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 0");
                 }
                 break;
             }

@@ -176,7 +176,24 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValue(const T *value, size_t count) override
 		{
-			return this->Set_Tx_Value(value, count);
+			bool validValue = true;
+			for(int i = 0; i < COUNT; ++i)
+			{
+				String stringValue = StringEncoderDecoder<T>::EncodeToString(value[i]);
+				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
+				{
+					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
+					validValue = false;
+				}
+			}
+			if(validValue)
+			{
+				return this->Set_Tx_Value(value, count);
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		virtual bool SetValue(const T value) override
