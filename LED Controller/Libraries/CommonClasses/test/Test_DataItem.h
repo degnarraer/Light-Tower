@@ -260,6 +260,7 @@ protected:
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
+        DestroyDataItem();
     }
 
     void TestInitialValueIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
@@ -269,15 +270,17 @@ protected:
         {
             EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
         }
+        DestroyDataItem();
     }
 
     void TestInitialValueReturnedAsString( const String name, int32_t initialValue, const String resultString, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
+        DestroyDataItem();
     }
 
-    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType )
+    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, bool expectValueAccepted )
     {
         switch(rxTxType)
         {
@@ -286,18 +289,27 @@ protected:
 	        case RxTxType_Tx_On_Change_With_Heartbeat:
             {
                 EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1).WillRepeatedly(Return(true));
-                if(	UpdateStoreType_On_Tx == updateStoreType)
+                if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+                }
+                else
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
                 }
                 break;
             }
             case RxTxType_Rx_Only:
 	        case RxTxType_Rx_Echo_Value:
             {
-                if(	UpdateStoreType_On_Rx == updateStoreType)
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0).WillRepeatedly(Return(true));
+                if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+                }
+                else
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
                 }
                 break;
             }
@@ -309,15 +321,16 @@ protected:
     void TestSetValueFromValueConvertsToString( const String name, const int32_t* testValue, const String resultString, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        SetRxTxCallExpectations(name, rxTxType, updateStoreType);
+        SetRxTxCallExpectations(name, rxTxType, updateStoreType, true);
         mp_DataItem->SetValue(testValue, COUNT);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
+        DestroyDataItem();
     }
     void TestSetValueFromStringConvertsToValue( const String name, const String testString, const int32_t* resultValue, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        SetRxTxCallExpectations(name, rxTxType, updateStoreType);
+        SetRxTxCallExpectations(name, rxTxType, updateStoreType, true);
         mp_DataItem->SetValueFromString(testString);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
@@ -325,19 +338,13 @@ protected:
         {
             EXPECT_EQ(resultValue[i], mp_DataItem->GetValuePointer()[i]);
         }
+        DestroyDataItem();
     }
 
     void TestSettingValue( const String name, const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectValueAccepted)
     {
-        CreateDataItem(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
-        if(expectValueAccepted)
-        {
-            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-        }
-        else
-        {
-            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
-        }
+        CreateDataItem(name, initialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
+        SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, expectValueAccepted);
         mp_DataItem->SetValue(testValue, COUNT);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         for(size_t i = 0; i < COUNT; ++i)
@@ -352,19 +359,13 @@ protected:
                 EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
             }
         }
+        DestroyDataItem();
     }
 
     void TestSettingStringValue( const String name, const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectValueAccepted)
     {
-        CreateDataItem(name, initialValue, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
-        if(expectValueAccepted)
-        {
-            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-        }
-        else
-        {
-            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(0);
-        }
+        CreateDataItem(name, initialValue, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
+        SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
         mp_DataItem->SetValueFromString(testValueString);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         for(size_t i = 0; i < COUNT; ++i)
@@ -379,6 +380,7 @@ protected:
                 EXPECT_EQ(initialValue, mp_DataItem->GetValuePointer()[i]);
             }
         }
+        DestroyDataItem();
     }
 };
 
@@ -388,57 +390,177 @@ using DataItemGetAndSetValueTestsInt10 = DataItemGetAndSetValueTests<int32_t, 10
 // ************ Name is set ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Name_Is_Set)
 {
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
     TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Name_Is_Set)
 {
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
     TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Name_Is_Set)
 {
-    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Name_Is_Set)
 {
-    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestNameIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 
 
 // ************ Initial Value is set ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Initial_Value_Is_Set)
 {
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
     TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Initial_Value_Is_Set)
 {
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
     TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Initial_Value_Is_Set)
 {
-    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Value_Is_Set)
 {
-    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueIsSet(name1, validValue10, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 
 // ************ Initial Value Returned as String ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Initial_Value_Is_Returned_As_String)
 {
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
     TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Initial_Value_Is_Returned_As_String)
 {
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, nullptr);
     TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, nullptr);
+    
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, nullptr);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Initial_Value_Is_Returned_As_String)
 {
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, &validValues);
     TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &validValues);
+    
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10String, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &validValues);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Value_Is_Returned_As_String)
 {
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 1000, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Rx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Rx, 1000, &validValues);
     TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &validValues);
+    
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change_With_Heartbeat, UpdateStoreType_On_Tx, 1000, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Tx, 0, &validValues);
+    TestInitialValueReturnedAsString(name1, validValue10, validValue10ArrayString, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Tx, 0, &validValues);
 }
 
 // ************ Set Value From Value Converts To String ******************
@@ -463,19 +585,19 @@ TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_F
 // ************ Set Value From String Converts To Value ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(name1, validValue20String, &validValue20, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromStringConvertsToValue(name1, validValue20String, &validValue20, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(name1, validValue20String, &validValue20, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromStringConvertsToValue(name1, validValue20String, &validValue20, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(name1, validValue20ArrayString, validValue20Array, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromStringConvertsToValue(name1, validValue20ArrayString, validValue20Array, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(name1, validValue20ArrayString, validValue20Array, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromStringConvertsToValue(name1, validValue20ArrayString, validValue20Array, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Valid_Values_When_Validation_Is_Used)

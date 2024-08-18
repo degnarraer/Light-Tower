@@ -335,19 +335,14 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
-		virtual bool SetValueFromString(const String& stringValue)
+		virtual size_t ParseStringValueIntoValues(const String& stringValue, T* values)
 		{
-			ESP_LOGD("LocalDataItem::SetValueFromString"
-					, "Name: \"%s\" String Value: \"%s\""
-					, m_Name.c_str()
-					, stringValue.c_str());
-			T value[COUNT];
 			std::vector<String> substrings;
 			size_t start = 0;
 			size_t end = stringValue.indexOf(ENCODE_DIVIDER);
 
 			// Split the input string by ENCODE_DIVIDER
-			while (end != -1) 
+			while (end != -1)
 			{
 				String parsedString = stringValue.substring(start, end);
 				ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
@@ -365,7 +360,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				ESP_LOGE( "SetValueFromString",
 						  "Expected %zu substrings but got %zu in string: \"%s\".",
 						  COUNT, substrings.size(), stringValue.c_str());
-				return false;
+				return 0;
 			}
 
 			// Decode each substring and store it in the value array
@@ -375,13 +370,29 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
 					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
-					return false;
+					return 0;
 				}
-				value[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
+				values[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
 			}
+			return substrings.size();
+		}
 
-			// Set the decoded values
-			return SetValue(value, COUNT);
+		virtual bool SetValueFromString(const String& stringValue)
+		{
+			ESP_LOGD("LocalDataItem::SetValueFromString"
+					, "Name: \"%s\" String Value: \"%s\""
+					, m_Name.c_str()
+					, stringValue.c_str());
+			T values[COUNT];
+			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
+			if(parseCount)
+			{
+				return SetValue(values, COUNT);
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		virtual bool SetValue(const T *value, size_t count)

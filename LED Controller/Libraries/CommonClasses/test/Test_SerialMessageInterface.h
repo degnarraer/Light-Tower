@@ -40,12 +40,13 @@ class MockSerialMessageInterface
 {
     public:
         MOCK_METHOD(T*, GetValuePointer, (), (const));
-        MOCK_METHOD(bool, SetValue, (const T *value, size_t count), ());
+        MOCK_METHOD(bool, UpdateStore, (const T *value, size_t count), ());
         MOCK_METHOD(bool, EqualsValue, (T *object, size_t count), (const));
         MOCK_METHOD(String, GetName, (), (const));
         MOCK_METHOD(String, GetValueAsString, (), (const));
         MOCK_METHOD(DataType_t, GetDataType, (), (const));
         MOCK_METHOD(String, ConvertValueToString, (const T *object, size_t count), (const));
+		MOCK_METHOD(bool, ParseStringValueIntoValues, (const String& stringValue, T* values), ());
 };
 
 template <typename T, size_t COUNT>
@@ -69,9 +70,9 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
         {
             return m_MockSerialMessageInterface.GetValuePointer();
         }
-        virtual bool SetValue(const T *value, size_t count) override
+		virtual bool UpdateStore(const T *value, size_t count) override
         {
-            return m_MockSerialMessageInterface.SetValue(value, count);
+            return m_MockSerialMessageInterface.UpdateStore(value, count);
         }
 		virtual bool EqualsValue(T *object, size_t count) const override
         {
@@ -92,6 +93,10 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
         virtual String ConvertValueToString(const T *pvalue, size_t count) const override
         {
             return m_MockSerialMessageInterface.ConvertValueToString(pvalue, count);
+        }
+		virtual size_t ParseStringValueIntoValues(const String& stringValue, T* values)
+        {
+            return m_MockSerialMessageInterface.ParseStringValueIntoValues(stringValue, values);
         }
 
         void Configure( RxTxType_t rxTxType
@@ -188,7 +193,7 @@ TEST_F(SerialMessageInterfaceTests_int32_t_1, TEST1)
     Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
     SetupInterface();
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
-    EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), SetValue(_, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), UpdateStore(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), EqualsValue(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetValueAsString()).WillRepeatedly(Return("10"));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetDataType()).WillRepeatedly(Return(GetDataTypeFromTemplateType<int32_t>()));

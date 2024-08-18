@@ -169,25 +169,46 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::ConvertValueToString(pvalue, count);
 		}
 
+		virtual size_t ParseStringValueIntoValues(const String& stringValue, T* values) override
+		{
+			return LocalDataItem<T, COUNT>::ParseStringValueIntoValues(stringValue, values);
+		}
+
 		virtual bool SetValue(const T *value, size_t count) override
 		{
-			bool updated = false;
-			if(this->Set_Tx_Value(value, count))
-			{
-				updated = LocalDataItem<T,COUNT>::SetValue(value, count);
-			}
-			return updated;
+			return this->Set_Tx_Value(value, count);
 		}
 
 		virtual bool SetValue(const T value) override
 		{
 			assert(COUNT == 1);
-			bool updated = false;
-			if(this->Set_Tx_Value(&value, 1))
-			{
-				updated = LocalDataItem<T,COUNT>::SetValue(value);
-			}
-			return updated;
+			return this->Set_Tx_Value(&value, 1);
 		}
-		
+
+		virtual bool SetValueFromString(const String& stringValue) override
+		{
+			ESP_LOGD( "DataItem::SetValueFromString"
+					, "Name: \"%s\" String Value: \"%s\""
+					, this->GetName().c_str()
+					, stringValue.c_str() );
+			T values[COUNT];
+			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
+			if(parseCount)
+			{
+				return this->Set_Tx_Value(values, parseCount);
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		virtual bool UpdateStore(const T *value, size_t count) override
+		{
+			ESP_LOGD( "DataItem::UpdateStore"
+					, "Name: \"%s\" Update Store with value: \"%s\""
+					, this->GetName().c_str()
+					, this->ConvertValueToString(value, count).c_str() );
+			return LocalDataItem<T,COUNT>::SetValue(value, count);
+		}
 };
