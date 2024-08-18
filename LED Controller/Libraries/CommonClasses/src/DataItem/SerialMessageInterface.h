@@ -161,21 +161,24 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			assert(count == COUNT);
 			assert(mp_TxValue);
 			bool valueUpdated = false;
-			if(memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
+			ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Current Value: \"%s\" New Value: \"%s\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, this->GetName().c_str()
+					, this->ConvertValueToString(mp_TxValue, count).c_str()
+					, this->ConvertValueToString(newTxValue, count).c_str() );
+			if(0 == memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
 			{
-				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value: \"%s\" for: \"%s\": Did not change"
+				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value did not change."
 						, mp_SerialPortMessageManager->GetName().c_str()
-						, this->ConvertValueToString(newTxValue, count).c_str()
 						, this->GetName().c_str() );
 			}
 			else
 			{
-				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for for: \"%s\": Changed"
+				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
 						, mp_SerialPortMessageManager->GetName().c_str()
 						, this->GetName().c_str() );
 				memcpy(mp_TxValue, newTxValue, sizeof(T)*count);
-				Try_TX_On_Change();
-				valueUpdated = true;
+				valueUpdated = Try_TX_On_Change();
 			}
 			return valueUpdated;
 		}
@@ -191,7 +194,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 					{
 						if(m_UpdateStoreType == UpdateStoreType_On_Tx)
 						{
-							ValueUpdated = this->SetValue(mp_TxValue, COUNT);	
+							ValueUpdated = true;	
 						}
 					}
 					ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\""
@@ -282,13 +285,15 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			}
 		}
 
-		void Try_TX_On_Change()
+		bool Try_TX_On_Change()
 		{
+			bool valueUpdated = false;
 			ESP_LOGD("Try_TX_On_Change", "\"%s\": Try TX On Change", this->GetName().c_str());
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
-				Tx_Now();
+				valueUpdated = Tx_Now();
 			}
+			return valueUpdated;
 		}
 
 		void EnableTx(bool enableTX)

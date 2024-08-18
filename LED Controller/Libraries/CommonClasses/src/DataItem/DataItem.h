@@ -171,13 +171,23 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValue(const T *value, size_t count) override
 		{
-			return this->Set_Tx_Value(value, count);
+			bool updated = false;
+			if(this->Set_Tx_Value(value, count))
+			{
+				updated = LocalDataItem<T,COUNT>::SetValue(value, count);
+			}
+			return updated;
 		}
 
 		virtual bool SetValue(const T value) override
 		{
 			assert(COUNT == 1);
-			return this->Set_Tx_Value(&value, 1);
+			bool updated = false;
+			if(this->Set_Tx_Value(&value, 1))
+			{
+				updated = LocalDataItem<T,COUNT>::SetValue(value);
+			}
+			return updated;
 		}
 		
 };

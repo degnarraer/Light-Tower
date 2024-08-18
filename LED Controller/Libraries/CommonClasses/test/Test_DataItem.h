@@ -277,21 +277,50 @@ protected:
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
     }
 
+    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType )
+    {
+        switch(rxTxType)
+        {
+            case RxTxType_Tx_Periodic:
+	        case RxTxType_Tx_On_Change:
+	        case RxTxType_Tx_On_Change_With_Heartbeat:
+            {
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1).WillRepeatedly(Return(true));
+                if(	UpdateStoreType_On_Tx == updateStoreType)
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+                }
+                break;
+            }
+            case RxTxType_Rx_Only:
+	        case RxTxType_Rx_Echo_Value:
+            {
+                if(	UpdateStoreType_On_Rx == updateStoreType)
+                {
+                    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
     void TestSetValueFromValueConvertsToString( const String name, const int32_t* testValue, const String resultString, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+        SetRxTxCallExpectations(name, rxTxType, updateStoreType);
         mp_DataItem->SetValue(testValue, COUNT);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
     }
-
     void TestSetValueFromStringConvertsToValue( const String name, const String testString, const int32_t* resultValue, int32_t initialValue, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, updateStoreType, rate, validStringValues);
-        EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+        SetRxTxCallExpectations(name, rxTxType, updateStoreType);
         mp_DataItem->SetValueFromString(testString);
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
         for(size_t i = 0; i < COUNT; ++i)
         {
             EXPECT_EQ(resultValue[i], mp_DataItem->GetValuePointer()[i]);
@@ -415,19 +444,19 @@ TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Initial_Val
 // ************ Set Value From Value Converts To String ******************
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItem_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(name1, &validValue20, validValue20String, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(name1, &validValue20, validValue20String, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt1, dataItemWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(name1, &validValue20, validValue20String, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(name1, &validValue20, validValue20String, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArray_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(name1, validValue20Array, validValue20ArrayString, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(name1, validValue20Array, validValue20ArrayString, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemGetAndSetValueTestsInt10, dataItemArrayWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(name1, validValue20Array, validValue20ArrayString, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(name1, validValue20Array, validValue20ArrayString, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 
 
