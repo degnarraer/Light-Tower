@@ -727,18 +727,26 @@ TEST_F(DataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Valid
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(validValue20);
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(validValue20);
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(invalidValue);
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(validValue30);
     EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 }
 
 TEST_F(DataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Not_Used)
@@ -749,18 +757,26 @@ TEST_F(DataItemGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Valid
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(validValue20);
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(validValue20);
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(invalidValue);
     EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     
     SetRxTxCallExpectations(name1, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(validValue30);
     EXPECT_EQ(3, mp_DataItem->GetChangeCount());
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
+    ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 }
 
 TEST_F(DataItemGetAndSetValueTestsInt1, Callback_Only_Called_For_New_Valid_Values_When_Validation_Used)

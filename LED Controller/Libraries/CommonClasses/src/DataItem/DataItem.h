@@ -189,7 +189,14 @@ class DataItem: public LocalDataItem<T, COUNT>
 		virtual bool SetValue(const T value) override
 		{
 			assert(COUNT == 1);
-			return this->Set_Tx_Value(&value, 1);
+			if(this->ConfirmValueValidity(&value, 1))
+			{
+				return this->Set_Tx_Value(&value, 1);
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
