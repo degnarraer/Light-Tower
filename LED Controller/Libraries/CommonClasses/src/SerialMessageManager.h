@@ -38,7 +38,7 @@ class NewRxTxValueCalleeInterface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(T* object, size_t count) = 0;
+		virtual bool NewRxValueReceived(const T* values, size_t count) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -147,7 +147,7 @@ class NewRxTxValueCallerInterface
 		}
 		
 	protected:
-		virtual void NotifyCallee(const String& name, T* object)
+		virtual void NotifyCallee(const String& name, T* values)
 		{
 			ESP_LOGD("NotifyCallee", "Notify Callees");
 			for (NewRxTxValueCalleeInterface<T>* callee : m_NewValueCallees)
@@ -156,7 +156,7 @@ class NewRxTxValueCallerInterface
 				{
 					if (callee->GetName().equals(name))
 					{
-						callee->NewRxValueReceived(object, callee->GetCount());
+						callee->NewRxValueReceived(values, callee->GetCount());
 						break;
 					}
 				}
@@ -178,7 +178,7 @@ class NewRxTxVoidObjectCalleeInterface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(void* object, size_t Count) = 0;
+		virtual bool NewRxValueReceived(const void* values, size_t count) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:

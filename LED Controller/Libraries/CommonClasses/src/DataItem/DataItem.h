@@ -174,21 +174,11 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::ParseStringValueIntoValues(stringValue, values);
 		}
 
-		virtual bool SetValue(const T *value, size_t count) override
+		virtual bool SetValue(const T* values, size_t count) override
 		{
-			bool validValue = true;
-			for(int i = 0; i < COUNT; ++i)
+			if(this->ConfirmValueValidity(values, count))
 			{
-				String stringValue = StringEncoderDecoder<T>::EncodeToString(value[i]);
-				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
-				{
-					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
-					validValue = false;
-				}
-			}
-			if(validValue)
-			{
-				return this->Set_Tx_Value(value, count);
+				return this->Set_Tx_Value(values, count);
 			}
 			else
 			{
@@ -220,12 +210,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 		}
 
-		virtual bool UpdateStore(const T *value, size_t count) override
+		virtual bool UpdateStore(const T *values, size_t count) override
 		{
-			ESP_LOGD( "DataItem::UpdateStore"
-					, "Name: \"%s\" Update Store with value: \"%s\""
-					, this->GetName().c_str()
-					, this->ConvertValueToString(value, count).c_str() );
-			return LocalDataItem<T,COUNT>::SetValue(value, count);
+			return LocalDataItem<T,COUNT>::UpdateStore(values, count);
 		}
 };

@@ -364,7 +364,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 
 			// Decode each substring and store it in the value array
-			ESP_LOGD("SetValue", "\"%s\" Parsed %i Strings.", m_Name.c_str(), substrings.size() );
+			ESP_LOGD("ParseStringValueIntoValues", "\"%s\" Parsed %i Strings.", m_Name.c_str(), substrings.size() );
 			for (size_t i = 0; i < substrings.size(); ++i) 
 			{
 				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
@@ -385,9 +385,9 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, stringValue.c_str());
 			T values[COUNT];
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
-			if(parseCount)
+			if(ConfirmValueValidity(values, parseCount))
 			{
-				return SetValue(values, COUNT);
+				return SetValue(values, parseCount);
 			}
 			else
 			{
@@ -405,15 +405,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			bool validValue = true;
 			if(true == valueChanged)
 			{
-				for(int i = 0; i < COUNT; ++i)
-				{
-					String stringValue = StringEncoderDecoder<T>::EncodeToString(value[i]);
-					if(false == m_ValidValueChecker.IsValidStringValue(stringValue))
-					{
-						ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", m_Name.c_str(), stringValue.c_str() );
-						validValue = false;
-					}
-				}
+				validValue = ConfirmValueValidity(mp_Value, COUNT);
 				if(true == validValue)
 				{
 					memcpy(mp_Value, value, sizeof(T) * COUNT);
@@ -469,6 +461,45 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		T *mp_InitialValue = nullptr;
 		NamedCallback_t *mp_NamedCallback = nullptr;
 		size_t m_ValueChangeCount = 0;
+		
+		virtual bool UpdateStore(const T *value, size_t count)
+		{
+			ESP_LOGD( "UpdateStore"
+					, "Name: \"%s\" Update Store with value: \"%s\""
+					, this->GetName().c_str()
+					, this->ConvertValueToString(value, count).c_str() );
+			assert(value != nullptr);
+			assert(mp_Value != nullptr);
+			assert(COUNT > 0);
+			assert(COUNT == count);
+			bool valueChanged = (memcmp(mp_Value, value, sizeof(T) * count) != 0);
+			bool validValue = true;
+			if(true == valueChanged)
+			{
+				memcpy(mp_Value, value, sizeof(T) * count);
+				++m_ValueChangeCount;
+				ESP_LOGI( "LocalDataItem: SetValue"
+						, "\"%s\" Set Value: \"%s\""
+						, m_Name.c_str()
+						, GetValueAsString().c_str());
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
+			}
+			return valueChanged;
+		}
+		
+		bool ConfirmValueValidity(const T* values, size_t count) const
+		{
+			for(int i = 0; i < count; ++i)
+			{
+				String stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
+				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
+				{
+					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
+					return false;
+				}
+			}
+			return true;
+		}
 	private:
 		SetupCallerInterface *mp_SetupCallerInterface = nullptr;
 		size_t m_Count = COUNT;

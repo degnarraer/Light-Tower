@@ -26,7 +26,7 @@
 template <typename T>
 class MockNewRxTxValueCalleeInterface : public NewRxTxValueCalleeInterface<T> {
 public:
-    MOCK_METHOD(bool, NewRxValueReceived, (T* object, size_t count), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const T* values, size_t count), (override));
     MOCK_METHOD(String, GetName, (), (override));
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
@@ -52,7 +52,7 @@ public:
 class MockNewRxTxVoidObjectCalleeInterface : public NewRxTxVoidObjectCalleeInterface {
 public:
     MockNewRxTxVoidObjectCalleeInterface(size_t Count) : NewRxTxVoidObjectCalleeInterface(Count) {}
-    MOCK_METHOD(bool, NewRxValueReceived, (void* object, size_t Count), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const void* values, size_t Count), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(size_t, GetCount, (), (override));
 };

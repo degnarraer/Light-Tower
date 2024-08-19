@@ -99,34 +99,35 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			m_Rate = rate;
 		}
 
-		virtual bool NewRxValueReceived(void* Object, size_t Count) override
+		virtual bool NewRxValueReceived(const void* values, size_t count) override
 		{	
+			assert(count == COUNT);
 			bool StoreUpdated = false;
-			T* receivedValue = static_cast<T*>(Object);
+			const T* receivedValue = static_cast<const T*>(values);
 			ESP_LOGD( "DataItem: NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str()
-					, this->GetValueAsString().c_str());
-			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * COUNT) != 0)
+					, this->ConvertValueToString(receivedValue, count).c_str());
+			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * count) != 0)
 			{
-				memcpy(mp_RxValue, receivedValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, this->GetName().c_str()
-						, this->GetValueAsString().c_str());
+						, this->ConvertValueToString(receivedValue, count).c_str());
+				memcpy(mp_RxValue, receivedValue, sizeof(T) * count);
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					StoreUpdated = UpdateStore(mp_RxValue, COUNT);
+					StoreUpdated = UpdateStore(mp_RxValue, count);
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
-				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * COUNT);
 				ESP_LOGD( "DataItem: NewRxValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, this->GetName().c_str()
-						, this->GetValueAsString().c_str());
+						, this->ConvertValueToString(receivedValue, count).c_str());
+				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * count);
 				Tx_Now();
 			}
 			return StoreUpdated;
@@ -185,9 +186,14 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 
 		bool Tx_Now()
 		{
+			ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, this->GetName().c_str()
+					, this->GetValueAsString().c_str() );
 			bool StoreUpdated = false;
 			if(mp_SerialPortMessageManager)
 			{
+				
 				if(mp_SerialPortMessageManager->QueueMessageFromData(this->GetName(), this->GetDataType(), mp_TxValue, COUNT))
 				{
 					if(!this->EqualsValue(mp_TxValue, COUNT))
@@ -197,10 +203,6 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 							StoreUpdated = UpdateStore(mp_TxValue, COUNT);	
 						}
 					}
-					ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\""
-							, mp_SerialPortMessageManager->GetName().c_str()
-							, this->GetName().c_str()
-							, this->GetValueAsString().c_str() );
 				}
 				else
 				{

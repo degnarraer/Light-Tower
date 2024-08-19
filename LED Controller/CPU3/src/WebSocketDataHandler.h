@@ -134,12 +134,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
     
-    bool NewRxValueReceived(T* Object, size_t Count)
+    bool NewRxValueReceived(const T* values, size_t count)
     {
-      bool ValueChanged = m_DataItem.SetValue(Object, Count);
-      ESP_LOGD( "NewRxValueReceived"
-              , "New RX Datalink Value: \tValue: %s \tNew Value: %s"
-              , m_DataItem.GetValueAsString());
+      ESP_LOGD( "NewRxValueReceived", "New RX Datalink Value");
+      bool ValueChanged = m_DataItem.SetValue(values, count);
       return ValueChanged;
     }
     
