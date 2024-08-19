@@ -179,16 +179,18 @@ using SerialMessageInterfaceTests_uint32_t_1 = SerialMessageInterfaceTests<uint3
 TEST_F(SerialMessageInterfaceTests_int32_t_1, Construct_and_destruct)
 {
     Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
     SetupInterface();
 }
 
 TEST_F(SerialMessageInterfaceTests_uint32_t_1, Construct_and_destruct)
 {
     Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
     SetupInterface();
 }
 
-TEST_F(SerialMessageInterfaceTests_int32_t_1, TEST1)
+TEST_F(SerialMessageInterfaceTests_int32_t_1, Tx_Periodic_Preiodically_Queues_Message)
 {
     Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
     SetupInterface();
@@ -199,6 +201,6 @@ TEST_F(SerialMessageInterfaceTests_int32_t_1, TEST1)
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetDataType()).WillRepeatedly(Return(GetDataTypeFromTemplateType<int32_t>()));
 
     EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(m_SerialPortMessageManagerName));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(11);
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }

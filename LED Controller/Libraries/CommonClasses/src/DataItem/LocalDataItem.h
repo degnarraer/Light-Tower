@@ -293,7 +293,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			if (mp_Value && COUNT > 0)
 			{
 				stringValue = ConvertValueToString(mp_Value, COUNT);
-				ESP_LOGD("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
+				ESP_LOGV("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
 				return true;
 			}
 			else
@@ -385,7 +385,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, stringValue.c_str());
 			T values[COUNT];
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
-			if(ConfirmValueValidity(values, parseCount))
+			if(parseCount == COUNT && ConfirmValueValidity(values, parseCount))
 			{
 				return SetValue(values, parseCount);
 			}
@@ -397,27 +397,29 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValue(const T *value, size_t count)
 		{
+			ESP_LOGI( "LocalDataItem: SetValue"
+					, "\"%s\" Set Value: \"%s\""
+					, m_Name.c_str()
+					, this->ConvertValueToString(value, count).c_str());
 			assert(value != nullptr);
 			assert(mp_Value != nullptr);
 			assert(COUNT > 0);
 			assert(COUNT == count);
 			bool valueChanged = (memcmp(mp_Value, value, sizeof(T) * COUNT) != 0);
-			bool validValue = true;
-			if(true == valueChanged)
+			bool validValue = ConfirmValueValidity(value, COUNT);
+			if(valueChanged && validValue)
 			{
-				validValue = ConfirmValueValidity(mp_Value, COUNT);
-				if(true == validValue)
-				{
-					memcpy(mp_Value, value, sizeof(T) * COUNT);
-					++m_ValueChangeCount;
-					ESP_LOGI( "LocalDataItem: SetValue"
-							, "\"%s\" Set Value: \"%s\""
-							, m_Name.c_str()
-							, GetValueAsString().c_str());
-					this->CallCallbacks(m_Name.c_str(), mp_Value);
-				}
+				memcpy(mp_Value, value, sizeof(T) * COUNT);
+				++m_ValueChangeCount;
+				this->CallCallbacks(m_Name.c_str(), mp_Value);
+				ESP_LOGD( "LocalDataItem: SetValue", "Set Value Successful");
+				return true;
 			}
-			return (valueChanged && validValue);
+			else
+			{
+				ESP_LOGD( "LocalDataItem: SetValue", "Set Value Failed");
+				return false;
+			}
 		}
 
 		virtual bool SetValue(const T value)
@@ -472,19 +474,19 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			assert(mp_Value != nullptr);
 			assert(COUNT > 0);
 			assert(COUNT == count);
-			bool valueChanged = (memcmp(mp_Value, value, sizeof(T) * count) != 0);
-			bool validValue = true;
-			if(true == valueChanged)
+			if( 0 != memcmp(mp_Value, value, sizeof(T) * count) )
 			{
 				memcpy(mp_Value, value, sizeof(T) * count);
 				++m_ValueChangeCount;
-				ESP_LOGI( "LocalDataItem: SetValue"
-						, "\"%s\" Set Value: \"%s\""
-						, m_Name.c_str()
-						, GetValueAsString().c_str());
 				this->CallCallbacks(m_Name.c_str(), mp_Value);
+				ESP_LOGD( "UpdateStore", "Set Value Successful");
+				return true;
 			}
-			return valueChanged;
+			else
+			{
+				ESP_LOGD( "UpdateStore", "Set Value Failed");
+				return false;
+			}
 		}
 		
 		bool ConfirmValueValidity(const T* values, size_t count) const

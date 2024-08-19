@@ -207,7 +207,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 					, stringValue.c_str() );
 			T values[COUNT];
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
-			if(parseCount)
+			if(parseCount == COUNT)
 			{
 				return this->Set_Tx_Value(values, parseCount);
 			}
