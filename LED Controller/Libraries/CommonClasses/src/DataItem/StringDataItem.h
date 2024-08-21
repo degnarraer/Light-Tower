@@ -82,7 +82,18 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::GetDataType();
 		}
-		
+		bool UpdateStore(const char *values, size_t count)
+		{
+			return LocalStringDataItem::UpdateStore(values, count);
+		}
+		String ConvertValueToString(const char *values, size_t count) const
+		{
+			return LocalStringDataItem::ConvertValueToString(values, count);
+		}
+		size_t ParseStringValueIntoValues(const String& stringValue, char *values)
+		{
+			return LocalStringDataItem::ParseStringValueIntoValues(stringValue, values);
+		}
 		virtual bool SetValue(const char* value, size_t count) override
 		{
 			bool valueChanged = Set_Tx_Value(value, count);

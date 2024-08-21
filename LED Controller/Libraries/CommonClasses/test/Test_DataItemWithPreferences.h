@@ -111,36 +111,38 @@ class DataItemWithPreferencesFunctionCallTests : public Test
                 EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItemWithPreferences)).Times(1);
                 delete mp_DataItemWithPreferences;
                 mp_DataItemWithPreferences = nullptr;
+                ::testing::Mock::VerifyAndClearExpectations(&mp_MockSetupCaller);
+                ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
             }
         }
-        void TestSetupCallRegistration(RxTxType_t rxtxtype)
+        void TestSetupCallRegistration(RxTxType_t rxtxtype, size_t rate)
         {
-            CreateDataItemWithPreferences(rxtxtype, UpdateStoreType_On_Rx, 1000);
+            CreateDataItemWithPreferences(rxtxtype, UpdateStoreType_On_Rx, rate);
             DestroyDataItemWithPreferences();
         }
-        void TestNewValueNotificationRegistration(RxTxType_t rxtxtype)
+        void TestNewValueNotificationRegistration(RxTxType_t rxtxtype, size_t rate)
         {
-            CreateDataItemWithPreferences(rxtxtype, UpdateStoreType_On_Rx, 1000);
+            CreateDataItemWithPreferences(rxtxtype, UpdateStoreType_On_Rx, rate);
             DestroyDataItemWithPreferences();
         }
 };
 
 TEST_F(DataItemWithPreferencesFunctionCallTests, Registration_With_Setup_Caller)
 {
-    TestSetupCallRegistration(RxTxType_Tx_Periodic);
-    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
-    TestSetupCallRegistration(RxTxType_Tx_On_Change);
-    TestSetupCallRegistration(RxTxType_Rx_Only);
-    TestSetupCallRegistration(RxTxType_Rx_Echo_Value);
+    TestSetupCallRegistration(RxTxType_Tx_Periodic, 1000);
+    TestSetupCallRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1000);
+    TestSetupCallRegistration(RxTxType_Tx_On_Change, 0);
+    TestSetupCallRegistration(RxTxType_Rx_Only, 0);
+    TestSetupCallRegistration(RxTxType_Rx_Echo_Value, 0);
 }
 
 TEST_F(DataItemWithPreferencesFunctionCallTests, Registration_For_New_Value_Notification)
 {
-    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic);
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat);
-    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change);
-    TestNewValueNotificationRegistration(RxTxType_Rx_Only);
-    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value);
+    TestNewValueNotificationRegistration(RxTxType_Tx_Periodic, 1000);
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change_With_Heartbeat, 1000);
+    TestNewValueNotificationRegistration(RxTxType_Tx_On_Change, 0);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Only, 0);
+    TestNewValueNotificationRegistration(RxTxType_Rx_Echo_Value, 0);
 }
 
 // Test Fixture for DataItemWithPreferences Rx Tx Tests
@@ -214,9 +216,9 @@ class DataItemWithPreferencesRxTxTests : public Test
 
 TEST_F(DataItemWithPreferencesRxTxTests, Tx_Called_Periodically)
 {
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10)
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(11)
         .WillRepeatedly(Return(true));
-    CreateDataItemWithPreferences(RxTxType_Tx_Periodic, UpdateStoreType_On_Rx, 100);
+    CreateDataItemWithPreferences(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
 }
 
@@ -440,38 +442,38 @@ TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesA
 // ************ Set Value From Value Converts To String ******************
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferencesWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(&validValue20, validValue20String, name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArrayWithValidation_Set_Value_From_Value_Converts_To_String)
 {
-    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromValueConvertsToString(validValue20Array, validValue20ArrayString, name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 
 
 // ************ Set Value From String Converts To Value ******************
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferencesWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, validValue10String, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromStringConvertsToValue(validValue20String, &validValue20, name1, validValue10, validValue10String, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArray_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
 }
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesArrayWithValidation_Set_Value_From_String_Converts_To_Value)
 {
-    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, validValue10ArrayString, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    TestSetValueFromStringConvertsToValue(validValue20ArrayString, validValue20Array, name1, validValue10, validValue10ArrayString, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
 }
 
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, DataItemWithPreferences_Set_Valid_Values_When_Validation_Is_Used)
@@ -493,7 +495,7 @@ TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt10, DataItemWithPreferencesA
 
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Used)
 {
-    CreateDataItemWithPreferences(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, &validValues);
+    CreateDataItemWithPreferences(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, &validValues);
     EXPECT_EQ(0, mp_DataItemWithPreferences->GetChangeCount());
     mp_DataItemWithPreferences->SetValue(validValue20);
     EXPECT_EQ(1, mp_DataItemWithPreferences->GetChangeCount());
@@ -507,7 +509,7 @@ TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, Change_Count_Changes_Prop
 
 TEST_F(DataItemWithPreferencesGetAndSetValueTestsInt1, Change_Count_Changes_Properly_When_Validation_Not_Used)
 {
-    CreateDataItemWithPreferences(name1, validValue10, RxTxType_Rx_Only, UpdateStoreType_On_Rx, 0, nullptr);
+    CreateDataItemWithPreferences(name1, validValue10, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0, nullptr);
     EXPECT_EQ(0, mp_DataItemWithPreferences->GetChangeCount());
     mp_DataItemWithPreferences->SetValue(validValue20);
     EXPECT_EQ(1, mp_DataItemWithPreferences->GetChangeCount());

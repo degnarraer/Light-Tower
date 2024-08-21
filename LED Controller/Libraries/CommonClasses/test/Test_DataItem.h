@@ -99,12 +99,12 @@ class DataItemFunctionCallTests : public Test
         }
         void TestSetupCallRegistration(RxTxType_t rxtxtype)
         {
-            CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
+            CreateDataItem(rxtxtype, UpdateStoreType_On_Tx, 1000);
             DestroyDataItem();
         }
         void TestNewValueNotificationRegistration(RxTxType_t rxtxtype)
         {
-            CreateDataItem(rxtxtype, UpdateStoreType_On_Rx, 1000);
+            CreateDataItem(rxtxtype, UpdateStoreType_On_Tx, 1000);
             DestroyDataItem();
         }
 };
@@ -170,6 +170,7 @@ class DataItemRxTxTests : public Test
                 EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItem)).Times(1);
                 delete mp_DataItem;
                 mp_DataItem = nullptr;
+                ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
             }
         }
 
@@ -248,6 +249,7 @@ protected:
             EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItem)).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
+            ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
         }
     }
 

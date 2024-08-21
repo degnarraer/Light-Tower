@@ -65,6 +65,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 		virtual ~SerialMessageInterface()
 		{
 			ESP_LOGD("~DataItem", "Deleting SerialMessageInterface");
+			DestroyTimer();
 			if(mp_SerialPortMessageManager)
 			{
 				mp_SerialPortMessageManager->DeRegisterForNewValueNotification(this);
@@ -79,7 +80,6 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
         		ESP_LOGD("~SerialMessageInterface", "freeing mp_TxValue Memory");
 				heap_caps_free(mp_TxValue);	
 			}
-			DestroyTimer();
 		}
 		virtual T* GetValuePointer() const = 0;
 		virtual bool UpdateStore(const T *value, size_t count) = 0;
@@ -159,7 +159,6 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 
 		bool Set_Tx_Value(const T* newTxValue, size_t count)
 		{
-			assert(count == COUNT);
 			assert(mp_TxValue);
 			bool StoreUpdated = false;
 			ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Current Value: \"%s\" New Value: \"%s\""
@@ -167,21 +166,29 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 					, this->GetName().c_str()
 					, this->ConvertValueToString(mp_TxValue, count).c_str()
 					, this->ConvertValueToString(newTxValue, count).c_str() );
-			if(0 == memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
+			if(count == COUNT)
 			{
-				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value did not change."
-						, mp_SerialPortMessageManager->GetName().c_str()
-						, this->GetName().c_str() );
+				if(0 == memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
+				{
+					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value did not change."
+							, mp_SerialPortMessageManager->GetName().c_str()
+							, this->GetName().c_str() );
+				}
+				else
+				{
+					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
+							, mp_SerialPortMessageManager->GetName().c_str()
+							, this->GetName().c_str() );
+					memcpy(mp_TxValue, newTxValue, sizeof(T)*count);
+					StoreUpdated = Try_TX_On_Change();
+				}
+				return StoreUpdated;
 			}
 			else
 			{
-				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
-						, mp_SerialPortMessageManager->GetName().c_str()
-						, this->GetName().c_str() );
-				memcpy(mp_TxValue, newTxValue, sizeof(T)*count);
-				StoreUpdated = Try_TX_On_Change();
+				ESP_LOGE("Set_Tx_Value", "Name: \"%s\" Count Error!", this->GetName().c_str() );
+				return false;
 			}
-			return StoreUpdated;
 		}
 
 		bool Tx_Now()

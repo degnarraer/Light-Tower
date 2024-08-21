@@ -27,5 +27,5 @@
 #include "Test_LocalStringDataItem.h"
 #include "Test_SerialMessageInterface.h"
 #include "Test_DataItem.h"
-//#include "Test_DataItemWithPreferences.h"
-//#include "Test_StringDataItem.h"
+#include "Test_DataItemWithPreferences.h"
+#include "Test_StringDataItem.h"

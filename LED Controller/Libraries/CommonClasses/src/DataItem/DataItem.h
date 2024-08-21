@@ -213,6 +213,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 			else
 			{
+				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
 				return false;
 			}
 		}
