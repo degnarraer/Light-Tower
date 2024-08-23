@@ -26,6 +26,7 @@
 #include "Mock_SetupCallInterface.h"
 #include "Mock_ValidValueChecker.h"
 #include "Mock_SerialPortMessageManager.h"
+#include "Mock_Callbacks.h"
 
 using ::testing::_;
 using ::testing::NotNull;
@@ -67,6 +68,7 @@ protected:
                 .Times(1)
                 .WillOnce(Return(true));
         }
+        mp_DataItem->Setup();
         ::testing::Mock::VerifyAndClearExpectations(&mp_MockSetupCaller);
         ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     }
@@ -87,39 +89,20 @@ protected:
         delete mp_MockSerialPortMessageManager;
         delete mp_MockSetupCaller;
     }
-    void TestSetupCallRegistrationDeregistration(RxTxType_t rxtxtype)
+    void TestCallRegistrationDeregistration(RxTxType_t rxtxtype)
     {
         CreateDataItem(rxtxtype, UpdateStoreType_On_Tx, 1000);
         DestroyDataItem();
-    }
-    void TestNewValueNotificationRegistrationDeregistration(RxTxType_t rxtxtype)
-    {
-        CreateDataItem(rxtxtype, UpdateStoreType_On_Tx, 1000);
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(NotNull())).Times(1);
-        mp_DataItem->Setup();
-        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(NotNull())).Times(1);
-        DestroyDataItem();
-        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     }
 };
 
-TEST_F(StringDataItemFunctionCallTests, Registration_With_Setup_Caller)
+TEST_F(StringDataItemFunctionCallTests, Registration_DeRegistration)
 {
-    TestSetupCallRegistrationDeregistration(RxTxType_Tx_Periodic);
-    TestSetupCallRegistrationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
-    TestSetupCallRegistrationDeregistration(RxTxType_Tx_On_Change);
-    TestSetupCallRegistrationDeregistration(RxTxType_Rx_Only);
-    TestSetupCallRegistrationDeregistration(RxTxType_Rx_Echo_Value);
-}
-
-TEST_F(StringDataItemFunctionCallTests, Registration_For_New_Value_Notification)
-{
-    TestNewValueNotificationRegistrationDeregistration(RxTxType_Tx_Periodic);
-    TestNewValueNotificationRegistrationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
-    TestNewValueNotificationRegistrationDeregistration(RxTxType_Tx_On_Change);
-    TestNewValueNotificationRegistrationDeregistration(RxTxType_Rx_Only);
-    TestNewValueNotificationRegistrationDeregistration(RxTxType_Rx_Echo_Value);    
+    TestCallRegistrationDeregistration(RxTxType_Tx_Periodic);
+    TestCallRegistrationDeregistration(RxTxType_Tx_On_Change_With_Heartbeat);
+    TestCallRegistrationDeregistration(RxTxType_Tx_On_Change);
+    TestCallRegistrationDeregistration(RxTxType_Rx_Only);
+    TestCallRegistrationDeregistration(RxTxType_Rx_Echo_Value);
 }
 
 
@@ -147,9 +130,9 @@ protected:
                                         , updateStoreType
                                         , rate
                                         , mp_MockSerialPortMessageManager
-                                        , NULL
-                                        , this );
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
+                                        , nullptr
+                                        , this );   
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);                            
         if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
         {
             EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
@@ -182,10 +165,11 @@ protected:
 
 TEST_F(StringDataItemRxTxTests, Tx_Called_Periodically)
 {
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(11)
-        .WillRepeatedly(Return(true));
     CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10)
+        .WillRepeatedly(Return(true));
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 }
 
 // Test Fixture for StringDataItemTest
@@ -205,8 +189,8 @@ protected:
     void SetUp() override
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
-        ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
+        ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
 
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
@@ -221,6 +205,12 @@ protected:
                                         , this );
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
         EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
+        if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
+        {
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
+                .Times(1)
+                .WillOnce(Return(true));
+        }
         SetupAllSetupCallees();
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
@@ -388,9 +378,10 @@ TEST_F(StringDataItemTest, StringDataItem_Initial_Value_Is_Returned_As_String)
 TEST_F(StringDataItemTest, StringDataItem_Set_Value_From_Char_Pointer_Converts_To_String)
 {
     CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
-    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     EXPECT_STREQ(value1.c_str(), mp_DataItem->GetValueAsString().c_str());
     DestroyDataItem();
 }

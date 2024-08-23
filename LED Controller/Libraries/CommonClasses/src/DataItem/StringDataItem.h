@@ -102,28 +102,12 @@ class StringDataItem: public LocalStringDataItem
 
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
-			if(this->mp_InitialValue)
-			{
-				stringValue = String(this->mp_InitialValue);
-				ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", this->m_Name.c_str(), stringValue.c_str());
-				return true;
-			}
-			else
-			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", this->m_Name.c_str());
-				return false;
-			}
+			return LocalStringDataItem::GetInitialValueAsString(stringValue);
 		}
 
 		String GetInitialValueAsString() const override
 		{
-			String value;
-			if(!GetInitialValueAsString(value))
-			{
-				ESP_LOGE("GetInitialValueAsString", "ERROR! \"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
-				value = "";
-			}
-			return value;
+			return LocalStringDataItem::GetInitialValueAsString();
 		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
@@ -133,16 +117,6 @@ class StringDataItem: public LocalStringDataItem
 					, "Name: \"%s\" String Value: \"%s\""
 					, this->m_Name.c_str()
 					, stringValue.c_str());
-			return SetValue(stringValue.c_str(), DATAITEM_STRING_LENGTH);
-		}
-
-	protected:
-
-		void ZeroOutCharArray(char* pChar)
-		{
-			for (size_t i = 0; i < LocalDataItem::GetCount(); ++i)
-			{
-				pChar[i] = '\0';
-			}
+			return this->Set_Tx_Value(stringValue.c_str(), stringValue.length());
 		}
 };

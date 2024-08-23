@@ -105,7 +105,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return SetValue(stringValue.c_str(), stringValue.length());
 		}
 
-		virtual bool SetValue(const char* value, size_t count)
+		virtual bool SetValue(const char* value, size_t count) override
 		{
 			assert(value != nullptr);
 			assert(mp_Value != nullptr);
@@ -119,19 +119,16 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			bool valueChanged = (strcmp(mp_Value, value) != 0);
 			if(valueChanged)
 			{	
-				ZeroOutCharArray(mp_Value);
+				ZeroOutMemory(mp_Value);
 				strcpy(mp_Value, value);
 				++m_ValueChangeCount;
 				CallCallbacks(m_Name.c_str(), mp_Value);
 			}
 			return valueChanged;
 		}
-	protected:
-		void ZeroOutCharArray(char* pChar)
+
+		virtual String ConvertValueToString(const char* pvalue, size_t count) const override
 		{
-			for (size_t i = 0; i < this->GetCount(); ++i)
-			{
-				pChar[i] = '\0';
-			}
+			return String(pvalue);
 		}
 };

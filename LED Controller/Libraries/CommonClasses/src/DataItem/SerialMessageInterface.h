@@ -115,6 +115,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, this->GetName().c_str()
 						, this->ConvertValueToString(receivedValue, count).c_str());
+				ZeroOutMemory(mp_RxValue);
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * count);
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
@@ -166,7 +167,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 					, this->GetName().c_str()
 					, this->ConvertValueToString(mp_TxValue, count).c_str()
 					, this->ConvertValueToString(newTxValue, count).c_str() );
-			if(count == COUNT)
+			if(count <= COUNT)
 			{
 				if(0 == memcmp(mp_TxValue, newTxValue, sizeof(T)*count))
 				{
@@ -179,6 +180,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, this->GetName().c_str() );
+					ZeroOutMemory(mp_TxValue);
 					memcpy(mp_TxValue, newTxValue, sizeof(T)*count);
 					StoreUpdated = Try_TX_On_Change();
 				}
@@ -456,5 +458,13 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 				result = true;
 			}
 			return result;
+		}
+
+		void ZeroOutMemory(T* object)
+		{
+			for (size_t i = 0; i < COUNT; ++i)
+			{
+				object[i] = 0;
+			}
 		}
 };

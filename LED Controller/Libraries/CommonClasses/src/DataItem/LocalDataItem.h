@@ -503,6 +503,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			return true;
 		}
+		void ZeroOutMemory(T* object)
+		{
+			for (size_t i = 0; i < COUNT; ++i)
+			{
+				object[i] = 0;
+			}
+		}
 	private:
 		SetupCallerInterface *mp_SetupCallerInterface = nullptr;
 		size_t m_Count = COUNT;
