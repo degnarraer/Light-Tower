@@ -462,9 +462,6 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 
 		void ZeroOutMemory(T* object)
 		{
-			for (size_t i = 0; i < COUNT; ++i)
-			{
-				object[i] = 0;
-			}
+			memset((void*)object, 0, sizeof(T) * COUNT);
 		}
 };
