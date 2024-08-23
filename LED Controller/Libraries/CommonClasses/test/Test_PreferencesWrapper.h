@@ -205,22 +205,28 @@ TEST_F(PreferenceManagerTests, Save_Preference_Uses_Timeout_Timer_To_Limit_Frequ
     SaveValue(initialValue, testValue, false, false);
 }
 
-TEST_F(PreferenceManagerTests, Save_Preference_Failure_Due_to_Save_Length_Error)
+TEST_F(PreferenceManagerTests, Save_Preference_Failure_Due_to_Save_Length_Error_Then_Preference_Removed)
 {
     EXPECT_CALL(*mp_mockPreferences, putString( StrEq(key1.c_str()), testValue ))
         .Times(1)
         .WillOnce(Return(invalidTestValueLength));
+    EXPECT_CALL(*mp_mockPreferences, remove( StrEq(key1.c_str()) ))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValue ))
         .Times(1)
         .WillOnce(Return(initialValue));
     EXPECT_EQ(false, mp_preferenceManagerWithCallback->Update_Preference(PreferenceManager::PreferenceUpdateType::Save, testValue));
 }
 
-TEST_F(PreferenceManagerTests, Save_Preference_Failure_Due_to_Value_Mismatch)
+TEST_F(PreferenceManagerTests, Save_Preference_Failure_Due_to_Value_Mismatch_Then_Preference_Removed)
 {
     EXPECT_CALL(*mp_mockPreferences, putString( StrEq(key1.c_str()), testValue ))
         .Times(1)
         .WillOnce(Return(testValueLength));
+    EXPECT_CALL(*mp_mockPreferences, remove( StrEq(key1.c_str()) ))
+        .Times(1)
+        .WillOnce(Return(true));
     EXPECT_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValue ))
         .Times(2)
         .WillOnce(Return(initialValue))

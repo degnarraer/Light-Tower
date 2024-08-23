@@ -112,7 +112,7 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
         }
     private:
         T m_value[COUNT];
-        MockSerialMessageInterface<T, COUNT> m_MockSerialMessageInterface;
+        NiceMock<MockSerialMessageInterface<T, COUNT>> m_MockSerialMessageInterface;
 };
 
 template <typename T, size_t COUNT>
@@ -134,12 +134,12 @@ class SerialMessageInterfaceTests : public Test
     protected:
         T m_value[COUNT];
         String m_SerialPortMessageManagerName = "SPMM";
-        MockSerialPortMessageManager *mp_MockSerialPortMessageManager = nullptr;
+        NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager = nullptr;
         SerialMessageInterfaceTester<T, COUNT>* mp_SerialMessageInterfaceTester = nullptr;
         String m_SerialPortInterfaceName = "SPI";
         void SetUp() override
         {
-            mp_MockSerialPortMessageManager = new MockSerialPortMessageManager();
+            mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
             mp_SerialMessageInterfaceTester = new SerialMessageInterfaceTester<T, COUNT>( mp_MockSerialPortMessageManager );
             ON_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetValuePointer()).WillByDefault(Return(m_value));
             ON_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillByDefault(Return(m_SerialPortInterfaceName));
@@ -192,8 +192,11 @@ TEST_F(SerialMessageInterfaceTests_uint32_t_1, Construct_and_destruct)
 
 TEST_F(SerialMessageInterfaceTests_int32_t_1, Tx_Periodic_Preiodically_Queues_Message)
 {
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
     Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
     SetupInterface();
+    ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
+
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), UpdateStore(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), EqualsValue(_, _)).WillRepeatedly(Return(true));
@@ -201,6 +204,7 @@ TEST_F(SerialMessageInterfaceTests_int32_t_1, Tx_Periodic_Preiodically_Queues_Me
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetDataType()).WillRepeatedly(Return(GetDataTypeFromTemplateType<int32_t>()));
 
     EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(m_SerialPortMessageManagerName));
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(11);
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(10);
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
+    ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
 }

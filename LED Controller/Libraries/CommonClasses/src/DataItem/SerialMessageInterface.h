@@ -243,16 +243,18 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 					ESP_LOGD( "SetDataLinkEnabled", "\"%s\" Set Datalink Enabled for: \"%s\""
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, this->GetName().c_str() );
-					bool enableTx = false;
+					bool enablePeriodicTx = false;
 					bool enableRx = false;
 					switch(m_RxTxType)
 					{
 						case RxTxType_Tx_Periodic:
 						case RxTxType_Tx_On_Change_With_Heartbeat:
-							enableTx = true;
+							enablePeriodicTx = true;
 							enableRx = true;
+							Tx_Now();
 							break;
 						case RxTxType_Tx_On_Change:
+							Tx_Now();
 						case RxTxType_Rx_Only:
 						case RxTxType_Rx_Echo_Value:
 							enableRx = true;
@@ -261,7 +263,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 						break;
 					}
 					EnableRx(enableRx);
-					EnableTx(enableTx);
+					EnablePeriodicTx(enablePeriodicTx);
 				}
 				else
 				{
@@ -269,7 +271,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, this->GetName().c_str() );
 					EnableRx(enable);
-					EnableTx(enable);
+					EnablePeriodicTx(enable);
 				}
 				m_DataLinkEnabled = enable;
 			}
@@ -284,7 +286,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			SerialMessageInterface *aSerialMessageInterface = static_cast<SerialMessageInterface*>(arg);
 			if(aSerialMessageInterface)
 			{
-				ESP_LOGD( "EnableTx", "\"%s\": Periodic Tx"
+				ESP_LOGD( "EnablePeriodicTx", "\"%s\": Periodic Tx"
 						, aSerialMessageInterface->GetName().c_str() );
 				aSerialMessageInterface->Tx_Now();
 			}
@@ -305,19 +307,18 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			return StoreUpdated;
 		}
 
-		void EnableTx(bool enableTX)
+		void EnablePeriodicTx(bool enablePeriodicTx)
 		{
-			if(enableTX)
+			if(enablePeriodicTx)
 			{
-				ESP_LOGD( "EnableTx", "\"%s\" Enable Tx for: \"%s\""
+				ESP_LOGD( "EnablePeriodicTx", "\"%s\" Enable Tx for: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str() );
 				StartTimer();
-				Tx_Now();
 			}
 			else
 			{
-				ESP_LOGD( "EnableTx", "\"%s\" Disable Tx for: \"%s\""
+				ESP_LOGD( "EnablePeriodicTx", "\"%s\" Disable Tx for: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str() );
 				StopTimer();

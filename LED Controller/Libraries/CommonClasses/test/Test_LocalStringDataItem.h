@@ -113,36 +113,28 @@ TEST_F(LocalStringDataItemTest, dataItem_Set_Value_From_Char_Pointer_Converts_To
     EXPECT_STREQ(value1.c_str(), mp_DataItem->GetValueAsString().c_str());
 }
 
-TEST_F(LocalStringDataItemTest, Change_Count_Changes_Properly)
+TEST_F(LocalStringDataItemTest, Callback_Only_Called_And_Change_Count_Changes_Properly_For_New_Value)
 {
     EXPECT_EQ(0, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value1.c_str(), value1.length());
-    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value1.c_str(), value1.length());
-    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value2.c_str(), value1.length());
-    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
-    mp_DataItem->SetValue(value2.c_str(), value1.length());
-    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
-}
-
-TEST_F(LocalStringDataItemTest, Callback_Only_Called_For_New_Values)
-{
     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
 
-    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);    
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-
-    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
+    EXPECT_EQ(1, mp_DataItem->GetChangeCount());
+    
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);    
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-
-    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
+    
+    EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(0);    
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
+    EXPECT_EQ(2, mp_DataItem->GetChangeCount());
 }
 
 TEST_F(LocalStringDataItemTest, Count_Reflects_DataItem_Count)
