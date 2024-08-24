@@ -92,7 +92,7 @@ void NewRxTxVoidObjectCallerInterface::NotifyCallee(const String& name, void* ob
 		{
 			if (callee->GetName().equals(name))
 			{
-				callee->NewRxValueReceived(object, callee->GetCount());
+				callee->NewRxValueReceived(this, object, callee->GetCount());
 				break;
 			}
 		}

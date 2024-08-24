@@ -99,7 +99,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 			m_Rate = rate;
 		}
 
-		virtual bool NewRxValueReceived(const void* values, size_t count) override
+		virtual bool NewRxValueReceived(const NewRxTxVoidObjectCallerInterface* sender, const void* values, size_t count) override
 		{	
 			assert(count == COUNT);
 			bool StoreUpdated = false;

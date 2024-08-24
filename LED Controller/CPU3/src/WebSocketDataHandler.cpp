@@ -4,10 +4,13 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
 {
   ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %i", clientId );
   std::vector<KVP> signalValues = std::vector<KVP>();
+  
+  /*//DELETE ME 
   for(int i = 0; i < m_MySenders.size(); ++i)
   {
     m_MySenders[i]->HandleWebSocketTx(signalValues, true);
   }
+  */
   if(signalValues.size())
   {
     String message;
@@ -26,10 +29,12 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
     std::vector<KVP> signalValues = m_Tx_KeyValues;
     std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
+    /*//DELETE ME 
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
       m_MySenders[i]->HandleWebSocketTx(signalValues);
     }
+    */
 
     if(signalValues.size())
     {
@@ -59,6 +64,7 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataReceiver(const String& nam
     m_MyReceivers.erase(it);
   }
 }
+
 
 void WebSocketDataProcessor::RegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender)
 {
@@ -127,6 +133,7 @@ void WebSocketDataProcessor::NotifyClients(const String& textString)
   }
 }
 
+/* DELETE ME
 void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
 {
   ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
@@ -139,6 +146,7 @@ void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sen
     NotifyClients(message);
   }
 }
+*/
 
 void WebSocketDataProcessor::StaticWebSocketDataProcessor_Task(void * parameter)
 {

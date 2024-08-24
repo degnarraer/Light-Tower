@@ -32,11 +32,13 @@
 #define MESSAGE_LENGTH 500
 
 class SettingsWebServerManager;
+
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void HandleWebSocketTx(std::vector<KVP> &signalValue, bool forceUpdate = false) = 0;
+    //virtual void HandleWebSocketTx(std::vector<KVP> &signalValue, bool forceUpdate = false) = 0;
 };
+
 
 class WebSocketDataHandlerReceiver
 {
@@ -66,7 +68,7 @@ class WebSocketDataProcessor
     void DeRegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender);
     bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& value);
     void UpdateAllDataToClient(uint8_t clientId);
-    void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate);
+    //DELETE ME void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate);
     static void StaticWebSocketDataProcessor_Task(void * parameter);
     void TxDataToWebSocket(String key, String value)
     {
@@ -144,7 +146,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
     }
     
-    bool NewRxValueReceived(const T* values, size_t count)
+    bool NewRxValueReceived(const NewRxTxValueCallerInterface<T>* sender, const T* values, size_t count)
     {
       ESP_LOGD( "NewRxValueReceived", "New RX Datalink Value");
       bool ValueChanged = m_DataItem.SetValue(values, count);
@@ -161,6 +163,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return m_Name;
     }
 
+    /* //DELETE ME 
     virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     {
       KVP signalValue;
@@ -172,7 +175,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
         m_Last_Update_Time = millis();
       }
     }
-    
+    */
     virtual void HandleWebSocketRx(const String& stringValue) override
     {
       ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRx"
@@ -227,6 +230,8 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     {
     }
   protected:
+
+  /*//DELETE ME 
     virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     {
       KVP signalValue;
@@ -237,7 +242,7 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
         signalValues.push_back(signalValue);
       }
     }
-    
+    */
     virtual void HandleWebSocketRx(const String& stringValue) override
     {
       ESP_LOGI( "HandleWebSocketRx"
@@ -269,6 +274,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
     }
   protected:
   
+  /*//DELETE ME 
     virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     {
       if( forceUpdate || ValueChanged() )
@@ -290,7 +296,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         }
       }
     }
-    
+    */
     void HandleWebSocketRx(const String& stringValue) override
     {
       ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRx", "New Signal Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
@@ -339,7 +345,8 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     {
     }
 
-  protected: 
+  protected:
+  /*//DELETE ME 
     virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     { 
       bool valueChanged = ValueChanged();
@@ -427,7 +434,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         }
       }
     }
-    
+    */
     virtual void HandleWebSocketRx(const String& stringValue) override
     {
       ESP_LOGE("HandleWebSocketRx", "ERROR! This function is not supported yet.");

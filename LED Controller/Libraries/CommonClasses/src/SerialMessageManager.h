@@ -27,6 +27,9 @@
 #define MaxMessageLength 500
 
 template <typename T>
+class NewRxTxValueCallerInterface;
+
+template <typename T>
 class NewRxTxValueCalleeInterface
 {
 	public:
@@ -38,7 +41,7 @@ class NewRxTxValueCalleeInterface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const T* values, size_t count) = 0;
+		virtual bool NewRxValueReceived(const NewRxTxValueCallerInterface<T>* sender, const T* values, size_t count) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -156,7 +159,7 @@ class NewRxTxValueCallerInterface
 				{
 					if (callee->GetName().equals(name))
 					{
-						callee->NewRxValueReceived(values, callee->GetCount());
+						callee->NewRxValueReceived(this, values, callee->GetCount());
 						break;
 					}
 				}
@@ -165,7 +168,7 @@ class NewRxTxValueCallerInterface
 	private:
 		std::vector<NewRxTxValueCalleeInterface<T>*> m_NewValueCallees = std::vector<NewRxTxValueCalleeInterface<T>*>();
 };
-
+class NewRxTxVoidObjectCallerInterface;
 class NewRxTxVoidObjectCalleeInterface
 {
 	public:
@@ -178,7 +181,7 @@ class NewRxTxVoidObjectCalleeInterface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const void* values, size_t count) = 0;
+		virtual bool NewRxValueReceived(const NewRxTxVoidObjectCallerInterface* sender, const void* values, size_t count) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:

@@ -427,7 +427,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
       WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg1);
       WebSocket_ActiveCompatibleDevice_ArrayDataHandler* DataHandler = static_cast<WebSocket_ActiveCompatibleDevice_ArrayDataHandler*>(arguments->arg2);
-      processor->UpdateDataForSender(DataHandler, false);
+      //DELETE ME processor->UpdateDataForSender(DataHandler, false);
     }
     
     //Bluetooth Source Auto Reconnect
