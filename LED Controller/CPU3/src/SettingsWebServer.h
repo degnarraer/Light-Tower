@@ -140,7 +140,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     IPreferences &m_preferenceInterface; 
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU2SerialPortMessageManager;
-    WebSocketDataProcessor m_WebSocketDataProcessor = WebSocketDataProcessor(m_WebServer, m_WebSocket);
+    WebSocketDataProcessor m_WebSocketDataProcessor{m_WebServer, m_WebSocket};
 
     struct CallbackArguments 
     {

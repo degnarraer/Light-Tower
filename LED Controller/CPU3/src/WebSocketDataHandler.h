@@ -57,6 +57,7 @@ class WebSocketDataProcessor
     }
     virtual ~WebSocketDataProcessor()
     {
+      std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
       if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
     }
     void RegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver);
@@ -67,16 +68,25 @@ class WebSocketDataProcessor
     void UpdateAllDataToClient(uint8_t clientId);
     void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate);
     static void StaticWebSocketDataProcessor_Task(void * parameter);
+    void TxDataToWebSocket(String key, String value)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
+      KVP keyValuePair = {key, value};
+      m_Tx_KeyValues.push_back(keyValuePair);
+    }
   private:
     AsyncWebServer &m_WebServer;
     AsyncWebSocket &m_WebSocket;
     TaskHandle_t m_WebSocketTaskHandle;
     std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
+    std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
+    std::recursive_mutex m_Tx_KeyValues_Mutex;
     void WebSocketDataProcessor_Task();
     void Encode_Signal_Values_To_JSON(std::vector<KVP> &signalValue, String &result);
     void NotifyClient(uint8_t clientID, const String& textString);
     void NotifyClients(const String& textString);
+
     template<typename T>
     std::vector<T>* AllocateVectorOnHeap(size_t count)
     {
@@ -172,6 +182,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
               , stringValue.c_str());
       m_DataItem.SetValueFromString(stringValue);
     }
+    void TxDataToWebSocket(String key, String value)
+    {
+      m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
+    }
   protected:
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     const bool &m_IsReceiver;
@@ -190,7 +204,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return valueChanged;
     }
   private:
-    uint64_t m_Last_Update_Time = millis();
+    uint64_t m_Last_Update_Time = millis();    
 };
 
 class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>
@@ -214,7 +228,7 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     }
   protected:
     virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
-    { 
+    {
       KVP signalValue;
       signalValue.Key = m_Signal;
       if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )

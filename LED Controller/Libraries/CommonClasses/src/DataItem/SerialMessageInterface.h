@@ -128,6 +128,7 @@ class SerialMessageInterface: public NewRxTxValueCallerInterface<T>
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, this->GetName().c_str()
 						, this->ConvertValueToString(receivedValue, count).c_str());
+				ZeroOutMemory(mp_TxValue);
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * count);
 				Tx_Now();
 			}

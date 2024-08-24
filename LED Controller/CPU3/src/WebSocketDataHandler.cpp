@@ -23,11 +23,14 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
   while(true)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    std::vector<KVP> signalValues = std::vector<KVP>();
+    std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
+    std::vector<KVP> signalValues = m_Tx_KeyValues;
+    std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
     for(int i = 0; i < m_MySenders.size(); ++i)
     {
       m_MySenders[i]->HandleWebSocketTx(signalValues);
     }
+
     if(signalValues.size())
     {
       String message;
@@ -108,6 +111,7 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyV
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& textString)
 {
+  ESP_LOGD("NotifyClients", "Notify Client: %s", textString.c_str());
   if(0 < textString.length())
   {
     m_WebSocket.text(clientID, textString);
@@ -116,6 +120,7 @@ void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& 
 
 void WebSocketDataProcessor::NotifyClients(const String& textString)
 {
+  ESP_LOGD("NotifyClients", "Notify Clients: %s", textString.c_str());
   if(0 < textString.length())
   {
     m_WebSocket.textAll(textString);
