@@ -27,15 +27,11 @@ export class WebSocketManager {
 
     initWebSocket() {
         console.log('Trying to open a WebSocket connection…');
-        try {
-            this.websocket = new WebSocket(this.gateway);
-            this.websocket.onopen = this.onOpen.bind(this);
-            this.websocket.onclose = this.onClose.bind(this);
-            this.websocket.onmessage = this.onMessage.bind(this);
-            this.websocket.onerror = this.onError.bind(this);
-        } catch (error) {
-            console.error('WebSocket initialization error:', error.message);
-        }
+        this.websocket = new WebSocket(this.gateway);
+        this.websocket.onopen = this.onOpen.bind(this);
+        this.websocket.onclose = this.onClose.bind(this);
+        this.websocket.onmessage = this.onMessage.bind(this);
+        this.websocket.onerror = this.onError.bind(this);
     }
 
     Send_Signal_Value_To_Web_Socket(signal, value)
@@ -110,12 +106,13 @@ export class WebSocketManager {
 
     onClose(event) {
         console.log('Connection closed');
-        setTimeout(() => this.initWebSocket(), 1000);
+        setTimeout(() => this.initWebSocket(), 5000);
     }
 
     onError(event) {
         console.error('Connection Error:', event);
-        setTimeout(() => this.initWebSocket(), 1000);
+        this.websocket.close();
+        setTimeout(() => this.initWebSocket(), 5000);
     }
 
 }

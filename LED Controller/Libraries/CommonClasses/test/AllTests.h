@@ -18,6 +18,10 @@
 
 #pragma once
 
+#if __cplusplus < 201402L
+#error "C++14 or later is required!"
+#endif
+
 #include "Test_PreferencesWrapper.h"
 #include "Test_AudioBuffer.h"
 #include "Test_DataSerializer.h"

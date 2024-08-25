@@ -132,7 +132,7 @@ protected:
                                         , mp_MockSerialPortMessageManager
                                         , nullptr
                                         , this );   
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);                            
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItem)).Times(1);                            
         if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
         {
             EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
@@ -155,7 +155,7 @@ protected:
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItem)).Times(1);
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_DataItem)).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
             ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
@@ -204,7 +204,7 @@ protected:
                                         , mp_mockNamedCallback
                                         , this );
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_DataItem)).Times(1);
+        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItem)).Times(1);
         if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
         {
             EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
@@ -220,7 +220,7 @@ protected:
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewValueNotification(mp_DataItem)).Times(1);
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_DataItem)).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
             ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);

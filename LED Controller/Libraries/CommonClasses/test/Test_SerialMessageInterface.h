@@ -159,7 +159,7 @@ class SerialMessageInterfaceTests : public Test
             EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
             EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetValuePointer()).Times(3).WillRepeatedly(Return(m_value));
             EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(m_SerialPortMessageManagerName));
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewValueNotification(mp_SerialMessageInterfaceTester)).Times(1);
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_SerialMessageInterfaceTester)).Times(1);
             mp_SerialMessageInterfaceTester->Setup();
             ::testing::Mock::VerifyAndClearExpectations(&(mp_SerialMessageInterfaceTester->GetMock()));
             ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);

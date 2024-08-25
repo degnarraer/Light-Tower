@@ -33,8 +33,9 @@
 
 template <typename T, size_t COUNT>
 class LocalDataItem: public DataItemInterface<T, COUNT>
-				   , public NamedCallbackInterface<T>
 			 	   , public SetupCalleeInterface
+				   , public NamedCallback_Caller_Interface<T>
+				   , public NewRxValue_Caller_Interface<T>
 			 	   , public DataTypeFunctions
 			 	   , public ValidValueChecker
 			 	   , public StringEncoderDecoder<T>
@@ -166,7 +167,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 						memcpy(mp_Value+i, &value, sizeof(char));
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
-					this->CallCallbacks(m_Name.c_str(), mp_Value);
+					this->CallNamedCallback(m_Name.c_str(), mp_Value);
 					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
@@ -181,7 +182,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
-					this->CallCallbacks(m_Name.c_str(), mp_Value);
+					this->CallNamedCallback(m_Name.c_str(), mp_Value);
 				}
 			}
 			else
@@ -412,7 +413,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				memcpy(mp_Value, value, sizeof(T) * COUNT);
 				++m_ValueChangeCount;
-				this->CallCallbacks(m_Name.c_str(), mp_Value);
+				this->CallNamedCallback(m_Name.c_str(), mp_Value);
 				ESP_LOGD( "LocalDataItem: SetValue", "Set Value Successful");
 				return true;
 			}
@@ -475,17 +476,21 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			assert(mp_Value != nullptr);
 			assert(COUNT > 0);
 			assert(COUNT == count);
-			if( 0 != memcmp(mp_Value, value, sizeof(T) * count) )
+			if( memcmp(mp_Value, value, sizeof(T) * count) != 0 )
 			{
+				ESP_LOGI( "UpdateStore"
+					, "Name: \"%s\" Update Store: Value Changed: \"%s\""
+					, this->GetName().c_str()
+					, this->ConvertValueToString(value, count).c_str() );
 				memcpy(mp_Value, value, sizeof(T) * count);
 				++m_ValueChangeCount;
-				this->CallCallbacks(m_Name.c_str(), mp_Value);
-				ESP_LOGD( "UpdateStore", "Set Value Successful");
+				this->CallNamedCallback(m_Name.c_str(), mp_Value);
+				ESP_LOGD( "UpdateStore", "Update Store: Successful");
 				return true;
 			}
 			else
 			{
-				ESP_LOGD( "UpdateStore", "Set Value Failed");
+				ESP_LOGD( "UpdateStore", "Update Store: No Change");
 				return false;
 			}
 		}

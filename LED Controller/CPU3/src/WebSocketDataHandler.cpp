@@ -6,9 +6,9 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   std::vector<KVP> signalValues = std::vector<KVP>();
   
   /*//DELETE ME 
-  for(int i = 0; i < m_MySenders.size(); ++i)
+  for(int i = 0; i < m_MyTxNotifyees.size(); ++i)
   {
-    m_MySenders[i]->HandleWebSocketTx(signalValues, true);
+    m_MyTxNotifyees[i]->HandleWebSocketTxNotification(signalValues, true);
   }
   */
   if(signalValues.size())
@@ -30,9 +30,9 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     std::vector<KVP> signalValues = m_Tx_KeyValues;
     std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
     /*//DELETE ME 
-    for(int i = 0; i < m_MySenders.size(); ++i)
+    for(int i = 0; i < m_MyTxNotifyees.size(); ++i)
     {
-      m_MySenders[i]->HandleWebSocketTx(signalValues);
+      m_MyTxNotifyees[i]->HandleWebSocketTxNotification(signalValues);
     }
     */
 
@@ -45,44 +45,44 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
   }  
 }
 
-void WebSocketDataProcessor::RegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver)
 {
-  auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), aReceiver);
-  if (it == m_MyReceivers.end())
+  auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
+  if (it == m_MyRxNotifyees.end())
   {
-    ESP_LOGI("RegisterAsWebSocketDataReceiver", "Registering %s as Web Socket Data Receiver.", name.c_str());
-    m_MyReceivers.push_back(aReceiver);
+    ESP_LOGI("DeRegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
+    m_MyRxNotifyees.push_back(aReceiver);
   }
 }
 
-void WebSocketDataProcessor::DeRegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::DeDeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver)
 {
-  auto it = std::find(m_MyReceivers.begin(), m_MyReceivers.end(), aReceiver);
-  if (it != m_MyReceivers.end())
+  auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
+  if (it != m_MyRxNotifyees.end())
   {
-    ESP_LOGI("RegisterAsWebSocketDataSender", "DeRegistering %s as Web Socket Data Receiver.", name.c_str());
-    m_MyReceivers.erase(it);
+    ESP_LOGI("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Receiver.", name.c_str());
+    m_MyRxNotifyees.erase(it);
   }
 }
 
 
-void WebSocketDataProcessor::RegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender)
+void WebSocketDataProcessor::RegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender)
 {
-  auto it = std::find(m_MySenders.begin(), m_MySenders.end(), aSender);
-  if (it == m_MySenders.end())
+  auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
+  if (it == m_MyTxNotifyees.end())
   {
-    ESP_LOGI("RegisterAsWebSocketDataSender", "Registering %s as Web Socket Data Sender.", name.c_str());
-    m_MySenders.push_back(aSender);
+    ESP_LOGI("RegisterForWebSocketTxNotification", "Registering %s as Web Socket Data Sender.", name.c_str());
+    m_MyTxNotifyees.push_back(aSender);
   }
 }
 
-void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender)
+void WebSocketDataProcessor::DeRegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender)
 {
-  auto it = std::find(m_MySenders.begin(), m_MySenders.end(), aSender);
-  if (it != m_MySenders.end())
+  auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
+  if (it != m_MyTxNotifyees.end())
   {
-    ESP_LOGI("RegisterAsWebSocketDataSender", "DeRegistering %s as Web Socket Data Sender.", name.c_str());
-    m_MySenders.erase(it);
+    ESP_LOGI("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Sender.", name.c_str());
+    m_MyTxNotifyees.erase(it);
   }
 }
 
@@ -90,13 +90,13 @@ void WebSocketDataProcessor::DeRegisterAsWebSocketDataSender(const String& name,
 bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& signalId, const String& value)
 {
   bool SignalFound = false;
-  for(int i = 0; i < m_MyReceivers.size(); ++i)
+  for(int i = 0; i < m_MyRxNotifyees.size(); ++i)
   {
-    if(true == m_MyReceivers[i]->GetSignal().equals(signalId))
+    if(true == m_MyRxNotifyees[i]->GetSignal().equals(signalId))
     {
       SignalFound = true;
       ESP_LOGD("ProcessSignalValueAndSendToDatalink", "Sending Value: \"%s\" to receiver.", value.c_str());
-      m_MyReceivers[i]->HandleWebSocketRx(value);
+      m_MyRxNotifyees[i]->HandleWebSocketRxNotification(value);
     }
   }
   return SignalFound;
@@ -138,7 +138,7 @@ void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sen
 {
   ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
   std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-  sender->HandleWebSocketTx(KeyValuePairs, forceUpdate);
+  sender->HandleWebSocketTxNotification(KeyValuePairs, forceUpdate);
   if(KeyValuePairs.size())
   {
     String message;

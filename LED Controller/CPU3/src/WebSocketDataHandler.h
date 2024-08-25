@@ -36,14 +36,14 @@ class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    //virtual void HandleWebSocketTx(std::vector<KVP> &signalValue, bool forceUpdate = false) = 0;
+    virtual void HandleWebSocketTxNotification() = 0;
 };
 
 
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual void HandleWebSocketRx(const String& stringValue) = 0;
+    virtual void HandleWebSocketRxNotification(const String& stringValue) = 0;
     virtual String GetSignal() = 0;
 };
 
@@ -62,10 +62,10 @@ class WebSocketDataProcessor
       std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
       if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
     }
-    void RegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver);
-    void DeRegisterAsWebSocketDataReceiver(const String& name, WebSocketDataHandlerReceiver *aReceiver);
-    void RegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender);
-    void DeRegisterAsWebSocketDataSender(const String& name, WebSocketDataHandlerSender *aSender);
+    void DeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
+    void DeDeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
+    void RegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender);
+    void DeRegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender);
     bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& value);
     void UpdateAllDataToClient(uint8_t clientId);
     //DELETE ME void UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate);
@@ -80,8 +80,8 @@ class WebSocketDataProcessor
     AsyncWebServer &m_WebServer;
     AsyncWebSocket &m_WebSocket;
     TaskHandle_t m_WebSocketTaskHandle;
-    std::vector<WebSocketDataHandlerReceiver*> m_MyReceivers = std::vector<WebSocketDataHandlerReceiver*>();
-    std::vector<WebSocketDataHandlerSender*> m_MySenders = std::vector<WebSocketDataHandlerSender*>();
+    std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
+    std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
     std::recursive_mutex m_Tx_KeyValues_Mutex;
     void WebSocketDataProcessor_Task();
@@ -113,15 +113,19 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
     WebSocketDataHandler( const WebSocketDataHandler &t )
                         : m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
-                        , m_IsReceiver(t.m_IsReceiver)
-                        , m_IsSender(t.m_IsSender)
+                        , m_RequiresWebSocketRxNotification(t.m_RequiresWebSocketRxNotification)
+                        , m_RequiresWebSocketTxNotification(t.m_RequiresWebSocketTxNotification)
                         , m_DataItem(t.m_DataItem)
                         , m_Debug(t.m_Debug)
                         , m_Name(t.m_Name)
                         , m_Signal(t.m_Signal)
     {
-      if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
-      if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
+      if(m_RequiresWebSocketRxNotification) m_WebSocketDataProcessor.DeRegisterForWebSocketRxNotification(m_Name, this);
+      if(m_RequiresWebSocketTxNotification)
+      {
+        m_WebSocketDataProcessor.RegisterForWebSocketTxNotification(m_Name, this);
+        m_DataItem.RegisterForNewRxValueNotification(this);
+      }
     }
     WebSocketDataHandler( WebSocketDataProcessor &webSocketDataProcessor
                         , const bool &isReceiver
@@ -129,28 +133,45 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                         , LocalDataItem<T, COUNT> &dataItem
                         , const bool &debug )
                         : m_WebSocketDataProcessor(webSocketDataProcessor)
-                        , m_IsReceiver(isReceiver)
-                        , m_IsSender(isSender)
+                        , m_RequiresWebSocketRxNotification(isReceiver)
+                        , m_RequiresWebSocketTxNotification(isSender)
                         , m_DataItem(dataItem)
                         , m_Debug(debug)
                         , m_Name(dataItem.GetName() + " Web Socket")
                         , m_Signal(dataItem.GetName())
     {
-      if(m_IsReceiver) m_WebSocketDataProcessor.RegisterAsWebSocketDataReceiver(m_Name, this);
-      if(m_IsSender) m_WebSocketDataProcessor.RegisterAsWebSocketDataSender(m_Name, this);
+      if(m_RequiresWebSocketRxNotification) m_WebSocketDataProcessor.DeRegisterForWebSocketRxNotification(m_Name, this);
+      if(m_RequiresWebSocketTxNotification)
+      {
+        m_WebSocketDataProcessor.RegisterForWebSocketTxNotification(m_Name, this);
+        m_DataItem.RegisterForNewRxValueNotification(this);
+      }
     }
     
     virtual ~WebSocketDataHandler()
     {
-      if(m_IsReceiver) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataReceiver(m_Name, this);
-      if(m_IsSender) m_WebSocketDataProcessor.DeRegisterAsWebSocketDataSender(m_Name, this);
+      if(m_RequiresWebSocketRxNotification) m_WebSocketDataProcessor.DeDeRegisterForWebSocketRxNotification(m_Name, this);
+      if(m_RequiresWebSocketTxNotification)
+      {
+        m_WebSocketDataProcessor.DeRegisterForWebSocketTxNotification(m_Name, this);
+        m_DataItem.DeRegisterForNewRxValueNotification(this);
+      }
     }
     
-    bool NewRxValueReceived(const NewRxTxValueCallerInterface<T>* sender, const T* values, size_t count)
+    bool NewRxValueReceived(const NewRxValue_Caller_Interface<T>* sender, const T* values, size_t count) override
     {
-      ESP_LOGD( "NewRxValueReceived", "New RX Datalink Value");
-      bool ValueChanged = m_DataItem.SetValue(values, count);
-      return ValueChanged;
+      if(sender == &m_DataItem)
+      {
+        ESP_LOGI( "NewRxValueReceived", "New RX Datalink Value");
+        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+        m_Last_Update_Time = millis();
+        return true;
+      }
+      else
+      {
+        ESP_LOGW( "NewRxValueReceived", "WARNING! Rx value from unknown sender");
+        return false;
+      }
     }
     
     String GetSignal()
@@ -163,36 +184,30 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return m_Name;
     }
 
-    /* //DELETE ME 
-    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    
+    virtual void HandleWebSocketTxNotification() override
     {
-      KVP signalValue;
-      signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
-      {
-        ESP_LOGI( "HandleWebSocketTx", "\"%s\": Tx \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
-        signalValues.push_back(signalValue);
-        m_Last_Update_Time = millis();
-      }
+      m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
     }
-    */
-    virtual void HandleWebSocketRx(const String& stringValue) override
+    
+    virtual void HandleWebSocketRxNotification(const String& stringValue) override
     {
-      ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRx"
+      ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRxNotification"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
               , m_Name.c_str()
               , m_Signal.c_str()
               , stringValue.c_str());
       m_DataItem.SetValueFromString(stringValue);
     }
+
     void TxDataToWebSocket(String key, String value)
     {
       m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
     }
   protected:
     WebSocketDataProcessor &m_WebSocketDataProcessor;
-    const bool &m_IsReceiver;
-    const bool &m_IsSender;
+    const bool &m_RequiresWebSocketRxNotification;
+    const bool &m_RequiresWebSocketTxNotification;
     LocalDataItem<T, COUNT> &m_DataItem;
     const bool &m_Debug;
     const String m_Name;
@@ -229,28 +244,6 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
     virtual ~WebSocket_String_DataHandler()
     {
     }
-  protected:
-
-  /*//DELETE ME 
-    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
-    {
-      KVP signalValue;
-      signalValue.Key = m_Signal;
-      if( (ValueChanged() || forceUpdate) && m_DataItem.GetValueAsString(signalValue.Value) )
-      {
-        ESP_LOGI( "WebSocket_Compatible_Device_DataHandler: HandleWebSocketTx", "\"%s\" Tx: \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
-        signalValues.push_back(signalValue);
-      }
-    }
-    */
-    virtual void HandleWebSocketRx(const String& stringValue) override
-    {
-      ESP_LOGI( "HandleWebSocketRx"
-              , "\"%s\" Rx: \"%s\""
-              , m_Name.c_str()
-              , stringValue.c_str());
-      m_DataItem.SetValueFromString(stringValue);
-    }
 };
 
 class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<CompatibleDevice_t, 1>
@@ -260,6 +253,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
                                            , const bool &IsReceiver
                                            , const bool &IsSender
                                            , DataItem<CompatibleDevice_t, 1> &DataItem
+               
                                            , const bool Debug )
                                            : WebSocketDataHandler<CompatibleDevice_t, 1>( WebSocketDataProcessor
                                                                                         , IsReceiver
@@ -275,7 +269,7 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
   protected:
   
   /*//DELETE ME 
-    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    virtual void HandleWebSocketTxNotification(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     {
       if( forceUpdate || ValueChanged() )
       {
@@ -291,25 +285,25 @@ class WebSocket_Compatible_Device_DataHandler: public WebSocketDataHandler<Compa
         signalValue.Value = Encode_Compatible_Device_To_JSON(compatibleDevices);
         if(signalValue.Value.length())
         {
-          ESP_LOGI( "HandleWebSocketTx", "\"%s\": Tx: \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
+          ESP_LOGI( "HandleWebSocketTxNotification", "\"%s\": Tx: \"%s\"", m_Name.c_str(), signalValue.Value.c_str());
           signalValues.push_back(signalValue);
         }
       }
     }
-    */
-    void HandleWebSocketRx(const String& stringValue) override
+    void HandleWebSocketRxNotification(const String& stringValue) override
     {
-      ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRx", "New Signal Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
+      ESP_LOGI("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRxNotification", "New Signal Value for \"%s\": \"%s\"", m_Signal.c_str(), stringValue.c_str());
       JSONVar jSONObject = JSON.parse(stringValue);
       if (JSON.typeof(jSONObject) == "undefined")
       {
-        ESP_LOGE("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRx", "ERROR! unable to parse JSON.");
+        ESP_LOGE("WebSocket_Compatible_Device_DataHandler: HandleWebSocketRxNotification", "ERROR! unable to parse JSON.");
       }
       String name = jSONObject["NAME"];
       String address = jSONObject["ADDRESS"];
       CompatibleDevice_t newValue(name.c_str(), address.c_str());
       m_DataItem.SetValue(&newValue, 1);
     }
+    */
   private:
     String Encode_Compatible_Device_To_JSON(std::vector<KVP> &keyValuePair)
     {
@@ -347,7 +341,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
 
   protected:
   /*//DELETE ME 
-    virtual void HandleWebSocketTx(std::vector<KVP> &signalValues, bool forceUpdate = false) override
+    virtual void HandleWebSocketTxNotification(std::vector<KVP> &signalValues, bool forceUpdate = false) override
     { 
       bool valueChanged = ValueChanged();
       unsigned long elapsedTime = 0;
@@ -402,7 +396,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
         // Remove timed out device
         if(ACTIVE_NAME_TIMEOUT < m_ActiveCompatibleDevices[i].timeSinceUpdate)
         {
-            ESP_LOGI("HandleWebSocketTx", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
+            ESP_LOGI("HandleWebSocketTxNotification", "Name Timedout: %s", m_ActiveCompatibleDevices[i].name);
             m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin() + i);
             --i;
             updated = true;
@@ -426,7 +420,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
           }
           signalValue.Key = m_Signal;
           signalValue.Value = Encode_SSID_Values_To_JSON(activeCompatibleDevicesKVT);
-          ESP_LOGI("HandleWebSocketTx", "Encoding Result: \"%s\"", signalValue.Value.c_str());
+          ESP_LOGI("HandleWebSocketTxNotification", "Encoding Result: \"%s\"", signalValue.Value.c_str());
           if(!signalValue.Value.isEmpty())
           {
               signalValues.push_back(signalValue);
@@ -435,9 +429,9 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
       }
     }
     */
-    virtual void HandleWebSocketRx(const String& stringValue) override
+    virtual void HandleWebSocketRxNotification(const String& stringValue) override
     {
-      ESP_LOGE("HandleWebSocketRx", "ERROR! This function is not supported yet.");
+      ESP_LOGE("HandleWebSocketRxNotification", "ERROR! This function is not supported yet.");
     }
   private:
     //Datalink
@@ -458,7 +452,7 @@ class WebSocket_ActiveCompatibleDevice_ArrayDataHandler: public WebSocketDataHan
     void LogDetails(ActiveCompatibleDevice_t &device, const String &context)
     {
       // Log device details
-      ESP_LOGI( "HandleWebSocketTx",
+      ESP_LOGI( "HandleWebSocketTxNotification",
                 "%s: %s: \n************* \nDevice Name: %s \nAddress: %s \nRSSI: %i \nUpdate Time: %lu \nTime Since Update: %lu \nChange Count: %i",
                 context.c_str(),
                 this->m_Name.c_str(),

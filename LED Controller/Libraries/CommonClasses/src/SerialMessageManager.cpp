@@ -18,35 +18,35 @@
 
 #include "SerialMessageManager.h"
 
-void NewRxTxVoidObjectCallerInterface::RegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
+void NewRxTxVoidObjectCallerInterface::RegisterForNewRxValueNotification(NewRxTxVoidObjectCalleeInterface* NewCallee)
 {
-	ESP_LOGD("RegisterForNewValueNotification", "Try Registering Callee");
+	ESP_LOGD("RegisterForNewRxValueNotification", "Try Registering Callee");
 	bool IsFound = false;
 	for (NewRxTxVoidObjectCalleeInterface* callee : m_NewValueCallees)
 	{
 		if(NewCallee == callee)
 		{
-			ESP_LOGE("RegisterForNewValueNotification", "ERROR! A callee with this name already exists.");
+			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with this name already exists.");
 			IsFound = true;
 			break;
 		}
 	}
 	if(false == IsFound)
 	{
-		ESP_LOGD("RegisterForNewValueNotification", "Callee Registered");
+		ESP_LOGD("RegisterForNewRxValueNotification", "Callee Registered");
 		m_NewValueCallees.push_back(NewCallee);
 	}
 }
 
-void NewRxTxVoidObjectCallerInterface::DeRegisterForNewValueNotification(NewRxTxVoidObjectCalleeInterface* Callee)
+void NewRxTxVoidObjectCallerInterface::DeRegisterForNewRxValueNotification(NewRxTxVoidObjectCalleeInterface* Callee)
 {
-	ESP_LOGD("DeRegisterForNewValueNotification", "Try DeRegister For New Value Notification");
+	ESP_LOGD("DeRegisterForNewRxValueNotification", "Try DeRegister For New Value Notification");
 	// Find the iterator pointing to the element
 	auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
 
 	// Check if the element was found before erasing
 	if (it != m_NewValueCallees.end()) {
-		ESP_LOGD("RegisterForNewValueNotification", "Callee DeRegistered");
+		ESP_LOGD("RegisterForNewRxValueNotification", "Callee DeRegistered");
 		m_NewValueCallees.erase(it);
 	}
 }
@@ -85,13 +85,14 @@ void NewRxTxVoidObjectCallerInterface::DeRegisterNamedCallback(NamedCallback_t* 
 
 void NewRxTxVoidObjectCallerInterface::NotifyCallee(const String& name, void* object)
 {
-	ESP_LOGD("NotifyCallee", "Notify Callees");
+	ESP_LOGI("NotifyCallee", "Notify Callee: \"%s\"", name.c_str());
 	for (NewRxTxVoidObjectCalleeInterface* callee : m_NewValueCallees)
 	{
 		if (callee) 
 		{
 			if (callee->GetName().equals(name))
 			{
+				ESP_LOGI("NotifyCallee", "Callee Found: \"%s\"", name.c_str());
 				callee->NewRxValueReceived(this, object, callee->GetCount());
 				break;
 			}
@@ -99,9 +100,9 @@ void NewRxTxVoidObjectCallerInterface::NotifyCallee(const String& name, void* ob
 	}
 }
 
-void NewRxTxVoidObjectCallerInterface::CallCallbacks(const String& name, void* object)
+void NewRxTxVoidObjectCallerInterface::CallNamedCallback(const String& name, void* object)
 {
-	ESP_LOGD("NotifyCallee", "CallCallbacks");
+	ESP_LOGD("CallNamedCallback", "CallNamedCallback");
     for (NamedCallback_t* namedCallback : m_NamedCallbacks)
     {
         if (namedCallback->Callback) 
@@ -198,13 +199,13 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 				}
 				else if(m_message.charAt(m_message.length() - 1) == '\n')
 				{
-					ESP_LOGD("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
+					ESP_LOGI("SerialPortMessageManager", "\"%s\" Message RX: \"%s\"", m_Name.c_str(), m_message.c_str());
 					NamedObject_t NamedObject;
 					m_message.trim();
 					if(mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
 					{
-						ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-						NotifyCallee(NamedObject.Name, NamedObject.Object);
+						ESP_LOGI("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+						this->NotifyCallee(NamedObject.Name, NamedObject.Object);
 					}
 					else
 					{
@@ -243,7 +244,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
                         ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: Address: \"%p\" Message: \"%s\"",m_Name.c_str(), static_cast<void*>(message), message);
+					ESP_LOGI("SerialPortMessageManager_TxTask", "\"%s\" Data TX: Address: \"%p\" Message: \"%s\"",m_Name.c_str(), static_cast<void*>(message), message);
 					mp_Serial->println(message);
 				}
 				else
