@@ -92,7 +92,7 @@ class WebSocketDataProcessor
     template<typename T>
     std::vector<T>* AllocateVectorOnHeap(size_t count)
     {
-        T* data = static_cast<T*>(heap_caps_malloc(sizeof(T) * count, MALLOC_CAP_SPIRAM));
+        T* data = static_cast<T*>(malloc(sizeof(T) * count));
         if (data)
         {
             return new std::vector<T>(data, data + count);

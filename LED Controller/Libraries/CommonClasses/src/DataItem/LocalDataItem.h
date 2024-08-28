@@ -131,12 +131,12 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			if(mp_Value)
 			{
         		ESP_LOGD("~LocalDataItem", "freeing mp_Value Memory");
-				heap_caps_free(mp_Value);
+				free(mp_Value);
 			}
 			if(mp_InitialValue) 
 			{
         		ESP_LOGD("~LocalDataItem", "freeing mp_InitialValue Memory");
-				heap_caps_free(mp_InitialValue);
+				free(mp_InitialValue);
 			}
 		}
 
@@ -149,8 +149,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		{
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
-			mp_Value = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			mp_InitialValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			mp_Value = (T*)malloc(sizeof(T)*COUNT);
+			mp_InitialValue = (T*)malloc(sizeof(T)*COUNT);
 			if (mp_Value && mp_InitialValue && mp_InitialValuePtr)
 			{
 				if (std::is_same<T, char>::value)

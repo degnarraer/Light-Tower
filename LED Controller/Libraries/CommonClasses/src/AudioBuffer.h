@@ -19,14 +19,12 @@
 
 #ifndef AudioBuffer_H
 #define AudioBuffer_H
-
-
 #include "Datatypes.h"
 #include "CircularBuffer.h" 
 #include "circle_buf.h"
 #include "Streaming.h"
 
-template <uint32_t T>
+template <uint32_t COUNT>
 class AudioBuffer
 {
   public:
@@ -36,8 +34,9 @@ class AudioBuffer
       FreeMemory();
     }
     void Initialize()
-	{ 
-		AllocateMemory();pthread_mutexattr_t Attr;
+	{
+		AllocateMemory();
+		pthread_mutexattr_t Attr;
 		pthread_mutexattr_init(&Attr);
 		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
 		if(0 != pthread_mutex_init(&m_Lock, &Attr))
@@ -48,14 +47,20 @@ class AudioBuffer
 
 	void AllocateMemory()
 	{
-		size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, T>);
-		void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, T>*)heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
-		m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, T>;
+        ESP_LOGD("AllocateMemory", "Allocating memory");
+		size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, COUNT>);
+		void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, COUNT>*)malloc(CircleBuffSize);
+		if (CircularBuffer_Raw == nullptr) 
+		{
+            ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
+            return;
+        }
+		m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, COUNT>;
 	}
 
 	void FreeMemory()
 	{
-	 heap_caps_free(m_CircularAudioBuffer);
+		free(m_CircularAudioBuffer);
 	}
 	size_t GetFrameCapacity()
 	{
@@ -127,7 +132,7 @@ class AudioBuffer
 	}
 	
 	private:
-		bfs::CircleBuf<Frame_t, T> *m_CircularAudioBuffer = nullptr;
+		bfs::CircleBuf<Frame_t, COUNT> *m_CircularAudioBuffer = nullptr;
 		pthread_mutex_t m_Lock;
 };
 
@@ -157,13 +162,12 @@ class ContinuousAudioBuffer
     {
         ESP_LOGD("AllocateMemory", "Allocating memory");
         size_t CircleBuffSize = sizeof(CircularBuffer<Frame_t, COUNT>);
-        void* CircularBuffer_Raw = heap_caps_malloc(CircleBuffSize, MALLOC_CAP_SPIRAM);
-
-        if (CircularBuffer_Raw == nullptr) {
+        void* CircularBuffer_Raw = malloc (CircleBuffSize );
+        if (CircularBuffer_Raw == nullptr)
+		{
             ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
             return;
         }
-
         m_CircularAudioBuffer = new(CircularBuffer_Raw) CircularBuffer<Frame_t, COUNT>;
     }
 
@@ -171,7 +175,7 @@ class ContinuousAudioBuffer
 	{
 		if (m_CircularAudioBuffer != nullptr) {
             m_CircularAudioBuffer->~CircularBuffer<Frame_t, COUNT>();
-            heap_caps_free(m_CircularAudioBuffer);
+            free(m_CircularAudioBuffer);
             m_CircularAudioBuffer = nullptr;
         }
 	}

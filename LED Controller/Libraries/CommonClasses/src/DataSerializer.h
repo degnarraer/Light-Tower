@@ -96,7 +96,7 @@ class DataSerializer: public CommonUtils
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Byte Count: %i", ObjectByteCount);
 					//This memory needs deleted by caller of function.
-					uint8_t *Buffer = (uint8_t*)heap_caps_malloc(sizeof(uint8_t)* ByteCountIn, MALLOC_CAP_SPIRAM);								
+					uint8_t *Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);								
 					if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
 					{
 						for(int j = 0; j < CountIn; ++j)
@@ -123,7 +123,7 @@ class DataSerializer: public CommonUtils
 						else
 						{
 							ESP_LOGD("DeSerializeJsonToNamedObject", "CheckSumCalc Did Not Match!");
-							heap_caps_free(Buffer);
+							free(Buffer);
 							NamedObject.Object = nullptr;
 							++m_FailCount;
 							ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Checksum Error\" Value: \"(%i != %i)\"", CheckSumCalc, CheckSumIn);

@@ -73,12 +73,12 @@ class SerialMessageInterface: public NewRxValue_Caller_Interface<T>
 			if(mp_RxValue)
 			{
         		ESP_LOGD("~SerialMessageInterface", "freeing mp_RxValue Memory");
-				heap_caps_free(mp_RxValue);
+				free(mp_RxValue);
 			}
 			if(mp_TxValue)
 			{
         		ESP_LOGD("~SerialMessageInterface", "freeing mp_TxValue Memory");
-				heap_caps_free(mp_TxValue);	
+				free(mp_TxValue);	
 			}
 		}
 		virtual T* GetValuePointer() const = 0;
@@ -137,8 +137,8 @@ class SerialMessageInterface: public NewRxValue_Caller_Interface<T>
 
 		void Setup()
 		{
-			if(!mp_RxValue) mp_RxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
-			if(!mp_TxValue) mp_TxValue = (T*)heap_caps_malloc(sizeof(T)*COUNT, MALLOC_CAP_SPIRAM);
+			if(!mp_RxValue) mp_RxValue = (T*)malloc(sizeof(T)*COUNT);
+			if(!mp_TxValue) mp_TxValue = (T*)malloc(sizeof(T)*COUNT);
 			if(this->GetValuePointer())
 			{
 				if (mp_RxValue && mp_TxValue)

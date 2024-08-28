@@ -449,7 +449,7 @@ class QueueManager: public CommonUtils
 			ESP_LOGE("CommonUtils", "ERROR! %s: Allocating %i DataItem's for a total of %i bytes of Memory.", m_Title.c_str(), m_DataItemCount, ConfigBytes);
 			
 			//Placement Allocation
-			void *DataItem_t_raw = heap_caps_malloc(sizeof(DataItem_t) * m_DataItemCount, MALLOC_CAP_SPIRAM);
+			void *DataItem_t_raw = malloc(sizeof(DataItem_t) * m_DataItemCount);
 			m_DataItem = new(DataItem_t_raw) DataItem_t[m_DataItemCount];
 
 			assert(m_DataItem != NULL);
@@ -500,7 +500,7 @@ class QueueManager: public CommonUtils
 					break;
 				}
 			}
-			heap_caps_free(m_DataItem);
+			free(m_DataItem);
 			m_MemoryAllocated = false;
 		}		
 		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage){
