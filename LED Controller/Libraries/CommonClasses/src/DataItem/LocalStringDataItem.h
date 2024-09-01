@@ -122,7 +122,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				ZeroOutMemory(mp_Value);
 				strcpy(mp_Value, value);
 				++m_ValueChangeCount;
-				CallNamedCallback(m_Name.c_str(), mp_Value);
+				CallAllCallbacks(mp_Value);
 			}
 			return valueChanged;
 		}

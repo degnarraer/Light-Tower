@@ -91,7 +91,7 @@ class Named_Callback_Caller_Interface
 			}
 		}
 	protected:
-		virtual void CallNamedCallback(const String& name, T* object)
+		virtual void CallNamedCallbacks(T* object)
 		{
 			ESP_LOGD("NotifyCallee", "CallCallbacks");
 			for (NamedCallback_t* namedCallback : m_NamedCallbacks)
@@ -103,6 +103,7 @@ class Named_Callback_Caller_Interface
 				aCallback(namedCallback->Name, object, arg);
 			}
 		}
+		
 	private:
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
 };
@@ -150,9 +151,9 @@ class Rx_Value_Caller_Interface
 		}
 		
 	protected:
-		virtual void NotifyCallees(T* values)
+		virtual void Notify_NewRxValue_Callees(T* values)
 		{
-			ESP_LOGD("NotifyCallees", "Notify Callees");
+			ESP_LOGD("Notify_NewRxValue_Callees", "Notify Callees");
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
 			{
 				callee->NewRxValueReceived(this, values);
@@ -175,7 +176,7 @@ class Named_Object_Callee_Interface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values, size_t count) = 0;
+		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -197,9 +198,10 @@ class Named_Object_Caller_Interface
 		virtual void DeRegisterForNewRxValueNotification(Named_Object_Callee_Interface* callee);
 		virtual void RegisterNamedCallback(NamedCallback_t* namedCallback);
 		virtual void DeRegisterNamedCallback(NamedCallback_t* namedCallback);
+		virtual String GetName() const = 0;
 	protected:
-		virtual void Notify_NewRxValue_Callee(const String& name, void* object);
-		virtual void CallNamedCallback(const String& name, void* object);
+		virtual void Notify_NewRxValue_Callees(void* object);
+		virtual void CallNamedCallbacks(void* object);
 	private:
 		std::vector<Named_Object_Callee_Interface*> m_NewValueCallees = std::vector<Named_Object_Callee_Interface*>();
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();

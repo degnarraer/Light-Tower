@@ -100,27 +100,26 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		}
 
 		//Named_Object_Callee_Interface
-		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values, size_t count) override
+		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values) override
 		{
-			assert(count == COUNT);
 			bool StoreUpdated = false;
 			const T* receivedValue = static_cast<const T*>(values);
 			ESP_LOGD( "NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str()
-					, this->ConvertValueToString(receivedValue, count).c_str());
-			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * count) != 0)
+					, this->ConvertValueToString(receivedValue, this->GetCount()).c_str());
+			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * this->GetCount()) != 0)
 			{
 				ESP_LOGI( "NewRxValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, this->GetName().c_str()
-						, this->ConvertValueToString(receivedValue, count).c_str());
+						, this->ConvertValueToString(receivedValue, this->GetCount()).c_str());
 				ZeroOutMemory(mp_RxValue);
-				memcpy(mp_RxValue, receivedValue, sizeof(T) * count);
+				memcpy(mp_RxValue, receivedValue, sizeof(T) * this->GetCount());
 				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
 				{
-					StoreUpdated = this->UpdateStore(mp_RxValue, count);
+					StoreUpdated = this->UpdateStore(mp_RxValue, this->GetCount());
 				}
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
@@ -128,9 +127,9 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				ESP_LOGI( "NewRxValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, this->GetName().c_str()
-						, this->ConvertValueToString(receivedValue, count).c_str());
+						, this->ConvertValueToString(receivedValue, this->GetCount()).c_str());
 				ZeroOutMemory(mp_TxValue);
-				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * count);
+				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * this->GetCount());
 				Tx_Now();
 			}
 			return StoreUpdated;
