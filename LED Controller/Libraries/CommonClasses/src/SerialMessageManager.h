@@ -41,7 +41,7 @@ class Rx_Value_Callee_Interface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count) = 0;
+		virtual bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -150,12 +150,12 @@ class Rx_Value_Caller_Interface
 		}
 		
 	protected:
-		virtual void NotifyCallees(const String& name, T* values)
+		virtual void NotifyCallees(T* values)
 		{
 			ESP_LOGD("NotifyCallees", "Notify Callees");
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
 			{
-				callee->NewRxValueReceived(this, values, callee->GetCount());
+				callee->NewRxValueReceived(this, values);
 			}
 		}
 	private:

@@ -142,7 +142,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_DataItem.DeRegisterForNewRxValueNotification(this);
     }
     
-    bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count) override
+    bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values) override
     {
       ESP_LOGI( "NewRxValueReceived", "New DataItem Rx Value");
       if(sender == &m_DataItem)

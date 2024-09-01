@@ -105,14 +105,14 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			assert(count == COUNT);
 			bool StoreUpdated = false;
 			const T* receivedValue = static_cast<const T*>(values);
-			ESP_LOGD( "DataItem: NewRxValueReceived"
+			ESP_LOGD( "NewRxValueReceived"
 					, "\"%s\" RX: \"%s\" Value: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str()
 					, this->ConvertValueToString(receivedValue, count).c_str());
 			if(memcmp(mp_RxValue, receivedValue, sizeof(T) * count) != 0)
 			{
-				ESP_LOGI( "DataItem: NewRxValueReceived"
+				ESP_LOGI( "NewRxValueReceived"
 						, "Value Changed for: \"%s\" to Value: \"%s\""
 						, this->GetName().c_str()
 						, this->ConvertValueToString(receivedValue, count).c_str());
@@ -125,7 +125,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
-				ESP_LOGI( "DataItem: NewRxValueReceived"
+				ESP_LOGI( "NewRxValueReceived"
 						, "RX Echo for: \"%s\" with Value: \"%s\""
 						, this->GetName().c_str()
 						, this->ConvertValueToString(receivedValue, count).c_str());
