@@ -27,21 +27,21 @@
 #define MaxMessageLength 500
 
 template <typename T>
-class NewRxValue_Caller_Interface;
+class Rx_Value_Caller_Interface;
 
 template <typename T>
-class NewRxTxValueCalleeInterface
+class Rx_Value_Callee_Interface
 {
 	public:
-		NewRxTxValueCalleeInterface()
+		Rx_Value_Callee_Interface()
 		{
 			
 		}
-		virtual ~NewRxTxValueCalleeInterface()
+		virtual ~Rx_Value_Callee_Interface()
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const NewRxValue_Caller_Interface<T>* sender, const T* values, size_t count) = 0;
+		virtual bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -49,14 +49,14 @@ class NewRxTxValueCalleeInterface
 };
 
 template <typename T>
-class NamedCallback_Caller_Interface
+class Named_Callback_Caller_Interface
 {
 	public:
-		NamedCallback_Caller_Interface()
+		Named_Callback_Caller_Interface()
 		{
 			
 		}
-		virtual ~NamedCallback_Caller_Interface()
+		virtual ~Named_Callback_Caller_Interface()
 		{
 			
 		}
@@ -108,22 +108,22 @@ class NamedCallback_Caller_Interface
 };
 
 template <typename T>
-class NewRxValue_Caller_Interface
+class Rx_Value_Caller_Interface
 {
 	public:
-		NewRxValue_Caller_Interface()
+		Rx_Value_Caller_Interface()
 		{
 			
 		}
-		virtual ~NewRxValue_Caller_Interface()
+		virtual ~Rx_Value_Caller_Interface()
 		{
 			
 		}
-		virtual void RegisterForNewRxValueNotification(NewRxTxValueCalleeInterface<T>* NewCallee)
+		virtual void RegisterForNewRxValueNotification(Rx_Value_Callee_Interface<T>* NewCallee)
 		{
 			ESP_LOGI("RegisterForNewRxValueNotification", "Try Registering Callee");
 			bool IsFound = false;
-			for (NewRxTxValueCalleeInterface<T>* callee : m_NewValueCallees)
+			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
 			{
 				if(NewCallee == callee)
 				{
@@ -138,7 +138,7 @@ class NewRxValue_Caller_Interface
 				m_NewValueCallees.push_back(NewCallee);
 			}
 		}
-		virtual void DeRegisterForNewRxValueNotification(NewRxTxValueCalleeInterface<T>* Callee)
+		virtual void DeRegisterForNewRxValueNotification(Rx_Value_Callee_Interface<T>* Callee)
 		{
 			// Find the iterator pointing to the element
 			auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
@@ -150,10 +150,10 @@ class NewRxValue_Caller_Interface
 		}
 		
 	protected:
-		virtual void NotifyCallee(const String& name, T* values)
+		virtual void NotifyCallees(const String& name, T* values)
 		{
-			ESP_LOGD("NotifyCallee", "Notify Callees");
-			for (NewRxTxValueCalleeInterface<T>* callee : m_NewValueCallees)
+			ESP_LOGD("NotifyCallees", "Notify Callees");
+			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
 			{
 				if (callee) 
 				{
@@ -166,52 +166,53 @@ class NewRxValue_Caller_Interface
 			}
 		}
 	private:
-		std::vector<NewRxTxValueCalleeInterface<T>*> m_NewValueCallees = std::vector<NewRxTxValueCalleeInterface<T>*>();
+		std::vector<Rx_Value_Callee_Interface<T>*> m_NewValueCallees = std::vector<Rx_Value_Callee_Interface<T>*>();
 };
-class NewRxTxVoidObjectCallerInterface;
-class NewRxTxVoidObjectCalleeInterface
+
+class Named_Object_Caller_Interface;
+class Named_Object_Callee_Interface
 {
 	public:
-		NewRxTxVoidObjectCalleeInterface( size_t Count )
+		Named_Object_Callee_Interface( size_t Count )
 										: m_Count(Count)
 		{
 			
 		}
-		virtual ~NewRxTxVoidObjectCalleeInterface()
+		virtual ~Named_Object_Callee_Interface()
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const NewRxTxVoidObjectCallerInterface* sender, const void* values, size_t count) = 0;
+		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values, size_t count) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
 };
 
-class NewRxTxVoidObjectCallerInterface
+class Named_Object_Caller_Interface
 {
 	public:
-		NewRxTxVoidObjectCallerInterface()
+		Named_Object_Caller_Interface()
 		{
 			
 		}
-		virtual ~NewRxTxVoidObjectCallerInterface()
+		virtual ~Named_Object_Caller_Interface()
 		{
 			
 		}
-		virtual void RegisterForNewRxValueNotification(NewRxTxVoidObjectCalleeInterface* newCallee);
-		virtual void DeRegisterForNewRxValueNotification(NewRxTxVoidObjectCalleeInterface* callee);
+		virtual void RegisterForNewRxValueNotification(Named_Object_Callee_Interface* newCallee);
+		virtual void DeRegisterForNewRxValueNotification(Named_Object_Callee_Interface* callee);
 		virtual void RegisterNamedCallback(NamedCallback_t* namedCallback);
 		virtual void DeRegisterNamedCallback(NamedCallback_t* namedCallback);
 	protected:
-		virtual void NotifyCallee(const String& name, void* object);
+		virtual void Notify_NewRxValue_Callee(const String& name, void* object);
 		virtual void CallNamedCallback(const String& name, void* object);
 	private:
-		std::vector<NewRxTxVoidObjectCalleeInterface*> m_NewValueCallees = std::vector<NewRxTxVoidObjectCalleeInterface*>();
+		std::vector<Named_Object_Callee_Interface*> m_NewValueCallees = std::vector<Named_Object_Callee_Interface*>();
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
 };
 
-class SerialPortMessageManager: public NewRxTxVoidObjectCallerInterface
+class SerialPortMessageManager: public Named_Object_Caller_Interface
 {
 	public:
 		SerialPortMessageManager(){}

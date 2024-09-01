@@ -104,7 +104,7 @@ class WebSocketDataProcessor
 template<typename T, size_t COUNT>
 class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                           , public WebSocketDataHandlerSender
-                          , public NewRxTxValueCalleeInterface<T>
+                          , public Rx_Value_Callee_Interface<T>
                           , public DataTypeFunctions
 {
   public:
@@ -158,7 +158,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     
-    bool NewRxValueReceived(const NewRxValue_Caller_Interface<T>* sender, const T* values, size_t count) override
+    bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count) override
     {
       if(sender == &m_DataItem)
       {

@@ -24,16 +24,16 @@
 #include "SerialMessageManager.h"
 
 template <typename T>
-class MockNewRxTxValueCalleeInterface : public NewRxTxValueCalleeInterface<T> {
+class MockRx_Value_Callee_Interface : public Rx_Value_Callee_Interface<T> {
 public:
-    MOCK_METHOD(bool, NewRxValueReceived, (const NewRxValue_Caller_Interface<T>* sender, const T* values, size_t count), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count), (override));
     MOCK_METHOD(String, GetName, (), (override));
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
 
-// Mock class for NamedCallback_Caller_Interface
+// Mock class for Named_Callback_Caller_Interface
 template <typename T>
-class MockNamedCallback_Caller_Interface : public NamedCallback_Caller_Interface<T>
+class MockNamed_Callback_Caller_Interface : public Named_Callback_Caller_Interface<T>
 {
 public:
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
@@ -42,28 +42,28 @@ public:
 };
 
 template <typename T>
-class MockNewRxValue_Caller_Interface : public NewRxValue_Caller_Interface<T> {
+class MockRx_Value_Caller_Interface : public Rx_Value_Caller_Interface<T> {
 public:
-    MOCK_METHOD(void, RegisterForNewRxValueNotification, (NewRxTxValueCalleeInterface<T>* newCallee), (override));
-    MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (NewRxTxValueCalleeInterface<T>* callee), (override));
+    MOCK_METHOD(void, RegisterForNewRxValueNotification, (Rx_Value_Callee_Interface<T>* newCallee), (override));
+    MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Rx_Value_Callee_Interface<T>* callee), (override));
     MOCK_METHOD(void, NotifyCallee, (const String& name, T* object), (override));
 };
 
-class MockNewRxTxVoidObjectCalleeInterface : public NewRxTxVoidObjectCalleeInterface {
+class MockNamed_Object_Callee_Interface : public Named_Object_Callee_Interface {
 public:
-    MockNewRxTxVoidObjectCalleeInterface(size_t count) : NewRxTxVoidObjectCalleeInterface(count) {}
-    MOCK_METHOD(bool, NewRxValueReceived, (const NewRxTxVoidObjectCallerInterface* sender, const void* values, size_t count), (override));
+    MockNamed_Object_Callee_Interface(size_t count) : Named_Object_Callee_Interface(count) {}
+    MOCK_METHOD(bool, NewRxValueReceived, (const Named_Object_Caller_Interface* sender, const void* values, size_t count), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
 
-class MockNewRxTxVoidObjectCallerInterface : public NewRxTxVoidObjectCallerInterface {
+class MockNamed_Object_Caller_Interface : public Named_Object_Caller_Interface {
 public:
-    MOCK_METHOD(void, RegisterForNewRxValueNotification, (NewRxTxVoidObjectCalleeInterface* newCallee), (override));
-    MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (NewRxTxVoidObjectCalleeInterface* callee), (override));
+    MOCK_METHOD(void, RegisterForNewRxValueNotification, (Named_Object_Callee_Interface* newCallee), (override));
+    MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
-    MOCK_METHOD(void, NotifyCallee, (const String& name, void* object), (override));
+    MOCK_METHOD(void, NewRxValueReceived, (const String& name, void* object), (override));
     MOCK_METHOD(void, CallNamedCallback, (const String& name, void* object), (override));
 };
 
@@ -146,11 +146,11 @@ public:
     MOCK_METHOD(void, SerialPortMessageManager_RxTask, (), (override));
     MOCK_METHOD(void, SerialPortMessageManager_TxTask, (), (override));
 
-    //NewRxTxVoidObjectCallerInterface
-    MOCK_METHOD(void, RegisterForNewRxValueNotification, (NewRxTxVoidObjectCalleeInterface* NewCallee), (override));	
-    MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (NewRxTxVoidObjectCalleeInterface* Callee), (override));
+    //Named_Object_Caller_Interface
+    MOCK_METHOD(void, RegisterForNewRxValueNotification, (Named_Object_Callee_Interface* NewCallee), (override));	
+    MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* Callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));	
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));
-    MOCK_METHOD(void, NotifyCallee, (const String& name, void* object), (override));
+    MOCK_METHOD(void, NewRxValueReceived, (const String& name, void* object), (override));
     MOCK_METHOD(void, CallNamedCallback, (const String& name, void* object), (override));
 };

@@ -114,11 +114,15 @@ void OutputSystemStatus()
 
 void TestPSRam()
 {
-  ESP_LOGI("PS Ram", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());  
-  byte* psdRamBuffer = (byte*)ps_malloc(500000);
-  ESP_LOGI("PS Ram", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
+  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
+  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(0 == allocationSize && "psram allocation should be 0 at start");
+  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
+  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
   free(psdRamBuffer);
-  ESP_LOGI("PS Ram", "Used PSRAM: %d", ESP.getPsramSize() - ESP.getFreePsram());
+  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(0 == allocationSize && "Failed to free allocated psram");
 }
 
 void setup() 
@@ -140,12 +144,12 @@ void setup()
   InitializePreferences();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_SoundProcessor.SetupSoundProcessor(); 
   m_I2S_In.Setup();
   a2dp_source.set_ssid_callback(ConnectToThisName);
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
   m_Manager.Setup();
+  m_SoundProcessor.SetupSoundProcessor(); 
   OutputSystemStatus();
 }
 

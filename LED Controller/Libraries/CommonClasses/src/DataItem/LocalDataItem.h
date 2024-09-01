@@ -34,8 +34,8 @@
 template <typename T, size_t COUNT>
 class LocalDataItem: public DataItemInterface<T, COUNT>
 			 	   , public SetupCalleeInterface
-				   , public NamedCallback_Caller_Interface<T>
-				   , public NewRxValue_Caller_Interface<T>
+				   , public Named_Callback_Caller_Interface<T>
+				   , public Rx_Value_Caller_Interface<T>
 			 	   , public DataTypeFunctions
 			 	   , public ValidValueChecker
 			 	   , public StringEncoderDecoder<T>

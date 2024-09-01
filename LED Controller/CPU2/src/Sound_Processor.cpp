@@ -46,6 +46,7 @@ void Sound_Processor::SetupSoundProcessor()
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
+  SetupAllSetupCallees();
 }
 
 void Sound_Processor::Static_Calculate_FFTs(void * parameter)
