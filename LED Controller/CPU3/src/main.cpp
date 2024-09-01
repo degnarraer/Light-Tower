@@ -75,6 +75,19 @@ void SetupSerialPorts()
 }
 
 
+void TestPSRam()
+{
+  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
+  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(0 == allocationSize && "psram allocation should be 0 at start");
+  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
+  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
+  free(psdRamBuffer);
+  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
+  assert(0 == allocationSize && "Failed to free allocated psram");
+}
+
 void InitLocalVariables()
 {
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
@@ -97,6 +110,7 @@ void setup()
   SetupSerialPorts();
   InitLocalVariables();
   PrintMemory();
+  //TestPSRam();
 }
 
 void loop()
