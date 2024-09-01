@@ -155,14 +155,7 @@ class Rx_Value_Caller_Interface
 			ESP_LOGD("NotifyCallees", "Notify Callees");
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
 			{
-				if (callee) 
-				{
-					if (callee->GetName().equals(name))
-					{
-						callee->NewRxValueReceived(this, values, callee->GetCount());
-						break;
-					}
-				}
+				callee->NewRxValueReceived(this, values, callee->GetCount());
 			}
 		}
 	private:
@@ -174,7 +167,7 @@ class Named_Object_Callee_Interface
 {
 	public:
 		Named_Object_Callee_Interface( size_t Count )
-										: m_Count(Count)
+									 : m_Count(Count)
 		{
 			
 		}

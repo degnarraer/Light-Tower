@@ -27,15 +27,11 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
-    std::vector<KVP> signalValues = m_Tx_KeyValues;
+    bool hasSize = (m_Tx_KeyValues.size() > 0);
+    if(hasSize) ESP_LOGI("WebSocketDataProcessor_Task", "Before Size %i", m_Tx_KeyValues.size());
+    std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
+    if(hasSize) ESP_LOGI("WebSocketDataProcessor_Task", "After Size %i", m_Tx_KeyValues.size());
     std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
-    /*//DELETE ME 
-    for(int i = 0; i < m_MyTxNotifyees.size(); ++i)
-    {
-      m_MyTxNotifyees[i]->HandleWebSocketTxNotification(signalValues);
-    }
-    */
-
     if(signalValues.size())
     {
       String message;
@@ -45,17 +41,17 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
   }  
 }
 
-void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver)
 {
   auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
   if (it == m_MyRxNotifyees.end())
   {
-    ESP_LOGI("DeRegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
+    ESP_LOGI("RegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
     m_MyRxNotifyees.push_back(aReceiver);
   }
 }
 
-void WebSocketDataProcessor::DeDeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver)
 {
   auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
   if (it != m_MyRxNotifyees.end())
@@ -132,21 +128,6 @@ void WebSocketDataProcessor::NotifyClients(const String& textString)
     m_WebSocket.textAll(textString);
   }
 }
-
-/* DELETE ME
-void WebSocketDataProcessor::UpdateDataForSender(WebSocketDataHandlerSender* sender, bool forceUpdate)
-{
-  ESP_LOGD("WebSocketDataProcessor::UpdateDataForSender", "Updating Data For DataHandler!");
-  std::vector<KVP> KeyValuePairs = std::vector<KVP>();
-  sender->HandleWebSocketTxNotification(KeyValuePairs, forceUpdate);
-  if(KeyValuePairs.size())
-  {
-    String message;
-    Encode_Signal_Values_To_JSON(KeyValuePairs, message);
-    NotifyClients(message);
-  }
-}
-*/
 
 void WebSocketDataProcessor::StaticWebSocketDataProcessor_Task(void * parameter)
 {

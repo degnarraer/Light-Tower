@@ -252,9 +252,11 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						case RxTxType_Tx_Periodic:
 						case RxTxType_Tx_On_Change_With_Heartbeat:
 							enablePeriodicTx = true;
+							if(m_UpdateStoreType == UpdateStoreType_On_Rx) enableRx = true;
 							Tx_Now();
 							break;
 						case RxTxType_Tx_On_Change:
+							if(m_UpdateStoreType == UpdateStoreType_On_Rx) enableRx = true;
 							Tx_Now();
 						case RxTxType_Rx_Only:
 						case RxTxType_Rx_Echo_Value:
