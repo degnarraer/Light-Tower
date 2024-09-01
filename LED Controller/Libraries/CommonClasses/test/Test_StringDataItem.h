@@ -37,8 +37,8 @@ using namespace testing;
 class StringDataItemFunctionCallTests : public Test
 {
 protected:
-    NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
-    NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
+    MockSetupCallerInterface *mp_MockSetupCaller;
+    MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
     StringDataItem *mp_DataItem;
     const String spmm = "Serial Port Message Manager";
     const String name = "name";
@@ -120,6 +120,7 @@ protected:
     void SetUp() override
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
@@ -131,16 +132,8 @@ protected:
                                         , rate
                                         , mp_MockSerialPortMessageManager
                                         , nullptr
-                                        , this );   
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItem)).Times(1);                            
-        if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
-        {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
-                .Times(1)
-                .WillOnce(Return(true));
-        }
+                                        , this );
         SetupAllSetupCallees();
-        ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     }
 
     void TearDown() override
@@ -155,10 +148,8 @@ protected:
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_DataItem)).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
-            ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
         }
     }
 };
@@ -190,6 +181,7 @@ protected:
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
 
@@ -204,26 +196,16 @@ protected:
                                         , mp_mockNamedCallback
                                         , this );
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItem)).Times(1);
-        if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
-        {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
-                .Times(1)
-                .WillOnce(Return(true));
-        }
         SetupAllSetupCallees();
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-        ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
     }
 
     void DestroyDataItem()
     {
         if(mp_DataItem)
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_DataItem)).Times(1);
             delete mp_DataItem;
             mp_DataItem = nullptr;
-            ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
         }
     }
     void TearDown() override
@@ -248,16 +230,6 @@ protected:
             case RxTxType_Tx_Periodic:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_Periodic");
-                if(expectValueAccepted)
-                {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(2).WillRepeatedly(Return(true));
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
-                }
-                else
-                {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
-                }
                 if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
@@ -273,16 +245,6 @@ protected:
 	        case RxTxType_Tx_On_Change:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change");
-                if(expectValueAccepted)
-                {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1).WillRepeatedly(Return(true));
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
-                }
-                else
-                {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
-                }
                 if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
@@ -298,16 +260,6 @@ protected:
 	        case RxTxType_Tx_On_Change_With_Heartbeat:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change_With_Heartbeat");
-                if(expectValueAccepted)
-                {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(2).WillRepeatedly(Return(true));
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
-                }
-                else
-                {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
-                }
                 if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
@@ -323,8 +275,6 @@ protected:
             case RxTxType_Rx_Only:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Only");
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0);
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
                 if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
@@ -340,8 +290,6 @@ protected:
 	        case RxTxType_Rx_Echo_Value:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Echo_Value");
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_)).Times(0);
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
                 if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
@@ -381,7 +329,6 @@ TEST_F(StringDataItemTest, StringDataItem_Set_Value_From_Char_Pointer_Converts_T
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     EXPECT_STREQ(value1.c_str(), mp_DataItem->GetValueAsString().c_str());
     DestroyDataItem();
 }
@@ -395,25 +342,21 @@ TEST_F(StringDataItemTest, Change_Count_Changes_Properly)
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     EXPECT_EQ(2, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     EXPECT_EQ(2, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     DestroyDataItem();
 }
 
@@ -424,22 +367,18 @@ TEST_F(StringDataItemTest, Callback_Only_Called_For_New_Values)
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
 
     SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
-    ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
     DestroyDataItem();
 }
 

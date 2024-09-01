@@ -40,13 +40,13 @@ class LocalDataItemFunctionCallTests : public Test
         const int32_t initialValue = 10;
         const String spmm = "Serial Port Message Manager";
         const String name = "Test Name";
-        NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
+        MockSetupCallerInterface *mp_MockSetupCaller;
         LocalDataItem<int32_t, 1> *mp_DataItem;
         LocalDataItemFunctionCallTests(): mp_MockSetupCaller(nullptr), mp_DataItem(nullptr)
         {}
         void SetUp() override
         {
-            mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
+            mp_MockSetupCaller = new MockSetupCallerInterface();
         }
         void CreateDataItem()
         {
@@ -74,7 +74,7 @@ class LocalDataItemFunctionCallTests : public Test
                 EXPECT_CALL(*mp_MockSetupCaller, DeRegisterForSetupCall(mp_DataItem)).Times(1);
                 delete mp_DataItem;
                 mp_DataItem = nullptr;
-                ::testing::Mock::VerifyAndClear(&mp_MockSetupCaller);
+                ::testing::Mock::VerifyAndClearExpectations(&mp_MockSetupCaller);
             }
         }
 };

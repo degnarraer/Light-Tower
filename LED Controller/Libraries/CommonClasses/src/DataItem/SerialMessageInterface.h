@@ -257,6 +257,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						case RxTxType_Tx_On_Change:
 							if(m_UpdateStoreType == UpdateStoreType_On_Rx) enableRx = true;
 							Tx_Now();
+							break;
 						case RxTxType_Rx_Only:
 						case RxTxType_Rx_Echo_Value:
 							enableRx = true;

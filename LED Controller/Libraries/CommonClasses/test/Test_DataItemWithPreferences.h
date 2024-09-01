@@ -80,14 +80,31 @@ class DataItemWithPreferencesFunctionCallTests : public Test
                                                                                 , mp_mockNamedCallback
                                                                                 , mp_MockSetupCaller );
             ::testing::Mock::VerifyAndClearExpectations(&mp_MockSetupCaller);
-            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(1);
+            if( updateStoreType == UpdateStoreType_On_Rx || rxTxType == RxTxType_Rx_Only || rxTxType == RxTxType_Rx_Echo_Value )
+            {
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(1);
+            }
+            else
+            {
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(0);
+            }
+            if( ( rxTxType == RxTxType_Tx_On_Change_With_Heartbeat || 
+                  rxTxType == RxTxType_Tx_On_Change ||
+                  rxTxType == RxTxType_Tx_Periodic ) && updateStoreType == UpdateStoreType_On_Tx )
+            {
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(1);
+            }
+            else
+            {
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(0);
+            }
             if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
             {
                 EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
                     .Times(1)
                     .WillOnce(Return(true));
             }
+            EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
             mp_DataItemWithPreferences->Setup();
             ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
         }
@@ -205,7 +222,6 @@ class DataItemWithPreferencesRxTxTests : public Test
                                                                                 , mp_mockNamedCallback
                                                                                 , this );
             EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(1);
             SetupAllSetupCallees();
             ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
             ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
@@ -297,13 +313,6 @@ protected:
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
         mp_DataItemWithPreferences = new DataItemWithPreferences<T, COUNT>( name, initialValue, rxTxType, updateStoreType, rate, mp_mockPreferences, mp_MockSerialPortMessageManager, mp_mockNamedCallback, this, validStringValues);
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
-        EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItemWithPreferences)).Times(1);
-        if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
-        {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_))
-                .Times(1)
-                .WillOnce(Return(true));
-        }
         SetupAllSetupCallees();
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
         ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
