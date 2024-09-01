@@ -83,29 +83,38 @@ void Named_Object_Caller_Interface::DeRegisterNamedCallback(NamedCallback_t* Nam
 	}
 }
 
-void Named_Object_Caller_Interface::Notify_NewRxValue_Callees(void* object)
+void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String& name, void* object)
 {
-	ESP_LOGD("NewRxValueReceived", "Notify Callee: \"%s\"", this->GetName().c_str());
+	ESP_LOGD("NewRxValueReceived", "Notify Callee: \"%s\"", name.c_str());
 	bool found = false;
 	for (Named_Object_Callee_Interface* callee : m_NewValueCallees)
 	{
-		found = true;
-		ESP_LOGD("NewRxValueReceived", "Callee Found: \"%s\"", this->GetName().c_str());
-		callee->NewRxValueReceived(this, object);
-		break;
+		if (callee) 
+		{
+			if (callee->GetName().equals(name))
+			{
+				found = true;
+				ESP_LOGD("NewRxValueReceived", "Callee Found: \"%s\"", name.c_str());
+				callee->NewRxValueReceived(this, object);
+				break;
+			}
+		}
 	}
-	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Callee Not Found Found: \"%s\"", this->GetName().c_str());
+	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Callee Not Found Found: \"%s\"", name.c_str());
 }
 
-void Named_Object_Caller_Interface::CallNamedCallbacks(void* object)
+void Named_Object_Caller_Interface::CallNamedCallback_ByName(const String& name, void* object)
 {
-	ESP_LOGD("CallNamedCallbacks", "CallNamedCallbacks");
+	ESP_LOGD("CallNamedCallback", "CallNamedCallback");
     for (NamedCallback_t* namedCallback : m_NamedCallbacks)
     {
-        if (namedCallback->Callback) 
-        {
-            namedCallback->Callback(namedCallback->Name, object, namedCallback->Arg);
-        }
+		if(namedCallback->Name.equals(name))
+		{
+			if (namedCallback->Callback) 
+			{
+				namedCallback->Callback(namedCallback->Name, object, namedCallback->Arg);
+			}
+		}
     }
 }
 
@@ -202,7 +211,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					if(mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
 					{
 						ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-						this->Notify_NewRxValue_Callees(NamedObject.Object);
+						this->Notify_NewRxValue_Callee_ByName(NamedObject.Name, NamedObject.Object);
 					}
 					else
 					{

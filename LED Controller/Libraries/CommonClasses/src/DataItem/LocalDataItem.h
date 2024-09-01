@@ -167,10 +167,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 						memcpy(mp_Value+i, &value, sizeof(char));
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
-					CallAllCallbacks(mp_Value);
 					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
+					CallAllCallbacks(mp_Value);
 				}
 				else
 				{
@@ -413,8 +413,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				memcpy(mp_Value, value, sizeof(T) * COUNT);
 				++m_ValueChangeCount;
-				CallAllCallbacks(mp_Value);
 				ESP_LOGD( "LocalDataItem: SetValue", "Set Value Successful");
+				CallAllCallbacks(mp_Value);
 				return true;
 			}
 			else
@@ -484,8 +484,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, this->ConvertValueToString(value, count).c_str() );
 				memcpy(mp_Value, value, sizeof(T) * count);
 				++m_ValueChangeCount;
-				CallAllCallbacks(mp_Value);
 				ESP_LOGD( "UpdateStore", "Update Store: Successful");
+				CallAllCallbacks(mp_Value);
 				return true;
 			}
 			else

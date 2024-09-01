@@ -200,8 +200,8 @@ class Named_Object_Caller_Interface
 		virtual void DeRegisterNamedCallback(NamedCallback_t* namedCallback);
 		virtual String GetName() const = 0;
 	protected:
-		virtual void Notify_NewRxValue_Callees(void* object);
-		virtual void CallNamedCallbacks(void* object);
+		virtual void Notify_NewRxValue_Callee_ByName(const String& name, void* object);
+		virtual void CallNamedCallback_ByName(const String& name, void* object);
 	private:
 		std::vector<Named_Object_Callee_Interface*> m_NewValueCallees = std::vector<Named_Object_Callee_Interface*>();
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();

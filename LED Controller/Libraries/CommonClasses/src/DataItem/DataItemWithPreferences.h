@@ -155,6 +155,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			}
 			return result;
 		}
+		
+		virtual bool SetValue(const T value) override
+		{
+			return this->SetValue(&value, 1);
+		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{

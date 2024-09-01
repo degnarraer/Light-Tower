@@ -52,7 +52,7 @@ public:
 class MockNamed_Object_Callee_Interface : public Named_Object_Callee_Interface {
 public:
     MockNamed_Object_Callee_Interface(size_t count) : Named_Object_Callee_Interface(count) {}
-    MOCK_METHOD(bool, NewRxValueReceived, (const Named_Object_Caller_Interface* sender, const void* values, size_t count), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const Named_Object_Caller_Interface* sender, const void* values), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
@@ -63,8 +63,8 @@ public:
     MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
-    MOCK_METHOD(void, NewRxValueReceived, (const String& name, void* object), (override));
-    MOCK_METHOD(void, CallNamedCallback, (const String& name, void* object), (override));
+    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object), (override));
+    MOCK_METHOD(void, CallNamedCallback_ByName, (const String& name, void* object), (override));
 };
 
 class MockHardwareSerial : public HardwareSerial {
@@ -151,6 +151,6 @@ public:
     MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* Callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));	
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));
-    MOCK_METHOD(void, NewRxValueReceived, (const String& name, void* object), (override));
-    MOCK_METHOD(void, CallNamedCallback, (const String& name, void* object), (override));
+    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object), (override));
+    MOCK_METHOD(void, CallNamedCallback_ByName, (const String& name, void* object), (override));
 };

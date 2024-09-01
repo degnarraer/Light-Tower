@@ -130,7 +130,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						, this->ConvertValueToString(receivedValue, this->GetCount()).c_str());
 				ZeroOutMemory(mp_TxValue);
 				memcpy(mp_TxValue, mp_RxValue, sizeof(T) * this->GetCount());
-				Tx_Now();
+				StoreUpdated = Tx_Now();
 			}
 			return StoreUpdated;
 		}
