@@ -173,7 +173,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			{
 				if(memcmp(mp_TxValue, newTxValue, sizeof(T)*count) != 0)
 				{
-					ESP_LOGI( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
+					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, this->GetName().c_str() );
 					ZeroOutMemory(mp_TxValue);
@@ -182,7 +182,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				}
 				else
 				{
-					ESP_LOGI( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value did not change."
+					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value did not change."
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, this->GetName().c_str() );
 				}
@@ -301,7 +301,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		bool Try_TX_On_Change()
 		{
-			ESP_LOGI("Try_TX_On_Change", "\"%s\": Try TX On Change", this->GetName().c_str());
+			ESP_LOGD("Try_TX_On_Change", "\"%s\": Try TX On Change", this->GetName().c_str());
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				return Tx_Now();

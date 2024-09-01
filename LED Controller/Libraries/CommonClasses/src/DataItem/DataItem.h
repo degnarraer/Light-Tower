@@ -195,7 +195,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			ESP_LOGI( "DataItem::SetValueFromString"
+			ESP_LOGD( "DataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, this->GetName().c_str()
 					, stringValue.c_str() );
@@ -203,7 +203,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
 			if(parseCount == COUNT)
 			{
-				ESP_LOGI("SetValueFromString", "Name: \"%s\" Setting Tx Value: \"%s\"", this->GetName().c_str(), stringValue.c_str() );
+				ESP_LOGD("SetValueFromString", "Name: \"%s\" Setting Tx Value: \"%s\"", this->GetName().c_str(), stringValue.c_str() );
 				return this->Set_Tx_Value(values, parseCount);
 			}
 			else

@@ -144,9 +144,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count) override
     {
+      ESP_LOGI( "NewRxValueReceived", "New DataItem Rx Value");
       if(sender == &m_DataItem)
       {
-        ESP_LOGI( "NewRxValueReceived", "New RX Datalink Value");
+        ESP_LOGI( "NewRxValueReceived", "New Verified DataItem Rx Value");
         m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
         m_Last_Update_Time = millis();
         return true;
