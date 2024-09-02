@@ -55,7 +55,7 @@ class WebSocketDataProcessor
                           : m_WebServer(webServer)
                           , m_WebSocket(webSocket)
     {
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_Task,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
     }
     virtual ~WebSocketDataProcessor()
     {
@@ -68,7 +68,7 @@ class WebSocketDataProcessor
     void DeRegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender);
     bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& value);
     void UpdateAllDataToClient(uint8_t clientId);
-    static void StaticWebSocketDataProcessor_Task(void * parameter);
+    static void StaticWebSocketDataProcessor_WebSocket_TxTask(void * parameter);
     void TxDataToWebSocket(String key, String value)
     {
       std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
@@ -83,7 +83,7 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
     std::recursive_mutex m_Tx_KeyValues_Mutex;
-    void WebSocketDataProcessor_Task();
+    void WebSocketDataProcessor_WebSocket_TxTask();
     void Encode_Signal_Values_To_JSON(std::vector<KVP> &signalValue, String &result);
     void NotifyClient(uint8_t clientID, const String& textString);
     void NotifyClients(const String& textString);

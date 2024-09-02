@@ -19,7 +19,7 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   }
 }
 
-void WebSocketDataProcessor::WebSocketDataProcessor_Task()
+void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
 {
   const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -28,9 +28,9 @@ void WebSocketDataProcessor::WebSocketDataProcessor_Task()
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
     bool hasSize = (m_Tx_KeyValues.size() > 0);
-    if(hasSize) ESP_LOGI("WebSocketDataProcessor_Task", "Before Size %i", m_Tx_KeyValues.size());
+    if(hasSize) ESP_LOGI("WebSocketDataProcessor_WebSocket_TxTask", "Before Size %i", m_Tx_KeyValues.size());
     std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
-    if(hasSize) ESP_LOGI("WebSocketDataProcessor_Task", "After Size %i", m_Tx_KeyValues.size());
+    if(hasSize) ESP_LOGI("WebSocketDataProcessor_WebSocket_TxTask", "After Size %i", m_Tx_KeyValues.size());
     std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
     if(signalValues.size())
     {
@@ -122,15 +122,15 @@ void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& 
 
 void WebSocketDataProcessor::NotifyClients(const String& textString)
 {
-  ESP_LOGD("NotifyClients", "Notify Clients: %s", textString.c_str());
+  ESP_LOGI("NotifyClients", "Notify Clients: %s", textString.c_str());
   if(0 < textString.length())
   {
     m_WebSocket.textAll(textString);
   }
 }
 
-void WebSocketDataProcessor::StaticWebSocketDataProcessor_Task(void * parameter)
+void WebSocketDataProcessor::StaticWebSocketDataProcessor_WebSocket_TxTask(void * parameter)
 {
   WebSocketDataProcessor *processor = (WebSocketDataProcessor*)parameter;
-  processor->WebSocketDataProcessor_Task();
+  processor->WebSocketDataProcessor_WebSocket_TxTask();
 }

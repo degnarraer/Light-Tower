@@ -143,7 +143,7 @@
 								Connect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Connect_Button" data-Signal="Sink_Connect" onmousedown="sink_Connect(this, true)" onmouseup="sink_Connect(this, false)">Connect</button>
+								<button id="Sink_Connect_Button" data-Signal="Sink_Connect" onmousedown="Sink_Connect.setValue(true)" onmouseup="Sink_Connect.setValue(false)">Connect</button>
 							</div>
 						</div>
 					</div>
@@ -153,7 +153,7 @@
 								Disconnect
 							</div>
 							<div class="settingGroup_Widget">
-								<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" onmousedown="sink_Disconnect(this, true)" onmouseup="sink_Disconnect(this, false)">Disconnect</button>
+								<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" onmousedown="Sink_Disconnect.setValue(true)" onmouseup="Sink_Disconnect.setValue(false)">Disconnect</button>
 							</div>
 						</div>
 					</div>
@@ -256,7 +256,7 @@
 									Disconnect
 								</div>
 								<div class="settingGroup_Widget">
-									<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" dataonmousedown="source_Disconnect(this, true)" onmouseup="source_Disconnect(this, false)">Disconnect</button>
+									<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" onmousedown="Source_Disconnect.setValue(true)" onmouseup="Source_Disconnect.setValue(false)">Disconnect</button>
 								</div>
 							</div>
 						</div>

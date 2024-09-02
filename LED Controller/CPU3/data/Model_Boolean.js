@@ -11,7 +11,15 @@ export class Model_Boolean {
     }
 
     static values = {
+        0: '0',
+        f: '0',
+        F: '0',
+        false: '0',
         False: '0',
+        1: '1',
+        t: '1',
+        T: '1',
+        true: '1',
         True: '1',
         Count: 'Count'
     };
@@ -34,6 +42,9 @@ export class Model_Boolean {
     
     setValue(newValue, updateWebsocket = true) {
         console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
+        if (typeof newValue === 'boolean') {
+            newValue = newValue ? Model_Boolean.values.True : Model_Boolean.values.False;
+        }
         if (Object.values(Model_Boolean.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
@@ -105,6 +116,8 @@ export class Model_Boolean {
             if (element.tagName.toLowerCase() === "input" && element.type.toLowerCase() === "checkbox") {
                 element.checked = this.value === Model_Boolean.values.True;
                 console.log(`"${this.signalName}" Controlled CheckBox "${element.id}" Updated to: "${this.value}"`);
+            } else if (element.tagName.toLowerCase() === "button" ) {
+                console.log(`"${this.signalName}" Button "${element.id}" Update to HTML not allowed: "${this.value}"`);
             } else {
                 console.error(`"${this.signalName}" Unsupported Element!`);
             }

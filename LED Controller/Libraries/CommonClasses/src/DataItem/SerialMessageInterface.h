@@ -124,8 +124,8 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
-				ESP_LOGI( "NewRxValueReceived"
-						, "RX Echo for: \"%s\" with Value: \"%s\""
+				ESP_LOGD( "NewRxValueReceived"
+						, "Rx Echo for: \"%s\" with Value: \"%s\""
 						, this->GetName().c_str()
 						, this->ConvertValueToString(receivedValue, this->GetCount()).c_str());
 				ZeroOutMemory(mp_TxValue);
