@@ -29,7 +29,6 @@
 #include "ValidValueChecker.h"
 #include "StringEncoderDecoder.h"
 
-#define ENCODE_DIVIDER "|"
 
 template <typename T, size_t COUNT>
 class LocalDataItem: public DataItemInterface<T, COUNT>
@@ -340,16 +339,16 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		{
 			std::vector<String> substrings;
 			size_t start = 0;
-			size_t end = stringValue.indexOf(ENCODE_DIVIDER);
+			size_t end = stringValue.indexOf(ENCODE_OBJECT_DIVIDER);
 
-			// Split the input string by ENCODE_DIVIDER
+			// Split the input string by ENCODE_OBJECT_DIVIDER
 			while (end != -1)
 			{
 				String parsedString = stringValue.substring(start, end);
 				ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
 				substrings.push_back(parsedString);
 				start = end + 1;
-				end = stringValue.indexOf(ENCODE_DIVIDER, start);
+				end = stringValue.indexOf(ENCODE_OBJECT_DIVIDER, start);
 			}
 			String parsedString = stringValue.substring(start);
 			ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
@@ -451,7 +450,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			for (size_t i = 0; i < count - 1; ++i)
 			{
 				stringValue += valueStrings[i];
-				stringValue += ENCODE_DIVIDER;
+				stringValue += ENCODE_OBJECT_DIVIDER;
 			}
 			stringValue += valueStrings[COUNT - 1];
 			return stringValue;

@@ -222,22 +222,29 @@ void Manager::MoveDataToStatisticalEngine()
 //BluetoothConnectionStateCallee Callback
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {
-  ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
+  ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Change Callback");
   switch(connectionState)
   {
     case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnected.");
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
       break;
     case ESP_A2D_CONNECTION_STATE_CONNECTING:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connecting.");
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Connecting);
       break;
     case ESP_A2D_CONNECTION_STATE_CONNECTED:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connected.");
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Connected);
       break;
     case ESP_A2D_CONNECTION_STATE_DISCONNECTING:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnecting.");
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnecting);
       break;
     default:
+      ESP_LOGW("BluetoothConnectionStatusChanged", "Unhandled Connection State Change. Changed to Disconnected.");
+      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
     break;
   }
+  
 }

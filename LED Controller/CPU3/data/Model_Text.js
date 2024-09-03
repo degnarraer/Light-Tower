@@ -70,6 +70,8 @@ export class Model_Text {
         elementsWithDataValue.forEach(element => {
             if (element.hasAttribute("value")) {
                 element.value = this.value;
+            } else if (element.hasAttribute("span")) {
+                element.innerHTML = this.value;
             } else if (element.childNodes.length > 0) {
                 element.innerHTML = this.value;
             } else {

@@ -43,6 +43,8 @@ class BluetoothConnectionStateCaller
 		{
 			vTaskDelete(m_Handle);
 		}
+		static void Static_BT_Connection_State_Change_Callback(esp_a2d_connection_state_t state, void *);
+		void BT_Connection_State_Change_Callback(esp_a2d_connection_state_t state);
 		void RegisterForConnectionStateChangedCallBack(BluetoothConnectionStateCallee *Callee);
 		bool IsConnected();
 	
@@ -54,8 +56,6 @@ class BluetoothConnectionStateCaller
 		TaskHandle_t m_Handle;
 		esp_a2d_connection_state_t m_ConnectionState;
 		BluetoothA2DPCommon *mp_BT;
-		static void StaticCheckBluetoothConnection(void *parameter);
-		void UpdateConnectionStatus();
 };
 
 class BluetoothActiveDeviceUpdatee

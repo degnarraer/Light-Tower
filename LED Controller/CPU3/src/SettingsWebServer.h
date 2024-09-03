@@ -50,7 +50,8 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void StartWiFi()
     {
-      InitWiFiAP();
+      //InitWiFiAP();
+      InitWiFiClient();
     }
     
     void EndWiFi()
@@ -70,7 +71,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         ESP_LOGI("InitializePreferences", "NVS Initialized");
         ESP.restart();
       }
-      else if(m_preferenceInterface.getBool("Pref_Reset", true))
+      else if(true)//m_preferenceInterface.getBool("Pref_Reset", true))
       {
         m_preferenceInterface.clear();
         ESP_LOGI("InitializePreferences", "Preferences Cleared!");
@@ -155,7 +156,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SSID_Callback = { "SSID Callback"
                                       , &SSID_ValueChanged
                                       , &m_SSID_CallbackArgs };
-    const String m_SSID_InitialValue = "LED Tower of Power";
+    const String m_SSID_InitialValue = "SHOCK 5G";
     LocalStringDataItemWithPreferences m_SSID = LocalStringDataItemWithPreferences( "SSID"
                                                                                   , m_SSID_InitialValue
                                                                                   , &m_preferenceInterface
@@ -180,7 +181,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_Password_Callback = { "Password Callback"
                                           , &Password_ValueChanged
                                           , &m_Password_CallbackArgs };
-    const String m_Password_InitialValue = "LEDs Rock";
+    const String m_Password_InitialValue = "agent007";
     LocalStringDataItemWithPreferences m_Password = LocalStringDataItemWithPreferences( "Password"
                                                                                       , m_Password_InitialValue
                                                                                       , &m_preferenceInterface
@@ -526,8 +527,9 @@ class SettingsWebServerManager: public SetupCallerInterface
     void InitWiFiClient()
     {
       ESP_LOGI( "SettingsWebServer: InitWiFiAP", "Initializing Wifi Client");
-      if(0 == m_SSID.GetValueAsString().length() || 0 == m_Password.GetValueAsString().length())
+      if(m_SSID.GetValueAsString().length(), m_Password.GetValueAsString().length())
       {
+        
         //WiFi.disconnect();
         WiFi.mode(WIFI_STA);
         bool connected = WiFi.begin(m_SSID.GetValueAsString().c_str(), m_Password.GetValueAsString().c_str());

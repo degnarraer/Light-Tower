@@ -23,9 +23,22 @@
 BluetoothConnectionStateCaller::BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT )
 															  : mp_BT(BT)
 {
-	if( xTaskCreatePinnedToCore( StaticCheckBluetoothConnection,   "BluetoothConnectionStateCaller", 10000,  this,   THREAD_PRIORITY_MEDIUM,  &m_Handle, 1 ) != pdTRUE)
-	{	
-		ESP_LOGE("BluetoothConnectionStateCaller", "ERROR! Unable to ceate task.");
+	if(mp_BT)
+	{
+		mp_BT->set_on_connection_state_changed(Static_BT_Connection_State_Change_Callback, this);
+	}
+}
+
+void BluetoothConnectionStateCaller::Static_BT_Connection_State_Change_Callback(esp_a2d_connection_state_t state, void *parameter)
+{
+	((BluetoothConnectionStateCaller*)parameter)->BT_Connection_State_Change_Callback(state);
+}
+
+void BluetoothConnectionStateCaller::BT_Connection_State_Change_Callback(esp_a2d_connection_state_t state)
+{
+	if(mp_BT && mp_ConnectionStateCallee)
+	{
+		mp_ConnectionStateCallee->BluetoothConnectionStateChanged(m_ConnectionState);
 	}
 }
 
@@ -37,31 +50,6 @@ void BluetoothConnectionStateCaller::RegisterForConnectionStateChangedCallBack(B
 bool BluetoothConnectionStateCaller::IsConnected()
 {
 	return mp_BT->is_connected();
-}
-
-void BluetoothConnectionStateCaller::StaticCheckBluetoothConnection(void *parameter)
-{
-  const TickType_t xFrequency = 100;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-	vTaskDelayUntil( &xLastWakeTime, xFrequency );
-	((BluetoothConnectionStateCaller*)parameter)->UpdateConnectionStatus();
-  }
-}
-
-void BluetoothConnectionStateCaller::UpdateConnectionStatus()
-{
-	if(mp_BT && mp_ConnectionStateCallee)
-	{
-		esp_a2d_connection_state_t StartingState = m_ConnectionState;
-		m_ConnectionState = mp_BT->get_connection_state();
-		if(StartingState != m_ConnectionState)
-		{
-			ESP_LOGI("UpdateConnectionStatus", "Connection Status Changed to: \"%s\"", mp_BT->to_str(m_ConnectionState) );
-			mp_ConnectionStateCallee->BluetoothConnectionStateChanged(m_ConnectionState);
-		}
-	}
 }
 
 void Bluetooth_Source::Setup()

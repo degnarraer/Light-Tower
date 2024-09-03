@@ -14,6 +14,8 @@
 #define THREAD_PRIORITY_MEDIUM configMAX_PRIORITIES-20
 #define THREAD_PRIORITY_LOW configMAX_PRIORITIES-30
 
+#define ENCODE_OBJECT_DIVIDER "|o|"
+#define ENCODE_VALUE_DIVIDER "|v|"
 
 class NamedItem
 {
@@ -224,13 +226,13 @@ struct  CompatibleDevice_t
 		// Function to convert to string
         String toString() const
         {
-            return String(name) + " | " + String(address);
+            return String(name) + ENCODE_VALUE_DIVIDER + String(address);
         }
 
 		// Static function to convert from string
 		static CompatibleDevice_t fromString(const std::string &str)
 		{
-			int delimiterIndex = str.find('|');
+			int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
 			if (delimiterIndex == -1)
 			{
 				// handle error, return default
@@ -361,13 +363,13 @@ public:
     // Convert object to string
     String toString() const
     {
-        return String(name) + " | " + String(address) + " | " + String(rssi) + " | " + String(lastUpdateTime) + " | " + String(timeSinceUpdate);
+        return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(lastUpdateTime) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
     }
 
     // Create object from string
     static ActiveCompatibleDevice_t fromString(const std::string &str)
     {
-        int delimiterIndex = str.find('|');
+        int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
         if (delimiterIndex == -1)
         {
             // handle error, return default
@@ -375,7 +377,7 @@ public:
         }
 
         String name = String(str.substr(0, delimiterIndex - 1).c_str());
-        int nextDelimiterIndex = str.find('|', delimiterIndex + 1);
+        int nextDelimiterIndex = str.find(ENCODE_VALUE_DIVIDER, delimiterIndex + 1);
         if (nextDelimiterIndex == -1)
         {
             // handle error, return default
@@ -383,7 +385,7 @@ public:
         }
 
         String address = String(str.substr(delimiterIndex + 2, nextDelimiterIndex - 1).c_str());
-        int nextDelimiterIndex2 = str.find('|', nextDelimiterIndex + 1);
+        int nextDelimiterIndex2 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex + 1);
         if (nextDelimiterIndex2 == -1)
         {
             // handle error, return default
@@ -393,7 +395,7 @@ public:
         String rssiStr =  String(str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1).c_str());
         int rssi = rssiStr.toInt(); // Convert string to integer
 
-        int nextDelimiterIndex3 = str.find('|', nextDelimiterIndex2 + 1);
+        int nextDelimiterIndex3 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex2 + 1);
         if (nextDelimiterIndex3 == -1)
         {
             // handle error, return default
@@ -531,7 +533,7 @@ class Mute_State
         enum Value
         {
             Mute_State_Un_Muted = 0,
-            Mute_State_Muted
+            Mute_State_Muted = 1
         };
 
         // Function to convert enum to string
@@ -653,10 +655,10 @@ class Transciever
     public:
         enum Value
         {
-            Transciever_None,
-            Transciever_TX,
-            Transciever_RX,
-            Transciever_TXRX
+            Transciever_None = 0,
+            Transciever_TX = 1,
+            Transciever_RX = 2,
+            Transciever_TXRX = 3
         };
 
         // Function to convert enum to string
@@ -787,9 +789,10 @@ public:
     enum Value
     {
         Disconnected = 0,
-        Connecting,
-        Connected,
-        Disconnecting
+        Connecting = 1,
+        Connected = 2,
+        Disconnecting = 3,
+        Unknown = 4
     };
 
     // Function to convert enum to string
@@ -801,6 +804,7 @@ public:
             case Connecting: return "Connecting";
             case Connected: return "Connected";
             case Disconnecting: return "Disconnecting";
+            case Unknown: return "Unknown";
             default: return "Unknown";
         }
     }
@@ -812,8 +816,7 @@ public:
         if (str == "Connecting") return Connecting;
         if (str == "Connected") return Connected;
         if (str == "Disconnecting") return Disconnecting;
-        
-        return Disconnected; // Default or error value
+        return Unknown; // Default or error value
     }
 
     // Overload the insertion operator
@@ -827,6 +830,7 @@ public:
     
     // Overload the extraction operator
     friend std::ostream& operator<<(std::ostream& os, const ConnectionStatus::Value& value) {
+        ESP_LOGI("operator<<", "Connection Status to String");
         os << ConnectionStatus::ToString(value);
         return os;
     }

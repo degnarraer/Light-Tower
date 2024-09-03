@@ -4,13 +4,10 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
 {
   ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %i", clientId );
   std::vector<KVP> signalValues = std::vector<KVP>();
-  
-  /*//DELETE ME 
   for(int i = 0; i < m_MyTxNotifyees.size(); ++i)
   {
-    m_MyTxNotifyees[i]->HandleWebSocketTxNotification(signalValues, true);
+    m_MyTxNotifyees[i]->HandleWebSocketDataRequest();
   }
-  */
   if(signalValues.size())
   {
     String message;
@@ -28,9 +25,9 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
     bool hasSize = (m_Tx_KeyValues.size() > 0);
-    if(hasSize) ESP_LOGI("WebSocketDataProcessor_WebSocket_TxTask", "Before Size %i", m_Tx_KeyValues.size());
+    if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "Before Size %i", m_Tx_KeyValues.size());
     std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
-    if(hasSize) ESP_LOGI("WebSocketDataProcessor_WebSocket_TxTask", "After Size %i", m_Tx_KeyValues.size());
+    if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "After Size %i", m_Tx_KeyValues.size());
     std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
     if(signalValues.size())
     {

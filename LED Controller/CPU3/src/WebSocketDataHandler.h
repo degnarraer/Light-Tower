@@ -36,7 +36,7 @@ class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void HandleWebSocketTxNotification() = 0;
+    virtual void HandleWebSocketDataRequest() = 0;
 };
 
 
@@ -144,7 +144,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values) override
     {
-      ESP_LOGI( "NewRxValueReceived", "New DataItem Rx Value");
+      ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       if(sender == &m_DataItem)
       {
         ESP_LOGI( "NewRxValueReceived", "New Verified DataItem Rx Value");
@@ -170,7 +170,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
 
     
-    virtual void HandleWebSocketTxNotification() override
+    virtual void HandleWebSocketDataRequest() override
     {
       m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
     }

@@ -87,12 +87,13 @@ class Manager: public NamedItem
     TaskHandle_t m_Manager_1000mS_Task;
     TaskHandle_t m_Manager_300000mS_Task;
     
-    String ConnectionStatusStrings[4]
+    String ConnectionStatusStrings[5]
     {
       "DISCONNECTED",
       "CONNECTING",
       "CONNECTED",
-      "DISCONNECTING"
+      "DISCONNECTING",
+      "Unknown",
     };
 
     ValidStringValues_t validBoolValues = {"0", "1"};
@@ -304,7 +305,7 @@ class Manager: public NamedItem
     DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State"
                                                                                                      , m_SinkConnectionStatus_InitialValue
                                                                                                      , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                                     , UpdateStoreType_On_Rx
+                                                                                                     , UpdateStoreType_On_Tx
                                                                                                      , 5000
                                                                                                      , &m_CPU3SerialPortMessageManager
                                                                                                      , NULL

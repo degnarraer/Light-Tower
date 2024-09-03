@@ -1,6 +1,7 @@
 import { WebSocketManager } from './WebSocket.js';
 import { Model_InputSource } from './Model_InputSource.js';
 import { Model_OutputSource } from './Model_OutputSource.js';
+import { Model_ConnectionStatus } from './Model_ConnectionStatus.js'
 import { Model_Boolean } from './Model_Boolean.js';
 import { Model_Numeric } from './Model_Numeric.js';
 import { Model_Text } from './Model_Text.js';
@@ -17,8 +18,10 @@ var source_Name_Changed_TimeoutHandle;
 
 export const CurrentSoundInputSource = new Model_InputSource('Input_Source', Model_InputSource.values.OFF, wsManager);
 export const CurrentSoundOutputSource = new Model_OutputSource('Output_Source', Model_OutputSource.values.OFF, wsManager);
+export const Source_ConnectionStatus = new Model_ConnectionStatus('Src_Conn_State', 'Disconnected', wsManager);
 export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.values.False, wsManager);
 export const Source_Disconnect = new Model_Boolean('Src_Disconnect', Model_Boolean.values.False, wsManager);
+export const Sink_ConnectionStatus = new Model_ConnectionStatus('Sink_Conn_State', 'Disconnected', wsManager);
 export const Sink_Connect = new Model_Boolean('Sink_Connect', Model_Boolean.values.False, wsManager);
 export const Sink_Disconnect = new Model_Boolean('Sink_Disconnect', Model_Boolean.values.False, wsManager);
 export const Source_Reset = new Model_Boolean('BT_Src_Reset', Model_Boolean.values.False, wsManager);
