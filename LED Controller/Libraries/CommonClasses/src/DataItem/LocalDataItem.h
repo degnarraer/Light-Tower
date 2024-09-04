@@ -408,6 +408,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			assert(COUNT == count);
 			bool valueChanged = (memcmp(mp_Value, value, sizeof(T) * COUNT) != 0);
 			bool validValue = ConfirmValueValidity(value, COUNT);
+
 			if(valueChanged && validValue)
 			{
 				memcpy(mp_Value, value, sizeof(T) * COUNT);
@@ -423,7 +424,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
-		virtual bool SetValue(const T value)
+		virtual bool SetValue(const T& value)
 		{
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
@@ -443,7 +444,9 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				for (size_t i = 0; i < count; ++i)
 				{
-					valueStrings.push_back(StringEncoderDecoder<T>::EncodeToString(pvalue[i]));
+					String encodedString = StringEncoderDecoder<T>::EncodeToString(pvalue[i]);
+					ESP_LOGI("ConvertValueToString", "Encoded String \"%s\"", encodedString.c_str());
+					valueStrings.push_back(encodedString);
 				}
 			}
 			String stringValue = "";

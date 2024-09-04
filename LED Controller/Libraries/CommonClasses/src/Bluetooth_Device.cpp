@@ -38,7 +38,7 @@ void BluetoothConnectionStateCaller::BT_Connection_State_Change_Callback(esp_a2d
 {
 	if(mp_BT && mp_ConnectionStateCallee)
 	{
-		mp_ConnectionStateCallee->BluetoothConnectionStateChanged(m_ConnectionState);
+		mp_ConnectionStateCallee->BluetoothConnectionStateChanged(state);
 	}
 }
 

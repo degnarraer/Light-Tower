@@ -266,7 +266,7 @@ class Manager: public NamedItem
         assert((arguments->arg1) && "Null Pointer!");
         Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
         bool resetBLE = *static_cast<bool*>(object);
-        ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Reset Value Changed Value Changed: %i", resetBLE);
+        ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Reset Value Changed: %i", resetBLE);
         BT_Out.Set_Reset_BLE(resetBLE);
       }
     }

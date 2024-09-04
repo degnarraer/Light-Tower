@@ -243,7 +243,7 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
       break;
     default:
       ESP_LOGW("BluetoothConnectionStatusChanged", "Unhandled Connection State Change. Changed to Disconnected.");
-      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
+      m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Unknown);
     break;
   }
   

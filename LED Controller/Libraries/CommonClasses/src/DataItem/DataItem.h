@@ -176,7 +176,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValue(const T* values, size_t count) override
 		{
-			ESP_LOGI("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName().c_str(), this->ConvertValueToString(values, count));
+			ESP_LOGI("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName().c_str(), this->ConvertValueToString(values, count).c_str() );
 			if(this->ConfirmValueValidity(values, count))
 			{
 				return this->Set_Tx_Value(values, count);
@@ -187,7 +187,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			}
 		}
 
-		virtual bool SetValue(const T value) override
+		virtual bool SetValue(const T& value) override
 		{
 			assert(COUNT == 1);
 			return this->SetValue(&value, 1);

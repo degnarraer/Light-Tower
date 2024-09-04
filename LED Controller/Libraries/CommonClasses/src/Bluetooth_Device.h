@@ -54,7 +54,6 @@ class BluetoothConnectionStateCaller
 	
 	private:
 		TaskHandle_t m_Handle;
-		esp_a2d_connection_state_t m_ConnectionState;
 		BluetoothA2DPCommon *mp_BT;
 };
 

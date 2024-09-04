@@ -14,8 +14,8 @@
 #define THREAD_PRIORITY_MEDIUM configMAX_PRIORITIES-20
 #define THREAD_PRIORITY_LOW configMAX_PRIORITIES-30
 
-#define ENCODE_OBJECT_DIVIDER "|o|"
-#define ENCODE_VALUE_DIVIDER "|v|"
+#define ENCODE_OBJECT_DIVIDER "|"
+#define ENCODE_VALUE_DIVIDER ","
 
 class NamedItem
 {
@@ -254,7 +254,7 @@ struct  CompatibleDevice_t
 
 		// Overload the insertion operator
 		friend std::ostream& operator<<(std::ostream& os, const CompatibleDevice_t& device) {
-			os << device.toString(); // Use toString to convert device to a string and write it to the stream
+			os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
 			return os;
 		}
 };
@@ -421,7 +421,7 @@ public:
 
     // Overload the insertion operator
     friend std::ostream& operator<<(std::ostream& os, const ActiveCompatibleDevice_t& device) {
-        os << device.toString(); // Use toString to convert device to a string and write it to the stream
+        os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
         return os;
     }
 };
@@ -566,7 +566,7 @@ class Mute_State
         
         // Overload the extraction operator
         friend std::ostream& operator<<(std::ostream& os, const Mute_State::Value& value) {
-            os << Mute_State::ToString(value);
+            os << Mute_State::ToString(value).c_str();
             return os;
         }
 };
@@ -644,7 +644,7 @@ class SoundState
         
         // Overload the extraction operator
         friend std::ostream& operator<<(std::ostream& os, const SoundState::Value& value) {
-            os << SoundState::ToString(value);
+            os << SoundState::ToString(value).c_str();
             return os;
         }
 };
@@ -696,7 +696,7 @@ class Transciever
         
         // Overload the extraction operator
         friend std::ostream& operator<<(std::ostream& os, const Transciever::Value& value) {
-            os << Transciever::ToString(value);
+            os << Transciever::ToString(value).c_str();
             return os;
         }
 
@@ -830,18 +830,11 @@ public:
     
     // Overload the extraction operator
     friend std::ostream& operator<<(std::ostream& os, const ConnectionStatus::Value& value) {
-        ESP_LOGI("operator<<", "Connection Status to String");
-        os << ConnectionStatus::ToString(value);
+        ESP_LOGI("operator<<", "Connection Status to String: \"%s\"", ConnectionStatus::ToString(value).c_str());
+        os << ConnectionStatus::ToString(value).c_str();
         return os;
     }
-
-    // Implicit conversion operator to std::string
-    operator String() const
-    {
-        return ToString(value);
-    }
-private:
-    Value value;
+    
 };
 typedef ConnectionStatus::Value ConnectionStatus_t;
 
