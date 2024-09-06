@@ -34,7 +34,7 @@ class DataSerializer: public CommonUtils
 			m_DataItems = &DataItem;
 			m_DataItemsCount = DataItemCount;
 		}
-		virtual String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count)
+		virtual String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
@@ -45,6 +45,7 @@ class DataSerializer: public CommonUtils
 			m_SerializeDoc[m_CountTag] = Count;
 			m_SerializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
 			m_SerializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
+			m_SerializeDoc[m_ChangeCountTag] = ChangeCount;
 			
 			char ByteHexValue[3];
 			for(int i = 0; i < Count; ++i)
@@ -87,10 +88,13 @@ class DataSerializer: public CommonUtils
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Sum: %i", CheckSumIn);
 					size_t CountIn = m_DeserializeDoc[m_CountTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Object Count: %i", CountIn);
+					size_t ChangeCountIn = m_DeserializeDoc[m_ChangeCountTag];
+					ESP_LOGD("DeSerializeJsonToNamedObject", "Change Count: %i", ChangeCountIn);
+					NamedObject.ChangeCount = ChangeCountIn;
 					size_t ByteCountIn = m_DeserializeDoc[m_TotalByteCountTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Byte Count: %i", ByteCountIn);
 					DataType_t DataType = GetDataTypeFromString(m_DeserializeDoc[m_DataTypeTag]);
-					ESP_LOGD("DeSerializeJsonToNamedObject", "DataType: %i", DataType);
+					ESP_LOGD("DeSerializeJsonToNamedObject", "DataType: %i", DataType);	
 					size_t ActualDataCount = m_DeserializeDoc[m_DataTag].length();
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Count: %i", ActualDataCount);
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
@@ -160,7 +164,7 @@ class DataSerializer: public CommonUtils
 		}
 		virtual bool AllTagsExist(JSONVar &jsonObject)
 		{
-			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
+			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_ChangeCountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
 			bool result = true;
 			for (const String& tag : tags) {
 				if (!jsonObject.hasOwnProperty(tag)) {
@@ -184,6 +188,7 @@ class DataSerializer: public CommonUtils
 		String m_NameTag = "Name";
 		String m_CheckSumTag = "Sum";
 		String m_CountTag = "Count";
+		String m_ChangeCountTag = "Change Count";
 		String m_DataTag = "Data";
 		String m_DataTypeTag = "Type";
 		String m_TotalByteCountTag = "Bytes";

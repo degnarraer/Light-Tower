@@ -139,6 +139,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{
 			return LocalDataItem<T, COUNT>::GetCount();
 		}
+		virtual size_t GetChangeCount() const override
+		{
+			return LocalDataItem<T, COUNT>::GetChangeCount();
+		}
 		virtual T* GetValuePointer() const override
 		{
 			return LocalDataItem<T, COUNT>::GetValuePointer();

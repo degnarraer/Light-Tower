@@ -214,7 +214,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return m_Count;
 		}
 
-		size_t GetChangeCount() const
+		virtual size_t GetChangeCount() const
 		{
 			return m_ValueChangeCount;
 		}
@@ -445,7 +445,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				for (size_t i = 0; i < count; ++i)
 				{
 					String encodedString = StringEncoderDecoder<T>::EncodeToString(pvalue[i]);
-					ESP_LOGI("ConvertValueToString", "Encoded String \"%s\"", encodedString.c_str());
+					ESP_LOGD("ConvertValueToString", "Encoded String \"%s\"", encodedString.c_str());
 					valueStrings.push_back(encodedString);
 				}
 			}

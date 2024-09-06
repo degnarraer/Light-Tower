@@ -65,6 +65,11 @@ class StringDataItem: public LocalStringDataItem
 			return LocalStringDataItem::GetCount();
 		}
 
+		virtual size_t GetChangeCount() const override
+		{
+			return LocalStringDataItem::GetChangeCount();
+		}
+
 		//SerialMessageInterface
 		virtual char* GetValuePointer() const override
 		{

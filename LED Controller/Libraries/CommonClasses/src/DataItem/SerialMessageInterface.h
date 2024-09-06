@@ -21,6 +21,8 @@
 #include <iostream>
 #include <sstream>
 
+#define RX_BLOCK_DURATION 2000000
+
 enum RxTxType_t
 {
 	RxTxType_Tx_Periodic,
@@ -35,6 +37,7 @@ enum UpdateStoreType_t
 {
 	UpdateStoreType_On_Tx,
 	UpdateStoreType_On_Rx,
+	UpdateStoreType_On_TxRx,
 	UpdateStoreType_Count
 };
 
@@ -65,7 +68,8 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		virtual ~SerialMessageInterface()
 		{
 			ESP_LOGD("~DataItem", "Deleting SerialMessageInterface");
-			DestroyTimer();
+			DestroyTimer(m_TxTimer);
+			DestroyTimer(m_RxTimer);
 			if(mp_SerialPortMessageManager)
 			{
 				mp_SerialPortMessageManager->DeRegisterForNewRxValueNotification(this);
@@ -85,6 +89,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		virtual bool UpdateStore(const T *value, size_t count) = 0;
 		virtual bool EqualsValue(T *Object, size_t Count) const = 0;
 		virtual String GetName() const = 0;
+		virtual size_t GetChangeCount() const = 0;
 		virtual String GetValueAsString() const = 0;
 		virtual DataType_t GetDataType() = 0;
 		virtual String ConvertValueToString(const T *pvalue, size_t count) const = 0;
@@ -117,7 +122,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						, this->ConvertValueToString(receivedValue, this->GetCount()).c_str());
 				ZeroOutMemory(mp_RxValue);
 				memcpy(mp_RxValue, receivedValue, sizeof(T) * this->GetCount());
-				if( UpdateStoreType_On_Rx == m_UpdateStoreType )
+				if( m_AllowRxUpdate && (UpdateStoreType_On_Rx == m_UpdateStoreType || UpdateStoreType_On_TxRx == m_UpdateStoreType) )
 				{
 					StoreUpdated = this->UpdateStore(mp_RxValue, this->GetCount());
 				}
@@ -196,20 +201,25 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		bool Tx_Now()
 		{
+			bool storeUpdated = false;
 			ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str()
 					, this->GetValueAsString().c_str() );
 			if(mp_SerialPortMessageManager)
 			{
-				
-				if(mp_SerialPortMessageManager->QueueMessageFromData(this->GetName(), this->GetDataType(), mp_TxValue, COUNT))
+				if(mp_SerialPortMessageManager->QueueMessageFromData(this->GetName(), this->GetDataType(), mp_TxValue, this->GetCount(), this->GetChangeCount()))
 				{
 					ESP_LOGD( "Tx_Now", "\"%s\": Messaged Queued for Tx", this->GetName().c_str());
-					if(m_UpdateStoreType == UpdateStoreType_On_Tx)
+					if(m_UpdateStoreType == UpdateStoreType_On_Tx || m_UpdateStoreType == UpdateStoreType_On_TxRx)
 					{
-						ESP_LOGD( "Tx_Now", "\"%s\": Updating Store on Tx", this->GetName().c_str());
-						return this->UpdateStore(mp_TxValue, COUNT);	
+						ESP_LOGI( "Tx_Now", "\"%s\": Updating Store on Tx", this->GetName().c_str());
+						storeUpdated = this->UpdateStore(mp_TxValue, COUNT);
+						if(storeUpdated && m_UpdateStoreType == UpdateStoreType_On_TxRx)
+						{
+							ESP_LOGI( "Tx_Now", "\"%s\": Blocking Rx", this->GetName().c_str());
+							Block_Rx();
+						}
 					}
 				}
 				else
@@ -221,7 +231,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			{
 				ESP_LOGE("Tx_Now", "ERROR! Null Pointer!");
 			}
-			return false;
+			return storeUpdated;
 		}		
 	protected:
 		bool m_DataLinkEnabled = false;
@@ -233,7 +243,10 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		T *mp_TxValue = nullptr;
 	private:
 		esp_timer_handle_t m_TxTimer = nullptr;
-		esp_timer_create_args_t timerArgs;
+		esp_timer_create_args_t m_TxTimerArgs;
+		esp_timer_handle_t m_RxTimer = nullptr;
+		esp_timer_create_args_t m_RxTimerArgs;
+		bool m_AllowRxUpdate = true;
 		
 		void SetDataLinkEnabled(bool enable)
 		{
@@ -251,11 +264,11 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						case RxTxType_Tx_Periodic:
 						case RxTxType_Tx_On_Change_With_Heartbeat:
 							enablePeriodicTx = true;
-							if(m_UpdateStoreType == UpdateStoreType_On_Rx) enableRx = true;
+							if(m_UpdateStoreType == UpdateStoreType_On_Rx || m_UpdateStoreType == UpdateStoreType_On_TxRx) enableRx = true;
 							Tx_Now();
 							break;
 						case RxTxType_Tx_On_Change:
-							if(m_UpdateStoreType == UpdateStoreType_On_Rx) enableRx = true;
+							if(m_UpdateStoreType == UpdateStoreType_On_Rx || m_UpdateStoreType == UpdateStoreType_On_TxRx) enableRx = true;
 							Tx_Now();
 							break;
 						case RxTxType_Rx_Only:
@@ -284,7 +297,28 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 		}
 
-		static void Static_Periodic_TX(void *arg)
+		static void Static_Unblock_Rx(void *arg)
+		{
+			SerialMessageInterface *aSerialMessageInterface = static_cast<SerialMessageInterface*>(arg);
+			if(aSerialMessageInterface)
+			{
+				ESP_LOGI( "Static_Unblock_Rx", "\"%s\": Static_Unblock_Rx"
+						, aSerialMessageInterface->GetName().c_str() );
+				aSerialMessageInterface->Unblock_Rx();
+			}
+			else
+			{
+				ESP_LOGE( "Static_Rx_Timer_Handler", "ERROR! Null Pointer." );
+			}
+		}
+
+		void Unblock_Rx()
+		{
+			ESP_LOGI( "Static_Unblock_Rx", "\"%s\": Unblocking Rx", this->GetName().c_str());
+			m_AllowRxUpdate = true;
+		}
+
+		static void Static_Periodic_Tx(void *arg)
 		{
 			SerialMessageInterface *aSerialMessageInterface = static_cast<SerialMessageInterface*>(arg);
 			if(aSerialMessageInterface)
@@ -316,14 +350,14 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				ESP_LOGI( "EnablePeriodicTx", "\"%s\" Enable Tx for: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str() );
-				StartTimer();
+				StartTxTimer();
 			}
 			else
 			{
 				ESP_LOGI( "EnablePeriodicTx", "\"%s\" Disable Tx for: \"%s\""
 					, mp_SerialPortMessageManager->GetName().c_str()
 					, this->GetName().c_str() );
-				StopTimer();
+				StopTimer(m_TxTimer);
 			}
 		}
 
@@ -359,17 +393,77 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 		}
 
+		bool Block_Rx()
+		{
+			bool success = false;
+			if (m_RxTimer || CreateRxTimer())
+			{
+				StopTimer(m_RxTimer);
+				if(ESP_OK == esp_timer_start_once(m_RxTimer, RX_BLOCK_DURATION))
+				{
+					ESP_LOGI("StartTxTimer", "Block Rx Timer Started");
+					m_AllowRxUpdate = false;
+					success = true;
+				}
+				else
+				{
+					ESP_LOGE("StartTxTimer", "ERROR! Unable to start timer.");
+					m_AllowRxUpdate = true;
+				}
+			}
+			else
+			{
+				ESP_LOGE("StartTxTimer", "ERROR! Null.");
+				m_AllowRxUpdate = true;
+			}
+			return success;
+		}
+
+		bool CreateRxTimer()
+		{
+			ESP_LOGD("CreateRxTimer", "Blocking Rx");
+			m_RxTimerArgs.callback = &Static_Unblock_Rx;
+			m_RxTimerArgs.arg = this;
+			m_RxTimerArgs.name = "Rx_Timer";
+			m_RxTimerArgs.dispatch_method = ESP_TIMER_TASK;
+			bool success = false;
+			if (!m_RxTimer)
+			{
+				esp_err_t error = esp_timer_create(&m_RxTimerArgs, &m_RxTimer);
+				switch(error)
+				{
+					case ESP_OK:
+						ESP_LOGD("CreateTxTimer", "Timer Created");
+						success = true;
+					break;
+					case ESP_ERR_NO_MEM:
+						ESP_LOGE("CreateTxTimer", "ERROR! Unable to create timer, no memory!");
+					break;
+					case ESP_ERR_INVALID_ARG:
+						ESP_LOGE("CreateTxTimer", "ERROR! Unable to create timer, Invalid Argument!");
+					break;
+					default:
+						ESP_LOGE("CreateTxTimer", "ERROR! Unable to create timer!");
+					break;
+				}
+			}
+			else
+			{
+				ESP_LOGD("CreateRxTimer", "Timer already exists.");
+			}
+			return success;
+		}
 		bool CreateTxTimer()
 		{
 			ESP_LOGD("CreateTxTimer", "Creating Timer");
-			timerArgs.callback = &Static_Periodic_TX;
-			timerArgs.arg = this;
-			timerArgs.name = "Tx_Timer";
-			timerArgs.dispatch_method = ESP_TIMER_TASK;
+			m_TxTimerArgs.callback = &Static_Periodic_Tx;
+			m_TxTimerArgs.arg = this;
+			m_TxTimerArgs.name = "Tx_Timer";
+			m_TxTimerArgs.dispatch_method = ESP_TIMER_TASK;
 			bool success = false;
 			if (!m_TxTimer)
 			{
-				esp_err_t error = esp_timer_create(&timerArgs, &m_TxTimer);
+				esp_err_t error = esp_timer_create(&m_TxTimerArgs, &m_TxTimer);
 				switch(error)
 				{
 					case ESP_OK:
@@ -394,17 +488,17 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			return success;
 		}
 
-		bool DestroyTimer()
+		bool DestroyTimer(esp_timer_handle_t& timer)
 		{
 			ESP_LOGD("DestroyTimer", "Destroying Timer");
-			if (m_TxTimer)
+			if (timer)
 			{
-				if (StopTimer())
+				if (StopTimer(timer))
 				{
-					if (ESP_OK == esp_timer_delete(m_TxTimer))
+					if (ESP_OK == esp_timer_delete(timer))
 					{
 						ESP_LOGD("DestroyTimer", "Timer deleted");
-						m_TxTimer = nullptr;
+						timer = nullptr;
 						return true;
 					}
 					else
@@ -424,34 +518,34 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			return false;
 		}
 
-		bool StartTimer()
+		bool StartTxTimer()
 		{
 			if (m_TxTimer || CreateTxTimer())
 			{
-				ESP_LOGD("StartTimer", "Starting Timer");
+				ESP_LOGD("StartTxTimer", "Starting Timer");
 				if (ESP_OK == esp_timer_start_periodic(m_TxTimer, m_Rate * 1000))
 				{
-					ESP_LOGD("StartTimer", "Timer Started");
+					ESP_LOGD("StartTxTimer", "Timer Started");
 					return true;
 				}
 				else
 				{
-					ESP_LOGE("StartTimer", "ERROR! Unable to start timer.");
+					ESP_LOGE("StartTxTimer", "ERROR! Unable to start timer.");
 				}
 			}
 			else
 			{
-				ESP_LOGE("StartTimer", "ERROR! Null.");
+				ESP_LOGE("StartTxTimer", "ERROR! Null.");
 			}
 			return false;
 		}
 
-		bool StopTimer()
+		bool StopTimer(esp_timer_handle_t& timer)
 		{
 			bool result = false;
-			if (m_TxTimer)
+			if (timer)
 			{
-				if (ESP_OK == esp_timer_stop(m_TxTimer))
+				if (ESP_OK == esp_timer_stop(timer))
 				{
 					ESP_LOGD("StopTimer", "Timer Stopped!");
 					result = true;

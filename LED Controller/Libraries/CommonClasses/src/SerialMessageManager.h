@@ -250,7 +250,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			ESP_LOGD("~SerialPortMessageManager", "SerialPortMessageManager Deleted");
 		}
 		virtual void SetupSerialPortMessageManager();
-		virtual bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count);
+		virtual bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount);
 		virtual bool QueueMessage(const String& message);
 		virtual String GetName() const 
 		{

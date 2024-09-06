@@ -17,6 +17,16 @@
 #define ENCODE_OBJECT_DIVIDER "|"
 #define ENCODE_VALUE_DIVIDER ","
 
+template <typename T>
+struct TemplateObjectWithChangeCount
+{
+    size_t ChangeCount;
+    T Object;
+};
+
+template <typename T>
+using TemplateObjectWithChangeCount_t = TemplateObjectWithChangeCount<T>;
+
 class NamedItem
 {
   public:
@@ -830,7 +840,7 @@ public:
     
     // Overload the extraction operator
     friend std::ostream& operator<<(std::ostream& os, const ConnectionStatus::Value& value) {
-        ESP_LOGI("operator<<", "Connection Status to String: \"%s\"", ConnectionStatus::ToString(value).c_str());
+        ESP_LOGD("operator<<", "Connection Status to String: \"%s\"", ConnectionStatus::ToString(value).c_str());
         os << ConnectionStatus::ToString(value).c_str();
         return os;
     }
@@ -842,6 +852,7 @@ struct NamedObject_t
 {
 	void* Object;
 	String Name = "";
+    size_t ChangeCount = 0;
 	
 	// Destructor to release memory when the object is destroyed.
 	~NamedObject_t()

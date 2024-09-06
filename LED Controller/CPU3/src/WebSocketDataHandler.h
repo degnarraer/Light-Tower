@@ -195,15 +195,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_Debug;
     const String m_Name;
     const String m_Signal;
-    size_t m_ChangeCount = 0;
 
-    bool ValueChanged()
-    {
-      size_t newChangeCount = m_DataItem.GetChangeCount();
-      bool valueChanged = newChangeCount != m_ChangeCount;
-      m_ChangeCount = newChangeCount;
-      return valueChanged;
-    }
   private:
     uint64_t m_Last_Update_Time = millis();    
 };

@@ -100,7 +100,7 @@ void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String
 			}
 		}
 	}
-	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Callee Not Found Found: \"%s\"", name.c_str());
+	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Rx Value Callee Not Found Found: \"%s\"", name.c_str());
 }
 
 void Named_Object_Caller_Interface::CallNamedCallback_ByName(const String& name, void* object)
@@ -136,7 +136,7 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
 }
 
-bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count)
+bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 {
 	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
@@ -148,7 +148,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 		if(mp_DataSerializer)
 		{
 			ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
-			String message = mp_DataSerializer->SerializeDataToJson(Name, DataType, Object, Count);
+			String message = mp_DataSerializer->SerializeDataToJson(Name, DataType, Object, Count, ChangeCount);
 			result = QueueMessage( message.c_str() );
 		}
 		else

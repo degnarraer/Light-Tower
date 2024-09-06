@@ -43,6 +43,11 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetCount();
 		}
 
+		virtual size_t GetChangeCount() const override
+		{
+			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetChangeCount();
+		}
+
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
 			if(mp_InitialValue)

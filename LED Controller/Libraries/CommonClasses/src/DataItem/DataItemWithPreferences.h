@@ -141,6 +141,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 			return DataItem<T, COUNT>::GetCount();
 		}
+
+		virtual size_t GetChangeCount() const override
+		{
+			return DataItem<T, COUNT>::GetChangeCount();
+		}
 		
 		virtual bool SetValue(const T* values, size_t count) override
 		{
