@@ -150,7 +150,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       {
           m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
           success = true;
-          ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Set to Web Socket", m_Signal.c_str());
+          ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
       }
       else
       {

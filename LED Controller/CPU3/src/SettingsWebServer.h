@@ -205,7 +205,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     DataItemWithPreferences <float, 1> m_AmplitudeGain = DataItemWithPreferences<float, 1>( "Amp_Gain"
                                                                                           , m_AmplitudeGain_InitialValue
                                                                                           , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                          , UpdateStoreType_On_TxRx
+                                                                                          , UpdateStoreType_On_Tx
                                                                                           , 5000
                                                                                           , &m_preferenceInterface
                                                                                           , &m_CPU2SerialPortMessageManager
@@ -220,7 +220,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     DataItemWithPreferences <float, 1> m_FFTGain = DataItemWithPreferences<float, 1>( "FFT_Gain"
                                                                                     , m_FFTGain_InitialValue
                                                                                     , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                    , UpdateStoreType_On_TxRx
+                                                                                    , UpdateStoreType_On_Tx
                                                                                     , 5000
                                                                                     , &m_preferenceInterface
                                                                                     , &m_CPU2SerialPortMessageManager

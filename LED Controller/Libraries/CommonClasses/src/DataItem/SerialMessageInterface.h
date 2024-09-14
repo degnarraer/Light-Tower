@@ -85,7 +85,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 		}
 		virtual T* GetValuePointer() const = 0;
-		virtual bool UpdateStore(const T *newValues, const size_t changeCount) = 0;
+		virtual bool UpdateStore(const T *newValues, const size_t changeCount, const bool synchronizeCount = false) = 0;
 		virtual bool EqualsValue(T *Object, size_t Count) const = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetChangeCount() const = 0;
@@ -129,7 +129,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			{
 				if((UpdateStoreType_On_Rx == m_UpdateStoreType || UpdateStoreType_On_TxRx == m_UpdateStoreType) )
 				{
-					StoreUpdated |= UpdateStore(mp_RxValue, changeCount);
+					StoreUpdated |= UpdateStore(mp_RxValue, changeCount, true);
 				}
 			}
 			
@@ -144,7 +144,6 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				}
 				if(UpdateTxStore(mp_RxValue))
 				{
-
 					StoreUpdated |= Tx_Now();
 				}
 			}

@@ -126,14 +126,14 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				valueChanged = true;
 			}
 			bool validValue = ConfirmValueValidity(value, count);
-			bool updateAllowed = UpdateChangeCount(GetChangeCount(), (valueChanged && validValue));
+			bool updateAllowed = UpdateChangeCount(GetChangeCount(), (valueChanged && validValue), false);
 			bool valueUpdateAllowed = updateAllowed & validValue;
 			if(valueUpdateAllowed)
 			{	
 				ZeroOutMemory(mp_Value);
 				strcpy(mp_Value, value);
 				ESP_LOGI( "LocalDataItem: SetValue", "Set Value Successful");
-				CallAllCallbacks();
+				CallAllCallbacks(true);
 			}
 			return valueUpdateAllowed;
 		}

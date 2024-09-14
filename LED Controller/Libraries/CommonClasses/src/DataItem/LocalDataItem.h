@@ -169,7 +169,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
-					CallAllCallbacks();
+					CallAllCallbacks(true);
 				}
 				else
 				{
@@ -181,7 +181,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
-					CallAllCallbacks();
+					CallAllCallbacks(true);
 				}
 			}
 			else
@@ -217,12 +217,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		virtual size_t GetChangeCount() const
 		{
 			return m_ChangeCount;
-		}
-		
-		bool IsChangeCountGreater(size_t changeCount)
-		{
-			size_t currentChangeCount = this->GetChangeCount();
-			return (changeCount > currentChangeCount) || (currentChangeCount - changeCount > (SIZE_MAX / 2));
 		}
 
 		DataType_t GetDataType()
@@ -473,42 +467,42 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		T *mp_InitialValue = nullptr;
 		NamedCallback_t *mp_NamedCallback = nullptr;
 		
-		bool UpdateChangeCount(const size_t newChangeCount, const bool incrementChangeCount)
+		bool UpdateChangeCount(const size_t newChangeCount, const bool incrementChangeCount, const bool synchronizeCount)
 		{
 			bool allowUpdate = false;
 			if(!m_ChangeCountInitialized)
 			{
 				m_ChangeCount = newChangeCount;
 				m_ChangeCountInitialized = true;
+				allowUpdate = true;
 			}
-			if(newChangeCount == m_ChangeCount)
+			if(synchronizeCount)
 			{
-				if(incrementChangeCount)
+				if(m_ChangeCount != newChangeCount)
 				{
-					++m_ChangeCount;
+					m_ChangeCount = newChangeCount;
 					allowUpdate = true;
-					if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-					{
-						ESP_LOGI("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
-					}
-				}
-				else
-				{
-					if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-					{
-						ESP_LOGI("UpdateChangeCount", "\"%s\": Change Count Match: \"%i\"", GetName().c_str(), m_ChangeCount);
-					}
+					ESP_LOGI("UpdateChangeCount", "\"%s\": Change count synchronized up: \"%i\"", GetName().c_str(), m_ChangeCount);
 				}
 			}
-			else if(newChangeCount != m_ChangeCount)
+			else if(incrementChangeCount)
 			{
-				m_ChangeCount = newChangeCount;
-				ESP_LOGI("UpdateChangeCount", "\"%s\": Change Count synchronized: \"%i\"", GetName().c_str(), m_ChangeCount);
+				m_ChangeCount = newChangeCount+1;
+				allowUpdate = true;
+				if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
+				{
+					ESP_LOGI("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
+				}
 			}
 			return allowUpdate;
 		}
 
-		virtual bool UpdateStore(const T *newValues, const size_t changeCount)
+		bool IsChangeCountGreater(size_t changeCount)
+		{
+			return (changeCount > m_ChangeCount) || (m_ChangeCount - changeCount > (SIZE_MAX / 2));
+		}
+
+		virtual bool UpdateStore(const T *newValues, const size_t newChangeCount, const bool synchronizeCount = false)
 		{
 			assert(newValues != nullptr);
 			assert(mp_Value != nullptr);
@@ -516,15 +510,16 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
 			{
 				ESP_LOGI( "UpdateStore"
-						, "Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\""
+						, "Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\" New Change Count: \"%i\""
 						, GetName().c_str()
 						, ConvertValueToString(newValues, COUNT).c_str()
-						, changeCount );
+						, m_ChangeCount
+						, newChangeCount );
 			}
 			bool storeUpdated = false;
 			bool valueChanged = (0 != memcmp(mp_Value, newValues, COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
-			if(UpdateChangeCount(changeCount, (valueChanged && validValue)))
+			if(UpdateChangeCount(newChangeCount, (valueChanged && validValue), synchronizeCount))
 			{
 				ZeroOutMemory(mp_Value);
 				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
@@ -533,7 +528,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				{
 					ESP_LOGI( "UpdateStore", "\"%s\": Update Store: Successful. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
 				}
-				CallAllCallbacks();
+				CallAllCallbacks(synchronizeCount);
 			}
 			else
 			{
@@ -541,10 +536,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			return storeUpdated;
 		}
-		void CallAllCallbacks()
+		void CallAllCallbacks(const bool synchronizeCount)
 		{
 			this->CallNamedCallbacks(mp_Value);
-			this->Notify_NewRxValue_Callees(mp_Value, m_ChangeCount);
+			if(synchronizeCount)
+			{
+				this->Notify_NewRxValue_Callees(mp_Value, m_ChangeCount);
+			}
 		} 
 
 		virtual bool ConfirmValueValidity(const T* values, size_t count) const
