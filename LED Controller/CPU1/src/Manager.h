@@ -136,7 +136,7 @@ class Manager: public NamedItem
     CallbackArguments m_SoundInputSource_CallbackArgs = {this};
     NamedCallback_t m_SoundInputSource_Callback = { "Sound Input Source Callback"
                                                   , &SoundInputSource_ValueChanged
-                                                  , & m_SoundInputSource_CallbackArgs };
+                                                  , &m_SoundInputSource_CallbackArgs };
     const SoundInputSource_t m_SoundInputSource_InitialValue = SoundInputSource_t::Microphone;
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
                                                                                                                       , m_SoundInputSource_InitialValue

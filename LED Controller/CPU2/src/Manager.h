@@ -133,7 +133,7 @@ class Manager: public NamedItem
     Callback2Arguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_TargetCompatibleDevice};
     NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback"
                                                     , &OuputSourceConnect_ValueChanged
-                                                    , & m_OuputSourceConnect_CallbackArgs};
+                                                    , &m_OuputSourceConnect_CallbackArgs};
     const bool m_OuputSourceConnect_InitialValue = false;
     DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect"
                                                               , m_OuputSourceConnect_InitialValue
@@ -165,7 +165,7 @@ class Manager: public NamedItem
     CallbackArguments m_OuputSourceDisconnect_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_OuputSourceDisconnect_Callback = { "Output Source DIsconnect Callback"
                                                        , &OuputSourceDisconnect_ValueChanged
-                                                       , & m_OuputSourceDisconnect_CallbackArgs};
+                                                       , &m_OuputSourceDisconnect_CallbackArgs};
     const bool m_OuputSourceDisconnect_InitialValue = false;
     DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect"
                                                                  , m_OuputSourceDisconnect_InitialValue

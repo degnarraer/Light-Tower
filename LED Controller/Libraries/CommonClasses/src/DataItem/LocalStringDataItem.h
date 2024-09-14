@@ -120,16 +120,27 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, newValue.c_str() );
-					
-			bool valueChanged = (strcmp(mp_Value, value) != 0);
-			if(valueChanged)
+			bool valueChanged = false;
+			if(0 != strcmp(mp_Value, value))
+			{
+				valueChanged = true;
+			}
+			bool validValue = ConfirmValueValidity(value, count);
+			bool updateAllowed = UpdateChangeCount(GetChangeCount(), (valueChanged && validValue));
+			bool valueUpdateAllowed = updateAllowed & validValue;
+			if(valueUpdateAllowed)
 			{	
 				ZeroOutMemory(mp_Value);
 				strcpy(mp_Value, value);
-				++m_ValueChangeCount;
-				CallAllCallbacks(mp_Value);
+				ESP_LOGI( "LocalDataItem: SetValue", "Set Value Successful");
+				CallAllCallbacks();
 			}
-			return valueChanged;
+			return valueUpdateAllowed;
+		}
+
+		virtual bool ConfirmValueValidity(const char *values, size_t count) const override
+		{
+			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::ConfirmValueValidity(values, count);
 		}
 
 		virtual String ConvertValueToString(const char* pvalue, size_t count) const override

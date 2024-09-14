@@ -181,14 +181,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 		virtual bool SetValue(const T* values, size_t count) override
 		{
 			ESP_LOGI("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName().c_str(), this->ConvertValueToString(values, count).c_str() );
-			if(this->ConfirmValueValidity(values, count))
-			{
-				return this->Set_Tx_Value(values, count);
-			}
-			else
-			{
-				return false;
-			}
+			return this->Set_Tx_Value(values, count);
 		}
 
 		virtual bool SetValue(const T& value) override
@@ -205,20 +198,16 @@ class DataItem: public LocalDataItem<T, COUNT>
 					, stringValue.c_str() );
 			T values[COUNT];
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
-			if(parseCount == COUNT)
-			{
-				ESP_LOGD("SetValueFromString", "Name: \"%s\" Setting Tx Value: \"%s\"", this->GetName().c_str(), stringValue.c_str() );
-				return this->Set_Tx_Value(values, parseCount);
-			}
-			else
-			{
-				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
-				return false;
-			}
+			return this->SetValue(values, parseCount);
 		}
 
-		virtual bool UpdateStore(const T *values, size_t count) override
+		virtual bool ConfirmValueValidity(const T* values, size_t count) const override
 		{
-			return LocalDataItem<T,COUNT>::UpdateStore(values, count);
+			return LocalDataItem<T, COUNT>::ConfirmValueValidity(values, count);
+		}
+
+		virtual bool UpdateStore(const T *newValues, const size_t changeCount) override
+		{
+			return LocalDataItem<T,COUNT>::UpdateStore(newValues, changeCount);
 		}
 };

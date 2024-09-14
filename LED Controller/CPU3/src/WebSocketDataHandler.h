@@ -141,22 +141,22 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_WebSocketDataProcessor.DeRegisterForWebSocketTxNotification(m_Name, this);
       m_DataItem.DeRegisterForNewRxValueNotification(this);
     }
-    
-    bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values) override
+
+    bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t changeCount) override
     {
       ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
+      bool success = false;
       if(sender == &m_DataItem)
       {
-        ESP_LOGI( "NewRxValueReceived", "New Verified DataItem Rx Value");
-        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
-        m_Last_Update_Time = millis();
-        return true;
+          m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+          success = true;
+          ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Set to Web Socket", m_Signal.c_str());
       }
       else
       {
         ESP_LOGW( "NewRxValueReceived", "WARNING! Rx value from unknown sender");
-        return false;
       }
+      return success;
     }
     
     String GetSignal()
@@ -177,7 +177,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleWebSocketRxNotification(const String& stringValue) override
     {
-      ESP_LOGI( "WebSocketDataHandler: HandleWebSocketRxNotification"
+      ESP_LOGI( "Web Socket Rx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
               , m_Name.c_str()
               , m_Signal.c_str()
@@ -195,9 +195,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     const bool &m_Debug;
     const String m_Name;
     const String m_Signal;
-
-  private:
-    uint64_t m_Last_Update_Time = millis();    
 };
 
 class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>

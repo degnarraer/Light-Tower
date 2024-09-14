@@ -26,7 +26,7 @@
 template <typename T>
 class MockRx_Value_Callee_Interface : public Rx_Value_Callee_Interface<T> {
 public:
-    MOCK_METHOD(bool, NewRxValueReceived, (const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t count), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t changeCount), (override));
     MOCK_METHOD(String, GetName, (), (override));
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
@@ -52,7 +52,7 @@ public:
 class MockNamed_Object_Callee_Interface : public Named_Object_Callee_Interface {
 public:
     MockNamed_Object_Callee_Interface(size_t count) : Named_Object_Callee_Interface(count) {}
-    MOCK_METHOD(bool, NewRxValueReceived, (const Named_Object_Caller_Interface* sender, const void* values), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const Named_Object_Caller_Interface* sender, const void* values, size_t changeCount), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
@@ -63,7 +63,7 @@ public:
     MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
-    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object), (override));
+    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object, const size_t changeCount), (override));
     MOCK_METHOD(void, CallNamedCallback_ByName, (const String& name, void* object), (override));
 };
 
@@ -120,7 +120,7 @@ private:
 class MockDataSerializer : public DataSerializer {
 public:
     MOCK_METHOD(void, SetDataSerializerDataItems, (DataItem_t& DataItem, size_t DataItemCount), (override));
-    MOCK_METHOD(String, SerializeDataToJson, (String Name, DataType_t DataType, void* Object, size_t Count), (override));
+    MOCK_METHOD(String, SerializeDataToJson, (String Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, DeSerializeJsonToNamedObject, (String json, NamedObject_t &NamedObject), (override));
     MOCK_METHOD(void, FailPercentage, (), (override));
     MOCK_METHOD(bool, AllTagsExist, (JSONVar &jsonObject), (override));
@@ -140,7 +140,7 @@ public:
     }
     
     MOCK_METHOD(void, SetupSerialPortMessageManager, (), (override));
-    MOCK_METHOD(bool, QueueMessageFromData, (const String& Name, DataType_t DataType, void* Object, size_t Count), (override));
+    MOCK_METHOD(bool, QueueMessageFromData, (const String& Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, QueueMessage, (const String& message), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(void, SerialPortMessageManager_RxTask, (), (override));
@@ -151,6 +151,6 @@ public:
     MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* Callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));	
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));
-    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object), (override));
+    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object, const size_t changeCount), (override));
     MOCK_METHOD(void, CallNamedCallback_ByName, (const String& name, void* object), (override));
 };

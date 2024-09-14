@@ -87,9 +87,9 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::GetDataType();
 		}
-		bool UpdateStore(const char *values, size_t count)
+		bool UpdateStore(const char *newValues, const size_t changeCount)
 		{
-			return LocalStringDataItem::UpdateStore(values, count);
+			return LocalStringDataItem::UpdateStore(newValues, changeCount);
 		}
 		String ConvertValueToString(const char *values, size_t count) const
 		{
@@ -123,5 +123,10 @@ class StringDataItem: public LocalStringDataItem
 					, this->m_Name.c_str()
 					, stringValue.c_str());
 			return this->Set_Tx_Value(stringValue.c_str(), stringValue.length());
+		}
+		
+		virtual bool ConfirmValueValidity(const char *values, size_t count) const override
+		{
+			return LocalStringDataItem::ConfirmValueValidity(values, count);
 		}
 };

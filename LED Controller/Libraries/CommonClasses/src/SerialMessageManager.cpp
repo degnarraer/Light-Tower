@@ -83,7 +83,7 @@ void Named_Object_Caller_Interface::DeRegisterNamedCallback(NamedCallback_t* Nam
 	}
 }
 
-void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String& name, void* object)
+void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String& name, void* object, const size_t changeCount)
 {
 	ESP_LOGD("NewRxValueReceived", "Notify Callee: \"%s\"", name.c_str());
 	bool found = false;
@@ -95,7 +95,7 @@ void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String
 			{
 				found = true;
 				ESP_LOGD("NewRxValueReceived", "Callee Found: \"%s\"", name.c_str());
-				callee->NewRxValueReceived(this, object);
+				callee->NewRxValueReceived(this, object, changeCount);
 				break;
 			}
 		}
@@ -147,7 +147,10 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 	{
 		if(mp_DataSerializer)
 		{
-			ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count);
+			if(this->GetName().equals("Amp_Gain"))
+			{
+				ESP_LOGI("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" Change Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count, ChangeCount);
+			}
 			String message = mp_DataSerializer->SerializeDataToJson(Name, DataType, Object, Count, ChangeCount);
 			result = QueueMessage( message.c_str() );
 		}
@@ -211,7 +214,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					if(mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
 					{
 						ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-						this->Notify_NewRxValue_Callee_ByName(NamedObject.Name, NamedObject.Object);
+						this->Notify_NewRxValue_Callee_ByName(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
 					}
 					else
 					{

@@ -146,7 +146,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 			return DataItem<T, COUNT>::GetChangeCount();
 		}
-		
+
 		virtual bool SetValue(const T* values, size_t count) override
 		{
 			ESP_LOGI("SetValue", "SetValue for Data Item With Preferences 1");
@@ -175,6 +175,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 									   				   , this->GetValueAsString() );
 			}
 			return result;
+		}
+
+		virtual bool ConfirmValueValidity(const T* values, size_t count) const override
+		{
+			return DataItem<T, COUNT>::ConfirmValueValidity(values, count);
 		}
 
 	private:

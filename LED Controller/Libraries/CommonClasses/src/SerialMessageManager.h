@@ -41,7 +41,7 @@ class Rx_Value_Callee_Interface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values) = 0;
+		virtual bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t changeCount) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -151,12 +151,12 @@ class Rx_Value_Caller_Interface
 		}
 		
 	protected:
-		virtual void Notify_NewRxValue_Callees(T* values)
+		virtual void Notify_NewRxValue_Callees(T* values, size_t changeCount)
 		{
 			ESP_LOGD("Notify_NewRxValue_Callees", "Notify Callees");
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
 			{
-				callee->NewRxValueReceived(this, values);
+				callee->NewRxValueReceived(this, values, changeCount);
 			}
 		}
 	private:
@@ -176,7 +176,7 @@ class Named_Object_Callee_Interface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values) = 0;
+		virtual bool NewRxValueReceived(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -200,7 +200,7 @@ class Named_Object_Caller_Interface
 		virtual void DeRegisterNamedCallback(NamedCallback_t* namedCallback);
 		virtual String GetName() const = 0;
 	protected:
-		virtual void Notify_NewRxValue_Callee_ByName(const String& name, void* object);
+		virtual void Notify_NewRxValue_Callee_ByName(const String& name, void* object, const size_t changeCount);
 		virtual void CallNamedCallback_ByName(const String& name, void* object);
 	private:
 		std::vector<Named_Object_Callee_Interface*> m_NewValueCallees = std::vector<Named_Object_Callee_Interface*>();
