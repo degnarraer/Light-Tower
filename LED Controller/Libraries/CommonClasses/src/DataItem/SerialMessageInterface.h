@@ -115,33 +115,29 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		{
 			bool StoreUpdated = false;
 			const T* receivedValues = static_cast<const T*>(values);
-			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-			{
-				ESP_LOGI( "NewRxValueReceived"
-				, "\"%s\" Rx: \"%s\" Value: \"%s\" Change Count: \"%i\""
-				, mp_SerialPortMessageManager->GetName().c_str()
-				, GetName().c_str()
-				, ConvertValueToString(receivedValues, GetCount()).c_str()
-				, GetChangeCount());
-			}
-
+			ESP_LOGD( "NewRxValueReceived"
+					, "\"%s\" Rx: \"%s\" Value: \"%s\" Change Count: \"%i\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, GetName().c_str()
+					, ConvertValueToString(receivedValues, GetCount()).c_str()
+					, GetChangeCount());
 			if(UpdateRxStore(receivedValues))
 			{
 				if((UpdateStoreType_On_Rx == m_UpdateStoreType || UpdateStoreType_On_TxRx == m_UpdateStoreType) )
 				{
-					StoreUpdated |= UpdateStore(mp_RxValue, changeCount);
+					if(StoreUpdated |= UpdateStore(mp_RxValue, changeCount))
+					{
+						ESP_LOGI( "New_Object_From_Sender", "\"%s\": Updated Store", GetName().c_str());
+					}
 				}
 			}
 			this->Notify_NewRxValue_Callees(mp_RxValue, changeCount);
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
-				if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-				{
-					ESP_LOGI( "NewRxValueReceived"
-							, "Rx Echo for: \"%s\" with Value: \"%s\""
-							, GetName().c_str()
-							, ConvertValueToString(receivedValues, GetCount()).c_str());
-				}
+				ESP_LOGD( "NewRxValueReceived"
+						, "Rx Echo for: \"%s\" with Value: \"%s\""
+						, GetName().c_str()
+						, ConvertValueToString(receivedValues, GetCount()).c_str());
 				if(UpdateTxStore(mp_RxValue))
 				{
 					StoreUpdated |= Tx_Now();
@@ -176,13 +172,10 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		bool Set_Tx_Value(const T* newTxValues, size_t count)
 		{
-			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-			{
-				ESP_LOGI( "Set_Tx_Value"
-						, "\"%s\" Set Tx Value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newTxValues, count).c_str());
-			}
+			ESP_LOGI( "Set_Tx_Value"
+					, "\"%s\" Set Tx Value: \"%s\""
+					, GetName().c_str()
+					, ConvertValueToString(newTxValues, count).c_str());
 			assert(newTxValues != nullptr);
 			assert(mp_TxValue != nullptr);
 			assert(COUNT > 0);
@@ -193,12 +186,9 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			bool valueUpdateAllowed = (valueChanged && validValue);
 			if(valueUpdateAllowed)
 			{
-				if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-				{
-					ESP_LOGI( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
-								, mp_SerialPortMessageManager->GetName().c_str()
-								, GetName().c_str() );
-				}
+				ESP_LOGI( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
+							, mp_SerialPortMessageManager->GetName().c_str()
+							, GetName().c_str() );
 				storeUpdated |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);
 			}
 			else
@@ -213,13 +203,10 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			assert(newValues != nullptr);
 			assert(mp_RxValue != nullptr);
 			assert(COUNT > 0);
-			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-			{
-				ESP_LOGI( "UpdateRxStore"
-						, "Name: \"%s\" Update Rx Store with value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newValues, COUNT).c_str());
-			}
+			ESP_LOGD( "UpdateRxStore"
+					, "Name: \"%s\" Update Rx Store with value: \"%s\""
+					, GetName().c_str()
+					, ConvertValueToString(newValues, COUNT).c_str());
 			bool storeUpdated = false;
 			bool valueChanged = (0 != memcmp(mp_RxValue, newValues, COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
@@ -228,10 +215,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				ZeroOutMemory(mp_RxValue);
 				memcpy(mp_RxValue, newValues, sizeof(T) * COUNT);
 				storeUpdated = true;
-				if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-				{
-					ESP_LOGI( "UpdateRxStore", "\"%s\": Update Rx Store: Successful.", GetName().c_str());
-				}
+				ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Successful.", GetName().c_str());
 			}
 			else
 			{
@@ -245,13 +229,10 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			assert(newValues != nullptr);
 			assert(mp_TxValue != nullptr);
 			assert(COUNT > 0);
-			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-			{
-				ESP_LOGI( "UpdateTxStore"
-						, "Name: \"%s\" Update Tx Store with value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newValues, COUNT).c_str());
-			}
+			ESP_LOGD( "UpdateTxStore"
+					, "Name: \"%s\" Update Tx Store with value: \"%s\""
+					, GetName().c_str()
+					, ConvertValueToString(newValues, COUNT).c_str());
 			bool storeUpdated = false;
 			bool valueChanged = (0 != memcmp(mp_TxValue, newValues, COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
@@ -260,10 +241,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				ZeroOutMemory(mp_TxValue);
 				memcpy(mp_TxValue, newValues, sizeof(T) * COUNT);
 				storeUpdated = true;
-				if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-				{
-					ESP_LOGI( "UpdateTxStore", "\"%s\": Update Tx Store: Successful.", GetName().c_str());
-				}
+				ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Successful.", GetName().c_str());
 			}
 			else
 			{
@@ -274,30 +252,22 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		bool Tx_Now()
 		{
-			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-			{
-				ESP_LOGI( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\""
-						, mp_SerialPortMessageManager->GetName().c_str()
-						, GetName().c_str()
-						, ConvertValueToString(mp_TxValue, COUNT)
-						, GetChangeCount() );
-			}
-
+			ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\""
+					, mp_SerialPortMessageManager->GetName().c_str()
+					, GetName().c_str()
+					, ConvertValueToString(mp_TxValue, COUNT)
+					, GetChangeCount() );
 			bool storeUpdated = false;
 			if(mp_SerialPortMessageManager)
 			{
 				if(m_UpdateStoreType == UpdateStoreType_On_Tx || m_UpdateStoreType == UpdateStoreType_On_TxRx)
 				{
-					if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
+					if(storeUpdated |= UpdateStore(mp_TxValue, GetChangeCount()))
 					{
-						ESP_LOGI( "Tx_Now", "\"%s\": Updating Store on Tx", GetName().c_str());
+						ESP_LOGI( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
 					}
-					storeUpdated |= UpdateStore(mp_TxValue, GetChangeCount());
 				}
-				if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-				{
-					ESP_LOGI( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
-				}
+				ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
 				if(!mp_SerialPortMessageManager->QueueMessageFromData(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
 				{
 					ESP_LOGE("Tx_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", GetName().c_str());
@@ -395,10 +365,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		bool Try_TX_On_Change(const T *newValues)
 		{
-			if(GetName().equals("Amp_Gain") || GetName().equals("Input_Source"))
-			{
-				ESP_LOGI("Try_TX_On_Change", "\"%s\": Try TX On Change", GetName().c_str());
-			}
+			ESP_LOGI("Try_TX_On_Change", "\"%s\": Try TX On Change", GetName().c_str());
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
 				return Tx_Now();

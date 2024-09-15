@@ -133,7 +133,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				ZeroOutMemory(mp_Value);
 				strcpy(mp_Value, value);
 				ESP_LOGI( "LocalDataItem: SetValue", "Set Value Successful");
-				CallAllCallbacks();
+				this->CallNamedCallbacks(mp_Value);
 			}
 			return valueUpdateAllowed;
 		}

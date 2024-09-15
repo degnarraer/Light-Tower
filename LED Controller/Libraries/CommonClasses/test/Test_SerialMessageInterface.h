@@ -40,7 +40,7 @@ class MockSerialMessageInterface
 {
     public:
         MOCK_METHOD(T*, GetValuePointer, (), (const));
-        MOCK_METHOD(bool, UpdateStore, (const T *value, size_t count, const bool synchronizeStore), ());
+        MOCK_METHOD(bool, UpdateStore, (const T *value, size_t count), ());
         MOCK_METHOD(bool, EqualsValue, (T *object, size_t count), (const));
         MOCK_METHOD(String, GetName, (), (const));
         MOCK_METHOD(size_t, GetChangeCount, (), (const));

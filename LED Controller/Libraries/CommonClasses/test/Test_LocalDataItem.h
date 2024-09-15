@@ -344,6 +344,7 @@ TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Set_Valid_Array_Valu
 }
 TEST_F(LocalDataItemGetAndSetValueTestsInt10, dataItemArray_Reject_Invalid_Array_Values_When_Validation_Is_Used)
 {
+    
     TestSettingValue(validValue10, invalidValueArray, false);
 }
 
