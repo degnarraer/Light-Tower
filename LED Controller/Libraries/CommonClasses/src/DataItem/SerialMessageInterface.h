@@ -111,7 +111,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		}
 
 		//Named_Object_Callee_Interface
-		virtual bool NewObjectFromSender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) override
+		virtual bool New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) override
 		{
 			bool StoreUpdated = false;
 			const T* receivedValues = static_cast<const T*>(values);
@@ -199,7 +199,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 								, mp_SerialPortMessageManager->GetName().c_str()
 								, GetName().c_str() );
 				}
-				storeUpdated |= Update_Tx_Store_And_Try_Echo_Value(newTxValues);
+				storeUpdated |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);
 			}
 			else
 			{
@@ -385,18 +385,11 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 		}
 
-		bool Update_Tx_Store_And_Try_Echo_Value(const T *newValues)
+		bool Update_Tx_Store_And_Try_Tx_On_Change(const T *newValues)
 		{
 			bool storeUpdated = false;
 			storeUpdated |= UpdateTxStore(newValues);
-			if(storeUpdated && RxTxType_Rx_Echo_Value == m_RxTxType)
-			{
-				ESP_LOGI( "NewRxValueReceived"
-						, "Rx Echo for: \"%s\" with Value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newValues, GetCount()).c_str());
-				storeUpdated |= Tx_Now();
-			}
+			Try_TX_On_Change(newValues);
 			return storeUpdated;
 		}
 

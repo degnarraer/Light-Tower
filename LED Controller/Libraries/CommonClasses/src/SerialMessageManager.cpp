@@ -63,7 +63,7 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 			{
 				found = true;
 				ESP_LOGD("Call_Named_Object_Callback", "Callee Found: \"%s\"", name.c_str());
-				callee->NewObjectFromSender(this, object, changeCount);
+				callee->New_Object_From_Sender(this, object, changeCount);
 				break;
 			}
 		}
