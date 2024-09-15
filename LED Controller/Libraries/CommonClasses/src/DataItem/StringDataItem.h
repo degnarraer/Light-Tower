@@ -87,9 +87,9 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::GetDataType();
 		}
-		bool UpdateStore(const char *newValues, const size_t changeCount, const bool synchronizeCount = false)
+		bool UpdateStore(const char *newValues, const size_t changeCount)
 		{
-			return LocalStringDataItem::UpdateStore(newValues, changeCount, synchronizeCount);
+			return LocalStringDataItem::UpdateStore(newValues, changeCount);
 		}
 		String ConvertValueToString(const char *values, size_t count) const
 		{

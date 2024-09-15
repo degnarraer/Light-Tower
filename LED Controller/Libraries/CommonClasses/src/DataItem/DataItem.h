@@ -214,8 +214,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::ConfirmValueValidity(values, count);
 		}
 
-		virtual bool UpdateStore(const T *newValues, const size_t changeCount, const bool synchronizeCount = false) override
+		virtual bool UpdateStore(const T *newValues, const size_t changeCount) override
 		{
-			return LocalDataItem<T,COUNT>::UpdateStore(newValues, changeCount, synchronizeCount);
+			return LocalDataItem<T,COUNT>::UpdateStore(newValues, changeCount);
 		}
 };

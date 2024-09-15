@@ -83,7 +83,7 @@ void Named_Object_Caller_Interface::DeRegisterNamedCallback(NamedCallback_t* Nam
 	}
 }
 
-void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String& name, void* object, const size_t changeCount)
+void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& name, void* object, const size_t changeCount)
 {
 	ESP_LOGD("NewRxValueReceived", "Notify Callee: \"%s\"", name.c_str());
 	bool found = false;
@@ -95,7 +95,7 @@ void Named_Object_Caller_Interface::Notify_NewRxValue_Callee_ByName(const String
 			{
 				found = true;
 				ESP_LOGD("NewRxValueReceived", "Callee Found: \"%s\"", name.c_str());
-				callee->NewRxValueReceived(this, object, changeCount);
+				callee->ObjectFromSender(this, object, changeCount);
 				break;
 			}
 		}
@@ -214,7 +214,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					if(mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
 					{
 						ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-						this->Notify_NewRxValue_Callee_ByName(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
+						this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
 					}
 					else
 					{

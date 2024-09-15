@@ -24,7 +24,6 @@
 #include "Tunes.h"
 #include "DataItem/DataItems.h"
 #include "ESPAsyncWebServer.h"
-#include "AsyncTCP.h"
 #include "Arduino_JSON.h"
 #include <mutex>
 #include <cstring>
@@ -119,7 +118,11 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       m_WebSocketDataProcessor.RegisterForWebSocketRxNotification(m_Name, this);
       m_WebSocketDataProcessor.RegisterForWebSocketTxNotification(m_Name, this);
-      m_DataItem.RegisterForNewRxValueNotification(this);
+      auto dataItemPtr = dynamic_cast<DataItem<T,COUNT>*>(&m_DataItem);
+      if (dataItemPtr)
+      {
+        dataItemPtr->RegisterForNewRxValueNotification(this);
+      }
     }
     WebSocketDataHandler( WebSocketDataProcessor &webSocketDataProcessor
                         , LocalDataItem<T, COUNT> &dataItem
@@ -132,30 +135,31 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       m_WebSocketDataProcessor.RegisterForWebSocketRxNotification(m_Name, this);
       m_WebSocketDataProcessor.RegisterForWebSocketTxNotification(m_Name, this);
-      m_DataItem.RegisterForNewRxValueNotification(this);
+      auto dataItemPtr = dynamic_cast<DataItem<T,COUNT>*>(&m_DataItem);
+      if (dataItemPtr)
+      {
+        dataItemPtr->RegisterForNewRxValueNotification(this);
+      }
     }
     
     virtual ~WebSocketDataHandler()
     {
       m_WebSocketDataProcessor.DeRegisterForWebSocketRxNotification(m_Name, this);
       m_WebSocketDataProcessor.DeRegisterForWebSocketTxNotification(m_Name, this);
-      m_DataItem.DeRegisterForNewRxValueNotification(this);
+      auto dataItemPtr = dynamic_cast<DataItem<T,COUNT>*>(&m_DataItem);
+      if (dataItemPtr)
+      {
+        dataItemPtr->RegisterForNewRxValueNotification(this);
+      }
     }
 
-    bool NewRxValueReceived(const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t changeCount) override
+    bool NewRxValueReceived(const T* values, size_t changeCount) override
     {
       ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
-      if(sender == &m_DataItem)
-      {
-          m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
-          success = true;
-          ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
-      }
-      else
-      {
-        ESP_LOGW( "NewRxValueReceived", "WARNING! Rx value from unknown sender");
-      }
+      m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+      success = true;
+      ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
       return success;
     }
     
@@ -172,7 +176,11 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleWebSocketDataRequest() override
     {
-      m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+      if(IsChangeCountGreater(m_DataItem.GetChangeCount()))
+      {
+        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+        m_ChangeCount = m_DataItem.GetChangeCount();
+      }
     }
     
     virtual void HandleWebSocketRxNotification(const String& stringValue) override
@@ -187,14 +195,25 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
 
     void TxDataToWebSocket(String key, String value)
     {
-      m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
+      if(IsChangeCountGreater(m_DataItem.GetChangeCount()))
+      {
+        m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
+        m_ChangeCount = m_DataItem.GetChangeCount();
+      }
     }
+
   protected:
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     LocalDataItem<T, COUNT> &m_DataItem;
+    size_t m_ChangeCount;
     const bool &m_Debug;
     const String m_Name;
     const String m_Signal;
+  private:
+		bool IsChangeCountGreater(size_t changeCount)
+		{
+			return (changeCount > m_ChangeCount) || (m_ChangeCount - changeCount > (SIZE_MAX / 2));
+		}
 };
 
 class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>

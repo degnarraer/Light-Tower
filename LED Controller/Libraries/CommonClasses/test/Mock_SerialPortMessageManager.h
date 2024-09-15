@@ -63,7 +63,7 @@ public:
     MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t *namedCallback), (override));
-    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object, const size_t changeCount), (override));
+    MOCK_METHOD(void, Call_Named_Object_Callback, (const String& name, void* object, const size_t changeCount), (override));
     MOCK_METHOD(void, CallNamedCallback_ByName, (const String& name, void* object), (override));
 };
 
@@ -151,6 +151,6 @@ public:
     MOCK_METHOD(void, DeRegisterForNewRxValueNotification, (Named_Object_Callee_Interface* Callee), (override));
     MOCK_METHOD(void, RegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));	
     MOCK_METHOD(void, DeRegisterNamedCallback, (NamedCallback_t* NamedCallback), (override));
-    MOCK_METHOD(void, Notify_NewRxValue_Callee_ByName, (const String& name, void* object, const size_t changeCount), (override));
+    MOCK_METHOD(void, Call_Named_Object_Callback, (const String& name, void* object, const size_t changeCount), (override));
     MOCK_METHOD(void, CallNamedCallback_ByName, (const String& name, void* object), (override));
 };

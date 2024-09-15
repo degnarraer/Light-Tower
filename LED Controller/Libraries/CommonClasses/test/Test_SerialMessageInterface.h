@@ -40,7 +40,7 @@ class MockSerialMessageInterface
 {
     public:
         MOCK_METHOD(T*, GetValuePointer, (), (const));
-        MOCK_METHOD(bool, UpdateStore, (const T *value, size_t count), ());
+        MOCK_METHOD(bool, UpdateStore, (const T *value, size_t count, const bool synchronizeStore), ());
         MOCK_METHOD(bool, EqualsValue, (T *object, size_t count), (const));
         MOCK_METHOD(String, GetName, (), (const));
         MOCK_METHOD(size_t, GetChangeCount, (), (const));
@@ -72,9 +72,9 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
         {
             return m_MockSerialMessageInterface.GetValuePointer();
         }
-		virtual bool UpdateStore(const T *newValues, const size_t changeCount, const bool synchronizeCount = false) override
+		virtual bool UpdateStore(const T *newValues, const size_t changeCount) override
         {
-            return m_MockSerialMessageInterface.UpdateStore(newValues, changeCount, synchronizeCount);
+            return m_MockSerialMessageInterface.UpdateStore(newValues, changeCount);
         }
 		virtual bool EqualsValue(T *object, size_t count) const override
         {
@@ -225,7 +225,7 @@ TEST_F(SerialMessageInterfaceTests_int32_t_1, Tx_Periodic_Preiodically_Queues_Me
     ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
 
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
-    EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), UpdateStore(_, _, _)).WillRepeatedly(Return(true));
+    EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), UpdateStore(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), EqualsValue(_, _)).WillRepeatedly(Return(true));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetValueAsString()).WillRepeatedly(Return("10"));
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetDataType()).WillRepeatedly(Return(GetDataTypeFromTemplateType<int32_t>()));

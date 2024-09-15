@@ -66,11 +66,11 @@ void SetupSerialPorts()
   delay(500);
   Serial.begin(500000, SERIAL_8O2);
   ClearSerialBuffers(Serial);
-  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
   ClearSerialBuffers(Serial1);
-  Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+  Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
   ClearSerialBuffers(Serial2);
 }
 
