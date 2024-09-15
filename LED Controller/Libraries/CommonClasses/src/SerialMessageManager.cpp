@@ -51,41 +51,9 @@ void Named_Object_Caller_Interface::DeRegisterForNewRxValueNotification(Named_Ob
 	}
 }
 
-void Named_Object_Caller_Interface::RegisterNamedCallback(NamedCallback_t* NamedCallback)
-{
-	ESP_LOGD("RegisterNamedCallback", "Try Registering callback");
-	bool IsFound = false;
-	for (NamedCallback_t* callback : m_NamedCallbacks)
-	{
-		if(NamedCallback == callback)
-		{
-			ESP_LOGE("RegisterNamedCallback", "ERROR! A callback with this name already exists.");
-			IsFound = true;
-			break;
-		}
-	}
-	if(false == IsFound)
-	{
-		ESP_LOGD("RegisterNamedCallback", "NamedCallback Registered");
-		m_NamedCallbacks.push_back(NamedCallback);
-	}
-	
-}
-
-void Named_Object_Caller_Interface::DeRegisterNamedCallback(NamedCallback_t* NamedCallback)
-{
-	// Find the iterator pointing to the element
-	auto it = std::find(m_NamedCallbacks.begin(), m_NamedCallbacks.end(), NamedCallback);
-
-	// Check if the element was found before erasing
-	if (it != m_NamedCallbacks.end()) {
-		m_NamedCallbacks.erase(it);
-	}
-}
-
 void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& name, void* object, const size_t changeCount)
 {
-	ESP_LOGD("NewRxValueReceived", "Notify Callee: \"%s\"", name.c_str());
+	ESP_LOGD("Call_Named_Object_Callback", "Notify Callee: \"%s\"", name.c_str());
 	bool found = false;
 	for (Named_Object_Callee_Interface* callee : m_NewValueCallees)
 	{
@@ -94,28 +62,13 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 			if (callee->GetName().equals(name))
 			{
 				found = true;
-				ESP_LOGD("NewRxValueReceived", "Callee Found: \"%s\"", name.c_str());
-				callee->ObjectFromSender(this, object, changeCount);
+				ESP_LOGD("Call_Named_Object_Callback", "Callee Found: \"%s\"", name.c_str());
+				callee->NewObjectFromSender(this, object, changeCount);
 				break;
 			}
 		}
 	}
 	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Rx Value Callee Not Found Found: \"%s\"", name.c_str());
-}
-
-void Named_Object_Caller_Interface::CallNamedCallback_ByName(const String& name, void* object)
-{
-	ESP_LOGD("CallNamedCallback", "CallNamedCallback");
-    for (NamedCallback_t* namedCallback : m_NamedCallbacks)
-    {
-		if(namedCallback->Name.equals(name))
-		{
-			if (namedCallback->Callback) 
-			{
-				namedCallback->Callback(namedCallback->Name, object, namedCallback->Arg);
-			}
-		}
-    }
 }
 
 void SerialPortMessageManager::SetupSerialPortMessageManager()

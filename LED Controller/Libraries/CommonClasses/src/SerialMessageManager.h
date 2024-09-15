@@ -124,7 +124,7 @@ class Rx_Value_Caller_Interface
 		{
 			ESP_LOGI("RegisterForNewRxValueNotification", "Try Registering Callee");
 			bool IsFound = false;
-			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
+			for (Rx_Value_Callee_Interface<T>* callee : m_NewRxValueCallees)
 			{
 				if(NewCallee == callee)
 				{
@@ -136,17 +136,14 @@ class Rx_Value_Caller_Interface
 			if(false == IsFound)
 			{
 				ESP_LOGD("RegisterForNewRxValueNotification", "Callee Registered");
-				m_NewValueCallees.push_back(NewCallee);
+				m_NewRxValueCallees.push_back(NewCallee);
 			}
 		}
 		virtual void DeRegisterForNewRxValueNotification(Rx_Value_Callee_Interface<T>* Callee)
 		{
-			// Find the iterator pointing to the element
-			auto it = std::find(m_NewValueCallees.begin(), m_NewValueCallees.end(), Callee);
-
-			// Check if the element was found before erasing
-			if (it != m_NewValueCallees.end()) {
-				m_NewValueCallees.erase(it);
+			auto it = std::find(m_NewRxValueCallees.begin(), m_NewRxValueCallees.end(), Callee);
+			if (it != m_NewRxValueCallees.end()) {
+				m_NewRxValueCallees.erase(it);
 			}
 		}
 		
@@ -154,13 +151,13 @@ class Rx_Value_Caller_Interface
 		virtual void Notify_NewRxValue_Callees(T* values, size_t changeCount)
 		{
 			ESP_LOGD("Notify_NewRxValue_Callees", "Notify Callees");
-			for (Rx_Value_Callee_Interface<T>* callee : m_NewValueCallees)
+			for (Rx_Value_Callee_Interface<T>* callee : m_NewRxValueCallees)
 			{
 				callee->NewRxValueReceived(values, changeCount);
 			}
 		}
 	private:
-		std::vector<Rx_Value_Callee_Interface<T>*> m_NewValueCallees = std::vector<Rx_Value_Callee_Interface<T>*>();
+		std::vector<Rx_Value_Callee_Interface<T>*> m_NewRxValueCallees = std::vector<Rx_Value_Callee_Interface<T>*>();
 };
 
 class Named_Object_Caller_Interface;
@@ -176,7 +173,7 @@ class Named_Object_Callee_Interface
 		{
 			
 		}
-		virtual bool ObjectFromSender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) = 0;
+		virtual bool NewObjectFromSender(const Named_Object_Caller_Interface* sender, const void* object, const size_t changeCount) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -196,12 +193,9 @@ class Named_Object_Caller_Interface
 		}
 		virtual void RegisterForNewRxValueNotification(Named_Object_Callee_Interface* newCallee);
 		virtual void DeRegisterForNewRxValueNotification(Named_Object_Callee_Interface* callee);
-		virtual void RegisterNamedCallback(NamedCallback_t* namedCallback);
-		virtual void DeRegisterNamedCallback(NamedCallback_t* namedCallback);
 		virtual String GetName() const = 0;
 	protected:
 		virtual void Call_Named_Object_Callback(const String& name, void* object, const size_t changeCount);
-		virtual void CallNamedCallback_ByName(const String& name, void* object);
 	private:
 		std::vector<Named_Object_Callee_Interface*> m_NewValueCallees = std::vector<Named_Object_Callee_Interface*>();
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();

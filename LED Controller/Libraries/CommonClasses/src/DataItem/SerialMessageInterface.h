@@ -111,7 +111,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		}
 
 		//Named_Object_Callee_Interface
-		virtual bool ObjectFromSender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) override
+		virtual bool NewObjectFromSender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) override
 		{
 			bool StoreUpdated = false;
 			const T* receivedValues = static_cast<const T*>(values);
