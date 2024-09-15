@@ -130,8 +130,8 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						ESP_LOGI( "New_Object_From_Sender", "\"%s\": Updated Store", GetName().c_str());
 					}
 				}
+				this->Notify_NewRxValue_Callees(mp_RxValue, changeCount);
 			}
-			this->Notify_NewRxValue_Callees(mp_RxValue, changeCount);
 			if(RxTxType_Rx_Echo_Value == m_RxTxType)
 			{
 				ESP_LOGD( "NewRxValueReceived"

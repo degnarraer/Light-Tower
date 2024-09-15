@@ -457,13 +457,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				m_ChangeCount = newChangeCount;
 				m_ChangeCountInitialized = true;
-				ESP_LOGI("UpdateChangeCount", "\"%s\": Change Count Initialized: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Initialized: \"%i\"", GetName().c_str(), m_ChangeCount);
 			}
 			if(incrementChangeCount)
 			{
 				m_ChangeCount = m_ChangeCount+1;
 				allowUpdate = true;
-				ESP_LOGI("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
 			}
 			return allowUpdate;
 		}
@@ -494,7 +494,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				ZeroOutMemory(mp_Value);
 				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
 				storeUpdated = true;
-				ESP_LOGI( "UpdateStore", "\"%s\": Update Store: Successful. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGI( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
 				this->CallNamedCallbacks(mp_Value);
 			}
 			else
