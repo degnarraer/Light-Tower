@@ -157,9 +157,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
-      m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
-      success = true;
-      ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
+      if(IsChangeCountGreater(m_DataItem.GetChangeCount()))
+      {
+        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+        success = true;
+        ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
+      }
       return success;
     }
     
@@ -176,11 +179,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleWebSocketDataRequest() override
     {
-      if(IsChangeCountGreater(m_DataItem.GetChangeCount()))
-      {
         m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
         m_ChangeCount = m_DataItem.GetChangeCount();
-      }
     }
     
     virtual void HandleWebSocketRxNotification(const String& stringValue) override
@@ -191,15 +191,13 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
               , m_Signal.c_str()
               , stringValue.c_str());
       m_DataItem.SetValueFromString(stringValue);
+      m_ChangeCount = m_DataItem.GetChangeCount();
     }
 
     void TxDataToWebSocket(String key, String value)
     {
-      if(IsChangeCountGreater(m_DataItem.GetChangeCount()))
-      {
-        m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
-        m_ChangeCount = m_DataItem.GetChangeCount();
-      }
+      m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
+      m_ChangeCount = m_DataItem.GetChangeCount();
     }
 
   protected:
