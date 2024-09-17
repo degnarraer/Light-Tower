@@ -29,7 +29,6 @@ class StringDataItem: public LocalStringDataItem
 		StringDataItem( const String name
 					  , const String &initialValue
 					  , const RxTxType_t rxTxType
-					  , const UpdateStoreType_t updateStoreType
 					  , const uint16_t rate
 					  , SerialPortMessageManager *serialPortMessageManager
 					  , NamedCallback_t *namedCallback
@@ -38,7 +37,7 @@ class StringDataItem: public LocalStringDataItem
 										   , initialValue
 										   , namedCallback
 										   , setupCallerInterface )
-					  , SerialMessageInterface<char, DATAITEM_STRING_LENGTH>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+					  , SerialMessageInterface<char, DATAITEM_STRING_LENGTH>(rxTxType, rate, serialPortMessageManager)
 		{
 		  
 		}

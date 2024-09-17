@@ -29,10 +29,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate )
 				: LocalDataItem<T, COUNT>(name, initialValue)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate)
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 1");
 		}
@@ -40,10 +39,9 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate )
 				: LocalDataItem<T, COUNT>(name, initialValue)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate)
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 2");
 		}
@@ -51,13 +49,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
 		}
@@ -65,13 +62,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)				
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)				
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
 		}
@@ -79,14 +75,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
 		}
@@ -94,14 +89,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface
 				, ValidStringValues_t *validStringValues )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
 		}
@@ -109,14 +103,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 		DataItem( const String name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
-				, const UpdateStoreType_t updateStoreType
 				, const uint16_t rate
 				, SerialPortMessageManager *serialPortMessageManager
 				, NamedCallback_t *namedCallback
 				, SetupCallerInterface *setupCallerInterface
 				, bool printDelimited )
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, printDelimited)
-				, SerialMessageInterface<T, COUNT>(rxTxType, updateStoreType, rate, serialPortMessageManager)
+				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
 		}

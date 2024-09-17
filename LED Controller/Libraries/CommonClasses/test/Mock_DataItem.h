@@ -32,15 +32,13 @@ class MockDataItem : public DataItem<T, COUNT> {
         MockDataItem(const String name
 				    , const T* initialValue
 				    , const RxTxType_t rxTxType
-				    , const UpdateStoreType_t updateStoreType
 				    , const uint16_t rate )
-                    : DataItem<T, COUNT>(name, initialValue, rxTxType, updateStoreType, rate){}
+                    : DataItem<T, COUNT>(name, initialValue, rxTxType, rate){}
         MockDataItem(const String name
 				    , const T& initialValue
 				    , const RxTxType_t rxTxType
-				    , const UpdateStoreType_t updateStoreType
 				    , const uint16_t rate )
-                    : DataItem<T, COUNT>(name, initialValue, rxTxType, updateStoreType, rate){}
+                    : DataItem<T, COUNT>(name, initialValue, rxTxType, rate){}
     protected:
         MOCK_METHOD(void, Setup, (), (override));
         MOCK_METHOD(bool, SetValueFromString, (const String& stringValue), (override));

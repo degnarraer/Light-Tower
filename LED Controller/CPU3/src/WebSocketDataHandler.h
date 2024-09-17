@@ -149,7 +149,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       auto dataItemPtr = dynamic_cast<DataItem<T,COUNT>*>(&m_DataItem);
       if (dataItemPtr)
       {
-        dataItemPtr->RegisterForNewRxValueNotification(this);
+        dataItemPtr->DeRegisterForNewRxValueNotification(this);
       }
     }
 

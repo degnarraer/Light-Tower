@@ -486,7 +486,7 @@ private:
                     mp_PreferenceTimerCreateArgs = nullptr;
                     return result;
                 }
-                ESP_LOGI("DelaySaveValue", "Delayed Save Timer Started for Key: \"%s\" for %lu uS", m_Key.c_str(), delayTime);
+                ESP_LOGD("DelaySaveValue", "Delayed Save Timer Started for Key: \"%s\" for %lu uS", m_Key.c_str(), delayTime);
                 m_PreferenceTimerActive = true;
                 result = true;
             }
@@ -510,7 +510,7 @@ private:
         {
             ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
             String loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-            ESP_LOGI("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+            ESP_LOGD("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
             if (m_Callback && mp_Object)
             {
                 if(m_Callback(loadedValue, mp_Object))
@@ -554,7 +554,7 @@ private:
         if(stringToSave.length() == saveLength)
         {
             String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-            ESP_LOGI("PerformSave", "Key: \"%s\" Comparing Strings: String to Save: \"%s\" Actual String Saved: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
+            ESP_LOGD("PerformSave", "Key: \"%s\" Comparing Strings: String to Save: \"%s\" Actual String Saved: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
             if(savedString.equals(stringToSave))
             {
                 ESP_LOGI("PerformSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
@@ -609,10 +609,10 @@ private:
             {
                 xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
                 String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                ESP_LOGI("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
+                ESP_LOGD("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
                 if(stringToSave.equals(savedString))
                 {
-                    ESP_LOGI("TrySave", "Key: \"%s\" Skipping save as String to Save: \"%s\" equals Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());       
+                    ESP_LOGD("TrySave", "Key: \"%s\" Skipping save as String to Save: \"%s\" equals Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());       
                 }
                 else
                 {

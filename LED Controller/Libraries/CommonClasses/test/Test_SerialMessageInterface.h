@@ -109,11 +109,9 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
             return m_MockSerialMessageInterface.ParseStringValueIntoValues(stringValue, values);
         }
 
-        void Configure( RxTxType_t rxTxType
-                      , UpdateStoreType_t updateStoreType
-                      , uint16_t rate )
+        void Configure( RxTxType_t rxTxType, uint16_t rate )
         {
-            SerialMessageInterface<T, COUNT>::Configure(rxTxType, updateStoreType, rate);
+            SerialMessageInterface<T, COUNT>::Configure(rxTxType, rate);
         }
 
         void Setup()
@@ -135,9 +133,7 @@ class SerialMessageInterfaceTests : public Test
             , mp_SerialMessageInterfaceTester(nullptr)
         {
         }
-        SerialMessageInterfaceTests( RxTxType_t rxTxType
-                                    , UpdateStoreType_t updateStoreType
-                                    , uint16_t rate )                     
+        SerialMessageInterfaceTests( RxTxType_t rxTxType, uint16_t rate )                     
         {
 
         }
@@ -164,39 +160,20 @@ class SerialMessageInterfaceTests : public Test
             delete mp_MockSerialPortMessageManager;
         }
 
-        void SetupInterface(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType)
+        void SetupInterface(RxTxType_t rxTxType)
         {
             EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));
             EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetValuePointer()).Times(3).WillRepeatedly(Return(m_value));
             EXPECT_CALL(*mp_MockSerialPortMessageManager, GetName()).WillRepeatedly(Return(m_SerialPortMessageManagerName));
-            if( updateStoreType == UpdateStoreType_On_Rx || rxTxType == RxTxType_Rx_Only || rxTxType == RxTxType_Rx_Echo_Value )
-            {
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_SerialMessageInterfaceTester)).Times(1);
-            }
-            else
-            {
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_SerialMessageInterfaceTester)).Times(0);
-            }
-            if( ( rxTxType == RxTxType_Tx_On_Change_With_Heartbeat || 
-                  rxTxType == RxTxType_Tx_On_Change ||
-                  rxTxType == RxTxType_Tx_Periodic ) && updateStoreType == UpdateStoreType_On_Tx )
-            {
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_SerialMessageInterfaceTester)).Times(1);
-            }
-            else
-            {
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, DeRegisterForNewRxValueNotification(mp_SerialMessageInterfaceTester)).Times(0);
-            }
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_SerialMessageInterfaceTester)).Times(1);
             mp_SerialMessageInterfaceTester->Setup();
             ::testing::Mock::VerifyAndClearExpectations(&(mp_SerialMessageInterfaceTester->GetMock()));
             ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
         }
 
-        void Configure( RxTxType_t rxTxType
-                      , UpdateStoreType_t updateStoreType
-                      , uint16_t rate )
+        void Configure( RxTxType_t rxTxType, uint16_t rate )
         {
-            mp_SerialMessageInterfaceTester->Configure(rxTxType, updateStoreType, rate);
+            mp_SerialMessageInterfaceTester->Configure(rxTxType, rate);
         }
 };
 
@@ -205,23 +182,23 @@ using SerialMessageInterfaceTests_uint32_t_1 = SerialMessageInterfaceTests<uint3
 
 TEST_F(SerialMessageInterfaceTests_int32_t_1, Construct_and_destruct)
 {
-    Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
+    Configure(RxTxType_Tx_Periodic, 100);
     EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(1);
-    SetupInterface(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx);
+    SetupInterface(RxTxType_Tx_Periodic);
 }
 
 TEST_F(SerialMessageInterfaceTests_uint32_t_1, Construct_and_destruct)
 {
-    Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 1000);
+    Configure(RxTxType_Tx_Periodic, 1000);
     EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(1);
-    SetupInterface(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx);
+    SetupInterface(RxTxType_Tx_Periodic);
 }
 
 TEST_F(SerialMessageInterfaceTests_int32_t_1, Tx_Periodic_Preiodically_Queues_Message)
 {
     EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(1);
-    Configure(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
-    SetupInterface(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx);
+    Configure(RxTxType_Tx_Periodic, 100);
+    SetupInterface(RxTxType_Tx_Periodic);
     ::testing::Mock::VerifyAndClearExpectations(mp_MockSerialPortMessageManager);
 
     EXPECT_CALL(mp_SerialMessageInterfaceTester->GetMock(), GetName()).WillRepeatedly(Return(m_SerialPortInterfaceName));

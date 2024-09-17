@@ -29,7 +29,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		DataItemWithPreferences( const String name
 							   , const T* initialValue
 							   , const RxTxType_t rxTxType
-							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
@@ -37,7 +36,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   : DataItem<T, COUNT>( name
 							   					   , initialValue
 							   					   , rxTxType
-							   					   , updateStoreType
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback )
@@ -48,7 +46,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		DataItemWithPreferences( const String name
 							   , const T& initialValue
 							   , const RxTxType_t rxTxType
-							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
@@ -57,7 +54,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   : DataItem<T, COUNT>( name
 												   , initialValue
 												   , rxTxType
-												   , updateStoreType
 												   , rate
 												   , serialPortMessageManager
 												   , namedCallback
@@ -70,7 +66,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		DataItemWithPreferences( const String name
 							   , const T* initialValue
 							   , const RxTxType_t rxTxType
-							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
@@ -80,7 +75,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   : DataItem<T, COUNT>( name
 							   					   , initialValue
 							   					   , rxTxType
-							   					   , updateStoreType
 							   					   , rate
 							   					   , serialPortMessageManager
 							   					   , namedCallback
@@ -94,7 +88,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		DataItemWithPreferences( const String name
 							   , const T& initialValue
 							   , const RxTxType_t rxTxType
-							   , const UpdateStoreType_t updateStoreType
 							   , const uint16_t rate
 							   , IPreferences *preferencesInterface
 							   , SerialPortMessageManager *serialPortMessageManager
@@ -104,7 +97,6 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   : DataItem<T, COUNT>( name
 												   , initialValue
 												   , rxTxType
-												   , updateStoreType
 												   , rate
 												   , serialPortMessageManager
 												   , namedCallback

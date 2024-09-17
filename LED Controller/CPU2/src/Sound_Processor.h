@@ -58,7 +58,6 @@ class Sound_Processor: public NamedItem
     DataItemWithPreferences<float, 1> m_Amplitude_Gain = DataItemWithPreferences<float, 1>( "Amp_Gain"
                                                                                           , m_Amplitude_Gain_InitialValue
                                                                                           , RxTxType_Rx_Echo_Value
-                                                                                          , UpdateStoreType_On_Rx
                                                                                           , 5000
                                                                                           , &m_Preferences
                                                                                           , &m_CPU3SerialPortMessageManager
@@ -69,7 +68,6 @@ class Sound_Processor: public NamedItem
     DataItemWithPreferences<float, 1> m_FFT_Gain = DataItemWithPreferences<float, 1>( "FFT_Gain"
                                                                                     , m_FFT_Gain_InitialValue
                                                                                     , RxTxType_Rx_Echo_Value
-                                                                                    , UpdateStoreType_On_Rx
                                                                                     , 5000
                                                                                     , &m_Preferences
                                                                                     , &m_CPU3SerialPortMessageManager

@@ -141,7 +141,6 @@ class Manager: public NamedItem
     DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
                                                                                                                       , m_SoundInputSource_InitialValue
                                                                                                                       , RxTxType_Rx_Echo_Value
-                                                                                                                      , UpdateStoreType_On_Rx
                                                                                                                       , 0
                                                                                                                       , &m_PreferencesWrapper
                                                                                                                       , &m_CPU3SerialPortMessageManager
@@ -170,7 +169,6 @@ class Manager: public NamedItem
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
                                                                             , m_SinkName_InitialValue
                                                                             , RxTxType_Rx_Echo_Value
-                                                                            , UpdateStoreType_On_Rx
                                                                             , 0
                                                                             , &m_PreferencesWrapper
                                                                             , &m_CPU3SerialPortMessageManager
@@ -201,7 +199,6 @@ class Manager: public NamedItem
     DataItemWithPreferences<bool, 1> m_SinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR"
                                                                                            , m_SinkAutoReConnect_InitialValue
                                                                                            , RxTxType_Rx_Echo_Value
-                                                                                           , UpdateStoreType_On_Rx
                                                                                            , 0
                                                                                            , &m_PreferencesWrapper
                                                                                            , &m_CPU3SerialPortMessageManager
@@ -234,7 +231,6 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect"
                                                        , m_SinkConnect_InitialValue
                                                        , RxTxType_Rx_Echo_Value
-                                                       , UpdateStoreType_On_Rx
                                                        , 0
                                                        , &m_CPU3SerialPortMessageManager
                                                        , &m_SinkConnect_Callback
@@ -266,7 +262,6 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Sink_Disconnect"
                                                           , m_SinkDisconnect_InitialValue
                                                           , RxTxType_Rx_Echo_Value
-                                                          , UpdateStoreType_On_Rx
                                                           , 0
                                                           , &m_CPU3SerialPortMessageManager
                                                           , &m_SinkDisconnect_Callback
@@ -292,7 +287,6 @@ class Manager: public NamedItem
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En"
                                                                                              , m_BluetoothSinkEnable_InitialValue
                                                                                              , RxTxType_Rx_Echo_Value
-                                                                                             , UpdateStoreType_On_Rx
                                                                                              , 0
                                                                                              , &m_PreferencesWrapper
                                                                                              , &m_CPU3SerialPortMessageManager
@@ -305,7 +299,6 @@ class Manager: public NamedItem
     DataItem<ConnectionStatus_t, 1> m_BluetoothSinkConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State"
                                                                                                      , m_SinkConnectionStatus_InitialValue
                                                                                                      , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                                     , UpdateStoreType_On_Tx
                                                                                                      , 5000
                                                                                                      , &m_CPU3SerialPortMessageManager
                                                                                                      , NULL

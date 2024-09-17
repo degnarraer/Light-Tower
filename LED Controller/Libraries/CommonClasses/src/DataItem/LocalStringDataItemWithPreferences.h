@@ -84,7 +84,6 @@ class StringDataItemWithPreferences: public StringDataItem
 		StringDataItemWithPreferences( const String name
 								     , const String &initialValue
 								     , const RxTxType_t rxTxType
-								     , const UpdateStoreType_t updateStoreType
 								     , const uint16_t rate
 								     , IPreferences *preferencesInterface
 								     , SerialPortMessageManager *serialPortMessageManager
@@ -93,7 +92,6 @@ class StringDataItemWithPreferences: public StringDataItem
 								     : StringDataItem( name
 													 , initialValue
 													 , rxTxType
-													 , updateStoreType
 													 , rate
 													 , serialPortMessageManager
 													 , namedCallback

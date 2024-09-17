@@ -51,13 +51,12 @@ protected:
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
-    void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
+    void CreateDataItem(RxTxType_t rxTxType,  uint16_t rate)
     {
         EXPECT_CALL(*mp_MockSetupCaller, RegisterForSetupCall(NotNull())).Times(1);
         mp_DataItem = new StringDataItem( name 
                                         , initialValue
                                         , rxTxType
-                                        , updateStoreType
                                         , rate
                                         , mp_MockSerialPortMessageManager
                                         , NULL
@@ -91,7 +90,7 @@ protected:
     }
     void TestCallRegistrationDeregistration(RxTxType_t rxtxtype)
     {
-        CreateDataItem(rxtxtype, UpdateStoreType_On_Tx, 1000);
+        CreateDataItem(rxtxtype, 1000);
         DestroyDataItem();
     }
 };
@@ -123,12 +122,11 @@ protected:
         ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
-    void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
+    void CreateDataItem(RxTxType_t rxTxType,  uint16_t rate)
     {
         mp_DataItem = new StringDataItem( name 
                                         , initialValue
                                         , rxTxType
-                                        , updateStoreType
                                         , rate
                                         , mp_MockSerialPortMessageManager
                                         , nullptr
@@ -156,7 +154,7 @@ protected:
 
 TEST_F(StringDataItemRxTxTests, Tx_Called_Periodically)
 {
-    CreateDataItem(RxTxType_Tx_Periodic, UpdateStoreType_On_Tx, 100);
+    CreateDataItem(RxTxType_Tx_Periodic, 100);
     EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(10)
         .WillRepeatedly(Return(true));
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
@@ -185,12 +183,11 @@ protected:
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
 
-    void CreateDataItem(RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, uint16_t rate)
+    void CreateDataItem(RxTxType_t rxTxType,  uint16_t rate)
     {
         mp_DataItem = new StringDataItem( name 
                                         , initialValue
                                         , rxTxType
-					                    , updateStoreType
 					                    , rate
 					                    , mp_MockSerialPortMessageManager
                                         , mp_mockNamedCallback
@@ -222,7 +219,7 @@ protected:
             mp_MockSerialPortMessageManager = nullptr;
         }
     }
-    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType, UpdateStoreType_t updateStoreType, bool expectValueAccepted )
+    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType,  bool expectValueAccepted )
     {
         bool loggedType = false;
         switch(rxTxType)
@@ -230,7 +227,7 @@ protected:
             case RxTxType_Tx_Periodic:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_Periodic");
-                if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
+                if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
                     ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
@@ -245,7 +242,7 @@ protected:
 	        case RxTxType_Tx_On_Change:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change");
-                if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
+                if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
                     ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
@@ -260,7 +257,7 @@ protected:
 	        case RxTxType_Tx_On_Change_With_Heartbeat:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change_With_Heartbeat");
-                if(	UpdateStoreType_On_Tx == updateStoreType && expectValueAccepted)
+                if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
                     ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
@@ -275,7 +272,7 @@ protected:
             case RxTxType_Rx_Only:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Only");
-                if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
+                if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
                     ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
@@ -290,7 +287,7 @@ protected:
 	        case RxTxType_Rx_Echo_Value:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Echo_Value");
-                if(	UpdateStoreType_On_Rx == updateStoreType && expectValueAccepted)
+                if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
                     ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: NewValueCallbackFunction x 1");
@@ -310,14 +307,14 @@ protected:
 
 TEST_F(StringDataItemTest, StringDataItem_Name_Is_Set)
 {
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
+    CreateDataItem(RxTxType_Tx_On_Change, 0);
     EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
     DestroyDataItem();
 }
 
 TEST_F(StringDataItemTest, StringDataItem_Initial_Value_Is_Returned_As_String)
 {
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
+    CreateDataItem(RxTxType_Tx_On_Change, 0);
     EXPECT_STREQ(initialValue.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
     EXPECT_STREQ(initialValue.c_str(), mp_DataItem->GetValueAsString().c_str());
     DestroyDataItem();
@@ -325,8 +322,8 @@ TEST_F(StringDataItemTest, StringDataItem_Initial_Value_Is_Returned_As_String)
 
 TEST_F(StringDataItemTest, StringDataItem_Set_Value_From_Char_Pointer_Converts_To_String)
 {
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
+    CreateDataItem(RxTxType_Tx_On_Change, 0);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, true);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     EXPECT_STREQ(value1.c_str(), mp_DataItem->GetValueAsString().c_str());
@@ -335,25 +332,25 @@ TEST_F(StringDataItemTest, StringDataItem_Set_Value_From_Char_Pointer_Converts_T
 
 TEST_F(StringDataItemTest, Change_Count_Changes_Properly)
 {
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
+    CreateDataItem(RxTxType_Tx_On_Change, 0);
     EXPECT_EQ(0, mp_DataItem->GetChangeCount());
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, true);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, false);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     EXPECT_EQ(1, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, true);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     EXPECT_EQ(2, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, false);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     EXPECT_EQ(2, mp_DataItem->GetChangeCount());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
@@ -362,21 +359,21 @@ TEST_F(StringDataItemTest, Change_Count_Changes_Properly)
 
 TEST_F(StringDataItemTest, Callback_Only_Called_For_New_Values)
 {
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
+    CreateDataItem(RxTxType_Tx_On_Change, 0);
     
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, true);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, false);
     mp_DataItem->SetValue(value1.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, true);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, true);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
 
-    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, false);
+    SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, false);
     mp_DataItem->SetValue(value2.c_str(), value1.length());
     ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     DestroyDataItem();
@@ -384,7 +381,7 @@ TEST_F(StringDataItemTest, Callback_Only_Called_For_New_Values)
 
 TEST_F(StringDataItemTest, Count_Reflects_DataItem_Count)
 {
-    CreateDataItem(RxTxType_Tx_On_Change, UpdateStoreType_On_Tx, 0);
+    CreateDataItem(RxTxType_Tx_On_Change, 0);
     EXPECT_EQ(50, mp_DataItem->GetCount());
     DestroyDataItem();
 }

@@ -123,7 +123,6 @@ class Manager: public NamedItem
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State"
                                                                                         , m_ConnectionStatus_InitialValue
                                                                                         , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                        , UpdateStoreType_On_Tx
                                                                                         , 5000
                                                                                         , &m_CPU3SerialPortMessageManager
                                                                                         , nullptr
@@ -138,7 +137,6 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect"
                                                               , m_OuputSourceConnect_InitialValue
                                                               , RxTxType_Rx_Only
-                                                              , UpdateStoreType_On_Rx
                                                               , 0
                                                               , &m_CPU3SerialPortMessageManager
                                                               , &m_OuputSourceConnect_Callback
@@ -170,7 +168,6 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect"
                                                                  , m_OuputSourceDisconnect_InitialValue
                                                                  , RxTxType_Rx_Only
-                                                                 , UpdateStoreType_On_Rx
                                                                  , 0
                                                                  , &m_CPU3SerialPortMessageManager
                                                                  , &m_OuputSourceDisconnect_Callback
@@ -197,7 +194,6 @@ class Manager: public NamedItem
     DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device"
                                                                                                 , m_ScannedDevice_InitialValue
                                                                                                 , RxTxType_Tx_On_Change
-                                                                                                , UpdateStoreType_On_Tx
                                                                                                 , 0
                                                                                                 , &m_CPU3SerialPortMessageManager
                                                                                                 , NULL
@@ -210,7 +206,6 @@ class Manager: public NamedItem
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En"
                                                                                                , m_BluetoothSourceEnable_InitialValue
                                                                                                , RxTxType_Rx_Echo_Value
-                                                                                               , UpdateStoreType_On_Rx
                                                                                                , 0
                                                                                                , &m_PreferencesInterface
                                                                                                , &m_CPU3SerialPortMessageManager
@@ -233,7 +228,6 @@ class Manager: public NamedItem
     DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR"
                                                                                                       , m_BluetoothSourceAutoReConnect_InitialValue
                                                                                                       , RxTxType_Rx_Echo_Value
-                                                                                                      , UpdateStoreType_On_Rx
                                                                                                       , 0
                                                                                                       , &m_PreferencesInterface
                                                                                                       , &m_CPU3SerialPortMessageManager
@@ -257,7 +251,7 @@ class Manager: public NamedItem
     CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_BluetoothReset_Callback = {"Bluetooth Reset Callback", &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
     const bool m_BluetoothReset_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
     static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -278,7 +272,6 @@ class Manager: public NamedItem
     DataItem<bool, 1> m_BluetoothResetNVS = DataItem<bool, 1>( "BT_SRC_NVS_Rst"
                                                              , m_BluetoothResetNVS_InitialValue
                                                              , RxTxType_Rx_Echo_Value
-                                                             , UpdateStoreType_On_Rx
                                                              , 0
                                                              , &m_CPU3SerialPortMessageManager
                                                              , &m_BluetoothResetNVS_Callback
@@ -301,7 +294,7 @@ class Manager: public NamedItem
     CallbackArguments m_TargetCompatibleDevice_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_TargetCompatibleDevice_Callback = {"Target Compatible Device Callback", &TargetCompatibleDevice_ValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
     const CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, UpdateStoreType_On_Rx, 0, &m_CPU3SerialPortMessageManager, &m_TargetCompatibleDevice_Callback, this);
+    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_TargetCompatibleDevice_Callback, this);
     static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
@@ -326,7 +319,6 @@ class Manager: public NamedItem
     DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source"
                                                                                                                          , m_SoundOutputSource_InitialValue
                                                                                                                          , RxTxType_Rx_Echo_Value
-                                                                                                                         , UpdateStoreType_On_Rx
                                                                                                                          , 0
                                                                                                                          , &m_PreferencesInterface
                                                                                                                          , &m_CPU3SerialPortMessageManager
