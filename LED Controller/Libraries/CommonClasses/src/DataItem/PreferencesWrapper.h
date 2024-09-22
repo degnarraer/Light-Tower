@@ -618,7 +618,6 @@ private:
                 {
                     result = PerformSave(stringToSave);
                 }
-                
                 xSemaphoreGiveRecursive(m_PreferencesMutex);
             }
         }

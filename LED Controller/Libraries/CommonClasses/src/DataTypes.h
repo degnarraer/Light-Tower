@@ -793,6 +793,54 @@ struct DataItemConfig_t
   size_t QueueCount;
 };
 
+class Wifi_Mode
+{
+public:
+    enum Value
+    {
+        Station = 0,
+        AccessPoint = 1,
+        Unknown = 2
+    };
+
+    // Function to convert enum to string
+    static String ToString(Value status)
+    {
+        switch (status)
+        {
+            case Station: return "Station";
+            case AccessPoint: return "AccessPoint";
+            default: return "Unknown";
+        }
+    }
+
+    // Function to convert string to enum
+    static Value FromString(const String& str)
+    {
+        if (str == "Station") return Station;
+        if (str == "AccessPoint") return AccessPoint;
+        return Unknown; // Default or error value
+    }
+
+    // Overload the insertion operator
+	friend std::istream& operator>>(std::istream& is, Wifi_Mode::Value& value) 
+	{
+		std::string token;
+		is >> token;
+		value = Wifi_Mode::FromString(token.c_str());
+		return is;
+	}
+    
+    // Overload the extraction operator
+    friend std::ostream& operator<<(std::ostream& os, const Wifi_Mode::Value& value) {
+        ESP_LOGD("operator<<", "Wifi Mode to String: \"%s\"", Wifi_Mode::ToString(value).c_str());
+        os << Wifi_Mode::ToString(value).c_str();
+        return os;
+    }
+    
+};
+typedef Wifi_Mode::Value Wifi_Mode_t;
+
 class ConnectionStatus
 {
 public:

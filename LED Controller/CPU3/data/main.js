@@ -5,6 +5,7 @@ import { Model_ConnectionStatus } from './Model_ConnectionStatus.js'
 import { Model_Boolean } from './Model_Boolean.js';
 import { Model_Numeric } from './Model_Numeric.js';
 import { Model_Text } from './Model_Text.js';
+import { Model_WifiMode } from './Model_WifiMode.js';
 
 const wsManager = new WebSocketManager();
 
@@ -31,10 +32,13 @@ export const BT_SinkEnable = new Model_Boolean('BT_Sink_En', Model_Boolean.value
 export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
 export const Sink_Auto_Reconnect = new Model_Boolean('BT_Sink_AR', Model_Boolean.values.False, wsManager);
 export const Source_Auto_Reconnect = new Model_Boolean('BT_Source_AR', Model_Boolean.values.False, wsManager);
-export const SSID = new Model_Text('SSID', 'LED Tower of Power', wsManager);
-export const Password = new Model_Text('Password', 'LEDs Rock', wsManager);
+export const STA_SSID = new Model_Text('STA_SSID', 'ENTER VALUE', wsManager);
+export const STA_Password = new Model_Text('STA_Password', 'ENTER VALUE', wsManager);
+export const AP_SSID = new Model_Text('AP_SSID', 'ENTER VALUE', wsManager);
+export const AP_Password = new Model_Text('AP_Password', 'ENTER VALUE', wsManager);
 export const SinkName = new Model_Text('Sink_Name', 'LED Tower of Power', wsManager);
 export const SourceName = new Model_Text('Source_Name', '', wsManager);
+export const WIFI_Mode = new Model_WifiMode('WIFI_Mode', Model_WifiMode.values.Unknown, wsManager);
 
 //Compatible Devices
 var compatibleDevices = [

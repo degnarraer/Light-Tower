@@ -3,6 +3,7 @@ export class WebSocketManager {
         this.websocket = null;
         this.gateway = `ws://${window.location.hostname}/ws`;
         this.listeners = []; // Array to hold registered listeners
+        this.loadingAnimation;
     }
 
     registerListener(listener) {
@@ -25,8 +26,20 @@ export class WebSocketManager {
         this.listeners = this.listeners.filter(l => l !== listener);
     }
 
+    show_Connecting_Modal() {
+        const loadingTextElement = document.querySelector('#loadingModal .modal-content h2');
+        let dotCount = 0;
+        loadingTextElement.textContent = 'Connecting';
+        document.getElementById('loadingPage').style.display = 'flex';
+        this.loadingAnimation = setInterval(() => {
+            dotCount = (dotCount + 1) % 4;
+            loadingTextElement.textContent = 'Connecting' + '.'.repeat(dotCount);
+        }, 1000);
+    }
+
     initWebSocket() {
         console.log('Trying to open a WebSocket connection…');
+        this.show_Connecting_Modal();
         this.websocket = new WebSocket(this.gateway);
         this.websocket.onopen = this.onOpen.bind(this);
         this.websocket.onclose = this.onClose.bind(this);
@@ -98,6 +111,11 @@ export class WebSocketManager {
     onOpen(event) {
         if(this.websocket) {
             console.log('Connection opened');
+            clearInterval(this.loadingAnimation);
+            document.querySelector('#loadingModal .modal-content h2').textContent = 'Connected!';
+            setTimeout(() => {
+                document.getElementById('loadingPage').style.display = 'none';
+            }, 1000 );
             this.announceHere();
         } else {
             console.error('Null Web_Socket!');
@@ -106,12 +124,16 @@ export class WebSocketManager {
 
     onClose(event) {
         console.log('Connection closed');
+        document.querySelector('#loadingModal .modal-content h2').textContent = 'Connection Closed!';
+        document.getElementById('loadingPage').style.display = 'flex';
         setTimeout(() => this.initWebSocket(), 5000);
     }
 
     onError(event) {
         console.error('Connection Error:', event);
         this.websocket.close();
+        document.querySelector('#loadingModal .modal-content h2').textContent = 'Connection Error!';
+        document.getElementById('loadingPage').style.display = 'flex';
         setTimeout(() => this.initWebSocket(), 5000);
     }
 

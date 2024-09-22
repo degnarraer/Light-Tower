@@ -29,10 +29,13 @@
 			   , BT_SinkEnable
 			   , Sink_Auto_Reconnect
 			   , Source_Auto_Reconnect
-			   , SSID
-			   , Password
+			   , STA_SSID
+			   , STA_Password  
+			   , AP_SSID
+			   , AP_Password
 			   , SinkName
-			   , SourceName } from './main.js';
+			   , SourceName
+			   , WIFI_Mode } from './main.js';
         window.CurrentSoundInputSource = CurrentSoundInputSource;
         window.CurrentSoundOutputSource = CurrentSoundOutputSource;
         window.Source_Connect = Source_Connect;
@@ -44,12 +47,21 @@
         window.BT_SinkEnable = BT_SinkEnable;
         window.Sink_Auto_Reconnect = Sink_Auto_Reconnect;
         window.Source_Auto_Reconnect = Source_Auto_Reconnect;
-        window.SSID = SSID;
-        window.Password = Password;
+        window.STA_SSID = STA_SSID;
+        window.STA_Password = STA_Password;
+        window.AP_SSID = AP_SSID;
+        window.AP_Password = AP_Password;
         window.SinkName = SinkName;
         window.SourceName = SourceName;
+		window.WIFI_Mode = WIFI_Mode;
 	</script>
-	<!-- Tab links -->
+	<div id="loadingPage">
+		<div id="loadingModal">
+			<div class="modal-content">
+				<h2>Connecting...</h2>
+			</div>
+		</div>
+	</div>
 	<div id= "MainScreen" class = "MainScreen">
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
 			<a href="javascript:void(0)"  class="CloseButton" onclick="closeNav()">&times;</a>
@@ -85,28 +97,75 @@
 			</div>
 			<div class="menu-content" id="Wifi">
 				<div class="settingGroup">
-					<div class="settingGroup_Horrizontal_Grid_TextInput">
+					<div class="settingGroup_Horrizontal_Grid_Radio_Button">
 						<div class="settingGroup_Title">
-							SSID
-						</div>
-						<div class="settingGroup_Textbox">
-							<label for="SSID_Text_Box"></label><input type="text" data-Signal="SSID" id="SSID_Text_Box" oninput="SSID.setValue(this.value, false)" value="Enter SSID">
+							Wifi Mode
 						</div>
 						<div class="settingGroup_Widget">
-							<button id="SSID_Submit_Button" for="SSID_Text_Box" onclick="SSID.scheduleWebSocketUpdate()">Submit</button>
+							<div class="radio-button-group">
+								<label onclick="WIFI_Mode.setValue('Station')">
+									<input type="radio" name="WIFI_Mode" value="Station" data-Signal="WIFI_Mode">
+									<span class="custom-radio"></span>
+									Station
+								</label>
+								<label onclick="WIFI_Mode.setValue('AccessPoint')">
+									<input type="radio" name="WIFI_Mode" value="AccessPoint" data-Signal="WIFI_Mode">
+									<span class="custom-radio"></span>
+									Access Point
+								</label>
+							</div>
 						</div>
 					</div>
 				</div>
 				<div class="settingGroup">
 					<div class="settingGroup_Horrizontal_Grid_TextInput">
 						<div class="settingGroup_Title">
-							Password
+							Access Point to Connect SSID
 						</div>
 						<div class="settingGroup_Textbox">
-							<label for="Password_Text_Box"></label><input type="text" data-Signal="Password" id="Password_Text_Box" oninput="Password.setValue(this.value, false)" value="Enter Password">
+							<label for="STA_SSID_Text_Box"></label><input type="text" data-Signal="STA_SSID" id="STA_SSID_Text_Box" oninput="STA_SSID.setValue(this.value, false)" value="Enter SSID">
 						</div>
 						<div class="settingGroup_Widget">
-							<button id="Password_Submit_Button" for="Password_Text_Box" onclick="Password.scheduleWebSocketUpdate()">Submit</button>
+							<button id="STA_SSID_Submit_Button" for="STA_SSID_Text_Box" onclick="STA_SSID.scheduleWebSocketUpdate()">Submit</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_TextInput">
+						<div class="settingGroup_Title">
+							Access Point to Connect Password
+						</div>
+						<div class="settingGroup_Textbox">
+							<label for="STA_Password_Text_Box"></label><input type="text" data-Signal="STA_Password" id="STA_Password_Text_Box" oninput="STA_Password.setValue(this.value, false)" value="Enter Password">
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="STA_Password_Submit_Button" for="STA_Password_Text_Box" onclick="STA_Password.scheduleWebSocketUpdate()">Submit</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_TextInput">
+						<div class="settingGroup_Title">
+							My Access Point SSID
+						</div>
+						<div class="settingGroup_Textbox">
+							<label for="AP_SSID_Text_Box"></label><input type="text" data-Signal="AP_SSID" id="AP_SSID_Text_Box" oninput="AP_SSID.setValue(this.value, false)" value="Enter SSID">
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="AP_SSID_Submit_Button" for="AP_SSID_Text_Box" onclick="AP_SSID.scheduleWebSocketUpdate()">Submit</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_TextInput">
+						<div class="settingGroup_Title">
+							My Access Point Password
+						</div>
+						<div class="settingGroup_Textbox">
+							<label for="AP_Password_Text_Box"></label><input type="text" data-Signal="AP_Password" id="AP_Password_Text_Box" oninput="AP_Password.setValue(this.value, false)" value="Enter Password">
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="AP_Password_Submit_Button" for="AP_Password_Text_Box" onclick="AP_Password.scheduleWebSocketUpdate()">Submit</button>
 						</div>
 					</div>
 				</div>
