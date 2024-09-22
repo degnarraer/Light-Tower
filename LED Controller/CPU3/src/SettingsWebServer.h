@@ -605,18 +605,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       return result;
     }
-
-    // Initialize WiFi Client
-    void InitWiFi_Station(const char* staSSID, const char* staPassword, const char* myHostName)
-    {
-      ESP_LOGI( "SettingsWebServer: InitWifiClient", "Starting Wifi Station Mode: SSID: \"%s\" Password: \"%s\" Host Name: \"%s\"", staSSID, staPassword, myHostName);
-      WiFi.mode(WIFI_STA);
-      WiFi.onEvent(WiFiEvent);
-      WiFi.setHostname(myHostName);
-      WiFi.begin(staSSID, staPassword);
-      InitWebServer();
-      BeginWebServer();
-    }
     
     void BeginWebServer()
     {
@@ -641,6 +629,17 @@ class SettingsWebServerManager: public SetupCallerInterface
       MDNS.addService("http", "tcp", 80);
     }
 
+    void InitWiFi_Station(const char* staSSID, const char* staPassword, const char* myHostName)
+    {
+      ESP_LOGI( "SettingsWebServer: InitWifiClient", "Starting Wifi Station Mode: SSID: \"%s\" Password: \"%s\" Host Name: \"%s\"", staSSID, staPassword, myHostName);
+      WiFi.mode(WIFI_STA);
+      WiFi.onEvent(WiFiEvent);
+      WiFi.setHostname(myHostName);
+      WiFi.begin(staSSID, staPassword);
+      InitWebServer();
+      BeginWebServer();
+    }
+    
     bool InitWiFi_AccessPoint(const char* apSSID, const char* apPassword, const char* myHostName)
     {
       ESP_LOGI( "SettingsWebServer: InitWifiClient", "Starting Wifi Access Point Mode: SSID: \"%s\" Password: \"%s\" Host Name: \"%s\"", apSSID, apPassword, myHostName);
@@ -664,7 +663,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       IPAddress Ip(192, 168, 4, 1);
       IPAddress NMask(255, 255, 255, 0);
       WiFi.softAPConfig(Ip, Ip, NMask);
-      ESP_LOGI("InitWiFi_AccessPoint_Station", "Starting Access Point: SSID: \"%s\" Password: \"%s\"", apSSID, apPassword);
       WiFi.softAP(apSSID, apPassword);
       Start_DNS_Server(myHostName);
       InitWebServer();
