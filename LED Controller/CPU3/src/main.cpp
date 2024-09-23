@@ -86,7 +86,6 @@ void InitLocalVariables()
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
-  m_SettingsWebServerManager.StartWiFi();
 }
 
 void PrintMemory()
