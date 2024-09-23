@@ -32,6 +32,7 @@ export const BT_SinkEnable = new Model_Boolean('BT_Sink_En', Model_Boolean.value
 export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
 export const Sink_Auto_Reconnect = new Model_Boolean('BT_Sink_AR', Model_Boolean.values.False, wsManager);
 export const Source_Auto_Reconnect = new Model_Boolean('BT_Source_AR', Model_Boolean.values.False, wsManager);
+export const Host_Name = new Model_Text('Host_Name', 'ENTER VALUE', wsManager);
 export const STA_SSID = new Model_Text('STA_SSID', 'ENTER VALUE', wsManager);
 export const STA_Password = new Model_Text('STA_Password', 'ENTER VALUE', wsManager);
 export const AP_SSID = new Model_Text('AP_SSID', 'ENTER VALUE', wsManager);

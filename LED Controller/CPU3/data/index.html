@@ -29,6 +29,7 @@
 			   , BT_SinkEnable
 			   , Sink_Auto_Reconnect
 			   , Source_Auto_Reconnect
+			   , Host_Name
 			   , STA_SSID
 			   , STA_Password  
 			   , AP_SSID
@@ -47,6 +48,7 @@
         window.BT_SinkEnable = BT_SinkEnable;
         window.Sink_Auto_Reconnect = Sink_Auto_Reconnect;
         window.Source_Auto_Reconnect = Source_Auto_Reconnect;
+		window.Host_Name = Host_Name;
         window.STA_SSID = STA_SSID;
         window.STA_Password = STA_Password;
         window.AP_SSID = AP_SSID;
@@ -120,7 +122,20 @@
 				<div class="settingGroup">
 					<div class="settingGroup_Horrizontal_Grid_TextInput">
 						<div class="settingGroup_Title">
-							Access Point to Connect SSID
+							Device Host Name:
+						</div>
+						<div class="settingGroup_Textbox">
+							<label for="Host_Name_Text_Box"></label><input type="text" data-Signal="Host_Name" id="Host_Name_Text_Box" oninput="Host_Name.setValue(this.value, false)" value="Enter Host Name">
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="Host_Name_Submit_Button" for="Host_Name_Text_Box" onclick="Host_Name.scheduleWebSocketUpdate()">Submit</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_TextInput">
+						<div class="settingGroup_Title">
+							SSID of Access Point to Connect to:
 						</div>
 						<div class="settingGroup_Textbox">
 							<label for="STA_SSID_Text_Box"></label><input type="text" data-Signal="STA_SSID" id="STA_SSID_Text_Box" oninput="STA_SSID.setValue(this.value, false)" value="Enter SSID">
@@ -133,7 +148,7 @@
 				<div class="settingGroup">
 					<div class="settingGroup_Horrizontal_Grid_TextInput">
 						<div class="settingGroup_Title">
-							Access Point to Connect Password
+							Password for Access Point to Connect to:
 						</div>
 						<div class="settingGroup_Textbox">
 							<label for="STA_Password_Text_Box"></label><input type="text" data-Signal="STA_Password" id="STA_Password_Text_Box" oninput="STA_Password.setValue(this.value, false)" value="Enter Password">
@@ -146,7 +161,7 @@
 				<div class="settingGroup">
 					<div class="settingGroup_Horrizontal_Grid_TextInput">
 						<div class="settingGroup_Title">
-							My Access Point SSID
+							My Access Point SSID:
 						</div>
 						<div class="settingGroup_Textbox">
 							<label for="AP_SSID_Text_Box"></label><input type="text" data-Signal="AP_SSID" id="AP_SSID_Text_Box" oninput="AP_SSID.setValue(this.value, false)" value="Enter SSID">
@@ -159,7 +174,7 @@
 				<div class="settingGroup">
 					<div class="settingGroup_Horrizontal_Grid_TextInput">
 						<div class="settingGroup_Title">
-							My Access Point Password
+							My Access Point Password:
 						</div>
 						<div class="settingGroup_Textbox">
 							<label for="AP_Password_Text_Box"></label><input type="text" data-Signal="AP_Password" id="AP_Password_Text_Box" oninput="AP_Password.setValue(this.value, false)" value="Enter Password">

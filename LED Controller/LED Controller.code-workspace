@@ -75,7 +75,8 @@
 			"typeinfo": "cpp",
 			"*.tpp": "cpp",
 			"any": "cpp",
-			"random": "cpp"
+			"random": "cpp",
+			"csignal": "cpp"
 		}
 	},
 	"launch": {

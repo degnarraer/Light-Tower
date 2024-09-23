@@ -47,13 +47,6 @@ void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
   m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
 }
 
-// Web Socket init to register web socket callback and connect it to the web server
-void InitWebSocket()
-{
-  MyWebSocket.onEvent(OnEvent);
-  MyWebServer.addHandler(&MyWebSocket);
-}
-
 void ClearSerialBuffers(HardwareSerial &serial)
 {
     serial.flush();
@@ -93,7 +86,6 @@ void InitLocalVariables()
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
-  InitWebSocket();
   m_SettingsWebServerManager.StartWiFi();
 }
 
