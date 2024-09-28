@@ -1,1 +1,0 @@
-idf_component_register(SRCS src/AsyncEventSource.cpp  src/AsyncWebSocket.cpp  src/SPIFFSEditor.cpp  src/WebAuthentication.cpp  src/WebHandlers.cpp  src/WebRequest.cpp  src/WebResponses.cpp  src/WebServer.cpp INCLUDE_DIRS src REQUIRES arduino-esp32 AsyncTCP wifi_provisioning)

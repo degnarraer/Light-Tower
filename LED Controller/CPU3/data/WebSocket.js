@@ -113,10 +113,10 @@ export class WebSocketManager {
             console.log('Connection opened');
             clearInterval(this.loadingAnimation);
             document.querySelector('#loadingModal .modal-content h2').textContent = 'Connected!';
+            this.announceHere();
             setTimeout(() => {
                 document.getElementById('loadingPage').style.display = 'none';
             }, 1000 );
-            this.announceHere();
         } else {
             console.error('Null Web_Socket!');
         }

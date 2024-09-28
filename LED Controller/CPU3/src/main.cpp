@@ -42,10 +42,6 @@ SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Man
                                                    , m_PreferencesWrapper
                                                    , m_CPU1SerialPortMessageManager
                                                    , m_CPU2SerialPortMessageManager );
-void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
-{
-  m_SettingsWebServerManager.OnEvent(server, client, type, arg, data, len);
-}
 
 void ClearSerialBuffers(HardwareSerial &serial)
 {
@@ -106,4 +102,5 @@ void setup()
 
 void loop()
 {
+  MyWebSocket.cleanupClients();
 }

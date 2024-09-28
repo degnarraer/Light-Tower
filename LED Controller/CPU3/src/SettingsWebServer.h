@@ -36,6 +36,18 @@ class SettingsWebServerManager: public SetupCallerInterface
                             , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                             , m_CPU2SerialPortMessageManager(CPU2SerialPortMessageManager)
     {
+      WiFi.onEvent(std::bind( &SettingsWebServerManager::OnWiFiEvent
+                            , this
+                            , std::placeholders::_1 ));
+      m_WebSocket.onEvent(std::bind( &SettingsWebServerManager::OnWebSocketEvent
+                                   , this
+                                   , std::placeholders::_1
+                                   , std::placeholders::_2
+                                   , std::placeholders::_3
+                                   , std::placeholders::_4
+                                   , std::placeholders::_5
+                                   , std::placeholders::_6 ));
+      m_WebServer.addHandler(&m_WebSocket);
     }
     
     virtual ~SettingsWebServerManager()
@@ -48,18 +60,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       SetupAllSetupCallees();
       InitFileSystem();
       InitWebServer();
-      WiFi.onEvent(std::bind( &SettingsWebServerManager::onWiFiEvent
-                            , this
-                            , std::placeholders::_1 ));
-      m_WebSocket.onEvent(std::bind( &SettingsWebServerManager::OnEvent
-                                   , this
-                                   , std::placeholders::_1
-                                   , std::placeholders::_2
-                                   , std::placeholders::_3
-                                   , std::placeholders::_4
-                                   , std::placeholders::_5
-                                   , std::placeholders::_6 ));
-      m_WebServer.addHandler(&m_WebSocket);
       StartWiFi();
     }
 
@@ -119,7 +119,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       });
       m_WebServer.serveStatic("/", SPIFFS, "/").setCacheControl("no-cache, no-store, must-revalidate");
     }
-    
+
     // Initialize SPIFFS
     void InitFileSystem()
     {
@@ -141,128 +141,127 @@ class SettingsWebServerManager: public SetupCallerInterface
     }
 
     // Event handler to capture Wi-Fi events
-    void onWiFiEvent(WiFiEvent_t event)
+    void OnWiFiEvent(WiFiEvent_t event)
     {
       switch (event) 
       {
           case SYSTEM_EVENT_WIFI_READY:
-            ESP_LOGI("WiFiEvent", "Wifi Ready!");
+            ESP_LOGI("Wifi Event", "Wifi Ready!");
             m_WiFi_Ready = true;
             BeginWebServer();
             StartDNSServer();
-            break;
+          break;
           case SYSTEM_EVENT_SCAN_DONE:
-            ESP_LOGI("WiFiEvent", "Scan Done!");
-            break;
+            ESP_LOGI("Wifi Event", "Scan Done!");
+          break;
           case SYSTEM_EVENT_STA_START:
-            ESP_LOGI("WiFiEvent", "Station started!");
+            ESP_LOGI("Wifi Event", "Station started!");
             m_Station_Running = true;
-            break;
+          break;
           case SYSTEM_EVENT_STA_STOP:
-            ESP_LOGI("WiFiEvent", "Station stopped!");
+            ESP_LOGI("Wifi Event", "Station stopped!");
             m_Station_Running = false;
-            break;
+          break;
           case SYSTEM_EVENT_STA_CONNECTED:
-            ESP_LOGI("WiFiEvent", "Station connected.");
-            break;
+            ESP_LOGI("Wifi Event", "Station connected.");
+          break;
           case SYSTEM_EVENT_STA_DISCONNECTED:
-            ESP_LOGI("WiFiEvent", "Station disconnected.");
-            WiFi.reconnect();
-            break;
+            ESP_LOGI("Wifi Event", "Station disconnected.");
+          break;
           case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
-            ESP_LOGI("WiFiEvent", "Station Auth Mode Change.");
-            break;
+            ESP_LOGI("Wifi Event", "Station Auth Mode Change.");
+          break;
           case SYSTEM_EVENT_STA_GOT_IP:
-            ESP_LOGI("WiFiEvent", "Station Got IP address: \"%s\".", WiFi.localIP().toString().c_str());
-            break;
+            ESP_LOGI("Wifi Event", "Station Got IP address: \"%s\".", WiFi.localIP().toString().c_str());
+          break;
           case SYSTEM_EVENT_STA_LOST_IP:
-            ESP_LOGI("WiFiEvent", "Station Lost IP address: \"%s\".", WiFi.localIP().toString().c_str());
-            break;
+            ESP_LOGI("Wifi Event", "Station Lost IP address: \"%s\".", WiFi.localIP().toString().c_str());
+          break;
           case SYSTEM_EVENT_STA_BSS_RSSI_LOW:
-            ESP_LOGI("WiFiEvent", "Station RSSI low: \"%i\".", WiFi.RSSI());
-            break;
+            ESP_LOGI("Wifi Event", "Station RSSI low: \"%i\".", WiFi.RSSI());
+          break;
           case SYSTEM_EVENT_STA_WPS_ER_SUCCESS:
-            //ESP_LOGI("WiFiEvent", "Station WPS ER Success!");
-            break;
+            ESP_LOGI("Wifi Event", "Station WPS ER Success!");
+          break;
           case SYSTEM_EVENT_STA_WPS_ER_FAILED:
-            //ESP_LOGI("WiFiEvent", "Station WPS ER failed!");
-            break;
+            ESP_LOGI("Wifi Event", "Station WPS ER failed!");
+          break;
           case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT:
-            ESP_LOGI("WiFiEvent", "Station WPS ER timeout.");
-            break;
+            ESP_LOGI("Wifi Event", "Station WPS ER timeout.");
+          break;
           case SYSTEM_EVENT_STA_WPS_ER_PIN:
-            ESP_LOGI("WiFiEvent", "Station WPS ER Pin.");
-            break;
+            ESP_LOGI("Wifi Event", "Station WPS ER Pin.");
+          break;
           case SYSTEM_EVENT_STA_WPS_ER_PBC_OVERLAP:
-            ESP_LOGI("WiFiEvent", "Station WPS ER overlap.");
-            break;
+            ESP_LOGI("Wifi Event", "Station WPS ER overlap.");
+          break;
           case SYSTEM_EVENT_AP_START:
-            ESP_LOGI("WiFiEvent", "Access Point start.");
+            ESP_LOGI("Wifi Event", "Access Point started!");
             m_AccessPoint_Running = true;
-            break;
+          break;
           case SYSTEM_EVENT_AP_STOP:
-            ESP_LOGI("WiFiEvent", "Access Point stop.");
+            ESP_LOGI("Wifi Event", "Access Point stopped!");
             m_AccessPoint_Running = false;
-            break;
+          break;
           case SYSTEM_EVENT_AP_STACONNECTED:
-            ESP_LOGI("WiFiEvent", "Station Connected to the Access Point.");
-            break;
+            ESP_LOGI("Wifi Event", "Station Connected to the Access Point.");
+          break;
           case SYSTEM_EVENT_AP_STADISCONNECTED:
-            ESP_LOGI("WiFiEvent", "Station Disconnected from the Access Point.");
-            break;
+            ESP_LOGI("Wifi Event", "Station Disconnected from the Access Point.");
+          break;
           case SYSTEM_EVENT_AP_STAIPASSIGNED:
           {
-            ip_event_got_ip_t* ip_event = (ip_event_got_ip_t*) event;
-            IPAddress assignedIP(ip_event->ip_info.ip.addr);
-            ESP_LOGI("WiFiEvent", "Assigned IP address: \"%s\".", assignedIP.toString().c_str());
-            break;
+            ip_event_got_ip_t* ip_event = (ip_event_got_ip_t*) &event;
+            IPAddress assignedIP = IPAddress(ip_event->ip_info.ip.addr);
+            ESP_LOGI("Wifi Event", "Assigned IP address: \"%s\".", assignedIP.toString().c_str());
           }
+          break;
           case SYSTEM_EVENT_AP_PROBEREQRECVED:
-            ESP_LOGI("WiFiEvent", "Prob Error Received.");
-            break;
+            ESP_LOGI("Wifi Event", "Prob Error Received.");
+          break;
           case SYSTEM_EVENT_ACTION_TX_STATUS:
-            ESP_LOGI("WiFiEvent", "Action Tx Status.");
-            break;
+            ESP_LOGI("Wifi Event", "Action Tx Status.");
+          break;
           case SYSTEM_EVENT_ROC_DONE:
-            ESP_LOGI("WiFiEvent", "ROC Done.");
-            break;
+            ESP_LOGI("Wifi Event", "ROC Done.");
+          break;
           case SYSTEM_EVENT_STA_BEACON_TIMEOUT:
-            ESP_LOGI("WiFiEvent", "Beacon Timeout.");
-            break;
+            ESP_LOGI("Wifi Event", "Beacon Timeout.");
+          break;
           case SYSTEM_EVENT_FTM_REPORT:
-            ESP_LOGI("WiFiEvent", "FTM Report.");
-            break;
+            ESP_LOGI("Wifi Event", "FTM Report.");
+          break;
           case SYSTEM_EVENT_GOT_IP6:
-            ESP_LOGI("WiFiEvent", "Got IP6.");
-            break;
+            ESP_LOGI("Wifi Event", "Got IP6.");
+          break;
           case SYSTEM_EVENT_ETH_START:
-            ESP_LOGI("WiFiEvent", "ETH Start.");
-            break;
+            ESP_LOGI("Wifi Event", "ETH Start.");
+          break;
           case SYSTEM_EVENT_ETH_STOP:
-            ESP_LOGI("WiFiEvent", "ETH Stop.");
-            break;
+            ESP_LOGI("Wifi Event", "ETH Stop.");
+          break;
           case SYSTEM_EVENT_ETH_CONNECTED:
-            ESP_LOGI("WiFiEvent", "ETH Connected.");
-            break;
+            ESP_LOGI("Wifi Event", "ETH Connected.");
+          break;
           case SYSTEM_EVENT_ETH_DISCONNECTED:
-            ESP_LOGI("WiFiEvent", "ETH Disconnected.");
-            break;
+            ESP_LOGI("Wifi Event", "ETH Disconnected.");
+          break;
           case SYSTEM_EVENT_ETH_GOT_IP:
-            ESP_LOGI("WiFiEvent", "ETH Got IP.");
-            break;
+            ESP_LOGI("Wifi Event", "ETH Got IP.");
+          break;
           case SYSTEM_EVENT_ETH_LOST_IP:
-            ESP_LOGI("WiFiEvent", "ETH Lost IP.");
-            break;
+            ESP_LOGI("Wifi Event", "ETH Lost IP.");
+          break;
           case SYSTEM_EVENT_MAX:
-            ESP_LOGI("WiFiEvent", "Event Max.");
-            break;
+            ESP_LOGI("Wifi Event", "Event Max.");
+          break;
           default:
-            ESP_LOGE("WiFiEvent", "Unhandled Event!");
-            break;
+            ESP_LOGE("Wifi Event", "Unhandled Event!");
+          break;
       }
     }
 
-    void OnEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
+    void OnWebSocketEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len)
     {
       SettingsWebServerManager *instance = reinterpret_cast<SettingsWebServerManager*>(arg);
       if (instance)
@@ -270,19 +269,19 @@ class SettingsWebServerManager: public SetupCallerInterface
         switch (type) 
         {
           case WS_EVT_CONNECT:
-            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            ESP_LOGI("Web Socket Event", "WebSocket client #%u connected from %s", client->id(), client->remoteIP().toString().c_str());
             break;
           case WS_EVT_PONG:
-            Serial.printf("WebSocket client #%u Pinged Us!\n", client->id());
+            ESP_LOGI("Web Socket Event", "WebSocket client #%u Pinged Us!", client->id());
             break;
           case WS_EVT_DATA:
             HandleWebSocketMessage(client, arg, data, len);
             break;
           case WS_EVT_ERROR:
-            Serial.printf("WebSocket client #%u Error. Closing Connection!\n", client->id());
+            ESP_LOGI("Web Socket Event", "WebSocket client #%u Error. Closing Connection!", client->id());
             break;
           case WS_EVT_DISCONNECT:
-            Serial.printf("WebSocket client #%u disconnected. Closing Connection.\n", client->id());
+            ESP_LOGI("Web Socket Event", "WebSocket client #%u disconnected. Closing Connection.", client->id());
             break;
         }
       }
@@ -298,6 +297,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     bool m_AccessPoint_Running = false;
     bool m_Station_Running = false;
     bool m_Web_Server_Running = false;
+    const int maxClients = 4;
 
     struct CallbackArguments 
     {
@@ -332,7 +332,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(pArguments->arg1);
           if(pSettingWebServer)
           {
-            pSettingWebServer->UpdateStationEnable();
+            //pSettingWebServer->UpdateStationEnable();
           }
           else
           {
@@ -853,12 +853,14 @@ class SettingsWebServerManager: public SetupCallerInterface
     void InitWiFi_AccessPoint_Station(const char* apSSID, const char* apPassword, const char* staSSID, const char* staPassword)
     {
       ESP_LOGI( "InitWifiClient", "Starting Wifi Access Point + Station Mode: Access Point SSID: \"%s\" Access Point Password: \"%s\" Station SSID: \"%s\" Station Password: \"%s\"", apSSID, apPassword, staSSID, staPassword);
+      WiFi.mode(WIFI_MODE_NULL);
       WiFi.mode(WIFI_AP_STA);
       WiFi.begin(staSSID, staPassword);
       IPAddress Ip(192, 168, 0, 1);
       IPAddress NMask(255, 255, 255, 0);
       WiFi.softAPConfig(Ip, Ip, NMask);
       WiFi.softAP(apSSID, apPassword);
+      UpdateStationEnable();
     }
 
     void UpdateStationEnable(bool enable = true)
@@ -869,13 +871,11 @@ class SettingsWebServerManager: public SetupCallerInterface
         {
           ESP_LOGI("UpdateStationEnable", "Station Mode Enabled.");
           WiFi.enableSTA(enable);
-          WiFi.enableAP(true);
         }
         else
         {
           ESP_LOGI("UpdateStationEnable", "Station Mode Disabled.");
           WiFi.enableSTA(false);
-          WiFi.enableAP(true);
         }
       }
       else
