@@ -113,15 +113,9 @@ export function SendValueToWebSocket(signalName, value){
 	wsManager.Send_Signal_Value_To_Web_Socket(signalName, value);
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    console.log('DOM fully loaded and parsed');
-	wsManager.announceHere();
-});
-
 window.addEventListener('load', onload);
 function onload(event)
 {
-	wsManager.initWebSocket();
 	var sink_BT_Auto_ReConnect_Toggle_Button;
 	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
 	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
@@ -142,6 +136,8 @@ function onload(event)
 	{
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
+	wsManager.initWebSocket();
+	wsManager.announceHere();
 }
  
 function setSpeakerImage(value)

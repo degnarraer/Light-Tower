@@ -1,7 +1,8 @@
 export class WebSocketManager {
     constructor() {
         this.websocket = null;
-        this.gateway = `ws://${window.location.hostname}/ws`;
+        this.webSocketPort = 81;
+        this.gateway = `ws://${window.location.hostname}:${this.webSocketPort}/ws`;
         this.listeners = []; // Array to hold registered listeners
         this.loadingAnimation;
     }

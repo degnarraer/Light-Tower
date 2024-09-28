@@ -30,10 +30,10 @@ SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManag
 SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial2, &m_DataSerializer);
 
 // Create AsyncWebServer object on port 80
-AsyncWebServer MyWebServer(80);
+WebServer MyWebServer(80);
 
 // Create WebSocket
-AsyncWebSocket MyWebSocket("/ws");
+WebSocketsServer MyWebSocket(81);
 
 // Create Settings Web Server that uses the Socket 
 SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Manager"
@@ -102,5 +102,6 @@ void setup()
 
 void loop()
 {
-  MyWebSocket.cleanupClients();
+  MyWebServer.handleClient();
+  MyWebSocket.loop();
 }

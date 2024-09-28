@@ -113,7 +113,7 @@ void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& 
   ESP_LOGD("NotifyClients", "Notify Client: %s", textString.c_str());
   if(0 < textString.length())
   {
-    m_WebSocket.text(clientID, textString);
+    m_WebSocket.sendTXT(clientID, textString.c_str(), textString.length());
   }
 }
 
@@ -122,7 +122,7 @@ void WebSocketDataProcessor::NotifyClients(const String& textString)
   ESP_LOGI("NotifyClients", "Notify Clients: %s", textString.c_str());
   if(0 < textString.length())
   {
-    m_WebSocket.textAll(textString);
+    m_WebSocket.broadcastTXT(textString.c_str(), textString.length());
   }
 }
 

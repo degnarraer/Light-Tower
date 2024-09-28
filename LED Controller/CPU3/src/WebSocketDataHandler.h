@@ -18,12 +18,14 @@
 #pragma once
 
 #include <freertos/portmacro.h>
+#include <WiFi.h>
+#include <WebServer.h>
+#include <WebSocketsServer.h>
 #include "Streaming.h"
 #include "Helpers.h"
 #include "DataTypes.h"
 #include "Tunes.h"
 #include "DataItem/DataItems.h"
-#include "ESPAsyncWebServer.h"
 #include "Arduino_JSON.h"
 #include <mutex>
 #include <cstring>
@@ -49,8 +51,8 @@ class WebSocketDataHandlerReceiver
 class WebSocketDataProcessor
 {
   public:
-    WebSocketDataProcessor( AsyncWebServer &webServer
-                          , AsyncWebSocket &webSocket )
+    WebSocketDataProcessor( WebServer &webServer
+                          , WebSocketsServer &webSocket )
                           : m_WebServer(webServer)
                           , m_WebSocket(webSocket)
     {
@@ -75,8 +77,8 @@ class WebSocketDataProcessor
       m_Tx_KeyValues.push_back(keyValuePair);
     }
   private:
-    AsyncWebServer &m_WebServer;
-    AsyncWebSocket &m_WebSocket;
+    WebServer &m_WebServer;
+    WebSocketsServer &m_WebSocket;
     TaskHandle_t m_WebSocketTaskHandle;
     std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
