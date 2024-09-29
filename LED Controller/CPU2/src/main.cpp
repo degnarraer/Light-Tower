@@ -128,19 +128,18 @@ void TestPSRam()
 void setup() 
 {
   //PC Serial Communication
-  Serial.flush();
   Serial.begin(500000, SERIAL_8N1);
   Serial.flush();
 
-  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
   Serial1.flush();
   
-  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
   Serial2.flush();
 
-  TestPSRam();
+  //TestPSRam();
   InitializePreferences();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();

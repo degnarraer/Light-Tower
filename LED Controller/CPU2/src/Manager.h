@@ -148,13 +148,16 @@ class Manager: public NamedItem
       if(arg && object)
       {
         Callback2Arguments* arguments = static_cast<Callback2Arguments*>(arg);
-        assert((arguments->arg1 && arguments->arg2) && "Null Pointers!");
-        Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-        CompatibleDevice_t *pTargetDevice = static_cast<CompatibleDevice_t*>(arguments->arg2);
-        bool connect = *static_cast<bool*>(object);
-        if(connect)
+        if(arguments->arg1 && arguments->arg2)
         {
-          pBT_Out->Connect(pTargetDevice->name, pTargetDevice->address);
+          Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          CompatibleDevice_t *pTargetDevice = static_cast<CompatibleDevice_t*>(arguments->arg2);
+          bool connect = *static_cast<bool*>(object);
+          if(connect)
+          {
+            ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
+            pBT_Out->Connect("","");
+          }
         }
       }
     }
@@ -297,7 +300,7 @@ class Manager: public NamedItem
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_TargetCompatibleDevice_Callback, this);
     static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
+      ESP_LOGI("TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);

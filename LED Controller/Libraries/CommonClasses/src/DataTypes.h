@@ -190,18 +190,11 @@ struct  CompatibleDevice_t
 
 		CompatibleDevice_t(const char* name_In, const char* address_In)
 		{
-			if(BT_NAME_LENGTH < String(name_In).length())
-			{
-				Serial << "Bad SSID: " << name_In << " | " << String(name_In).length() << "\n";
-				assert(BT_NAME_LENGTH >= String(name_In).length());
-			}
-			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
-			if(BT_ADDRESS_LENGTH < String(address_In).length())
-			{
-				Serial << "Bad address: " << address_In << " | " << String(address_In).length() << "\n";
-				assert(BT_ADDRESS_LENGTH >= String(address_In).length());
-			}
-			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
+            strncpy(name, name_In, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
+    
+            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
+            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
 		}
 
 		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)

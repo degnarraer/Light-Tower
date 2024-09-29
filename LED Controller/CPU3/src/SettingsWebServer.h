@@ -21,6 +21,8 @@
 #include "DataItem/DataItems.h"
 #include <ESPmDNS.h>
 
+#define BLUETOOTH_DEVICE_TIMEOUT 5000
+
 class SettingsWebServerManager: public SetupCallerInterface
 {  
   public:
@@ -52,15 +54,36 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     virtual ~SettingsWebServerManager()
     {
+      DestroyTasks();
     }
     
     void SetupSettingsWebServerManager()
     {
+      InitializeLocalvariables();
+      CreateTasks();
       InitializePreferences();
       SetupAllSetupCallees();
       InitFileSystem();
       InitWebServer();
       StartWiFi();
+    }
+
+    void InitializeLocalvariables()
+    {
+      m_ActiveDevicesMutex = xSemaphoreCreateRecursiveMutex();
+    }
+
+    void CreateTasks()
+    {
+      if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) != pdTRUE )
+      {
+        ESP_LOGE("CreateTasks", "ERROR! Unable to create task.");
+      }
+    }
+
+    void DestroyTasks()
+    {
+      if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
     }
 
     void StartWiFi()
@@ -73,6 +96,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       if( Wifi_Mode_t::AccessPoint == m_Wifi_Mode.GetValue() )
       {
         InitWiFi_AccessPoint( m_AP_SSID.GetValueAsString().c_str()
+             
                             , m_AP_Password.GetValueAsString().c_str() );
       }
       else if(Wifi_Mode_t::Station == m_Wifi_Mode.GetValue())
@@ -468,6 +492,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                          , &m_AP_SSID_CallbackArgs };
     const String m_AP_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_AP_SSID = LocalStringDataItemWithPreferences( "AP_SSID"
+                                                       
                                                                                      , m_AP_SSID_InitialValue
                                                                                      , &m_preferenceInterface
                                                                                      , &m_AP_SSID_Callback
@@ -724,19 +749,102 @@ class SettingsWebServerManager: public SetupCallerInterface
     }
 
     //Scanned Device
-    CallbackArguments m_ScannedDevice_CallbackArgs = {&m_WebSocketDataProcessor, &m_ScannedDevice_DataHandler};
+    CallbackArguments m_ScannedDevice_CallbackArgs = {this, &m_WebSocketDataProcessor};
+    std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
+    SemaphoreHandle_t m_ActiveDevicesMutex;
+    TaskHandle_t m_ActiveDeviceUpdateTask;
     NamedCallback_t m_ScannedDevice_Callback = {"m_ScannedDevice_Callback", &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
     ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
     DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, &m_ScannedDevice_Callback, this);
-    WebSocketDataHandler<ActiveCompatibleDevice_t,1> m_ScannedDevice_DataHandler = WebSocketDataHandler<ActiveCompatibleDevice_t,1> ( m_WebSocketDataProcessor, m_ScannedDevice, false );
     static void ScannedDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGD("Manager::ScannedDeviceValueChanged", "Scanned Device Value Changed");
-      CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-      WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg1);
-      WebSocketDataHandler<ActiveCompatibleDevice_t,1> * DataHandler = static_cast<WebSocketDataHandler<ActiveCompatibleDevice_t,1> *>(arguments->arg2);
-      //DELETE ME processor->UpdateDataForSender(DataHandler, false);
+      if(arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && arguments->arg2)
+        {
+          SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
+          WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg2);
+          ActiveCompatibleDevice_t device = *static_cast<ActiveCompatibleDevice_t*>(object);
+          ESP_LOGI("ScannedDevice_ValueChanged", "Scanned Device: \"%s\"", device.toString().c_str());
+          pSettingWebServer->ActiveCompatibleDeviceReceived(device);
+        }
+      }
     }
+
+    void ActiveCompatibleDeviceReceived(ActiveCompatibleDevice_t device)
+    {
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
+      {
+        auto it = std::find(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(), device);
+        if (it != m_ActiveCompatibleDevices.end())
+        {
+          *it = device;
+          ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
+        }
+        else 
+        {
+          ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
+          m_ActiveCompatibleDevices.push_back(device);
+          SendActiveCompatibleDevicesToWebSocket();
+        }
+      }
+      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+    }
+
+    static void Static_UpdateActiveCompatibleDevices(void * parameter)
+    {
+      SettingsWebServerManager *manager = (SettingsWebServerManager*)parameter;
+      const TickType_t xFrequency = 1000;
+      TickType_t xLastWakeTime = xTaskGetTickCount();
+      while(true)
+      {
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+        manager->CleanActiveCompatibleDevices();
+      }
+    }
+
+    void CleanActiveCompatibleDevices()
+    {
+      ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
+      {
+        for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end(); ++it) 
+        {
+          ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
+          if(device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
+          {
+            ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
+            it = m_ActiveCompatibleDevices.erase(it);
+            SendActiveCompatibleDevicesToWebSocket();
+          }
+        }
+      }
+      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+    }
+
+    void SendActiveCompatibleDevicesToWebSocket()
+    {
+      ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "Updating Web Socket:");
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
+      {
+        String key = "Key";
+        String value = "Value";
+        m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
+      }
+      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+    }
+
+
+
+
+
+
+
+
+
+
+
     
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
@@ -752,19 +860,18 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SourceReset_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset, false );    
+    
+    
     void HandleWebSocketMessage(uint8_t clientID, WStype_t type, uint8_t *payload, size_t length)
     {
         // Handle text messages
         if (type == WStype_TEXT) 
         {
-            // Null-terminate the payload to safely treat it as a C string
             payload[length] = 0;
 
-            // Convert the payload to a String for easier handling
             String WebSocketData = String((char*)payload);
             Serial.printf("WebSocket Data from Client %u: %s\n", clientID, WebSocketData.c_str());
 
-            // Check for specific message
             if (WebSocketData.equals("Hello I am here!")) 
             {
                 Serial.printf("New Client Message from %u: \"Hello I am here!\"\n", clientID);
@@ -773,7 +880,6 @@ class SettingsWebServerManager: public SetupCallerInterface
             } 
             else 
             {
-                // Parse the JSON object from the WebSocket data
                 JSONVar jsonObject = JSON.parse(WebSocketData);
                 if (JSON.typeof(jsonObject) == "undefined") 
                 {
@@ -788,38 +894,6 @@ class SettingsWebServerManager: public SetupCallerInterface
             }
         }
     }
-    /*
-    void HandleWebSocketMessage(AsyncWebSocketClient *client, void *arg, uint8_t *data, size_t len)
-    {
-      AwsFrameInfo *info = (AwsFrameInfo*)arg;
-      data[len] = 0;
-      if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT)
-      {
-        String WebSocketData = String((char*)data);
-        ESP_LOGD("HandleWebSocketMessage", "WebSocket Data from Client: %i, Data: %s", client->id(), WebSocketData.c_str());
-        if ( WebSocketData.equals("Hello I am here!") )
-        {
-          ESP_LOGI("HandleWebSocketMessage", "New Client Message: \"Hello I am here!\"");
-          m_WebSocketDataProcessor.UpdateAllDataToClient(client->id());
-          return;
-        }
-        else
-        {
-          JSONVar jsonObject = JSON.parse(WebSocketData);
-          if (JSON.typeof(jsonObject) == "undefined")
-          {
-            ESP_LOGE("HandleWebSocketMessage", "ERROR! Parsing failed for Input: %s.", WebSocketData.c_str());
-          }
-          else
-          {
-            if(HandleSignalValue(jsonObject)){}
-            else if(HandleJSONValue(jsonObject)){}
-            else ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown Web Socket Message: %s.", WebSocketData.c_str());
-          }
-        }
-      }
-    }
-    */
     
     bool HandleSignalValue(JSONVar &jsonObject)
     {

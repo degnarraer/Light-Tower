@@ -76,7 +76,8 @@
 			"*.tpp": "cpp",
 			"any": "cpp",
 			"random": "cpp",
-			"csignal": "cpp"
+			"csignal": "cpp",
+			"codecvt": "cpp"
 		}
 	},
 	"launch": {

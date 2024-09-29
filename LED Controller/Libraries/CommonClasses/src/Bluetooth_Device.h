@@ -94,7 +94,6 @@ class Bluetooth_Source: public NamedItem
 						, BluetoothConnectionStateCaller(&BTSource)
 						, m_BTSource(BTSource)
 		{
-			std::lock_guard<std::mutex> lock(m_ActiveCompatibleDevicesMutex);
 		}
 		Bluetooth_Source(const Bluetooth_Source&) = delete;
 		virtual ~Bluetooth_Source()
@@ -141,11 +140,11 @@ class Bluetooth_Source: public NamedItem
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		std::string m_Name;
-		std::string m_Address;
+		String m_Name;
+		String m_Address;
 		bool m_ResetBLE = true;
 		bool m_AutoReConnect = false;
-		std::mutex m_ActiveCompatibleDevicesMutex;
+		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
 		TaskHandle_t m_CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
