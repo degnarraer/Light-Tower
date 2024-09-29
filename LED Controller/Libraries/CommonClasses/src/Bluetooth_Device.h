@@ -149,7 +149,7 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t m_CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
-		bool compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi);
+		void compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
 };

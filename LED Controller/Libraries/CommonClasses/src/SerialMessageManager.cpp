@@ -139,46 +139,54 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
-	ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
-	const TickType_t xFrequency = 25;
-	TickType_t xLastWakeTime = xTaskGetTickCount();
-	while(true)
-	{
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		if(mp_Serial && mp_DataSerializer)
-		{
-			while (mp_Serial->available())
-			{
-				char character = mp_Serial->read();
-				m_message += character;
-				if(m_message.length() > MaxMessageLength)
-				{
-					ESP_LOGE("SerialPortMessageManager", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
-					m_message = "";
-				}
-				else if(m_message.charAt(m_message.length() - 1) == '\n')
-				{
-					ESP_LOGD("SerialPortMessageManager", "\"%s\" Message Rx: \"%s\"", m_Name.c_str(), m_message.c_str());
-					NamedObject_t NamedObject;
-					m_message.trim();
-					if(mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
-					{
-						ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-						this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
-					}
-					else
-					{
-						ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
-					}
-					m_message = "";
-				}
-			}
-		}
-		else
-		{
-			ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Null Pointer.");
-		}
-	}
+    ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
+    const TickType_t xFrequency = 25;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    
+    while (true)
+    {
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
+        
+        if (mp_Serial && mp_DataSerializer)
+        {
+            while (mp_Serial->available())
+            {
+                char character = mp_Serial->read();
+                if (m_message.length() >= MaxMessageLength)
+                {
+                    ESP_LOGE("SerialPortMessageManager", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
+                    m_message.clear();
+                    break;
+                }
+
+                m_message += character;
+
+                if (m_message.endsWith("\n"))
+                {
+                    m_message.trim();
+                    ESP_LOGD("SerialPortMessageManager", "\"%s\" Message Rx: \"%s\"", m_Name.c_str(), m_message.c_str());
+
+                    NamedObject_t NamedObject;
+                    if (mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
+                    {
+                        ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+                        this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
+                    }
+                    else
+                    {
+                        ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
+                    }
+
+                    m_message.clear();
+                }
+            }
+        }
+        else
+        {
+            ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Null Pointer.");
+            vTaskDelay(100);
+        }
+    }
 }
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()

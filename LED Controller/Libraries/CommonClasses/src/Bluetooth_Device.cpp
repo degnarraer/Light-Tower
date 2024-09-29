@@ -125,11 +125,11 @@ bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t 
 	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
 			, name.c_str()
 			, GetAddressString(address));
-	bool result = compatible_device_found(name, address, rssi);
-	return result;
+	compatible_device_found(name, address, rssi);
+	return m_Name.equals(String(name.c_str())) && m_Address.equals(String(GetAddressString(address)));
 }
 		
-bool Bluetooth_Source::compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi)
+void Bluetooth_Source::compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
     bool found = false;
     std::string addressString(GetAddressString(address));
@@ -161,7 +161,6 @@ bool Bluetooth_Source::compatible_device_found(const std::string& name, esp_bd_a
         NewDevice.lastUpdateTime = millis();
         m_ActiveCompatibleDevices.push_back(NewDevice);
     }
-    return found;
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)

@@ -14,15 +14,18 @@ class StringEncoderDecoder
             iss >> value;
             return value;
         }
-
+        
         String EncodeToString(T value) const
         {
             std::ostringstream oss;
             oss << value;
+
             if (oss.fail())
             {
-                assert((false) && "Failed to encode value to string");
+                ESP_LOGE("EncodeToString", "Failed to encode value to string");
+                return String();
             }
+
             return String(oss.str().c_str());
         }
 };
