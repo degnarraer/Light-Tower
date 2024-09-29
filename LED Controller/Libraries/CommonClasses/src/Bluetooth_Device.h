@@ -61,7 +61,7 @@ class BluetoothActiveDeviceUpdatee
 {
 	public:
 		BluetoothActiveDeviceUpdatee(){};
-		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices) = 0;
+		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices) = 0;
 };
 
 class BluetoothActiveDeviceUpdater

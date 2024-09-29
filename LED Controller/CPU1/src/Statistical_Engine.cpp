@@ -33,7 +33,7 @@
 void StatisticalEngine::Setup()
 {
   if(false == m_MemoryIsAllocated) AllocateMemory();
-  SetupQueueManager();
+  //SetupQueueManager();
   unsigned long currentTime = millis();
   m_NewBandDataCurrentTime = currentTime;
   m_NewMaxBandSoundDataCurrentTime = currentTime;

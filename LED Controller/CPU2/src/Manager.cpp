@@ -111,7 +111,7 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
-void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
+void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices)
 {
   unsigned long currentMillis = millis();
   for(int i = 0; i < Devices.size(); ++i)
@@ -131,7 +131,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
                                                                     , Devices[i].rssi
                                                                     , Devices[i].lastUpdateTime
                                                                     , elapsedTime );
-    m_ScannedDevice.SetValue(&ActiveDevice, 1);                                            
+    m_ScannedDevice.SetValue(ActiveDevice);                                            
   }
 }
 

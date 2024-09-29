@@ -98,9 +98,9 @@ void InitLocalVariables()
   m_BTSink.set_stream_reader(read_data_stream, true);
   m_BTSink.set_on_data_received(data_received_callback);  
   m_Manager.Setup();
-  m_Scheduler.AddTask(m_CalculateFPS);
-  m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
-  m_Scheduler.AddTask(m_VisualizationPlayer);
+  //m_Scheduler.AddTask(m_CalculateFPS);
+  //m_Scheduler.AddTask(m_StatisticalEngineModelInterface);
+  //m_Scheduler.AddTask(m_VisualizationPlayer);
 }
 
 void PrintStartupData()
@@ -124,12 +124,12 @@ void InitSerialCommunication()
   Serial.begin(500000);
   Serial.flush();
   
-  Serial1.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+  Serial1.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
   Serial1.flush();
   
-  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
+  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
   Serial2.flush();
 }
 

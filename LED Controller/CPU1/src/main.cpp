@@ -44,7 +44,7 @@ void setup()
 {
   InitSerialCommunication();
   SetComponentDebugLevels();
-  TestPSRam();
+  //TestPSRam();
   PrintFreeHeap();
   PrintStartupData();
   InitLocalVariables();
