@@ -55,7 +55,7 @@ void Manager::Setup()
 
 void Manager::StartBluetooth()
 {
-  ESP_LOGI("StartBluetooth", "Starting Bluetooth!" );
+  ESP_LOGI("Manager::ConnectToTargetDevice", "Starting Bluetooth!" );
   m_BT_Out.Set_Auto_Reconnect(m_BluetoothSourceAutoReConnect.GetValue());
   m_BT_Out.Set_Reset_BLE(m_BluetoothReset.GetValue());
   m_BT_Out.StartDevice();
@@ -63,7 +63,7 @@ void Manager::StartBluetooth()
 
 void Manager::StopBluetooth()
 {
-  ESP_LOGI("StopBluetooth", "Stopping Bluetooth!" );
+  ESP_LOGI("Manager::ConnectToTargetDevice", "Stopping Bluetooth!" );
   m_BT_Out.StopDevice();
 }
 
@@ -111,9 +111,8 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
-void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices)
+void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices)
 {
-  ESP_LOGI("BluetoothActiveDeviceListUpdated","Updating %i Devices.", Devices.size());
   unsigned long currentMillis = millis();
   for(int i = 0; i < Devices.size(); ++i)
   {
@@ -121,7 +120,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
     unsigned long previousMillis = Devices[i].lastUpdateTime;
     if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
     else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
-    ESP_LOGD("BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
+    ESP_LOGD("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address

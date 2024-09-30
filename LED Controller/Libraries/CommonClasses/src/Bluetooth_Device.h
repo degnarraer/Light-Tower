@@ -61,7 +61,7 @@ class BluetoothActiveDeviceUpdatee
 {
 	public:
 		BluetoothActiveDeviceUpdatee(){};
-		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices) = 0;
+		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices) = 0;
 };
 
 class BluetoothActiveDeviceUpdater
@@ -140,16 +140,16 @@ class Bluetooth_Source: public NamedItem
 	
 		BluetoothA2DPSource& m_BTSource;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		std::string m_Name;
-		std::string m_Address;
+		String m_Name;
+		String m_Address;
 		bool m_ResetBLE = true;
 		bool m_AutoReConnect = false;
-		std::mutex m_ActiveCompatibleDevicesMutex;
+		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
 		TaskHandle_t m_CompatibleDeviceTrackerTask;
 		bool m_Is_Running = false;
 		
-		void Compatible_Device_Found(BT_Device_Info newDevice);
+		void compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
 };
@@ -206,7 +206,7 @@ class Bluetooth_Sink: public NamedItem
 	void Setup();
 	void StartDevice();
 	void StopDevice();
-	void Connect(std::string SinkName, bool reconnect);
+	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
@@ -242,7 +242,7 @@ class Bluetooth_Sink: public NamedItem
 		
 		bool m_Is_Running = false;
 		bool m_AutoReConnect = false;
-		std::string m_SinkName;
+		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;
 		void InstallDevice();
 };
