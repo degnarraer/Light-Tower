@@ -226,7 +226,7 @@ class Bluetooth_Sink: public NamedItem
 	void Setup();
 	void StartDevice();
 	void StopDevice();
-	void Connect(std::string SinkName, bool reconnect);
+	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
@@ -262,7 +262,7 @@ class Bluetooth_Sink: public NamedItem
 		
 		bool m_Is_Running = false;
 		bool m_AutoReConnect = false;
-		std::string m_SinkName;
+		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;
 		void InstallDevice();
 };
