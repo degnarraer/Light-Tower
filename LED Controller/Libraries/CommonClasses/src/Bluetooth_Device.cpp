@@ -68,10 +68,6 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
 	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
-	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  10000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
-	{
-		ESP_LOGE("InstallDevice", "ERROR! Unable to create task.");
-	}
 }
 
 void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
@@ -99,68 +95,78 @@ void Bluetooth_Source::StopDevice()
 
 void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddress )
 {
-	m_Name = String(SourceName);
-	m_Address = String(SourceAddress);
+	m_Name = std::string(SourceName);
+	m_Address = std::string(SourceAddress);
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
 	m_BTSource.start_raw(m_MusicDataCallback);
+	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop,   "CompatibleDeviceTrackerTask",  10000,  this,   THREAD_PRIORITY_MEDIUM,   &m_CompatibleDeviceTrackerTask, 1) != pdTRUE )
+	{
+		ESP_LOGE("InstallDevice", "ERROR! Unable to create task.");
+	}
 	m_Is_Running = true;
 }
 void Bluetooth_Source::Disconnect()
 {
+	if(m_CompatibleDeviceTrackerTask) vTaskDelete(m_CompatibleDeviceTrackerTask);
 	m_BTSource.disconnect();
 	m_Is_Running = false;
 }
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
-	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
+	ESP_LOGI( "ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
 			, sourceName.c_str()
 			, sourceAddress.c_str() );
-	m_Name = String(sourceName.c_str());
-	m_Address = String(sourceAddress.c_str());
+	m_Name = sourceName.c_str();
+	m_Address = sourceAddress.c_str();
 }
 
 //Callback from BT Source for compatible devices to connect to
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
-	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
-			, name.c_str()
-			, GetAddressString(address));
-	compatible_device_found(name, address, rssi);
-	return m_Name.equals(String(name.c_str())) && m_Address.equals(String(GetAddressString(address)));
+	BT_Device_Info newDevice = BT_Device_Info(name.c_str(), GetAddressString(address), rssi);
+	ESP_LOGI( "ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\""
+			, newDevice.name
+			, newDevice.address);
+	Compatible_Device_Found(newDevice);
+	bool shouldConnect = (m_Name == newDevice.name && m_Address == newDevice.address);
+	if(shouldConnect)
+	{
+    	ESP_LOGI("Bluetooth_Device", "Target Device Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
+	}
+	else
+	{
+    	ESP_LOGI("Bluetooth_Device", "Target Device Not Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
+	}
+	return shouldConnect;
 }
 		
-void Bluetooth_Source::compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi)
+void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
+    ESP_LOGI("Bluetooth_Device", "Compatible Device Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
     bool found = false;
-    std::string addressString(GetAddressString(address));
-    ESP_LOGI("Bluetooth_Device", "Compatible Device Found. Name: \"%s\" Address: \"%s\"", name.c_str(), addressString.c_str());
-
-    std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
-    for (auto& device : m_ActiveCompatibleDevices)
-    {
-        if (strcmp(device.address, addressString.c_str()) == 0)
-        {
-            ESP_LOGI("Bluetooth_Device", "Compatible Device \"%s\" Updated", name.c_str());
-            found = true;
-            strncpy(device.name, name.c_str(), sizeof(device.name) - 1);
-            device.name[sizeof(device.name) - 1] = '\0';
-            device.rssi = rssi;
-            device.lastUpdateTime = millis();
-            break;
-        }
-    }
-    if (!found)
-    {
-        ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", name.c_str());
-        ActiveCompatibleDevice_t NewDevice;
-        strncpy(NewDevice.name, name.c_str(), sizeof(NewDevice.name) - 1);
-        NewDevice.name[sizeof(NewDevice.name) - 1] = '\0';
-        strncpy(NewDevice.address, addressString.c_str(), sizeof(NewDevice.address) - 1);
-        NewDevice.address[sizeof(NewDevice.address) - 1] = '\0';
-        NewDevice.rssi = rssi;
-        NewDevice.lastUpdateTime = millis();
-        m_ActiveCompatibleDevices.push_back(NewDevice);
-    }
+    std::vector<ActiveCompatibleDevice_t> tempVector;
+	{
+		std::lock_guard<std::mutex> lock(m_ActiveCompatibleDevicesMutex);
+		for (auto& device : m_ActiveCompatibleDevices)
+		{
+			if (device == newDevice)
+			{
+				ESP_LOGI("Bluetooth_Device", "Compatible Device \"%s\" Updated", newDevice.name);
+				found = true;
+				device = newDevice;
+				device.lastUpdateTime = millis();
+				break;
+			}
+		}
+		if (!found)
+		{
+			ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", newDevice.name);
+			ActiveCompatibleDevice_t newActiveCompatibleDevice = newDevice;
+			m_ActiveCompatibleDevices.push_back(newActiveCompatibleDevice);
+		}
+		tempVector = m_ActiveCompatibleDevices;
+	}
+	m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);	
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
@@ -171,25 +177,29 @@ void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
 
 void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 {
+	std::vector<ActiveCompatibleDevice_t> tempVector;
 	while(true)
 	{
-		std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
-		unsigned long CurrentTime = millis();
-		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 		{
-			if(CurrentTime - m_ActiveCompatibleDevices[i].lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
+			std::lock_guard<std::mutex> lock(m_ActiveCompatibleDevicesMutex);
+			unsigned long CurrentTime = millis();
+			for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
 			{
-				m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
-				break;
+				if(CurrentTime - m_ActiveCompatibleDevices[i].lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT)
+				{
+					m_ActiveCompatibleDevices.erase(m_ActiveCompatibleDevices.begin()+i);
+					break;
+				}
 			}
-		}
-		for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
-		{
-			ESP_LOGD("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].rssi);
+			for(int i = 0; i < m_ActiveCompatibleDevices.size(); ++i)
+			{
+				ESP_LOGD("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", m_ActiveCompatibleDevices[i].name, m_ActiveCompatibleDevices[i].rssi);
+			}
+			tempVector = m_ActiveCompatibleDevices;
 		}
 		if(NULL != m_BluetoothActiveDeviceUpdatee)
 		{
-			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
+			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
 		}
 		vTaskDelay(500 / portTICK_PERIOD_MS);
 	}
@@ -269,7 +279,7 @@ void Bluetooth_Sink::StopDevice()
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
 	}
 }
-void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
+void Bluetooth_Sink::Connect(std::string sinkName, bool reconnect)
 {
 	m_SinkName = sinkName;
 	m_AutoReConnect = reconnect;

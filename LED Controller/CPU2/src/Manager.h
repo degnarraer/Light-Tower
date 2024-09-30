@@ -70,7 +70,7 @@ class Manager: public NamedItem
     void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState);
     
     //BluetoothActiveDeviceUpdatee Callback 
-    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices);
+    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> &Devices);
 
   private:
     IPreferences& m_PreferencesInterface;    

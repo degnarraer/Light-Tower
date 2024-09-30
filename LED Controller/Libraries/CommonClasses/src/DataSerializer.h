@@ -34,41 +34,41 @@ class DataSerializer: public CommonUtils
 			m_DataItems = &DataItem;
 			m_DataItemsCount = DataItemCount;
 		}
-		virtual String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
+		virtual std::string SerializeDataToJson(std::string Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
 			
 			JSONVar data;
 
-			m_SerializeDoc[m_NameTag] = Name;
-			m_SerializeDoc[m_CountTag] = Count;
-			m_SerializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
-			m_SerializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
-			m_SerializeDoc[m_ChangeCountTag] = ChangeCount;
+			m_SerializeDoc[m_NameTag.c_str()] = Name.c_str();
+			m_SerializeDoc[m_CountTag.c_str()] = Count;
+			m_SerializeDoc[m_DataTypeTag.c_str()] = DataTypeStrings[DataType];
+			m_SerializeDoc[m_TotalByteCountTag.c_str()] = ObjectByteCount * Count;
+			m_SerializeDoc[m_ChangeCountTag.c_str()] = ChangeCount;
 			
 			char ByteHexValue[3];
 			for(int i = 0; i < Count; ++i)
 			{
-				String BytesString = "";
+				std::string BytesString = "";
 				for(int j = 0; j < ObjectByteCount; ++j)
 				{
 					uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
 					sprintf(ByteHexValue,"%02X", DecValue);
-					BytesString += String(ByteHexValue);
+					BytesString += std::string(ByteHexValue);
 					CheckSum += DecValue;
 				}
-				data[i] = BytesString;
+				data[i] = BytesString.c_str();
 			}
-			m_SerializeDoc[m_DataTag] = data;
-			m_SerializeDoc[m_CheckSumTag] = CheckSum;
-			return JSON.stringify(m_SerializeDoc);
+			m_SerializeDoc[m_DataTag.c_str()] = data;
+			m_SerializeDoc[m_CheckSumTag.c_str()] = CheckSum;
+			return std::string(JSON.stringify(m_SerializeDoc).c_str());
 		}
-		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
+		virtual bool DeSerializeJsonToNamedObject(std::string json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 			bool deserialized = false;
-			m_DeserializeDoc = JSON.parse(json);
+			m_DeserializeDoc = JSON.parse(json.c_str());
 			if (JSON.typeof(m_DeserializeDoc) == "undefined")
 			{
 				++m_FailCount;
@@ -80,22 +80,22 @@ class DataSerializer: public CommonUtils
 			{
 				if(AllTagsExist(m_DeserializeDoc))
 				{
-					const String Name = m_DeserializeDoc[m_NameTag];
+					const std::string Name = static_cast<const char*>(m_DeserializeDoc[m_NameTag.c_str()]);
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Name: %s", Name.c_str());
-					NamedObject.Name = Name;
+					NamedObject.Name = Name.c_str();
 					size_t CheckSumCalc = 0;
-					size_t CheckSumIn = m_DeserializeDoc[m_CheckSumTag];
+					size_t CheckSumIn = m_DeserializeDoc[m_CheckSumTag.c_str()];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Sum: %i", CheckSumIn);
-					size_t CountIn = m_DeserializeDoc[m_CountTag];
+					size_t CountIn = m_DeserializeDoc[m_CountTag.c_str()];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Object Count: %i", CountIn);
-					size_t ChangeCountIn = m_DeserializeDoc[m_ChangeCountTag];
+					size_t ChangeCountIn = m_DeserializeDoc[m_ChangeCountTag.c_str()];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Change Count: %i", ChangeCountIn);
 					NamedObject.ChangeCount = ChangeCountIn;
-					size_t ByteCountIn = m_DeserializeDoc[m_TotalByteCountTag];
+					size_t ByteCountIn = m_DeserializeDoc[m_TotalByteCountTag.c_str()];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Byte Count: %i", ByteCountIn);
-					DataType_t DataType = GetDataTypeFromString(m_DeserializeDoc[m_DataTypeTag]);
+					DataType_t DataType = GetDataTypeFromString(m_DeserializeDoc[m_DataTypeTag.c_str()]);
 					ESP_LOGD("DeSerializeJsonToNamedObject", "DataType: %i", DataType);	
-					size_t ActualDataCount = m_DeserializeDoc[m_DataTag].length();
+					size_t ActualDataCount = m_DeserializeDoc[m_DataTag.c_str()].length();
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Count: %i", ActualDataCount);
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Byte Count: %i", ObjectByteCount);
@@ -105,13 +105,13 @@ class DataSerializer: public CommonUtils
 					{
 						for(int j = 0; j < CountIn; ++j)
 						{
-							String BytesString = m_DeserializeDoc[m_DataTag][j];
+							std::string BytesString = static_cast<const char*>(m_DeserializeDoc[m_DataTag.c_str()][j]);
 							for(int k = 0; k < ObjectByteCount; ++k)
 							{
 								size_t startIndex = 2*k;
 								char hexArray[2];
-								strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
-								long decValue = strtol(String(hexArray).c_str(), NULL, 16);
+								strcpy(hexArray, BytesString.substr(startIndex,startIndex+2).c_str());
+								long decValue = strtol(std::string(hexArray).c_str(), NULL, 16);
 								CheckSumCalc += decValue;
 								Buffer[j * ObjectByteCount + k] = decValue;
 							}
@@ -164,10 +164,10 @@ class DataSerializer: public CommonUtils
 		}
 		virtual bool AllTagsExist(JSONVar &jsonObject)
 		{
-			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_ChangeCountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
+			const std::string tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_ChangeCountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
 			bool result = true;
-			for (const String& tag : tags) {
-				if (!jsonObject.hasOwnProperty(tag)) {
+			for (const std::string& tag : tags) {
+				if (!jsonObject.hasOwnProperty(tag.c_str())) {
 					ESP_LOGW("AllTagsExist", "WARNING! Missing Tag: \"%s\"", tag.c_str());
 					result = false;
 				}
@@ -185,11 +185,11 @@ class DataSerializer: public CommonUtils
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags
-		String m_NameTag = "Name";
-		String m_CheckSumTag = "Sum";
-		String m_CountTag = "Count";
-		String m_ChangeCountTag = "Change Count";
-		String m_DataTag = "Data";
-		String m_DataTypeTag = "Type";
-		String m_TotalByteCountTag = "Bytes";
+		std::string m_NameTag = "Name";
+		std::string m_CheckSumTag = "Sum";
+		std::string m_CountTag = "Count";
+		std::string m_ChangeCountTag = "Change Count";
+		std::string m_DataTag = "Data";
+		std::string m_DataTypeTag = "Type";
+		std::string m_TotalByteCountTag = "Bytes";
 };
