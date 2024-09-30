@@ -18,10 +18,12 @@
 
 #pragma once
 #define BT_COMPATIBLE_DEVICE_TIMEOUT 30000
+#define DEVICE_QUEUE_SIZE 10
 
 #include <vector>
 #include <Arduino.h>
 #include <mutex>
+#include <queue>
 #include <memory>
 #include "BluetoothA2DPSink.h"
 #include "BluetoothA2DPSource.h"
@@ -98,7 +100,21 @@ class Bluetooth_Source: public NamedItem
 		Bluetooth_Source(const Bluetooth_Source&) = delete;
 		virtual ~Bluetooth_Source()
 		{
-			vTaskDelete(m_CompatibleDeviceTrackerTask);
+			if(m_CompatibleDeviceTrackerTaskHandle)
+			{
+				vTaskDelete(m_CompatibleDeviceTrackerTaskHandle);
+				m_CompatibleDeviceTrackerTaskHandle = nullptr;
+			}
+			if(m_DeviceProcessorTaskHandle)
+			{
+				vTaskDelete(m_DeviceProcessorTaskHandle);
+				m_DeviceProcessorTaskHandle = nullptr;
+			}
+			if(m_DeviceProcessorQueueHandle) 
+			{
+				vQueueDelete(m_DeviceProcessorQueueHandle);
+				m_DeviceProcessorQueueHandle = nullptr;
+			}
 		}
 		void Setup();
 		void InstallDevice();
@@ -146,12 +162,16 @@ class Bluetooth_Source: public NamedItem
 		bool m_AutoReConnect = false;
 		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
-		TaskHandle_t m_CompatibleDeviceTrackerTask;
+		QueueHandle_t m_DeviceProcessorQueueHandle;
+		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle;
+		TaskHandle_t m_DeviceProcessorTaskHandle;
 		bool m_Is_Running = false;
 		
-		void compatible_device_found(const std::string& name, esp_bd_addr_t address, int32_t rssi);
+		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
+		static void StaticDeviceProcessingTask(void * Parameters);
+		void DeviceProcessingTask();
 };
 
 class Bluetooth_Sink_Callback
@@ -206,7 +226,7 @@ class Bluetooth_Sink: public NamedItem
 	void Setup();
 	void StartDevice();
 	void StopDevice();
-	void Connect(String SinkName, bool reconnect);
+	void Connect(std::string SinkName, bool reconnect);
 	void Disconnect();
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
@@ -242,7 +262,7 @@ class Bluetooth_Sink: public NamedItem
 		
 		bool m_Is_Running = false;
 		bool m_AutoReConnect = false;
-		String m_SinkName;
+		std::string m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;
 		void InstallDevice();
 };

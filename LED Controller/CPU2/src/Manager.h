@@ -131,7 +131,7 @@ class Manager: public NamedItem
     //Output Source Connect
     Callback2Arguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_TargetCompatibleDevice};
     NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback"
-                                                    , &OuputSourceConnect_ValueChanged
+                                                    , &OutputSourceConnect_ValueChanged
                                                     , &m_OuputSourceConnect_CallbackArgs};
     const bool m_OuputSourceConnect_InitialValue = false;
     DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect"
@@ -142,9 +142,9 @@ class Manager: public NamedItem
                                                               , &m_OuputSourceConnect_Callback
                                                               , this
                                                               , &validBoolValues);
-    static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void OutputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed ");
+      ESP_LOGI("OutputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed ");
       if(arg && object)
       {
         Callback2Arguments* arguments = static_cast<Callback2Arguments*>(arg);
@@ -153,10 +153,13 @@ class Manager: public NamedItem
           Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
           CompatibleDevice_t *pTargetDevice = static_cast<CompatibleDevice_t*>(arguments->arg2);
           bool connect = *static_cast<bool*>(object);
-          if(connect)
+          if(pBT_Out && pTargetDevice)
           {
-            ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
-            pBT_Out->Connect("","");
+            if(connect)
+            {
+              ESP_LOGI("OutputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
+              pBT_Out->Connect("","");
+            }
           }
         }
       }

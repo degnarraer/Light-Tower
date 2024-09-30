@@ -494,7 +494,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				ZeroOutMemory(mp_Value);
 				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
 				storeUpdated = true;
-				ESP_LOGI( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
 				this->CallNamedCallbacks(mp_Value);
 			}
 			else

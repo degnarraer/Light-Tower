@@ -809,7 +809,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
       if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
       {
-        for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end(); ++it) 
+        for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end();) 
         {
           ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
           if(device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
@@ -817,6 +817,10 @@ class SettingsWebServerManager: public SetupCallerInterface
             ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
             it = m_ActiveCompatibleDevices.erase(it);
             SendActiveCompatibleDevicesToWebSocket();
+          }
+          else
+          {
+              ++it;
           }
         }
       }
