@@ -165,6 +165,7 @@ class Bluetooth_Source: public NamedItem
 		QueueHandle_t m_DeviceProcessorQueueHandle;
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle;
 		TaskHandle_t m_DeviceProcessorTaskHandle;
+		bool m_Is_Installed = false;
 		bool m_Is_Running = false;
 		
 		void Compatible_Device_Found(BT_Device_Info newDevice);

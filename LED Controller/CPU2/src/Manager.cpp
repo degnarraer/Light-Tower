@@ -55,7 +55,7 @@ void Manager::Setup()
 
 void Manager::StartBluetooth()
 {
-  ESP_LOGI("Manager::ConnectToTargetDevice", "Starting Bluetooth!" );
+  ESP_LOGI("StartBluetooth", "Starting Bluetooth!" );
   m_BT_Out.Set_Auto_Reconnect(m_BluetoothSourceAutoReConnect.GetValue());
   m_BT_Out.Set_Reset_BLE(m_BluetoothReset.GetValue());
   m_BT_Out.StartDevice();
@@ -63,7 +63,7 @@ void Manager::StartBluetooth()
 
 void Manager::StopBluetooth()
 {
-  ESP_LOGI("Manager::ConnectToTargetDevice", "Stopping Bluetooth!" );
+  ESP_LOGI("StopBluetooth", "Stopping Bluetooth!" );
   m_BT_Out.StopDevice();
 }
 

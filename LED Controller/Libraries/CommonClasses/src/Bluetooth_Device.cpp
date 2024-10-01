@@ -80,6 +80,7 @@ void Bluetooth_Source::InstallDevice()
 	m_BTSource.set_local_name("LED Tower of Power");
 	m_BTSource.set_task_core(1);
 	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
+	m_Is_Installed = true;
 	ESP_LOGI("InstallDevice", "%s: Device Installed", GetTitle().c_str());
 }
 
@@ -91,7 +92,10 @@ void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 void Bluetooth_Source::StartDevice()
 {
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
-	InstallDevice();
+	if(!m_Is_Installed)
+	{
+		InstallDevice();
+	}
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
 }
 
@@ -108,6 +112,7 @@ void Bluetooth_Source::StopDevice()
 
 void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddress )
 {
+	StartDevice();
 	m_Name = String(SourceName);
 	m_Address = String(SourceAddress);
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
@@ -118,6 +123,9 @@ void Bluetooth_Source::Disconnect()
 {
 	m_BTSource.disconnect();
 	m_Is_Running = false;
+	
+	m_BTSource.end(true);
+	m_Is_Installed = false;
 }
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
@@ -132,7 +140,7 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
     ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
-	//BT_Device_Info newDevice(name.c_str(), GetAddressString(address), rssi);
+	BT_Device_Info newDevice(name.c_str(), GetAddressString(address), rssi);
     if(false) //m_DeviceProcessorQueueHandle)
 	{
 		if (false)//xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
