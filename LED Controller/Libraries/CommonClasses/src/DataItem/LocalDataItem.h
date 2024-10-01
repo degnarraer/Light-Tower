@@ -541,5 +541,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		size_t m_Count = COUNT;
 		size_t m_ChangeCount = 0;
 		bool m_ChangeCountInitialized = false;
+	protected:
 		//mutable std::recursive_mutex m_ValueMutext;
 };

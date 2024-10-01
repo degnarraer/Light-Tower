@@ -132,10 +132,10 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
     ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
-	BT_Device_Info newDevice(name.c_str(), GetAddressString(address), rssi);
-    if(m_DeviceProcessorQueueHandle)
+	//BT_Device_Info newDevice(name.c_str(), GetAddressString(address), rssi);
+    if(false) //m_DeviceProcessorQueueHandle)
 	{
-		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
+		if (false)//xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
 		{
 			ESP_LOGI("ConnectToThisName", "Device info sent to queue");
 		}
@@ -199,7 +199,7 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 		}
 		tempVector = m_ActiveCompatibleDevices;
 	}
-	//m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);	
+	m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);	
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
@@ -234,7 +234,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		if (NULL != m_BluetoothActiveDeviceUpdatee)
 		{
-			//m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
+			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
 		}
 	}
 }

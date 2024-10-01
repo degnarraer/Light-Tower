@@ -83,28 +83,17 @@ struct BT_Device_Info
 		BT_Device_Info(){}
 		BT_Device_Info(const char* name_In, int32_t rssi_In = 0)
 		{
-			if(BT_NAME_LENGTH < String(name_In).length())
-			{
-				Serial << "Bad name: " << String(name_In).c_str() << " | " << String(name_In).length() << "\n";
-				assert(BT_NAME_LENGTH >= String(name_In).length());
-			}
-			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
+            strncpy(name, name_In, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
 			rssi = rssi_In;
 		}
 		BT_Device_Info(const char* name_In, const char* address_In, int32_t rssi_In = 0)
 		{
-			if(BT_NAME_LENGTH < String(name_In).length())
-			{
-				Serial << "Bad name: " << name_In << " | " << String(name_In).length() << "\n";
-				assert(BT_NAME_LENGTH >= String(name_In).length());
-			}
-			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
-			if(BT_ADDRESS_LENGTH < String(address_In).length())
-			{
-				Serial << "Bad ADDRESS: " << address_In << " | " << String(address_In).length() << "\n";
-				assert(BT_ADDRESS_LENGTH >= String(address_In).length());
-			}
-			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
+            strncpy(name, name_In, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
+    
+            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
+            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
 			rssi = rssi_In;
 		}
 		bool operator==(const BT_Device_Info& other) const
@@ -128,18 +117,11 @@ struct BT_Device_Info_With_Time_Since_Update
 		BT_Device_Info_With_Time_Since_Update(){}
 		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)
 		{
-			if(BT_NAME_LENGTH < String(name_In).length())
-			{
-				Serial << "Bad SSID: " << name_In << " | " << String(name_In).length() << "\n";
-				assert(BT_NAME_LENGTH >= String(name_In).length());
-			}
-			snprintf(name, BT_NAME_LENGTH, "%s", name_In);
-			if(BT_ADDRESS_LENGTH < String(address_In).length())
-			{
-				Serial << "Bad address: " << address_In << " | " << String(address_In).length() << "\n";
-				assert(BT_ADDRESS_LENGTH >= String(address_In).length());
-			}
-			snprintf(address, BT_ADDRESS_LENGTH, "%s", address_In);
+            strncpy(name, name_In, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
+    
+            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
+            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
 			timeSinceUdpate = timeSinceUdpate_in;
 			rssi = rssi_In;
 		}
