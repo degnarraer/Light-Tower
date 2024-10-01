@@ -327,6 +327,20 @@ public:
         lastUpdateTime = lastUpdateTime_in;
         timeSinceUpdate = timeSinceUpdate_in;
     }
+    
+    // Constructor for ActiveCompatibleDevice_t that takes BT_Device_Info
+    ActiveCompatibleDevice_t(const BT_Device_Info& deviceInfo)
+    {
+        strncpy(this->name, deviceInfo.name, sizeof(this->name) - 1);
+        this->name[sizeof(this->name) - 1] = '\0';
+
+        strncpy(this->address, deviceInfo.address, sizeof(this->address) - 1);
+        this->address[sizeof(this->address) - 1] = '\0';
+
+        this->rssi = deviceInfo.rssi;
+        this->lastUpdateTime = millis();
+        this->timeSinceUpdate = 0;
+    }
 
     // Assignment operator
     ActiveCompatibleDevice_t& operator=(const ActiveCompatibleDevice_t& other)
@@ -346,8 +360,28 @@ public:
         return *this;
     }
 
+    ActiveCompatibleDevice_t& operator=(const BT_Device_Info& other)
+    {
+        strncpy(this->name, other.name, sizeof(this->name) - 1);
+        this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+        strncpy(this->address, other.address, sizeof(this->address) - 1);
+        this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+
+        rssi = other.rssi;
+        lastUpdateTime = millis();
+        timeSinceUpdate = 0;
+
+        return *this;
+    }
+
     // Equality operator
     bool operator==(const ActiveCompatibleDevice_t& other) const
+    {
+        return (strcmp(this->name, other.name) == 0 && strcmp(this->address, other.address) == 0);
+    }
+    
+    bool operator==(const BT_Device_Info& other) const
     {
         return (strcmp(this->name, other.name) == 0 && strcmp(this->address, other.address) == 0);
     }

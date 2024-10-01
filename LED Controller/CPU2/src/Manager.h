@@ -144,7 +144,6 @@ class Manager: public NamedItem
                                                               , &validBoolValues);
     static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("OuputSourceConnect_ValueChanged", "Ouput Source Connect Value Changed ");
       if(arg && object)
       {
         Callback2Arguments* arguments = static_cast<Callback2Arguments*>(arg);
