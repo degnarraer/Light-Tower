@@ -26,8 +26,8 @@ class StringDataItem: public LocalStringDataItem
 			  		, public SerialMessageInterface<char, DATAITEM_STRING_LENGTH>
 {
 	public:
-		StringDataItem( const String name
-					  , const String &initialValue
+		StringDataItem( const std::string name
+					  , const std::string &initialValue
 					  , const RxTxType_t rxTxType
 					  , const uint16_t rate
 					  , SerialPortMessageManager *serialPortMessageManager

@@ -177,7 +177,6 @@ class Manager: public NamedItem
                                                                  , &validBoolValues );
     static void OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Ouput Source Disconnect Value Changed ");
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
@@ -186,6 +185,7 @@ class Manager: public NamedItem
         bool disconnect = *static_cast<bool*>(object);
         if(BT_Out && disconnect)
         {
+          ESP_LOGI("OuputSourceDisconnect_ValueChanged", "Blueutooth Disconnecting");
           BT_Out->Disconnect();
         }
       }

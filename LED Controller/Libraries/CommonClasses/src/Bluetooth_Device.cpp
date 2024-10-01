@@ -179,6 +179,7 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
     bool found = false;
     std::vector<ActiveCompatibleDevice_t> tempVector;
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
 		for (auto& device : m_ActiveCompatibleDevices)
 		{
 			if (device == newDevice)
@@ -198,7 +199,7 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 		}
 		tempVector = m_ActiveCompatibleDevices;
 	}
-	m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);	
+	//m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);	
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
@@ -217,6 +218,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 
 		std::vector<ActiveCompatibleDevice_t> tempVector;
 		{
+			std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
 			unsigned long CurrentTime = millis();
 			auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
 				[CurrentTime](const ActiveCompatibleDevice_t& device) {
@@ -232,7 +234,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		}
 		if (NULL != m_BluetoothActiveDeviceUpdatee)
 		{
-			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
+			//m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
 		}
 	}
 }

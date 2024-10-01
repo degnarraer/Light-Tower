@@ -25,8 +25,8 @@
 class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 {
 	public:
-		LocalStringDataItem( const String name
-					 	   , const String &initialValue
+		LocalStringDataItem( const std::string name
+					 	   , const std::string &initialValue
 					 	   , NamedCallback_t *namedCallback
 					 	   , SetupCallerInterface *setupCallerInterface )
 						   : LocalDataItem<char, DATAITEM_STRING_LENGTH>( name, initialValue.c_str(), namedCallback, setupCallerInterface )

@@ -26,7 +26,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			  , public SerialMessageInterface<T, COUNT>
 {
 	public:
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate )
@@ -36,7 +36,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 1");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate )
@@ -46,7 +46,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 2");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -59,7 +59,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -72,7 +72,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
 		}
 		
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -86,7 +86,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -100,7 +100,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate

@@ -397,7 +397,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_Host_Name_Callback = { "Host Name"
                                            , &Host_Name_ValueChanged
                                            , &m_Host_Name_CallbackArgs };
-    const String m_Host_Name_InitialValue = "LTOP";
+    const std::string m_Host_Name_InitialValue = "LTOP";
     LocalStringDataItemWithPreferences m_Host_Name = LocalStringDataItemWithPreferences( "Host_Name"
                                                                                        , m_Host_Name_InitialValue
                                                                                        , &m_preferenceInterface
@@ -428,7 +428,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_STA_SSID_Callback = { "Station SSID Callback"
                                           , &STA_SSID_ValueChanged
                                           , &m_STA_SSID_CallbackArgs };
-    const String m_STA_SSID_InitialValue = "";
+    const std::string m_STA_SSID_InitialValue = "";
     LocalStringDataItemWithPreferences m_STA_SSID = LocalStringDataItemWithPreferences( "STA_SSID"
                                                                                       , m_STA_SSID_InitialValue
                                                                                       , &m_preferenceInterface
@@ -459,7 +459,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_STA_Password_Callback = { "Station Password Callback"
                                               , &STA_Password_ValueChanged
                                               , &m_STA_Password_CallbackArgs };
-    const String m_STA_Password_InitialValue = "";
+    const std::string m_STA_Password_InitialValue = "";
     LocalStringDataItemWithPreferences m_STA_Password = LocalStringDataItemWithPreferences( "STA_Password"
                                                                                           , m_STA_Password_InitialValue
                                                                                           , &m_preferenceInterface
@@ -490,7 +490,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_AP_SSID_Callback = { "Access Point SSID Callback"
                                          , &AP_SSID_ValueChanged
                                          , &m_AP_SSID_CallbackArgs };
-    const String m_AP_SSID_InitialValue = "LED Tower of Power";
+    const std::string m_AP_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_AP_SSID = LocalStringDataItemWithPreferences( "AP_SSID"
                                                        
                                                                                      , m_AP_SSID_InitialValue
@@ -518,7 +518,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_AP_Password_Callback = { "Access Point Password Callback"
                                           , &AP_Password_ValueChanged
                                           , &m_AP_Password_CallbackArgs };
-    const String m_AP_Password_InitialValue = "LEDs Rock";
+    const std::string m_AP_Password_InitialValue = "LEDs Rock";
     LocalStringDataItemWithPreferences m_AP_Password = LocalStringDataItemWithPreferences( "AP_Password"
                                                                                          , m_AP_Password_InitialValue
                                                                                          , &m_preferenceInterface
@@ -611,12 +611,12 @@ class SettingsWebServerManager: public SetupCallerInterface
     WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkEnable, false );
 
     //Sink Name
-    const String m_SinkName_InitialValue = "LED Tower of Power";  
+    const std::string m_SinkName_InitialValue = "LED Tower of Power";  
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this);
     WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SinkName, false );
 
     //Source Name
-    const String m_SourceName_InitialValue = "";  
+    const std::string m_SourceName_InitialValue = "";  
     StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue, RxTxType_Rx_Only, 0, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this);
     WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SourceName, false );
 

@@ -28,15 +28,15 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 							 			, public PreferenceManager
 {
 	public:
-		LocalStringDataItemWithPreferences( const String name
-					 	   				  , const String &initialValue
+		LocalStringDataItemWithPreferences( const std::string name
+					 	   				  , const std::string &initialValue
 						   				  , IPreferences *preferencesInterface
 					 	   				  , NamedCallback_t *namedCallback
 						   				  , SetupCallerInterface *setupCallerInterface )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
 										  , PreferenceManager( preferencesInterface
-											  				 , this->m_Name
-											  				 , initialValue
+											  				 , String(this->m_Name.c_str())
+											  				 , String(initialValue.c_str())
 												  			 , PREFERENCE_TIMEOUT
 											  				 , this->StaticSetValueFromString
 											  				 , this )
@@ -81,8 +81,8 @@ class StringDataItemWithPreferences: public StringDataItem
 								   , public PreferenceManager
 {
 	public:
-		StringDataItemWithPreferences( const String name
-								     , const String &initialValue
+		StringDataItemWithPreferences( const std::string name
+								     , const std::string &initialValue
 								     , const RxTxType_t rxTxType
 								     , const uint16_t rate
 								     , IPreferences *preferencesInterface
@@ -97,7 +97,7 @@ class StringDataItemWithPreferences: public StringDataItem
 													 , namedCallback
 													 , setupCallerInterface )
 									 , PreferenceManager( preferencesInterface
-									 					, this->m_Name
+									 					, String(this->m_Name.c_str())
 									 					, this->GetInitialValueAsString()
 														, PREFERENCE_TIMEOUT
 									 					, this->StaticSetValueFromString

@@ -165,7 +165,7 @@ class Manager: public NamedItem
     NamedCallback_t m_SinkName_Callback = { "Sink Name Callback"
                                           , &SinkName_ValueChanged
                                           , &m_SinkName_CallbackArgs };
-    const String m_SinkName_InitialValue = "LED Tower of Power";
+    const std::string m_SinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
                                                                             , m_SinkName_InitialValue
                                                                             , RxTxType_Rx_Echo_Value
