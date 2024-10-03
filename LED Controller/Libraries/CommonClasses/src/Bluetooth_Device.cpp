@@ -238,7 +238,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 
 		for (const auto& device : tempVector)
 		{
-			ESP_LOGD("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", device.name.c_str(), device.rssi);
+			ESP_LOGD("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", device.name, device.rssi);
 		}
 		if (NULL != m_BluetoothActiveDeviceUpdatee)
 		{

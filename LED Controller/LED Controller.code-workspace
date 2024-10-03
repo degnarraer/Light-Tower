@@ -15,6 +15,9 @@
 		{
 			"name": "Libraries",
 			"path": "Libraries"
+		},
+		{
+			"path": "../../../Users/degna/OneDrive/Documents/PlatformIO/Projects/Test"
 		}
 	],
 	"settings": {
@@ -77,7 +80,9 @@
 			"any": "cpp",
 			"random": "cpp",
 			"csignal": "cpp",
-			"codecvt": "cpp"
+			"codecvt": "cpp",
+			"freertos.h": "c",
+			"task.h": "c"
 		}
 	},
 	"launch": {

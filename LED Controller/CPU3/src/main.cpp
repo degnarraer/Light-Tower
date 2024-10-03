@@ -21,6 +21,7 @@
 
 #include "Tunes.h"
 #include "SettingsWebServer.h"
+
 #define SERIAL_RX_BUFFER_SIZE 2048
 
 Preferences m_Preferences;
@@ -66,15 +67,30 @@ void SetupSerialPorts()
 
 void TestPSRam()
 {
-  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
-  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "psram allocation should be 0 at start");
-  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
-  free(psdRamBuffer);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "Failed to free allocated psram");
+  if(uint32_t* buffer = (uint32_t*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM))
+  {
+    ESP_LOGI("TestPSRam", "Heaps_Cap_Worked");
+  }
+  else
+  {
+    ESP_LOGI("TestPSRam", "Heaps_Cap_Worked No Workey");
+  }
+  if (psramInit())
+  {
+    ESP_LOGI("TestPSRam", "PSRAM Initialized");
+    if(ps_malloc(100))
+    {
+      ESP_LOGI("TestPSRam", "PSRAM Allocated");
+    }
+    else
+    {
+      ESP_LOGE("TestPSRam", "PSRAM Not Allocated");
+    }   
+  } 
+  else
+  {
+    ESP_LOGE("TestPSRam", "PSRAM Not Initialized");
+  }
 }
 
 void InitLocalVariables()
@@ -96,8 +112,8 @@ void setup()
 {
   SetupSerialPorts();
   InitLocalVariables();
+  TestPSRam();
   PrintMemory();
-  //TestPSRam();
 }
 
 void loop()
