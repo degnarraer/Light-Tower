@@ -131,7 +131,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
                                                                     , Devices[i].rssi
                                                                     , Devices[i].lastUpdateTime
                                                                     , elapsedTime );
-    m_ScannedDevice.SetValue(ActiveDevice);                                            
+    m_ScannedDevice.SetValue(ActiveDevice);                                          
   }
 }
 

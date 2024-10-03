@@ -117,9 +117,9 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	bool result = false;
 	if(m_TXQueue)
 	{	
-		if( message.length() > 0 &&                   // Check if the message is not empty
-            message.length() <= MaxMessageLength &&   // Check if the message length is within bounds
-            message.indexOf('\0') != -1 &&            // Check if the message is null terminated
+		if( message.length() > 0 &&
+            message.length() <= MaxMessageLength &&
+            message.indexOf('\0') != -1 &&
             xQueueSend(m_TXQueue, message.c_str(), portMAX_DELAY) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());

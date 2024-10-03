@@ -162,9 +162,9 @@ class Bluetooth_Source: public NamedItem
 		bool m_AutoReConnect = false;
 		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
-		QueueHandle_t m_DeviceProcessorQueueHandle;
-		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle;
-		TaskHandle_t m_DeviceProcessorTaskHandle;
+		QueueHandle_t m_DeviceProcessorQueueHandle= nullptr;
+		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle= nullptr;
+		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;
 		bool m_Is_Installed = false;
 		bool m_Is_Running = false;
 		

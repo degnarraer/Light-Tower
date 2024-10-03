@@ -57,17 +57,29 @@ void Bluetooth_Source::Setup()
 {
 	ESP_LOGI("Bluetooth_Device", "%s: Setup", GetTitle().c_str());
 	m_DeviceProcessorQueueHandle = xQueueCreate(DEVICE_QUEUE_SIZE, sizeof(BT_Device_Info));
-	if(m_DeviceProcessorQueueHandle == NULL)
+	if(m_DeviceProcessorQueueHandle != NULL)
 	{
-		ESP_LOGE("CommonUtils", "ERROR! Error creating Queue.");
+		ESP_LOGI("CommonUtils", "Created Compatible Device Processor Queue.");
 	}
-	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_CompatibleDeviceTrackerTaskHandle, 1 ) != pdTRUE )
+	else
 	{
-		ESP_LOGE("InstallDevice", "ERROR! Unable to create task.");
+		ESP_LOGE("CommonUtils", "ERROR! Unable to create Compatible Device Processor Queue.");
 	}
-	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_MEDIUM, &m_DeviceProcessorTaskHandle, 1 ) != pdTRUE)
+	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_CompatibleDeviceTrackerTaskHandle, 1 ) == pdTRUE )
 	{
-		ESP_LOGE("InstallDevice", "ERROR! Unable to create task.");
+		ESP_LOGI("InstallDevice", "Created Compatible Device Tracker task.");
+	}
+	else
+	{
+		ESP_LOGE("InstallDevice", "ERROR! Unable to create Compatible Device Tracker task.");
+	}
+	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_MEDIUM, &m_DeviceProcessorTaskHandle, 1 ) == pdTRUE)
+	{
+		ESP_LOGI("InstallDevice", "Created Compatible Device Processor task.");
+	}
+	else
+	{
+		ESP_LOGE("InstallDevice", "ERROR! Unable to create Compatible Device Processor task.");
 	}
 }
 
@@ -141,9 +153,9 @@ bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t 
 {
     ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
 	BT_Device_Info newDevice(name.c_str(), GetAddressString(address), rssi);
-    if(false) //m_DeviceProcessorQueueHandle)
+    if(m_DeviceProcessorQueueHandle)
 	{
-		if (false)//xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
+		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
 		{
 			ESP_LOGI("ConnectToThisName", "Device info sent to queue");
 		}
@@ -168,7 +180,7 @@ void Bluetooth_Source::StaticDeviceProcessingTask(void * Parameters)
 
 void Bluetooth_Source::DeviceProcessingTask()
 {
-	const TickType_t xFrequency = 1000;
+	const TickType_t xFrequency = 25;
   	TickType_t xLastWakeTime = xTaskGetTickCount();
 	BT_Device_Info receivedDevice;
   	while(true)
@@ -223,7 +235,6 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
   	while(true)
   	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-
 		std::vector<ActiveCompatibleDevice_t> tempVector;
 		{
 			std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);

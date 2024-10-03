@@ -96,7 +96,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       if( Wifi_Mode_t::AccessPoint == m_Wifi_Mode.GetValue() )
       {
         InitWiFi_AccessPoint( m_AP_SSID.GetValueAsString().c_str()
-             
                             , m_AP_Password.GetValueAsString().c_str() );
       }
       else if(Wifi_Mode_t::Station == m_Wifi_Mode.GetValue())
@@ -386,7 +385,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool wifiReady = *static_cast<bool*>(pArguments->arg2);
           if(wifiReady)
           {
-            pSettingWebServer->StartWiFi();
+            //pSettingWebServer->StartWiFi();
           }
         }
       }
@@ -806,21 +805,29 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void CleanActiveCompatibleDevices()
     {
-      ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end(); ++it) 
+        ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
+        if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY) == pdTRUE)
         {
-          ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
-          if(device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
-          {
-            ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
-            it = m_ActiveCompatibleDevices.erase(it);
-            SendActiveCompatibleDevicesToWebSocket();
-          }
+            for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end();)
+            {
+                ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
+                if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
+                {
+                    ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
+                    it = m_ActiveCompatibleDevices.erase(it);
+                    SendActiveCompatibleDevicesToWebSocket();
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+            xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
         }
-      }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+        else
+        {
+            ESP_LOGE("UpdateActiveCompatibleDevices", "Failed to take mutex.");
+        }
     }
 
     void SendActiveCompatibleDevicesToWebSocket()
@@ -834,17 +841,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
     }
-
-
-
-
-
-
-
-
-
-
-
     
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
