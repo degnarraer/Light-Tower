@@ -21,7 +21,7 @@
 #include "DataItem/DataItems.h"
 #include <ESPmDNS.h>
 
-#define BLUETOOTH_DEVICE_TIMEOUT 5000
+#define BLUETOOTH_DEVICE_TIMEOUT 30000
 
 class SettingsWebServerManager: public SetupCallerInterface
 {  
@@ -765,7 +765,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
           WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg2);
           ActiveCompatibleDevice_t device = *static_cast<ActiveCompatibleDevice_t*>(object);
-          ESP_LOGI("ScannedDevice_ValueChanged", "Scanned Device: \"%s\"", device.toString().c_str());
+          ESP_LOGD("ScannedDevice_ValueChanged", "Scanned Device: \"%s\"", device.toString().c_str());
           pSettingWebServer->ActiveCompatibleDeviceReceived(device);
         }
       }
