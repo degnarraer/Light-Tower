@@ -111,18 +111,18 @@ struct BT_Device_Info_With_Time_Since_Update
 	public:
 		char name[BT_NAME_LENGTH] = "\0";
 		char address[BT_ADDRESS_LENGTH] = "\0";
-		uint32_t timeSinceUdpate = 0;
 		int32_t rssi = 0;
+		uint32_t timeSinceUpdate = 0;
 
 		BT_Device_Info_With_Time_Since_Update(){}
-		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, uint32_t timeSinceUdpate_in, int32_t rssi_In = 0)
+		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, int32_t rssi_In, uint32_t timeSinceUdpate_in)
 		{
             strncpy(name, name_In, BT_NAME_LENGTH - 1);
             name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
     
             strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
             address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
-			timeSinceUdpate = timeSinceUdpate_in;
+			timeSinceUpdate = timeSinceUdpate_in;
 			rssi = rssi_In;
 		}
 		BT_Device_Info_With_Time_Since_Update& operator=(const BT_Device_Info_With_Time_Since_Update& other)
@@ -134,7 +134,7 @@ struct BT_Device_Info_With_Time_Since_Update
 			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
 
 			this->rssi = other.rssi;
-			this->timeSinceUdpate = other.timeSinceUdpate;
+			this->timeSinceUpdate = other.timeSinceUpdate;
 
 			return *this;
 		}
@@ -143,7 +143,7 @@ struct BT_Device_Info_With_Time_Since_Update
 			if( strcmp(this->name, other.name) == 0 &&
 				strcmp(this->address, other.address) == 0 &&
 				this->rssi == other.rssi &&
-				this->timeSinceUdpate == other.timeSinceUdpate) return true;
+				this->timeSinceUpdate == other.timeSinceUpdate) return true;
 			else return false;
 		}
 		bool operator!=(const BT_Device_Info_With_Time_Since_Update& other) const
@@ -151,8 +151,77 @@ struct BT_Device_Info_With_Time_Since_Update
 			if( strcmp(this->name, other.name) != 0 ||
 				strcmp(this->address, other.address) != 0 ||
 				this->rssi != other.rssi ||
-				this->timeSinceUdpate != other.timeSinceUdpate) return true;
+				this->timeSinceUpdate != other.timeSinceUpdate) return true;
 			else return false;
+		}
+
+		operator String() const
+        {
+            return toString();
+        }
+
+		// Function to convert to string
+        String toString() const
+        {
+            return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
+        }
+
+		// Static function to convert from string
+		static BT_Device_Info_With_Time_Since_Update fromString(const std::string &str)
+        {
+            int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
+            if (delimiterIndex == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+
+            std::string name = str.substr(0, delimiterIndex - 1);
+            int nextDelimiterIndex = str.find(ENCODE_VALUE_DIVIDER, delimiterIndex + 1);
+            if (nextDelimiterIndex == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+
+            std::string address = str.substr(delimiterIndex + 2, nextDelimiterIndex - 1);
+            int nextDelimiterIndex2 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex + 1);
+            if (nextDelimiterIndex2 == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+
+            std::string rssiStr =  str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1);
+            int32_t rssi = std::stoi(rssiStr); // Convert string to integer
+
+            int nextDelimiterIndex3 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex2 + 1);
+            if (nextDelimiterIndex3 == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+            std::string lastUpdateTimeStr =  str.substr(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1);
+            unsigned long lastUpdateTime = std::stoul(lastUpdateTimeStr); // Convert string to unsigned long
+
+            String timeSinceUpdateStr =  String(str.substr(nextDelimiterIndex3 + 2).c_str());
+            uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt(); // Convert string to uint32_t
+
+            return BT_Device_Info_With_Time_Since_Update(name.c_str(), address.c_str(), rssi, timeSinceUpdate);
+        }
+
+		// Overload the extraction operator
+		friend std::istream& operator>>(std::istream& is, BT_Device_Info_With_Time_Since_Update& device) {
+			std::string str;
+			std::getline(is, str); // Read a line from the stream
+			device = BT_Device_Info_With_Time_Since_Update::fromString(str); // Use fromString to create device from the string
+			return is;
+		}
+
+		// Overload the insertion operator
+		friend std::ostream& operator<<(std::ostream& os, const BT_Device_Info_With_Time_Since_Update& device) {
+			os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
+			return os;
 		}
 };
 typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Update_t;

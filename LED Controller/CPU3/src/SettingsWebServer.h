@@ -749,12 +749,12 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Scanned Device
     CallbackArguments m_ScannedDevice_CallbackArgs = {this, &m_WebSocketDataProcessor};
-    std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
+    std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;
     SemaphoreHandle_t m_ActiveDevicesMutex;
     TaskHandle_t m_ActiveDeviceUpdateTask;
     NamedCallback_t m_ScannedDevice_Callback = {"m_ScannedDevice_Callback", &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
-    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
-    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, &m_ScannedDevice_Callback, this);
+    BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0, };
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, &m_ScannedDevice_Callback, this);
     static void ScannedDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg)
@@ -764,28 +764,31 @@ class SettingsWebServerManager: public SetupCallerInterface
         {
           SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
           WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg2);
-          ActiveCompatibleDevice_t device = *static_cast<ActiveCompatibleDevice_t*>(object);
+          BT_Device_Info_With_Time_Since_Update device = *static_cast<BT_Device_Info_With_Time_Since_Update*>(object);
           ESP_LOGD("ScannedDevice_ValueChanged", "Scanned Device: \"%s\"", device.toString().c_str());
           pSettingWebServer->ActiveCompatibleDeviceReceived(device);
         }
       }
     }
 
-    void ActiveCompatibleDeviceReceived(ActiveCompatibleDevice_t device)
+    void ActiveCompatibleDeviceReceived(BT_Device_Info_With_Time_Since_Update device)
     {
       if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
       {
-        auto it = std::find(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(), device);
-        if (it != m_ActiveCompatibleDevices.end())
+        auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), device);
+        if (it != m_ActiveDevices.end())
         {
           *it = device;
           ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
         }
         else 
         {
-          ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
-          m_ActiveCompatibleDevices.push_back(device);
-          SendActiveCompatibleDevicesToWebSocket();
+          if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
+          {
+            ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
+            m_ActiveDevices.push_back(device);
+            SendActiveCompatibleDevicesToWebSocket();
+          }
         }
       }
       xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
@@ -808,13 +811,13 @@ class SettingsWebServerManager: public SetupCallerInterface
         ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
         if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY) == pdTRUE)
         {
-            for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end();)
+            for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
             {
-                ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
+                BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
                 if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
                 {
                     ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
-                    it = m_ActiveCompatibleDevices.erase(it);
+                    it = m_ActiveDevices.erase(it);
                     SendActiveCompatibleDevicesToWebSocket();
                 }
                 else
@@ -832,7 +835,7 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void SendActiveCompatibleDevicesToWebSocket()
     {
-      ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "Updating Web Socket:");
+      //ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "Updating Web Socket:");
       if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
       {
         String key = "Key";

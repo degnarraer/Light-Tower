@@ -192,14 +192,14 @@ class Manager: public NamedItem
     }
     
     //Scanned Device
-    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
-    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device"
-                                                                                                , m_ScannedDevice_InitialValue
-                                                                                                , RxTxType_Tx_On_Change
-                                                                                                , 0
-                                                                                                , &m_CPU3SerialPortMessageManager
-                                                                                                , NULL
-                                                                                                , this );
+    BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0, };
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Device"
+                                                                                                                           , m_ScannedDevice_InitialValue
+                                                                                                                           , RxTxType_Tx_On_Change
+                                                                                                                           , 0
+                                                                                                                           , &m_CPU3SerialPortMessageManager
+                                                                                                                           , NULL
+                                                                                                                           , this );
     
     //Bluetooth Source Enable
     CallbackArguments m_BluetoothSourceEnable_CallbackArgs = {&m_BT_Out};
