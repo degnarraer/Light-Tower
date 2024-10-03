@@ -141,17 +141,13 @@ struct BT_Device_Info_With_Time_Since_Update
 		bool operator==(const BT_Device_Info_With_Time_Since_Update& other) const
 		{
 			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0 &&
-				this->rssi == other.rssi &&
-				this->timeSinceUpdate == other.timeSinceUpdate) return true;
+				strcmp(this->address, other.address) == 0 ) return true;
 			else return false;
 		}
 		bool operator!=(const BT_Device_Info_With_Time_Since_Update& other) const
 		{
 			if( strcmp(this->name, other.name) != 0 ||
-				strcmp(this->address, other.address) != 0 ||
-				this->rssi != other.rssi ||
-				this->timeSinceUpdate != other.timeSinceUpdate) return true;
+				strcmp(this->address, other.address) != 0 ) return true;
 			else return false;
 		}
 
