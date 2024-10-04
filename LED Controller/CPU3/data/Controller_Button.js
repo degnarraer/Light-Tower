@@ -9,7 +9,7 @@ export class Controller_Button {
         Pressed: '1',
     };
     
-    getSignalName() {
+    getListnerName() {
         return this.signalName;
     }
 
@@ -29,7 +29,7 @@ export class Controller_Button {
     setPressState(pressState) {
         this.value = pressState;
         console.log(`Button: "${this.signalName}" Set value to: "${this.value.toString()}"`);
-        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.value);
+        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getListnerName(), this.value);
     }
     
 }

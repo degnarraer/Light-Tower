@@ -17,7 +17,7 @@
 */
 
 #pragma once
-#define BT_COMPATIBLE_DEVICE_TIMEOUT 60000
+#define BT_COMPATIBLE_DEVICE_TIMEOUT 10000
 #define DEVICE_QUEUE_SIZE 10
 
 #include <vector>

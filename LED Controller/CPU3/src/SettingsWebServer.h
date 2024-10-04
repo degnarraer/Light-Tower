@@ -21,7 +21,7 @@
 #include "DataItem/DataItems.h"
 #include <ESPmDNS.h>
 
-#define BLUETOOTH_DEVICE_TIMEOUT 30000
+#define BLUETOOTH_DEVICE_TIMEOUT 10000
 
 class SettingsWebServerManager: public SetupCallerInterface
 {  
@@ -357,6 +357,8 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     const ValidStringValues_t validBoolValues = { "0", "1" };
 
+    //Wifi ReStart
+
     //Wifi Mode
     const ValidStringValues_t m_Wifi_Mode_ValidValues = { "Station", "AccessPoint" };
     CallbackArguments m_Wifi_Mode_CallbackArgs = { this };
@@ -678,6 +680,30 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool sinkDisconnect = *static_cast<bool*>(object);
           if(sinkDisconnect)
           {
+          }
+        }
+      }
+    }
+
+    //Source Restart
+    CallbackArguments m_SourceRestart_CallbackArgs = {this};
+    NamedCallback_t m_SourceRestart_Callback = {"SourceRestart Callback", &SourceRestart_ValueChanged, &m_SourceRestart_CallbackArgs};
+    const bool m_SourceRestart_InitialValue = false;
+    LocalDataItem<bool, 1> m_SourceRestart = LocalDataItem<bool, 1>( "Wifi_Restart", m_SourceRestart_InitialValue, &m_SourceRestart_Callback, this);
+    WebSocketDataHandler<bool, 1> m_SourceRestart_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceRestart, false );
+    static void SourceRestart_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("SourceRestart_ValueChanged", "Source Restart Value Changed");
+      if(object && arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && object)
+        {
+          SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
+          bool sourceRestart = *static_cast<bool*>(object);
+          if(sourceRestart)
+          {
+            pSettingWebServer->StartWiFi();
           }
         }
       }

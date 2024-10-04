@@ -37,7 +37,8 @@
 			   , AP_Password
 			   , SinkName
 			   , SourceName
-			   , WIFI_Mode } from './main.js';
+			   , WIFI_Mode
+			   , Wifi_Restart } from './main.js';
         window.CurrentSoundInputSource = CurrentSoundInputSource;
         window.CurrentSoundOutputSource = CurrentSoundOutputSource;
         window.Source_Connect = Source_Connect;
@@ -58,6 +59,7 @@
         window.SinkName = SinkName;
         window.SourceName = SourceName;
 		window.WIFI_Mode = WIFI_Mode;
+		window.Wifi_Restart = Wifi_Restart;
 	</script>
 	<div id="loadingPage">
 		<div id="loadingModal">
@@ -183,6 +185,16 @@
 						</div>
 						<div class="settingGroup_Widget">
 							<button id="AP_Password_Submit_Button" for="AP_Password_Text_Box" onclick="AP_Password.scheduleWebSocketUpdate()">Submit</button>
+						</div>
+					</div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_Toggle">
+						<div class="settingGroup_Title">
+							Restart Wifi:
+						</div>
+						<div class="settingGroup_Widget">
+							<button id="Wifi_Restart_Submit_Button" for="" onclick="Wifi_Restart.setValue(this.value, false)">Submit</button>
 						</div>
 					</div>
 				</div>

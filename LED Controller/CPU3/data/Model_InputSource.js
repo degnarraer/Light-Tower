@@ -21,7 +21,7 @@ export class Model_InputSource {
         this.wsManager.unregisterListener(this);
     }
 
-    getSignalName() {
+    getListnerName() {
         return this.signalName;
     }
 
@@ -57,7 +57,25 @@ export class Model_InputSource {
 
     sendWebSocketUpdate() {
         console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
-        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        this.Send_Signal_Value_To_Web_Socket(this.getListnerName(), this.toString());
+    }
+
+    Send_Signal_Value_To_Web_Socket(signal, value) {
+        if (this.wsManager) {
+            if (signal && value) {
+                console.log('Web Socket Tx: \'' + signal + '\' Value: \'' + value + '\'');
+                var Root = {};
+                Root.SignalValue = {};
+                Root.SignalValue.Id = signal.toString();
+                Root.SignalValue.Value = value.toString();
+                var Message = JSON.stringify(Root);
+                this.wsManager.send(Message);
+            } else {
+                console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+            }
+        } else {
+            console.error('Null wsManager!');
+        }
     }
 
     getValue() {

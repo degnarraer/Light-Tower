@@ -9,37 +9,38 @@ import { Model_WifiMode } from './Model_WifiMode.js';
 
 const wsManager = new WebSocketManager();
 
-var speakerImages = new Array();
-var sliderTouched = false;
-var sliderTimeoutHandle;
-var sink_Name_Value_Changed = false;
-var sink_Name_Changed_TimeoutHandle;
-var source_Name_Value_Changed = false;
-var source_Name_Changed_TimeoutHandle;
+//var loadingAnimation;
 
+
+export const SinkName = new Model_Text('Sink_Name', 'LED Tower of Power', wsManager);
 export const CurrentSoundInputSource = new Model_InputSource('Input_Source', Model_InputSource.values.OFF, wsManager);
-export const CurrentSoundOutputSource = new Model_OutputSource('Output_Source', Model_OutputSource.values.OFF, wsManager);
-export const Source_ConnectionStatus = new Model_ConnectionStatus('Src_Conn_State', 'Disconnected', wsManager);
-export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.values.False, wsManager);
-export const Source_Disconnect = new Model_Boolean('Src_Disconnect', Model_Boolean.values.False, wsManager);
+export const BT_SinkEnable = new Model_Boolean('BT_Sink_En', Model_Boolean.values.False, wsManager);
 export const Sink_ConnectionStatus = new Model_ConnectionStatus('Sink_Conn_State', 'Disconnected', wsManager);
 export const Sink_Connect = new Model_Boolean('Sink_Connect', Model_Boolean.values.False, wsManager);
 export const Sink_Disconnect = new Model_Boolean('Sink_Disconnect', Model_Boolean.values.False, wsManager);
-export const Source_Reset = new Model_Boolean('BT_Src_Reset', Model_Boolean.values.False, wsManager);
-export const Amplitude_Gain = new Model_Numeric('Amp_Gain', 2.0, wsManager);
-export const FFT_Gain = new Model_Numeric('FFT_Gain', 2.0, wsManager);
-export const BT_SinkEnable = new Model_Boolean('BT_Sink_En', Model_Boolean.values.False, wsManager);
-export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
 export const Sink_Auto_Reconnect = new Model_Boolean('BT_Sink_AR', Model_Boolean.values.False, wsManager);
+
+export const SourceName = new Model_Text('Source_Name', '', wsManager);
+export const CurrentSoundOutputSource = new Model_OutputSource('Output_Source', Model_OutputSource.values.OFF, wsManager);
+export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
+export const Source_ConnectionStatus = new Model_ConnectionStatus('Src_Conn_State', 'Disconnected', wsManager);
+export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.values.False, wsManager);
+export const Source_Disconnect = new Model_Boolean('Src_Disconnect', Model_Boolean.values.False, wsManager);
+export const Source_Reset = new Model_Boolean('BT_Src_Reset', Model_Boolean.values.False, wsManager);
 export const Source_Auto_Reconnect = new Model_Boolean('BT_Source_AR', Model_Boolean.values.False, wsManager);
+
+
+export const WIFI_Mode = new Model_WifiMode('WIFI_Mode', Model_WifiMode.values.Unknown, wsManager);
 export const Host_Name = new Model_Text('Host_Name', 'ENTER VALUE', wsManager);
 export const STA_SSID = new Model_Text('STA_SSID', 'ENTER VALUE', wsManager);
 export const STA_Password = new Model_Text('STA_Password', 'ENTER VALUE', wsManager);
 export const AP_SSID = new Model_Text('AP_SSID', 'ENTER VALUE', wsManager);
 export const AP_Password = new Model_Text('AP_Password', 'ENTER VALUE', wsManager);
-export const SinkName = new Model_Text('Sink_Name', 'LED Tower of Power', wsManager);
-export const SourceName = new Model_Text('Source_Name', '', wsManager);
-export const WIFI_Mode = new Model_WifiMode('WIFI_Mode', Model_WifiMode.values.Unknown, wsManager);
+export const Wifi_Restart = new Model_Boolean('Wifi_Restart', Model_Boolean.values.False, wsManager);
+
+export const Amplitude_Gain = new Model_Numeric('Amp_Gain', 2.0, wsManager);
+export const FFT_Gain = new Model_Numeric('FFT_Gain', 2.0, wsManager);
+
 
 //Compatible Devices
 var compatibleDevices = [
@@ -116,6 +117,9 @@ export function SendValueToWebSocket(signalName, value){
 window.addEventListener('load', onload);
 function onload(event)
 {
+	wsManager.initWebSocket();
+	wsManager.announceHere();
+
 	var sink_BT_Auto_ReConnect_Toggle_Button;
 	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');
 	sink_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()
@@ -136,10 +140,19 @@ function onload(event)
 	{
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
-	wsManager.initWebSocket();
-	wsManager.announceHere();
 }
- 
+
+function show_Connecting_Modal() {
+	const loadingTextElement = document.querySelector('#loadingModal .modal-content h2');
+	let dotCount = 0;
+	loadingTextElement.textContent = 'Connecting';
+	document.getElementById('loadingPage').style.display = 'flex';
+	loadingAnimation = setInterval(() => {
+		dotCount = (dotCount + 1) % 4;
+		loadingTextElement.textContent = 'Connecting' + '.'.repeat(dotCount);
+	}, 1000);
+}
+
 function setSpeakerImage(value)
 {   
 	var Image1Source;
@@ -236,119 +249,6 @@ const imageTwoPromise = new Promise((resolve, reject) => {
 	});
 }
 
-function handleBTSourceTargetDevice(id, value)
-{
-	if(id && value)
-	{
-		console.log('Received BT Source Target Device!' && value);
-		var elementsWithDataValue = document.querySelectorAll('[data-Signal="Source_Name"]');
-		elementsWithDataValue.forEach(function(element)
-		{
-			try 
-			{
-				var innerData = JSON.parse(value);
-				var innerKeys = Object.keys(innerData);
-
-				for (var j = 0; j < innerKeys.length; ++j) 
-				{
-					var address = innerData[innerKeys[j]]['ADDRESS'];
-					var name = innerData[innerKeys[j]]['NAME'];
-					if(address & name)
-					{
-						element.value = name;
-					}
-				}
-			}
-			catch (error)
-			{
-				console.error('Error parsing JSON in handleBTSourceTargetDevice:', error);
-			}
-		});
-	}
-}
-
-function handleBTSourceTargetDevices(id, value)
-{
-	if(value)
-	{
-		console.log('Received BT Source Target Devices!');
-		try 
-		{
-			var sourceTargetData = JSON.parse(value);
-			var sourceTargetKeys = Object.keys(sourceTargetData);
-			compatibleDevices.length = 0;
-
-			var innerData = JSON.parse(value);
-			var innerKeys = Object.keys(innerData);
-
-			for (var j = 0; j < innerKeys.length; ++j)
-			{
-				var address = innerData[innerKeys[j]]['ADDRESS'];
-				var name = innerData[innerKeys[j]]['NAME'];
-				var rssi = innerData[innerKeys[j]]['RSSI'];
-				var newValue = { name: name, address: address, rssi: rssi };
-				compatibleDevices.push(newValue);
-			}
-			updateCompatibleDeviceList();
-		} 
-		catch (error)
-		{
-			console.error('Error parsing JSON in handleBTSourceTargetDevices:', error);
-		}
-	}
-	else
-	{
-		compatibleDevices.length = 0;
-		updateCompatibleDeviceList();
-	}
-}
-
-function updateCompatibleDeviceList() {	
-	var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Source_Target_Devices"]');
-	elementsWithDataValue.forEach(function(element){
-		if(element.hasOwnProperty("innerHTML")){
-			deviceListElement.innerHTML = ""; // Clear previous entries
-			// Iterate through the Bluetooth data and create list items
-			compatibleDevices.forEach((device, index) => {
-				const listItem = document.createElement("li");
-				listItem.className = "deviceItem";
-				if (index === selectedDeviceIndex){
-					listItem.classList.add("selected");
-				}
-				listItem.innerHTML = `<strong>Name:</strong> ${device.name}<br>
-									<strong>Address:</strong> ${device.address}<br>
-									<strong>RSSI:</strong> ${device.rssi}`;
-				element.appendChild(listItem);
-				
-				// Attach a click listener to the list item
-				listItem.addEventListener("click", () => {
-					handleTargetDeviceItemClick(device);
-				});
-			});
-		}
-		else{
-			console.log('updateCompatibleDeviceList Unsupported Element!');
-		}
-	});
-}
-
-// Function to handle the click event on a device list item
-function handleTargetDeviceItemClick(device) {
-    // Do something with the selected device's name and address
-    console.log('Selected Name:', device.name);
-    console.log('Selected Address:', device.address);
-
-    var Root = {};
-	var TextboxElement;
-	Root.JSONValue = {};
-	Root.JSONValue.Id = 'BT_Source_Target_Device';
-	Root.JSONValue.Value = {};
-	Root.JSONValue.Value.Address = device.address;
-	Root.JSONValue.Value.Name = device.name;
-	var Message = JSON.stringify(Root);
-	wsManager.send(Message);
-}
-
 function handleSpeakerImage(id, value) {
 	if(id && value)
 	{
@@ -357,16 +257,3 @@ function handleSpeakerImage(id, value) {
 	}
 }
 
-function handleBTSinkConnectionState(id, value) {
-    if (id && value) {
-        console.log('Received Bluetooth Source Connection State!');
-        var elementsWithDataValue = document.querySelectorAll('[data-Signal="BT_Sink_Connection_State"]');
-        elementsWithDataValue.forEach(function (element) {
-            if (element.textContent !== undefined) {
-                element.textContent = ConnectionStateString[parseInt(value)].toString();
-            } else {
-				console.log('handleBTSinkConnectionState Unsupported Element: ' + element.id);
-			}
-        });
-    }
-}

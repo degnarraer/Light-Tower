@@ -22,7 +22,7 @@ export class Model_ConnectionStatus {
         this.wsManager.unregisterListener(this);
     }
 
-    getSignalName() {
+    getListnerName() {
         return this.signalName;
     }
 
