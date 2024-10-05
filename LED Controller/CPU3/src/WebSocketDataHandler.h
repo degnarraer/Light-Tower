@@ -153,7 +153,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
 
-    bool NewRxValueReceived(const T* values, size_t changeCount) override
+    virtual bool NewRxValueReceived(const T* values, size_t changeCount) override
     {
       ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
@@ -206,7 +206,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     size_t m_ChangeCount;
     const String m_Name;
     const String m_Signal;
-  private:
 		bool IsChangeCountGreater(size_t changeCount)
 		{
 			return (changeCount > m_ChangeCount) || (m_ChangeCount - changeCount > (SIZE_MAX / 2));
@@ -257,6 +256,20 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     void DestroyTasks()
     {
       if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
+    }
+
+    bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t changeCount) override
+    {
+      ESP_LOGI( "NewRxValueReceived", "New DataItem Rx Value");
+      bool success = false;
+      if(this->IsChangeCountGreater(m_DataItem.GetChangeCount()))
+      {
+        ActiveCompatibleDeviceReceived(values[0]);
+        SendActiveCompatibleDevicesToWebSocket();
+        success = true;
+      }
+      m_ChangeCount = m_DataItem.GetChangeCount();
+      return success;
     }
 
     void ActiveCompatibleDeviceReceived(BT_Device_Info_With_Time_Since_Update device)
@@ -325,8 +338,14 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     {
       if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
       {
-        String key = "Key";
-        String value = "Value";
+        String value;
+        for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
+        {
+            BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
+            value += "{" + device->toString() + "}";
+        }
+        ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", value.c_str());
+        String key = this->GetName();
         this->TxDataToWebSocket(key, value);
       }
       xSemaphoreGiveRecursive(m_ActiveDevicesMutex);

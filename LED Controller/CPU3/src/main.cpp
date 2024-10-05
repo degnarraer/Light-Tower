@@ -25,7 +25,7 @@
 #define SERIAL_RX_BUFFER_SIZE 2048
 
 Preferences m_Preferences;
-PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
+PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
 DataSerializer m_DataSerializer;  
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
 SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial2, &m_DataSerializer);
@@ -44,52 +44,47 @@ SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Man
                                                    , m_CPU1SerialPortMessageManager
                                                    , m_CPU2SerialPortMessageManager );
 
-void ClearSerialBuffers(HardwareSerial &serial)
-{
-    serial.flush();
-    while (serial.available() > 0) {
-        serial.read();
-    }
-}
 void SetupSerialPorts()
 {
+  Serial.begin(115200, SERIAL_8O2);
   delay(500);
-  Serial.begin(500000, SERIAL_8O2);
-  ClearSerialBuffers(Serial);
+  Serial.flush();
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  ClearSerialBuffers(Serial1);
+  delay(100);
+  Serial1.flush();
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
-  ClearSerialBuffers(Serial2);
+  delay(100);
+  Serial2.flush();
 }
 
 
 void TestPSRam()
 {
-  if(uint32_t* buffer = (uint32_t*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM))
+  psramInit();
+  void* buffer1 = (void*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM);
+  if(buffer1)
   {
-    ESP_LOGI("TestPSRam", "Heaps_Cap_Worked");
+    ESP_LOGI("TestPSRam", "Heaps Cap Malloc memory allocated");
+    free(buffer1);
+    buffer1 = nullptr;
   }
   else
   {
-    ESP_LOGI("TestPSRam", "Heaps_Cap_Worked No Workey");
+    ESP_LOGE("TestPSRam", "Heaps Cap Malloc memory NOT allocated!");
   }
-  if (psramInit())
+
+  void* buffer2 = ps_malloc(100);
+  if(buffer2)
   {
-    ESP_LOGI("TestPSRam", "PSRAM Initialized");
-    if(ps_malloc(100))
-    {
-      ESP_LOGI("TestPSRam", "PSRAM Allocated");
-    }
-    else
-    {
-      ESP_LOGE("TestPSRam", "PSRAM Not Allocated");
-    }   
-  } 
+    ESP_LOGI("TestPSRam", "PSRAM Allocated");
+    free(buffer2);
+    buffer2 = nullptr;
+  }
   else
   {
-    ESP_LOGE("TestPSRam", "PSRAM Not Initialized");
+    ESP_LOGE("TestPSRam", "PSRAM Not Allocated!");
   }
 }
 
@@ -100,20 +95,22 @@ void InitLocalVariables()
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
 
-void PrintMemory()
+void PrintMemory(const char* message)
 {
-  ESP_LOGI("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGI("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGI("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGI("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
+  ESP_LOGI("PrintMemory", "%s", message);
+  ESP_LOGI("PrintMemory", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGI("PrintMemory", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGI("PrintMemory", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGI("PrintMemory", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void setup()
 {
   SetupSerialPorts();
-  InitLocalVariables();
+  PrintMemory("Before Initialization");
   TestPSRam();
-  PrintMemory();
+  InitLocalVariables();
+  PrintMemory("After Initialization");
 }
 
 void loop()

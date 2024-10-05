@@ -123,12 +123,9 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValue(const T* values, size_t count) override
 		{
-			ESP_LOGI("SetValue", "SetValue for Local Data Item With Preferences 1");
 			bool result = LocalDataItem<T, COUNT>::SetValue(values, count);
 			if(result)
 			{
-				
-				ESP_LOGI("SetValue", "SetValue for Local Data Item With Preferences 2");
 				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   , this->GetValueAsString() );
 			}

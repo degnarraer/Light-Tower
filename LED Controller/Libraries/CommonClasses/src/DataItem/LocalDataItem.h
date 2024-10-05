@@ -44,7 +44,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 : m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
 			CommonSetup();
 		}
 		LocalDataItem( const std::string name
@@ -52,7 +52,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 : m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
 			CommonSetup();
 		}
 		LocalDataItem( const std::string name
@@ -65,7 +65,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
 			CommonSetup();
 		}
 		
@@ -79,7 +79,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
 			CommonSetup();
 		}
 
@@ -94,7 +94,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 5");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 5");
 			CommonSetup();
 		}
 		
@@ -109,7 +109,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 6");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 6");
 			CommonSetup();
 		}
 		
@@ -167,7 +167,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 						memcpy(mp_Value+i, &value, sizeof(char));
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
-					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
+					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 					this->CallNamedCallbacks(mp_Value);
@@ -179,7 +179,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 						memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
 						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 					}
-					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
+					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 					this->CallNamedCallbacks(mp_Value);
@@ -406,7 +406,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		virtual bool SetValue(const T *values, size_t count)
 		{
 			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
-			ESP_LOGI( "LocalDataItem: SetValue"
+			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, this->ConvertValueToString(values, count).c_str() );

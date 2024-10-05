@@ -122,13 +122,13 @@ class Rx_Value_Caller_Interface
 		}
 		virtual void RegisterForNewRxValueNotification(Rx_Value_Callee_Interface<T>* NewCallee)
 		{
-			ESP_LOGI("RegisterForNewRxValueNotification", "Try Registering Callee");
+			ESP_LOGD("RegisterForNewRxValueNotification", "Try Registering Callee");
 			bool IsFound = false;
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewRxValueCallees)
 			{
 				if(NewCallee == callee)
 				{
-					ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with this name already exists.");
+					ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
 					IsFound = true;
 					break;
 				}

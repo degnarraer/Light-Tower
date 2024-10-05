@@ -7,6 +7,7 @@ class IPreferences
     public:
         virtual ~IPreferences() {}
 
+        virtual void InitializePreferences(const char* name)=0;
         virtual bool begin(const char* name, bool readOnly = false, const char* partition_label = nullptr) = 0;
         virtual void end() = 0;
         virtual bool clear() = 0;
@@ -52,10 +53,31 @@ class IPreferences
 class PreferencesWrapper : public IPreferences
 {
     public:
-        PreferencesWrapper(Preferences* preferences)
-                          : mp_preferences(preferences){}
+        PreferencesWrapper(const char* name, Preferences* preferences)
+                          : mp_preferences(preferences)
+        {
+            InitializePreferences(name);
+        }
     private:
         Preferences* mp_preferences = nullptr;
+        void InitializePreferences(const char* name)
+        {
+            if(mp_preferences->begin(name, false))
+            {
+                ESP_LOGE("InitializePreferences", "ERROR! Unable to initialize preferences named: \"%s\". Resseting Device to Factory Defaults.", name);
+                nvs_flash_erase();
+                ESP_LOGI("InitializePreferences", "NVS Cleared!");
+                nvs_flash_init();
+                ESP_LOGI("InitializePreferences", "NVS Initialized");
+                ESP.restart();
+            }
+            else if(mp_preferences->getBool("Pref_Reset", true))
+            {
+                mp_preferences->clear();
+                ESP_LOGI("InitializePreferences", "Preferences Cleared!");
+                mp_preferences->putBool("Pref_Reset", false);
+            }
+        }
     public:
         bool begin(const char* name, bool readOnly = false, const char* partition_label = nullptr) override
         {
@@ -346,7 +368,12 @@ public:
             vSemaphoreDelete(m_PreferencesMutex);
         }
     }
-
+    
+    void InitializePreferences(const char* name)
+    {
+        mp_PreferencesInterface->InitializePreferences(name);
+    }
+    
     bool InitializeAndLoadPreference()
     {
         bool result = false;
@@ -358,12 +385,12 @@ public:
             bool isKey = mp_PreferencesInterface->isKey(m_Key.c_str());
             if (isKey)
             {
-                ESP_LOGI("InitializeAndLoadPreference", "Preference Found: \"%s\" Loading saved value", m_Key.c_str());
+                ESP_LOGD("InitializeAndLoadPreference", "Preference Found: \"%s\" Loading saved value", m_Key.c_str());
                 result = Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
             }
             else
             {
-                ESP_LOGI("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
+                ESP_LOGD("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
                 result = Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
             }
         }
