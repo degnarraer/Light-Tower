@@ -54,13 +54,11 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     virtual ~SettingsWebServerManager()
     {
-      DestroyTasks();
     }
     
     void SetupSettingsWebServerManager()
     {
       InitializeLocalvariables();
-      CreateTasks();
       InitializePreferences();
       SetupAllSetupCallees();
       InitFileSystem();
@@ -70,20 +68,6 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void InitializeLocalvariables()
     {
-      m_ActiveDevicesMutex = xSemaphoreCreateRecursiveMutex();
-    }
-
-    void CreateTasks()
-    {
-      if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) != pdTRUE )
-      {
-        ESP_LOGE("CreateTasks", "ERROR! Unable to create task.");
-      }
-    }
-
-    void DestroyTasks()
-    {
-      if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
     }
 
     void StartWiFi()
@@ -372,7 +356,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                                            , &m_Wifi_Mode_Callback
                                                                                                            , this
                                                                                                            , &m_Wifi_Mode_ValidValues );
-    WebSocketDataHandler<Wifi_Mode_t, 1> m_Wifi_Mode_DataHandler = WebSocketDataHandler<Wifi_Mode_t, 1>( m_WebSocketDataProcessor, m_Wifi_Mode, false );
+    WebSocketDataHandler<Wifi_Mode_t, 1> m_Wifi_Mode_DataHandler = WebSocketDataHandler<Wifi_Mode_t, 1>( m_WebSocketDataProcessor, m_Wifi_Mode );
     static void Wifi_Mode_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Wifi_Mode_ValueChanged", "Wifi Mode ValueChanged");
@@ -404,7 +388,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                        , &m_preferenceInterface
                                                                                        , &m_Host_Name_Callback
                                                                                        , this );
-    WebSocket_String_DataHandler m_Host_Name_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_Host_Name, false );
+    WebSocket_String_DataHandler m_Host_Name_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_Host_Name );
     static void Host_Name_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -435,7 +419,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                       , &m_preferenceInterface
                                                                                       , &m_STA_SSID_Callback
                                                                                       , this );
-    WebSocket_String_DataHandler m_STA_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_SSID, false );
+    WebSocket_String_DataHandler m_STA_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_SSID );
     static void STA_SSID_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -466,7 +450,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                           , &m_preferenceInterface
                                                                                           , &m_STA_Password_Callback
                                                                                           , this );
-    WebSocket_String_DataHandler m_STA_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_Password, false );
+    WebSocket_String_DataHandler m_STA_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_Password );
     static void STA_Password_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -498,7 +482,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                      , &m_preferenceInterface
                                                                                      , &m_AP_SSID_Callback
                                                                                      , this );
-    WebSocket_String_DataHandler m_AP_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_SSID, false );
+    WebSocket_String_DataHandler m_AP_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_SSID );
     static void AP_SSID_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -525,7 +509,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                          , &m_preferenceInterface
                                                                                          , &m_AP_Password_Callback
                                                                                          , this );
-    WebSocket_String_DataHandler m_AP_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_Password, false );
+    WebSocket_String_DataHandler m_AP_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_Password );
     static void AP_Password_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -555,9 +539,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                           , &m_CPU2SerialPortMessageManager
                                                                                           , nullptr
                                                                                           , this );
-    WebSocketDataHandler<float, 1> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor
-                                                                                                , m_AmplitudeGain
-                                                                                                , false );    
+    WebSocketDataHandler<float, 1> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor, m_AmplitudeGain );    
     
     //FFT Gain
     const float m_FFTGain_InitialValue = 2.0;
@@ -569,9 +551,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                     , &m_CPU2SerialPortMessageManager
                                                                                     , nullptr
                                                                                     , this );
-    WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor
-                                                                                          , m_FFTGain
-                                                                                          , false );
+    WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor, m_FFTGain );
 
     //Microphone Enable
     //TBD
@@ -587,9 +567,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                                                       , nullptr
                                                                                                                       , this
                                                                                                                       , &validInputSourceValues );
-    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( m_WebSocketDataProcessor
-                                                                                                                            , m_SoundInputSource
-                                                                                                                            , false );
+    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( m_WebSocketDataProcessor, m_SoundInputSource );
     
     //Output Source
     const ValidStringValues_t validOutputSourceValues = { "OFF", "Bluetooth" };
@@ -602,51 +580,49 @@ class SettingsWebServerManager: public SetupCallerInterface
                                                                                                                         , nullptr
                                                                                                                         , this
                                                                                                                         , &validOutputSourceValues);
-    WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( m_WebSocketDataProcessor
-                                                                                                                              , m_SoundOuputSource
-                                                                                                                              , false );
+    WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( m_WebSocketDataProcessor, m_SoundOuputSource );
     
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this, nullptr);
-    WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkEnable, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkEnable );
 
     //Sink Name
     const std::string m_SinkName_InitialValue = "LED Tower of Power";  
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this);
-    WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SinkName, false );
+    WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SinkName );
 
     //Source Name
     const std::string m_SourceName_InitialValue = "";  
     StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue, RxTxType_Rx_Only, 0, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SourceName, false );
+    WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SourceName );
 
     //Sink Connection State
     const ConnectionStatus_t m_SinkConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SinkConnectionState = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State", m_SinkConnectionState_InitialValue, RxTxType_Rx_Only, 0, &m_CPU1SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<ConnectionStatus_t, 1> m_SinkConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SinkConnectionState, false );    
+    WebSocketDataHandler<ConnectionStatus_t, 1> m_SinkConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SinkConnectionState );    
     
     //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this, nullptr);
-    WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkAutoReConnect, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkAutoReConnect );
     
     //Bluetooth Source Enable
     const bool m_BluetoothSourceEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, nullptr);
-    WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceEnable, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceEnable );
 
     //Target Device
     CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
     DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<CompatibleDevice_t, 1> m_TargetCompatibleDevice_DataHandler = WebSocketDataHandler<CompatibleDevice_t, 1>( m_WebSocketDataProcessor, m_TargetCompatibleDevice, false );
+    WebSocketDataHandler<CompatibleDevice_t, 1> m_TargetCompatibleDevice_DataHandler = WebSocketDataHandler<CompatibleDevice_t, 1>( m_WebSocketDataProcessor, m_TargetCompatibleDevice );
 
     //Sink Connect
     CallbackArguments m_SinkConnect_CallbackArgs = {this};
     NamedCallback_t m_SinkConnect_Callback = {"m_SinkConnect_Callback", &SinkConnect_ValueChanged, &m_SinkConnect_CallbackArgs};
     const bool m_SinkConnect_InitialValue = false;
     DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect", m_SinkConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU1SerialPortMessageManager, &m_SinkConnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SinkConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkConnect, false );
+    WebSocketDataHandler<bool, 1> m_SinkConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkConnect );
     static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
@@ -668,7 +644,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SinkDisconnect_Callback = {"m_SinkDisconnect_Callback", &SinkDisconnect_ValueChanged, &m_SinkDisconnect_CallbackArgs};
     const bool m_SinkDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Sink_Disconnect", m_SinkDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU1SerialPortMessageManager, &m_SinkDisconnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SinkDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkDisconnect, false );
+    WebSocketDataHandler<bool, 1> m_SinkDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkDisconnect );
     static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkDisconnect_ValueChanged", "Sink DisConnect Value Changed");
@@ -690,7 +666,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SourceRestart_Callback = {"SourceRestart Callback", &SourceRestart_ValueChanged, &m_SourceRestart_CallbackArgs};
     const bool m_SourceRestart_InitialValue = false;
     LocalDataItem<bool, 1> m_SourceRestart = LocalDataItem<bool, 1>( "Wifi_Restart", m_SourceRestart_InitialValue, &m_SourceRestart_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SourceRestart_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceRestart, false );
+    WebSocketDataHandler<bool, 1> m_SourceRestart_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceRestart );
     static void SourceRestart_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceRestart_ValueChanged", "Source Restart Value Changed");
@@ -714,7 +690,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SourceConnect_Callback = {"Test Name", &SourceConnect_ValueChanged, &m_SourceConnect_CallbackArgs};
     const bool m_SourceConnect_InitialValue = false;
     DataItem<bool, 1> m_SourceConnect = DataItem<bool, 1>( "Src_Connect", m_SourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceConnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceConnect, false );
+    WebSocketDataHandler<bool, 1> m_SourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceConnect );
     static void SourceConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceConnect_ValueChanged", "Source Connect Value Changed");
@@ -746,7 +722,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SourceDisconnect_Callback = {"m_SourceDisconnect_Callback", &SourceDisconnect_ValueChanged, &m_SourceDisconnect_CallbackArgs};
     const bool m_SourceDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_SourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceDisconnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceDisconnect, false );
+    WebSocketDataHandler<bool, 1> m_SourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceDisconnect );
     static void SourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceDisconnect_ValueChanged", "Source Disconnect Value Changed");
@@ -775,118 +751,24 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Scanned Device
     CallbackArguments m_ScannedDevice_CallbackArgs = {this, &m_WebSocketDataProcessor};
-    std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;
-    SemaphoreHandle_t m_ActiveDevicesMutex;
-    TaskHandle_t m_ActiveDeviceUpdateTask;
-    NamedCallback_t m_ScannedDevice_Callback = {"m_ScannedDevice_Callback", &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
     BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0, };
-    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, &m_ScannedDevice_Callback, this);
-    static void ScannedDevice_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      if(arg)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2)
-        {
-          SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
-          WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg2);
-          BT_Device_Info_With_Time_Since_Update device = *static_cast<BT_Device_Info_With_Time_Since_Update*>(object);
-          ESP_LOGD("ScannedDevice_ValueChanged", "Scanned Device: \"%s\"", device.toString().c_str());
-          pSettingWebServer->ActiveCompatibleDeviceReceived(device);
-        }
-      }
-    }
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this);
+    BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler m_ScannedDevice_DataHandler = BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler(m_WebSocketDataProcessor, m_ScannedDevice);
 
-    void ActiveCompatibleDeviceReceived(BT_Device_Info_With_Time_Since_Update device)
-    {
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), device);
-        if (it != m_ActiveDevices.end())
-        {
-          *it = device;
-          ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
-        }
-        else 
-        {
-          if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
-          {
-            ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
-            m_ActiveDevices.push_back(device);
-            SendActiveCompatibleDevicesToWebSocket();
-          }
-        }
-      }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-    }
-
-    static void Static_UpdateActiveCompatibleDevices(void * parameter)
-    {
-      SettingsWebServerManager *manager = (SettingsWebServerManager*)parameter;
-      const TickType_t xFrequency = 1000;
-      TickType_t xLastWakeTime = xTaskGetTickCount();
-      while(true)
-      {
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-        manager->CleanActiveCompatibleDevices();
-      }
-    }
-
-    void CleanActiveCompatibleDevices()
-    {
-        ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
-        if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY) == pdTRUE)
-        {
-            for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
-            {
-                BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
-                if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
-                {
-                    ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
-                    it = m_ActiveDevices.erase(it);
-                    SendActiveCompatibleDevicesToWebSocket();
-                }
-                else
-                {
-                    ++it;
-                }
-            }
-            xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-        }
-        else
-        {
-            ESP_LOGE("UpdateActiveCompatibleDevices", "Failed to take mutex.");
-        }
-    }
-
-    void SendActiveCompatibleDevicesToWebSocket()
-    {
-      //ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "Updating Web Socket:");
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        String key = "Key";
-        String value = "Value";
-        m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
-      }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-    }
-    
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
-    WebSocketDataHandler<bool, 1> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceAutoReConnect, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceAutoReConnect );
 
     //Source Connection State
     const ConnectionStatus_t m_SourceConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SourceConnectionState = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State", m_SourceConnectionState_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<ConnectionStatus_t, 1> m_SourceConnectionState_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SourceConnectionState, false );    
+    WebSocketDataHandler<ConnectionStatus_t, 1> m_SourceConnectionState_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SourceConnectionState );    
 
     //Source Reset
     const bool m_SourceReset_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
-    WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset, false );    
-    
-    
+    WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset );    
     void HandleWebSocketMessage(uint8_t clientID, WStype_t type, uint8_t *payload, size_t length)
     {
         // Handle text messages

@@ -31,6 +31,7 @@
 #include <cstring>
 
 #define MESSAGE_LENGTH 500
+#define BLUETOOTH_DEVICE_TIMEOUT 10000
 
 class SettingsWebServerManager;
 
@@ -114,7 +115,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataHandler( const WebSocketDataHandler &t )
                         : m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
                         , m_DataItem(t.m_DataItem)
-                        , m_Debug(t.m_Debug)
                         , m_Name(t.m_Name)
                         , m_Signal(t.m_Signal)
     {
@@ -127,11 +127,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     WebSocketDataHandler( WebSocketDataProcessor &webSocketDataProcessor
-                        , LocalDataItem<T, COUNT> &dataItem
-                        , const bool &debug )
+                        , LocalDataItem<T, COUNT> &dataItem )
                         : m_WebSocketDataProcessor(webSocketDataProcessor)
                         , m_DataItem(dataItem)
-                        , m_Debug(debug)
                         , m_Name(dataItem.GetName() + " Web Socket")
                         , m_Signal(dataItem.GetName())
     {
@@ -206,7 +204,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     LocalDataItem<T, COUNT> &m_DataItem;
     size_t m_ChangeCount;
-    const bool &m_Debug;
     const String m_Name;
     const String m_Signal;
   private:
@@ -220,15 +217,122 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
 {
   public:
     WebSocket_String_DataHandler( WebSocketDataProcessor &WebSocketDataProcessor
-                                , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem
-                                , const bool Debug )
+                                , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem )
                                 : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( WebSocketDataProcessor
-                                                                                    , DataItem
-                                                                                    , Debug)
+                                                                                    , DataItem )
     {
     }
     
     virtual ~WebSocket_String_DataHandler()
     {
     }
+};
+
+
+class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>
+{
+  public:
+    BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler( WebSocketDataProcessor &WebSocketDataProcessor
+                                                               , LocalDataItem<BT_Device_Info_With_Time_Since_Update, 1> &DataItem )
+                                                               : WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>( WebSocketDataProcessor
+                                                                                                                               , DataItem )
+    {
+      m_ActiveDevicesMutex = xSemaphoreCreateRecursiveMutex();
+      CreateTasks();
+    }
+    
+    virtual ~BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler()
+    {
+      DestroyTasks();
+    }
+    
+    void CreateTasks()
+    {
+      if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) != pdTRUE )
+      {
+        ESP_LOGE("CreateTasks", "ERROR! Unable to create task.");
+      }
+    }
+
+    void DestroyTasks()
+    {
+      if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
+    }
+
+    void ActiveCompatibleDeviceReceived(BT_Device_Info_With_Time_Since_Update device)
+    {
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
+      {
+        auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), device);
+        if (it != m_ActiveDevices.end())
+        {
+          *it = device;
+          ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
+        }
+        else 
+        {
+          if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
+          {
+            ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
+            m_ActiveDevices.push_back(device);
+            SendActiveCompatibleDevicesToWebSocket();
+          }
+        }
+      }
+      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+    }
+
+    static void Static_UpdateActiveCompatibleDevices(void * parameter)
+    {
+      BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *handler = (BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*)parameter;
+      const TickType_t xFrequency = 1000;
+      TickType_t xLastWakeTime = xTaskGetTickCount();
+      while(true)
+      {
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+        handler->CleanActiveCompatibleDevices();
+      }
+    }
+
+    void CleanActiveCompatibleDevices()
+    {
+        ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
+        if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY) == pdTRUE)
+        {
+            for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
+            {
+                BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
+                if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
+                {
+                    ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
+                    it = m_ActiveDevices.erase(it);
+                    SendActiveCompatibleDevicesToWebSocket();
+                }
+                else
+                {
+                    ++it;
+                }
+            }
+            xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+        }
+        else
+        {
+            ESP_LOGE("UpdateActiveCompatibleDevices", "Failed to take mutex.");
+        }
+    }
+
+    void SendActiveCompatibleDevicesToWebSocket()
+    {
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
+      {
+        String key = "Key";
+        String value = "Value";
+        this->TxDataToWebSocket(key, value);
+      }
+      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+    }
+    private:
+      std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;
+      SemaphoreHandle_t m_ActiveDevicesMutex;
+      TaskHandle_t m_ActiveDeviceUpdateTask;
 };
