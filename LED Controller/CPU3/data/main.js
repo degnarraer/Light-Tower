@@ -118,7 +118,6 @@ window.addEventListener('load', onload);
 function onload(event)
 {
 	wsManager.initWebSocket();
-	wsManager.announceHere();
 
 	var sink_BT_Auto_ReConnect_Toggle_Button;
 	sink_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Sink_BT_Auto_ReConnect_Toggle_Button');

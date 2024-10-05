@@ -22,10 +22,10 @@ export class Model_ConnectionStatus {
         this.wsManager.unregisterListener(this);
     }
 
-    getListnerName() {
-        return this.signalName;
-    }
-
+    getListnerName() {return this.signalName;}
+    onOpen(){}
+    onClose(){}
+    onError(){}
     onMessage(newValue) {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         try {
@@ -36,7 +36,7 @@ export class Model_ConnectionStatus {
     }
 
     setValue(newValue, updateWebsocket = true) {
-        console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
+        console.log(`ESP32 Model: Set Value for Signal: "${this.signalName}" to "${newValue}"`);
         if (Object.values(Model_ConnectionStatus.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();

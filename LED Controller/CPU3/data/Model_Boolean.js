@@ -31,17 +31,17 @@ export class Model_Boolean {
         }
     }
 
-    getListnerName() {
-        return this.signalName;
-    }
-
+    getListnerName() {return this.signalName;}
+    onOpen(){}
+    onClose(){}
+    onError(){}
     onMessage(newValue) {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
     
     setValue(newValue, updateWebsocket = true) {
-        console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
+        console.log(`ESP32 Model: ESP32 Model: Set Value for Signal: "${this.signalName}" to "${newValue}"`);
         if (typeof newValue === 'boolean') {
             newValue = newValue ? Model_Boolean.values.True : Model_Boolean.values.False;
         }
@@ -58,7 +58,7 @@ export class Model_Boolean {
     }
 
     scheduleWebSocketUpdate() {
-        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
+        console.log(`ESP32: ESP32: Schedule Update: "${this.signalName}" to "${this.value}"`);
         if (!this.updateWebSocketTimeout) {
             this.sendWebSocketUpdate();
             this.updateWebSocketTimeout = setTimeout(() => {
@@ -76,12 +76,12 @@ export class Model_Boolean {
     Send_Signal_Value_To_Web_Socket(signal, value) {
         if (this.wsManager) {
             if (signal && value) {
-                console.log('Web Socket Tx: \'' + signal + '\' Value: \'' + value + '\'');
                 var Root = {};
                 Root.SignalValue = {};
                 Root.SignalValue.Id = signal.toString();
                 Root.SignalValue.Value = value.toString();
                 var Message = JSON.stringify(Root);
+                console.log('ESP32 Web Socket Tx: \'' + Message + '\'');
                 this.wsManager.send(Message);
             } else {
                 console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');

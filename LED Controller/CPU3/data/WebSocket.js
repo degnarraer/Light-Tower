@@ -8,22 +8,22 @@ export class WebSocketManager {
 
     registerListener(listener) {
         if (listener) {
-            if ( typeof listener.onmessage === 'function' && 
-                 typeof listener.onopen === 'function' && 
-                 typeof listener.onclose === 'function' && 
-                 typeof listener.onerror === 'function' && 
+            if ( typeof listener.onMessage === 'function' && 
+                 typeof listener.onOpen === 'function' && 
+                 typeof listener.onClose === 'function' && 
+                 typeof listener.onError === 'function' && 
                  typeof listener.getListnerName === 'function' ) 
             {
                 this.listeners.push(listener);
             }
             else 
             {
-                console.warn('Listener does not have required methods');
+                console.warn('ESP32 Web Socket: Listener does not have required methods');
             }
         } 
         else
         {
-            console.warn('null Listener');
+            console.warn('ESP32 Web Socket: null Listener');
         }
     }
 
@@ -32,7 +32,7 @@ export class WebSocketManager {
     }
 
     initWebSocket() {
-        console.log('Trying to open a WebSocket connection…');
+        console.log('ESP32 Web Socket: Trying to open a WebSocket connection…');
         this.websocket = new WebSocket(this.gateway);
         this.websocket.onopen = this.onOpenHandler.bind(this);
         this.websocket.onclose = this.onCloseHandler.bind(this);
@@ -41,7 +41,7 @@ export class WebSocketManager {
     }
 
     announceHere() {
-        this.websocket.send('Hello I am here!');
+        this.websocket.send('ESP32 Web Socket is here!');
     }
 
     send(message) {
@@ -49,63 +49,94 @@ export class WebSocketManager {
             if (this.websocket.OPEN) {
                 this.websocket.send(message);
             } else {
-                console.error('Web_Socket Closed!');
+                console.error('ESP32 Web Socket: Web_Socket Closed!');
             }
         } else {
-            console.error('Null Web_Socket!');
+            console.error('ESP32 Web Socket: Null Web_Socket!');
         }
     }
 
     onMessageHandler(event) {
-        console.log(`Web Socket Rx: "${event.data}"`);
+        if (event.data instanceof Blob) {
+            this.blobToString(event.data)
+                .then(strMessage => {
+                    console.log(`ESP32 Web Socket: Received binary data converted to string: "${strMessage}"`);
+                    this.processMessage(strMessage);
+                })
+                .catch(error => {
+                    console.error('ESP32 Web Socket: Error converting blob to string:', error);
+                });
+        } else if (typeof event.data === 'string') {
+            console.log(`ESP32 Web Socket: Received message: "${event.data}"`);
+            this.processMessage(event.data);
+        } else {
+            console.error('ESP32 Web Socket: Received unsupported data type:', typeof event.data);
+        }
+    }
+
+    blobToString(blob) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                resolve(event.target.result); // The result is the string content of the blob
+            };
+            reader.onerror = function(event) {
+                reject(new Error("Failed to read blob: " + event.target.error));
+            };
+            reader.readAsText(blob); // Read the blob as text
+        });
+    }
+    
+    processMessage(message) {
         try {
-            const myObj = JSON.parse(event.data);
+            const myObj = JSON.parse(message);
             const keys = Object.keys(myObj);
             keys.forEach(key => {
                 const { Id, Value } = myObj[key];
-                console.log(`Parsed Rx: ID:"${Id}" Value:"${Value}"`);
-                var found = false;
+                console.log(`ESP32 Web Socket: Parsed Rx: ID:"${Id}" Value:"${Value}"`);
+                let found = false;
                 this.listeners.forEach(listener => {
                     if (typeof listener.onMessage === 'function') {
                         if (typeof listener.getListnerName === 'function') {
                             if (Id == listener.getListnerName()) {
                                 found = true;
-                                console.log(`Found Listener Rx: ID:"${Id}" Value:"${Value}"`);
+                                console.log(`ESP32 Web Socket: Found Listener Rx: ID:"${Id}" Value:"${Value}"`);
                                 listener.onMessage(Value);
                             }
                         }
                     }
                 });
                 if (!found) {
-                    console.warn("No Listener for Id: \"" + Id + "\" Value: \"" + Value + "\"");
+                    console.warn(`ESP32 Web Socket: No Listener for Id: "${Id}" Value: "${Value}"`);
                 }
             });
         } catch (error) {
-            console.error('Error parsing message:', error);
+            console.error('ESP32 Web Socket: Error parsing message:', error);
         }
     }
 
     onOpenHandler(event) {
-        console.log('Connection opened');
+        console.log('ESP32 Web Socket: Connection opened');
+        this.announceHere();
         this.listeners.forEach(listener => {
-            listener.onopen(event);
+            listener.onOpen(event);
         });
     }
 
     onCloseHandler(event) {
-        console.log('Connection closed');
+        console.log('ESP32 Web Socket: Connection closed');
         setTimeout(() => this.initWebSocket(), 5000);
         this.listeners.forEach(listener => {
-            listener.onclose(event);
+            listener.onClose(event);
         });
     }
 
     onErrorHandler(event) {
-        console.error('Connection Error:', event);
+        console.error('ESP32 Web Socket: Connection Error:', event);
         this.websocket.close();
         setTimeout(() => this.initWebSocket(), 5000);
         this.listeners.forEach(listener => {
-            listener.onerror(event);
+            listener.onError(event);
         });
     }
 }
