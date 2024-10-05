@@ -46,7 +46,11 @@ export class WebSocketManager {
 
     send(message) {
         if (this.websocket) {
-            this.websocket.send(message);
+            if (this.websocket.OPEN) {
+                this.websocket.send(message);
+            } else {
+                console.error('Web_Socket Closed!');
+            }
         } else {
             console.error('Null Web_Socket!');
         }
