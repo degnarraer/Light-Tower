@@ -48,16 +48,14 @@ SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Man
 void SetupSerialPorts()
 {
   Serial.begin(115200, SERIAL_8O2);
-  delay(500);
   Serial.flush();
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  delay(100);
   Serial1.flush();
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
-  delay(100);
   Serial2.flush();
+  ESP_LOGI("SetupSerialPorts", "Serial Ports Setup");
 }
 
 

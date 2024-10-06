@@ -12,6 +12,7 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
   {
     String message;
     Encode_Signal_Values_To_JSON(signalValues, message);
+    ESP_LOGI("UpdateAllDataToClient", "Sending All Data to Client %u: \"%s\"", clientId, message.c_str());
     NotifyClient(clientId, message);
   }
 }
@@ -104,8 +105,8 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyV
     SettingValues["Id"] = keyValuePairs.at(i).Key;
     SettingValues["Value"] = keyValuePairs.at(i).Value;
     jSONVars["SignalValue"] = SettingValues;
+    result += JSON.stringify(jSONVars);
   }
-  result = JSON.stringify(jSONVars);
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& textString)

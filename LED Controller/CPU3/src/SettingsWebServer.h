@@ -71,7 +71,6 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void StartWiFi()
     {
-      ESP_LOGI("StartWiFi", "Starting Wifi");
       if(m_WiFi_Ready)
       {
         EndWiFi();
@@ -160,8 +159,6 @@ class SettingsWebServerManager: public SetupCallerInterface
           case SYSTEM_EVENT_WIFI_READY:
             ESP_LOGI("Wifi Event", "Wifi Ready!");
             m_WiFi_Ready = true;
-            BeginWebServer();
-            StartDNSServer();
           break;
           case SYSTEM_EVENT_SCAN_DONE:
             ESP_LOGI("Wifi Event", "Scan Done!");
@@ -176,9 +173,13 @@ class SettingsWebServerManager: public SetupCallerInterface
           break;
           case SYSTEM_EVENT_STA_CONNECTED:
             ESP_LOGI("Wifi Event", "Station connected.");
+            m_Station_Connected = true;
+            TryBeginWebServer();
           break;
           case SYSTEM_EVENT_STA_DISCONNECTED:
             ESP_LOGI("Wifi Event", "Station disconnected.");
+            m_Station_Connected = false;
+            TryEndWebServer();
           break;
           case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
             ESP_LOGI("Wifi Event", "Station Auth Mode Change.");
@@ -210,10 +211,12 @@ class SettingsWebServerManager: public SetupCallerInterface
           case SYSTEM_EVENT_AP_START:
             ESP_LOGI("Wifi Event", "Access Point started!");
             m_AccessPoint_Running = true;
+            TryBeginWebServer();
           break;
           case SYSTEM_EVENT_AP_STOP:
             ESP_LOGI("Wifi Event", "Access Point stopped!");
             m_AccessPoint_Running = false;
+            TryEndWebServer();
           break;
           case SYSTEM_EVENT_AP_STACONNECTED:
             ESP_LOGI("Wifi Event", "Station Connected to the Access Point.");
@@ -280,21 +283,21 @@ class SettingsWebServerManager: public SetupCallerInterface
           case WStype_CONNECTED:
           {
               IPAddress ip = m_WebSocket.remoteIP(clientID);
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u connected from %s\n", clientID, ip.toString().c_str());
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u connected from %s", clientID, ip.toString().c_str());
               break;
           }
           case WStype_PONG:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Pinged Us!\n", clientID);
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Pinged Us!", clientID);
               break;
           case WStype_TEXT:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u sent Text #%s\n", clientID, String((char*)payload, length).c_str());
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u sent Text #%s", clientID, String((char*)payload, length).c_str());
               HandleWebSocketMessage(clientID, type, payload, length);
               break;
           case WStype_ERROR:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Error. Closing Connection!\n", clientID);
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Error. Closing Connection!", clientID);
               break;
           case WStype_DISCONNECTED:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u disconnected. Closing Connection.\n", clientID);
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u disconnected. Closing Connection.", clientID);
               break;
       }
     }
@@ -308,6 +311,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     bool m_WiFi_Ready = false;
     bool m_AccessPoint_Running = false;
     bool m_Station_Running = false;
+    bool m_Station_Connected = false;
     bool m_Web_Server_Running = false;
     const int maxClients = 4;
 
@@ -641,7 +645,7 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
     }
 
-    //Source Restart
+    //Wifi Restart
     CallbackArguments m_SourceRestart_CallbackArgs = {this};
     NamedCallback_t m_SourceRestart_Callback = {"SourceRestart Callback", &SourceRestart_ValueChanged, &m_SourceRestart_CallbackArgs};
     const bool m_SourceRestart_InitialValue = false;
@@ -757,11 +761,11 @@ class SettingsWebServerManager: public SetupCallerInterface
             payload[length] = 0;
 
             String WebSocketData = String((char*)payload);
-            Serial.printf("WebSocket Data from Client %u: %s\n", clientID, WebSocketData.c_str());
+            ESP_LOGI("HandleWebSocketMessage", "WebSocket Data from Client %u: %s\n", clientID, WebSocketData.c_str());
 
-            if (WebSocketData.equals("Hello I am here!")) 
+            if (WebSocketData.equals("New client is here!")) 
             {
-                Serial.printf("New Client Message from %u: \"Hello I am here!\"\n", clientID);
+                ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"\n", clientID);
                 m_WebSocketDataProcessor.UpdateAllDataToClient(clientID);
                 return;
             } 
@@ -770,7 +774,7 @@ class SettingsWebServerManager: public SetupCallerInterface
                 JSONVar jsonObject = JSON.parse(WebSocketData);
                 if (JSON.typeof(jsonObject) == "undefined") 
                 {
-                    Serial.printf("ERROR! Parsing failed for Input from Client %u: %s.\n", clientID, WebSocketData.c_str());
+                    ESP_LOGE("HandleWebSocketMessage", "ERROR! Parsing failed for Input from Client %u: %s.\n", clientID, WebSocketData.c_str());
                 } 
                 else 
                 {
@@ -836,32 +840,20 @@ class SettingsWebServerManager: public SetupCallerInterface
       return result;
     }
     
-    void BeginWebServer()
+    void TryBeginWebServer()
     {
-      ESP_LOGI("BeginWebServer", "Starting Web Server");
-      m_WebServer.begin();
-      m_WebSocket.begin();
-      m_Web_Server_Running = true;
+      if(m_Station_Connected || m_AccessPoint_Running)
+      {
+        BeginWebServer();
+      }
     }
 
     void TryEndWebServer()
     {
       ESP_LOGI("BeginWebServer", "Try Ending Web Server");
-      if(!m_Station_Running && !m_AccessPoint_Running)
+      if(!m_Station_Connected && !m_AccessPoint_Running)
       {
         EndWebServer();
-      }
-    }
-
-    void EndWebServer()
-    {
-      ESP_LOGI("BeginWebServer", "Ending Web Server");
-      if(m_Web_Server_Running)
-      {
-        m_WebServer.stop();
-        m_WebSocket.close();
-        m_Web_Server_Running = false;
-        ESP_LOGI("BeginWebServer", "Web Server Stopped");
       }
     }
 
@@ -888,16 +880,10 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void TryEndDNSServer()
     {
-      if(!m_Station_Running && !m_AccessPoint_Running)
+      if(!m_Station_Connected && !m_AccessPoint_Running)
       {
         End_DNS_Server();
       }
-    }
-
-    void End_DNS_Server()
-    {
-      ESP_LOGI( "InitWifiClient", "Ending DNS Server");
-      MDNS.end();
     }
 
     void InitWiFi_AccessPoint(const char* apSSID, const char* apPassword)
@@ -919,5 +905,36 @@ class SettingsWebServerManager: public SetupCallerInterface
       IPAddress NMask(255, 255, 255, 0);
       WiFi.softAPConfig(Ip, Ip, NMask);
       WiFi.softAP(apSSID, apPassword);
+    }
+
+  private:
+    void EndWebServer()
+    {
+      ESP_LOGI("EndWebServer", "Ending Web Server");
+      if(m_Web_Server_Running)
+      {
+        m_WebServer.stop();
+        m_WebSocket.close();
+        m_Web_Server_Running = false;
+        ESP_LOGI("EndWebServer", "Web Server Stopped");
+      }
+    }
+
+    void BeginWebServer()
+    {
+      if(!m_Web_Server_Running)
+      {
+        ESP_LOGI("BeginWebServer", "Starting Web Server");
+        m_WebServer.begin();
+        m_WebSocket.begin();
+        StartDNSServer();
+        m_Web_Server_Running = true;
+      }
+    }
+
+    void End_DNS_Server()
+    {
+      ESP_LOGI( "InitWifiClient", "Ending DNS Server");
+      MDNS.end();
     }
 };

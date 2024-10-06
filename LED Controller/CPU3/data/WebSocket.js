@@ -41,7 +41,7 @@ export class WebSocketManager {
     }
 
     announceHere() {
-        this.websocket.send('ESP32 Web Socket is here!');
+        this.websocket.send('New client is here!');
     }
 
     send(message) {

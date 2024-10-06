@@ -115,7 +115,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		
 		virtual ~LocalDataItem()
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": LocalDataItem Freeing Memory", m_Name.c_str());
 			if(mp_SetupCallerInterface)
 			{
@@ -146,7 +146,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
 			mp_Value = (T*)malloc(sizeof(T)*COUNT);
@@ -227,7 +227,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		void GetValue(void* object, size_t count) const
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			assert((count == COUNT) && "Counts must be equal");
 			if(mp_Value)
 			{
@@ -242,7 +242,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		T* GetValuePointer() const
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			if(!mp_Value)
 			{
 				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
@@ -252,7 +252,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual T GetValue() const
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			assert((1 == COUNT) && "Count must 1 to use this function");
 			if(mp_Value)
 			{
@@ -267,7 +267,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool GetInitialValueAsString(String &stringValue) const
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			stringValue = "";
 			if (mp_InitialValue && COUNT > 0)
 			{
@@ -294,7 +294,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool GetValueAsString(String &stringValue) const
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			stringValue = "";
 			if (mp_Value && COUNT > 0)
 			{
@@ -385,7 +385,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValueFromString(const String& stringValue)
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			ESP_LOGD("LocalDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
@@ -405,7 +405,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValue(const T *values, size_t count)
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
@@ -415,7 +415,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValue(const T& value)
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
 			return SetValue(&value, 1);
@@ -423,7 +423,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		bool EqualsValue(T *values, size_t count) const
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			if(COUNT == count)
 			{
 				return (memcmp(mp_Value, values, count) == 0);
@@ -486,7 +486,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool UpdateStore(const T *newValues, const size_t newChangeCount)
 		{
-			//std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			assert(newValues != nullptr);
 			assert(mp_Value != nullptr);
 			assert(COUNT > 0);

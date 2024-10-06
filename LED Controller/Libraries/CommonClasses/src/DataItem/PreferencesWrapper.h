@@ -564,7 +564,7 @@ private:
                 }
                 else
                 {
-                    ESP_LOGW("HandleLoad", "\"%s\" Failed to Load Value. Loading Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+                    ESP_LOGW("HandleLoad", "WARNING! \"%s\" Failed to Load Value. Loading Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
                     if(m_Callback(m_InitialValue, mp_Object))
                     {
                         ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());

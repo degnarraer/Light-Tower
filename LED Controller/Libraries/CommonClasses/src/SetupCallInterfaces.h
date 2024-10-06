@@ -66,7 +66,7 @@ class SetupCallerInterface
 			{
 				if(newCallee == callee)
 				{
-					ESP_LOGE("SetupCallerInterface", "ERROR! Setup Callee already added!");
+					ESP_LOGW("SetupCallerInterface", "WARNING! Setup Callee already added!");
 					isFound = true;
 					break;
 				}
