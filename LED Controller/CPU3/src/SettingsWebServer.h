@@ -761,11 +761,11 @@ class SettingsWebServerManager: public SetupCallerInterface
             payload[length] = 0;
 
             String WebSocketData = String((char*)payload);
-            ESP_LOGI("HandleWebSocketMessage", "WebSocket Data from Client %u: %s\n", clientID, WebSocketData.c_str());
+            ESP_LOGI("HandleWebSocketMessage", "WebSocket Data from Client %u: %s", clientID, WebSocketData.c_str());
 
             if (WebSocketData.equals("New client is here!")) 
             {
-                ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"\n", clientID);
+                ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"", clientID);
                 m_WebSocketDataProcessor.UpdateAllDataToClient(clientID);
                 return;
             } 
@@ -774,13 +774,13 @@ class SettingsWebServerManager: public SetupCallerInterface
                 JSONVar jsonObject = JSON.parse(WebSocketData);
                 if (JSON.typeof(jsonObject) == "undefined") 
                 {
-                    ESP_LOGE("HandleWebSocketMessage", "ERROR! Parsing failed for Input from Client %u: %s.\n", clientID, WebSocketData.c_str());
+                    ESP_LOGE("HandleWebSocketMessage", "ERROR! Parsing failed for Input from Client %u: %s.", clientID, WebSocketData.c_str());
                 } 
                 else 
                 {
                     if (HandleSignalValue(jsonObject)) {} 
                     else if (HandleJSONValue(jsonObject)){} 
-                    else{ ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown WebSocket Message from Client %u: %s.\n", clientID, WebSocketData.c_str()); }
+                    else{ ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown WebSocket Message from Client %u: %s.", clientID, WebSocketData.c_str()); }
                 }
             }
         }

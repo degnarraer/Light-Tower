@@ -179,8 +179,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleWebSocketDataRequest() override
     {
-        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
-        m_ChangeCount = m_DataItem.GetChangeCount();
+      ESP_LOGI("HandleWebSocketDataRequest", "\"%s\" sending \"%s\" to web socket", m_Signal, m_DataItem.GetValueAsString());
+      m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
+      m_ChangeCount = m_DataItem.GetChangeCount();
     }
     
     virtual void HandleWebSocketRxNotification(const String& stringValue) override

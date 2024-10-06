@@ -2,18 +2,10 @@
 
 void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
 {
-  ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %i", clientId );
-  std::vector<KVP> signalValues = std::vector<KVP>();
+  ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %u", clientId );
   for(int i = 0; i < m_MyTxNotifyees.size(); ++i)
   {
     m_MyTxNotifyees[i]->HandleWebSocketDataRequest();
-  }
-  if(signalValues.size())
-  {
-    String message;
-    Encode_Signal_Values_To_JSON(signalValues, message);
-    ESP_LOGI("UpdateAllDataToClient", "Sending All Data to Client %u: \"%s\"", clientId, message.c_str());
-    NotifyClient(clientId, message);
   }
 }
 
