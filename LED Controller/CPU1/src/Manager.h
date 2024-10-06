@@ -75,7 +75,7 @@ class Manager: public NamedItem
     
   private:
     Preferences m_Preferences;
-    PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
+    PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
     DataSerializer m_DataSerializer;
 
     void SetupSerialPortManager();
@@ -129,7 +129,6 @@ class Manager: public NamedItem
     I2S_Device &m_Mic_In; 
     I2S_Device &m_I2S_Out;
 
-    void InitializePreferences();
     void MoveDataToStatisticalEngine();
 
     //Input Source

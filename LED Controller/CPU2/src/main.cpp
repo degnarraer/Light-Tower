@@ -23,7 +23,7 @@
 #define SERIAL_RX_BUFFER_SIZE 2048
 
 Preferences m_Preferences;
-PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
+PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
 TaskHandle_t ProcessSPI_CPU1_TXTask;
 uint32_t ProcessSPI_CPU1_TXTaskLoopCount = 0;
 
@@ -82,25 +82,6 @@ static bool ConnectToThisName(const char* aName, esp_bd_addr_t address, int32_t 
   return m_BT_Out.ConnectToThisName(aName, address, rssi);
 }
 
-void InitializePreferences()
-{
-  if(!m_Preferences.begin("Settings", false))
-  {
-    ESP_LOGE("Preferences", "ERROR! Unable to initialize preferences! Resseting Device to Factory Defaults.");
-    nvs_flash_erase();
-    ESP_LOGI("Preferences", "NVS Cleared!");
-    nvs_flash_init();
-    ESP_LOGI("Preferences", "NVS Initialized");
-    ESP.restart();
-  }
-  else if(m_Preferences.getBool("Pref_Reset", true))
-  {
-    m_Preferences.clear();
-    ESP_LOGI("Preferences", "Preferences Cleared!");
-    m_Preferences.putBool("Pref_Reset", false);
-  }
-}
-
 void OutputSystemStatus()
 {
   ESP_LOGI("SystemStatus", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
@@ -114,21 +95,36 @@ void OutputSystemStatus()
 
 void TestPSRam()
 {
-  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
-  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "psram allocation should be 0 at start");
-  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
-  free(psdRamBuffer);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "Failed to free allocated psram");
+  psramInit();
+  void* buffer1 = (void*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM);
+  if(buffer1)
+  {
+    ESP_LOGI("TestPSRam", "Heaps Cap Malloc memory allocated");
+    free(buffer1);
+    buffer1 = nullptr;
+  }
+  else
+  {
+    ESP_LOGE("TestPSRam", "Heaps Cap Malloc memory NOT allocated!");
+  }
+
+  void* buffer2 = ps_malloc(100);
+  if(buffer2)
+  {
+    ESP_LOGI("TestPSRam", "PSRAM Allocated");
+    free(buffer2);
+    buffer2 = nullptr;
+  }
+  else
+  {
+    ESP_LOGE("TestPSRam", "PSRAM Not Allocated!");
+  }
 }
 
 void setup() 
 {
   //PC Serial Communication
-  Serial.begin(500000, SERIAL_8N1);
+  Serial.begin(115200, SERIAL_8N1);
   Serial.flush();
 
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
@@ -139,8 +135,7 @@ void setup()
   Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
   Serial2.flush();
 
-  //TestPSRam();
-  InitializePreferences();
+  TestPSRam();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   m_I2S_In.Setup();

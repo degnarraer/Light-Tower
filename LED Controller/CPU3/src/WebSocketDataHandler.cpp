@@ -43,7 +43,7 @@ void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const String& na
   auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
   if (it == m_MyRxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
     m_MyRxNotifyees.push_back(aReceiver);
   }
 }
@@ -53,7 +53,7 @@ void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String& 
   auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
   if (it != m_MyRxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Receiver.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Receiver.", name.c_str());
     m_MyRxNotifyees.erase(it);
   }
 }
@@ -64,7 +64,7 @@ void WebSocketDataProcessor::RegisterForWebSocketTxNotification(const String& na
   auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
   if (it == m_MyTxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketTxNotification", "Registering %s as Web Socket Data Sender.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketTxNotification", "Registering %s as Web Socket Data Sender.", name.c_str());
     m_MyTxNotifyees.push_back(aSender);
   }
 }
@@ -74,7 +74,7 @@ void WebSocketDataProcessor::DeRegisterForWebSocketTxNotification(const String& 
   auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
   if (it != m_MyTxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Sender.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Sender.", name.c_str());
     m_MyTxNotifyees.erase(it);
   }
 }

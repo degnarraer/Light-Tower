@@ -59,7 +59,6 @@ class SettingsWebServerManager: public SetupCallerInterface
     void SetupSettingsWebServerManager()
     {
       InitializeLocalvariables();
-      InitializePreferences();
       SetupAllSetupCallees();
       InitFileSystem();
       InitWebServer();
@@ -104,25 +103,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       EndWebServer();
       WiFi.disconnect(false, true);
       m_WiFi_Ready = false;
-    }
-
-    void InitializePreferences()
-    {
-      if(!m_preferenceInterface.begin("Settings", false))
-      {
-        ESP_LOGE("InitializePreferences", "ERROR! Unable to initialize preferences. Resseting Device to Factory Defaults.");
-        nvs_flash_erase();
-        ESP_LOGI("InitializePreferences", "NVS Cleared!");
-        nvs_flash_init();
-        ESP_LOGI("InitializePreferences", "NVS Initialized");
-        ESP.restart();
-      }
-      else if(m_preferenceInterface.getBool("Pref_Reset", true))
-      {
-        m_preferenceInterface.clear();
-        ESP_LOGI("InitializePreferences", "Preferences Cleared!");
-        m_preferenceInterface.putBool("Pref_Reset", false);
-      }
     }
 
     // Init the web server to use the local SPIFFS memory and serve up index.html file.

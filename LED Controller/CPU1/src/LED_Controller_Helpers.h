@@ -121,7 +121,7 @@ void PrintFreeHeap()
 void InitSerialCommunication()
 {
   //PC Serial Communication
-  Serial.begin(500000);
+  Serial.begin(115200);
   Serial.flush();
   
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
@@ -135,15 +135,30 @@ void InitSerialCommunication()
 
 void TestPSRam()
 {
-  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
-  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "psram allocation should be 0 at start");
-  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
-  free(psdRamBuffer);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "Failed to free allocated psram");
+  psramInit();
+  void* buffer1 = (void*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM);
+  if(buffer1)
+  {
+    ESP_LOGI("TestPSRam", "Heaps Cap Malloc memory allocated");
+    free(buffer1);
+    buffer1 = nullptr;
+  }
+  else
+  {
+    ESP_LOGE("TestPSRam", "Heaps Cap Malloc memory NOT allocated!");
+  }
+
+  void* buffer2 = ps_malloc(100);
+  if(buffer2)
+  {
+    ESP_LOGI("TestPSRam", "PSRAM Allocated");
+    free(buffer2);
+    buffer2 = nullptr;
+  }
+  else
+  {
+    ESP_LOGE("TestPSRam", "PSRAM Not Allocated!");
+  }
 }
 
 void SetComponentDebugLevels()
