@@ -34,7 +34,7 @@ class DataSerializer: public CommonUtils
 			m_DataItems = &DataItem;
 			m_DataItemsCount = DataItemCount;
 		}
-		virtual String SerializeDataToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
+		virtual String SerializeDataItemToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);

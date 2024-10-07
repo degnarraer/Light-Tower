@@ -124,7 +124,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Bool_t_Corre
     String objectName = "Object Name";
     bool testValue = true;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Bool_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Bool_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(bool*)namedObject.Object);
@@ -136,7 +136,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint8_t_Corr
     String objectName = "Object Name";
     uint8_t testValue = 10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Uint8_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint8_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(uint8_t*)namedObject.Object);
@@ -148,7 +148,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint16_t_Cor
     String objectName = "Object Name";
     uint16_t testValue = 10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Uint16_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint16_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(uint16_t*)namedObject.Object);
@@ -160,7 +160,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint32_t_Cor
     String objectName = "Object Name";
     uint32_t testValue = 10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Uint32_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint32_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(uint32_t*)namedObject.Object);
@@ -172,7 +172,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int8_t_Corre
     String objectName = "Object Name";
     int8_t testValue = -10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Int8_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Int8_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(int8_t*)namedObject.Object);
@@ -184,7 +184,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int16_t_Corr
     String objectName = "Object Name";
     int16_t testValue = -10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Int16_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Int16_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(int16_t*)namedObject.Object);
@@ -196,7 +196,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int32_t_Corr
     String objectName = "Object Name";
     int32_t testValue = -10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Int32_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Int32_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(int32_t*)namedObject.Object);
@@ -208,7 +208,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Char_Correct
     String objectName = "Object Name";
     char testValue = 'a';
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Char_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Char_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(char*)namedObject.Object);
@@ -223,7 +223,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Bt_Device_In
 	int32_t rssi = 100;
     BT_Device_Info_t testValue = { name, address, rssi };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_BT_Device_Info_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_BT_Device_Info_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(BT_Device_Info_t*)namedObject.Object);
@@ -239,7 +239,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_BT_Device_In
     uint32_t timeSinceUdpate = 200;
     BT_Device_Info_With_Time_Since_Update_t testValue = { name, address, timeSinceUdpate, rssi };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_BT_Device_Info_With_Time_Since_Update_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_BT_Device_Info_With_Time_Since_Update_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(BT_Device_Info_With_Time_Since_Update_t*)namedObject.Object);
@@ -253,7 +253,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_CompatibleDe
 	char address[BT_ADDRESS_LENGTH] = "AA:BB:CC:DD:EE:FF";
     CompatibleDevice_t testValue = { name, address };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_CompatibleDevice_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_CompatibleDevice_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(CompatibleDevice_t*)namedObject.Object);
@@ -270,7 +270,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ActiveCompat
     uint32_t timeSinceUpdate = 300;
     ActiveCompatibleDevice_t testValue = { name, address, rssi, lastUpdateTime, timeSinceUpdate };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ActiveCompatibleDevice_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ActiveCompatibleDevice_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(ActiveCompatibleDevice_t*)namedObject.Object);
@@ -282,7 +282,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Flaot_Correc
     String objectName = "Object Name";
     float testValue = 1.23456;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Float_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Float_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(float*)namedObject.Object);
@@ -294,7 +294,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Double_t_Cor
     String objectName = "Object Name";
     double testValue = 10.10;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Double_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Double_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(double*)namedObject.Object);
@@ -309,7 +309,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ProcessedSou
 	int32_t Maximum = 200;
     ProcessedSoundData_t testValue = { NormalizedPower, Minimum, Maximum };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ProcessedSoundData_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ProcessedSoundData_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(ProcessedSoundData_t*)namedObject.Object);
@@ -324,7 +324,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_MaxBandSound
 	int16_t TotalBands = 200;
     MaxBandSoundData_t testValue = { MaxBandNormalizedPower, MaxBandIndex, TotalBands };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_MaxBandSoundData_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_MaxBandSoundData_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(MaxBandSoundData_t*)namedObject.Object);
@@ -338,7 +338,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Frame_Correc
 	int16_t channel2 = 200;
     Frame_t testValue = { channel1, channel2 };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_Frame_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Frame_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(Frame_t*)namedObject.Object);
@@ -358,7 +358,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ProcessedSou
     ProcessedSoundData_t channel2 = { NormalizedPower2, Minimum2, Maximum2};
     ProcessedSoundFrame_t testValue = { channel1, channel2 };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ProcessedSoundFrame_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ProcessedSoundFrame_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(ProcessedSoundFrame_t*)namedObject.Object);
@@ -370,7 +370,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundState_C
     String objectName = "Object Name";
     SoundState_t testValue = SoundState::Sound_Level9_Detected;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_SoundState_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_SoundState_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(SoundState_t*)namedObject.Object);
@@ -382,7 +382,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ConnectionSt
     String objectName = "Object Name";
     ConnectionStatus_t testValue = ConnectionStatus::Disconnecting;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ConnectionStatus_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ConnectionStatus_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(ConnectionStatus_t*)namedObject.Object);
@@ -394,7 +394,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundInputSo
     String objectName = "Object Name";
     SoundInputSource_t testValue = SoundInputSource_t::Microphone;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_ConnectionStatus_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ConnectionStatus_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(SoundInputSource_t*)namedObject.Object);
@@ -406,7 +406,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundOutputS
     String objectName = "Object Name";
     SoundOutputSource_t testValue = SoundOutputSource_t::Bluetooth;
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataToJson(objectName, DataType_SoundOutputSource_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_SoundOutputSource_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(SoundOutputSource_t*)namedObject.Object);

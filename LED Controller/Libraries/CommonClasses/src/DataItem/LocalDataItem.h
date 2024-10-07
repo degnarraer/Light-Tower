@@ -375,7 +375,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
-					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
+					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
 					return 0;
 				}
 				values[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
@@ -523,7 +523,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				String stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
 				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
 				{
-					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
+					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
 					return false;
 				}
 			}

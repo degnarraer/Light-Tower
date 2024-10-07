@@ -197,6 +197,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
 
     void TxDataToWebSocket(String key, String value)
     {
+      ESP_LOGI("TxDataToWebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
       m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
@@ -339,17 +340,26 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     {
       if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
       {
-        String value;
-        for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
+        JSONVar jsonVars;
+        JSONVar deviceArray;
+
+        for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end(); ++it)
         {
             BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
-            value += "{" + device->toString() + "}";
+
+            JSONVar deviceJson;
+            deviceJson["Name"] = device->name;
+            deviceJson["Address"] = device->address;
+            deviceJson["RSSI"] = device->rssi;
+            deviceArray[deviceArray.length()] = deviceJson;
         }
-        ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", value.c_str());
-        String key = this->GetName();
-        this->TxDataToWebSocket(key, value);
+        jsonVars["Devices"] = deviceArray;
+        String jsonString = JSON.stringify(jsonVars);
+        ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
+        String key = this->GetSignal();
+        this->TxDataToWebSocket(key, jsonString);
+        xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
       }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
     }
     private:
       std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;

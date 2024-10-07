@@ -117,7 +117,7 @@ private:
 class MockDataSerializer : public DataSerializer {
 public:
     MOCK_METHOD(void, SetDataSerializerDataItems, (DataItem_t& DataItem, size_t DataItemCount), (override));
-    MOCK_METHOD(String, SerializeDataToJson, (String Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
+    MOCK_METHOD(String, SerializeDataItemToJson, (String Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, DeSerializeJsonToNamedObject, (String json, NamedObject_t &NamedObject), (override));
     MOCK_METHOD(void, FailPercentage, (), (override));
     MOCK_METHOD(bool, AllTagsExist, (JSONVar &jsonObject), (override));
