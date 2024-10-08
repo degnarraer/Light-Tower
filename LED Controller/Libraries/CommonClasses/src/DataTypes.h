@@ -99,215 +99,15 @@ struct BT_Device_Info
 		bool operator==(const BT_Device_Info& other) const
 		{
 			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0 &&
-				this->rssi == other.rssi) return true;
-			else return false;
-		}
-};
-typedef BT_Device_Info BT_Device_Info_t;
-
-struct BT_Device_Info_With_Time_Since_Update
-{
-	public:
-		char name[BT_NAME_LENGTH] = "\0";
-		char address[BT_ADDRESS_LENGTH] = "\0";
-		int32_t rssi = 0;
-		uint32_t timeSinceUpdate = 0;
-
-		BT_Device_Info_With_Time_Since_Update(){}
-		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, int32_t rssi_In, uint32_t timeSinceUdpate_in)
-		{
-            strncpy(name, name_In, BT_NAME_LENGTH - 1);
-            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
-    
-            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
-            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
-			timeSinceUpdate = timeSinceUdpate_in;
-			rssi = rssi_In;
-		}
-		BT_Device_Info_With_Time_Since_Update& operator=(const BT_Device_Info_With_Time_Since_Update& other)
-		{
-			strncpy(this->name, other.name, sizeof(this->name) - 1);
-			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
-
-			strncpy(this->address, other.address, sizeof(this->address) - 1);
-			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
-
-			this->rssi = other.rssi;
-			this->timeSinceUpdate = other.timeSinceUpdate;
-
-			return *this;
-		}
-		bool operator==(const BT_Device_Info_With_Time_Since_Update& other) const
-		{
-			if( strcmp(this->name, other.name) == 0 &&
 				strcmp(this->address, other.address) == 0 ) return true;
 			else return false;
 		}
-		bool operator!=(const BT_Device_Info_With_Time_Since_Update& other) const
+		bool operator!=(const BT_Device_Info& other) const
 		{
-			if( strcmp(this->name, other.name) != 0 ||
-				strcmp(this->address, other.address) != 0 ) return true;
-			else return false;
-		}
-
-		operator String() const
-        {
-            return toString();
-        }
-
-		// Function to convert to string
-        String toString() const
-        {
-            return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
-        }
-
-		// Static function to convert from string
-		static BT_Device_Info_With_Time_Since_Update fromString(const std::string &str)
-        {
-            int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
-            if (delimiterIndex == -1)
-            {
-                // handle error, return default
-                return BT_Device_Info_With_Time_Since_Update();
-            }
-
-            std::string name = str.substr(0, delimiterIndex - 1);
-            int nextDelimiterIndex = str.find(ENCODE_VALUE_DIVIDER, delimiterIndex + 1);
-            if (nextDelimiterIndex == -1)
-            {
-                // handle error, return default
-                return BT_Device_Info_With_Time_Since_Update();
-            }
-
-            std::string address = str.substr(delimiterIndex + 2, nextDelimiterIndex - 1);
-            int nextDelimiterIndex2 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex + 1);
-            if (nextDelimiterIndex2 == -1)
-            {
-                // handle error, return default
-                return BT_Device_Info_With_Time_Since_Update();
-            }
-
-            std::string rssiStr =  str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1);
-            int32_t rssi = std::stoi(rssiStr); // Convert string to integer
-
-            int nextDelimiterIndex3 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex2 + 1);
-            if (nextDelimiterIndex3 == -1)
-            {
-                // handle error, return default
-                return BT_Device_Info_With_Time_Since_Update();
-            }
-            std::string lastUpdateTimeStr =  str.substr(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1);
-            unsigned long lastUpdateTime = std::stoul(lastUpdateTimeStr); // Convert string to unsigned long
-
-            String timeSinceUpdateStr =  String(str.substr(nextDelimiterIndex3 + 2).c_str());
-            uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt(); // Convert string to uint32_t
-
-            return BT_Device_Info_With_Time_Since_Update(name.c_str(), address.c_str(), rssi, timeSinceUpdate);
-        }
-
-		// Overload the extraction operator
-		friend std::istream& operator>>(std::istream& is, BT_Device_Info_With_Time_Since_Update& device) {
-			std::string str;
-			std::getline(is, str); // Read a line from the stream
-			device = BT_Device_Info_With_Time_Since_Update::fromString(str); // Use fromString to create device from the string
-			return is;
-		}
-
-		// Overload the insertion operator
-		friend std::ostream& operator<<(std::ostream& os, const BT_Device_Info_With_Time_Since_Update& device) {
-			os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
-			return os;
+			return !(*this == other);
 		}
 };
-typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Update_t;
-
-struct  CompatibleDevice_t
-{
-	public:
-		char name[BT_NAME_LENGTH] = "\0";
-		char address[BT_ADDRESS_LENGTH] = "\0";
-		
-        CompatibleDevice_t(){}
-
-		CompatibleDevice_t(const String &str)
-		{
-			*this = fromString(str.c_str());
-		}
-
-		CompatibleDevice_t(const char* name_In, const char* address_In)
-		{
-            strncpy(name, name_In, BT_NAME_LENGTH - 1);
-            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
-    
-            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
-            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
-		}
-
-		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)
-		{
-			strncpy(this->name, other.name, sizeof(this->name) - 1);
-			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
-
-			strncpy(this->address, other.address, sizeof(this->address) - 1);
-			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
-			return *this;
-		}
-
-		bool operator==(const CompatibleDevice_t& other) const
-		{
-			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0) return true;
-			else return false;
-		}
-
-		bool operator!=(const CompatibleDevice_t& other) const
-		{
-			if( strcmp(this->name, other.name) != 0 ||
-				strcmp(this->address, other.address) != 0) return true;
-			else return false;
-		}
-
-		operator String() const
-        {
-            return toString();
-        }
-
-		// Function to convert to string
-        String toString() const
-        {
-            return String(name) + ENCODE_VALUE_DIVIDER + String(address);
-        }
-
-		// Static function to convert from string
-		static CompatibleDevice_t fromString(const std::string &str)
-		{
-			int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
-			if (delimiterIndex == -1)
-			{
-				// handle error, return default
-				return CompatibleDevice_t();
-			}
-
-			String name = String(str.substr(0, delimiterIndex - 1).c_str());
-			String address = String(str.substr(delimiterIndex + 2).c_str());
-			return CompatibleDevice_t(name.c_str(), address.c_str());
-		}
-
-		// Overload the extraction operator
-		friend std::istream& operator>>(std::istream& is, CompatibleDevice_t& device) {
-			std::string str;
-			std::getline(is, str); // Read a line from the stream
-			device = CompatibleDevice_t::fromString(str); // Use fromString to create device from the string
-			return is;
-		}
-
-		// Overload the insertion operator
-		friend std::ostream& operator<<(std::ostream& os, const CompatibleDevice_t& device) {
-			os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
-			return os;
-		}
-};
+typedef BT_Device_Info BT_Device_Info_t;
 
 struct ActiveCompatibleDevice_t
 {
@@ -425,12 +225,15 @@ public:
     // Equality operator
     bool operator==(const ActiveCompatibleDevice_t& other) const
     {
-        return (strcmp(this->name, other.name) == 0 && strcmp(this->address, other.address) == 0);
+        return ( strcmp(this->name, other.name) == 0 &&
+                 strcmp(this->address, other.address ) == 0 &&
+                 this->rssi == other.rssi );
     }
     
     bool operator==(const BT_Device_Info& other) const
     {
-        return (strcmp(this->name, other.name) == 0 && strcmp(this->address, other.address) == 0);
+        return ( strcmp(this->name, other.name) == 0 &&
+                 strcmp(this->address, other.address ) == 0 );
     }
 
     // Inequality operator
@@ -508,6 +311,217 @@ public:
         os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
         return os;
     }
+};
+
+struct BT_Device_Info_With_Time_Since_Update
+{
+	public:
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		int32_t rssi = 0;
+		uint32_t timeSinceUpdate = 0;
+
+		BT_Device_Info_With_Time_Since_Update(){}
+		BT_Device_Info_With_Time_Since_Update(const char* name_In, const char* address_In, int32_t rssi_In, uint32_t timeSinceUdpate_in)
+		{
+            strncpy(name, name_In, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
+    
+            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
+            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
+			rssi = rssi_In;
+			timeSinceUpdate = timeSinceUdpate_in;
+		}
+
+        BT_Device_Info_With_Time_Since_Update(const ActiveCompatibleDevice_t device_in, uint32_t timeSinceUpdate_in)
+        {
+            strncpy(name, device_in.name, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
+    
+            strncpy(address, device_in.address, BT_ADDRESS_LENGTH - 1);
+            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
+			rssi = device_in.rssi;
+            timeSinceUpdate = timeSinceUpdate_in;
+        }
+        
+		BT_Device_Info_With_Time_Since_Update& operator=(const BT_Device_Info_With_Time_Since_Update& other)
+		{
+			strncpy(this->name, other.name, sizeof(this->name) - 1);
+			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+			strncpy(this->address, other.address, sizeof(this->address) - 1);
+			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+
+			this->rssi = other.rssi;
+			this->timeSinceUpdate = other.timeSinceUpdate;
+
+			return *this;
+		}
+		bool operator==(const BT_Device_Info_With_Time_Since_Update& other) const
+		{
+			if( strcmp(this->name, other.name) == 0 &&
+				strcmp(this->address, other.address) == 0 ) return true;
+			else return false;
+		}
+		bool operator!=(const BT_Device_Info_With_Time_Since_Update& other) const
+		{
+			return !(*this == other);
+		}
+
+		operator String() const
+        {
+            return toString();
+        }
+
+		// Function to convert to string
+        String toString() const
+        {
+            return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
+        }
+
+		// Static function to convert from string
+		static BT_Device_Info_With_Time_Since_Update fromString(const std::string &str)
+        {
+            int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
+            if (delimiterIndex == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+
+            std::string name = str.substr(0, delimiterIndex - 1);
+            int nextDelimiterIndex = str.find(ENCODE_VALUE_DIVIDER, delimiterIndex + 1);
+            if (nextDelimiterIndex == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+
+            std::string address = str.substr(delimiterIndex + 2, nextDelimiterIndex - 1);
+            int nextDelimiterIndex2 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex + 1);
+            if (nextDelimiterIndex2 == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+
+            std::string rssiStr =  str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1);
+            int32_t rssi = std::stoi(rssiStr); // Convert string to integer
+
+            int nextDelimiterIndex3 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex2 + 1);
+            if (nextDelimiterIndex3 == -1)
+            {
+                // handle error, return default
+                return BT_Device_Info_With_Time_Since_Update();
+            }
+            std::string lastUpdateTimeStr =  str.substr(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1);
+            unsigned long lastUpdateTime = std::stoul(lastUpdateTimeStr); // Convert string to unsigned long
+
+            String timeSinceUpdateStr =  String(str.substr(nextDelimiterIndex3 + 2).c_str());
+            uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt(); // Convert string to uint32_t
+
+            return BT_Device_Info_With_Time_Since_Update(name.c_str(), address.c_str(), rssi, timeSinceUpdate);
+        }
+
+		// Overload the extraction operator
+		friend std::istream& operator>>(std::istream& is, BT_Device_Info_With_Time_Since_Update& device) {
+			std::string str;
+			std::getline(is, str); // Read a line from the stream
+			device = BT_Device_Info_With_Time_Since_Update::fromString(str); // Use fromString to create device from the string
+			return is;
+		}
+
+		// Overload the insertion operator
+		friend std::ostream& operator<<(std::ostream& os, const BT_Device_Info_With_Time_Since_Update& device) {
+			os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
+			return os;
+		}
+};
+typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Update_t;
+
+struct  CompatibleDevice_t
+{
+	public:
+		char name[BT_NAME_LENGTH] = "\0";
+		char address[BT_ADDRESS_LENGTH] = "\0";
+		
+        CompatibleDevice_t(){}
+
+		CompatibleDevice_t(const String &str)
+		{
+			*this = fromString(str.c_str());
+		}
+
+		CompatibleDevice_t(const char* name_In, const char* address_In)
+		{
+            strncpy(name, name_In, BT_NAME_LENGTH - 1);
+            name[BT_NAME_LENGTH - 1] = '\0';  // Ensure null-terminated
+    
+            strncpy(address, address_In, BT_ADDRESS_LENGTH - 1);
+            address[BT_ADDRESS_LENGTH - 1] = '\0';  // Ensure null-terminated
+		}
+
+		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)
+		{
+			strncpy(this->name, other.name, sizeof(this->name) - 1);
+			this->name[sizeof(this->name) - 1] = '\0';  // Ensure null-terminated
+
+			strncpy(this->address, other.address, sizeof(this->address) - 1);
+			this->address[sizeof(this->address) - 1] = '\0';  // Ensure null-terminated
+			return *this;
+		}
+
+		bool operator==(const CompatibleDevice_t& other) const
+		{
+			if( strcmp(this->name, other.name) == 0 &&
+				strcmp(this->address, other.address) == 0) return true;
+			else return false;
+		}
+
+		bool operator!=(const CompatibleDevice_t& other) const
+		{
+			return !(*this == other);
+		}
+
+		operator String() const
+        {
+            return toString();
+        }
+
+		// Function to convert to string
+        String toString() const
+        {
+            return String(name) + ENCODE_VALUE_DIVIDER + String(address);
+        }
+
+		// Static function to convert from string
+		static CompatibleDevice_t fromString(const std::string &str)
+		{
+			int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
+			if (delimiterIndex == -1)
+			{
+				// handle error, return default
+				return CompatibleDevice_t();
+			}
+
+			String name = String(str.substr(0, delimiterIndex - 1).c_str());
+			String address = String(str.substr(delimiterIndex + 2).c_str());
+			return CompatibleDevice_t(name.c_str(), address.c_str());
+		}
+
+		// Overload the extraction operator
+		friend std::istream& operator>>(std::istream& is, CompatibleDevice_t& device) {
+			std::string str;
+			std::getline(is, str); // Read a line from the stream
+			device = CompatibleDevice_t::fromString(str); // Use fromString to create device from the string
+			return is;
+		}
+
+		// Overload the insertion operator
+		friend std::ostream& operator<<(std::ostream& os, const CompatibleDevice_t& device) {
+			os << device.toString().c_str(); // Use toString to convert device to a string and write it to the stream
+			return os;
+		}
 };
 
 class SoundInputSource

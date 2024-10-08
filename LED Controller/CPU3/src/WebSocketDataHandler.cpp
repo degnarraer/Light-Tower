@@ -21,7 +21,6 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
     if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "Before Size %i", m_Tx_KeyValues.size());
     std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
     if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "After Size %i", m_Tx_KeyValues.size());
-    std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
     if(signalValues.size())
     {
       String message;

@@ -193,7 +193,7 @@ class Manager: public NamedItem
     
     //Scanned Device
     BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0, };
-    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Device"
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Devices"
                                                                                                                            , m_ScannedDevice_InitialValue
                                                                                                                            , RxTxType_Tx_On_Change
                                                                                                                            , 0

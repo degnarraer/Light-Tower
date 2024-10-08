@@ -410,7 +410,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, this->ConvertValueToString(values, count).c_str() );
-			return UpdateStore(values, GetChangeCount());
+			return UpdateStore(values, GetChangeCount()+1);
 		}
 
 		virtual bool SetValue(const T& value)
@@ -472,7 +472,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			if(incrementChangeCount)
 			{
-				m_ChangeCount = m_ChangeCount+1;
+				m_ChangeCount += 1;
 				allowUpdate = true;
 				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
 			}
@@ -496,16 +496,15 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, ConvertValueToString(newValues, COUNT).c_str()
 					, m_ChangeCount
 					, newChangeCount );
-			bool storeUpdated = false;
 			bool valueChanged = (0 != memcmp(mp_Value, newValues, COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
 			const bool updateAllowed = valueChanged && validValue;
-			ESP_LOGD( "UpdateStore", "\"%s\": Value Changed: \"%i\" Value Valid: \"%i\"", GetName().c_str(), valueChanged, validValue);
-			if(UpdateChangeCount(newChangeCount, updateAllowed))
+			const bool storeUpdated = UpdateChangeCount(newChangeCount, updateAllowed);
+			ESP_LOGI( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
+			if(storeUpdated)
 			{
 				ZeroOutMemory(mp_Value);
 				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
-				storeUpdated = true;
 				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
 				this->CallNamedCallbacks(mp_Value);
 			}

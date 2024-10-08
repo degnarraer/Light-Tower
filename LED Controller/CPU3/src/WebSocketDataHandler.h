@@ -153,7 +153,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
 
-    virtual bool NewRxValueReceived(const T* values, size_t changeCount) override
+    virtual bool NewRxValueReceived(const T* values, size_t count, size_t changeCount) override
     {
       ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
@@ -238,7 +238,6 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                                                                : WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>( WebSocketDataProcessor
                                                                                                                                , DataItem )
     {
-      m_ActiveDevicesMutex = xSemaphoreCreateRecursiveMutex();
       CreateTasks();
     }
     
@@ -260,13 +259,16 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
       if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
     }
 
-    bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t changeCount) override
+    bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t count, size_t changeCount) override
     {
       ESP_LOGI( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
       if(this->IsChangeCountGreater(m_DataItem.GetChangeCount()))
       {
-        ActiveCompatibleDeviceReceived(values[0]);
+        for(size_t i = 0; i < count; ++i)
+        {
+          ActiveCompatibleDeviceReceived(values[i]);
+        }
         SendActiveCompatibleDevicesToWebSocket();
         success = true;
       }
@@ -274,27 +276,24 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
       return success;
     }
 
-    void ActiveCompatibleDeviceReceived(BT_Device_Info_With_Time_Since_Update device)
+    void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
     {
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
+      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+      auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), device);
+      if (it != m_ActiveDevices.end())
       {
-        auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), device);
-        if (it != m_ActiveDevices.end())
+        *it = device;
+        ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
+      }
+      else 
+      {
+        if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
         {
-          *it = device;
-          ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
-        }
-        else 
-        {
-          if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
-          {
-            ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
-            m_ActiveDevices.push_back(device);
-            SendActiveCompatibleDevicesToWebSocket();
-          }
+          ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
+          m_ActiveDevices.push_back(device);
         }
       }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+      SendActiveCompatibleDevicesToWebSocket();
     }
 
     static void Static_UpdateActiveCompatibleDevices(void * parameter)
@@ -311,58 +310,62 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void CleanActiveCompatibleDevices()
     {
-        ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
-        if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY) == pdTRUE)
+      ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
+      bool updated = false;
+
+      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+      for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
+      {
+        BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
+        if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
         {
-            for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
-            {
-                BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
-                if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
-                {
-                    ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
-                    it = m_ActiveDevices.erase(it);
-                    SendActiveCompatibleDevicesToWebSocket();
-                }
-                else
-                {
-                    ++it;
-                }
-            }
-            xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
+          ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
+          it = m_ActiveDevices.erase(it);
+          updated = true;
         }
         else
         {
-            ESP_LOGE("UpdateActiveCompatibleDevices", "Failed to take mutex.");
+          ++it;
         }
+      }
+      if(updated) SendActiveCompatibleDevicesToWebSocket();
     }
 
     void SendActiveCompatibleDevicesToWebSocket()
     {
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        JSONVar jsonVars;
-        JSONVar deviceArray;
+        std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
 
-        for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end(); ++it)
+        const size_t preAllocSize = 1024;
+        std::string jsonString;
+        jsonString.reserve(preAllocSize);
+
+        jsonString.append("{\"Devices\":[");
+
+        bool firstDevice = true;
+        for (const auto& device : m_ActiveDevices)
         {
-            BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
+            if (!firstDevice) 
+            {
+                jsonString.append(",");
+            }
+            firstDevice = false;
 
-            JSONVar deviceJson;
-            deviceJson["Name"] = device->name;
-            deviceJson["Address"] = device->address;
-            deviceJson["RSSI"] = device->rssi;
-            deviceArray[deviceArray.length()] = deviceJson;
+            jsonString.append("{");
+            jsonString.append("\"Name\":\"" + std::string(device.name) + "\",");
+            jsonString.append("\"Address\":\"" + std::string(device.address) + "\",");
+            jsonString.append("\"RSSI\":" + std::to_string(device.rssi) + "\"");
+            jsonString.append("}");
         }
-        jsonVars["Devices"] = deviceArray;
-        String jsonString = JSON.stringify(jsonVars);
+
+        jsonString.append("]}");
+
         ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
+
         String key = this->GetSignal();
-        this->TxDataToWebSocket(key, jsonString);
-        xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-      }
+        this->TxDataToWebSocket(key, jsonString.c_str());
     }
     private:
       std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;
-      SemaphoreHandle_t m_ActiveDevicesMutex;
+      std::recursive_mutex m_ActiveDevicesMutex;
       TaskHandle_t m_ActiveDeviceUpdateTask;
 };

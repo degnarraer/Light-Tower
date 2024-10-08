@@ -735,8 +735,8 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Scanned Device
     CallbackArguments m_ScannedDevice_CallbackArgs = {this, &m_WebSocketDataProcessor};
-    BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0, };
-    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this);
+    BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0 };
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Devices", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this);
     BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler m_ScannedDevice_DataHandler = BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler(m_WebSocketDataProcessor, m_ScannedDevice);
 
     //Bluetooth Source Auto Reconnect

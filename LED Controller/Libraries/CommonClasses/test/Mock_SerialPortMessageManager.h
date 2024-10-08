@@ -26,7 +26,7 @@
 template <typename T>
 class MockRx_Value_Callee_Interface : public Rx_Value_Callee_Interface<T> {
 public:
-    MOCK_METHOD(bool, NewRxValueReceived, (const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t changeCount), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const T* values, size_t count, size_t changeCount), (override));
     MOCK_METHOD(String, GetName, (), (override));
     MOCK_METHOD(size_t, GetCount, (), (override));
 };

@@ -102,7 +102,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						, ConvertValueToString(receivedValues, GetCount()).c_str() );
 				if(UpdateTxStore(mp_RxValue))
 				{
-					storeUpdated |= Tx_Now();
+					storeUpdated |= Tx_Now(GetChangeCount());
 				}
 			}
 			return storeUpdated;
@@ -127,7 +127,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			if(UpdateRxStore(receivedValues))
 			{
 				storeUpdated |= UpdateStore(mp_RxValue, changeCount);
-				this->Notify_NewRxValue_Callees(mp_RxValue, changeCount);
+				this->Notify_NewRxValue_Callees(mp_RxValue, COUNT, changeCount);
 			}
 			storeUpdated |= Try_Echo_Value(receivedValues);
 			return storeUpdated;
@@ -168,9 +168,10 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			assert(COUNT > 0);
 			assert(count <= COUNT);
 			bool storeUpdated = false;
-			bool valueChanged = (0 != memcmp(mp_TxValue, newTxValues, count));
-			bool validValue = ConfirmValueValidity(newTxValues, COUNT);
-			bool valueUpdateAllowed = (valueChanged && validValue);
+			const bool valueChanged = (0 != memcmp(mp_TxValue, newTxValues, count));
+			const bool validValue = ConfirmValueValidity(newTxValues, COUNT);
+			const bool valueUpdateAllowed = (valueChanged && validValue);
+			ESP_LOGI( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), valueUpdateAllowed);
 			if(valueUpdateAllowed)
 			{
 				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
@@ -194,14 +195,14 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					, "Name: \"%s\" Update Rx Store with value: \"%s\""
 					, GetName().c_str()
 					, ConvertValueToString(newValues, COUNT).c_str());
-			bool storeUpdated = false;
-			bool valueChanged = (0 != memcmp(mp_RxValue, newValues, COUNT));
-			bool validValue = ConfirmValueValidity(newValues, COUNT);
-			if(valueChanged && validValue)
+			const bool valueChanged = (0 != memcmp(mp_RxValue, newValues, COUNT));
+			const bool validValue = ConfirmValueValidity(newValues, COUNT);
+			const bool storeUpdated = valueChanged && validValue;
+			ESP_LOGI( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
+			if(storeUpdated)
 			{
 				ZeroOutMemory(mp_RxValue);
 				memcpy(mp_RxValue, newValues, sizeof(T) * COUNT);
-				storeUpdated = true;
 				ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Successful.", GetName().c_str());
 			}
 			else
@@ -220,14 +221,13 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					, "Name: \"%s\" Update Tx Store with value: \"%s\""
 					, GetName().c_str()
 					, ConvertValueToString(newValues, COUNT).c_str());
-			bool storeUpdated = false;
 			bool valueChanged = (0 != memcmp(mp_TxValue, newValues, COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
-			if(valueChanged && validValue)
+			const bool storeUpdated = valueChanged && validValue;
+			if(storeUpdated)
 			{
 				ZeroOutMemory(mp_TxValue);
 				memcpy(mp_TxValue, newValues, sizeof(T) * COUNT);
-				storeUpdated = true;
 				ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Successful.", GetName().c_str());
 			}
 			else
@@ -237,7 +237,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			return storeUpdated;
 		}
 
-		bool Tx_Now()
+		bool Tx_Now(size_t changeCount)
 		{
 			ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\""
 					, mp_SerialPortMessageManager->GetName().c_str()
@@ -247,9 +247,9 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			bool storeUpdated = false;
 			if(mp_SerialPortMessageManager)
 			{
-				if(storeUpdated |= UpdateStore(mp_TxValue, GetChangeCount()))
+				if(storeUpdated |= UpdateStore(mp_TxValue, max(GetChangeCount(),changeCount)))
 				{
-					ESP_LOGD( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
+					ESP_LOGI( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
 				}
 				ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
 				if(!mp_SerialPortMessageManager->QueueMessageFromData(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
@@ -290,10 +290,10 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						case RxTxType_Tx_Periodic:
 						case RxTxType_Tx_On_Change_With_Heartbeat:
 							enablePeriodicTx = true;
-							Tx_Now();
+							Tx_Now(GetChangeCount());
 							break;
 						case RxTxType_Tx_On_Change:
-							Tx_Now();
+							Tx_Now(GetChangeCount());
 							break;
 						case RxTxType_Rx_Only:
 						case RxTxType_Rx_Echo_Value:
@@ -327,7 +327,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			{
 				ESP_LOGD( "EnablePeriodicTx", "\"%s\": Periodic Tx"
 						, aSerialMessageInterface->GetName().c_str() );
-				aSerialMessageInterface->Tx_Now();
+				aSerialMessageInterface->Tx_Now(aSerialMessageInterface->GetChangeCount());
 			}
 			else
 			{
@@ -338,19 +338,26 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		bool Update_Tx_Store_And_Try_Tx_On_Change(const T *newValues)
 		{
 			bool storeUpdated = false;
-			storeUpdated |= UpdateTxStore(newValues);
-			Try_TX_On_Change(newValues);
+			if(UpdateTxStore(newValues))
+			{
+				storeUpdated = Try_TX_On_Change(newValues, GetChangeCount()+1);
+			}
+			else
+			{
+				storeUpdated = Try_TX_On_Change(newValues, GetChangeCount());
+			}
 			return storeUpdated;
 		}
 
-		bool Try_TX_On_Change(const T *newValues)
+		bool Try_TX_On_Change(const T *newValues, size_t changeCount)
 		{
 			ESP_LOGD("Try_TX_On_Change", "\"%s\": Try TX On Change", GetName().c_str());
+			bool storeUpdated = false;
 			if(m_RxTxType == RxTxType_Tx_On_Change || m_RxTxType == RxTxType_Tx_On_Change_With_Heartbeat)
 			{
-				return Tx_Now();
+				storeUpdated = Tx_Now(changeCount);
 			}
-			return false;
+			return storeUpdated;
 		}
 
 		void EnablePeriodicTx(bool enablePeriodicTx)

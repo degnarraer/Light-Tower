@@ -293,134 +293,136 @@
 						</div>
 					</div>
 				</div>
-				<div class="menu-content" id="Sound Output">
-				
-					<div class="selection_tabs">
-						<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('OFF');">OFF</div>
-						<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">Bluetooth</div>
+			</div>
+			<div class="menu-content" id="Sound Output">
+			
+				<div class="selection_tabs">
+					<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('OFF');">OFF</div>
+					<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">Bluetooth</div>
+				</div>
+				<div class="selection_tab_content_output_source" id="Sound_Output_Selection_OFF">
+					<h2>Off</h2>
+					<p>Sound output has been disabled.</p>
+				</div>
+				<div class="selection_tab_content_output_source" id="Sound_Output_Selection_Bluetooth">
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_TextInput">
+							<div class="settingGroup_Title">
+								Found Bluetooth Speakers
+							</div>
+							<div class="settingGroup_Widget">
+								<div id="deviceList" data-signal="Scan_BT_Devices">
+
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="selection_tab_content_output_source" id="Sound_Output_Selection_OFF">
-						<h2>Off</h2>
-						<p>Sound output has been disabled.</p>
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_TextInput">
+							<div class="settingGroup_Title">
+								Bluetooth Speaker Name
+							</div>
+							<div class="settingGroup_Textbox">
+								<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" oninput="SourceName.setValue(this.value, false)" value="Enter Name">
+							</div>
+							<div class="settingGroup_Widget">
+								<button id="Source_Name_Submit_Button" onclick="SourceName.scheduleWebSocketUpdate()">Submit</button>
+							</div>
+						</div>
 					</div>
-					<div class="selection_tab_content_output_source" id="Sound_Output_Selection_Bluetooth">
-						<h2>Bluetooth</h2>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
-								<div class="settingGroup_Title">
-									Found Bluetooth Speakers
-								</div>
-								<div class="settingGroup_Widget">
-									<ul data-Signal="BT_Source_Target_Devices" id="compatibleDeviceList"></ul>
-								</div>
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_Status">
+							<div class="settingGroup_Title">
+								Connect
+							</div>
+							<div class="settingGroup_Widget">
+								<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">Connect</button>
 							</div>
 						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
-								<div class="settingGroup_Title">
-									Bluetooth Speaker Name
-								</div>
-								<div class="settingGroup_Textbox">
-									<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" oninput="SourceName.setValue(this.value, false)" value="Enter Name">
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="Source_Name_Submit_Button" onclick="SourceName.scheduleWebSocketUpdate()">Submit</button>
-								</div>
+					</div>
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_Status">
+							<div class="settingGroup_Title">
+								Disconnect
+							</div>
+							<div class="settingGroup_Widget">
+								<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" onmousedown="Source_Disconnect.setValue(true)" onmouseup="Source_Disconnect.setValue(false)">Disconnect</button>
 							</div>
 						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Status">
-								<div class="settingGroup_Title">
-									Connect
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">Connect</button>
-								</div>
+					</div>
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_Status">
+							<div class="settingGroup_Title">
+								Bluetooth Speaker State
+							</div>
+							<div class="settingGroup_Value">
+								<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
 							</div>
 						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Status">
-								<div class="settingGroup_Title">
-									Disconnect
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" onmousedown="Source_Disconnect.setValue(true)" onmouseup="Source_Disconnect.setValue(false)">Disconnect</button>
-								</div>
+					</div>
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_Toggle">
+							<div class="settingGroup_Title">
+								Reset Bluetooth Speaker Connection
+							</div>
+							<div class="settingGroup_Widget">
+								<label for="Source_BT_Reset_Toggle_Button" class="widget_Toggle_Switch">
+								<input type="checkbox" data-Signal="BT_Src_Reset" id="Source_BT_Reset_Toggle_Button">
+								<span class="slider Round"></span>
+								</label>
 							</div>
 						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Status">
-								<div class="settingGroup_Title">
-									Bluetooth Speaker State
-								</div>
-								<div class="settingGroup_Value">
-									<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
-								</div>
+					</div>
+					<div class="settingGroup">
+						<div class="settingGroup_Horrizontal_Grid_Toggle">
+							<div class="settingGroup_Title">
+								Bluetooth Speaker Auto ReConnect
 							</div>
-						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Toggle">
-								<div class="settingGroup_Title">
-									Reset Bluetooth Speaker Connection
-								</div>
-								<div class="settingGroup_Widget">
-									<label for="Source_BT_Reset_Toggle_Button" class="widget_Toggle_Switch">
-									<input type="checkbox" data-Signal="BT_Src_Reset" id="Source_BT_Reset_Toggle_Button">
-									<span class="slider Round"></span>
-									</label>
-								</div>
-							</div>
-						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Toggle">
-								<div class="settingGroup_Title">
-									Bluetooth Speaker Auto ReConnect
-								</div>
-								<div class="settingGroup_Widget">
-									<label for="Source_BT_Auto_ReConnect_Toggle_Button" class="widget_Toggle_Switch">
+							<div class="settingGroup_Widget">
+								<label for="Source_BT_Auto_ReConnect_Toggle_Button" class="widget_Toggle_Switch">
 									<input type="checkbox" data-Signal="BT_Source_AR" id="Source_BT_Auto_ReConnect_Toggle_Button">
 									<span class="slider Round"></span>
-									</label>
-								</div>
+								</label>
 							</div>
 						</div>
 					</div>
 				</div>
-				<div class="menu-content" id="Real Time FFT">
-					<div class="settingGroup">
-						<div class="settingGroup_Horrizontal_Grid_slider">
-							<div class="settingGroup_Title">FFT Gain</div>
-							<div class="settingGroup_Widget">
-								<label for="FFT_Gain_Slider1"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
-							</div>
-							<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_Slider1_Value">10.0</span> </div>
+			</div>
+			<div class="menu-content" id="Real Time FFT">
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_slider">
+						<div class="settingGroup_Title">FFT Gain</div>
+						<div class="settingGroup_Widget">
+							<label for="FFT_Gain_Slider1"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
+						<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_Slider1_Value">10.0</span> </div>
 					</div>
 				</div>
-				<div class="menu-content" id="Gains">
-					<div class="settingGroup">
-						<div class="settingGroup_Horrizontal_Grid_slider">
-							<div class="settingGroup_Title">Input Gain</div>
-							<div class="settingGroup_Widget">
-								<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amp_Gain" id="Amplitude_Gain_Slider4" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
-							</div>
-							<div class="settingGroup_Value"><span data-Signal="Amp_Gain" id="Amplitude_Gain_Slider4_Value">10.0</span> </div>
+			</div>
+			<div class="menu-content" id="Gains">
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_slider">
+						<div class="settingGroup_Title">Input Gain</div>
+						<div class="settingGroup_Widget">
+							<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amp_Gain" id="Amplitude_Gain_Slider4" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
+						<div class="settingGroup_Value"><span data-Signal="Amp_Gain" id="Amplitude_Gain_Slider4_Value">10.0</span> </div>
 					</div>
-					<div class="settingGroup">
-						<div class="settingGroup_Horrizontal_Grid_slider">
-							<div class="settingGroup_Title">FFT Gain</div>
-							<div class="settingGroup_Widget">
-								<label for="FFT_Gain_slider4"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" data-Signal="FFT_Gain" id="FFT_Gain_slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
-							</div>
-							<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_slider4_Value">10.0</span> </div>
+				</div>
+				<div class="settingGroup">
+					<div class="settingGroup_Horrizontal_Grid_slider">
+						<div class="settingGroup_Title">FFT Gain</div>
+						<div class="settingGroup_Widget">
+							<label for="FFT_Gain_slider4"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" data-Signal="FFT_Gain" id="FFT_Gain_slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
 						</div>
-					</div>	
-				</div>
-				<div class="menu-content" id="Visualization">
-				</div>
+						<div class="settingGroup_Value"><span data-Signal="FFT_Gain" id="FFT_Gain_slider4_Value">10.0</span> </div>
+					</div>
+				</div>	
+			</div>
+			<div class="menu-content" id="Visualization">
 			</div>
 		</div>
 	</div>
+	
 </body>
 </html>

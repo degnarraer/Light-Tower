@@ -152,7 +152,8 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
     ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
-	BT_Device_Info newDevice(name.c_str(), GetAddressString(address), rssi);
+	const char* addressString = GetAddressString(address);
+	BT_Device_Info newDevice(name.c_str(), addressString, rssi);
     if(m_DeviceProcessorQueueHandle)
 	{
 		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
@@ -169,7 +170,7 @@ bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t 
 		ESP_LOGE("ConnectToThisName", "Queue Not Ready!");
 	}
 	
-    return false;
+    return (m_Name.c_str() == name && m_Address == addressString);
 }
 
 void Bluetooth_Source::StaticDeviceProcessingTask(void * Parameters)
@@ -216,10 +217,13 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 			ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", newDevice.name);
 			ActiveCompatibleDevice_t newActiveCompatibleDevice = newDevice;
 			m_ActiveCompatibleDevices.push_back(newActiveCompatibleDevice);
+			tempVector = m_ActiveCompatibleDevices;
 		}
-		tempVector = m_ActiveCompatibleDevices;
 	}
-	m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);	
+	if (m_BluetoothActiveDeviceUpdatee && !found)
+	{
+		m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
+	}	
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
@@ -245,11 +249,6 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 				});
 			m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
 			tempVector = m_ActiveCompatibleDevices;
-		}
-
-		for (const auto& device : tempVector)
-		{
-			ESP_LOGD("Bluetooth_Device", "Scanned Device Name: %s \tRSSI: %i", device.name, device.rssi);
 		}
 		if (NULL != m_BluetoothActiveDeviceUpdatee)
 		{

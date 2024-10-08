@@ -6,6 +6,7 @@ import { Model_Boolean } from './Model_Boolean.js';
 import { Model_Numeric } from './Model_Numeric.js';
 import { Model_Text } from './Model_Text.js';
 import { Model_WifiMode } from './Model_WifiMode.js';
+import { Model_BtDeviceSelector } from './Model_BtDeviceSelector.js'
 
 const wsManager = new WebSocketManager();
 
@@ -22,6 +23,7 @@ export const Sink_Auto_Reconnect = new Model_Boolean('BT_Sink_AR', Model_Boolean
 
 export const SourceName = new Model_Text('Source_Name', '', wsManager);
 export const CurrentSoundOutputSource = new Model_OutputSource('Output_Source', Model_OutputSource.values.OFF, wsManager);
+export const BluetoothDeviceList = new Model_BtDeviceSelector('Scan_BT_Devices', wsManager);
 export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
 export const Source_ConnectionStatus = new Model_ConnectionStatus('Src_Conn_State', 'Disconnected', wsManager);
 export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.values.False, wsManager);

@@ -118,18 +118,21 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
   {
     unsigned long elapsedTime;
     unsigned long previousMillis = Devices[i].lastUpdateTime;
-    if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
-    else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
-    ESP_LOGD("Manager: BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
+    if (currentMillis >= previousMillis)
+    { 
+      elapsedTime = currentMillis - previousMillis;
+    } 
+    else
+    { 
+      elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1;
+    }
+    ESP_LOGI("BluetoothActiveDeviceListUpdated", "Device: %i Name: \"%s\" Address: \"%s\"  RSSI: \"%i\" Last Update Time: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address
-            , elapsedTime
-            , Devices[i].rssi );
-    BT_Device_Info_With_Time_Since_Update ActiveDevice = BT_Device_Info_With_Time_Since_Update( Devices[i].name
-                                                                                              , Devices[i].address
-                                                                                              , Devices[i].rssi
-                                                                                              , elapsedTime );
+            , Devices[i].rssi 
+            , elapsedTime );
+    BT_Device_Info_With_Time_Since_Update ActiveDevice = BT_Device_Info_With_Time_Since_Update( Devices[i], elapsedTime );
     m_ScannedDevice.SetValue(ActiveDevice);                                          
   }
 }
