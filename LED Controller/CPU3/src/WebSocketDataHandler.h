@@ -356,8 +356,8 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
             jsonString.append("{");
             jsonString.append("\"Name\":\"" + std::string(device.name) + "\",");
-            jsonString.append("\"Address:\"" + std::string(device.address) + "\",");
-            jsonString.append("\"RSSI:\"" + std::to_string(device.rssi) + "\"");
+            jsonString.append("\"Address\":\"" + std::string(device.address) + "\",");
+            jsonString.append("\"RSSI\":\"" + std::to_string(device.rssi) + "\"");
             jsonString.append("}");
         }
         jsonString.append("]}");

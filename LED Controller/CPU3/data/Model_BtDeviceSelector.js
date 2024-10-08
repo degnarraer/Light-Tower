@@ -61,25 +61,32 @@ export class Model_BtDeviceSelector {
             console.error(`Container for signal "${this.signalName}" not found.`);
             return;
         }
-
+    
         this.container.innerHTML = ''; // Clear previous entries
-
+    
         this.deviceList.forEach((device, index) => {
+            // Check if device object has the expected properties
+            console.log("Device Object:", device);
+    
+            const name = device.Name || 'Unknown Name';
+            const address = device.Address || 'Unknown Address';
+            const rssi = device.RSSI || 'Unknown RSSI';
+    
             const deviceElement = document.createElement('div');
             deviceElement.innerHTML = `
-                <strong>Name:</strong> ${device.name} <br>
-                <strong>Address:</strong> ${device.address} <br>
-                <strong>RSSI:</strong> ${device.rssi}
+                <strong>Name:</strong> ${name} <br>
+                <strong>Address:</strong> ${address} <br>
+                <strong>RSSI:</strong> ${rssi}
             `;
             deviceElement.style.padding = '10px';
             deviceElement.style.cursor = 'pointer';
             deviceElement.style.borderBottom = '1px solid #ccc';
-
+    
             // Highlight the selected device
-            if (this.selectedDevice && this.selectedDevice.name === device.name) {
+            if (this.selectedDevice && this.selectedDevice.Name === device.Name) {
                 deviceElement.style.backgroundColor = '#ADD8E6';
             }
-
+    
             deviceElement.addEventListener('click', () => this.selectDevice(index));
             this.container.appendChild(deviceElement);
         });
