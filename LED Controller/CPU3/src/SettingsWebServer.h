@@ -761,7 +761,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             payload[length] = 0;
 
             String WebSocketData = String((char*)payload);
-            ESP_LOGI("HandleWebSocketMessage", "WebSocket Data from Client %u: %s", clientID, WebSocketData.c_str());
+            ESP_LOGD("HandleWebSocketMessage", "WebSocket Data from Client %u: %s", clientID, WebSocketData.c_str());
 
             if (WebSocketData.equals("New client is here!")) 
             {

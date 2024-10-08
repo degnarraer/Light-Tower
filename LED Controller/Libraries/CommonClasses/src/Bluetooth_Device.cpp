@@ -151,7 +151,7 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 //Callback from BT Source for compatible devices to connect to
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
-    ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
+    ESP_LOGD("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
 	const char* addressString = GetAddressString(address);
 	BT_Device_Info newDevice(name.c_str(), addressString, rssi);
     if(m_DeviceProcessorQueueHandle)

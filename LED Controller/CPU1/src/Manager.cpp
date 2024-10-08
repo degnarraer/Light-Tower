@@ -202,7 +202,6 @@ void Manager::MoveDataToStatisticalEngine()
 //BluetoothConnectionStateCallee Callback
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {
-  ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Change Callback");
   switch(connectionState)
   {
     case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
@@ -226,5 +225,4 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Unknown);
     break;
   }
-  
 }

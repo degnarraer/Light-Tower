@@ -102,12 +102,31 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 //BluetoothConnectionStateCallee Callback 
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {
-  ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
-  if(m_ConnectionStatus.GetValue() != newValue)
+  switch(connectionState)
   {
-    m_ConnectionStatus.SetValue(newValue);
-    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
+    case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnected.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
+      break;
+    case ESP_A2D_CONNECTION_STATE_CONNECTING:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connecting.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Connecting);
+      break;
+    case ESP_A2D_CONNECTION_STATE_CONNECTED:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connected.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Connected);
+      break;
+    case ESP_A2D_CONNECTION_STATE_DISCONNECTING:
+      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnecting.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Disconnecting);
+      break;
+    default:
+      ESP_LOGW("BluetoothConnectionStatusChanged", "WARNING! Unhandled Connection State Change. Changed to Disconnected.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Unknown);
+    break;
   }
+
+
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
@@ -126,7 +145,7 @@ void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibl
     { 
       elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1;
     }
-    ESP_LOGI("BluetoothActiveDeviceListUpdated", "Device: %i Name: \"%s\" Address: \"%s\"  RSSI: \"%i\" Last Update Time: \"%i\""
+    ESP_LOGD("BluetoothActiveDeviceListUpdated", "Device: %i Name: \"%s\" Address: \"%s\"  RSSI: \"%i\" Last Update Time: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address

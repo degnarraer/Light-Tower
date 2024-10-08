@@ -226,8 +226,7 @@ public:
     bool operator==(const ActiveCompatibleDevice_t& other) const
     {
         return ( strcmp(this->name, other.name) == 0 &&
-                 strcmp(this->address, other.address ) == 0 &&
-                 this->rssi == other.rssi );
+                 strcmp(this->address, other.address ) == 0 );
     }
     
     bool operator==(const BT_Device_Info& other) const

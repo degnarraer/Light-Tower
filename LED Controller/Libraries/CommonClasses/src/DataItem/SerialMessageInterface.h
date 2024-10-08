@@ -171,14 +171,14 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			const bool valueChanged = (0 != memcmp(mp_TxValue, newTxValues, sizeof(T)*count));
 			const bool validValue = ConfirmValueValidity(newTxValues, COUNT);
 			const bool valueUpdateAllowed = (valueChanged && validValue);
-			ESP_LOGI( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\""
+			ESP_LOGD( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\""
 					, GetName().c_str()
 					, valueUpdateAllowed
 					, ConvertValueToString(mp_TxValue, count).c_str()
 					, ConvertValueToString(newTxValues, count).c_str() );
 			if(valueUpdateAllowed)
 			{
-				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
+				ESP_LOGI( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, GetName().c_str() );
 				storeUpdated |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);

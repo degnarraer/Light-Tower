@@ -279,18 +279,23 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
     {
       std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-      auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), device);
+      ActiveCompatibleDevice_t newdevice = ActiveCompatibleDevice_t( device.name
+                                                                   , device.address
+                                                                   , device.rssi
+                                                                   , millis()
+                                                                   , device.timeSinceUpdate );
+      auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), newdevice);
       if (it != m_ActiveDevices.end())
       {
-        *it = device;
-        ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
+        *it = newdevice;
+        ESP_LOGI("ScannedDevice_ValueChanged", "Device Updated: \"%s\"", device.toString().c_str());
       }
       else 
       {
         if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
         {
-          ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
-          m_ActiveDevices.push_back(device);
+          ESP_LOGI("ScannedDevice_ValueChanged", "New Device: \"%s\"", device.toString().c_str());
+          m_ActiveDevices.push_back(newdevice);
         }
       }
     }
@@ -321,8 +326,9 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
       std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
       for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
       {
-        BT_Device_Info_With_Time_Since_Update* device = static_cast<BT_Device_Info_With_Time_Since_Update*>(&(*it));
-        if (device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
+        ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
+        if ( device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT || 
+             millis() - device->lastUpdateTime > BLUETOOTH_DEVICE_TIMEOUT )
         {
           ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
           it = m_ActiveDevices.erase(it);
@@ -371,7 +377,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         }
     }
     private:
-      std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;
+      std::vector<ActiveCompatibleDevice_t> m_ActiveDevices;
       std::recursive_mutex m_ActiveDevicesMutex;
       TaskHandle_t m_ActiveDeviceUpdateTask;
 };
