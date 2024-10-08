@@ -168,10 +168,14 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			assert(COUNT > 0);
 			assert(count <= COUNT);
 			bool storeUpdated = false;
-			const bool valueChanged = (0 != memcmp(mp_TxValue, newTxValues, count));
+			const bool valueChanged = (0 != memcmp(mp_TxValue, newTxValues, sizeof(T)*count));
 			const bool validValue = ConfirmValueValidity(newTxValues, COUNT);
 			const bool valueUpdateAllowed = (valueChanged && validValue);
-			ESP_LOGI( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), valueUpdateAllowed);
+			ESP_LOGI( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\""
+					, GetName().c_str()
+					, valueUpdateAllowed
+					, ConvertValueToString(mp_TxValue, count).c_str()
+					, ConvertValueToString(newTxValues, count).c_str() );
 			if(valueUpdateAllowed)
 			{
 				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
@@ -195,7 +199,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					, "Name: \"%s\" Update Rx Store with value: \"%s\""
 					, GetName().c_str()
 					, ConvertValueToString(newValues, COUNT).c_str());
-			const bool valueChanged = (0 != memcmp(mp_RxValue, newValues, COUNT));
+			const bool valueChanged = (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
 			const bool validValue = ConfirmValueValidity(newValues, COUNT);
 			const bool storeUpdated = valueChanged && validValue;
 			ESP_LOGI( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
@@ -221,7 +225,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					, "Name: \"%s\" Update Tx Store with value: \"%s\""
 					, GetName().c_str()
 					, ConvertValueToString(newValues, COUNT).c_str());
-			bool valueChanged = (0 != memcmp(mp_TxValue, newValues, COUNT));
+			bool valueChanged = (0 != memcmp(mp_TxValue, newValues, sizeof(T)*COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
 			const bool storeUpdated = valueChanged && validValue;
 			if(storeUpdated)
@@ -247,7 +251,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			bool storeUpdated = false;
 			if(mp_SerialPortMessageManager)
 			{
-				if(storeUpdated |= UpdateStore(mp_TxValue, max(GetChangeCount(),changeCount)))
+				if(storeUpdated |= UpdateStore(mp_TxValue, changeCount))
 				{
 					ESP_LOGI( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
 				}

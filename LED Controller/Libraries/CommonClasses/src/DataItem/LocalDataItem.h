@@ -426,7 +426,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			if(COUNT == count)
 			{
-				return (memcmp(mp_Value, values, count) == 0);
+				return (memcmp(mp_Value, values, sizeof(T)*count) == 0);
 			}
 			return false;
 		}
@@ -496,7 +496,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, ConvertValueToString(newValues, COUNT).c_str()
 					, m_ChangeCount
 					, newChangeCount );
-			bool valueChanged = (0 != memcmp(mp_Value, newValues, COUNT));
+			bool valueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
 			const bool updateAllowed = valueChanged && validValue;
 			const bool storeUpdated = UpdateChangeCount(newChangeCount, updateAllowed);
