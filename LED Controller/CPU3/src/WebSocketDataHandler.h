@@ -353,18 +353,21 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                 jsonString.append(",");
             }
             firstDevice = false;
+
             jsonString.append("{");
             jsonString.append("\"Name\":\"" + std::string(device.name) + "\",");
-            jsonString.append("\"Address\":\"" + std::string(device.address) + "\",");
-            jsonString.append("\"RSSI\":" + std::to_string(device.rssi) + "\"");
+            jsonString.append("\"Address:\"" + std::string(device.address) + "\",");
+            jsonString.append("\"RSSI:\"" + std::to_string(device.rssi) + "\"");
             jsonString.append("}");
         }
         jsonString.append("]}");
-        ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
-        if(0 < jsonString.length())
+        
+        ESP_LOGD("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
+        
+        if (0 < jsonString.length())
         {
-          String key = this->GetSignal();
-          this->TxDataToWebSocket(key, jsonString.c_str());
+            String key = this->GetSignal();
+            this->TxDataToWebSocket(key, jsonString.c_str());
         }
     }
     private:
