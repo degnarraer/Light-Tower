@@ -472,7 +472,7 @@ class QueueManager: public CommonUtils
 						CreateManagedQueue(ConfigFile[i].Name, m_DataItem[i].QueueHandle_TX, bytes, ConfigFile[i].QueueCount, true);
 					break;
 				}
-				ESP_LOGI("CommonUtils", "%s: Try Configuring DataItem %i of %i", m_Title.c_str(), i+1, m_DataItemCount);
+				ESP_LOGD("CommonUtils", "%s: Try Configuring DataItem %i of %i", m_Title.c_str(), i+1, m_DataItemCount);
 				m_DataItem[i].Name = ConfigFile[i].Name;
 				m_DataItem[i].DataType = ConfigFile[i].DataType;
 				m_DataItem[i].Count = ConfigFile[i].Count;

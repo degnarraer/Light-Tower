@@ -202,7 +202,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			const bool valueChanged = (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
 			const bool validValue = ConfirmValueValidity(newValues, COUNT);
 			const bool storeUpdated = valueChanged && validValue;
-			ESP_LOGI( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
+			ESP_LOGD( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
 			if(storeUpdated)
 			{
 				ZeroOutMemory(mp_RxValue);
@@ -253,7 +253,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			{
 				if(storeUpdated |= UpdateStore(mp_TxValue, changeCount))
 				{
-					ESP_LOGI( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
+					ESP_LOGD( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
 				}
 				ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
 				if(!mp_SerialPortMessageManager->QueueMessageFromData(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))

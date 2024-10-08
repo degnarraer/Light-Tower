@@ -500,7 +500,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			bool validValue = ConfirmValueValidity(newValues, COUNT);
 			const bool updateAllowed = valueChanged && validValue;
 			const bool storeUpdated = UpdateChangeCount(newChangeCount, updateAllowed);
-			ESP_LOGI( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
+			ESP_LOGD( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
 			if(storeUpdated)
 			{
 				ZeroOutMemory(mp_Value);

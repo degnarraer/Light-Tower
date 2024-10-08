@@ -85,7 +85,7 @@ class SetupCallerInterface
 			if (it != m_SetupCallees.end())
 			{
 				m_SetupCallees.erase(it);
-				ESP_LOGI("SetupCallerInterface", "Callee Deregistered");
+				ESP_LOGD("SetupCallerInterface", "Callee Deregistered");
 			}
 		}
 

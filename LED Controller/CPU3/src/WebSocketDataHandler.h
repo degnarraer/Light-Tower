@@ -161,7 +161,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       {
         m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
         success = true;
-        ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
+        ESP_LOGD( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
       }
       return success;
     }
@@ -179,7 +179,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     
     virtual void HandleWebSocketDataRequest() override
     {
-      ESP_LOGI("HandleWebSocketDataRequest", "\"%s\" sending \"%s\" to web socket", m_Signal, m_DataItem.GetValueAsString());
+      ESP_LOGD("HandleWebSocketDataRequest", "\"%s\" sending \"%s\" to web socket", m_Signal, m_DataItem.GetValueAsString());
       m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
@@ -197,7 +197,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
 
     void TxDataToWebSocket(String key, String value)
     {
-      ESP_LOGI("TxDataToWebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
+      ESP_LOGD("TxDataToWebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
       m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
@@ -261,7 +261,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t count, size_t changeCount) override
     {
-      ESP_LOGI( "NewRxValueReceived", "New DataItem Rx Value");
+      ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
       if(this->IsChangeCountGreater(m_DataItem.GetChangeCount()))
       {
@@ -349,18 +349,14 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                 jsonString.append(",");
             }
             firstDevice = false;
-
             jsonString.append("{");
             jsonString.append("\"Name\":\"" + std::string(device.name) + "\",");
             jsonString.append("\"Address\":\"" + std::string(device.address) + "\",");
             jsonString.append("\"RSSI\":" + std::to_string(device.rssi) + "\"");
             jsonString.append("}");
         }
-
         jsonString.append("]}");
-
-        ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
-
+        ESP_LOGD("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
         String key = this->GetSignal();
         this->TxDataToWebSocket(key, jsonString.c_str());
     }

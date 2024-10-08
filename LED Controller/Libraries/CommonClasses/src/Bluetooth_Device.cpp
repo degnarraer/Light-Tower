@@ -55,31 +55,31 @@ bool BluetoothConnectionStateCaller::IsConnected()
 
 void Bluetooth_Source::Setup()
 {
-	ESP_LOGI("Bluetooth_Device", "%s: Setup", GetTitle().c_str());
+	ESP_LOGI("Setup", "%s: Setup", GetTitle().c_str());
 	m_DeviceProcessorQueueHandle = xQueueCreate(DEVICE_QUEUE_SIZE, sizeof(BT_Device_Info));
 	if(m_DeviceProcessorQueueHandle != NULL)
 	{
-		ESP_LOGI("CommonUtils", "Created Compatible Device Processor Queue.");
+		ESP_LOGI("Setup", "Created Compatible Device Processor Queue.");
 	}
 	else
 	{
-		ESP_LOGE("CommonUtils", "ERROR! Unable to create Compatible Device Processor Queue.");
+		ESP_LOGE("Setup", "ERROR! Unable to create Compatible Device Processor Queue.");
 	}
 	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_CompatibleDeviceTrackerTaskHandle, 1 ) == pdTRUE )
 	{
-		ESP_LOGI("InstallDevice", "Created Compatible Device Tracker task.");
+		ESP_LOGI("Setup", "Created Compatible Device Tracker task.");
 	}
 	else
 	{
-		ESP_LOGE("InstallDevice", "ERROR! Unable to create Compatible Device Tracker task.");
+		ESP_LOGE("Setup", "ERROR! Unable to create Compatible Device Tracker task.");
 	}
 	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_MEDIUM, &m_DeviceProcessorTaskHandle, 1 ) == pdTRUE)
 	{
-		ESP_LOGI("InstallDevice", "Created Compatible Device Processor task.");
+		ESP_LOGI("Setup", "Created Compatible Device Processor task.");
 	}
 	else
 	{
-		ESP_LOGE("InstallDevice", "ERROR! Unable to create Compatible Device Processor task.");
+		ESP_LOGE("Setup", "ERROR! Unable to create Compatible Device Processor task.");
 	}
 }
 
@@ -158,7 +158,7 @@ bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t 
 	{
 		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
 		{
-			ESP_LOGI("ConnectToThisName", "Device info sent to queue");
+			ESP_LOGD("ConnectToThisName", "Device info sent to queue");
 		}
 		else
 		{
@@ -196,7 +196,7 @@ void Bluetooth_Source::DeviceProcessingTask()
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-    ESP_LOGI("Bluetooth_Device", "Compatible Device Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
+    ESP_LOGD("Bluetooth_Device", "Compatible Device Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
     bool found = false;
     std::vector<ActiveCompatibleDevice_t> tempVector;
 	{
@@ -205,7 +205,7 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 		{
 			if (device == newDevice)
 			{
-				ESP_LOGI("Bluetooth_Device", "Compatible Device \"%s\" Updated", newDevice.name);
+				ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", newDevice.name);
 				found = true;
 				device = newDevice;
 				device.lastUpdateTime = millis();

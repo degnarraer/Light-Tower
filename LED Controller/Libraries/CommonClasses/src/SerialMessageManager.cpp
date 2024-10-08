@@ -99,7 +99,7 @@ bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType
 		{
 			if(this->GetName().equals("Amp_Gain"))
 			{
-				ESP_LOGI("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" Change Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count, ChangeCount);
+				ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" Change Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count, ChangeCount);
 			}
 			String message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
 			result = QueueMessage( message.c_str() );

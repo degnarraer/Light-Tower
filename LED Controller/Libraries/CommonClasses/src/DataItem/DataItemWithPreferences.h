@@ -141,12 +141,9 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 
 		virtual bool SetValue(const T* values, size_t count) override
 		{
-			ESP_LOGI("SetValue", "SetValue for Data Item With Preferences 1");
 			bool result = DataItem<T, COUNT>::SetValue(values, count);
 			if(result)
 			{
-				
-				ESP_LOGI("SetValue", "SetValue for Data Item With Preferences 2");
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   				   , this->GetValueAsString() );
 			}
