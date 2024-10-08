@@ -32,6 +32,7 @@
 
 #define MESSAGE_LENGTH 500
 #define BLUETOOTH_DEVICE_TIMEOUT 10000
+#define BT_SCANNED_DEVICE_WEB_SOCKET_UPDATE_INTERVAL 1000
 
 class SettingsWebServerManager;
 
@@ -269,7 +270,6 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         {
           ActiveCompatibleDeviceReceived(values[i]);
         }
-        SendActiveCompatibleDevicesToWebSocket();
         success = true;
       }
       m_ChangeCount = m_DataItem.GetChangeCount();
@@ -293,7 +293,6 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
           m_ActiveDevices.push_back(device);
         }
       }
-      SendActiveCompatibleDevicesToWebSocket();
     }
 
     static void Static_UpdateActiveCompatibleDevices(void * parameter)
@@ -301,10 +300,16 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
       BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *handler = (BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*)parameter;
       const TickType_t xFrequency = 1000;
       TickType_t xLastWakeTime = xTaskGetTickCount();
+      unsigned long lastWebSocketUpdateTime = 0;
       while(true)
       {
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
         handler->CleanActiveCompatibleDevices();
+        unsigned long currentTime = millis();
+        if(currentTime - lastWebSocketUpdateTime >= BT_SCANNED_DEVICE_WEB_SOCKET_UPDATE_INTERVAL)
+        {
+          handler->SendActiveCompatibleDevicesToWebSocket();
+        }
       }
     }
 
@@ -328,7 +333,6 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
           ++it;
         }
       }
-      if(updated) SendActiveCompatibleDevicesToWebSocket();
     }
 
     void SendActiveCompatibleDevicesToWebSocket()
@@ -356,9 +360,12 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
             jsonString.append("}");
         }
         jsonString.append("]}");
-        ESP_LOGD("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
-        String key = this->GetSignal();
-        this->TxDataToWebSocket(key, jsonString.c_str());
+        ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
+        if(0 < jsonString.length())
+        {
+          String key = this->GetSignal();
+          this->TxDataToWebSocket(key, jsonString.c_str());
+        }
     }
     private:
       std::vector<BT_Device_Info_With_Time_Since_Update> m_ActiveDevices;
