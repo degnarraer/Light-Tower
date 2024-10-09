@@ -279,11 +279,11 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
     {
       std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-      ActiveCompatibleDevice_t newdevice = ActiveCompatibleDevice_t( device.name
-                                                                   , device.address
-                                                                   , device.rssi
-                                                                   , millis()
-                                                                   , device.timeSinceUpdate );
+      ActiveCompatibleDevice_t newdevice( device.name
+                                        , device.address
+                                        , device.rssi
+                                        , millis()
+                                        , device.timeSinceUpdate );
       auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), newdevice);
       if (it != m_ActiveDevices.end())
       {
@@ -320,31 +320,27 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void CleanActiveCompatibleDevices()
     {
-      ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
-      bool updated = false;
-
-      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-      for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
-      {
-        ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
-        if ( device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT || 
-             millis() - device->lastUpdateTime > BLUETOOTH_DEVICE_TIMEOUT )
+        ESP_LOGV("CleanActiveCompatibleDevices", "Cleaning Stale Devices.");
+        std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+        for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
         {
-          ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
-          it = m_ActiveDevices.erase(it);
-          updated = true;
+            ActiveCompatibleDevice_t& device = *it;
+            if (device.timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT || 
+                millis() - device.lastUpdateTime > BLUETOOTH_DEVICE_TIMEOUT)
+            {
+                ESP_LOGI("CleanActiveCompatibleDevices", "Removing Device: \"%s\"", device.toString().c_str());
+                it = m_ActiveDevices.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
         }
-        else
-        {
-          ++it;
-        }
-      }
     }
 
     void SendActiveCompatibleDevicesToWebSocket()
     {
         std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-
         const size_t preAllocSize = 1024;
         std::string jsonString;
         jsonString.reserve(preAllocSize);

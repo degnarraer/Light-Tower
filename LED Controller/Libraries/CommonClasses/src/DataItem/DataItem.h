@@ -180,7 +180,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValue(const T& value) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			assert(COUNT == 1);
 			return this->SetValue(&value, 1);
 		}

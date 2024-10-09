@@ -98,9 +98,8 @@ struct BT_Device_Info
 		}
 		bool operator==(const BT_Device_Info& other) const
 		{
-			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0 ) return true;
-			else return false;
+			return ( strcmp(this->name, other.name) == 0 &&
+				     strcmp(this->address, other.address) == 0 );
 		}
 		bool operator!=(const BT_Device_Info& other) const
 		{
@@ -358,9 +357,8 @@ struct BT_Device_Info_With_Time_Since_Update
 		}
 		bool operator==(const BT_Device_Info_With_Time_Since_Update& other) const
 		{
-			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0 ) return true;
-			else return false;
+			return ( strcmp(this->name, other.name) == 0 &&
+				     strcmp(this->address, other.address) == 0 );
 		}
 		bool operator!=(const BT_Device_Info_With_Time_Since_Update& other) const
 		{
@@ -472,9 +470,8 @@ struct  CompatibleDevice_t
 
 		bool operator==(const CompatibleDevice_t& other) const
 		{
-			if( strcmp(this->name, other.name) == 0 &&
-				strcmp(this->address, other.address) == 0) return true;
-			else return false;
+			return ( strcmp(this->name, other.name) == 0 &&
+				     strcmp(this->address, other.address) == 0 );
 		}
 
 		bool operator!=(const CompatibleDevice_t& other) const

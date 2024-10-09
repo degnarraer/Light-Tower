@@ -644,15 +644,15 @@ form {
 #deviceList {
 	overflow-y: scroll;
 	max-height: 300px;
-	min-height: 100px;
+	min-height: 300px;
 	border: 1px solid #fF0000;
 	padding: 10px;
-	width: 300px;
+	width: 100%;
 	font-family: Arial, sans-serif;
 }
 
 .device-item {
-	padding: 150px;
+	padding: 5px;
 	cursor: pointer;
 	border-bottom: 1px solid #ccc;
 }

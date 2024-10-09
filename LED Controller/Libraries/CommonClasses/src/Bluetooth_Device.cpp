@@ -151,11 +151,12 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 //Callback from BT Source for compatible devices to connect to
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
-    ESP_LOGD("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), GetAddressString(address), rssi);
 	const char* addressString = GetAddressString(address);
-	BT_Device_Info newDevice(name.c_str(), addressString, rssi);
+    ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), addressString, rssi);
+	
     if(m_DeviceProcessorQueueHandle)
 	{
+		BT_Device_Info newDevice = BT_Device_Info(name.c_str(), addressString, rssi);
 		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
 		{
 			ESP_LOGD("ConnectToThisName", "Device info sent to queue");
@@ -181,12 +182,9 @@ void Bluetooth_Source::StaticDeviceProcessingTask(void * Parameters)
 
 void Bluetooth_Source::DeviceProcessingTask()
 {
-	const TickType_t xFrequency = 25;
-  	TickType_t xLastWakeTime = xTaskGetTickCount();
-	BT_Device_Info receivedDevice;
   	while(true)
   	{
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
+		BT_Device_Info receivedDevice;
         if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, portMAX_DELAY) == pdPASS)
         {
             Compatible_Device_Found(receivedDevice);
@@ -197,33 +195,24 @@ void Bluetooth_Source::DeviceProcessingTask()
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
     ESP_LOGD("Bluetooth_Device", "Compatible Device Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
-    bool found = false;
-    std::vector<ActiveCompatibleDevice_t> tempVector;
+	std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
+	bool found = false;
+	for (auto& device : m_ActiveCompatibleDevices)
 	{
-		std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
-		for (auto& device : m_ActiveCompatibleDevices)
+		if (device == newDevice)
 		{
-			if (device == newDevice)
-			{
-				ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", newDevice.name);
-				found = true;
-				device = newDevice;
-				device.lastUpdateTime = millis();
-				break;
-			}
-		}
-		if (!found)
-		{
-			ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", newDevice.name);
-			ActiveCompatibleDevice_t newActiveCompatibleDevice = newDevice;
-			m_ActiveCompatibleDevices.push_back(newActiveCompatibleDevice);
-			tempVector = m_ActiveCompatibleDevices;
+			found = true;
+			device = newDevice;
+			device.lastUpdateTime = millis();
+			ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", newDevice.name);
+			break;
 		}
 	}
-	if (m_BluetoothActiveDeviceUpdatee && !found)
+	if (!found)
 	{
-		m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
-	}	
+		ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", newDevice.name);
+		m_ActiveCompatibleDevices.push_back(newDevice);
+	}
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
@@ -239,20 +228,16 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
   	while(true)
   	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		std::vector<ActiveCompatibleDevice_t> tempVector;
+		std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
+		unsigned long CurrentTime = millis();
+		auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
+			[CurrentTime](const ActiveCompatibleDevice_t& device) {
+				return CurrentTime - device.lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT;
+			});
+		m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
+		if (m_BluetoothActiveDeviceUpdatee)
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
-			unsigned long CurrentTime = millis();
-			auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
-				[CurrentTime](const ActiveCompatibleDevice_t& device) {
-					return CurrentTime - device.lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT;
-				});
-			m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
-			tempVector = m_ActiveCompatibleDevices;
-		}
-		if (NULL != m_BluetoothActiveDeviceUpdatee)
-		{
-			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(tempVector);
+			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
 		}
 	}
 }
