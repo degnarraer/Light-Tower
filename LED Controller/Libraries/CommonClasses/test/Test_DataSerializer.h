@@ -251,12 +251,12 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_CompatibleDe
     String objectName = "Object Name";
     char name[BT_NAME_LENGTH] = "LED Tower of Power";
 	char address[BT_ADDRESS_LENGTH] = "AA:BB:CC:DD:EE:FF";
-    CompatibleDevice_t testValue = { name, address };
+    BluetoothDevice_t testValue = { name, address };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_CompatibleDevice_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_BluetoothDevice_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
-    EXPECT_EQ(testValue, *(CompatibleDevice_t*)namedObject.Object);
+    EXPECT_EQ(testValue, *(BluetoothDevice_t*)namedObject.Object);
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
 
@@ -268,12 +268,12 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_ActiveCompat
     int32_t rssi = 100;
     unsigned long lastUpdateTime = 200;
     uint32_t timeSinceUpdate = 300;
-    ActiveCompatibleDevice_t testValue = { name, address, rssi, lastUpdateTime, timeSinceUpdate };
+    ActiveBluetoothDevice_t testValue = { name, address, rssi, lastUpdateTime, timeSinceUpdate };
     NamedObject_t namedObject;
-    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ActiveCompatibleDevice_t, &testValue, 1, 0);
+    String jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_ActiveBluetoothDevice_t, &testValue, 1, 0);
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
-    EXPECT_EQ(testValue, *(ActiveCompatibleDevice_t*)namedObject.Object);
+    EXPECT_EQ(testValue, *(ActiveBluetoothDevice_t*)namedObject.Object);
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
 

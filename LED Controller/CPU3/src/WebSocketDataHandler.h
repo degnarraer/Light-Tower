@@ -31,7 +31,7 @@
 #include <cstring>
 
 #define MESSAGE_LENGTH 500
-#define BLUETOOTH_DEVICE_TIMEOUT 5000
+#define BLUETOOTH_DEVICE_TIMEOUT 10000
 #define BT_SCANNED_DEVICE_WEB_SOCKET_UPDATE_INTERVAL 1000
 
 class SettingsWebServerManager;
@@ -279,7 +279,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
     {
       std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-      ActiveCompatibleDevice_t newdevice( device.name
+      ActiveBluetoothDevice_t newdevice( device.name
                                         , device.address
                                         , device.rssi
                                         , millis()
@@ -324,7 +324,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
         for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
         {
-            ActiveCompatibleDevice_t& device = *it;
+            ActiveBluetoothDevice_t& device = *it;
             if (device.timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT || 
                 millis() - device.lastUpdateTime > BLUETOOTH_DEVICE_TIMEOUT)
             {
@@ -373,7 +373,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         }
     }
     private:
-      std::vector<ActiveCompatibleDevice_t> m_ActiveDevices;
+      std::vector<ActiveBluetoothDevice_t> m_ActiveDevices;
       std::recursive_mutex m_ActiveDevicesMutex;
       TaskHandle_t m_ActiveDeviceUpdateTask;
 };

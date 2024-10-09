@@ -55,32 +55,51 @@ I2S_Device::~I2S_Device()
 	UninstallDevice();
 }
 
+bool I2S_Device::IsRunning()
+{
+  return m_Is_Running;
+}
+
 void I2S_Device::Setup()
 {
-    m_BytesPerSample = m_BitsPerSample/8;
-    m_ChannelSampleCount = m_BufferSize;
+  m_BytesPerSample = m_BitsPerSample/8;
+  m_ChannelSampleCount = m_BufferSize;
 	m_SampleCount = m_ChannelSampleCount * 2;
-    m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
-    m_TotalBytesToRead = m_ChannelBytesToRead * 2;
+  m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
+  m_TotalBytesToRead = m_ChannelBytesToRead * 2;
 }
 
 void I2S_Device::StartDevice()
 {
-	if(false == m_Is_Running)
+	if(!m_Is_Running)
 	{
+    m_Is_Running = true;
 		InstallDevice();
 		i2s_start(m_I2S_PORT);
-		m_Is_Running = true;
+    if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+    {
+      ESP_LOGI("StartDevice", "I2S Device Task Started.");
+    }
+    else
+    {
+      ESP_LOGE("Setup", "ERROR! Unable to create task.");
+    }
 	}
 }
 
 void I2S_Device::StopDevice()
 {
-	if(true == m_Is_Running)
+	if(m_Is_Running)
 	{
 		i2s_stop(m_I2S_PORT);
 		UninstallDevice();
+    if(m_TaskHandle)
+    {
+      vTaskDelete(m_TaskHandle);
+      m_TaskHandle = nullptr;
+    }
 		m_Is_Running = false;
+		ESP_LOGE("StartDevice", "%s: I2S Device Stopped.", GetTitle().c_str());
 	}
 }
 
@@ -156,66 +175,69 @@ void I2S_Device::InstallDevice()
       .data_out_num = m_SerialDataOutPin,     // not used (only for speakers)
       .data_in_num = m_SerialDataInPin        // Serial Data (SD)
     };
-  // Configuring the I2S driver and pins.
-  // This function must be called before any I2S driver read/write operations.
-  err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queue);
-  if (err != ESP_OK)
-  {
-	ESP_LOGE("i2S Device", "ERROR! %s: Failed installing driver: %s.", GetTitle().c_str(), err);
-    ESP.restart();
-  }
-  if (NULL == m_i2s_event_queue)
-  {
-	ESP_LOGE("i2S Device", "ERROR! %s: Failed to setup event queue.", GetTitle().c_str());
-	ESP.restart();
-  }
-  err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
-  if (err != ESP_OK)
-  {
-	ESP_LOGE("i2S Device", "ERROR! %s: Failed setting clock: %s.", GetTitle().c_str(), err);
-	ESP.restart();
-  }
-  err = i2s_set_pin(m_I2S_PORT, &pin_config);
-  if (err != ESP_OK)
-  {
-	ESP_LOGE("i2S Device", "ERROR! %s: Failed setting pin: %s.", GetTitle().c_str(), err);
-    ESP.restart();
-  }
-  ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
+    // Configuring the I2S driver and pins.
+    // This function must be called before any I2S driver read/write operations.
+    err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queueHandle);
+    if (err != ESP_OK)
+    {
+      ESP_LOGE("i2S Device", "ERROR! %s: Failed installing driver: %s.", GetTitle().c_str(), err);
+      ESP.restart();
+    }
+    if (NULL == m_i2s_event_queueHandle)
+    {
+      ESP_LOGE("i2S Device", "ERROR! %s: Failed to setup event queue.", GetTitle().c_str());
+      ESP.restart();
+    }
+    err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
+    if (err != ESP_OK)
+    {
+      ESP_LOGE("i2S Device", "ERROR! %s: Failed setting clock: %s.", GetTitle().c_str(), err);
+      ESP.restart();
+    }
+    err = i2s_set_pin(m_I2S_PORT, &pin_config);
+    if (err != ESP_OK)
+    {
+      ESP_LOGE("i2S Device", "ERROR! %s: Failed setting pin: %s.", GetTitle().c_str(), err);
+      ESP.restart();
+    }
+    ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
 }
 
 void I2S_Device::ProcessEventQueue()
 {
-	if(NULL != m_i2s_event_queue)
-	{
-		i2s_event_t i2sEvent = {};
-		uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queue);   
-		// Iterate over all events in the i2s event queue
-		for( int i = 0; i < i2sMsgCount; ++i )
-		{
-			ESP_LOGV("i2S Device", "%s: Queue Count: %i", GetTitle(), i2sMsgCount);
-			// Take next event from queue
-			if ( xQueueReceive(m_i2s_event_queue, (void*) &i2sEvent, 0) == pdTRUE )
-			{
-				switch (i2sEvent.type)
-				{
-					case I2S_EVENT_DMA_ERROR:
-						ESP_LOGE("i2S Device", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
-						break;
-					case I2S_EVENT_TX_DONE:
-						ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());
-						break;
-					case I2S_EVENT_RX_DONE:
-						{
-						  ESP_LOGV("i2S Device", "%s: RX", GetTitle().c_str());
-						  ReadSamples();
-						}
-						break;
-					case I2S_EVENT_MAX:
-						ESP_LOGW("i2S Device", "WARNING! I2S_EVENT_MAX");
-						break;
-				}	
-			}
-		}
-	}
+  const TickType_t xFrequency = 10;
+  TickType_t xLastWakeTime = xTaskGetTickCount();
+  while(true)
+  {
+    vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    if(nullptr != m_i2s_event_queueHandle)
+    {
+      i2s_event_t i2sEvent = {};
+      uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queueHandle);
+      for( int i = 0; i < i2sMsgCount; ++i )
+      {
+        if ( xQueueReceive(m_i2s_event_queueHandle, (void*) &i2sEvent, 0) == pdTRUE )
+        {
+          switch (i2sEvent.type)
+          {
+            case I2S_EVENT_DMA_ERROR:
+              ESP_LOGE("i2S Device", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
+              break;
+            case I2S_EVENT_TX_DONE:
+              ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());
+              break;
+            case I2S_EVENT_RX_DONE:
+              {
+                ESP_LOGV("i2S Device", "%s: RX", GetTitle().c_str());
+                ReadSamples();
+              }
+              break;
+            case I2S_EVENT_MAX:
+              ESP_LOGW("i2S Device", "WARNING! I2S_EVENT_MAX");
+              break;
+          }	
+        }
+      }
+	  }
+  }
 }

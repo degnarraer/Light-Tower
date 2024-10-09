@@ -69,8 +69,8 @@ class I2S_Device: public NamedItem
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
 	
     void Setup();
-    void ProcessEventQueue();
-	
+    bool IsRunning();
+
   private:
 	  I2S_Device_Callback* m_Callee = NULL;
     DataItemConfig_t* m_ItemConfig = NULL;
@@ -90,7 +90,8 @@ class I2S_Device: public NamedItem
     const int m_SerialDataOutPin;
 
 	  bool m_Is_Running = false;
-    QueueHandle_t m_i2s_event_queue = NULL;
+    QueueHandle_t m_i2s_event_queueHandle = nullptr;
+    TaskHandle_t m_TaskHandle = nullptr;
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
@@ -101,6 +102,14 @@ class I2S_Device: public NamedItem
     size_t WriteSamples(uint8_t *samples, size_t ByteCount);
     void InstallDevice();
     void UninstallDevice();
+
+    static void Static_10mS_TaskLoop(void * parameter)
+    {
+      I2S_Device* device = static_cast<I2S_Device*>(parameter);
+      device->ProcessEventQueue();
+    }
+    void ProcessEventQueue();
+
 };
 
 #endif

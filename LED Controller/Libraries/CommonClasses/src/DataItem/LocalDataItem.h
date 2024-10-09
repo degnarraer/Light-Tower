@@ -389,7 +389,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		virtual bool SetValueFromString(const String& stringValue)
 		{
 			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
-			ESP_LOGD("LocalDataItem::SetValueFromString"
+			ESP_LOGI("LocalDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
 					, stringValue.c_str());

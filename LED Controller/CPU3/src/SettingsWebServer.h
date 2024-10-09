@@ -597,9 +597,9 @@ class SettingsWebServerManager: public SetupCallerInterface
     WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceEnable );
 
     //Target Device
-    CompatibleDevice_t m_Selected_Device_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_Selected_Device = DataItem<CompatibleDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<CompatibleDevice_t, 1> m_Selected_Device_DataHandler = WebSocketDataHandler<CompatibleDevice_t, 1>( m_WebSocketDataProcessor, m_Selected_Device );
+    BluetoothDevice_t m_Selected_Device_InitialValue = {"", ""};
+    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
+    WebSocketDataHandler<BluetoothDevice_t, 1> m_Selected_Device_DataHandler = WebSocketDataHandler<BluetoothDevice_t, 1>( m_WebSocketDataProcessor, m_Selected_Device );
 
     //Sink Connect
     CallbackArguments m_SinkConnect_CallbackArgs = {this};
@@ -686,8 +686,8 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool sourceConnect = *static_cast<bool*>(object);
           if(sourceConnect)
           {
-            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
-            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
+            DataItem<BluetoothDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg1);
+            BluetoothDevice_t *initialValue = static_cast<BluetoothDevice_t*>(arguments->arg2);
             if(targetCompatibleDevice && initialValue)
             {
               targetCompatibleDevice->SetValue(initialValue, 1);
@@ -718,8 +718,8 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool sourceDisconnect = *static_cast<bool*>(object);
           if(sourceDisconnect)
           {
-            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
-            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
+            DataItem<BluetoothDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg1);
+            BluetoothDevice_t *initialValue = static_cast<BluetoothDevice_t*>(arguments->arg2);
             if(targetCompatibleDevice && initialValue)
             {
               targetCompatibleDevice->SetValue(initialValue, 1);

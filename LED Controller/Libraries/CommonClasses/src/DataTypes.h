@@ -106,7 +106,7 @@ struct BT_Device_Info
 };
 typedef BT_Device_Info BT_Device_Info_t;
 
-struct ActiveCompatibleDevice_t
+struct ActiveBluetoothDevice_t
 {
 public:
     char name[BT_NAME_LENGTH+1];
@@ -115,18 +115,18 @@ public:
     unsigned long lastUpdateTime;
     uint32_t timeSinceUpdate;
     
-    ActiveCompatibleDevice_t() : rssi(0), lastUpdateTime(0), timeSinceUpdate(0)
+    ActiveBluetoothDevice_t() : rssi(0), lastUpdateTime(0), timeSinceUpdate(0)
     {
         name[0] = '\0';
         address[0] = '\0';
     }
     
-	ActiveCompatibleDevice_t(const String &str)
+	ActiveBluetoothDevice_t(const String &str)
 	{
 		*this =  fromString(str.c_str());
 	}
 
-    ActiveCompatibleDevice_t(const String& name_In, const String& address_In)
+    ActiveBluetoothDevice_t(const String& name_In, const String& address_In)
     {
         if (BT_NAME_LENGTH < name_In.length())
         {
@@ -145,7 +145,7 @@ public:
         this->address[sizeof(this->address)] = '\0';
     }
 
-    ActiveCompatibleDevice_t(const String& name_In, const String& address_In, int32_t rssi_in, unsigned long lastUpdateTime_in, uint32_t timeSinceUpdate_in)
+    ActiveBluetoothDevice_t(const String& name_In, const String& address_In, int32_t rssi_in, unsigned long lastUpdateTime_in, uint32_t timeSinceUpdate_in)
     {
         if (BT_NAME_LENGTH < name_In.length())
         {
@@ -168,7 +168,7 @@ public:
         timeSinceUpdate = timeSinceUpdate_in;
     }
     
-    ActiveCompatibleDevice_t(const BT_Device_Info& deviceInfo)
+    ActiveBluetoothDevice_t(const BT_Device_Info& deviceInfo)
     {
         strncpy(this->name, deviceInfo.name, sizeof(this->name));
         this->name[sizeof(this->name)] = '\0';
@@ -181,7 +181,7 @@ public:
         this->timeSinceUpdate = 0;
     }
 
-    ActiveCompatibleDevice_t& operator=(const ActiveCompatibleDevice_t& other)
+    ActiveBluetoothDevice_t& operator=(const ActiveBluetoothDevice_t& other)
     {
         if (this != &other)
         {
@@ -198,7 +198,7 @@ public:
         return *this;
     }
 
-    ActiveCompatibleDevice_t& operator=(const BT_Device_Info& other)
+    ActiveBluetoothDevice_t& operator=(const BT_Device_Info& other)
     {
         strncpy(this->name, other.name, sizeof(this->name));
         this->name[sizeof(this->name)] = '\0';
@@ -213,7 +213,7 @@ public:
         return *this;
     }
 
-    bool operator==(const ActiveCompatibleDevice_t& other) const
+    bool operator==(const ActiveBluetoothDevice_t& other) const
     {
         return ( strcmp(this->name, other.name) == 0 &&
                  strcmp(this->address, other.address ) == 0 );
@@ -225,7 +225,7 @@ public:
                  strcmp(this->address, other.address ) == 0 );
     }
 
-    bool operator!=(const ActiveCompatibleDevice_t& other) const
+    bool operator!=(const ActiveBluetoothDevice_t& other) const
     {
         return !(*this == other);
     }
@@ -240,54 +240,68 @@ public:
         return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(lastUpdateTime) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
     }
 
-    static ActiveCompatibleDevice_t fromString(const std::string &str)
+    static ActiveBluetoothDevice_t fromString(const std::string &str)
     {
-        int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
-        if (delimiterIndex == -1)
+        const std::string delimiter = ENCODE_VALUE_DIVIDER; // Assuming ENCODE_VALUE_DIVIDER is a string or char
+        size_t delimiterIndex = str.find(delimiter);
+
+        if (delimiterIndex == std::string::npos)
         {
-            return ActiveCompatibleDevice_t();
+            return ActiveBluetoothDevice_t();  // Return default if delimiter not found
         }
 
-        String name = String(str.substr(0, delimiterIndex).c_str());
-        int nextDelimiterIndex = str.find(ENCODE_VALUE_DIVIDER, delimiterIndex + 1);
-        if (nextDelimiterIndex == -1)
+        // Extract name
+        std::string name = str.substr(0, delimiterIndex);
+
+        // Find the next delimiter for the address
+        size_t nextDelimiterIndex = str.find(delimiter, delimiterIndex + delimiter.length());
+        if (nextDelimiterIndex == std::string::npos)
         {
-            return ActiveCompatibleDevice_t();
+            return ActiveBluetoothDevice_t();
         }
 
-        String address = String(str.substr(delimiterIndex + 2, nextDelimiterIndex - 1).c_str());
-        int nextDelimiterIndex2 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex + 1);
-        if (nextDelimiterIndex2 == -1)
+        // Extract address
+        std::string address = str.substr(delimiterIndex + delimiter.length(), nextDelimiterIndex - delimiterIndex - delimiter.length());
+
+        // Find the next delimiter for RSSI
+        size_t nextDelimiterIndex2 = str.find(delimiter, nextDelimiterIndex + delimiter.length());
+        if (nextDelimiterIndex2 == std::string::npos)
         {
-            return ActiveCompatibleDevice_t();
+            return ActiveBluetoothDevice_t();
         }
 
-        String rssiStr =  String(str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1).c_str());
-        int rssi = rssiStr.toInt();
+        // Extract RSSI
+        std::string rssiStr = str.substr(nextDelimiterIndex + delimiter.length(), nextDelimiterIndex2 - nextDelimiterIndex - delimiter.length());
+        int rssi = std::stoi(rssiStr);
 
-        int nextDelimiterIndex3 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex2 + 1);
-        if (nextDelimiterIndex3 == -1)
+        // Find the next delimiter for lastUpdateTime
+        size_t nextDelimiterIndex3 = str.find(delimiter, nextDelimiterIndex2 + delimiter.length());
+        if (nextDelimiterIndex3 == std::string::npos)
         {
-            return ActiveCompatibleDevice_t();
+            return ActiveBluetoothDevice_t();
         }
 
-        String lastUpdateTimeStr =  String(str.substr(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1).c_str());
-        unsigned long lastUpdateTime = lastUpdateTimeStr.toInt();
+        // Extract lastUpdateTime
+        std::string lastUpdateTimeStr = str.substr(nextDelimiterIndex2 + delimiter.length(), nextDelimiterIndex3 - nextDelimiterIndex2 - delimiter.length());
+        unsigned long lastUpdateTime = std::stoul(lastUpdateTimeStr);
 
-        String timeSinceUpdateStr =  String(str.substr(nextDelimiterIndex3 + 2).c_str());
-        uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt();
+        // Extract timeSinceUpdate
+        std::string timeSinceUpdateStr = str.substr(nextDelimiterIndex3 + delimiter.length());
+        uint32_t timeSinceUpdate = std::stoul(timeSinceUpdateStr);
 
-        return ActiveCompatibleDevice_t(name, address, rssi, lastUpdateTime, timeSinceUpdate);
+        // Create and return the ActiveBluetoothDevice_t object
+        return ActiveBluetoothDevice_t(name.c_str(), address.c_str(), rssi, lastUpdateTime, timeSinceUpdate);
     }
+
 	
-    friend std::istream& operator>>(std::istream& is, ActiveCompatibleDevice_t& device) {
+    friend std::istream& operator>>(std::istream& is, ActiveBluetoothDevice_t& device) {
         std::string str;
         std::getline(is, str);
-        device = ActiveCompatibleDevice_t::fromString(str);
+        device = ActiveBluetoothDevice_t::fromString(str);
         return is;
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const ActiveCompatibleDevice_t& device) {
+    friend std::ostream& operator<<(std::ostream& os, const ActiveBluetoothDevice_t& device) {
         os << device.toString().c_str();
         return os;
     }
@@ -313,7 +327,7 @@ struct BT_Device_Info_With_Time_Since_Update
 			timeSinceUpdate = timeSinceUdpate_in;
 		}
 
-        BT_Device_Info_With_Time_Since_Update(const ActiveCompatibleDevice_t device_in, uint32_t timeSinceUpdate_in)
+        BT_Device_Info_With_Time_Since_Update(const ActiveBluetoothDevice_t device_in, uint32_t timeSinceUpdate_in)
         {
             strncpy(name, device_in.name, BT_NAME_LENGTH);
             name[BT_NAME_LENGTH] = '\0';
@@ -359,43 +373,46 @@ struct BT_Device_Info_With_Time_Since_Update
 
 		static BT_Device_Info_With_Time_Since_Update fromString(const std::string &str)
         {
-            int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
-            if (delimiterIndex == -1)
+            const std::string delimiter = ENCODE_VALUE_DIVIDER; // Assuming ENCODE_VALUE_DIVIDER is a string or char
+            size_t delimiterIndex = str.find(delimiter);
+            
+            if (delimiterIndex == std::string::npos)
+            {
+                return BT_Device_Info_With_Time_Since_Update();  // Return default if delimiter not found
+            }
+
+            // Extract name
+            std::string name = str.substr(0, delimiterIndex);
+
+            // Find the next delimiter for the address
+            size_t nextDelimiterIndex = str.find(delimiter, delimiterIndex + delimiter.length());
+            if (nextDelimiterIndex == std::string::npos)
             {
                 return BT_Device_Info_With_Time_Since_Update();
             }
 
-            std::string name = str.substr(0, delimiterIndex - 1);
-            int nextDelimiterIndex = str.find(ENCODE_VALUE_DIVIDER, delimiterIndex + 1);
-            if (nextDelimiterIndex == -1)
+            // Extract address
+            std::string address = str.substr(delimiterIndex + delimiter.length(), nextDelimiterIndex - delimiterIndex - delimiter.length());
+
+            // Find the next delimiter for RSSI
+            size_t nextDelimiterIndex2 = str.find(delimiter, nextDelimiterIndex + delimiter.length());
+            if (nextDelimiterIndex2 == std::string::npos)
             {
                 return BT_Device_Info_With_Time_Since_Update();
             }
 
-            std::string address = str.substr(delimiterIndex + 2, nextDelimiterIndex - 1);
-            int nextDelimiterIndex2 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex + 1);
-            if (nextDelimiterIndex2 == -1)
-            {
-                return BT_Device_Info_With_Time_Since_Update();
-            }
-
-            std::string rssiStr =  str.substr(nextDelimiterIndex + 2, nextDelimiterIndex2 - 1);
+            // Extract RSSI
+            std::string rssiStr = str.substr(nextDelimiterIndex + delimiter.length(), nextDelimiterIndex2 - nextDelimiterIndex - delimiter.length());
             int32_t rssi = std::stoi(rssiStr);
 
-            int nextDelimiterIndex3 = str.find(ENCODE_VALUE_DIVIDER, nextDelimiterIndex2 + 1);
-            if (nextDelimiterIndex3 == -1)
-            {
-                
-                return BT_Device_Info_With_Time_Since_Update();
-            }
-            std::string lastUpdateTimeStr =  str.substr(nextDelimiterIndex2 + 2, nextDelimiterIndex3 - 1);
-            unsigned long lastUpdateTime = std::stoul(lastUpdateTimeStr);
+            // Extract timeSinceUpdate (assuming it's the last part of the string)
+            std::string timeSinceUpdateStr = str.substr(nextDelimiterIndex2 + delimiter.length());
+            uint32_t timeSinceUpdate = std::stoul(timeSinceUpdateStr);
 
-            String timeSinceUpdateStr =  String(str.substr(nextDelimiterIndex3 + 2).c_str());
-            uint32_t timeSinceUpdate = timeSinceUpdateStr.toInt();
-
+            // Create and return the BT_Device_Info_With_Time_Since_Update object without lastUpdateTime
             return BT_Device_Info_With_Time_Since_Update(name.c_str(), address.c_str(), rssi, timeSinceUpdate);
         }
+
 
 		
 		friend std::istream& operator>>(std::istream& is, BT_Device_Info_With_Time_Since_Update& device) {
@@ -413,20 +430,20 @@ struct BT_Device_Info_With_Time_Since_Update
 };
 typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Update_t;
 
-struct  CompatibleDevice_t
+struct  BluetoothDevice_t
 {
 	public:
 		char name[BT_NAME_LENGTH] = "\0";
 		char address[BT_ADDRESS_LENGTH] = "\0";
 		
-        CompatibleDevice_t(){}
+        BluetoothDevice_t(){}
 
-		CompatibleDevice_t(const String &str)
+		BluetoothDevice_t(const String &str)
 		{
 			*this = fromString(str.c_str());
 		}
 
-		CompatibleDevice_t(const char* name_In, const char* address_In)
+		BluetoothDevice_t(const char* name_In, const char* address_In)
 		{
             strncpy(name, name_In, BT_NAME_LENGTH);
             name[BT_NAME_LENGTH] = '\0';
@@ -435,7 +452,7 @@ struct  CompatibleDevice_t
             address[BT_ADDRESS_LENGTH] = '\0';
 		}
 
-		CompatibleDevice_t& operator=(const CompatibleDevice_t& other)
+		BluetoothDevice_t& operator=(const BluetoothDevice_t& other)
 		{
 			strncpy(this->name, other.name, sizeof(this->name));
 			this->name[sizeof(this->name)] = '\0';
@@ -445,13 +462,13 @@ struct  CompatibleDevice_t
 			return *this;
 		}
 
-		bool operator==(const CompatibleDevice_t& other) const
+		bool operator==(const BluetoothDevice_t& other) const
 		{
 			return ( strcmp(this->name, other.name) == 0 &&
 				     strcmp(this->address, other.address) == 0 );
 		}
 
-		bool operator!=(const CompatibleDevice_t& other) const
+		bool operator!=(const BluetoothDevice_t& other) const
 		{
 			return !(*this == other);
 		}
@@ -466,27 +483,30 @@ struct  CompatibleDevice_t
             return String(name) + ENCODE_VALUE_DIVIDER + String(address);
         }
 
-		static CompatibleDevice_t fromString(const std::string &str)
-		{
-			int delimiterIndex = str.find(ENCODE_VALUE_DIVIDER);
-			if (delimiterIndex == -1)
-			{
-				return CompatibleDevice_t();
-			}
+		static BluetoothDevice_t fromString(const std::string &str)
+        {
+            const std::string delimiter = ENCODE_VALUE_DIVIDER;
+            size_t delimiterIndex = str.find(delimiter);
 
-			String name = String(str.substr(0, delimiterIndex - 1).c_str());
-			String address = String(str.substr(delimiterIndex + 2).c_str());
-			return CompatibleDevice_t(name.c_str(), address.c_str());
-		}
+            if (delimiterIndex == std::string::npos)
+            {
+                return BluetoothDevice_t();
+            }
 
-		friend std::istream& operator>>(std::istream& is, CompatibleDevice_t& device) {
+            std::string name = str.substr(0, delimiterIndex);
+            std::string address = str.substr(delimiterIndex + delimiter.length());
+
+            return BluetoothDevice_t(name.c_str(), address.c_str());
+        }
+
+		friend std::istream& operator>>(std::istream& is, BluetoothDevice_t& device) {
 			std::string str;
 			std::getline(is, str);
-			device = CompatibleDevice_t::fromString(str);
+			device = BluetoothDevice_t::fromString(str);
 			return is;
 		}
 
-		friend std::ostream& operator<<(std::ostream& os, const CompatibleDevice_t& device) {
+		friend std::ostream& operator<<(std::ostream& os, const BluetoothDevice_t& device) {
 			os << device.toString().c_str();
 			return os;
 		}
@@ -794,8 +814,8 @@ enum DataType_t
   DataType_String_t,
   DataType_BT_Device_Info_t,
   DataType_BT_Device_Info_With_Time_Since_Update_t,
-  DataType_CompatibleDevice_t,
-  DataType_ActiveCompatibleDevice_t,
+  DataType_BluetoothDevice_t,
+  DataType_ActiveBluetoothDevice_t,
   DataType_Float_t,
   DataType_Double_t,
   DataType_ProcessedSoundData_t,
@@ -822,8 +842,8 @@ static const char* DataTypeStrings[] =
   "String_t",
   "BT_Device_Info_t",
   "BT_Device_Info_With_Time_Since_Update_t",
-  "CompatibleDevice_t",
-  "ActiveCompatibleDevice_t",
+  "BluetoothDevice_t",
+  "ActiveBluetoothDevice_t",
   "Float_t",
   "Double_t",
   "ProcessedSoundData_t",
@@ -1073,8 +1093,8 @@ class DataTypeFunctions
 			else if(std::is_same<T, String>::value) 									return DataType_String_t;
 			else if(std::is_same<T, BT_Device_Info_t>::value) 							return DataType_BT_Device_Info_t;
 			else if(std::is_same<T, BT_Device_Info_With_Time_Since_Update_t>::value) 	return DataType_BT_Device_Info_With_Time_Since_Update_t;
-			else if(std::is_same<T, CompatibleDevice_t>::value)							return DataType_CompatibleDevice_t;
-			else if(std::is_same<T, ActiveCompatibleDevice_t>::value)					return DataType_ActiveCompatibleDevice_t;
+			else if(std::is_same<T, BluetoothDevice_t>::value)							return DataType_BluetoothDevice_t;
+			else if(std::is_same<T, ActiveBluetoothDevice_t>::value)					return DataType_ActiveBluetoothDevice_t;
 			else if(std::is_same<T, float>::value) 										return DataType_Float_t;
 			else if(std::is_same<T, double>::value) 									return DataType_Double_t;
 			else if(std::is_same<T, ProcessedSoundData_t>::value) 						return DataType_ProcessedSoundData_t;
@@ -1140,12 +1160,12 @@ class DataTypeFunctions
 					result = sizeof(BT_Device_Info_With_Time_Since_Update_t);
 				break;
 				
-				case DataType_CompatibleDevice_t:
-					result = sizeof(CompatibleDevice_t);
+				case DataType_BluetoothDevice_t:
+					result = sizeof(BluetoothDevice_t);
 				break;
 				
-				case DataType_ActiveCompatibleDevice_t:
-					result = sizeof(ActiveCompatibleDevice_t);
+				case DataType_ActiveBluetoothDevice_t:
+					result = sizeof(ActiveBluetoothDevice_t);
 				break;
 				
 				case DataType_Float_t:

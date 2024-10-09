@@ -32,40 +32,47 @@ Manager::Manager( String Title
 }
 Manager::~Manager()
 {
-  vTaskDelete(m_Manager_20mS_Task);
-  vTaskDelete(m_Manager_1000mS_Task);
-  vTaskDelete(m_Manager_300000mS_Task);
+  if(m_Manager_10mS_TaskHandle)
+  {
+    vTaskDelete(m_Manager_10mS_TaskHandle);
+    m_Manager_10mS_TaskHandle = nullptr;
+  }
+  if(m_Manager_10mS_TaskHandle)
+  {
+    vTaskDelete(m_Manager_1000mS_TaskHandle);
+    m_Manager_1000mS_TaskHandle = nullptr;
+  }
+  if(m_Manager_300000mS_TaskHandle)
+  {
+    vTaskDelete(m_Manager_300000mS_TaskHandle);
+    m_Manager_300000mS_TaskHandle = nullptr;
+  }
 }
 
 void Manager::Setup()
 {
+  SetupDevices();
   SetupAllSetupCallees();
   SetupSerialPortManager();
-  SetupBlueTooth();
-  SetupI2S();
   SetupStatisticalEngine();
   SetupTasks();
 }
 
-void Manager::SetupBlueTooth()
+void Manager::SetupDevices()
 {
   //Set Bluetooth Power to Max
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
   m_BT_In.Setup();
   m_BT_In.RegisterForConnectionStateChangedCallBack(this);
+  m_Mic_In.Setup();
+  m_Mic_In.SetCallback(this);
+  m_I2S_Out.Setup();
 }
 
 void Manager::SetupSerialPortManager()
 {
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
-}
-
-void Manager::SetupI2S()
-{
-  m_Mic_In.Setup();
-  m_I2S_Out.Setup();
-  m_Mic_In.SetCallback(this); 
 }
 
 void Manager::SetupStatisticalEngine()
@@ -75,21 +82,30 @@ void Manager::SetupStatisticalEngine()
 
 void Manager::SetupTasks()
 {
-  xTaskCreatePinnedToCore( Static_Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &m_Manager_20mS_Task,     0 );
-  xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 3,  &m_Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 3,  &m_Manager_300000mS_Task, 0 );
+  if(xTaskCreatePinnedToCore( Static_Manager_10mS_TaskLoop,     "Manager_10mS_Task",      10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_10mS_TaskHandle,     0 ) != pdTRUE )
+  {
+    ESP_LOGE("Setup", "ERROR! Unable to create task.");
+  }
+  if(xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_1000mS_TaskHandle,   0 ) != pdTRUE )
+  {
+    ESP_LOGE("Setup", "ERROR! Unable to create task.");
+  }
+  if(xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_300000mS_TaskHandle, 0 ) != pdTRUE )
+  {
+    ESP_LOGE("Setup", "ERROR! Unable to create task.");
+  }
 }
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
 }
 
-void Manager::Static_Manager_20mS_TaskLoop(void * parameter)
+void Manager::Static_Manager_10mS_TaskLoop(void * parameter)
 {
   Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue20mS();
+  manager->ProcessEventQueue10mS();
 }
-void Manager::ProcessEventQueue20mS()
+void Manager::ProcessEventQueue10mS()
 {
   const TickType_t xFrequency = 10;
   TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -146,7 +162,7 @@ void Manager::SetInputSource(SoundInputSource_t Type)
     case SoundInputSource_t::Bluetooth:
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
-      m_Mic_In.StopDevice();
+      m_Mic_In.StopDevice(); 
       m_I2S_Out.StopDevice();
       m_BT_In.StartDevice();
       m_BT_In.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
@@ -169,7 +185,8 @@ void Manager::BTDataReceived(uint8_t *data, uint32_t length)
 
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
-{  
+{
+  ESP_LOGI("I2SDataReceived", "I2SDataReceived.");
   switch(m_SoundInputSource.GetValue())
   {
     case SoundInputSource_t::Microphone:

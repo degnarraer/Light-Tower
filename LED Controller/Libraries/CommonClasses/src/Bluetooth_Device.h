@@ -63,7 +63,7 @@ class BluetoothActiveDeviceUpdatee
 {
 	public:
 		BluetoothActiveDeviceUpdatee(){};
-		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices) = 0;
+		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices) = 0;
 };
 
 class BluetoothActiveDeviceUpdater
@@ -161,7 +161,7 @@ class Bluetooth_Source: public NamedItem
 		bool m_ResetBLE = true;
 		bool m_AutoReConnect = false;
 		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
-		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
+		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
 		QueueHandle_t m_DeviceProcessorQueueHandle= nullptr;
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle= nullptr;
 		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;

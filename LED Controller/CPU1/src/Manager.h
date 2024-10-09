@@ -53,14 +53,15 @@ class Manager: public NamedItem
     void Setup();
 
     //Tasks
-    static void Static_Manager_20mS_TaskLoop(void * parameter);
-    void ProcessEventQueue20mS();
+    static void Static_Manager_10mS_TaskLoop(void * parameter);
+    void ProcessEventQueue10mS();
     static void Static_Manager_1000mS_TaskLoop(void * parameter);
     void ProcessEventQueue1000mS();
     static void Static_Manager_300000mS_TaskLoop(void * parameter);
     void ProcessEventQueue300000mS();
     
     void SetInputSource(SoundInputSource_t Type);
+
     //Bluetooth_Callback
     void BTDataReceived(uint8_t *data, uint32_t length);
     
@@ -83,9 +84,9 @@ class Manager: public NamedItem
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
     
     void SetupTasks();
-    TaskHandle_t m_Manager_20mS_Task;
-    TaskHandle_t m_Manager_1000mS_Task;
-    TaskHandle_t m_Manager_300000mS_Task;
+    TaskHandle_t m_Manager_10mS_TaskHandle;
+    TaskHandle_t m_Manager_1000mS_TaskHandle;
+    TaskHandle_t m_Manager_300000mS_TaskHandle;
     
     String ConnectionStatusStrings[5]
     {
@@ -121,7 +122,7 @@ class Manager: public NamedItem
     Mute_State_t m_MuteState = Mute_State_t::Mute_State_Un_Muted;
 
     //Bluetooth Data
-    void SetupBlueTooth();
+    void SetupDevices();
     Bluetooth_Sink &m_BT_In;
     
     //I2S Sound Data RX
@@ -183,8 +184,8 @@ class Manager: public NamedItem
         DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
         char* sinkName = static_cast<char*>(object);
         ESP_LOGI("SinkName_ValueChanged", "Sink Name Changed: %s", sinkName);
-        pBT_In->Disconnect();
-        pBT_In->Connect(sinkName, pBluetoothSinkAutoReConnect->GetValue());
+        //pBT_In->Disconnect();
+        //pBT_In->Connect(sinkName, pBluetoothSinkAutoReConnect->GetValue());
       }
     }
 
@@ -204,6 +205,7 @@ class Manager: public NamedItem
                                                                                            , NULL
                                                                                            , this
                                                                                            , &validBoolValues );
+
     static void SinkAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -213,11 +215,9 @@ class Manager: public NamedItem
         Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
         DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
         ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
-        pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+        //pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
       }
     }
-
-
 
     //Sink Connect
     Callback3Arguments m_SinkConnect_CallbackArgs = { &m_BT_In
@@ -247,7 +247,7 @@ class Manager: public NamedItem
         if(sinkConnect)
         {
           ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
-          pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
+          //pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
         }
       }
     }
@@ -276,7 +276,7 @@ class Manager: public NamedItem
         if(sinkDisconnect)
         {
           ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnecting");
-          pBT_In->Disconnect();
+          //pBT_In->Disconnect();
         }
       }
     }

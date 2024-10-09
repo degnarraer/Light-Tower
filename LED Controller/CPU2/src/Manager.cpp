@@ -92,11 +92,18 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channe
 //Bluetooth Source Callback
 int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
-  size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
-  assert(0 == ByteReceived % sizeof(uint32_t)); 
-  size_t FrameCount = ByteReceived / sizeof(uint32_t);
-  m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
-  return ByteReceived;
+  if(m_I2S_In.IsRunning())
+  {
+    size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
+    assert(0 == ByteReceived % sizeof(uint32_t)); 
+    size_t FrameCount = ByteReceived / sizeof(uint32_t);
+    m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
+    return ByteReceived;
+  }
+  else
+  {
+    return 0;
+  }
 }
 
 //BluetoothConnectionStateCallee Callback 
@@ -130,7 +137,7 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
 }
 
 //BluetoothActiveDeviceUpdatee Callback 
-void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices)
+void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices)
 {
   unsigned long currentMillis = millis();
   for(int i = 0; i < Devices.size(); ++i)

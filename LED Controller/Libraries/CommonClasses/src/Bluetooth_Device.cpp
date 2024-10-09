@@ -233,7 +233,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
 		unsigned long CurrentTime = millis();
 		auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
-			[CurrentTime](const ActiveCompatibleDevice_t& device) {
+			[CurrentTime](const ActiveBluetoothDevice_t& device) {
 				return CurrentTime - device.lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT;
 			});
 		m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
@@ -248,7 +248,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		
 void Bluetooth_Sink::Setup()
 {
-	ESP_LOGI("Bluetooth_Device", "%s: Setup", GetTitle().c_str());
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setup", GetTitle().c_str());
 }
 void Bluetooth_Sink::ResgisterForRxCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
 
@@ -309,8 +309,7 @@ void Bluetooth_Sink::StartDevice()
 }
 void Bluetooth_Sink::StopDevice()
 {
-	Disconnect();
-	if(true == m_Is_Running)
+	if(m_Is_Running)
 	{
 		ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth");
 		m_BTSink.end(false);
@@ -320,6 +319,7 @@ void Bluetooth_Sink::StopDevice()
 }
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
+	StartDevice();
 	m_SinkName = sinkName;
 	m_AutoReConnect = reconnect;
 	m_BTSink.start(m_SinkName.c_str());
@@ -328,6 +328,7 @@ void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 void Bluetooth_Sink::Disconnect()
 {
 	m_BTSink.disconnect();
+	StopDevice();
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Disconnected");
 }
 

@@ -70,13 +70,13 @@ class Manager: public NamedItem
     void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState);
     
     //BluetoothActiveDeviceUpdatee Callback 
-    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices);
+    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices);
 
   private:
     IPreferences& m_PreferencesInterface;    
     TaskHandle_t m_Manager_20mS_Task;
-    TaskHandle_t m_Manager_1000mS_Task;
-    TaskHandle_t m_Manager_300000mS_Task;
+    TaskHandle_t m_Manager_1000mS_TaskHandle;
+    TaskHandle_t m_Manager_300000mS_TaskHandle;
 
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
@@ -150,7 +150,7 @@ class Manager: public NamedItem
         if(arguments->arg1 && arguments->arg2)
         {
           Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-          CompatibleDevice_t *pTargetDevice = static_cast<CompatibleDevice_t*>(arguments->arg2);
+          BluetoothDevice_t *pTargetDevice = static_cast<BluetoothDevice_t*>(arguments->arg2);
           bool connect = *static_cast<bool*>(object);
           if(connect)
           {
@@ -295,8 +295,8 @@ class Manager: public NamedItem
     //Selected Device Device
     CallbackArguments m_Selected_Device_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_Selected_Device_Callback = {"Target Compatible Device Callback", &TargetCompatibleDevice_ValueChanged, &m_Selected_Device_CallbackArgs};
-    const CompatibleDevice_t m_Selected_Device_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_Selected_Device = DataItem<CompatibleDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_Selected_Device_Callback, this);
+    const BluetoothDevice_t m_Selected_Device_InitialValue = {"", ""};
+    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_Selected_Device_Callback, this);
     static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
@@ -305,7 +305,7 @@ class Manager: public NamedItem
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
         if(arguments->arg1)
         {
-          CompatibleDevice_t* targetCompatibleDevice = static_cast<CompatibleDevice_t*>(object);
+          BluetoothDevice_t* targetCompatibleDevice = static_cast<BluetoothDevice_t*>(object);
           Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
           if(BT_Out && targetCompatibleDevice)
           {
