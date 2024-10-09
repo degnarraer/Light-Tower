@@ -129,7 +129,7 @@ class Manager: public NamedItem
                                                                                         , this );
     
     //Output Source Connect
-    Callback2Arguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_TargetCompatibleDevice};
+    Callback2Arguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_Selected_Device};
     NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback"
                                                     , &OuputSourceConnect_ValueChanged
                                                     , &m_OuputSourceConnect_CallbackArgs};
@@ -292,24 +292,38 @@ class Manager: public NamedItem
       }
     }
     
-    //Target Compatible Device
-    CallbackArguments m_TargetCompatibleDevice_CallbackArgs = {&m_BT_Out};
-    NamedCallback_t m_TargetCompatibleDevice_Callback = {"Target Compatible Device Callback", &TargetCompatibleDevice_ValueChanged, &m_TargetCompatibleDevice_CallbackArgs};
-    const CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_TargetCompatibleDevice_Callback, this);
+    //Selected Device Device
+    CallbackArguments m_Selected_Device_CallbackArgs = {&m_BT_Out};
+    NamedCallback_t m_Selected_Device_Callback = {"Target Compatible Device Callback", &TargetCompatibleDevice_ValueChanged, &m_Selected_Device_CallbackArgs};
+    const CompatibleDevice_t m_Selected_Device_InitialValue = {"", ""};
+    DataItem<CompatibleDevice_t, 1> m_Selected_Device = DataItem<CompatibleDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_Selected_Device_Callback, this);
     static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert((arguments->arg1) && "Null Pointer!");
-        CompatibleDevice_t* targetCompatibleDevice = static_cast<CompatibleDevice_t*>(object);
-        Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-        if(BT_Out && targetCompatibleDevice)
+        if(arguments->arg1)
         {
-          BT_Out->SetNameToConnect(targetCompatibleDevice->name, targetCompatibleDevice->address);
+          CompatibleDevice_t* targetCompatibleDevice = static_cast<CompatibleDevice_t*>(object);
+          Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          if(BT_Out && targetCompatibleDevice)
+          {
+            BT_Out->SetNameToConnect(targetCompatibleDevice->name, targetCompatibleDevice->address);
+          }
+          else
+          {
+            ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
+          }
         }
+        else
+        {
+          ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
+        }
+      }
+      else
+      {
+        ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
       }
     }
 

@@ -288,7 +288,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
       if (it != m_ActiveDevices.end())
       {
         *it = newdevice;
-        ESP_LOGI("ScannedDevice_ValueChanged", "Device Updated: \"%s\"", device.toString().c_str());
+        ESP_LOGD("ScannedDevice_ValueChanged", "Device Updated: \"%s\"", device.toString().c_str());
       }
       else 
       {

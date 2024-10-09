@@ -141,7 +141,7 @@ void Bluetooth_Source::Disconnect()
 }
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
-	ESP_LOGI( "Bluetooth_Source::ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
+	ESP_LOGI( "ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
 			, sourceName.c_str()
 			, sourceAddress.c_str() );
 	m_Name = String(sourceName.c_str());
@@ -152,9 +152,12 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi)
 {
 	const char* addressString = GetAddressString(address);
-    ESP_LOGI("ConnectToThisName", "Connect to this name: \"%s\" Address: \"%s\" RSSI: \"%i\"", name.c_str(), addressString, rssi);
-	
-    if(m_DeviceProcessorQueueHandle)
+    ESP_LOGI("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", name.c_str(), addressString, rssi, m_Name.c_str(), m_Address.c_str());
+    if(m_Name.c_str() == name && m_Address == addressString)
+	{
+		return true;
+	}
+    else if(m_DeviceProcessorQueueHandle)
 	{
 		BT_Device_Info newDevice = BT_Device_Info(name.c_str(), addressString, rssi);
 		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
@@ -170,8 +173,7 @@ bool Bluetooth_Source::ConnectToThisName(const std::string& name, esp_bd_addr_t 
 	{
 		ESP_LOGE("ConnectToThisName", "Queue Not Ready!");
 	}
-	
-    return (m_Name.c_str() == name && m_Address == addressString);
+	return false;
 }
 
 void Bluetooth_Source::StaticDeviceProcessingTask(void * Parameters)

@@ -23,7 +23,7 @@ export const Sink_Auto_Reconnect = new Model_Boolean('BT_Sink_AR', Model_Boolean
 
 export const SourceName = new Model_Text('Source_Name', '', wsManager);
 export const CurrentSoundOutputSource = new Model_OutputSource('Output_Source', Model_OutputSource.values.OFF, wsManager);
-export const BluetoothDeviceSelector = new Model_BtDeviceSelector('Scan_BT_Devices', wsManager);
+export const BluetoothDeviceSelector = new Model_BtDeviceSelector('Scan_BT_Devices', 'Selected_Device', wsManager);
 export const BT_SourceEnable = new Model_Boolean('BT_Source_En', Model_Boolean.values.False, wsManager);
 export const Source_ConnectionStatus = new Model_ConnectionStatus('Src_Conn_State', 'Disconnected', wsManager);
 export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.values.False, wsManager);

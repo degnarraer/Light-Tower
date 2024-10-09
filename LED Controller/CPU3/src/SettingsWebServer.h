@@ -597,9 +597,9 @@ class SettingsWebServerManager: public SetupCallerInterface
     WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceEnable );
 
     //Target Device
-    CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<CompatibleDevice_t, 1> m_TargetCompatibleDevice_DataHandler = WebSocketDataHandler<CompatibleDevice_t, 1>( m_WebSocketDataProcessor, m_TargetCompatibleDevice );
+    CompatibleDevice_t m_Selected_Device_InitialValue = {"", ""};
+    DataItem<CompatibleDevice_t, 1> m_Selected_Device = DataItem<CompatibleDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
+    WebSocketDataHandler<CompatibleDevice_t, 1> m_Selected_Device_DataHandler = WebSocketDataHandler<CompatibleDevice_t, 1>( m_WebSocketDataProcessor, m_Selected_Device );
 
     //Sink Connect
     CallbackArguments m_SinkConnect_CallbackArgs = {this};
@@ -670,7 +670,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     }
 
     //Output Source Connect
-    CallbackArguments m_SourceConnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    CallbackArguments m_SourceConnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue};
     NamedCallback_t m_SourceConnect_Callback = {"Test Name", &SourceConnect_ValueChanged, &m_SourceConnect_CallbackArgs};
     const bool m_SourceConnect_InitialValue = false;
     DataItem<bool, 1> m_SourceConnect = DataItem<bool, 1>( "Src_Connect", m_SourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceConnect_Callback, this);
@@ -690,7 +690,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
             if(targetCompatibleDevice && initialValue)
             {
-              //targetCompatibleDevice->SetValue(initialValue, 1);
+              targetCompatibleDevice->SetValue(initialValue, 1);
             }
           }
         }
@@ -702,7 +702,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     }
 
     //Output Source Disconnect
-    CallbackArguments m_SourceDisconnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    CallbackArguments m_SourceDisconnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue};
     NamedCallback_t m_SourceDisconnect_Callback = {"m_SourceDisconnect_Callback", &SourceDisconnect_ValueChanged, &m_SourceDisconnect_CallbackArgs};
     const bool m_SourceDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_SourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceDisconnect_Callback, this);
@@ -722,7 +722,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
             if(targetCompatibleDevice && initialValue)
             {
-              //targetCompatibleDevice->SetValue(initialValue, 1);
+              targetCompatibleDevice->SetValue(initialValue, 1);
             }
           }
         }

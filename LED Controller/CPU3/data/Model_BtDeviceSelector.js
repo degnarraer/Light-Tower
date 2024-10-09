@@ -1,8 +1,9 @@
 const WAITING_TIME = 5000;
 export class Model_BtDeviceSelector {
     
-    constructor(signalName, wsManager) {
-        this.signalName = signalName;
+    constructor(deviceList_signalName, selection_signalName, wsManager) {
+        this.deviceList_signalName = deviceList_signalName;
+        this.selection_signalName = selection_signalName;
         this.wsManager = wsManager;
         this.deviceList = [];
         this.selectedDevice = null;
@@ -16,12 +17,12 @@ export class Model_BtDeviceSelector {
         this.wsManager.unregisterListener(this);
     }
 
-    getListnerName() {return this.signalName;}
+    getListnerName() {return this.deviceList_signalName;}
     onOpen(){}
     onClose(){}
     onError(){}
     onMessage(deviceData) {
-        console.debug(`Message Rx for: "${this.signalName}" with device data: ${deviceData}`);
+        console.debug(`Message Rx for: "${this.deviceList_signalName}" with device data: ${deviceData}`);
         try {
             const parsedData = JSON.parse(deviceData);
     
@@ -50,18 +51,57 @@ export class Model_BtDeviceSelector {
     }
 
     findDeviceListWidget() {
-        return document.querySelector(`[data-signal="${this.signalName}"]`);
+        return document.querySelector(`[data-signal="${this.deviceList_signalName}"]`);
     }
 
     selectDevice(index) {
         this.selectedDevice = this.deviceList[index];
         this.updateHTML();
-        console.log(`Selected Device: ${this.deviceList[index].name}`);
+        console.log(`Selected Device Name: "${this.selectedDevice.Name}" Address: "${this.selectedDevice.Address}"`);
+        this.scheduleWebSocketUpdate();
+    }
+
+    scheduleWebSocketUpdate() {
+        console.log(`ESP32: ESP32: Schedule Update: "${this.selection_signalName}" to Name: "${this.selectedDevice.Name}" Address: "${this.selectedDevice.Address}"`);
+        if (!this.updateWebSocketTimeout) {
+            this.sendWebSocketUpdate();
+            this.updateWebSocketTimeout = setTimeout(() => {
+                this.sendWebSocketUpdate();
+                this.updateWebSocketTimeout = null;
+            }, this.debounceDelay);
+        }
+    }
+
+    toString(){
+        return `${this.selectedDevice.Name},${this.selectedDevice.Address}`;
+    }
+
+    sendWebSocketUpdate() {
+        console.log(`sendWebSocketUpdate: "${this.selection_signalName}" to Name: "${this.selectedDevice.Name}" Address: "${this.selectedDevice.Address}"`);
+        this.Send_Signal_Value_To_Web_Socket(this.selection_signalName, this.toString());
+    }
+
+    Send_Signal_Value_To_Web_Socket(signal, value) {
+        if (this.wsManager) {
+            if (signal && value) {
+                var Root = {};
+                Root.SignalValue = {};
+                Root.SignalValue.Id = signal.toString();
+                Root.SignalValue.Value = value.toString();
+                var Message = JSON.stringify(Root);
+                console.log('ESP32 Web Socket Tx: \'' + Message + '\'');
+                this.wsManager.send(Message);
+            } else {
+                console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+            }
+        } else {
+            console.error('Null wsManager!');
+        }
     }
 
     updateHTML() {
         if (!this.container) {
-            console.error(`Container for signal "${this.signalName}" not found.`);
+            console.error(`Container for signal "${this.deviceList_signalName}" not found.`);
             return;
         }
     
