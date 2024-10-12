@@ -136,6 +136,7 @@ void setup()
   Serial2.flush();
 
   TestPSRam();
+  m_PreferencesWrapper.Setup();
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   m_I2S_In.Setup();

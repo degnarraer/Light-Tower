@@ -138,6 +138,7 @@ class Bluetooth_Source: public NamedItem
 		void Set_Auto_Reconnect(bool AutoReConnect)
 		{
 			m_AutoReConnect = AutoReConnect;
+			m_BTSource.set_auto_reconnect(m_AutoReConnect);
 		}
 		void Set_SSP_Enabled(bool SSPEnabled)
 		{
@@ -232,6 +233,7 @@ class Bluetooth_Sink: public NamedItem
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
 	{
 		m_AutoReConnect = reconnect;
+		m_BTSink.set_auto_reconnect(m_AutoReConnect);
     }
 
 	//Callbacks from BluetoothSink  

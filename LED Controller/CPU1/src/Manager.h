@@ -215,7 +215,7 @@ class Manager: public NamedItem
         Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
         DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
         ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
-        //pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+        pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
       }
     }
 

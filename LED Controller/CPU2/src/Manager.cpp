@@ -58,6 +58,7 @@ void Manager::StartBluetooth()
   ESP_LOGI("StartBluetooth", "Starting Bluetooth!" );
   m_BT_Out.Set_Auto_Reconnect(m_BluetoothSourceAutoReConnect.GetValue());
   m_BT_Out.Set_Reset_BLE(m_BluetoothReset.GetValue());
+  m_I2S_In.StartDevice();
   m_BT_Out.StartDevice();
 }
 
@@ -65,6 +66,7 @@ void Manager::StopBluetooth()
 {
   ESP_LOGI("StopBluetooth", "Stopping Bluetooth!" );
   m_BT_Out.StopDevice();
+  m_I2S_In.StopDevice();
 }
 
 void Manager::Static_TaskLoop_20mS(void * parameter)
@@ -80,7 +82,6 @@ void Manager::TaskLoop_20mS()
   while(true)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    m_I2S_In.ProcessEventQueue();
   }
 }
 

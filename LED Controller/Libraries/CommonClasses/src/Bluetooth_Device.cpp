@@ -98,6 +98,7 @@ void Bluetooth_Source::InstallDevice()
 
 void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 {
+	ESP_LOGI("SetMusicDataCallback", "Set Music Data Callback");
 	m_MusicDataCallback = callback;
 }
 
@@ -261,6 +262,7 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
 	if(NULL != m_Callee)
 	{
+		ESP_LOGI("Bluetooth Device", "Read Data Stream");
 		m_Callee->BTDataReceived((uint8_t*)data, length);
 	}
 }

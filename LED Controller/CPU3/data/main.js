@@ -94,14 +94,36 @@ export function showContent(classId, contentId) {
     }
 }
 
-export function openNav() 
-{
-  document.getElementById('leftSideNavigationMenu').style.width = '200px';
+let isMenuOpen = false;
+
+function handleClickOutside(event) {
+	const menu = document.getElementById('leftSideNavigationMenu');
+	const isClickInsideMenu = menu.contains(event.target);
+	if (!isClickInsideMenu) {
+		closeNav();
+	}
 }
 
-export function closeNav()
-{
-  document.getElementById('leftSideNavigationMenu').style.width = '0';
+function handleTransitionEnd() {
+	document.addEventListener('click', handleClickOutside);
+}
+
+export function openNav() {
+	if (!isMenuOpen) {
+		const menu = document.getElementById('leftSideNavigationMenu');
+		menu.style.width = '100px';
+		isMenuOpen = true;
+		menu.addEventListener('transitionend', handleTransitionEnd, { once: true });
+	}
+}
+
+export function closeNav() {
+	if (isMenuOpen) {
+		const menu = document.getElementById('leftSideNavigationMenu');
+		menu.style.width = '0';
+		document.removeEventListener('click', handleClickOutside);
+		isMenuOpen = false;
+	}
 }
 
 export function GetElementValue(element) {
@@ -141,6 +163,7 @@ function onload(event)
 	{
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
+	showContent('menu-content', 'Wifi');
 }
 
 function show_Connecting_Modal() {
@@ -154,107 +177,4 @@ function show_Connecting_Modal() {
 	}, 1000);
 }
 
-function setSpeakerImage(value)
-{   
-	var Image1Source;
-	var Image2Source;
-	var state = parseInt(value);
-	const imageOneElement = document.getElementById('L Speaker Image');
-	const imageTwoElement = document.getElementById('R Speaker Image');
-	var imageOne = new Image;
-	var imageTwo = new Image;
-	switch(state)
-	{
-	  case 0:
-		Image1Source = 'Images/L-Speaker-Off.svg';
-		Image2Source = 'Images/R-Speaker-Off.svg';
-	  break;
-	  case 1:
-		Image1Source = 'Images/L-Speaker-0.svg';
-		Image2Source = 'Images/R-Speaker-0.svg';
-	  break;
-	  case 2:
-		Image1Source = 'Images/L-Speaker-1.svg';
-		Image2Source = 'Images/R-Speaker-1.svg';
-	  break;
-	  case 3:
-		Image1Source = 'Images/L-Speaker-2.svg';
-		Image2Source = 'Images/R-Speaker-2.svg';
-	  break;
-	  case 4:
-		Image1Source = 'Images/L-Speaker-3.svg';
-		Image2Source = 'Images/R-Speaker-3.svg';
-	  break;
-	  case 5:
-		Image1Source = 'Images/L-Speaker-4.svg';
-		Image2Source = 'Images/R-Speaker-4.svg';
-	  break;
-	  case 6:
-		Image1Source = 'Images/L-Speaker-5.svg';
-		Image2Source = 'Images/R-Speaker-5.svg';
-	  break;
-	  case 7:
-		Image1Source = 'Images/L-Speaker-6.svg';
-		Image2Source = 'Images/R-Speaker-6.svg';
-	  break;
-	  case 8:
-		Image1Source = 'Images/L-Speaker-7.svg';
-		Image2Source = 'Images/R-Speaker-7.svg';
-	  break;
-	  case 9:
-		Image1Source = 'Images/L-Speaker-8.svg';
-		Image2Source = 'Images/R-Speaker-8.svg';
-	  break;
-	  case 10:
-		Image1Source = 'Images/L-Speaker-9.svg';
-		Image2Source = 'Images/R-Speaker-9.svg';
-	  break;
-	  case 11:
-		Image1Source = 'Images/L-Speaker-10.svg';
-		Image2Source = 'Images/R-Speaker-10.svg';
-	  break;
-	  case 12:
-		Image1Source = 'Images/L-Speaker-11.svg';
-		Image2Source = 'Images/R-Speaker-11.svg';
-	  break;
-	  default:
-		Image1Source = 'Images/L-Speaker-0.svg';
-		Image2Source = 'Images/R-Speaker-0.svg';
-	  break;
-	}
-	imageTwo.src = Image2Source;
-	const imageOnePromise = new Promise((resolve, reject) => {
-	  imageOne.src = Image1Source;
-	  imageOne.onload = () => {
-		resolve();
-	  };
-	  imageOne.onerror = () => {
-		reject('Error loading image one');
-	  };
-});
-
-const imageTwoPromise = new Promise((resolve, reject) => {
-		imageTwo.src = Image2Source;
-		imageTwo.onload = () => {
-			resolve();
-		};
-		imageTwo.onerror = () => {
-			reject('Error loading image two');
-		};
-	});  
-
-	Promise.all([imageOnePromise, imageTwoPromise]).then(() => {
-		// both images have finished loading
-		imageOneElement.src = imageOne.src;
-		imageTwoElement.src = imageTwo.src;
-	});
-}
-
-function handleSpeakerImage(id, value) {
-	if(id && value)
-	{
-		console.log('Received Speaker Image!');
-		setSpeakerImage(value);
-	}
-}
 
