@@ -68,7 +68,7 @@ const ConnectionStateString =
 	3: 'Disconnecting'
 }
 
-export function showContent(classId, contentId) {
+export function showMenuContent(classId, contentId) {
     // Select all elements with the given classId
     var tabContents = document.querySelectorAll('.' + classId);
     
@@ -89,6 +89,26 @@ export function showContent(classId, contentId) {
     var selectedContent = document.getElementById(contentId);
     if (selectedContent) {
         selectedContent.classList.add('active');
+    } else {
+        console.warn("Element with ID '" + contentId + "' not found.");
+    }
+}
+
+export function showContent(classId, contentId) {
+    var selectedContent = document.getElementById(contentId);
+    if (selectedContent) {
+        selectedContent.classList.add('active');
+        console.log("Showing Elements with ID '" + contentId + "'.");
+    } else {
+        console.warn("Element with ID '" + contentId + "' not found.");
+    }
+}
+
+export function hideContent(classId, contentId) {
+    var selectedContent = document.getElementById(contentId);
+    if (selectedContent) {
+        selectedContent.classList.remove('active');
+        console.log("Hiding Elements with ID '" + contentId + "'.");
     } else {
         console.warn("Element with ID '" + contentId + "' not found.");
     }
@@ -163,7 +183,7 @@ function onload(event)
 	{
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
-	showContent('menu-content', 'Wifi');
+	showMenuContent('menu-content', 'Wifi Settings');
 }
 
 function show_Connecting_Modal() {

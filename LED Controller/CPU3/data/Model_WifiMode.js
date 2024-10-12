@@ -1,3 +1,6 @@
+import { showContent } from './main.js';
+import { hideContent } from './main.js';
+
 export class Model_WifiMode {
     
     constructor(signalName, initialValue, wsManager) {
@@ -35,12 +38,30 @@ export class Model_WifiMode {
         if (Object.values(Model_WifiMode.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
+            this.updateUIVisibility(newValue);
         } else {
             console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
         }
         if(updateWebsocket){
             this.scheduleWebSocketUpdate();
+        }
+    }
+
+    updateUIVisibility(value) {
+        switch (value) {
+            case Model_WifiMode.values.Station:
+                showContent("screen-content", "station");
+                hideContent("screen-content", "access point");
+                break;
+            case Model_WifiMode.values.AccessPoint:
+                showContent("screen-content", "station");
+                showContent("screen-content", "access point");
+                break;
+            case Model_WifiMode.values.Unknown:
+                hideContent("screen-content", "access point");
+                hideContent("screen-content", "station");
+                break;
         }
     }
 

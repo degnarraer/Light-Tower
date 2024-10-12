@@ -289,52 +289,41 @@ body {
     border-radius: 0 0 8px 8px; /* Rounded bottom corners for content area */
 }
 
-
-/* Settings Group */
 .settingGroup {
 	display: flex;
-	align-items: center;
+	align-items: right;
 	height: auto;
 }
 
-.settingGroup_Horrizontal_Grid_TextInput{
-	width: 100%;
-	align-content: center;
-	vertical-align: middle;
+.settingGroup_2_Column {
 	display: grid;
-	grid-template-columns: minmax(20%, 40%) minmax(30%, 60%) 100px;
+	width: 100%;
+	vertical-align: middle;
+	grid-template-columns: auto 300px;
 }
 
-.settingGroup_Horrizontal_Grid_slider {
-	width: 100%;
-	align-content: center;
-	vertical-align: middle;
+.settingGroup_3_Column {
 	display: grid;
-	grid-template-columns: 200px minmax(20%, 80%) auto;
-}
-
-.settingGroup_Horrizontal_Grid_Toggle {
 	width: 100%;
-	align-content: center;
 	vertical-align: middle;
-	display: grid;
-	grid-template-columns: auto 100px;
+	grid-template-columns: auto 200px 100px;
 }
 
 .settingGroup_Horrizontal_Grid_Radio_Button {
+	display: flex;
 	width: 100%;
-	align-content: center;
+	align-content: right;
+	justify-content: right;
 	vertical-align: middle;
-	display: grid;
-	grid-template-columns: auto 100px;
+	grid-template-columns: auto 200px;
 }
 
 .settingGroup_Horrizontal_Grid_Status {
+	display: flex;
 	width: 100%;
 	align-content: center;
 	vertical-align: middle;
-	display: grid;
-	grid-template-columns: auto 100px;
+	grid-template-columns: auto 200px;
 }
 
 .settingGroup_Title {
@@ -342,18 +331,37 @@ body {
 	justify-content: right;
 	align-items: center;
     font-size: 1.5rem;
+	border: 2px solid #333;
+	padding: 10px;
+	margin: -1px;
 }
 
 .settingGroup_Widget {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	border: 2px solid #333;
+	margin: -1px;
+}
+
+.settingGroup_Button {
+	display: flex;
+	justify-content: right;
+	align-items: right;
+	border: 2px solid #333;
+	margin: -1px;
+	
+	padding-right: 10px;
 }
 
 .settingGroup_Textbox {
-    width: 100%; /* make the text box fill the width of its container */
-	border: 1px solid #ccc; /* add a border to the text box */
-	border-radius: 4px; /* add some border-radius to the text box */
+	display: flex;
+    width: 100%;
+	justify-content: center;
+	align-items: center;
+	align-items: center;
+	border: 2px solid #333;
+	margin: -1px;
 }
 	
 .settingGroup_Value {
@@ -363,26 +371,21 @@ body {
     font-size: 1rem;
     font-weight: bold;
     color: Black;
+	border: 2px solid #333;
+	margin: -1px;
 }
-
-.settingGroup_Radio_Button {
-	display: flex;
-	justify-content: left;
-	align-items: Left;
-}
-
 
 /*Test Boxes */
 #Source_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
-	border: 1px solid #ccc; /* add a border to the text box */
-	border-radius: 4px; /* add some border-radius to the text box */
+	/*border: 1px solid #ccc; /* add a border to the text box */
+	/*border-radius: 4px; /* add some border-radius to the text box */
 	text-align: right;
 }
 #Sink_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
-	border: 1px solid #ccc; /* add a border to the text box */
-	border-radius: 4px; /* add some border-radius to the text box */
+	/*border: 1px solid #ccc; /* add a border to the text box */
+	/*border-radius: 4px; /* add some border-radius to the text box */
 	text-align: right;
 }
 

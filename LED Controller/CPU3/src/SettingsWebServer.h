@@ -77,8 +77,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       if( Wifi_Mode_t::AccessPoint == m_Wifi_Mode.GetValue() )
       {
-        InitWiFi_AccessPoint( m_AP_SSID.GetValueAsString().c_str()
-                            , m_AP_Password.GetValueAsString().c_str() );
+        InitWiFi_Station( m_STA_SSID.GetValueAsString().c_str()
+                        , m_STA_Password.GetValueAsString().c_str() );
       }
       else if(Wifi_Mode_t::Station == m_Wifi_Mode.GetValue())
       {
@@ -89,10 +89,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       else
       {
-        InitWiFi_AccessPoint_Station( "LED Tower of Power"
-                                    , "LEDs Rock"
-                                    , ""
-                                    , "" );
+        InitWiFi_Station( "LED Tower of Power"
+                        , "LEDs Rock" );
       }
     }
     
@@ -886,14 +884,13 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
     }
 
-    void InitWiFi_AccessPoint(const char* apSSID, const char* apPassword)
+    void InitWiFi_Station(const char* staSSID, const char* staPassword)
     {
-      ESP_LOGI( "InitWifiClient", "Starting Wifi Access Point Mode: Access Point SSID: \"%s\" Access Point Password: \"%s\"", apSSID, apPassword);
-      WiFi.mode(WIFI_AP);
+      ESP_LOGI( "InitWifiClient", "Starting Wifi Station Mode: SSID: \"%s\" Password: \"%s\"", staSSID, staPassword);
+      WiFi.mode(WIFI_STA);
+      WiFi.begin(staSSID, staPassword);
       IPAddress Ip(192, 168, 0, 1);
       IPAddress NMask(255, 255, 255, 0);
-      WiFi.softAPConfig(Ip, Ip, NMask);
-      WiFi.softAP(apSSID, apPassword);
     }
 
     void InitWiFi_AccessPoint_Station(const char* apSSID, const char* apPassword, const char* staSSID, const char* staPassword)

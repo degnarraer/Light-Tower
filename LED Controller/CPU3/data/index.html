@@ -9,8 +9,8 @@
 </head>
 <body>
 	<script type="module">
-		import { showContent, openNav, closeNav, GetElementValue, GetElementDataSignal, SendValueToWebSocket } from './main.js';
-        window.showContent = showContent;
+		import { showMenuContent, openNav, closeNav, GetElementValue, GetElementDataSignal, SendValueToWebSocket } from './main.js';
+        window.showMenuContent = showMenuContent;
         window.openNav = openNav;
         window.closeNav = closeNav;
 		window.GetElementValue = GetElementValue;
@@ -70,19 +70,19 @@
 	</div>
 	<div id= "MainScreen" class = "MainScreen">
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
-			<button class="Tablinks" onclick="showContent('menu-content', 'Speaker Status'); closeNav();">
+			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Speaker Status'); closeNav();">
 				<img src="Images/status-health.svg" alt="Status" style="width:24px; height:24px;">
 			</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Wifi Settings'); closeNav();">
+			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Wifi Settings'); closeNav();">
 				<img src="Images/wifi.svg" alt="Wifi" style="width:24px; height:24px;">
 			</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Sound Settings'); closeNav();">
+			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Sound Settings'); closeNav();">
 				<img src="Images/sound.svg" alt="Sound" style="width:24px; height:24px;">
 			</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Real Time FFT'); closeNav();">
+			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Real Time FFT'); closeNav();">
 				<img src="Images/histogram.svg" alt="FFT" style="width:24px; height:24px;">
 			</button>
-			<button class="Tablinks" onclick="showContent('menu-content', 'Brightness'); closeNav();">
+			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Brightness'); closeNav();">
 				<img src="Images/brightness.svg" alt="Brightness" style="width:24px; height:24px;">
 			</button>
 		</div>
@@ -99,7 +99,7 @@
 					<img alt="R Speaker" id="R Speaker Image" src="Images/R-Speaker-Off.svg" width="40%" height="60%" />
 				</div>
 				<div class="settingGroup">
-					<div class="settingGroup_Horrizontal_Grid_slider">
+					<div class="settingGroup_2_Column">
 						<div class="settingGroup_Title">Input Gain</div>
 						<div class="settingGroup_Widget">
 							<label for="Amplitude_Gain_Slider1"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amp_Gain" id="Amplitude_Gain_Slider1" min="0.1" max="50.0" step="0.1" value ="1.0" class="widget_slider">
@@ -113,11 +113,11 @@
 					<div class="frame">
 						<h2>Network Type</h2>
 						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Radio_Button">
+							<div class="settingGroup_2_Column">
 								<div class="settingGroup_Title">
 									Wifi Mode
 								</div>
-								<div class="settingGroup_Widget">
+								<div class="settingGroup_Textbox">
 									<div class="radio-button-group">
 										<label onclick="WIFI_Mode.setValue('Station')">
 											Station
@@ -133,17 +133,20 @@
 										</label>
 									</div>
 								</div>
+								<div>
+									
+								</div>
 							</div>
 						</div>
 						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
+							<div class="settingGroup_3_Column">
 								<div class="settingGroup_Title">
 									Host Name
 								</div>
 								<div class="settingGroup_Textbox">
 									<label for="Host_Name_Text_Box"></label><input type="text" data-Signal="Host_Name" id="Host_Name_Text_Box" oninput="Host_Name.setValue(this.value, false)" value="Enter Host Name">
 								</div>
-								<div class="settingGroup_Widget">
+								<div class="settingGroup_Button">
 									<button id="Host_Name_Submit_Button" for="Host_Name_Text_Box" onclick="Host_Name.scheduleWebSocketUpdate()">
 										<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
 									</button>
@@ -153,80 +156,84 @@
 					</div>
 					<div class="frame">
 						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_Toggle">
+							<div class="settingGroup_2_Column">
 								<div class="settingGroup_Title">
-									Restart Wifi:
+									Restart Wifi
 								</div>
-								<div class="settingGroup_Widget">
+								<div class="settingGroup_Button">
 									<button id="Wifi_Restart_Button" data-Signal="Wifi_Restart" onmousedown="Wifi_Restart.setValue(true)" onmouseup="Wifi_Restart.setValue(false)">
 										<img src="Images/restart.svg" alt="Status" style="width:24px; height:24px;">
 									</button>
 								</div>
 							</div>
 						</div>
-					</div>						
-					<div class="frame">
-						<h2>Access Point</h2>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
-								<div class="settingGroup_Title">
-									SSID:
+					</div>
+					<div class="screen-content" id="access point">
+						<div class="frame">
+							<h2>Access Point</h2>
+							<div class="settingGroup">
+								<div class="settingGroup_3_Column">
+									<div class="settingGroup_Title">
+										SSID
+									</div>
+									<div class="settingGroup_Textbox">
+										<label for="STA_SSID_Text_Box"></label><input type="text" data-Signal="STA_SSID" id="STA_SSID_Text_Box" oninput="STA_SSID.setValue(this.value, false)" value="Enter SSID">
+									</div>
+									<div class="settingGroup_Button">
+										<button id="STA_SSID_Submit_Button" for="STA_SSID_Text_Box" onclick="STA_SSID.scheduleWebSocketUpdate()">
+											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+										</button>
+									</div>
 								</div>
-								<div class="settingGroup_Textbox">
-									<label for="STA_SSID_Text_Box"></label><input type="text" data-Signal="STA_SSID" id="STA_SSID_Text_Box" oninput="STA_SSID.setValue(this.value, false)" value="Enter SSID">
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="STA_SSID_Submit_Button" for="STA_SSID_Text_Box" onclick="STA_SSID.scheduleWebSocketUpdate()">
-										<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
-									</button>
+							</div>
+							<div class="settingGroup">
+								<div class="settingGroup_3_Column">
+									<div class="settingGroup_Title">
+										Password
+									</div>
+									<div class="settingGroup_Textbox">
+										<label for="STA_Password_Text_Box"></label><input type="text" data-Signal="STA_Password" id="STA_Password_Text_Box" oninput="STA_Password.setValue(this.value, false)" value="Enter Password">
+									</div>
+									<div class="settingGroup_Button">
+										<button id="STA_Password_Submit_Button" for="STA_Password_Text_Box" onclick="STA_Password.scheduleWebSocketUpdate()">
+											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+										</button>
+									</div>
 								</div>
 							</div>
 						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
-								<div class="settingGroup_Title">
-									Password:
-								</div>
-								<div class="settingGroup_Textbox">
-									<label for="STA_Password_Text_Box"></label><input type="text" data-Signal="STA_Password" id="STA_Password_Text_Box" oninput="STA_Password.setValue(this.value, false)" value="Enter Password">
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="STA_Password_Submit_Button" for="STA_Password_Text_Box" onclick="STA_Password.scheduleWebSocketUpdate()">
-										<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>						
-					<div class="frame">
-						<h2>Station</h2>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
-								<div class="settingGroup_Title">
-									SSID:
-								</div>
-								<div class="settingGroup_Textbox">
-									<label for="AP_SSID_Text_Box"></label><input type="text" data-Signal="AP_SSID" id="AP_SSID_Text_Box" oninput="AP_SSID.setValue(this.value, false)" value="Enter SSID">
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="AP_SSID_Submit_Button" for="AP_SSID_Text_Box" onclick="AP_SSID.scheduleWebSocketUpdate()">
-										<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
-									</button>
+					</div>		
+					<div class="screen-content" id="station">		
+						<div class="frame">
+							<h2>Station</h2>
+							<div class="settingGroup">
+								<div class="settingGroup_3_Column">
+									<div class="settingGroup_Title">
+										SSID
+									</div>
+									<div class="settingGroup_Textbox">
+										<label for="AP_SSID_Text_Box"></label><input type="text" data-Signal="AP_SSID" id="AP_SSID_Text_Box" oninput="AP_SSID.setValue(this.value, false)" value="Enter SSID">
+									</div>
+									<div class="settingGroup_Button">
+										<button id="AP_SSID_Submit_Button" for="AP_SSID_Text_Box" onclick="AP_SSID.scheduleWebSocketUpdate()">
+											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+										</button>
+									</div>
 								</div>
 							</div>
-						</div>
-						<div class="settingGroup">
-							<div class="settingGroup_Horrizontal_Grid_TextInput">
-								<div class="settingGroup_Title">
-									Password:
-								</div>
-								<div class="settingGroup_Textbox">
-									<label for="AP_Password_Text_Box"></label><input type="text" data-Signal="AP_Password" id="AP_Password_Text_Box" oninput="AP_Password.setValue(this.value, false)" value="Enter Password">
-								</div>
-								<div class="settingGroup_Widget">
-									<button id="AP_Password_Submit_Button" for="AP_Password_Text_Box" onclick="AP_Password.scheduleWebSocketUpdate()">
-										<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
-									</button>
+							<div class="settingGroup">
+								<div class="settingGroup_3_Column">
+									<div class="settingGroup_Title">
+										Password
+									</div>
+									<div class="settingGroup_Textbox">
+										<label for="AP_Password_Text_Box"></label><input type="text" data-Signal="AP_Password" id="AP_Password_Text_Box" oninput="AP_Password.setValue(this.value, false)" value="Enter Password">
+									</div>
+									<div class="settingGroup_Button">
+										<button id="AP_Password_Submit_Button" for="AP_Password_Text_Box" onclick="AP_Password.scheduleWebSocketUpdate()">
+											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+										</button>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -250,7 +257,7 @@
 							<h2>Microphone</h2>
 							<p>Sound input is now using the microphone. Make some noise!</p>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_slider">
+								<div class="settingGroup_3_Column">
 									<div class="settingGroup_Title">Input Gain</div>
 									<div class="settingGroup_Widget">
 										<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amp_Gain" id="Amplitude_Gain_Slider2" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
@@ -283,7 +290,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_TextInput">
+								<div class="settingGroup_3_Column">
 									<div class="settingGroup_Title">
 										Bluetooth Bridge Name
 									</div>
@@ -309,7 +316,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Toggle">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
 										Bluetooth Bridge Auto ReConnect
 									</div>
@@ -335,7 +342,7 @@
 						</div>
 						<div class="selection_tab_content_output_source" id="Sound_Output_Selection_Bluetooth">
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_TextInput">
+								<div class="settingGroup_3_Column">
 									<div class="settingGroup_Title">
 										Found Bluetooth Speakers
 									</div>
@@ -346,7 +353,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_TextInput">
+								<div class="settingGroup_3_Column">
 									<div class="settingGroup_Title">
 										Bluetooth Speaker Name
 									</div>
@@ -391,7 +398,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Toggle">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
 										Reset Bluetooth Speaker Connection
 									</div>
@@ -404,7 +411,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Toggle">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
 										Bluetooth Speaker Auto ReConnect
 									</div>
@@ -422,7 +429,7 @@
 			</div>
 			<div class="menu-content" id="Real Time FFT">
 				<div class="settingGroup">
-					<div class="settingGroup_Horrizontal_Grid_slider">
+					<div class="settingGroup_3_Column">
 						<div class="settingGroup_Title">FFT Gain</div>
 						<div class="settingGroup_Widget">
 							<label for="FFT_Gain_Slider1"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" id="FFT_Gain_Slider1" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
@@ -433,7 +440,7 @@
 			</div>
 			<div class="menu-content" id="Brightness">
 				<div class="settingGroup">
-					<div class="settingGroup_Horrizontal_Grid_slider">
+					<div class="settingGroup_3_Column">
 						<div class="settingGroup_Title">Input Gain</div>
 						<div class="settingGroup_Widget">
 							<label for="Amplitude_Gain_Slider2"></label><input type="range" oninput="Amplitude_Gain.setValue(this.value)" data-Signal="Amp_Gain" id="Amplitude_Gain_Slider4" min="0.1" max="20.0" step="0.1" value ="1.0" class="widget_slider">
@@ -442,7 +449,7 @@
 					</div>
 				</div>
 				<div class="settingGroup">
-					<div class="settingGroup_Horrizontal_Grid_slider">
+					<div class="settingGroup_3_Column">
 						<div class="settingGroup_Title">FFT Gain</div>
 						<div class="settingGroup_Widget">
 							<label for="FFT_Gain_slider4"></label><input type="range" oninput="FFT_Gain.setValue(this.value)" data-Signal="FFT_Gain" data-Signal="FFT_Gain" id="FFT_Gain_slider4" min="0.1" max="5.0" step="0.1" value ="1.0" class="widget_slider">
