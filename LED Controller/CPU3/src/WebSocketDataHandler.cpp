@@ -89,15 +89,16 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& s
 
 void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyValuePairs, String &result)
 {
-  JSONVar jSONVars;
-  for(int i = 0; i < keyValuePairs.size(); ++i)
-  {
-    JSONVar SettingValues;
-    SettingValues["Id"] = keyValuePairs.at(i).Key;
-    SettingValues["Value"] = keyValuePairs.at(i).Value;
-    jSONVars["SignalValue"] = SettingValues;
-    result += JSON.stringify(jSONVars);
-  }
+    JSONVar jsonArray;
+    for (int i = 0; i < keyValuePairs.size(); ++i)
+    {
+        JSONVar settingValues;
+        settingValues["Id"] = keyValuePairs.at(i).Key;
+        settingValues["Value"] = keyValuePairs.at(i).Value;
+        jsonArray[i] = settingValues;
+    }
+
+    result = JSON.stringify(jsonArray);
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& textString)

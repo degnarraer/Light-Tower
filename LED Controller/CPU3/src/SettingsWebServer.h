@@ -333,7 +333,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_Wifi_Mode_Callback = { "Wifi Mode Callback"
                                            , &Wifi_Mode_ValueChanged
                                            , &m_Wifi_Mode_CallbackArgs };
-    const Wifi_Mode_t m_Wifi_Mode_InitialValue = Wifi_Mode_t::AccessPoint;
+    const Wifi_Mode_t m_Wifi_Mode_InitialValue = Wifi_Mode_t::Station;
     LocalDataItemWithPreferences<Wifi_Mode_t, 1> m_Wifi_Mode = LocalDataItemWithPreferences<Wifi_Mode_t, 1>( "WIFI_Mode"
                                                                                                            , m_Wifi_Mode_InitialValue
                                                                                                            , &m_preferenceInterface

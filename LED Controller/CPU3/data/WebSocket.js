@@ -111,7 +111,7 @@ export class WebSocketManager {
                 }
             });
         } catch (error) {
-            console.error('ESP32 Web Socket: Error parsing message:', error);
+            console.error('ESP32 Web Socket: Error parsing message: ', message, " Error: ", error);
         }
     }
 

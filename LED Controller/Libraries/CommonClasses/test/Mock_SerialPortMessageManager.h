@@ -137,7 +137,7 @@ public:
     }
     
     MOCK_METHOD(void, SetupSerialPortMessageManager, (), (override));
-    MOCK_METHOD(bool, QueueMessageFromData, (const String& Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
+    MOCK_METHOD(bool, QueueMessageFromDataType, (const String& Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, QueueMessage, (const String& message), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(void, SerialPortMessageManager_RxTask, (), (override));

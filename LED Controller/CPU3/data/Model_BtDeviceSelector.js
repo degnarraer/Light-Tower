@@ -36,7 +36,7 @@ export class Model_BtDeviceSelector {
                 console.error("Devices array is undefined:", parsedData);
             }
         } catch (error) {
-            console.error("Error parsing message:", error);
+            console.error("Error parsing message: ", deviceData, " Error: " , error );
         }
     }
 

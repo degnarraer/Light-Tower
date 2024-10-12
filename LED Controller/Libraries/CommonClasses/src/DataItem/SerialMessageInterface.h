@@ -256,7 +256,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					ESP_LOGD( "Tx_Now", "\"%s\": Updated Store", GetName().c_str());
 				}
 				ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
-				if(!mp_SerialPortMessageManager->QueueMessageFromData(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
+				if(!mp_SerialPortMessageManager->QueueMessageFromDataType(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
 				{
 					ESP_LOGE("Tx_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", GetName().c_str());
 				}

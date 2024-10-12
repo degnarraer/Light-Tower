@@ -86,27 +86,23 @@ void SerialPortMessageManager::SetupSerialPortMessageManager()
 	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
 }
 
-bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
+bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 {
 	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
 	{
-		ESP_LOGE("QueueMessageFromData", "ERROR! Invalid Data.");
+		ESP_LOGE("QueueMessageFromDataType", "ERROR! Invalid Data.");
 	}
 	else
 	{
 		if(mp_DataSerializer)
 		{
-			if(this->GetName().equals("Amp_Gain"))
-			{
-				ESP_LOGD("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" Change Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count, ChangeCount);
-			}
 			String message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
 			result = QueueMessage( message.c_str() );
 		}
 		else
 		{
-			ESP_LOGE("QueueMessageFromData", "ERROR! Null Pointer.");
+			ESP_LOGE("QueueMessageFromDataType", "ERROR! Null Pointer.");
 		}
 	}
 	return result;

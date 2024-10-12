@@ -48,7 +48,7 @@ protected:
     {
         mp_MockSetupCaller = new NiceMock<MockSetupCallerInterface>();
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
-        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType,  uint16_t rate)
@@ -63,7 +63,7 @@ protected:
                                         , mp_MockSetupCaller );                               
         if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
         {
-            EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_,_))
+            EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(name,_,_,_,_))
                 .Times(1)
                 .WillOnce(Return(true));
         }
@@ -119,7 +119,7 @@ protected:
     void SetUp() override
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
-        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
     void CreateDataItem(RxTxType_t rxTxType,  uint16_t rate)
@@ -155,7 +155,7 @@ protected:
 TEST_F(StringDataItemRxTxTests, Tx_Called_Periodically)
 {
     CreateDataItem(RxTxType_Tx_Periodic, 100);
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(10)
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(10)
         .WillRepeatedly(Return(true));
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
     ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
@@ -179,7 +179,7 @@ protected:
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
-        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
 
