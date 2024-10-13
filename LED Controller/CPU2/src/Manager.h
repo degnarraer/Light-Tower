@@ -117,7 +117,48 @@ class Manager: public NamedItem
     };
 
     const ValidStringValues_t validBoolValues = { "0", "1" };
-        
+
+    //Selected Device Device
+    CallbackArguments m_Selected_Device_CallbackArgs = {&m_BT_Out};
+    NamedCallback_t m_Selected_Device_Callback = {"Target Compatible Device Callback", &Selected_Device_ValueChanged, &m_Selected_Device_CallbackArgs};
+    const BluetoothDevice_t m_Selected_Device_InitialValue = {"", ""};
+    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device"
+                                                                                     , m_Selected_Device_InitialValue
+                                                                                     , RxTxType_Rx_Echo_Value
+                                                                                     , 0
+                                                                                     , &m_CPU3SerialPortMessageManager
+                                                                                     , &m_Selected_Device_Callback
+                                                                                     , this);
+    static void Selected_Device_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1)
+        {
+          BluetoothDevice_t* targetCompatibleDevice = static_cast<BluetoothDevice_t*>(object);
+          Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          if(BT_Out && targetCompatibleDevice)
+          {
+            BT_Out->SetNameToConnect(targetCompatibleDevice->name, targetCompatibleDevice->address);
+          }
+          else
+          {
+            ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
+          }
+        }
+        else
+        {
+          ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
+        }
+      }
+      else
+      {
+        ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
+      }
+    }
+
     //Bluetooth Source Connection Status
     ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State"
@@ -155,7 +196,8 @@ class Manager: public NamedItem
           if(connect)
           {
             ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
-            pBT_Out->Connect("","");
+            pBT_Out->Connect("", "");
+            //pBT_Out->Connect(pTargetDevice->name, pTargetDevice->address);
           }
         }
       }
@@ -252,8 +294,16 @@ class Manager: public NamedItem
     //Bluetooth Source Reset
     CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_BluetoothReset_Callback = {"Bluetooth Reset Callback", &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
-    const bool m_BluetoothReset_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues);
+    const bool m_BluetoothReset_InitialValue = false;
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset"
+                                                                                        , m_BluetoothReset_InitialValue
+                                                                                        , RxTxType_Rx_Echo_Value
+                                                                                        , 0
+                                                                                        , &m_PreferencesInterface
+                                                                                        , &m_CPU3SerialPortMessageManager
+                                                                                        , &m_BluetoothReset_Callback
+                                                                                        , this
+                                                                                        , &validBoolValues );
     static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -262,68 +312,14 @@ class Manager: public NamedItem
         assert((arguments->arg1) && "Null Pointer!");
         Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
         bool resetBLE = *static_cast<bool*>(object);
-        ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Reset Value Changed: %i", resetBLE);
-        BT_Out.Set_Reset_BLE(resetBLE);
-      }
-    }
-    
-    //Bluetooth Reset NVS
-    CallbackArguments m_BluetoothResetNVS_CallbackArgs = {&m_BT_Out};
-    NamedCallback_t m_BluetoothResetNVS_Callback = {"Bluetooth Reset NVS Callback", &BluetoothResetNVS_ValueChanged, &m_BluetoothResetNVS_CallbackArgs};
-    const bool m_BluetoothResetNVS_InitialValue = true;
-    DataItem<bool, 1> m_BluetoothResetNVS = DataItem<bool, 1>( "BT_SRC_NVS_Rst"
-                                                             , m_BluetoothResetNVS_InitialValue
-                                                             , RxTxType_Rx_Echo_Value
-                                                             , 0
-                                                             , &m_CPU3SerialPortMessageManager
-                                                             , &m_BluetoothResetNVS_Callback
-                                                             , this
-                                                             , &validBoolValues );
-    static void BluetoothResetNVS_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      if(arg && object)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert((arguments->arg1) && "Null Pointer!");
-        Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
-        bool resetNVS = *static_cast<bool*>(object);
-        ESP_LOGI("Manager::BluetoothSourceResetNVS_ValueChanged", "Bluetooth Source Reset NVS Value Changed: %i", resetNVS);
-        BT_Out.Set_NVS_Init(resetNVS);
-      }
-    }
-    
-    //Selected Device Device
-    CallbackArguments m_Selected_Device_CallbackArgs = {&m_BT_Out};
-    NamedCallback_t m_Selected_Device_Callback = {"Target Compatible Device Callback", &TargetCompatibleDevice_ValueChanged, &m_Selected_Device_CallbackArgs};
-    const BluetoothDevice_t m_Selected_Device_InitialValue = {"", ""};
-    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_Selected_Device_Callback, this);
-    static void TargetCompatibleDevice_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      ESP_LOGI("TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
-      if(arg && object)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1)
+        ESP_LOGI("BluetoothReset_ValueChanged", "Bluetooth Source Reset Value Changed: %i", resetBLE);
+        if(resetBLE)
         {
-          BluetoothDevice_t* targetCompatibleDevice = static_cast<BluetoothDevice_t*>(object);
-          Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-          if(BT_Out && targetCompatibleDevice)
-          {
-            BT_Out->SetNameToConnect(targetCompatibleDevice->name, targetCompatibleDevice->address);
-          }
-          else
-          {
-            ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
-          }
+          BT_Out.Disconnect();
+          BT_Out.Set_Reset_BLE(resetBLE);
+          BT_Out.Set_NVS_Init(resetBLE);
+          BT_Out.Connect("", "");
         }
-        else
-        {
-          ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
-        }
-      }
-      else
-      {
-        ESP_LOGE("TargetCompatibleDevice_ValueChanged", "Error! NULL Pointers.");
       }
     }
 

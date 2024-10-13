@@ -94,8 +94,23 @@ export class Model_ConnectionStatus {
     updateHTML() {
         const elementsWithDataValue = document.querySelectorAll(`[data-Signal="${this.signalName}"]`);
         elementsWithDataValue.forEach(element => {
-            if (element.tagName === "SPAN") {
+            if (element.tagName.toUpperCase() === "SPAN") {
                 element.innerHTML = this.value;
+            } else if(element.tagName.toUpperCase() === "IMG") {
+                switch(this.value){
+                    case Model_ConnectionStatus.values.Connected:
+                        element.src = "./Images/connected.svg"
+                    break;
+                    case Model_ConnectionStatus.values.Connecting:
+                        element.src = "./Images/connecting.svg"
+                    break;
+                    case Model_ConnectionStatus.values.Disconnecting:
+                        element.src = "./Images/disconnected.svg"
+                    break;
+                    case Model_ConnectionStatus.values.Disconnected:
+                        element.src = "./Images/disconnected.svg"
+                    break;
+                }
             } else {
                 console.error(`"${this.signalName}" Unsupported Element!`);
             }

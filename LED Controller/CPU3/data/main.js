@@ -102,7 +102,7 @@ export function showContent(classId, contentId) {
     } else {
         console.warn("Element with ID '" + contentId + "' not found.");
     }
-	
+
 }
 
 export function hideContent(classId, contentId) {
@@ -184,7 +184,7 @@ function onload(event)
 	{
 		Source_Auto_Reconnect.setValue(source_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
-	showMenuContent('menu-content', 'Wifi Settings');
+	showMenuContent('menu-content', 'Sound Settings');
 }
 
 function show_Connecting_Modal() {

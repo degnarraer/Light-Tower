@@ -189,7 +189,6 @@
 										<button id="STA_Password_Submit_Button" for="STA_Password_Text_Box" onclick="STA_Password.scheduleWebSocketUpdate()">
 											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
 											Submit
-											Submit
 										</button>
 									</div>
 								</div>
@@ -340,11 +339,29 @@
 							<div class="settingGroup">
 								<div class="settingGroup_3_Column">
 									<div class="settingGroup_Title">
-										Found Bluetooth Speakers
+										Bluetooth Speakers
 									</div>
 									<div class="settingGroup_Widget">
 										<div id="deviceList" data-signal="Scan_BT_Devices">
 										</div>
+									</div>
+									<div class="settingGroup_Button">	
+										<div class="settingGroup_Button non-pressable-button">
+											<img src="Images/disconnected.svg" data-Signal="Src_Conn_State" alt="Status" style="width:50px; height:50px;">
+											<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
+										</div>
+										<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">
+											<img src="Images/radar-sweep.svg" alt="Start Scan" style="width:80px; height:100px;">
+											Start Scan
+										</button>
+										<button id="Source_Connect_Button" data-Signal="BT_Src_Reset" onmousedown="Source_Reset.setValue(true)" onmouseup="Source_Reset.setValue(false)">
+											<img src="Images/reset.svg" alt="Start Scan" style="width:80px; height:50px;">
+											Reset
+										</button>
+										<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" onmousedown="Source_Disconnect.setValue(true)" onmouseup="Source_Disconnect.setValue(false)">
+											<img src="Images/wifi-off.svg" alt="Start Scan" style="width:80px; height:50px;">
+											Disconnect
+										</button>
 									</div>
 								</div>
 							</div>
@@ -361,49 +378,6 @@
 											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
 											Submit
 										</button>
-									</div>
-								</div>
-							</div>
-							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Status">
-									<div class="settingGroup_Title">
-										Start Scan
-									</div>
-									<div class="settingGroup_Widget">
-										<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">Start Scan</button>
-									</div>
-								</div>
-							</div>
-							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Status">
-									<div class="settingGroup_Title">
-										Disconnect
-									</div>
-									<div class="settingGroup_Widget">
-										<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" onmousedown="Source_Disconnect.setValue(true)" onmouseup="Source_Disconnect.setValue(false)">Disconnect</button>
-									</div>
-								</div>
-							</div>
-							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Status">
-									<div class="settingGroup_Title">
-										Bluetooth Speaker State
-									</div>
-									<div class="settingGroup_Value">
-										<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
-									</div>
-								</div>
-							</div>
-							<div class="settingGroup">
-								<div class="settingGroup_2_Column">
-									<div class="settingGroup_Title">
-										Reset Bluetooth Speaker Connection
-									</div>
-									<div class="settingGroup_Widget">
-										<label for="Source_BT_Reset_Toggle_Button" class="widget_Toggle_Switch">
-										<input type="checkbox" data-Signal="BT_Src_Reset" id="Source_BT_Reset_Toggle_Button">
-										<span class="slider Round"></span>
-										</label>
 									</div>
 								</div>
 							</div>
