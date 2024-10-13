@@ -171,13 +171,6 @@ function onload(event)
 		Sink_Auto_Reconnect.setValue(sink_BT_Auto_ReConnect_Toggle_Button.checked? "1" : "0");
 	});
 
-	var source_BT_Reset_Toggle_Button;
-	source_BT_Reset_Toggle_Button = document.getElementById('Source_BT_Reset_Toggle_Button');
-	source_BT_Reset_Toggle_Button.addEventListener('change', function()
-	{
-		Source_Reset.setValue(source_BT_Reset_Toggle_Button.checked? "1" : "0");
-	});
-
 	var source_BT_Auto_ReConnect_Toggle_Button;
 	source_BT_Auto_ReConnect_Toggle_Button = document.getElementById('Source_BT_Auto_ReConnect_Toggle_Button');
 	Source_BT_Auto_ReConnect_Toggle_Button.addEventListener('change', function()

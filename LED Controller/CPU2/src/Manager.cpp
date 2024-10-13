@@ -107,6 +107,24 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   }
 }
 
+void Manager::BtDiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode)
+{
+  switch(discoveryMode)
+  {
+    case ESP_BT_GAP_DISCOVERY_STOPPED:
+      ESP_LOGI("DiscoveryModeChanged", "Discovery Mode Stopped");
+      m_Bluetooth_Discovery_Mode_t.SetValue(Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped);
+    break;
+    case ESP_BT_GAP_DISCOVERY_STARTED:
+      ESP_LOGI("DiscoveryModeChanged", "Discovery Mode Started");
+      m_Bluetooth_Discovery_Mode_t.SetValue(Bluetooth_Discovery_Mode_t::Discovery_Mode_Started);
+    break;
+    default:
+      ESP_LOGI("DiscoveryModeChanged", "Unknown Discovery Mode");
+      m_Bluetooth_Discovery_Mode_t.SetValue(Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown);
+  }
+}
+
 //BluetoothConnectionStateCallee Callback 
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
 {

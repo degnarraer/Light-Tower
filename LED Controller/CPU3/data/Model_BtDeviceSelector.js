@@ -98,121 +98,112 @@ export class Model_BtDeviceSelector {
             console.error('Null wsManager!');
         }
     }
-
     updateHTML() {
         if (!this.container) {
             console.error(`Container for signal "${this.deviceList_signalName}" not found.`);
             return;
         }
     
-        // Clear any existing waiting timeout when updateHTML is called
         if (this.waitingTimeoutId) {
             clearTimeout(this.waitingTimeoutId);
             this.waitingTimeoutId = null;
         }
     
-        // Clear the container for fresh content
         this.container.innerHTML = '';
     
-        // If no devices are found, show the "Searching" animation
         if (this.deviceList.length === 0) {
-            if (!this.searchingIntervalId) { // Only start the animation if it's not already running
+            if (!this.searchingIntervalId) {
                 let periodCount = 0;
                 const baseText = 'Searching';
     
                 const updateSearchingText = () => {
-                    // Clear the container for the new "Searching" text
                     this.container.innerHTML = '';
-    
-                    // Create a new paragraph element to show the text
                     const searchingText = document.createElement('p');
-                    searchingText.style.textAlign = 'center'; // Optional: Center-align the text
-                    searchingText.style.fontStyle = 'italic'; // Optional: Italic for styling
-    
-                    // Build the "Searching" text with the number of periods
+                    searchingText.style.textAlign = 'center';
+                    searchingText.style.fontStyle = 'italic';
                     let text = baseText;
                     for (let i = 0; i < periodCount; i++) {
                         text += '.';
                     }
                     searchingText.textContent = text;
-    
-                    // Append the "Searching" text to the container
                     this.container.appendChild(searchingText);
-    
-                    // Update the period count (looping from 0 to 3)
                     periodCount = (periodCount + 1) % 4;
                 };
     
-                // Start the animation loop every 1 second
                 this.searchingIntervalId = setInterval(updateSearchingText, 1000);
             }
     
-            return; // Exit the function early since we're in the "Searching" state
+            return;
         }
     
-        // If devices are found, stop the "Searching" animation
         if (this.searchingIntervalId) {
             clearInterval(this.searchingIntervalId);
-            this.searchingIntervalId = null; // Reset the interval ID
+            this.searchingIntervalId = null;
         }
     
-        // Proceed with updating the table for the device list
         const table = document.createElement('table');
-        table.style.width = '100%'; // Make the table take up the full width
-        table.style.borderCollapse = 'collapse'; // Optional: Make the table borders collapse
+        table.style.width = '100%';
+        table.style.borderCollapse = 'collapse';
     
-        // Create table header
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
     
-        // Create Name header
         const nameHeader = document.createElement('th');
         nameHeader.textContent = 'Name';
-        nameHeader.style.textAlign = 'left'; // Left align the Name header
+        nameHeader.style.textAlign = 'left';
         headerRow.appendChild(nameHeader);
     
-        // Create RSSI header
         const rssiHeader = document.createElement('th');
-        rssiHeader.textContent = 'RSSI';
-        rssiHeader.style.textAlign = 'right'; // Right align the RSSI header
+        rssiHeader.textContent = 'Signal Strength';
+        rssiHeader.style.textAlign = 'right';
         headerRow.appendChild(rssiHeader);
     
         thead.appendChild(headerRow);
         table.appendChild(thead);
     
-        // Create table body
         const tbody = document.createElement('tbody');
     
         this.deviceList.forEach((device, index) => {
             const name = device.Name || 'Unknown Name';
-            const rssi = device.RSSI || 'Unknown RSSI';
+            const rssi = device.RSSI || 0; // Set default RSSI if missing
     
-            // Create a row for each device
             const row = document.createElement('tr');
-    
-            // Alternate row colors: light gray for even rows, white for odd rows
             row.style.backgroundColor = index % 2 === 0 ? '#f2f2f2' : '#ffffff';
     
-            // Create and configure the name cell
             const nameCell = document.createElement('td');
             nameCell.textContent = name;
             nameCell.style.padding = '5px';
-            nameCell.style.textAlign = 'left'; // Left-align the Name column
+            nameCell.style.textAlign = 'left';
             row.appendChild(nameCell);
     
-            // Create and configure the RSSI cell
+            // Create the RSSI (Signal Strength) cell
             const rssiCell = document.createElement('td');
-            rssiCell.textContent = rssi;
             rssiCell.style.padding = '5px';
-            rssiCell.style.textAlign = 'right'; // Right-align the RSSI column
-            row.appendChild(rssiCell);
+            rssiCell.style.textAlign = 'right';
     
-            // Highlight the selected device
-            if (this.selectedDevice && this.selectedDevice.Name === device.Name) {
-                row.style.backgroundColor = '#ADD8E6'; // Light blue background for selected row
+            // Create the image based on the RSSI value
+            const rssiImage = document.createElement('img');
+            rssiImage.style.height = '20px'; // Adjust the size as needed
+    
+            if (rssi <= -80) {
+                rssiImage.src = './Images/signal-1.svg';  // Weak signal
+            } else if (rssi <= -60) {
+                rssiImage.src = './Images/signal-2.svg';
+            } else if (rssi <= -40) {
+                rssiImage.src = './Images/signal-3.svg';
+            } else if (rssi <= -20) {
+                rssiImage.src = './Images/signal-4.svg';
+            } else {
+                rssiImage.src = './Images/signal-5.svg'; // Strong signal
             }
     
-            // Add a click listener for selecting a device
+            rssiCell.appendChild(rssiImage);
+            row.appendChild(rssiCell);
+    
+            if (this.selectedDevice && this.selectedDevice.Name === device.Name) {
+                row.style.backgroundColor = '#ADD8E6';
+            }
+    
             row.style.cursor = 'pointer';
             row.addEventListener('click', () => this.selectDevice(index));
     
@@ -220,15 +211,14 @@ export class Model_BtDeviceSelector {
         });
     
         table.appendChild(tbody);
-        this.container.appendChild(table); // Append the table to the container
+        this.container.appendChild(table);
     
-        // Start the waiting timeout to display "Waiting" if updateHTML is not called for 5 seconds
         this.waitingTimeoutId = setTimeout(() => {
-            this.container.innerHTML = ''; // Clear current content
+            this.container.innerHTML = '';
             const waitingText = document.createElement('p');
             waitingText.textContent = 'Waiting...';
-            waitingText.style.textAlign = 'center'; // Optional: Center-align the text
-            waitingText.style.fontStyle = 'italic'; // Optional: Italic for styling
+            waitingText.style.textAlign = 'center';
+            waitingText.style.fontStyle = 'italic';
             this.container.appendChild(waitingText);
         }, WAITING_TIME);
     }

@@ -77,6 +77,11 @@ int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
   return m_Manager.SetBTTxData(Data, channel_len);
 }
 
+void DiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode)
+{
+  m_Manager.BtDiscoveryModeChanged(discoveryMode);
+}
+
 static bool ConnectToThisName(const char* aName, esp_bd_addr_t address, int32_t rssi)
 {
   return m_BT_Out.ConnectToThisName(aName, address, rssi);

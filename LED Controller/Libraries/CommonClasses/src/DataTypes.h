@@ -655,6 +655,49 @@ class Mute_State
 };
 typedef Mute_State::Value Mute_State_t;
 
+class Bluetooth_Discovery_Mode
+{
+    public:
+        enum Value
+        {
+            Discovery_Mode_Started = 0,
+            Discovery_Mode_Stopped = 1,
+            Discovery_Mode_Unknown = 2
+        };
+
+        static String ToString(Value state)
+        {
+            switch (state)
+            {
+                case Discovery_Mode_Started: return "Discovery_Mode_Started";
+                case Discovery_Mode_Stopped: return "Discovery_Mode_Stopped";
+                case Discovery_Mode_Unknown: return "Discovery_Mode_Unknown";
+                default: return "Discovery_Mode_Unknown";
+            }
+        }
+
+        static Value FromString(const String& str)
+        {
+            if (str == "Discovery_Mode_Started") return Discovery_Mode_Started;
+            if (str == "Discovery_Mode_Stopped") return Discovery_Mode_Stopped;
+            return Discovery_Mode_Unknown;
+        }
+
+        friend std::istream& operator>>(std::istream& is, Bluetooth_Discovery_Mode::Value& value) 
+        {
+            std::string token;
+            is >> token;
+            value = Bluetooth_Discovery_Mode::FromString(token.c_str());
+            return is;
+        }
+        
+        friend std::ostream& operator<<(std::ostream& os, const Bluetooth_Discovery_Mode::Value& value) {
+            os << Bluetooth_Discovery_Mode::ToString(value).c_str();
+            return os;
+        }
+};
+typedef Bluetooth_Discovery_Mode::Value Bluetooth_Discovery_Mode_t;
+
 class SoundState
 {
     public:
@@ -826,6 +869,7 @@ enum DataType_t
   DataType_ConnectionStatus_t,
   DataType_SoundInputSource_t,
   DataType_SoundOutputSource_t,
+  DataType_Bluetooth_Discovery_Mode_t,
   DataType_Undef,
 };
 
@@ -854,6 +898,7 @@ static const char* DataTypeStrings[] =
   "ConnectionStatus_t",
   "SoundInputSource_t",
   "SoundOutputSource_t",
+  "Bluetooth_Discovery_Mode_t",
   "Undefined_t"
 };
 
@@ -1105,6 +1150,7 @@ class DataTypeFunctions
 			else if(std::is_same<T, ConnectionStatus_t>::value) 						return DataType_ConnectionStatus_t;
 			else if(std::is_same<T, SoundInputSource_t>::value)							return DataType_SoundInputSource_t;
 			else if(std::is_same<T, SoundOutputSource_t>::value)						return DataType_SoundOutputSource_t;
+			else if(std::is_same<T, Bluetooth_Discovery_Mode_t>::value)					return DataType_Bluetooth_Discovery_Mode_t;
 			else
 			{
 				ESP_LOGE("DataTypes: GetDataTypeFromTemplateType", "ERROR! Undefined Data Type.");
@@ -1206,6 +1252,10 @@ class DataTypeFunctions
 				
 				case DataType_SoundOutputSource_t:
 					result = sizeof(SoundOutputSource_t);
+				break;
+
+                case DataType_Bluetooth_Discovery_Mode_t:
+                    result = sizeof(Bluetooth_Discovery_Mode_t);
 				break;
 				
 				default:

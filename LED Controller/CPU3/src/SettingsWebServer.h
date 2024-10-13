@@ -667,8 +667,50 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
     }
 
+    //Bluetooth Source Discovery Mode
+    
+    CallbackArguments m_Bluetooth_Discovery_Mode_t_CallbackArgs = {&m_ScannedDevice_DataHandler};
+    NamedCallback_t m_Bluetooth_Discovery_Mode_t_Callback = {"Discovery Mode Callback", &Bluetooth_Discovery_Mode_t_ValueChanged, &m_Bluetooth_Discovery_Mode_t_CallbackArgs};
+    Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_t_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
+    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_t = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode"
+                                                                                        , m_Bluetooth_Discovery_Mode_t_initialValue
+                                                                                        , RxTxType_Rx_Only
+                                                                                        , 0
+                                                                                        , &m_CPU2SerialPortMessageManager
+                                                                                        , nullptr
+                                                                                        , this );
+    static void Bluetooth_Discovery_Mode_t_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(object && arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && object)
+        {
+          Bluetooth_Discovery_Mode_t discoveryMode = *static_cast<Bluetooth_Discovery_Mode_t*>(object);
+          BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *dataHandler = static_cast<BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*>(arguments->arg1);
+          switch(discoveryMode)
+          {
+            case::Bluetooth_Discovery_Mode_t::Discovery_Mode_Started:
+              ESP_LOGI("Bluetooth_Discovery_Mode_t_ValueChanged", "Discovery Mode Started");
+              dataHandler->StartTrackingDevices();
+            break;
+            case::Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped:
+              ESP_LOGI("Bluetooth_Discovery_Mode_t_ValueChanged", "Discovery Mode Stopped");
+              dataHandler->StopTrackingDevices();
+            break;
+            case::Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown:
+            break;            
+          }
+        }
+        else
+        {
+          ESP_LOGE("SourceConnect_ValueChanged", "ERROR! Invalid Pointer.");
+        }
+      }
+    }
+
     //Output Source Connect
-    CallbackArguments m_SourceConnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue};
+    CallbackArguments m_SourceConnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue, &m_ScannedDevice_DataHandler};
     NamedCallback_t m_SourceConnect_Callback = {"Test Name", &SourceConnect_ValueChanged, &m_SourceConnect_CallbackArgs};
     const bool m_SourceConnect_InitialValue = false;
     DataItem<bool, 1> m_SourceConnect = DataItem<bool, 1>( "Src_Connect", m_SourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceConnect_Callback, this);
@@ -679,14 +721,16 @@ class SettingsWebServerManager: public SetupCallerInterface
       if(object && arg)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2 && object)
+        if(arguments->arg1 && arguments->arg2 && arguments->arg3 && object)
         {
           bool sourceConnect = *static_cast<bool*>(object);
           if(sourceConnect)
           {
             DataItem<BluetoothDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg1);
             BluetoothDevice_t *initialValue = static_cast<BluetoothDevice_t*>(arguments->arg2);
-            if(targetCompatibleDevice && initialValue)
+            BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *dataHandler = static_cast<BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*>(arguments->arg3);
+            dataHandler->StartTrackingDevices();
+            if(targetCompatibleDevice && initialValue && dataHandler)
             {
               targetCompatibleDevice->SetValue(initialValue, 1);
             }

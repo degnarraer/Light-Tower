@@ -239,25 +239,11 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                                                                : WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>( WebSocketDataProcessor
                                                                                                                                , DataItem )
     {
-      CreateTasks();
     }
     
     virtual ~BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler()
     {
-      DestroyTasks();
-    }
-    
-    void CreateTasks()
-    {
-      if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) != pdTRUE )
-      {
-        ESP_LOGE("CreateTasks", "ERROR! Unable to create task.");
-      }
-    }
-
-    void DestroyTasks()
-    {
-      if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
+      StopTrackingDevices();
     }
 
     bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t count, size_t changeCount) override
@@ -274,6 +260,42 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
       }
       m_ChangeCount = m_DataItem.GetChangeCount();
       return success;
+    }
+
+    void StartTrackingDevices()
+    {
+      CreateUpdateTask();
+    }
+
+    void StopTrackingDevices()
+    {
+      DestroyUpdateTask();
+    }
+
+  private:
+    void CreateUpdateTask()
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+      if(!m_ActiveDeviceUpdateTask)
+      {
+        if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) == pdTRUE )
+        {
+          ESP_LOGI("CreateUpdateTask", "Started Device Tracking Task");
+        }
+        else
+        {
+          ESP_LOGE("CreateUpdateTask", "ERROR! Unable to create task.");
+        }
+      }
+    }
+
+    void DestroyUpdateTask()
+    {
+      if(m_ActiveDeviceUpdateTask)
+      {
+        vTaskDelete(m_ActiveDeviceUpdateTask);
+        m_ActiveDeviceUpdateTask = nullptr;
+      }
     }
 
     void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)

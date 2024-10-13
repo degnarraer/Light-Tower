@@ -63,6 +63,9 @@ class Manager: public NamedItem
     //Bluetooth Set Data Callback
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
+    //Bluetooth Discovery Mode Changed Callback
+    void BtDiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode);
+    
     //I2S_Device_Callback
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
 
@@ -159,6 +162,15 @@ class Manager: public NamedItem
       }
     }
 
+    //Bluetooth Source Discovery Mode
+    Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_t_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
+    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_t = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode"
+                                                                                        , m_Bluetooth_Discovery_Mode_t_initialValue
+                                                                                        , RxTxType_Tx_On_Change_With_Heartbeat
+                                                                                        , 5000
+                                                                                        , &m_CPU3SerialPortMessageManager
+                                                                                        , nullptr
+                                                                                        , this );
     //Bluetooth Source Connection Status
     ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State"
@@ -283,11 +295,17 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert((arguments->arg1) && "Null Pointer!");
-        Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
-        bool autoReconnect = *static_cast<bool*>(object);
-        ESP_LOGI("Manager::BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Auto Reconnect Value Changed Value Changed: %i", autoReconnect);
-        BT_Out.Set_Auto_Reconnect(autoReconnect);
+        if(arguments->arg1)
+        {
+          Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
+          bool autoReconnect = *static_cast<bool*>(object);
+          ESP_LOGI("BluetoothSourceAutoReConnect_ValueChanged", "Bluetooth Source Auto Reconnect Value Changed Value Changed: %i", autoReconnect);
+          BT_Out.Set_Auto_Reconnect(autoReconnect);
+        }
+        else
+        {
+          ESP_LOGE("BluetoothSourceAutoReConnect_ValueChanged", "ERROR! Null Pointer!");
+        }
       }
     }
     
