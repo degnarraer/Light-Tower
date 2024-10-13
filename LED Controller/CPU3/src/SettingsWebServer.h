@@ -77,8 +77,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       if( Wifi_Mode_t::AccessPoint == m_Wifi_Mode.GetValue() )
       {
-        InitWiFi_Station( m_STA_SSID.GetValueAsString().c_str()
-                        , m_STA_Password.GetValueAsString().c_str() );
+        InitWiFi_AccessPoint( m_AP_SSID.GetValueAsString().c_str()
+                            , m_AP_Password.GetValueAsString().c_str() );
       }
       else if(Wifi_Mode_t::Station == m_Wifi_Mode.GetValue())
       {
@@ -89,8 +89,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       else
       {
-        InitWiFi_Station( "LED Tower of Power"
-                        , "LEDs Rock" );
+        InitWiFi_AccessPoint( "LED Tower of Power"
+                            , "LEDs Rock" );
       }
     }
     
@@ -157,6 +157,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           case SYSTEM_EVENT_WIFI_READY:
             ESP_LOGI("Wifi Event", "Wifi Ready!");
             m_WiFi_Ready = true;
+            TryBeginWebServer();
           break;
           case SYSTEM_EVENT_SCAN_DONE:
             ESP_LOGI("Wifi Event", "Scan Done!");
@@ -459,7 +460,6 @@ class SettingsWebServerManager: public SetupCallerInterface
                                          , &m_AP_SSID_CallbackArgs };
     const std::string m_AP_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_AP_SSID = LocalStringDataItemWithPreferences( "AP_SSID"
-                                                       
                                                                                      , m_AP_SSID_InitialValue
                                                                                      , &m_preferenceInterface
                                                                                      , &m_AP_SSID_Callback
@@ -840,7 +840,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     void TryBeginWebServer()
     {
-      if(m_Station_Connected || m_AccessPoint_Running)
+      if(m_WiFi_Ready || m_Station_Connected || m_AccessPoint_Running)
       {
         BeginWebServer();
       }
@@ -848,7 +848,7 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void TryEndWebServer()
     {
-      ESP_LOGI("BeginWebServer", "Try Ending Web Server");
+      ESP_LOGI("TryEndWebServer", "Try Ending Web Server");
       if(!m_Station_Connected && !m_AccessPoint_Running)
       {
         EndWebServer();
@@ -884,13 +884,14 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
     }
 
-    void InitWiFi_Station(const char* staSSID, const char* staPassword)
+    void InitWiFi_AccessPoint(const char* apSSID, const char* apPassword)
     {
-      ESP_LOGI( "InitWifiClient", "Starting Wifi Station Mode: SSID: \"%s\" Password: \"%s\"", staSSID, staPassword);
-      WiFi.mode(WIFI_STA);
-      WiFi.begin(staSSID, staPassword);
+      ESP_LOGI( "InitWifiClient", "Starting Wifi Access Point Mode: Access Point SSID: \"%s\" Access Point Password: \"%s\"", apSSID, apPassword);
+      WiFi.mode(WIFI_AP);
       IPAddress Ip(192, 168, 0, 1);
       IPAddress NMask(255, 255, 255, 0);
+      WiFi.softAPConfig(Ip, Ip, NMask);
+      WiFi.softAP(apSSID, apPassword);
     }
 
     void InitWiFi_AccessPoint_Station(const char* apSSID, const char* apPassword, const char* staSSID, const char* staPassword)

@@ -52,14 +52,14 @@ export class Model_WifiMode {
         switch (value) {
             case Model_WifiMode.values.Station:
                 showContent("screen-content", "station");
-                hideContent("screen-content", "access point");
+                showContent("screen-content", "access_point");
                 break;
             case Model_WifiMode.values.AccessPoint:
-                showContent("screen-content", "station");
-                showContent("screen-content", "access point");
+                hideContent("screen-content", "station");
+                showContent("screen-content", "access_point");
                 break;
             case Model_WifiMode.values.Unknown:
-                hideContent("screen-content", "access point");
+                hideContent("screen-content", "access_point");
                 hideContent("screen-content", "station");
                 break;
         }

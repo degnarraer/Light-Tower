@@ -133,8 +133,6 @@ export class WebSocketManager {
 
     onErrorHandler(event) {
         console.error('ESP32 Web Socket: Connection Error:', event);
-        this.websocket.close();
-        setTimeout(() => this.initWebSocket(), 5000);
         this.listeners.forEach(listener => {
             listener.onError(event);
         });

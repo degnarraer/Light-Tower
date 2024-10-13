@@ -168,12 +168,25 @@ p {
 
 .menu-content {
 	display: none;
+	padding: 10px;
 	border: 1px solid #ccc;
 	background-color: white;
 	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
 .menu-content.active {
+	display: block;
+	padding: 10px;
+	border: 1px solid #ccc;
+	background-color: white;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.screen-content {
+	display: none;
+}
+
+.screen-content.active {
 	display: block;
 }
 

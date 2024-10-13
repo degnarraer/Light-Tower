@@ -102,6 +102,7 @@ export function showContent(classId, contentId) {
     } else {
         console.warn("Element with ID '" + contentId + "' not found.");
     }
+	
 }
 
 export function hideContent(classId, contentId) {
