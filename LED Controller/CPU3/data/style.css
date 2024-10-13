@@ -312,7 +312,7 @@ body {
 	display: grid;
 	width: 100%;
 	vertical-align: middle;
-	grid-template-columns: auto 300px;
+	grid-template-columns: auto 100px;
 }
 
 .settingGroup_3_Column {
@@ -359,12 +359,10 @@ body {
 
 .settingGroup_Button {
 	display: flex;
-	justify-content: right;
-	align-items: right;
+	justify-content: center;
+	align-items: center;
 	border: 2px solid #333;
 	margin: -1px;
-	
-	padding-right: 10px;
 }
 
 .settingGroup_Textbox {
@@ -596,28 +594,23 @@ form {
 }
 
 .radio-button-group {
-    margin-top: 5px;
-    margin-bottom: 5px;
     display: grid;
-    justify-items: end;
+	padding: 10px;
 }
 
 .radio-button-group label {
     display: flex;
-	padding-left: 10px;
     align-items: center;
+	justify-content: right;
     cursor: pointer;
-    margin-bottom: 10px;
     font-size: 16px;
 }
 
 .radio-button-group img {
-    padding-left: 10px;
-    padding-right: 10px;
-    align-items: center;
+    align-items: right;
     cursor: pointer;
-    margin-bottom: 10px;
     font-size: 16px;
+	justify-content: right;
 }
 
 /* Hide default radio button */
@@ -630,9 +623,8 @@ form {
     width: 18px;
     height: 18px;
     border: 2px solid #3498db;
-    border-radius: 50%; /* Changed to 50% for a perfect circle */
+    border-radius: 50%;
     position: relative;
-    margin-right: 10px;
     transition: background 0.3s;
 }
 

@@ -71,19 +71,19 @@
 	<div id= "MainScreen" class = "MainScreen">
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
 			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Speaker Status'); closeNav();">
-				<img src="Images/status-health.svg" alt="Status" style="width:24px; height:24px;">
+				<img src="Images/status-health.svg" alt="Status" style="width:80px; height:50px;">
 			</button>
 			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Wifi Settings'); closeNav();">
-				<img src="Images/wifi.svg" alt="Wifi" style="width:24px; height:24px;">
+				<img src="Images/wifi.svg" alt="Wifi" style="width:80px; height:50px;">
 			</button>
 			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Sound Settings'); closeNav();">
-				<img src="Images/sound.svg" alt="Sound" style="width:24px; height:24px;">
+				<img src="Images/sound.svg" alt="Sound" style="width:80px; height:50px;">
 			</button>
 			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Real Time FFT'); closeNav();">
-				<img src="Images/histogram.svg" alt="FFT" style="width:24px; height:24px;">
+				<img src="Images/histogram.svg" alt="FFT" style="width:80px; height:50px;">
 			</button>
 			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Brightness'); closeNav();">
-				<img src="Images/brightness.svg" alt="Brightness" style="width:24px; height:24px;">
+				<img src="Images/brightness.svg" alt="Brightness" style="width:80px; height:50px;">
 			</button>
 		</div>
 		<div id="MainContentArea" class="MainContentArea">
@@ -113,7 +113,7 @@
 					<div class="frame">
 						<h2>Network Type</h2>
 						<div class="settingGroup">
-							<div class="settingGroup_2_Column">
+							<div class="settingGroup_3_Column">
 								<div class="settingGroup_Title">
 									Wifi Mode
 								</div>
@@ -121,20 +121,23 @@
 									<div class="radio-button-group">
 										<label onclick="WIFI_Mode.setValue('Station')">
 											Station
-											<img src="Images/station.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/station.svg" alt="Status" style="width:80px; height:50px;">
 											<input type="radio" name="WIFI_Mode" value="Station" data-Signal="WIFI_Mode">
 											<span class="custom-radio"></span>
 										</label>
 										<label onclick="WIFI_Mode.setValue('AccessPoint')">
 											Access Point
-											<img src="Images/router.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/router.svg" alt="Status" style="width:80px; height:50px;">
 											<input type="radio" name="WIFI_Mode" value="AccessPoint" data-Signal="WIFI_Mode">
 											<span class="custom-radio"></span>
 										</label>
 									</div>
 								</div>
-								<div>
-									
+								<div class="settingGroup_Button">
+									<button id="Wifi_Restart_Button" data-Signal="Wifi_Restart" onmousedown="Wifi_Restart.setValue(true)" onmouseup="Wifi_Restart.setValue(false)">
+										<img src="Images/restart.svg" alt="Status" style="width:80px; height:50px;">
+										Restart
+									</button>
 								</div>
 							</div>
 						</div>
@@ -148,21 +151,8 @@
 								</div>
 								<div class="settingGroup_Button">
 									<button id="Host_Name_Submit_Button" for="Host_Name_Text_Box" onclick="Host_Name.scheduleWebSocketUpdate()">
-										<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
-									</button>
-								</div>
-							</div>
-						</div>
-					</div>
-					<div class="frame">
-						<div class="settingGroup">
-							<div class="settingGroup_2_Column">
-								<div class="settingGroup_Title">
-									Restart Wifi
-								</div>
-								<div class="settingGroup_Button">
-									<button id="Wifi_Restart_Button" data-Signal="Wifi_Restart" onmousedown="Wifi_Restart.setValue(true)" onmouseup="Wifi_Restart.setValue(false)">
-										<img src="Images/restart.svg" alt="Status" style="width:24px; height:24px;">
+										<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+										Submit
 									</button>
 								</div>
 							</div>
@@ -181,7 +171,8 @@
 									</div>
 									<div class="settingGroup_Button">
 										<button id="STA_SSID_Submit_Button" for="STA_SSID_Text_Box" onclick="STA_SSID.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+											Submit
 										</button>
 									</div>
 								</div>
@@ -196,7 +187,9 @@
 									</div>
 									<div class="settingGroup_Button">
 										<button id="STA_Password_Submit_Button" for="STA_Password_Text_Box" onclick="STA_Password.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+											Submit
+											Submit
 										</button>
 									</div>
 								</div>
@@ -216,7 +209,8 @@
 									</div>
 									<div class="settingGroup_Button">
 										<button id="AP_SSID_Submit_Button" for="AP_SSID_Text_Box" onclick="AP_SSID.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+											Submit
 										</button>
 									</div>
 								</div>
@@ -231,7 +225,8 @@
 									</div>
 									<div class="settingGroup_Button">
 										<button id="AP_Password_Submit_Button" for="AP_Password_Text_Box" onclick="AP_Password.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+											Submit
 										</button>
 									</div>
 								</div>
@@ -300,7 +295,8 @@
 									</div>
 									<div class="settingGroup_Widget">
 										<button id="Sink_Name_Submit_Button" for="Sink_Name_Text_Box" onclick="SinkName.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+											Submit
 										</button>
 									</div>
 								</div>
@@ -362,7 +358,8 @@
 									</div>
 									<div class="settingGroup_Widget">
 										<button id="Source_Name_Submit_Button" onclick="SourceName.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:24px; height:24px;">
+											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
+											Submit
 										</button>
 									</div>
 								</div>
