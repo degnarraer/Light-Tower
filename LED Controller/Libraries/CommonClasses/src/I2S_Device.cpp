@@ -90,7 +90,7 @@ void I2S_Device::StartDevice()
 
 void I2S_Device::StopDevice()
 {
-  ESP_LOGE("StopDevice", "%s: Stopping I2S device.", GetTitle().c_str());
+  ESP_LOGI("StopDevice", "%s: Stopping I2S device.", GetTitle().c_str());
 	if(m_Is_Started)
 	{
 		if(ESP_OK == i2s_stop(m_I2S_PORT))

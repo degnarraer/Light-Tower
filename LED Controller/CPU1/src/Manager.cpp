@@ -164,7 +164,7 @@ void Manager::SetInputSource(SoundInputSource_t Type)
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
       m_Mic_In.StopDevice(); 
-      m_I2S_Out.StartDevice();
+      m_I2S_Out.StopDevice();
       m_BT_In.StartDevice();
       m_BT_In.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
     }

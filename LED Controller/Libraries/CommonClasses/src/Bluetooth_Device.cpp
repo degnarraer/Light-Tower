@@ -352,22 +352,34 @@ void Bluetooth_Sink::StopDevice()
 }
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
+	ESP_LOGI("Bluetooth_Device", "Bluetooth sink connect with Name: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 	if(!m_Is_Connected)
 	{
 		StartDevice();
 		m_SinkName = sinkName;
+		m_AutoReConnect = reconnect;
+		m_BTSink.set_auto_reconnect(m_AutoReConnect);
 		m_BTSink.start(m_SinkName.c_str());
 		m_Is_Connected = true;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth sink started with Name: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
+		ESP_LOGI("Bluetooth_Device", "Bluetooth sink connected to Name: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
+	}
+	else
+	{
+		ESP_LOGW("Bluetooth_Device", "Bluetooth sink already started.");
 	}
 }
 void Bluetooth_Sink::Disconnect()
 {
+	ESP_LOGI("Bluetooth_Device", "Bluetooth sink disconnecting");
 	if(m_Is_Connected)
 	{
 		m_BTSink.disconnect();
 		m_Is_Connected = false;
 		ESP_LOGI("Bluetooth_Device", "Bluetooth sink disconnected");
+	}
+	else
+	{
+		ESP_LOGW("Bluetooth_Device", "Bluetooth sink already disconnected.");
 	}
 }
 
