@@ -59,46 +59,53 @@ void Bluetooth_Source::Setup()
 	m_DeviceProcessorQueueHandle = xQueueCreate(DEVICE_QUEUE_SIZE, sizeof(BT_Device_Info));
 	if(m_DeviceProcessorQueueHandle != NULL)
 	{
-		ESP_LOGI("Setup", "Created Compatible Device Processor Queue.");
+		ESP_LOGI("Setup", "Created compatible device Processor Queue.");
 	}
 	else
 	{
-		ESP_LOGE("Setup", "ERROR! Unable to create Compatible Device Processor Queue.");
+		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Processor Queue.");
 	}
 	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_CompatibleDeviceTrackerTaskHandle, 1 ) == pdTRUE )
 	{
-		ESP_LOGI("Setup", "Created Compatible Device Tracker task.");
+		ESP_LOGI("Setup", "Created compatible device Tracker task.");
 	}
 	else
 	{
-		ESP_LOGE("Setup", "ERROR! Unable to create Compatible Device Tracker task.");
+		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Tracker task.");
 	}
 	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_MEDIUM, &m_DeviceProcessorTaskHandle, 1 ) == pdTRUE)
 	{
-		ESP_LOGI("Setup", "Created Compatible Device Processor task.");
+		ESP_LOGI("Setup", "Created compatible device Processor task.");
 	}
 	else
 	{
-		ESP_LOGE("Setup", "ERROR! Unable to create Compatible Device Processor task.");
+		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Processor task.");
 	}
 }
 
 void Bluetooth_Source::InstallDevice()
 {
-	ESP_LOGI("InstallDevice", "%s: Installing Bluetooth Device.", GetTitle().c_str());
-	m_BTSource.set_reset_ble(m_ResetBLE);
-	m_BTSource.set_auto_reconnect(m_AutoReConnect);
-	m_BTSource.set_ssp_enabled(false);
-	m_BTSource.set_local_name("LED Tower of Power");
-	m_BTSource.set_task_core(1);
-	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
-	m_Is_Installed = true;
-	ESP_LOGI("InstallDevice", "%s: Device Installed", GetTitle().c_str());
+	ESP_LOGI("InstallDevice", "%s: Installing Bluetooth device.", GetTitle().c_str());
+	if(!m_Is_Installed)
+	{
+		m_BTSource.set_reset_ble(m_ResetBLE);
+		m_BTSource.set_auto_reconnect(m_AutoReConnect);
+		m_BTSource.set_ssp_enabled(false);
+		m_BTSource.set_local_name("LED Tower of Power");
+		m_BTSource.set_task_core(1);
+		m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
+		m_Is_Installed = true;
+		ESP_LOGI("InstallDevice", "%s: Device installed", GetTitle().c_str());
+	}
+	else
+	{
+		ESP_LOGW("InstallDevice", "%s: Device already installed", GetTitle().c_str());
+	}
 }
 
 void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 {
-	ESP_LOGI("SetMusicDataCallback", "Set Music Data Callback");
+	ESP_LOGI("SetMusicDataCallback", "Set music data callback");
 	m_MusicDataCallback = callback;
 }
 
@@ -109,18 +116,20 @@ void Bluetooth_Source::StartDevice()
 	{
 		InstallDevice();
 	}
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Started");
+	m_Is_Started = true;
+	ESP_LOGI("Bluetooth_Device", "Bluetooth started");
 }
 
 void Bluetooth_Source::StopDevice()
 {
-	if(true == m_Is_Running)
+	if(true == m_Is_Connected)
 	{
 		ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth");
-		m_BTSource.end(false);
-		m_Is_Running = false;
+		Disconnect();
+		m_BTSource.end();
+		m_Is_Started = false;
 		m_Is_Installed = false;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
+		ESP_LOGI("Bluetooth_Device", "Bluetooth stopped");
 	}
 }
 
@@ -131,16 +140,20 @@ void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddres
 	m_Address = String(SourceAddress);
 	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
 	m_BTSource.start_raw(m_MusicDataCallback);
-	m_Is_Running = true;
+	m_Is_Connected = true;
 }
 void Bluetooth_Source::Disconnect()
 {
-	m_BTSource.disconnect();
-	StopDevice();
+	if(m_Is_Connected)
+	{
+		m_BTSource.disconnect();
+		m_Is_Connected = false;
+		ESP_LOGI("Bluetooth_Device", "Bluetooth source disconnected");
+	}
 }
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
-	ESP_LOGI( "ConnectToThisName", "Set Name to Connect: \"%s\" Address: \"%s\""
+	ESP_LOGI( "ConnectToThisName", "Set name to connect: \"%s\" Address: \"%s\""
 			, sourceName.c_str()
 			, sourceAddress.c_str() );
 	m_Name = String(sourceName.c_str());
@@ -195,7 +208,7 @@ void Bluetooth_Source::DeviceProcessingTask()
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-    ESP_LOGD("Bluetooth_Device", "Compatible Device Found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
+    ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 	std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
 	bool found = false;
 	for (auto& device : m_ActiveCompatibleDevices)
@@ -205,13 +218,13 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 			found = true;
 			device = newDevice;
 			device.lastUpdateTime = millis();
-			ESP_LOGD("Bluetooth_Device", "Compatible Device \"%s\" Updated", newDevice.name);
+			ESP_LOGD("Bluetooth_Device", "compatible device \"%s\" Updated", newDevice.name);
 			break;
 		}
 	}
 	if (!found)
 	{
-		ESP_LOGI("Bluetooth_Device", "New Compatible Device Found: %s", newDevice.name);
+		ESP_LOGI("Bluetooth_Device", "New compatible device Found: %s", newDevice.name);
 		m_ActiveCompatibleDevices.push_back(newDevice);
 	}
 }
@@ -260,75 +273,102 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 {  
 	if(NULL != m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read Data Stream");
+		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BTDataReceived((uint8_t*)data, length);
 	}
 }
 
 void Bluetooth_Sink::InstallDevice()
 {
-	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth Device.", GetTitle().c_str());
-	static i2s_config_t i2s_config = {
-	  .mode = m_i2s_Mode,
-	  .sample_rate = m_SampleRate, // updated automatically by A2DP
-	  .bits_per_sample = m_BitsPerSample,
-	  .channel_format = m_Channel_Fmt,
-	  .communication_format = m_CommFormat,
-	  .intr_alloc_flags = 1, // default interrupt priority
-	  .dma_buf_count = m_BufferCount,
-	  .dma_buf_len = m_BufferSize,
-	  .use_apll = m_Use_APLL,
-	  .tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
-	  .fixed_mclk = 1
-	};
-	i2s_pin_config_t my_pin_config = 
+	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth device.", GetTitle().c_str());
+	if(!m_Is_Started)
 	{
-		.bck_io_num = m_SerialClockPin,
-		.ws_io_num = m_WordSelectPin,
-		.data_out_num = m_SerialDataOutPin,
-		.data_in_num = m_SerialDataInPin
-	};
-	m_BTSink.set_pin_config(my_pin_config);
-	m_BTSink.set_i2s_config(i2s_config);
-	m_BTSink.set_i2s_port(m_I2S_PORT);
-	m_BTSink.set_auto_reconnect(m_AutoReConnect);
-	m_BTSink.set_bits_per_sample(m_BitsPerSample);
-	m_BTSink.set_task_core(1);
-	m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
-	m_BTSink.set_volume_control(&m_VolumeControl);
-	m_BTSink.set_volume(100);
-	ESP_LOGI("Bluetooth_Device", "%s: Device Installed", GetTitle().c_str());
+		static i2s_config_t i2s_config = {
+		.mode = m_i2s_Mode,
+		.sample_rate = m_SampleRate, // updated automatically by A2DP
+		.bits_per_sample = m_BitsPerSample,
+		.channel_format = m_Channel_Fmt,
+		.communication_format = m_CommFormat,
+		.intr_alloc_flags = 1, // default interrupt priority
+		.dma_buf_count = m_BufferCount,
+		.dma_buf_len = m_BufferSize,
+		.use_apll = m_Use_APLL,
+		.tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
+		.fixed_mclk = 1
+		};
+		i2s_pin_config_t my_pin_config = 
+		{
+			.bck_io_num = m_SerialClockPin,
+			.ws_io_num = m_WordSelectPin,
+			.data_out_num = m_SerialDataOutPin,
+			.data_in_num = m_SerialDataInPin
+		};
+		m_BTSink.set_pin_config(my_pin_config);
+		m_BTSink.set_i2s_config(i2s_config);
+		m_BTSink.set_i2s_port(m_I2S_PORT);
+		m_BTSink.set_auto_reconnect(m_AutoReConnect);
+		m_BTSink.set_bits_per_sample(m_BitsPerSample);
+		m_BTSink.set_task_core(1);
+		m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
+		m_BTSink.set_volume_control(&m_VolumeControl);
+		m_BTSink.set_volume(100);
+		m_Is_Installed = true;
+		ESP_LOGI("Bluetooth_Device", "%s: Bluetooth Device installed", GetTitle().c_str());
+	}
+	else
+	{
+		ESP_LOGW("Bluetooth Device", "%s: Bluetooth device already installed.", GetTitle().c_str());
+	}
 }
 void Bluetooth_Sink::StartDevice()
 {
-	if(false == m_Is_Running)
+	ESP_LOGI("StartDevice", "Starting Bluetooth");
+	if(!m_Is_Started)
 	{
-		m_Is_Running = true;
 		InstallDevice();
+		m_Is_Started = true;
+		ESP_LOGI("StartDevice", "Bluetooth started");
+	}
+	else
+	{
+		ESP_LOGW("StopDevice", "Bluetooth already started.");
 	}
 }
 void Bluetooth_Sink::StopDevice()
 {
-	if(m_Is_Running)
+	ESP_LOGI("StopDevice", "Stopping Bluetooth");
+	if(m_Is_Started)
 	{
-		ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth");
-		m_BTSink.end(false);
-		m_Is_Running = false;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
+		Disconnect();
+		m_BTSink.end();
+		m_Is_Started = false;
+		m_Is_Installed = false;
+		ESP_LOGI("StopDevice", "Bluetooth stopped");
+	}
+	else
+	{
+		ESP_LOGW("StopDevice", "Bluetooth already stopped.");
 	}
 }
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
-	StartDevice();
-	m_SinkName = sinkName;
-	m_BTSink.start(m_SinkName.c_str());
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With NAME: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
+	if(!m_Is_Connected)
+	{
+		StartDevice();
+		m_SinkName = sinkName;
+		m_BTSink.start(m_SinkName.c_str());
+		m_Is_Connected = true;
+		ESP_LOGI("Bluetooth_Device", "Bluetooth sink started with Name: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
+	}
 }
 void Bluetooth_Sink::Disconnect()
 {
-	m_BTSink.disconnect();
-	StopDevice();
-	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Disconnected");
+	if(m_Is_Connected)
+	{
+		m_BTSink.disconnect();
+		m_Is_Connected = false;
+		ESP_LOGI("Bluetooth_Device", "Bluetooth sink disconnected");
+	}
 }
 
 #endif

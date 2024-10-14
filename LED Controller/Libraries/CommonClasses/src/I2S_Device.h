@@ -89,7 +89,9 @@ class I2S_Device: public NamedItem
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
 
-	  bool m_Is_Running = false;
+		bool m_Is_Installed = false;
+		bool m_Is_Started = false;
+
     QueueHandle_t m_i2s_event_queueHandle = nullptr;
     TaskHandle_t m_TaskHandle = nullptr;
     size_t m_SampleCount;
@@ -102,6 +104,25 @@ class I2S_Device: public NamedItem
     size_t WriteSamples(uint8_t *samples, size_t ByteCount);
     void InstallDevice();
     void UninstallDevice();
+    void CreateTask()
+    {
+      if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+      {
+        ESP_LOGI("StartDevice", "%s: I2S device started.", GetTitle().c_str());
+      }
+      else
+      {
+        ESP_LOGE("StartDevice", "ERROR! %s: Unable to create task!", GetTitle().c_str());
+      }
+    }
+    void DestroyTask()
+    {
+      if(m_TaskHandle)
+      {
+        vTaskDelete(m_TaskHandle);
+        m_TaskHandle = nullptr;
+      }
+    }
 
     static void Static_10mS_TaskLoop(void * parameter)
     {

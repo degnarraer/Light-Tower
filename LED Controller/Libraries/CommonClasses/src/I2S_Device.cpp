@@ -57,7 +57,7 @@ I2S_Device::~I2S_Device()
 
 bool I2S_Device::IsRunning()
 {
-  return m_Is_Running;
+  return m_Is_Started;
 }
 
 void I2S_Device::Setup()
@@ -71,36 +71,44 @@ void I2S_Device::Setup()
 
 void I2S_Device::StartDevice()
 {
-	if(!m_Is_Running)
+  ESP_LOGI("StartDevice", "%s: Starting I2S device.", GetTitle().c_str());
+	if(!m_Is_Started)
 	{
-    m_Is_Running = true;
 		InstallDevice();
-		i2s_start(m_I2S_PORT);
-    if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+    if(m_Is_Installed)
     {
-      ESP_LOGI("StartDevice", "I2S Device Task Started.");
+      i2s_start(m_I2S_PORT);
+      CreateTask();
     }
-    else
-    {
-      ESP_LOGE("Setup", "ERROR! Unable to create task.");
-    }
+    m_Is_Started = true;
 	}
+  else
+  {
+    ESP_LOGW("StartDevice", "%s: Device already started.", GetTitle().c_str());
+  }
 }
 
 void I2S_Device::StopDevice()
 {
-	if(m_Is_Running)
+  ESP_LOGE("StopDevice", "%s: Stopping I2S device.", GetTitle().c_str());
+	if(m_Is_Started)
 	{
-		i2s_stop(m_I2S_PORT);
-		UninstallDevice();
-    if(m_TaskHandle)
+		if(ESP_OK == i2s_stop(m_I2S_PORT))
     {
-      vTaskDelete(m_TaskHandle);
-      m_TaskHandle = nullptr;
+      DestroyTask();
+      UninstallDevice();
+      m_Is_Started = false;
+      ESP_LOGI("StopDevice", "%s: I2S device stopped.", GetTitle().c_str());
     }
-		m_Is_Running = false;
-		ESP_LOGE("StartDevice", "%s: I2S Device Stopped.", GetTitle().c_str());
+    else
+    {
+      ESP_LOGE("StopDevice", "%s: Unable to stop I2S device.", GetTitle().c_str());
+    }
 	}
+  else
+  {
+    ESP_LOGW("StopDevice", "%s: I2S device not running.", GetTitle().c_str());
+  }
 }
 
 size_t I2S_Device::WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
@@ -146,37 +154,55 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 
 void I2S_Device::UninstallDevice()
 {
-	i2s_driver_uninstall(m_I2S_PORT);
+  ESP_LOGI("i2S Device", "%s: Uninstalling I2S device.", GetTitle().c_str());
+  if(m_Is_Installed)
+  {
+	  if(ESP_OK == i2s_driver_uninstall(m_I2S_PORT))
+    {
+      ESP_LOGI("i2S Device", "%s: I2S device uninstalled.", GetTitle().c_str());
+      m_Is_Installed = false;
+    }
+    else
+    {
+      ESP_LOGE("i2S Device", "%s: Could not uninstall I2S device.", GetTitle().c_str());
+    }
+  }
+  else
+  {
+    ESP_LOGW("i2S Device", "%s: I2S device not installed.", GetTitle().c_str());
+  }
 }
 void I2S_Device::InstallDevice()
 {
-	ESP_LOGI("i2S Device", "%s: Configuring I2S Device.", GetTitle().c_str());
-  esp_err_t err;
-  // The I2S config as per the example
-  const i2s_config_t i2s_config = {
-    .mode = m_i2s_Mode,
-    .sample_rate = m_SampleRate,
-    .bits_per_sample = m_BitsPerSample,
-    .channel_format = m_Channel_Fmt,
-    .communication_format = m_CommFormat,
-    .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-    .dma_buf_count = m_BufferCount,
-    .dma_buf_len = m_BufferSize,
-    .use_apll = m_Use_APLL,
-    .tx_desc_auto_clear = true,
-    .fixed_mclk = 0
-  };
-
-  // The pin config as per the setup
-  const i2s_pin_config_t pin_config = 
-    {
-      .bck_io_num = m_SerialClockPin,         // Serial Clock (SCK)
-      .ws_io_num = m_WordSelectPin,           // Word Select (WS)
-      .data_out_num = m_SerialDataOutPin,     // not used (only for speakers)
-      .data_in_num = m_SerialDataInPin        // Serial Data (SD)
+  ESP_LOGI("i2S Device", "%s: Installing I2S device.", GetTitle().c_str());
+  if(!m_Is_Installed)
+  {
+    esp_err_t err;
+    // The I2S config as per the example
+    const i2s_config_t i2s_config = {
+      .mode = m_i2s_Mode,
+      .sample_rate = m_SampleRate,
+      .bits_per_sample = m_BitsPerSample,
+      .channel_format = m_Channel_Fmt,
+      .communication_format = m_CommFormat,
+      .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+      .dma_buf_count = m_BufferCount,
+      .dma_buf_len = m_BufferSize,
+      .use_apll = m_Use_APLL,
+      .tx_desc_auto_clear = true,
+      .fixed_mclk = 0
     };
-    // Configuring the I2S driver and pins.
-    // This function must be called before any I2S driver read/write operations.
+
+    // The pin config as per the setup
+    const i2s_pin_config_t pin_config = 
+      {
+        .bck_io_num = m_SerialClockPin,         // Serial Clock (SCK)
+        .ws_io_num = m_WordSelectPin,           // Word Select (WS)
+        .data_out_num = m_SerialDataOutPin,     // not used (only for speakers)
+        .data_in_num = m_SerialDataInPin        // Serial Data (SD)
+      };
+      // Configuring the I2S driver and pins.
+      // This function must be called before any I2S driver read/write operations.
     err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queueHandle);
     if (err != ESP_OK)
     {
@@ -200,7 +226,13 @@ void I2S_Device::InstallDevice()
       ESP_LOGE("i2S Device", "ERROR! %s: Failed setting pin: %s.", GetTitle().c_str(), err);
       ESP.restart();
     }
-    ESP_LOGI("i2S Device", "%s: Driver Installed.", GetTitle().c_str());
+    ESP_LOGI("i2S Device", "%s: Device Installed.", GetTitle().c_str());
+    m_Is_Installed = true;
+  }
+  else
+  {
+    ESP_LOGW("i2S Device", "%s: Device already installed.", GetTitle().c_str());
+  }
 }
 
 void I2S_Device::ProcessEventQueue()

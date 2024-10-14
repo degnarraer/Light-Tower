@@ -170,7 +170,8 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle= nullptr;
 		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;
 		bool m_Is_Installed = false;
-		bool m_Is_Running = false;
+		bool m_Is_Started = false;
+		bool m_Is_Connected = false;
 		
 		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
@@ -267,7 +268,10 @@ class Bluetooth_Sink: public NamedItem
 		const int m_SerialDataInPin;
 		const int m_SerialDataOutPin;
 		
-		bool m_Is_Running = false;
+		bool m_Is_Installed = false;
+		bool m_Is_Started = false;
+		bool m_Is_Connected = false;
+		
 		bool m_AutoReConnect = false;
 		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;

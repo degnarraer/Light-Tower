@@ -167,8 +167,8 @@ void Manager::SetInputSource(SoundInputSource_t Type)
       m_I2S_Out.StartDevice();
       m_BT_In.StartDevice();
       m_BT_In.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
-      break;
     }
+    break;
     case SoundInputSource_t::OFF:
     default:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
