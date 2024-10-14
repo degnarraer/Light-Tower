@@ -226,6 +226,11 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return GetDataTypeFromTemplateType<T>();
 		}
 
+		void ResetToDefaultValue()
+		{
+			SetValue(mp_InitialValue, COUNT);
+		}
+
 		void GetValue(void* object, size_t count) const
 		{
 			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);

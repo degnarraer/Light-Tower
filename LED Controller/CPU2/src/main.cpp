@@ -148,6 +148,7 @@ void setup()
   a2dp_source.set_ssid_callback(ConnectToThisName);
   m_BT_Out.Setup();
   m_BT_Out.SetMusicDataCallback(SetBTTxData);
+  m_BT_Out.SetDiscoveryModeCallback(DiscoveryModeChanged);
   m_Manager.Setup();
   m_SoundProcessor.SetupSoundProcessor(); 
   OutputSystemStatus();

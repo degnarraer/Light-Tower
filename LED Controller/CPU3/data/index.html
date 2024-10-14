@@ -239,9 +239,24 @@
 					<div class="frame">
 						<header>Sound Input</header>
 						<div class="selection_tabs">
-							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('OFF');">OFF</div>
-							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Microphone');">Microphone</div>
-							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Bluetooth');">Bluetooth</div>
+							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('OFF');">
+								<div class="settingGroup_Button non-pressable-button">
+									<img src="Images/power.svg" alt="OFF" style="width:100px; height:25px">
+									OFF
+								</div>
+							</div>
+							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Microphone');">
+								<div class="settingGroup_Button non-pressable-button">
+									<img src="Images/microphone.svg" alt="Microphone" style="width:100px; height:25px">
+									Microphone
+								</div>
+							</div>
+							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Bluetooth');">
+								<div class="settingGroup_Button non-pressable-button">
+									<img src="Images/bluetooth.svg" alt="Bluetooth" style="width:100px; height:25px">
+									Bluetooth
+								</div>
+							</div>
 						</div>
 						<div class="selection_tab_content_input_source" id="Sound_Input_Selection_OFF">
 							<h2>Off</h2>
@@ -264,7 +279,7 @@
 							<h2>Bluetooth</h2>
 							<p>Sound input has been set to Bluetooth.</p>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Status">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
 										Connect
 									</div>
@@ -274,7 +289,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Status">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
 										Disconnect
 									</div>
@@ -301,7 +316,7 @@
 								</div>
 							</div>
 							<div class="settingGroup">
-								<div class="settingGroup_Horrizontal_Grid_Status">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
 										Bluetooth Bridge State
 									</div>
@@ -328,8 +343,18 @@
 					<div class="frame">
 						<header>Sound Output</header>
 						<div class="selection_tabs">
-							<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('OFF');">OFF</div>
-							<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">Bluetooth</div>
+							<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('OFF');">
+								<div class="settingGroup_Button non-pressable-button">
+									<img src="Images/power.svg" alt="OFF" style="width:100px; height:25px;">
+									OFF
+								</div>
+							</div>
+							<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">
+								<div class="settingGroup_Button non-pressable-button">
+									<img src="Images/bluetooth.svg" alt="Bluetooth" style="width:100px; height:25px;">
+									Bluetooth
+								</div>
+							</div>
 						</div>
 						<div class="selection_tab_content_output_source" id="Sound_Output_Selection_OFF">
 							<h2>Off</h2>

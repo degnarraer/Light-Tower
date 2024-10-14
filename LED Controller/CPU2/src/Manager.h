@@ -106,17 +106,12 @@ class Manager: public NamedItem
     struct CallbackArguments 
     {
       void* arg1;
-    };
-    struct Callback2Arguments 
-    {
-      void* arg1;
-      void* arg2;
-    };
-    struct Callback3Arguments 
-    {
-      void* arg1;
       void* arg2;
       void* arg3;
+      void* arg4;
+
+      CallbackArguments(void* a1 = nullptr, void* a2 = nullptr, void* a3 = nullptr, void* a4 = nullptr)
+        : arg1(a1), arg2(a2), arg3(a3), arg4(a4) {}
     };
 
     const ValidStringValues_t validBoolValues = { "0", "1" };
@@ -182,7 +177,7 @@ class Manager: public NamedItem
                                                                                         , this );
     
     //Output Source Connect
-    Callback2Arguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_Selected_Device};
+    CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_Selected_Device};
     NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback"
                                                     , &OuputSourceConnect_ValueChanged
                                                     , &m_OuputSourceConnect_CallbackArgs};
@@ -199,7 +194,7 @@ class Manager: public NamedItem
     {
       if(arg && object)
       {
-        Callback2Arguments* arguments = static_cast<Callback2Arguments*>(arg);
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
         if(arguments->arg1 && arguments->arg2)
         {
           Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
@@ -310,7 +305,7 @@ class Manager: public NamedItem
     }
     
     //Bluetooth Source Reset
-    CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out};
+    CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out, &m_Selected_Device};
     NamedCallback_t m_BluetoothReset_Callback = {"Bluetooth Reset Callback", &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
     const bool m_BluetoothReset_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset"
@@ -327,16 +322,23 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        assert((arguments->arg1) && "Null Pointer!");
-        Bluetooth_Source& BT_Out = *static_cast<Bluetooth_Source*>(arguments->arg1);
-        bool resetBLE = *static_cast<bool*>(object);
-        ESP_LOGI("BluetoothReset_ValueChanged", "Bluetooth Source Reset Value Changed: %i", resetBLE);
-        if(resetBLE)
+        if(arguments->arg1 && arguments->arg2)
         {
-          BT_Out.Disconnect();
-          BT_Out.Set_Reset_BLE(resetBLE);
-          BT_Out.Set_NVS_Init(resetBLE);
-          BT_Out.Connect("", "");
+          /*
+          Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          DataItem<BluetoothDevice_t, 1> *pTargetDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg2);
+          const BluetoothDevice_t InitialValue = {"", ""};
+          bool resetBLE = *static_cast<bool*>(object);
+          ESP_LOGI("BluetoothReset_ValueChanged", "Bluetooth Source Reset Value Changed: %i", resetBLE);
+          if(resetBLE)
+          {
+            pTargetDevice->ResetToDefaultValue();
+            pBT_Out->Disconnect();
+            pBT_Out->Set_Reset_BLE(true);
+            pBT_Out->Connect(pTargetDevice->GetValuePointer()->name, pTargetDevice->GetValuePointer()->address);
+            pBT_Out->Set_Reset_BLE(false);
+          }
+          */
         }
       }
     }

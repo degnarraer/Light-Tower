@@ -795,6 +795,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SourceReset_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset );    
+    
     void HandleWebSocketMessage(uint8_t clientID, WStype_t type, uint8_t *payload, size_t length)
     {
         // Handle text messages

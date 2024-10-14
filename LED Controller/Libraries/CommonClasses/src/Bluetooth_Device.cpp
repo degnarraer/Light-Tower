@@ -119,6 +119,7 @@ void Bluetooth_Source::StopDevice()
 		ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth");
 		m_BTSource.end(false);
 		m_Is_Running = false;
+		m_Is_Installed = false;
 		ESP_LOGI("Bluetooth_Device", "Bluetooth Stopped");
 	}
 }
@@ -135,10 +136,7 @@ void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddres
 void Bluetooth_Source::Disconnect()
 {
 	m_BTSource.disconnect();
-	m_Is_Running = false;
-	
-	m_BTSource.end(true);
-	m_Is_Installed = false;
+	StopDevice();
 }
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
@@ -323,7 +321,6 @@ void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
 	StartDevice();
 	m_SinkName = sinkName;
-	m_AutoReConnect = reconnect;
 	m_BTSink.start(m_SinkName.c_str());
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink Started With NAME: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
 }

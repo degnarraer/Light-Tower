@@ -102,19 +102,12 @@ class Manager: public NamedItem
     struct CallbackArguments 
     {
       void* arg1;
-    };
-
-    struct Callback2Arguments 
-    {
-      void* arg1;
-      void* arg2;
-    };
-
-    struct Callback3Arguments 
-    {
-      void* arg1;
       void* arg2;
       void* arg3;
+      void* arg4;
+      
+      CallbackArguments(void* a1 = nullptr, void* a2 = nullptr, void* a3 = nullptr, void* a4 = nullptr)
+        : arg1(a1), arg2(a2), arg3(a3), arg4(a4) {}
     };
 
     void SetupStatisticalEngine();
@@ -160,11 +153,6 @@ class Manager: public NamedItem
     }
 
     //Bluetooth Sink Name
-    Callback2Arguments m_SinkName_CallbackArgs = { &m_BT_In
-                                                 , &m_SinkAutoReConnect };
-    NamedCallback_t m_SinkName_Callback = { "Sink Name Callback"
-                                          , &SinkName_ValueChanged
-                                          , &m_SinkName_CallbackArgs };
     const std::string m_SinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
                                                                             , m_SinkName_InitialValue
@@ -172,26 +160,11 @@ class Manager: public NamedItem
                                                                             , 0
                                                                             , &m_PreferencesWrapper
                                                                             , &m_CPU3SerialPortMessageManager
-                                                                            , &m_SinkName_Callback
+                                                                            , nullptr
                                                                             , this );
-    static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      if(arg && object)
-      {
-        Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
-        assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");
-        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-        DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
-        char* sinkName = static_cast<char*>(object);
-        ESP_LOGI("SinkName_ValueChanged", "Sink Name Changed: %s", sinkName);
-        //pBT_In->Disconnect();
-        //pBT_In->Connect(sinkName, pBluetoothSinkAutoReConnect->GetValue());
-      }
-    }
 
     //Bluetooth Sink Auto Reconnect
-    Callback2Arguments m_SinkAutoReConnect_CallbackArgs = { &m_BT_In
-                                                          , &m_SinkName };
+    CallbackArguments m_SinkAutoReConnect_CallbackArgs = { &m_BT_In, &m_SinkName };
     NamedCallback_t m_SinkAutoReConnect_Callback = { "Sink Connect Callback"
                                                    , &SinkAutoReConnect_ValueChanged
                                                    , &m_SinkAutoReConnect_CallbackArgs };
@@ -210,17 +183,23 @@ class Manager: public NamedItem
     {
       if(arg && object)
       {
-        Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
-        assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");
-        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-        DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
-        ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
-        pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+        CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
+        if(pArguments->arg1 && pArguments->arg2)
+        {
+          Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+          DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
+          ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
+          pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+        }
+        else
+        {
+          ESP_LOGE("SinkAutoReConnect_ValueChanged", "ERROR! Null Pointers!");
+        }
       }
     }
 
     //Sink Connect
-    Callback3Arguments m_SinkConnect_CallbackArgs = { &m_BT_In
+    CallbackArguments m_SinkConnect_CallbackArgs = { &m_BT_In
                                                     , &m_SinkName
                                                     , &m_SinkAutoReConnect };
     NamedCallback_t m_SinkConnect_Callback = { "Sink Connect Callback"
@@ -238,16 +217,22 @@ class Manager: public NamedItem
     {
       if(arg && object)
       {
-        Callback3Arguments* pArguments = static_cast<Callback3Arguments*>(arg);
-        assert(pArguments->arg1 && pArguments->arg2 && pArguments->arg3 && "Null Pointers!");
-        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-        StringDataItemWithPreferences* pBluetoothSinkName = static_cast<StringDataItemWithPreferences*>(pArguments->arg2);
-        DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg3);
-        bool sinkConnect = *static_cast<bool*>(object);
-        if(sinkConnect)
+        CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
+        if(pArguments->arg1 && pArguments->arg2 && pArguments->arg3)
         {
-          ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
-          //pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
+          Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+          StringDataItemWithPreferences* pBluetoothSinkName = static_cast<StringDataItemWithPreferences*>(pArguments->arg2);
+          DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg3);
+          bool sinkConnect = *static_cast<bool*>(object);
+          if(sinkConnect)
+          {
+            ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
+            pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
+          }
+        }
+        else
+        {
+            ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
         }
       }
     }
@@ -276,7 +261,7 @@ class Manager: public NamedItem
         if(sinkDisconnect)
         {
           ESP_LOGI("SinkDisconnect_ValueChanged", "Sink Disconnecting");
-          //pBT_In->Disconnect();
+          pBT_In->Disconnect();
         }
       }
     }

@@ -117,13 +117,16 @@ class Bluetooth_Source: public NamedItem
 			}
 		}
 		void Setup();
-		void InstallDevice();
 		void StartDevice();
 		void StopDevice();
 		void Connect( const char *SourceName, const char *SourceAddress );
 		void Disconnect();
 		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
 		void SetMusicDataCallback(music_data_cb_t callback);
+		void SetDiscoveryModeCallback(void(*callback)(esp_bt_gap_discovery_state_t discoveryMode))
+		{
+			m_BTSource.set_discovery_mode_callback(callback);
+		}
 		
 		//Callback from BT Source for compatible devices to connect to
 		bool ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi);
@@ -169,6 +172,7 @@ class Bluetooth_Source: public NamedItem
 		bool m_Is_Installed = false;
 		bool m_Is_Running = false;
 		
+		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
