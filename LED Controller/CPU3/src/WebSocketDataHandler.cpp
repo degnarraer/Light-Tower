@@ -17,15 +17,15 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
-    bool hasSize = (m_Tx_KeyValues.size() > 0);
-    if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "Before Size %i", m_Tx_KeyValues.size());
-    std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
-    if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "After Size %i", m_Tx_KeyValues.size());
-    if(signalValues.size())
+    if(m_Tx_KeyValues.size() > 0)
     {
-      String message;
-      Encode_Signal_Values_To_JSON(signalValues, message);
-      NotifyClients(message);
+      std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
+      if(signalValues.size())
+      {
+        String message;
+        Encode_Signal_Values_To_JSON(signalValues, message);
+        NotifyClients(message);
+      }
     }
   }  
 }

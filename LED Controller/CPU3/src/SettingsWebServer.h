@@ -669,32 +669,33 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Bluetooth Source Discovery Mode
     
-    CallbackArguments m_Bluetooth_Discovery_Mode_t_CallbackArgs = {&m_ScannedDevice_DataHandler};
-    NamedCallback_t m_Bluetooth_Discovery_Mode_t_Callback = {"Discovery Mode Callback", &Bluetooth_Discovery_Mode_t_ValueChanged, &m_Bluetooth_Discovery_Mode_t_CallbackArgs};
-    Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_t_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
-    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_t = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode"
-                                                                                        , m_Bluetooth_Discovery_Mode_t_initialValue
+    CallbackArguments m_Bluetooth_Discovery_Mode_CallbackArgs = {&m_ScannedDevice_DataHandler};
+    NamedCallback_t m_Bluetooth_Discovery_Mode_Callback = {"Discovery Mode Callback", &Bluetooth_Discovery_Mode_ValueChanged, &m_Bluetooth_Discovery_Mode_CallbackArgs};
+    Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
+    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode"
+                                                                                        , m_Bluetooth_Discovery_Mode_initialValue
                                                                                         , RxTxType_Rx_Only
                                                                                         , 0
                                                                                         , &m_CPU2SerialPortMessageManager
                                                                                         , nullptr
                                                                                         , this );
-    static void Bluetooth_Discovery_Mode_t_ValueChanged(const String &Name, void* object, void* arg)
+    WebSocketDataHandler<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_DataHandler = WebSocketDataHandler<Bluetooth_Discovery_Mode_t, 1>( m_WebSocketDataProcessor, m_Bluetooth_Discovery_Mode );
+    static void Bluetooth_Discovery_Mode_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && object)
+        if(arguments->arg1)
         {
           Bluetooth_Discovery_Mode_t discoveryMode = *static_cast<Bluetooth_Discovery_Mode_t*>(object);
           BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *dataHandler = static_cast<BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*>(arguments->arg1);
           switch(discoveryMode)
           {
-            case::Bluetooth_Discovery_Mode_t::Discovery_Mode_Started:
+            case Bluetooth_Discovery_Mode_t::Discovery_Mode_Started:
               ESP_LOGI("Bluetooth_Discovery_Mode_t_ValueChanged", "Discovery Mode Started");
               dataHandler->StartTrackingDevices();
             break;
-            case::Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped:
+            case Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped:
               ESP_LOGI("Bluetooth_Discovery_Mode_t_ValueChanged", "Discovery Mode Stopped");
               dataHandler->StopTrackingDevices();
             break;

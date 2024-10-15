@@ -91,45 +91,53 @@ void Bluetooth_Source::InstallDevice()
 		m_BTSource.set_reset_ble(m_ResetBLE);
 		m_BTSource.set_auto_reconnect(m_AutoReConnect);
 		m_BTSource.set_ssp_enabled(false);
-		m_BTSource.set_local_name("LED Tower of Power");
+		m_BTSource.set_local_name("LED Tower of Power.");
 		m_BTSource.set_task_core(1);
 		m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
 		m_Is_Installed = true;
-		ESP_LOGI("InstallDevice", "%s: Device installed", GetTitle().c_str());
+		ESP_LOGI("InstallDevice", "%s: Device installed.", GetTitle().c_str());
 	}
 	else
 	{
-		ESP_LOGW("InstallDevice", "%s: Device already installed", GetTitle().c_str());
+		ESP_LOGW("InstallDevice", "%s: Device already installed.", GetTitle().c_str());
 	}
 }
 
 void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 {
-	ESP_LOGI("SetMusicDataCallback", "Set music data callback");
+	ESP_LOGI("SetMusicDataCallback", "Set music data callback.");
 	m_MusicDataCallback = callback;
 }
 
 void Bluetooth_Source::StartDevice()
 {
-	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth");
-	if(!m_Is_Installed)
+	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth.");
+	if(!m_Is_Started)
 	{
 		InstallDevice();
+		m_Is_Started = true;
+		ESP_LOGI("Bluetooth_Device", "Bluetooth started.");
 	}
-	m_Is_Started = true;
-	ESP_LOGI("Bluetooth_Device", "Bluetooth started");
+	else
+	{
+		ESP_LOGI("Bluetooth_Device", "Bluetooth already started.");
+	}
 }
 
 void Bluetooth_Source::StopDevice()
 {
-	if(true == m_Is_Connected)
+	ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth.");
+	if(m_Is_Started)
 	{
-		ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth");
 		Disconnect();
-		m_BTSource.end();
+		m_BTSource.end(true);
 		m_Is_Started = false;
 		m_Is_Installed = false;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth stopped");
+		ESP_LOGI("Bluetooth_Device", "Bluetooth stopped.");
+	}
+	else
+	{
+		ESP_LOGW("Bluetooth_Device", "Bluetooth already stopped.");
 	}
 }
 
@@ -148,6 +156,7 @@ void Bluetooth_Source::Disconnect()
 	{
 		m_BTSource.disconnect();
 		m_Is_Connected = false;
+		StopDevice();
 		ESP_LOGI("Bluetooth_Device", "Bluetooth source disconnected");
 	}
 }
@@ -281,7 +290,7 @@ void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
 void Bluetooth_Sink::InstallDevice()
 {
 	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth device.", GetTitle().c_str());
-	if(!m_Is_Started)
+	if(!m_Is_Installed)
 	{
 		static i2s_config_t i2s_config = {
 		.mode = m_i2s_Mode,
@@ -340,7 +349,7 @@ void Bluetooth_Sink::StopDevice()
 	if(m_Is_Started)
 	{
 		Disconnect();
-		m_BTSink.end();
+		m_BTSink.end(true);
 		m_Is_Started = false;
 		m_Is_Installed = false;
 		ESP_LOGI("StopDevice", "Bluetooth stopped");

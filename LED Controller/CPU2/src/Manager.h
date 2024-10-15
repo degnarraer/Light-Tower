@@ -135,11 +135,11 @@ class Manager: public NamedItem
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
         if(arguments->arg1)
         {
-          BluetoothDevice_t* targetCompatibleDevice = static_cast<BluetoothDevice_t*>(object);
-          Bluetooth_Source* BT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-          if(BT_Out && targetCompatibleDevice)
+          BluetoothDevice_t* pTargetCompatibleDevice = static_cast<BluetoothDevice_t*>(object);
+          Bluetooth_Source* pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          if(pBT_Out && pTargetCompatibleDevice)
           {
-            BT_Out->SetNameToConnect(targetCompatibleDevice->name, targetCompatibleDevice->address);
+            pBT_Out->SetNameToConnect(pTargetCompatibleDevice->name, pTargetCompatibleDevice->address);
           }
           else
           {
@@ -202,8 +202,9 @@ class Manager: public NamedItem
           bool connect = *static_cast<bool*>(object);
           if(connect)
           {
-            ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
+            ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", "", "");
             pBT_Out->Connect("", "");
+            //ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
             //pBT_Out->Connect(pTargetDevice->name, pTargetDevice->address);
           }
         }

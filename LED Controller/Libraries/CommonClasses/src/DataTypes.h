@@ -669,17 +669,17 @@ class Bluetooth_Discovery_Mode
         {
             switch (state)
             {
-                case Discovery_Mode_Started: return "Discovery_Mode_Started";
-                case Discovery_Mode_Stopped: return "Discovery_Mode_Stopped";
-                case Discovery_Mode_Unknown: return "Discovery_Mode_Unknown";
+                case Discovery_Mode_Started: return "Started";
+                case Discovery_Mode_Stopped: return "Stopped";
+                case Discovery_Mode_Unknown: return "Unknown";
                 default: return "Discovery_Mode_Unknown";
             }
         }
 
         static Value FromString(const String& str)
         {
-            if (str == "Discovery_Mode_Started") return Discovery_Mode_Started;
-            if (str == "Discovery_Mode_Stopped") return Discovery_Mode_Stopped;
+            if (str == "Started") return Discovery_Mode_Started;
+            if (str == "Stopped") return Discovery_Mode_Stopped;
             return Discovery_Mode_Unknown;
         }
 

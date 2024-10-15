@@ -219,6 +219,19 @@ body {
     float: left;
 }
 
+.spin-image {
+	animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+	from {
+	  transform: rotate(0deg);
+	}
+	to {
+	  transform: rotate(360deg);
+	}
+  }
+
 /*Selection Tabs*/
 .selection_tabs {
 	display: flex;
