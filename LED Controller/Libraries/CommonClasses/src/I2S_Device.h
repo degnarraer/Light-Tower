@@ -36,7 +36,6 @@ class I2S_Device_Callback
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-				//Callbacks called by this class
 		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
 };
 
@@ -61,16 +60,15 @@ class I2S_Device: public NamedItem
               , int SerialDataInPin
               , int SerialDataOutPin );
     virtual ~I2S_Device();
-    void SetDataReceivedCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
+
+    void Setup();
     void StartDevice();
     void StopDevice();
-
+    bool IsRunning();
     size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
+    void SetDataReceivedCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
 	
-    void Setup();
-    bool IsRunning();
-
   private:
 	  I2S_Device_Callback* m_Callee = NULL;
     DataItemConfig_t* m_ItemConfig = NULL;
@@ -88,7 +86,6 @@ class I2S_Device: public NamedItem
     const int m_WordSelectPin;
     const int m_SerialDataInPin;
     const int m_SerialDataOutPin;
-
 		bool m_Is_Installed = false;
 		bool m_Is_Started = false;
 
@@ -100,37 +97,19 @@ class I2S_Device: public NamedItem
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
 
-    size_t ReadSamples();
-    size_t WriteSamples(uint8_t *samples, size_t ByteCount);
+    //Device Installation    
     void InstallDevice();
     void UninstallDevice();
-    void CreateTask()
-    {
-      if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
-      {
-        ESP_LOGI("StartDevice", "%s: I2S device started.", GetTitle().c_str());
-      }
-      else
-      {
-        ESP_LOGE("StartDevice", "ERROR! %s: Unable to create task!", GetTitle().c_str());
-      }
-    }
-    void DestroyTask()
-    {
-      if(m_TaskHandle)
-      {
-        vTaskDelete(m_TaskHandle);
-        m_TaskHandle = nullptr;
-      }
-    }
 
-    static void Static_10mS_TaskLoop(void * parameter)
-    {
-      I2S_Device* device = static_cast<I2S_Device*>(parameter);
-      device->ProcessEventQueue();
-    }
+    //Process Task
+    void CreateTask();
+    void DestroyTask();
+    static void Static_10mS_TaskLoop(void * parameter);
     void ProcessEventQueue();
 
+    //Read & Write Data
+    size_t ReadSamples();
+    size_t WriteSamples(uint8_t *samples, size_t ByteCount);
 };
 
 #endif

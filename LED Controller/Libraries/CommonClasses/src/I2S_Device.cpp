@@ -235,6 +235,33 @@ void I2S_Device::InstallDevice()
   }
 }
 
+void I2S_Device::CreateTask()
+{
+  if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+  {
+    ESP_LOGI("StartDevice", "%s: I2S device started.", GetTitle().c_str());
+  }
+  else
+  {
+    ESP_LOGE("StartDevice", "ERROR! %s: Unable to create task!", GetTitle().c_str());
+  }
+}
+
+void I2S_Device::DestroyTask()
+{
+  if(m_TaskHandle)
+  {
+    vTaskDelete(m_TaskHandle);
+    m_TaskHandle = nullptr;
+  }
+}
+
+void I2S_Device::Static_10mS_TaskLoop(void * parameter)
+{
+  I2S_Device* device = static_cast<I2S_Device*>(parameter);
+  device->ProcessEventQueue();
+}
+
 void I2S_Device::ProcessEventQueue()
 {
   const TickType_t xFrequency = 10;
@@ -256,11 +283,11 @@ void I2S_Device::ProcessEventQueue()
               ESP_LOGE("i2S Device", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
               break;
             case I2S_EVENT_TX_DONE:
-              ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());
+              ESP_LOGI("i2S Device", "%s: TX Done", GetTitle().c_str());
               break;
             case I2S_EVENT_RX_DONE:
               {
-                ESP_LOGV("i2S Device", "%s: RX", GetTitle().c_str());
+                ESP_LOGI("i2S Device", "%s: RX", GetTitle().c_str());
                 ReadSamples();
               }
               break;

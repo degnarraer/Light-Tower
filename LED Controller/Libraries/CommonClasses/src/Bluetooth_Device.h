@@ -264,8 +264,7 @@ class Bluetooth_Sink: public NamedItem
 		const int m_SerialClockPin;
 		const int m_WordSelectPin;
 		const int m_SerialDataInPin;
-		const int m_SerialDataOutPin;		
-		bool m_AutoReConnect = false;
+		const int m_SerialDataOutPin;
 		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;
 		void InstallDevice();

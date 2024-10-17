@@ -376,6 +376,7 @@ class Manager: public NamedItem
             manager->StartBluetooth();
           break;
           default:
+            manager->StopBluetooth();
           break;
         }
       }

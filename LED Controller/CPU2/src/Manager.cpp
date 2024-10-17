@@ -96,9 +96,9 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
   if(m_I2S_In.IsRunning())
   {
-    ESP_LOGI("SetBTTxData", "BT Tx Data: %i bytes requested.", channel_len);
+    //ESP_LOGI("SetBTTxData", "BT Tx Data: %i bytes requested.", channel_len);
     size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
-    ESP_LOGI("SetBTTxData", "BT Tx Data: %i bytes received.", ByteReceived);
+    //ESP_LOGI("SetBTTxData", "BT Tx Data: %i bytes received.", ByteReceived);
     assert(0 == ByteReceived % sizeof(uint32_t)); 
     size_t FrameCount = ByteReceived / sizeof(uint32_t);
     m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
@@ -106,7 +106,7 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   }
   else
   {
-    ESP_LOGI("SetBTTxData", "I2S In not running.");
+    ESP_LOGE("SetBTTxData", "I2S In not running.");
     return 0;
   }
 }

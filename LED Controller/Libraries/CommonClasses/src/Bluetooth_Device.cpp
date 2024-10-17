@@ -15,7 +15,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#define BUILD_BLUETOOTH
 
 #ifdef BUILD_BLUETOOTH
 
@@ -233,8 +232,6 @@ void Bluetooth_Sink::Setup()
 {
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setting Up", GetTitle().c_str());
   	bT_sink_instance = this;
-	m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
-  	m_BTSink.set_on_data_received(StaticBTDataReceived);
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setup", GetTitle().c_str());
 }
@@ -301,7 +298,6 @@ void Bluetooth_Sink::InstallDevice()
 	m_BTSink.set_pin_config(my_pin_config);
 	m_BTSink.set_i2s_config(i2s_config);
 	m_BTSink.set_i2s_port(m_I2S_PORT);
-	m_BTSink.set_auto_reconnect(m_AutoReConnect);
 	m_BTSink.set_bits_per_sample(m_BitsPerSample);
 	m_BTSink.set_task_core(1);
 	m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
@@ -313,6 +309,8 @@ void Bluetooth_Sink::InstallDevice()
 void Bluetooth_Sink::StartDevice()
 {
 	InstallDevice();
+	m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
+  	m_BTSink.set_on_data_received(StaticBTDataReceived);
 	m_BTSink.set_connectable(true);
 }
 void Bluetooth_Sink::StopDevice()
@@ -323,8 +321,7 @@ void Bluetooth_Sink::StopDevice()
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
 	m_SinkName = sinkName;
-	m_AutoReConnect = reconnect;
-	m_BTSink.set_auto_reconnect(m_AutoReConnect);
+	m_BTSink.set_auto_reconnect(reconnect);
 	m_BTSink.start(m_SinkName.c_str());
 }
 void Bluetooth_Sink::Disconnect()
@@ -333,8 +330,7 @@ void Bluetooth_Sink::Disconnect()
 }
 void Bluetooth_Sink::Set_Auto_Reconnect(bool reconnect, int count)
 {
-	m_AutoReConnect = reconnect;
-	m_BTSink.set_auto_reconnect(m_AutoReConnect);
+	m_BTSink.set_auto_reconnect(reconnect, count);
 }
 
 #endif
