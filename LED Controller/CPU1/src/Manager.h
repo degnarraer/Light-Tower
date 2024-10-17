@@ -40,10 +40,7 @@ class Manager: public NamedItem
 {
   public:
     Manager( String Title
-           , StatisticalEngine &StatisticalEngine
-           , Bluetooth_Sink &BT_In
-           , I2S_Device &Mic_In
-           , I2S_Device &I2S_Out );
+           , StatisticalEngine &StatisticalEngine );
 
     // Delete copy constructor and copy assignment operator
     Manager(const Manager&) = delete;
@@ -61,10 +58,17 @@ class Manager: public NamedItem
     void ProcessEventQueue300000mS();
     
     void SetInputSource(SoundInputSource_t Type);
-
-    //Bluetooth_Callback
-    void BTDataReceived(uint8_t *data, uint32_t length);
     
+    //Bluetooth Callbacks
+		void BT_Data_Received()
+    {
+      
+    }
+		void BT_Read_Data_Stream(const uint8_t *data, uint32_t length)
+    {
+
+    }
+
     //I2S_Device_Callback
     void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
 
@@ -87,6 +91,56 @@ class Manager: public NamedItem
     TaskHandle_t m_Manager_10mS_TaskHandle;
     TaskHandle_t m_Manager_1000mS_TaskHandle;
     TaskHandle_t m_Manager_300000mS_TaskHandle;
+
+    BluetoothA2DPSink m_BTSink;
+    Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
+                                          , m_BTSink
+                                          , I2S_NUM_1                          // I2S Interface
+                                          , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                          , I2S_SAMPLE_RATE
+                                          , I2S_BITS_PER_SAMPLE_16BIT
+                                          , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                          , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                          , I2S_CHANNEL_STEREO
+                                          , true                               // Use APLL                                    
+                                          , I2S_BUFFER_COUNT                   // Buffer Count
+                                          , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
+                                          , I2S2_SCLCK_PIN                     // Serial Clock Pin
+                                          , I2S2_WD_PIN                        // Word Selection Pin
+                                          , I2S2_SDIN_PIN                      // Serial Data In Pin
+                                          , I2S2_SDOUT_PIN );                  // Serial Data Out Pin
+
+    I2S_Device m_Mic_In = I2S_Device( "Microphone"
+                                    , I2S_NUM_0                          // I2S Interface
+                                    , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
+                                    , I2S_SAMPLE_RATE
+                                    , I2S_BITS_PER_SAMPLE_32BIT
+                                    , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                    , I2S_CHANNEL_STEREO
+                                    , true                               // Use APLL
+                                    , I2S_BUFFER_COUNT                   // Buffer Count
+                                    , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
+                                    , I2S1_SCLCK_PIN                     // Serial Clock Pin
+                                    , I2S1_WD_PIN                        // Word Selection Pin
+                                    , I2S1_SDIN_PIN                      // Serial Data In Pin
+                                    , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
+
+    I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
+                                    , I2S_NUM_1                        // I2S Interface
+                                    , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                    , I2S_SAMPLE_RATE
+                                    , I2S_BITS_PER_SAMPLE_16BIT
+                                    , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                    , I2S_CHANNEL_STEREO
+                                    , true                            // Use APLL
+                                    , I2S_BUFFER_COUNT                // Buffer Count
+                                    , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
+                                    , I2S2_SCLCK_PIN                  // Serial Clock Pin
+                                    , I2S2_WD_PIN                     // Word Selection Pin
+                                    , I2S2_SDIN_PIN                   // Serial Data In Pin
+                                    , I2S2_SDOUT_PIN );               // Serial Data Out Pin
     
     String ConnectionStatusStrings[5]
     {
@@ -116,12 +170,9 @@ class Manager: public NamedItem
 
     //Bluetooth Data
     void SetupDevices();
-    Bluetooth_Sink &m_BT_In;
     
     //I2S Sound Data RX
     void SetupI2S();
-    I2S_Device &m_Mic_In; 
-    I2S_Device &m_I2S_Out;
 
     void MoveDataToStatisticalEngine();
 
@@ -147,8 +198,8 @@ class Manager: public NamedItem
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
         assert(arguments->arg1 && "Null Pointer!");
         Manager *manager = static_cast<Manager*>(arguments->arg1);
-        SoundInputSource_t *inputSource = static_cast<SoundInputSource_t*>(object);
-        manager->SetInputSource(*inputSource);
+        SoundInputSource_t inputSource = *static_cast<SoundInputSource_t*>(object);
+        manager->SetInputSource(inputSource);
       }
     }
 

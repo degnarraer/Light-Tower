@@ -168,11 +168,7 @@ class Bluetooth_Source: public NamedItem
 		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
 		QueueHandle_t m_DeviceProcessorQueueHandle= nullptr;
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle= nullptr;
-		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;
-		bool m_Is_Installed = false;
-		bool m_Is_Started = false;
-		bool m_Is_Connected = false;
-		
+		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;		
 		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
@@ -188,8 +184,10 @@ class Bluetooth_Sink_Callback
 		virtual ~Bluetooth_Sink_Callback(){}
 	
 		//Callbacks called by this class
-		virtual void BTDataReceived(uint8_t *data, uint32_t length) = 0;
+		virtual void BT_Data_Received() = 0;
+		virtual void BT_Read_Data_Stream(const uint8_t *data, uint32_t length) = 0;
 };
+
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
 				    , public QueueController
@@ -230,24 +228,24 @@ class Bluetooth_Sink: public NamedItem
 				  , m_SerialDataInPin(SerialDataInPin)
 				  , m_SerialDataOutPin(SerialDataOutPin){};		
 	virtual ~Bluetooth_Sink(){};
+	static Bluetooth_Sink* bT_sink_instance;
+	
 	void Setup();
 	void StartDevice();
 	void StopDevice();
 	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
-	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
-	{
-		m_AutoReConnect = reconnect;
-		m_BTSink.set_auto_reconnect(m_AutoReConnect);
-    }
-
-	//Callbacks from BluetoothSink  
-	void data_received_callback();
-	void read_data_stream(const uint8_t *data, uint32_t length);
-
+	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM);
+	
 	//Callback Registrtion to this class
-	void ResgisterForRxCallback(Bluetooth_Sink_Callback *callee);
-   
+	void ResgisterForCallbacks(Bluetooth_Sink_Callback *callee);
+
+    //Bluetooth_Callbacks
+    static void StaticBTDataReceived();
+    void BTDataReceived();
+    static void StaticBTReadDataStream(const uint8_t* data, uint32_t length);
+    void BTReadDataStream(const uint8_t *data, uint32_t length);
+
 	protected:
 		bool GetConnectionStatus(){ return m_BTSink.is_connected(); } 
 	private:
@@ -266,12 +264,7 @@ class Bluetooth_Sink: public NamedItem
 		const int m_SerialClockPin;
 		const int m_WordSelectPin;
 		const int m_SerialDataInPin;
-		const int m_SerialDataOutPin;
-		
-		bool m_Is_Installed = false;
-		bool m_Is_Started = false;
-		bool m_Is_Connected = false;
-		
+		const int m_SerialDataOutPin;		
 		bool m_AutoReConnect = false;
 		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;

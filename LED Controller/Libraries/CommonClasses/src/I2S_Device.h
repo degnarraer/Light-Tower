@@ -61,7 +61,7 @@ class I2S_Device: public NamedItem
               , int SerialDataInPin
               , int SerialDataOutPin );
     virtual ~I2S_Device();
-    void SetCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
+    void SetDataReceivedCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
     void StartDevice();
     void StopDevice();
 

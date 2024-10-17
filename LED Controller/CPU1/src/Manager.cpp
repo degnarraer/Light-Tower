@@ -19,15 +19,9 @@
 #include "Manager.h"
 
 Manager::Manager( String Title
-                , StatisticalEngine &StatisticalEngine
-                , Bluetooth_Sink &BT_In
-                , I2S_Device &Mic_In
-                , I2S_Device &I2S_Out )
+                , StatisticalEngine &StatisticalEngine )
                 : NamedItem(Title)
                 , m_StatisticalEngine(StatisticalEngine)
-                , m_BT_In(BT_In)
-                , m_Mic_In(Mic_In) 
-                , m_I2S_Out(I2S_Out)
 {
 }
 Manager::~Manager()
@@ -61,12 +55,14 @@ void Manager::Setup()
 
 void Manager::SetupDevices()
 {
-  //Set Bluetooth Power to Max
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
-  m_BT_In.Setup();
   m_BT_In.RegisterForConnectionStateChangedCallBack(this);
+  m_BT_In.ResgisterForCallbacks(this);
+  m_BT_In.Setup();
+
+  m_Mic_In.SetDataReceivedCallback(this);
   m_Mic_In.Setup();
-  m_Mic_In.SetCallback(this);
+
+  m_I2S_Out.SetDataReceivedCallback(this);
   m_I2S_Out.Setup();
 }
 
@@ -179,15 +175,10 @@ void Manager::SetInputSource(SoundInputSource_t Type)
   }
 }
 
-//Bluetooth_Callback
-void Manager::BTDataReceived(uint8_t *data, uint32_t length)
-{
-}
-
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
 {
-  ESP_LOGI("I2SDataReceived", "I2SDataReceived.");
+  ESP_LOGI("I2SDataReceived", "I2S Data: %i bytes received.", length);
   switch(m_SoundInputSource.GetValue())
   {
     case SoundInputSource_t::Microphone:
@@ -204,7 +195,7 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
     break;
     case SoundInputSource_t::Bluetooth:
     {
-      m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+      //m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
     }
     break;
     case SoundInputSource_t::OFF:

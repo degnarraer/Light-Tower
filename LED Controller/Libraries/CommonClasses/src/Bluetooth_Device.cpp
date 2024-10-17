@@ -86,21 +86,13 @@ void Bluetooth_Source::Setup()
 void Bluetooth_Source::InstallDevice()
 {
 	ESP_LOGI("InstallDevice", "%s: Installing Bluetooth device.", GetTitle().c_str());
-	if(!m_Is_Installed)
-	{
-		m_BTSource.set_reset_ble(m_ResetBLE);
-		m_BTSource.set_auto_reconnect(m_AutoReConnect);
-		m_BTSource.set_ssp_enabled(false);
-		m_BTSource.set_local_name("LED Tower of Power.");
-		m_BTSource.set_task_core(1);
-		m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
-		m_Is_Installed = true;
-		ESP_LOGI("InstallDevice", "%s: Device installed.", GetTitle().c_str());
-	}
-	else
-	{
-		ESP_LOGW("InstallDevice", "%s: Device already installed.", GetTitle().c_str());
-	}
+	m_BTSource.set_reset_ble(m_ResetBLE);
+	m_BTSource.set_auto_reconnect(m_AutoReConnect);
+	m_BTSource.set_ssp_enabled(false);
+	m_BTSource.set_local_name("LED Tower of Power.");
+	m_BTSource.set_task_core(1);
+	m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
+	ESP_LOGI("InstallDevice", "%s: Device installed.", GetTitle().c_str());
 }
 
 void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
@@ -111,54 +103,25 @@ void Bluetooth_Source::SetMusicDataCallback(music_data_cb_t callback)
 
 void Bluetooth_Source::StartDevice()
 {
-	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth.");
-	if(!m_Is_Started)
-	{
-		InstallDevice();
-		m_Is_Started = true;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth started.");
-	}
-	else
-	{
-		ESP_LOGI("Bluetooth_Device", "Bluetooth already started.");
-	}
+	InstallDevice();
+	m_BTSource.set_connectable(true);
 }
 
 void Bluetooth_Source::StopDevice()
 {
-	ESP_LOGI("Bluetooth_Device", "Stopping Bluetooth.");
-	if(m_Is_Started)
-	{
-		Disconnect();
-		m_BTSource.end(true);
-		m_Is_Started = false;
-		m_Is_Installed = false;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth stopped.");
-	}
-	else
-	{
-		ESP_LOGW("Bluetooth_Device", "Bluetooth already stopped.");
-	}
+	m_BTSource.set_connectable(false);
+	m_BTSource.end();
 }
 
 void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddress )
 {
-	StartDevice();
 	m_Name = String(SourceName);
 	m_Address = String(SourceAddress);
-	ESP_LOGI("Bluetooth_Device", "Starting Bluetooth with: \n\tName: \"%s\" \n\tAddress: \"%s\"", m_Name.c_str(), m_Address.c_str());
 	m_BTSource.start_raw(m_MusicDataCallback);
-	m_Is_Connected = true;
 }
 void Bluetooth_Source::Disconnect()
 {
-	if(m_Is_Connected)
-	{
-		m_BTSource.disconnect();
-		m_Is_Connected = false;
-		StopDevice();
-		ESP_LOGI("Bluetooth_Device", "Bluetooth source disconnected");
-	}
+	m_BTSource.disconnect();
 }
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
@@ -265,131 +228,113 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 	}
 }
 
-		
-		
+Bluetooth_Sink* Bluetooth_Sink::bT_sink_instance = nullptr;
 void Bluetooth_Sink::Setup()
 {
+	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setting Up", GetTitle().c_str());
+  	bT_sink_instance = this;
+	m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
+  	m_BTSink.set_on_data_received(StaticBTDataReceived);
+	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setup", GetTitle().c_str());
 }
-void Bluetooth_Sink::ResgisterForRxCallback(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
+void Bluetooth_Sink::ResgisterForCallbacks(Bluetooth_Sink_Callback* callee){ m_Callee = callee; }
 
-//Callbacks for Bluetooth 
-void Bluetooth_Sink::data_received_callback() 
+//Callbacks for Bluetooth
+void Bluetooth_Sink::StaticBTReadDataStream(const uint8_t* data, uint32_t length) 
 {
+    if (bT_sink_instance) {
+        bT_sink_instance->BTReadDataStream(data, length);
+    }
 }
 
-void Bluetooth_Sink::read_data_stream(const uint8_t *data, uint32_t length)
-{  
+void Bluetooth_Sink::BTReadDataStream(const uint8_t *data, uint32_t length)
+{
+  ESP_LOGI("BTDataReceived", "BT Data: %i bytes received.", length);
 	if(NULL != m_Callee)
 	{
 		ESP_LOGI("Bluetooth Device", "Read data stream");
-		m_Callee->BTDataReceived((uint8_t*)data, length);
+		m_Callee->BT_Read_Data_Stream(data, length);
+	}
+}
+
+void Bluetooth_Sink::StaticBTDataReceived() 
+{
+    if (bT_sink_instance) {
+        bT_sink_instance->BTDataReceived();
+    }
+}
+
+void Bluetooth_Sink::BTDataReceived()
+{
+  	ESP_LOGI("BTDataReceived", "BT Data: received.");
+	if(NULL != m_Callee)
+	{
+		ESP_LOGI("Bluetooth Device", "Read data stream");
+		m_Callee->BT_Data_Received();
 	}
 }
 
 void Bluetooth_Sink::InstallDevice()
 {
 	ESP_LOGI("Bluetooth Device", "%s: Installing Bluetooth device.", GetTitle().c_str());
-	if(!m_Is_Installed)
+	static i2s_config_t i2s_config = {
+	.mode = m_i2s_Mode,
+	.sample_rate = m_SampleRate, // updated automatically by A2DP
+	.bits_per_sample = m_BitsPerSample,
+	.channel_format = m_Channel_Fmt,
+	.communication_format = m_CommFormat,
+	.intr_alloc_flags = 1, // default interrupt priority
+	.dma_buf_count = m_BufferCount,
+	.dma_buf_len = m_BufferSize,
+	.use_apll = m_Use_APLL,
+	.tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
+	.fixed_mclk = 1
+	};
+	i2s_pin_config_t my_pin_config = 
 	{
-		static i2s_config_t i2s_config = {
-		.mode = m_i2s_Mode,
-		.sample_rate = m_SampleRate, // updated automatically by A2DP
-		.bits_per_sample = m_BitsPerSample,
-		.channel_format = m_Channel_Fmt,
-		.communication_format = m_CommFormat,
-		.intr_alloc_flags = 1, // default interrupt priority
-		.dma_buf_count = m_BufferCount,
-		.dma_buf_len = m_BufferSize,
-		.use_apll = m_Use_APLL,
-		.tx_desc_auto_clear = true, // avoiding noise in case of data unavailability
-		.fixed_mclk = 1
-		};
-		i2s_pin_config_t my_pin_config = 
-		{
-			.bck_io_num = m_SerialClockPin,
-			.ws_io_num = m_WordSelectPin,
-			.data_out_num = m_SerialDataOutPin,
-			.data_in_num = m_SerialDataInPin
-		};
-		m_BTSink.set_pin_config(my_pin_config);
-		m_BTSink.set_i2s_config(i2s_config);
-		m_BTSink.set_i2s_port(m_I2S_PORT);
-		m_BTSink.set_auto_reconnect(m_AutoReConnect);
-		m_BTSink.set_bits_per_sample(m_BitsPerSample);
-		m_BTSink.set_task_core(1);
-		m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
-		m_BTSink.set_volume_control(&m_VolumeControl);
-		m_BTSink.set_volume(100);
-		m_Is_Installed = true;
-		ESP_LOGI("Bluetooth_Device", "%s: Bluetooth Device installed", GetTitle().c_str());
-	}
-	else
-	{
-		ESP_LOGW("Bluetooth Device", "%s: Bluetooth device already installed.", GetTitle().c_str());
-	}
+		.bck_io_num = m_SerialClockPin,
+		.ws_io_num = m_WordSelectPin,
+		.data_out_num = m_SerialDataOutPin,
+		.data_in_num = m_SerialDataInPin
+	};
+	m_BTSink.set_pin_config(my_pin_config);
+	m_BTSink.set_i2s_config(i2s_config);
+	m_BTSink.set_i2s_port(m_I2S_PORT);
+	m_BTSink.set_auto_reconnect(m_AutoReConnect);
+	m_BTSink.set_bits_per_sample(m_BitsPerSample);
+	m_BTSink.set_task_core(1);
+	m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
+	m_BTSink.set_volume_control(&m_VolumeControl);
+	m_BTSink.set_volume(100);
+	ESP_LOGI("Bluetooth_Device", "%s: Bluetooth Device installed", GetTitle().c_str());
+
 }
 void Bluetooth_Sink::StartDevice()
 {
-	ESP_LOGI("StartDevice", "Starting Bluetooth");
-	if(!m_Is_Started)
-	{
-		InstallDevice();
-		m_Is_Started = true;
-		ESP_LOGI("StartDevice", "Bluetooth started");
-	}
-	else
-	{
-		ESP_LOGW("StopDevice", "Bluetooth already started.");
-	}
+	InstallDevice();
+	m_BTSink.set_connectable(true);
 }
 void Bluetooth_Sink::StopDevice()
 {
-	ESP_LOGI("StopDevice", "Stopping Bluetooth");
-	if(m_Is_Started)
-	{
-		Disconnect();
-		m_BTSink.end(true);
-		m_Is_Started = false;
-		m_Is_Installed = false;
-		ESP_LOGI("StopDevice", "Bluetooth stopped");
-	}
-	else
-	{
-		ESP_LOGW("StopDevice", "Bluetooth already stopped.");
-	}
+	m_BTSink.set_connectable(false);
+	m_BTSink.end();
 }
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
-	ESP_LOGI("Bluetooth_Device", "Bluetooth sink connect with Name: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
-	if(!m_Is_Connected)
-	{
-		StartDevice();
-		m_SinkName = sinkName;
-		m_AutoReConnect = reconnect;
-		m_BTSink.set_auto_reconnect(m_AutoReConnect);
-		m_BTSink.start(m_SinkName.c_str());
-		m_Is_Connected = true;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth sink connected to Name: \"%s\" Auto Reconnect: %i", m_SinkName.c_str(), m_AutoReConnect);
-	}
-	else
-	{
-		ESP_LOGW("Bluetooth_Device", "Bluetooth sink already started.");
-	}
+	m_SinkName = sinkName;
+	m_AutoReConnect = reconnect;
+	m_BTSink.set_auto_reconnect(m_AutoReConnect);
+	m_BTSink.start(m_SinkName.c_str());
 }
 void Bluetooth_Sink::Disconnect()
 {
-	ESP_LOGI("Bluetooth_Device", "Bluetooth sink disconnecting");
-	if(m_Is_Connected)
-	{
-		m_BTSink.disconnect();
-		m_Is_Connected = false;
-		ESP_LOGI("Bluetooth_Device", "Bluetooth sink disconnected");
-	}
-	else
-	{
-		ESP_LOGW("Bluetooth_Device", "Bluetooth sink already disconnected.");
-	}
+	m_BTSink.disconnect();
+}
+void Bluetooth_Sink::Set_Auto_Reconnect(bool reconnect, int count)
+{
+	m_AutoReConnect = reconnect;
+	m_BTSink.set_auto_reconnect(m_AutoReConnect);
 }
 
 #endif
