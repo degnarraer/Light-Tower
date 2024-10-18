@@ -30,9 +30,8 @@
 #include "DataItem/DataItems.h"
 
 class Manager: public NamedItem
+             , public Bluetooth_Source_Callbacks
              , public I2S_Device_Callback
-             , public BluetoothConnectionStateCallee
-             , public BluetoothActiveDeviceUpdatee
              , public CommonUtils
              , public QueueController
              , public SetupCallerInterface
@@ -60,20 +59,30 @@ class Manager: public NamedItem
     static void Static_TaskLoop_1000mS(void * parameter);
     void TaskLoop_1000mS();
    
-    //Bluetooth Set Data Callback
+    //Bluetooth Callbacks
+    void BT_Data_Received()
+    {
+
+    }
+		void BT_Read_Data_Stream(const uint8_t *data, uint32_t length)
+    {
+      
+    }
+		
     int32_t SetBTTxData(uint8_t *Data, int32_t channel_len);
     
     //Bluetooth Discovery Mode Changed Callback
-    void BtDiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode);
+    void Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode);
+    
+    int32_t MusicDataCallback(uint8_t *data, int32_t len)
+    {
+      return 0;
+    }
+    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState, void* object);
+    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices);
     
     //I2S_Device_Callback
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
-
-    //BluetoothConnectionStateCallee Callback 
-    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState);
-    
-    //BluetoothActiveDeviceUpdatee Callback 
-    void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices);
 
   private:
     IPreferences& m_PreferencesInterface;    

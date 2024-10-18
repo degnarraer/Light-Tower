@@ -55,7 +55,6 @@ void Manager::Setup()
 
 void Manager::SetupDevices()
 {
-  m_BT_In.RegisterForConnectionStateChangedCallBack(this);
   m_BT_In.ResgisterForCallbacks(this);
   m_BT_In.Setup();
 
@@ -209,7 +208,7 @@ void Manager::MoveDataToStatisticalEngine()
 }
 
 //BluetoothConnectionStateCallee Callback
-void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
+void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
   switch(connectionState)
   {

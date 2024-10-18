@@ -283,11 +283,11 @@ void I2S_Device::ProcessEventQueue()
               ESP_LOGE("i2S Device", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
               break;
             case I2S_EVENT_TX_DONE:
-              ESP_LOGI("i2S Device", "%s: TX Done", GetTitle().c_str());
+              ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());
               break;
             case I2S_EVENT_RX_DONE:
               {
-                ESP_LOGI("i2S Device", "%s: RX", GetTitle().c_str());
+                ESP_LOGV("i2S Device", "%s: RX", GetTitle().c_str());
                 ReadSamples();
               }
               break;

@@ -44,8 +44,6 @@ void Manager::Setup()
 {
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
-  m_BT_Out.RegisterForConnectionStateChangedCallBack(this);
-  m_BT_Out.RegisterForActiveDeviceUpdate(this);
   if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
@@ -111,7 +109,7 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   }
 }
 
-void Manager::BtDiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode)
+void Manager::Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode)
 {
   switch(discoveryMode)
   {
@@ -130,7 +128,7 @@ void Manager::BtDiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode)
 }
 
 //BluetoothConnectionStateCallee Callback 
-void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
+void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
   switch(connectionState)
   {

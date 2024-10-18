@@ -71,22 +71,6 @@ Manager m_Manager( "Manager"
                  , m_AudioBuffer
                  , m_PreferencesWrapper);
 
-
-int32_t SetBTTxData(uint8_t *Data, int32_t channel_len)
-{
-  return m_Manager.SetBTTxData(Data, channel_len);
-}
-
-void DiscoveryModeChanged(esp_bt_gap_discovery_state_t discoveryMode)
-{
-  m_Manager.BtDiscoveryModeChanged(discoveryMode);
-}
-
-static bool ConnectToThisName(const char* aName, esp_bd_addr_t address, int32_t rssi)
-{
-  return m_BT_Out.ConnectToThisName(aName, address, rssi);
-}
-
 void OutputSystemStatus()
 {
   ESP_LOGI("SystemStatus", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
@@ -145,10 +129,8 @@ void setup()
   m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
   m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
   m_I2S_In.Setup();
-  a2dp_source.set_ssid_callback(ConnectToThisName);
+  
   m_BT_Out.Setup();
-  m_BT_Out.SetMusicDataCallback(SetBTTxData);
-  m_BT_Out.SetDiscoveryModeCallback(DiscoveryModeChanged);
   m_Manager.Setup();
   m_SoundProcessor.SetupSoundProcessor(); 
   OutputSystemStatus();

@@ -30,10 +30,9 @@
 #include "DataItem/DataItems.h"
 
 class Manager: public NamedItem
+             , public Bluetooth_Sink_Callbacks
              , public I2S_Device_Callback
-             , public Bluetooth_Sink_Callback
              , public SoundMeasureCalleeInterface
-             , public BluetoothConnectionStateCallee
              , public CommonUtils
              , public QueueController
              , public SetupCallerInterface
@@ -76,7 +75,7 @@ class Manager: public NamedItem
     void SoundStateChange(SoundState_t SoundState);
 
     //BluetoothConnectionStateCallee Callback
-    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState);
+    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object);
     
   private:
     Preferences m_Preferences;
