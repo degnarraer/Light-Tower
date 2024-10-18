@@ -185,8 +185,72 @@ class Manager: public NamedItem
                                                                                         , nullptr
                                                                                         , this );
     
+    //Output Source Start Scan
+    CallbackArguments m_SourceConnect_CallbackArgs = { &m_BT_Out };
+    NamedCallback_t m_SourceStartScan_Callback = { "Source StartScan Callback"
+                                                 , &SourceStartScan_ValueChanged
+                                                 , &m_SourceStartScan_CallbackArgs};
+    const bool m_SourceStartScan_InitialValue = false;
+    DataItem<bool, 1> m_SourceStartScan = DataItem<bool, 1>( "Src_Start_Scan"
+                                                           , m_SourceStartScan_InitialValue
+                                                           , RxTxType_Rx_Only
+                                                           , 0
+                                                           , &m_CPU3SerialPortMessageManager
+                                                           , &m_SourceStartScan_Callback
+                                                           , this
+                                                           , &validBoolValues);
+    static void SourceStartScan_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1)
+        {
+          Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          bool startScan = *static_cast<bool*>(object);
+          if(startScan)
+          {
+            ESP_LOGI("SourceStartScan_ValueChanged", "Start Scanning for Devices.");
+            pBT_Out->StartDiscovery();
+          }
+        }
+      }
+    }
+
+    //Output Source Stop Scan
+    CallbackArguments m_SourceStopScan_CallbackArgs = { &m_BT_Out };
+    NamedCallback_t m_SourceStopScan_Callback = { "Source StopScan Callback"
+                                                 , &SourceStopScan_ValueChanged
+                                                 , &m_SourceStopScan_CallbackArgs};
+    const bool m_SourceStopScan_InitialValue = false;
+    DataItem<bool, 1> m_SourceStopScan = DataItem<bool, 1>( "Src_Stop_Scan"
+                                                          , m_SourceStopScan_InitialValue
+                                                          , RxTxType_Rx_Only
+                                                          , 0
+                                                          , &m_CPU3SerialPortMessageManager
+                                                          , &m_SourceStopScan_Callback
+                                                          , this
+                                                          , &validBoolValues);
+    static void SourceStopScan_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1)
+        {
+          Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
+          bool startScan = *static_cast<bool*>(object);
+          if(startScan)
+          {
+            ESP_LOGI("SourceStopScan_ValueChanged", "Stop Scanning for Devices.");
+            pBT_Out->StopDiscovery();
+          }
+        }
+      }
+    }
+
     //Output Source Connect
-    CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out, &m_Selected_Device};
+    CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback"
                                                     , &OuputSourceConnect_ValueChanged
                                                     , &m_OuputSourceConnect_CallbackArgs};
@@ -204,17 +268,14 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2)
+        if(arguments->arg1)
         {
           Bluetooth_Source *pBT_Out = static_cast<Bluetooth_Source*>(arguments->arg1);
-          BluetoothDevice_t *pTargetDevice = static_cast<BluetoothDevice_t*>(arguments->arg2);
           bool connect = *static_cast<bool*>(object);
           if(connect)
           {
             ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", "", "");
-            pBT_Out->Connect("", "");
-            //ESP_LOGI("OuputSourceConnect_ValueChanged", "Connect to Target Device: Name: \"%s\" Address: \"%s\"", pTargetDevice->name, pTargetDevice->address);
-            //pBT_Out->Connect(pTargetDevice->name, pTargetDevice->address);
+            pBT_Out->Connect();
           }
         }
       }

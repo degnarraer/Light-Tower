@@ -47,32 +47,7 @@ class Bluetooth_Source_Callbacks
 		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices) = 0;
 };
 
-class BluetoothActiveDeviceUpdatee
-{
-	public:
-		BluetoothActiveDeviceUpdatee(){};
-		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices) = 0;
-};
-
-class BluetoothActiveDeviceUpdater
-{
-	public:
-		BluetoothActiveDeviceUpdater()
-		{
-		}
-		virtual ~BluetoothActiveDeviceUpdater()
-		{
-		}
-		void RegisterForActiveDeviceUpdate(BluetoothActiveDeviceUpdatee *Callee)
-		{
-			m_BluetoothActiveDeviceUpdatee = Callee;
-		}
-	protected:
-		BluetoothActiveDeviceUpdatee *m_BluetoothActiveDeviceUpdatee = NULL;
-};
-
 class Bluetooth_Source: public NamedItem
-					  , public BluetoothActiveDeviceUpdater
 					  , public CommonUtils
 					  , public QueueController
 {	
@@ -90,7 +65,9 @@ class Bluetooth_Source: public NamedItem
 		void Setup();
 		void StartDevice();
 		void StopDevice();
-		void Connect( const char *SourceName, const char *SourceAddress );
+		void StartDiscovery();
+		void StopDiscovery();
+		void Connect();
 		void Disconnect();
 		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
 		

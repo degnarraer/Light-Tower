@@ -78,17 +78,24 @@ void Bluetooth_Source::StopDevice()
 	m_BTSource.end();
 }
 
-void Bluetooth_Source::Connect( const char *SourceName, const char *SourceAddress )
+void Bluetooth_Source::StartDiscovery()
 {
-	m_Name = String(SourceName);
-	m_Address = String(SourceAddress);
-	m_BTSource.start_raw(StaticSetBTTxData);
-	m_BTSource.set_connectable(true);
+	m_BTSource.start_Discovery();
 }
+void Bluetooth_Source::StopDiscovery()
+{
+	m_BTSource.stop_Discovery();
+}
+
+void Bluetooth_Source::Connect()
+{
+	m_BTSource.start_raw(StaticSetBTTxData);
+}
+
 void Bluetooth_Source::Disconnect()
 {
+	m_BTSource.stop_Discovery();
 	m_BTSource.disconnect();
-	m_BTSource.set_connectable(false);
 }
 
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
@@ -109,8 +116,9 @@ void Bluetooth_Source::ResgisterForCallbacks(Bluetooth_Source_Callbacks *callee)
 int32_t Bluetooth_Source::StaticMusicDataCallback(uint8_t *data, int32_t len)
 {
 	if (bT_source_instance) {
-		bT_source_instance->MusicDataCallback(data, len);
+		return bT_source_instance->MusicDataCallback(data, len);
 	}
+	return 0;
 }
 int32_t Bluetooth_Source::MusicDataCallback(uint8_t *data, int32_t len)
 {
@@ -118,8 +126,9 @@ int32_t Bluetooth_Source::MusicDataCallback(uint8_t *data, int32_t len)
 	if(NULL != m_Callee)
 	{
 		ESP_LOGI("Bluetooth Device", "Read data stream");
-		m_Callee->MusicDataCallback(data, len);
+		return m_Callee->MusicDataCallback(data, len);
 	}
+	return 0;
 
 }
 
@@ -195,8 +204,9 @@ void Bluetooth_Source::BTDataReceived()
 int32_t Bluetooth_Source::StaticSetBTTxData(uint8_t *data, int32_t length)
 {
 	if (bT_source_instance) {
-		bT_source_instance->SetBTTxData(data, length);
+		return bT_source_instance->SetBTTxData(data, length);
 	}
+	return 0;
 }
 
 int32_t Bluetooth_Source::SetBTTxData(uint8_t *data, int32_t length)
@@ -207,10 +217,7 @@ int32_t Bluetooth_Source::SetBTTxData(uint8_t *data, int32_t length)
 		ESP_LOGI("Bluetooth Device", "Read data stream");
 		return m_Callee->SetBTTxData(data, length);
 	}
-	else
-	{
-		return 0;
-	}
+	return 0;
 }
 	
 void Bluetooth_Source::StaticBluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
@@ -244,38 +251,41 @@ void Bluetooth_Source::Discovery_Mode_Changed(esp_bt_gap_discovery_state_t disco
 	}
 }
 
-bool Bluetooth_Source::StaticConnectToThisName(const char*name, esp_bd_addr_t address, int rssi)
+bool Bluetooth_Source::StaticConnectToThisName(const char* name, esp_bd_addr_t address, int rssi)
 {
-	if (bT_source_instance) {
-		bT_source_instance->ConnectToThisName(std::string(name), address, rssi);
-	}
+    if (bT_source_instance) {
+        return bT_source_instance->ConnectToThisName(std::string(name), address, rssi);
+    }
+    return false;
 }
 
 bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address, int rssi)
 {
-	std::string addressString = GetAddressString(address);
-    ESP_LOGI("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", name, addressString, rssi, m_Name.c_str(), m_Address.c_str());
-    if(m_Name.c_str() == name && m_Address.c_str() == addressString)
-	{
-		return true;
-	}
-    else if(m_DeviceProcessorQueueHandle)
-	{
-		BT_Device_Info newDevice = BT_Device_Info(name.c_str(), addressString.c_str(), rssi);
-		if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
-		{
-			ESP_LOGD("ConnectToThisName", "Device info sent to queue");
-		}
-		else
-		{
-			ESP_LOGE("ConnectToThisName", "Failed to send device info to queue");
-		}
-	}
-	else
-	{
-		ESP_LOGE("ConnectToThisName", "Queue Not Ready!");
-	}
-	return false;
+    std::string addressString = GetAddressString(address);
+    ESP_LOGI("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", 
+             name.c_str(), addressString.c_str(), rssi, m_Name.c_str(), m_Address.c_str());
+    
+    // Use string content comparison, not pointer comparison
+    if (m_Name.c_str() == name && m_Address.c_str() == addressString) {
+        return true;
+    }
+    else if (m_DeviceProcessorQueueHandle)
+    {
+        BT_Device_Info newDevice(name.c_str(), addressString.c_str(), rssi);
+        if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
+        {
+            ESP_LOGD("ConnectToThisName", "Device info sent to queue");
+        }
+        else
+        {
+            ESP_LOGE("ConnectToThisName", "Failed to send device info to queue");
+        }
+    }
+    else
+    {
+        ESP_LOGE("ConnectToThisName", "Queue Not Ready!");
+    }
+    return false;
 }
 
 void Bluetooth_Source::Set_NVS_Init(bool ResetNVS)
@@ -307,7 +317,10 @@ const char* Bluetooth_Source::GetAddressString(esp_bd_addr_t bda)
 void Bluetooth_Source::StaticDeviceProcessingTask(void * Parameters)
 {
 	Bluetooth_Source* BT_Source = (Bluetooth_Source*)Parameters;
-	BT_Source->DeviceProcessingTask();
+	if(BT_Source)
+	{
+		BT_Source->DeviceProcessingTask();
+	}
 }
 
 void Bluetooth_Source::DeviceProcessingTask()
@@ -348,7 +361,10 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
 {
 	Bluetooth_Source* BT_Source = (Bluetooth_Source*)Parameters;
-	BT_Source->CompatibleDeviceTrackerTaskLoop();
+	if(BT_Source)
+	{
+		BT_Source->CompatibleDeviceTrackerTaskLoop();
+	}
 }
 
 void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
@@ -365,9 +381,9 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 				return CurrentTime - device.lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT;
 			});
 		m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
-		if (m_BluetoothActiveDeviceUpdatee)
+		if (m_Callee)
 		{
-			m_BluetoothActiveDeviceUpdatee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
+			m_Callee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
 		}
 	}
 }

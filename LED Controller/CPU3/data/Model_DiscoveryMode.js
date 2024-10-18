@@ -1,9 +1,14 @@
+
+import { Model_Boolean } from './Model_Boolean.js';
+
 export class Model_DiscoveryMode {
-    constructor(signalName, initialValue, wsManager) {
+    constructor(signalName, startScanSignalName, stopScanSignalName, initialValue, wsManager) {
         this.signalName = signalName;
         this.wsManager = wsManager;
         this.wsManager.registerListener(this);
         this.setValue(initialValue, false);
+        this.Start_Scan = new Model_Boolean(startScanSignalName, Model_Boolean.values.False, wsManager);
+        this.Stop_Scan = new Model_Boolean(stopScanSignalName, Model_Boolean.values.False, wsManager);
     }
 
     static values = {
@@ -23,6 +28,23 @@ export class Model_DiscoveryMode {
     onMessage(newValue) {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
+    }
+
+    toggleValue()
+    {
+        switch(this.value){
+            case Model_DiscoveryMode.values.Discovery_Mode_Started:
+                console.log(`ESP32 Model: Toggling Discovery Mode: Stop`);
+                this.Start_Scan.setValue(false);
+                this.Stop_Scan.setValue(true);
+                break;
+            case Model_DiscoveryMode.values.Discovery_Mode_Stopped:
+            default:
+                console.log(`ESP32 Model: Toggling Discovery Mode: Stop`);
+                this.Start_Scan.setValue(false);
+                this.Stop_Scan.setValue(true);
+                break;
+        }
     }
 
     setValue(newValue, updateWebsocket = true) {
@@ -136,6 +158,7 @@ export class Model_DiscoveryMode {
                     default:
                         break;
                 }
+            } else if (element.tagName.toLowerCase() === "button") {
             } else {
                 console.error(`"${this.signalName}" Unsupported Element!`);
             }

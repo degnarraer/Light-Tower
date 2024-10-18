@@ -127,7 +127,6 @@ void Manager::Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode)
   }
 }
 
-//BluetoothConnectionStateCallee Callback 
 void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
   switch(connectionState)
@@ -157,7 +156,6 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
 
 }
 
-//BluetoothActiveDeviceUpdatee Callback 
 void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices)
 {
   unsigned long currentMillis = millis();
