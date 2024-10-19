@@ -39,7 +39,7 @@ class SettingsWebServerManager;
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void HandleWebSocketDataRequest() = 0;
+    virtual KVP HandleWebSocketDataRequest() = 0;
 };
 
 
@@ -178,16 +178,15 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
 
     
-    virtual void HandleWebSocketDataRequest() override
+    virtual KVP HandleWebSocketDataRequest() override
     {
-      ESP_LOGD("HandleWebSocketDataRequest", "\"%s\" sending \"%s\" to web socket", m_Signal, m_DataItem.GetValueAsString());
-      m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
       m_ChangeCount = m_DataItem.GetChangeCount();
+      return { m_Signal, m_DataItem.GetValueAsString() };
     }
     
     virtual void HandleWebSocketRxNotification(const String& stringValue) override
     {
-      ESP_LOGI( "Web Socket Rx"
+      ESP_LOGD( "Web Socket Rx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
               , m_Name.c_str()
               , m_Signal.c_str()

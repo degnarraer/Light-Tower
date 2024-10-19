@@ -199,7 +199,6 @@ class Bluetooth_Sink: public NamedItem
 		ESP_LOGI("BluetoothConnectionStateChanged", "Connection State: %i", connectionState);
 		if(NULL != m_Callee)
 		{
-			ESP_LOGI("Bluetooth Device", "Read data stream");
 			m_Callee->BluetoothConnectionStateChanged(connectionState, object);
 		}
 	}

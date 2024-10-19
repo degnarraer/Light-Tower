@@ -126,20 +126,20 @@ class Manager: public NamedItem
                                     , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
 
     I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
-                                    , I2S_NUM_1                        // I2S Interface
-                                    , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                    , I2S_SAMPLE_RATE
-                                    , I2S_BITS_PER_SAMPLE_16BIT
-                                    , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                    , I2S_CHANNEL_STEREO
-                                    , true                            // Use APLL
-                                    , I2S_BUFFER_COUNT                // Buffer Count
-                                    , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
-                                    , I2S2_SCLCK_PIN                  // Serial Clock Pin
-                                    , I2S2_WD_PIN                     // Word Selection Pin
-                                    , I2S2_SDIN_PIN                   // Serial Data In Pin
-                                    , I2S2_SDOUT_PIN );               // Serial Data Out Pin
+                                     , I2S_NUM_1                        // I2S Interface
+                                     , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
+                                     , I2S_SAMPLE_RATE
+                                     , I2S_BITS_PER_SAMPLE_16BIT
+                                     , I2S_CHANNEL_FMT_RIGHT_LEFT
+                                     , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
+                                     , I2S_CHANNEL_STEREO
+                                     , true                            // Use APLL
+                                     , I2S_BUFFER_COUNT                // Buffer Count
+                                     , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
+                                     , I2S2_SCLCK_PIN                  // Serial Clock Pin
+                                     , I2S2_WD_PIN                     // Word Selection Pin
+                                     , I2S2_SDIN_PIN                   // Serial Data In Pin
+                                     , I2S2_SDOUT_PIN );               // Serial Data Out Pin
     
     String ConnectionStatusStrings[5]
     {
