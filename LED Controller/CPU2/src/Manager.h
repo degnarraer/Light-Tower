@@ -129,13 +129,7 @@ class Manager: public NamedItem
     CallbackArguments m_Selected_Device_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_Selected_Device_Callback = {"Target Compatible Device Callback", &Selected_Device_ValueChanged, &m_Selected_Device_CallbackArgs};
     const BluetoothDevice_t m_Selected_Device_InitialValue = {"", ""};
-    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device"
-                                                                                     , m_Selected_Device_InitialValue
-                                                                                     , RxTxType_Rx_Echo_Value
-                                                                                     , 0
-                                                                                     , &m_CPU3SerialPortMessageManager
-                                                                                     , &m_Selected_Device_Callback
-                                                                                     , this);
+    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_CPU3SerialPortMessageManager, &m_Selected_Device_Callback, this);
     static void Selected_Device_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("TargetCompatibleDeviceValueChanged", "Target Compatible Device Value Changed Value Changed");
@@ -168,37 +162,16 @@ class Manager: public NamedItem
 
     //Bluetooth Source Discovery Mode
     Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_t_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
-    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_t = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode"
-                                                                                        , m_Bluetooth_Discovery_Mode_t_initialValue
-                                                                                        , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                        , 5000
-                                                                                        , &m_CPU3SerialPortMessageManager
-                                                                                        , nullptr
-                                                                                        , this );
+    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_t = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode", m_Bluetooth_Discovery_Mode_t_initialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU3SerialPortMessageManager, nullptr, this );
     //Bluetooth Source Connection Status
     ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
-    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State"
-                                                                                        , m_ConnectionStatus_InitialValue
-                                                                                        , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                        , 5000
-                                                                                        , &m_CPU3SerialPortMessageManager
-                                                                                        , nullptr
-                                                                                        , this );
+    DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU3SerialPortMessageManager, nullptr, this );
     
     //Output Source Start Scan
-    CallbackArguments m_SourceConnect_CallbackArgs = { &m_BT_Out };
-    NamedCallback_t m_SourceStartScan_Callback = { "Source StartScan Callback"
-                                                 , &SourceStartScan_ValueChanged
-                                                 , &m_SourceStartScan_CallbackArgs};
+    CallbackArguments m_SourceStartScan_CallbackArgs = { &m_BT_Out };
+    NamedCallback_t m_SourceStartScan_Callback = { "Source StartScan Callback", &SourceStartScan_ValueChanged, &m_SourceStartScan_CallbackArgs};
     const bool m_SourceStartScan_InitialValue = false;
-    DataItem<bool, 1> m_SourceStartScan = DataItem<bool, 1>( "Src_Start_Scan"
-                                                           , m_SourceStartScan_InitialValue
-                                                           , RxTxType_Rx_Only
-                                                           , 0
-                                                           , &m_CPU3SerialPortMessageManager
-                                                           , &m_SourceStartScan_Callback
-                                                           , this
-                                                           , &validBoolValues);
+    DataItem<bool, 1> m_SourceStartScan = DataItem<bool, 1>( "Src_Start_Scan", m_SourceStartScan_InitialValue, RxTxType_Rx_Only, 0, &m_CPU3SerialPortMessageManager, &m_SourceStartScan_Callback, this, &validBoolValues);
     static void SourceStartScan_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -219,18 +192,9 @@ class Manager: public NamedItem
 
     //Output Source Stop Scan
     CallbackArguments m_SourceStopScan_CallbackArgs = { &m_BT_Out };
-    NamedCallback_t m_SourceStopScan_Callback = { "Source StopScan Callback"
-                                                 , &SourceStopScan_ValueChanged
-                                                 , &m_SourceStopScan_CallbackArgs};
+    NamedCallback_t m_SourceStopScan_Callback = { "Source StopScan Callback", &SourceStopScan_ValueChanged, &m_SourceStopScan_CallbackArgs};
     const bool m_SourceStopScan_InitialValue = false;
-    DataItem<bool, 1> m_SourceStopScan = DataItem<bool, 1>( "Src_Stop_Scan"
-                                                          , m_SourceStopScan_InitialValue
-                                                          , RxTxType_Rx_Only
-                                                          , 0
-                                                          , &m_CPU3SerialPortMessageManager
-                                                          , &m_SourceStopScan_Callback
-                                                          , this
-                                                          , &validBoolValues);
+    DataItem<bool, 1> m_SourceStopScan = DataItem<bool, 1>( "Src_Stop_Scan", m_SourceStopScan_InitialValue, RxTxType_Rx_Only, 0, &m_CPU3SerialPortMessageManager, &m_SourceStopScan_Callback, this, &validBoolValues);
     static void SourceStopScan_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -251,18 +215,9 @@ class Manager: public NamedItem
 
     //Output Source Connect
     CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out};
-    NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback"
-                                                    , &OuputSourceConnect_ValueChanged
-                                                    , &m_OuputSourceConnect_CallbackArgs};
+    NamedCallback_t m_OuputSourceConnect_Callback = { "Output Source Connect Callback", &OuputSourceConnect_ValueChanged, &m_OuputSourceConnect_CallbackArgs};
     const bool m_OuputSourceConnect_InitialValue = false;
-    DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect"
-                                                              , m_OuputSourceConnect_InitialValue
-                                                              , RxTxType_Rx_Only
-                                                              , 0
-                                                              , &m_CPU3SerialPortMessageManager
-                                                              , &m_OuputSourceConnect_Callback
-                                                              , this
-                                                              , &validBoolValues);
+    DataItem<bool, 1> m_OuputSourceConnect = DataItem<bool, 1>( "Src_Connect", m_OuputSourceConnect_InitialValue, RxTxType_Rx_Only, 0, &m_CPU3SerialPortMessageManager, &m_OuputSourceConnect_Callback, this, &validBoolValues);
     static void OuputSourceConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -283,18 +238,9 @@ class Manager: public NamedItem
     
     //Output Source Disconnect
     CallbackArguments m_OuputSourceDisconnect_CallbackArgs = {&m_BT_Out};
-    NamedCallback_t m_OuputSourceDisconnect_Callback = { "Output Source DIsconnect Callback"
-                                                       , &OuputSourceDisconnect_ValueChanged
-                                                       , &m_OuputSourceDisconnect_CallbackArgs};
+    NamedCallback_t m_OuputSourceDisconnect_Callback = { "Output Source DIsconnect Callback", &OuputSourceDisconnect_ValueChanged, &m_OuputSourceDisconnect_CallbackArgs};
     const bool m_OuputSourceDisconnect_InitialValue = false;
-    DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect"
-                                                                 , m_OuputSourceDisconnect_InitialValue
-                                                                 , RxTxType_Rx_Only
-                                                                 , 0
-                                                                 , &m_CPU3SerialPortMessageManager
-                                                                 , &m_OuputSourceDisconnect_Callback
-                                                                 , this
-                                                                 , &validBoolValues );
+    DataItem<bool, 1> m_OuputSourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_OuputSourceDisconnect_InitialValue, RxTxType_Rx_Only, 0, &m_CPU3SerialPortMessageManager, &m_OuputSourceDisconnect_Callback, this, &validBoolValues );
     static void OuputSourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -313,27 +259,13 @@ class Manager: public NamedItem
     
     //Scanned Device
     BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0, };
-    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Devices"
-                                                                                                                           , m_ScannedDevice_InitialValue
-                                                                                                                           , RxTxType_Tx_On_Change
-                                                                                                                           , 0
-                                                                                                                           , &m_CPU3SerialPortMessageManager
-                                                                                                                           , NULL
-                                                                                                                           , this );
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Devices", m_ScannedDevice_InitialValue, RxTxType_Tx_On_Change, 0, &m_CPU3SerialPortMessageManager, NULL, this );
     
     //Bluetooth Source Enable
     CallbackArguments m_BluetoothSourceEnable_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_BluetoothSourceEnable_Callback = {"Bluetooth Source Enable Callback", &BluetoothSourceEnable_ValueChanged, &m_BluetoothSourceEnable_CallbackArgs};
     const bool m_BluetoothSourceEnable_InitialValue = true;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En"
-                                                                                               , m_BluetoothSourceEnable_InitialValue
-                                                                                               , RxTxType_Rx_Echo_Value
-                                                                                               , 0
-                                                                                               , &m_PreferencesInterface
-                                                                                               , &m_CPU3SerialPortMessageManager
-                                                                                               , &m_BluetoothSourceEnable_Callback
-                                                                                               , this
-                                                                                               , &validBoolValues );
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothSourceEnable_Callback, this, &validBoolValues );
     static void BluetoothSourceEnable_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -347,15 +279,7 @@ class Manager: public NamedItem
     CallbackArguments m_BluetoothSourceAutoReConnect_CallbackArgs = {&m_BT_Out};
     NamedCallback_t m_BluetoothSourceAutoReConnect_Callback = {"Bluetooth Source ReConnect Callback", &BluetoothSourceAutoReConnect_ValueChanged, &m_BluetoothSourceAutoReConnect_CallbackArgs};
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR"
-                                                                                                      , m_BluetoothSourceAutoReConnect_InitialValue
-                                                                                                      , RxTxType_Rx_Echo_Value
-                                                                                                      , 0
-                                                                                                      , &m_PreferencesInterface
-                                                                                                      , &m_CPU3SerialPortMessageManager
-                                                                                                      , &m_BluetoothSourceAutoReConnect_Callback
-                                                                                                      , this
-                                                                                                      , &validBoolValues);
+    DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothSourceAutoReConnect_Callback, this, &validBoolValues);
     static void BluetoothSourceAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -379,15 +303,7 @@ class Manager: public NamedItem
     CallbackArguments m_BluetoothReset_CallbackArgs = {&m_BT_Out, &m_Selected_Device};
     NamedCallback_t m_BluetoothReset_Callback = {"Bluetooth Reset Callback", &BluetoothReset_ValueChanged, &m_BluetoothReset_CallbackArgs};
     const bool m_BluetoothReset_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset"
-                                                                                        , m_BluetoothReset_InitialValue
-                                                                                        , RxTxType_Rx_Echo_Value
-                                                                                        , 0
-                                                                                        , &m_PreferencesInterface
-                                                                                        , &m_CPU3SerialPortMessageManager
-                                                                                        , &m_BluetoothReset_Callback
-                                                                                        , this
-                                                                                        , &validBoolValues );
+    DataItemWithPreferences<bool, 1> m_BluetoothReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_BluetoothReset_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_BluetoothReset_Callback, this, &validBoolValues );
     static void BluetoothReset_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
@@ -419,15 +335,7 @@ class Manager: public NamedItem
     CallbackArguments m_SoundOutputSource_CallbackArgs = {this};
     NamedCallback_t m_SoundOutputSource_Callback = {"Sound Output Source Callback", &SoundOutputSource_ValueChanged, &m_SoundOutputSource_CallbackArgs};
     const SoundOutputSource_t m_SoundOutputSource_InitialValue = SoundOutputSource_t::Bluetooth;
-    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source"
-                                                                                                                         , m_SoundOutputSource_InitialValue
-                                                                                                                         , RxTxType_Rx_Echo_Value
-                                                                                                                         , 0
-                                                                                                                         , &m_PreferencesInterface
-                                                                                                                         , &m_CPU3SerialPortMessageManager
-                                                                                                                         , &m_SoundOutputSource_Callback
-                                                                                                                         , this
-                                                                                                                         , &validSoundOutputSourceValues );
+    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOutputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", m_SoundOutputSource_InitialValue, RxTxType_Rx_Echo_Value, 0, &m_PreferencesInterface, &m_CPU3SerialPortMessageManager, &m_SoundOutputSource_Callback, this, &validSoundOutputSourceValues );
     static void SoundOutputSource_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)

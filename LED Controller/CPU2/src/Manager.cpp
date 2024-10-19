@@ -44,6 +44,7 @@ void Manager::Setup()
 {
   esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
+  m_BT_Out.ResgisterForCallbacks(this);
   if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");

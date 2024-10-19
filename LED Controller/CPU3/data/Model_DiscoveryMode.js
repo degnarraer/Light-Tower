@@ -41,8 +41,8 @@ export class Model_DiscoveryMode {
             case Model_DiscoveryMode.values.Discovery_Mode_Stopped:
             default:
                 console.log(`ESP32 Model: Toggling Discovery Mode: Stop`);
-                this.Start_Scan.setValue(false);
-                this.Stop_Scan.setValue(true);
+                this.Stop_Scan.setValue(false);
+                this.Start_Scan.setValue(true);
                 break;
         }
     }

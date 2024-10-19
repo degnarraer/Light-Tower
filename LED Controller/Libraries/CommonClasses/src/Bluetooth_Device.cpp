@@ -82,6 +82,7 @@ void Bluetooth_Source::StartDiscovery()
 {
 	m_BTSource.start_Discovery();
 }
+
 void Bluetooth_Source::StopDiscovery()
 {
 	m_BTSource.stop_Discovery();
@@ -94,7 +95,6 @@ void Bluetooth_Source::Connect()
 
 void Bluetooth_Source::Disconnect()
 {
-	m_BTSource.stop_Discovery();
 	m_BTSource.disconnect();
 }
 
@@ -115,17 +115,13 @@ void Bluetooth_Source::ResgisterForCallbacks(Bluetooth_Source_Callbacks *callee)
 //Bluetooth_Callbacks
 int32_t Bluetooth_Source::StaticMusicDataCallback(uint8_t *data, int32_t len)
 {
-	if (bT_source_instance) {
-		return bT_source_instance->MusicDataCallback(data, len);
-	}
-	return 0;
+	return bT_source_instance->MusicDataCallback(data, len);
 }
+
 int32_t Bluetooth_Source::MusicDataCallback(uint8_t *data, int32_t len)
 {
-	ESP_LOGI("BTDataReceived", "BT Data: %i bytes received.", len);
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		return m_Callee->MusicDataCallback(data, len);
 	}
 	return 0;
@@ -134,17 +130,13 @@ int32_t Bluetooth_Source::MusicDataCallback(uint8_t *data, int32_t len)
 
 void Bluetooth_Sink::StaticBTDataReceived() 
 {
-    if (bT_sink_instance) {
-        bT_sink_instance->BTDataReceived();
-    }
+    bT_sink_instance->BTDataReceived();
 }
 
 void Bluetooth_Sink::BTDataReceived()
 {
-  	ESP_LOGI("BTDataReceived", "BT Data: received.");
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BT_Data_Received();
 	}
 }
@@ -169,52 +161,39 @@ Bluetooth_Source::~Bluetooth_Source()
 }
 void Bluetooth_Source::StaticBTReadDataStream(const uint8_t* data, uint32_t length) 
 {
-    if (bT_source_instance) {
-        bT_source_instance->BTReadDataStream(data, length);
-    }
+    bT_source_instance->BTReadDataStream(data, length);
 }
 
 void Bluetooth_Source::BTReadDataStream(const uint8_t *data, uint32_t length)
 {
-  ESP_LOGI("BTDataReceived", "BT Data: %i bytes received.", length);
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BT_Read_Data_Stream(data, length);
 	}
 }
 
 void Bluetooth_Source::StaticBTDataReceived() 
 {
-    if (bT_source_instance) {
-        bT_source_instance->BTDataReceived();
-    }
+    bT_source_instance->BTDataReceived();
 }
 
 void Bluetooth_Source::BTDataReceived()
 {
-  	ESP_LOGI("BTDataReceived", "BT Data: received.");
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BT_Data_Received();
 	}
 }
 
 int32_t Bluetooth_Source::StaticSetBTTxData(uint8_t *data, int32_t length)
 {
-	if (bT_source_instance) {
-		return bT_source_instance->SetBTTxData(data, length);
-	}
-	return 0;
+	return bT_source_instance->SetBTTxData(data, length);
 }
 
 int32_t Bluetooth_Source::SetBTTxData(uint8_t *data, int32_t length)
 {
-	ESP_LOGI("BTDataReceived", "BT Data: %i bytes received.", length);
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		return m_Callee->SetBTTxData(data, length);
 	}
 	return 0;
@@ -222,41 +201,30 @@ int32_t Bluetooth_Source::SetBTTxData(uint8_t *data, int32_t length)
 	
 void Bluetooth_Source::StaticBluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
-	if (bT_source_instance) {
-		bT_source_instance->BluetoothConnectionStateChanged(connectionState, object);
-	}
+	bT_source_instance->BluetoothConnectionStateChanged(connectionState, object);
 }
 void Bluetooth_Source::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
-	ESP_LOGI("BluetoothConnectionStateChanged", "Connection State: %i", connectionState);
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BluetoothConnectionStateChanged(connectionState, object);
 	}
 }
 void Bluetooth_Source::Static_Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode)
 {
-	if (bT_source_instance) {
-		bT_source_instance->Discovery_Mode_Changed(discoveryMode);
-	}
+	bT_source_instance->Discovery_Mode_Changed(discoveryMode);
 }
 void Bluetooth_Source::Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode)
 {
-	ESP_LOGI("Discovery_Mode_Changed", "Discovery Mode: %i", discoveryMode);
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->Discovery_Mode_Changed(discoveryMode);
 	}
 }
 
 bool Bluetooth_Source::StaticConnectToThisName(const char* name, esp_bd_addr_t address, int rssi)
 {
-    if (bT_source_instance) {
-        return bT_source_instance->ConnectToThisName(std::string(name), address, rssi);
-    }
-    return false;
+    return bT_source_instance->ConnectToThisName(std::string(name), address, rssi); 
 }
 
 bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address, int rssi)
@@ -274,7 +242,7 @@ bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address
         BT_Device_Info newDevice(name.c_str(), addressString.c_str(), rssi);
         if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
         {
-            ESP_LOGD("ConnectToThisName", "Device info sent to queue");
+            ESP_LOGI("ConnectToThisName", "Device info sent to queue");
         }
         else
         {
@@ -317,10 +285,7 @@ const char* Bluetooth_Source::GetAddressString(esp_bd_addr_t bda)
 void Bluetooth_Source::StaticDeviceProcessingTask(void * Parameters)
 {
 	Bluetooth_Source* BT_Source = (Bluetooth_Source*)Parameters;
-	if(BT_Source)
-	{
-		BT_Source->DeviceProcessingTask();
-	}
+	BT_Source->DeviceProcessingTask();
 }
 
 void Bluetooth_Source::DeviceProcessingTask()
@@ -361,10 +326,7 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
 {
 	Bluetooth_Source* BT_Source = (Bluetooth_Source*)Parameters;
-	if(BT_Source)
-	{
-		BT_Source->CompatibleDeviceTrackerTaskLoop();
-	}
+	BT_Source->CompatibleDeviceTrackerTaskLoop();
 }
 
 void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
@@ -408,13 +370,12 @@ void Bluetooth_Sink::StaticBTReadDataStream(const uint8_t* data, uint32_t length
 void Bluetooth_Sink::BTReadDataStream(const uint8_t *data, uint32_t length)
 {
   ESP_LOGI("BTDataReceived", "BT Data: %i bytes received.", length);
-	if(NULL != m_Callee)
+	if(m_Callee)
 	{
 		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BT_Read_Data_Stream(data, length);
 	}
 }
-
 
 void Bluetooth_Sink::InstallDevice()
 {
