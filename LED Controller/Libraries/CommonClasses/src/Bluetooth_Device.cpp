@@ -230,7 +230,7 @@ bool Bluetooth_Source::StaticConnectToThisName(const char* name, esp_bd_addr_t a
 bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address, int rssi)
 {
     std::string addressString = GetAddressString(address);
-    ESP_LOGI("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", 
+    ESP_LOGD("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", 
              name.c_str(), addressString.c_str(), rssi, m_Name.c_str(), m_Address.c_str());
     
     // Use string content comparison, not pointer comparison
@@ -242,7 +242,7 @@ bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address
         BT_Device_Info newDevice(name.c_str(), addressString.c_str(), rssi);
         if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
         {
-            ESP_LOGI("ConnectToThisName", "Device info sent to queue");
+            ESP_LOGD("ConnectToThisName", "Device info sent to queue");
         }
         else
         {

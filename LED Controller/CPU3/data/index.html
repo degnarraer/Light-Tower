@@ -72,19 +72,19 @@
 	</div>
 	<div id= "MainScreen" class = "MainScreen">
 		<div id="leftSideNavigationMenu" class="leftSideNavigationMenu">
-			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Speaker Status'); closeNav();">
+			<button onclick="showMenuContent('menu-content', 'Speaker Status'); closeNav();">
 				<img src="Images/status-health.svg" alt="Status" style="width:80px; height:50px;">
 			</button>
-			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Wifi Settings'); closeNav();">
+			<button onclick="showMenuContent('menu-content', 'Wifi Settings'); closeNav();">
 				<img src="Images/wifi.svg" alt="Wifi" style="width:80px; height:50px;">
 			</button>
-			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Sound Settings'); closeNav();">
+			<button onclick="showMenuContent('menu-content', 'Sound Settings'); closeNav();">
 				<img src="Images/sound.svg" alt="Sound" style="width:80px; height:50px;">
 			</button>
-			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Real Time FFT'); closeNav();">
+			<button onclick="showMenuContent('menu-content', 'Real Time FFT'); closeNav();">
 				<img src="Images/histogram.svg" alt="FFT" style="width:80px; height:50px;">
 			</button>
-			<button class="Tablinks" onclick="showMenuContent('menu-content', 'Brightness'); closeNav();">
+			<button onclick="showMenuContent('menu-content', 'Brightness'); closeNav();">
 				<img src="Images/brightness.svg" alt="Brightness" style="width:80px; height:50px;">
 			</button>
 		</div>
@@ -241,24 +241,24 @@
 					<div class="frame">
 						<header>Sound Input</header>
 						<div class="selection_tabs">
-							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('OFF');">
-								<div class="settingGroup_Button non-pressable-button">
+							<button id="Sink_Connect_Button" onclick="CurrentSoundInputSource.setValue('OFF');">
+								<div class="vertically_Alligned">
 									<img src="Images/power.svg" alt="OFF" style="width:100px; height:25px">
 									OFF
 								</div>
+							</button>
+							<button id="Sink_Connect_Button" onclick="CurrentSoundInputSource.setValue('Microphone');">
+								<div class="vertically_Alligned">
+								<img src="Images/microphone.svg" alt="Microphone" style="width:100px; height:25px">
+								Microphone
 							</div>
-							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Microphone');">
-								<div class="settingGroup_Button non-pressable-button">
-									<img src="Images/microphone.svg" alt="Microphone" style="width:100px; height:25px">
-									Microphone
-								</div>
-							</div>
-							<div class="selection_tab" onclick="CurrentSoundInputSource.setValue('Bluetooth');">
-								<div class="settingGroup_Button non-pressable-button">
+							</button>
+							<button id="Sink_Connect_Button" onclick="CurrentSoundInputSource.setValue('Bluetooth');">
+								<div class="vertically_Alligned">
 									<img src="Images/bluetooth.svg" alt="Bluetooth" style="width:100px; height:25px">
 									Bluetooth
 								</div>
-							</div>
+							</button>
 						</div>
 						<div class="selection_tab_content_input_source" id="Sound_Input_Selection_OFF">
 							<h2>Off</h2>
@@ -345,18 +345,19 @@
 					<div class="frame">
 						<header>Sound Output</header>
 						<div class="selection_tabs">
-							<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('OFF');">
-								<div class="settingGroup_Button non-pressable-button">
-									<img src="Images/power.svg" alt="OFF" style="width:100px; height:25px;">
+							<button id="Sink_Connect_Button" onclick="CurrentSoundOutputSource.setValue('OFF');">
+								<div class="vertically_Alligned">
+									<img src="Images/power.svg" alt="OFF" style="width:100px; height:25px">
 									OFF
 								</div>
-							</div>
-							<div class="selection_tab" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">
-								<div class="settingGroup_Button non-pressable-button">
-									<img src="Images/bluetooth.svg" alt="Bluetooth" style="width:100px; height:25px;">
+							</button>
+							<button id="Sink_Connect_Button" onclick="CurrentSoundOutputSource.setValue('Bluetooth');">
+								<div class="vertically_Alligned">
+									<img src="Images/bluetooth.svg" alt="Microphone" style="width:100px; height:25px">
 									Bluetooth
+									</button>
 								</div>
-							</div>
+							</button>
 						</div>
 						<div class="selection_tab_content_output_source" id="Sound_Output_Selection_OFF">
 							<h2>Off</h2>
@@ -366,21 +367,12 @@
 							<div class="settingGroup">
 								<div class="settingGroup_3_Column">
 									<div class="settingGroup_Title">
-										Bluetooth Speakers
+										Connected Speaker
 									</div>
-									<div class="settingGroup_Widget">
-										<div id="deviceList" data-signal="Scan_BT_Devices">
-										</div>
+									<div class="settingGroup_Textbox">
+										<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" oninput="SourceName.setValue(this.value, false)" value="Enter Name">
 									</div>
-									<div class="settingGroup_Button">	
-										<div class="settingGroup_Button non-pressable-button">
-											<img src="Images/disconnected.svg" data-Signal="Src_Conn_State" alt="Status" style="width:50px; height:50px;">
-											<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
-										</div>
-										<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">
-											<img src="Images/radar-sweep.svg" alt="Discovery Mode" data-Signal="Src_Discov_Mode" style="width:80px; height:100px;">
-											Start Scan
-										</button>
+									<div class="settingGroup_Button">
 										<button id="Source_Reset_Button" data-Signal="BT_Src_Reset" onmousedown="Source_Reset.setValue(true)" onmouseup="Source_Reset.setValue(false)">
 											<img src="Images/reset.svg" alt="Start Scan" style="width:80px; height:50px;">
 											Reset
@@ -388,22 +380,6 @@
 										<button id="Source_Disconnect_Button" data-Signal="Src_Disconnect" onmousedown="Source_Disconnect.setValue(true)" onmouseup="Source_Disconnect.setValue(false)">
 											<img src="Images/bluetooth-slash.svg" alt="Disconnect" style="width:80px; height:50px;">
 											Disconnect
-										</button>
-									</div>
-								</div>
-							</div>
-							<div class="settingGroup">
-								<div class="settingGroup_3_Column">
-									<div class="settingGroup_Title">
-										Bluetooth Speaker Name
-									</div>
-									<div class="settingGroup_Textbox">
-										<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" oninput="SourceName.setValue(this.value, false)" value="Enter Name">
-									</div>
-									<div class="settingGroup_Widget">
-										<button id="Source_Name_Submit_Button" onclick="SourceName.scheduleWebSocketUpdate()">
-											<img src="Images/submit.svg" alt="Status" style="width:80px; height:50px;">
-											Submit
 										</button>
 									</div>
 								</div>
@@ -418,6 +394,27 @@
 											<input type="checkbox" data-Signal="BT_Source_AR" id="Source_BT_Auto_ReConnect_Toggle_Button">
 											<span class="slider Round"></span>
 										</label>
+									</div>
+								</div>
+							</div>
+							<div class="settingGroup">
+								<div class="settingGroup_3_Column">
+									<div class="settingGroup_Title">
+										Found Speakers
+									</div>
+									<div class="settingGroup_Widget">
+										<div id="deviceList" data-signal="Scan_BT_Devices">
+										</div>
+									</div>
+									<div class="settingGroup_Button">	
+										<div class="settingGroup_Button non-pressable-button">
+											<img src="Images/disconnected.svg" data-Signal="Src_Conn_State" alt="Status" style="width:50px; height:50px;">
+											<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
+										</div>
+										<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">
+											<img src="Images/radar-sweep.svg" alt="Discovery Mode" data-Signal="Src_Discov_Mode" style="width:80px; height:250px;">
+											Start Scan
+										</button>
 									</div>
 								</div>
 							</div>
