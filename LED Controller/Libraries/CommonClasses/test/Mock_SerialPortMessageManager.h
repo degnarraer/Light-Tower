@@ -136,7 +136,7 @@ public:
         ESP_LOGD("MockSerialPortMessageManager", "Deleting MockSerialPortMessageManager");
     }
     
-    MOCK_METHOD(void, SetupSerialPortMessageManager, (), (override));
+    MOCK_METHOD(void, Setup, (), (override));
     MOCK_METHOD(bool, QueueMessageFromDataType, (const String& Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, QueueMessage, (const String& message), (override));
     MOCK_METHOD(String, GetName, (), ());

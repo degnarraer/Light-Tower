@@ -42,13 +42,8 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
   m_BT_Out.ResgisterForCallbacks(this);
-  if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
   SetupAllSetupCallees();
 }
 
@@ -66,22 +61,6 @@ void Manager::StopBluetooth()
   ESP_LOGI("StopBluetooth", "Stopping Bluetooth!" );
   m_BT_Out.StopDevice();
   m_I2S_In.StopDevice();
-}
-
-void Manager::Static_TaskLoop_20mS(void * parameter)
-{
-  Manager *aManager = (Manager*)parameter;
-  aManager->TaskLoop_20mS();
-}
-
-void Manager::TaskLoop_20mS()
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
 }
 
 //I2S_Device_Callback

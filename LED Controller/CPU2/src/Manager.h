@@ -85,14 +85,9 @@ class Manager: public NamedItem
     void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
 
   private:
-    IPreferences& m_PreferencesInterface;    
-    TaskHandle_t m_Manager_20mS_Task;
-    TaskHandle_t m_Manager_1000mS_TaskHandle;
-    TaskHandle_t m_Manager_300000mS_TaskHandle;
-
+    IPreferences& m_PreferencesInterface;
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
-       
     Sound_Processor &m_SoundProcessor;
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];

@@ -35,7 +35,7 @@ Sound_Processor::~Sound_Processor()
   if(m_ProcessFFTTask) vTaskDelete(m_ProcessFFTTask);
   if(m_ProcessSoundPowerTask) vTaskDelete(m_ProcessSoundPowerTask);
 }
-void Sound_Processor::SetupSoundProcessor()
+void Sound_Processor::Setup()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   if( xTaskCreatePinnedToCore( Static_Calculate_FFTs,   "ProcessFFTTask",         5000,   this,   THREAD_PRIORITY_MEDIUM,   &m_ProcessFFTTask,          0 ) != pdTRUE )

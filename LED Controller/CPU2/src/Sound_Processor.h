@@ -40,7 +40,7 @@ class Sound_Processor: public NamedItem
                    , SerialPortMessageManager &CPU3SerialPortMessageManager
                    , IPreferences& preferences );
     virtual ~Sound_Processor();
-    void SetupSoundProcessor();
+    void Setup();
     
   private:
     ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;

@@ -67,8 +67,8 @@ void Manager::SetupDevices()
 
 void Manager::SetupSerialPortManager()
 {
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU1SerialPortMessageManager.Setup();
+  m_CPU3SerialPortMessageManager.Setup();
 }
 
 void Manager::SetupStatisticalEngine()

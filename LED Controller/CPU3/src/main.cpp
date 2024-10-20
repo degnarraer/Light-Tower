@@ -61,36 +61,38 @@ void SetupSerialPorts()
 
 void TestPSRam()
 {
-  psramInit();
-  void* buffer1 = (void*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM);
-  if(buffer1)
-  {
-    ESP_LOGI("TestPSRam", "Heaps Cap Malloc memory allocated");
+    const size_t theSize = 100;
+    size_t freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    void* buffer1 = heap_caps_malloc(theSize, MALLOC_CAP_SPIRAM);
+    assert(buffer1);
+    size_t freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    size_t allocatedSize = freeSizeBefore - freeSizeAfter;
+    ESP_LOGI("TestPSRam", "Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    assert(allocatedSize >= theSize);
     free(buffer1);
     buffer1 = nullptr;
-  }
-  else
-  {
-    ESP_LOGE("TestPSRam", "Heaps Cap Malloc memory NOT allocated!");
-  }
-
-  void* buffer2 = ps_malloc(100);
-  if(buffer2)
-  {
-    ESP_LOGI("TestPSRam", "PSRAM Allocated");
+    size_t freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    assert(freeSizeAfterFree == freeSizeBefore);
+    
+    freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    void* buffer2 = ps_malloc(theSize);
+    assert(buffer2);
+    freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    allocatedSize = freeSizeBefore - freeSizeAfter;
+    ESP_LOGI("TestPSRam", "ps_malloc Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    assert(allocatedSize >= theSize);
     free(buffer2);
     buffer2 = nullptr;
-  }
-  else
-  {
-    ESP_LOGE("TestPSRam", "PSRAM Not Allocated!");
-  }
+    freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    assert(freeSizeAfterFree == freeSizeBefore);
 }
 
 void InitLocalVariables()
 {
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU1SerialPortMessageManager.Setup();
+  m_CPU2SerialPortMessageManager.Setup();
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
 

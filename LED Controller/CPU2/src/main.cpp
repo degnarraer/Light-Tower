@@ -24,11 +24,6 @@
 
 Preferences m_Preferences;
 PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
-TaskHandle_t ProcessSPI_CPU1_TXTask;
-uint32_t ProcessSPI_CPU1_TXTaskLoopCount = 0;
-
-TaskHandle_t ProcessSPI_CPU3_TXTask;
-uint32_t ProcessSPI_CPU3_TXTaskLoopCount = 0;
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S_NUM_1
@@ -38,13 +33,13 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S_CHANNEL_FMT_RIGHT_LEFT
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
-                                , true                               // Use APLL
-                                , I2S_BUFFER_COUNT                   // Buffer Count
-                                , I2S_SAMPLE_COUNT                   // Buffer Size
-                                , I2S1_SCLCK_PIN                     // Serial Clock Pin
-                                , I2S1_WD_PIN                        // Word Selection Pin
-                                , I2S1_SDIN_PIN                      // Serial Data In Pin
-                                , I2S1_SDOUT_PIN );                  // Serial Data Out Pin 
+                                , true
+                                , I2S_BUFFER_COUNT
+                                , I2S_SAMPLE_COUNT
+                                , I2S1_SCLCK_PIN
+                                , I2S1_WD_PIN
+                                , I2S1_SDIN_PIN
+                                , I2S1_SDOUT_PIN );
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out( "Bluetooth Source", a2dp_source );
@@ -84,30 +79,32 @@ void OutputSystemStatus()
 
 void TestPSRam()
 {
-  psramInit();
-  void* buffer1 = (void*)heap_caps_malloc(100, MALLOC_CAP_SPIRAM);
-  if(buffer1)
-  {
-    ESP_LOGI("TestPSRam", "Heaps Cap Malloc memory allocated");
+    const size_t theSize = 100;
+    size_t freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    void* buffer1 = heap_caps_malloc(theSize, MALLOC_CAP_SPIRAM);
+    assert(buffer1);
+    size_t freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    size_t allocatedSize = freeSizeBefore - freeSizeAfter;
+    ESP_LOGI("TestPSRam", "Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    assert(allocatedSize >= theSize);
     free(buffer1);
     buffer1 = nullptr;
-  }
-  else
-  {
-    ESP_LOGE("TestPSRam", "Heaps Cap Malloc memory NOT allocated!");
-  }
-
-  void* buffer2 = ps_malloc(100);
-  if(buffer2)
-  {
-    ESP_LOGI("TestPSRam", "PSRAM Allocated");
+    size_t freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    assert(freeSizeAfterFree == freeSizeBefore);
+    
+    freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    void* buffer2 = ps_malloc(theSize);
+    assert(buffer2);
+    freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    allocatedSize = freeSizeBefore - freeSizeAfter;
+    ESP_LOGI("TestPSRam", "ps_malloc Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    assert(allocatedSize >= theSize);
     free(buffer2);
     buffer2 = nullptr;
-  }
-  else
-  {
-    ESP_LOGE("TestPSRam", "PSRAM Not Allocated!");
-  }
+    freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    assert(freeSizeAfterFree == freeSizeBefore);
 }
 
 void setup() 
@@ -126,13 +123,12 @@ void setup()
 
   TestPSRam();
   m_PreferencesWrapper.Setup();
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU1SerialPortMessageManager.Setup();
+  m_CPU3SerialPortMessageManager.Setup();
   m_I2S_In.Setup();
-  
   m_BT_Out.Setup();
   m_Manager.Setup();
-  m_SoundProcessor.SetupSoundProcessor(); 
+  m_SoundProcessor.Setup(); 
   OutputSystemStatus();
 }
 

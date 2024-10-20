@@ -68,22 +68,22 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Rx Value Callee Not Found Found: \"%s\"", name.c_str());
 }
 
-void SerialPortMessageManager::SetupSerialPortMessageManager()
+void SerialPortMessageManager::Setup()
 {
 	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) != pdPASS)
-	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
-	else ESP_LOGD("SetupSerialPortMessageManager", "RX Task Created.");
+	ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
+	else ESP_LOGD("Setup", "RX Task Created.");
 	
 	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) != pdPASS)
-	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
-	else ESP_LOGD("SetupSerialPortMessageManager", "TX Task Created.");
+	ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
+	else ESP_LOGD("Setup", "TX Task Created.");
 	
 	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
 	if(nullptr == m_TXQueue)
 	{
-		ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
+		ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
 	}
-	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
+	else ESP_LOGD("Setup", "TX Queue Created.");
 }
 
 bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
@@ -135,7 +135,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
-    ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
+    ESP_LOGD("Setup", "Starting RX Task.");
     const TickType_t xFrequency = 25;
     TickType_t xLastWakeTime = xTaskGetTickCount();
     
@@ -187,7 +187,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
-	ESP_LOGD("SetupSerialPortMessageManager", "Starting TX Task.");
+	ESP_LOGD("Setup", "Starting TX Task.");
 	const TickType_t xFrequency = 25;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
