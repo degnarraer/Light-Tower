@@ -129,6 +129,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			mp_PreferenceManager->InitializeAndLoadPreference();
 		}
 		
+		virtual String GetName() const override
+		{
+			return DataItem<T, COUNT>::GetName();
+		}
+
 		virtual size_t GetCount() const override
 		{
 			return DataItem<T, COUNT>::GetCount();

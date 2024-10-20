@@ -63,6 +63,11 @@ class PreferencesWrapper : public IPreferences
         {
             InitializePreferences(mp_Name);
         }
+        
+		virtual String GetName() const override
+		{
+			return String(mp_Name);
+		}
     private:
         Preferences* mp_preferences = nullptr;
         const char *mp_Name;
