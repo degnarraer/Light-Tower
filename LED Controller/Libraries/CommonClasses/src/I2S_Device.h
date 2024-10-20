@@ -28,8 +28,11 @@
 #include <Arduino.h>
 #include <DataTypes.h>
 #include <Helpers.h>
+#include <mutex>
 #include "driver/i2s.h"
 #include "Streaming.h"
+
+extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
 
 class I2S_Device_Callback
 {
@@ -43,6 +46,14 @@ class I2S_Device: public NamedItem
 				, public CommonUtils
 				, public QueueController
 {
+  enum class DeviceState
+  {
+    Installed,
+    Uninstalled,
+    Running,
+    Stopped
+  };
+
   public:
     I2S_Device( String Title
               , i2s_port_t i2S_PORT
@@ -62,12 +73,16 @@ class I2S_Device: public NamedItem
     virtual ~I2S_Device();
 
     void Setup();
+    bool IsInitialized();
     void StartDevice();
     void StopDevice();
-    bool IsRunning();
     size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
-    void SetDataReceivedCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
+    void SetDataReceivedCallback(I2S_Device_Callback* callee)
+    { 
+      std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
+      m_Callee = callee;
+    }
 	
   private:
 	  I2S_Device_Callback* m_Callee = NULL;
@@ -82,13 +97,10 @@ class I2S_Device: public NamedItem
 	  const bool m_Use_APLL;
     const int m_BufferCount;
     const int m_BufferSize;
-    const int m_SerialClockPin;
-    const int m_WordSelectPin;
-    const int m_SerialDataInPin;
-    const int m_SerialDataOutPin;
-		bool m_Is_Installed = false;
-		bool m_Is_Started = false;
-
+    const int m_I2SClockPin;
+    const int m_I2SWordSelectPin;
+    const int m_I2SDataInPin;
+    const int m_I2SDataOutPin;
     QueueHandle_t m_i2s_event_queueHandle = nullptr;
     TaskHandle_t m_TaskHandle = nullptr;
     size_t m_SampleCount;
@@ -97,7 +109,9 @@ class I2S_Device: public NamedItem
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
 
-    //Device Installation    
+    //Device Installation
+    DeviceState m_DeviceState = DeviceState::Uninstalled;
+    std::recursive_mutex i2s_mutex;
     void InstallDevice();
     void UninstallDevice();
 

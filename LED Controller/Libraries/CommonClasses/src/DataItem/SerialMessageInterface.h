@@ -178,7 +178,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					, ConvertValueToString(newTxValues, count).c_str() );
 			if(valueUpdateAllowed)
 			{
-				ESP_LOGI( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
+				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
 							, mp_SerialPortMessageManager->GetName().c_str()
 							, GetName().c_str() );
 				storeUpdated |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);

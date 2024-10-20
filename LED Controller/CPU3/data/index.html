@@ -286,7 +286,10 @@
 										Connect
 									</div>
 									<div class="settingGroup_Widget">
-										<button id="Sink_Connect_Button" data-Signal="Sink_Connect" onmousedown="Sink_Connect.setValue(true)" onmouseup="Sink_Connect.setValue(false)">Connect</button>
+										<button id="Sink_Connect_Button" data-Signal="Sink_Connect" onmousedown="Sink_Connect.setValue(true)" onmouseup="Sink_Connect.setValue(false)">
+											<img src="Images/connected.svg" alt="Status" style="width:80px; height:50px;">
+											Connect
+										</button>
 									</div>
 								</div>
 							</div>
@@ -296,7 +299,10 @@
 										Disconnect
 									</div>
 									<div class="settingGroup_Widget">
-										<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" onmousedown="Sink_Disconnect.setValue(true)" onmouseup="Sink_Disconnect.setValue(false)">Disconnect</button>
+										<button id="Sink_Disconnect_Button" data-Signal="Sink_Disconnect" onmousedown="Sink_Disconnect.setValue(true)" onmouseup="Sink_Disconnect.setValue(false)">
+											<img src="Images/disconnected.svg" alt="Status" style="width:80px; height:50px;">
+											Disconnect
+										</button>
 									</div>
 								</div>
 							</div>
@@ -322,8 +328,8 @@
 									<div class="settingGroup_Title">
 										Bluetooth Bridge State
 									</div>
-									<div class="settingGroup_Value">
-										<span data-Signal="Sink_Conn_State" id="Sink_Connection_State_Text">Disconnected</span>
+									<div class="settingGroup_Button non-pressable-button">
+										<img src="Images/disconnected.svg" data-Signal="Sink_Conn_State" alt="Status" style="width:50px; height:50px;">
 									</div>
 								</div>
 							</div>
@@ -373,6 +379,9 @@
 										<label for="Source_Name_Text_Box"></label><input type="text" data-Signal="Source_Name" id="Source_Name_Text_Box" oninput="SourceName.setValue(this.value, false)" value="Enter Name">
 									</div>
 									<div class="settingGroup_Button">
+										<div class="settingGroup_Button non-pressable-button">
+											<img src="Images/disconnected.svg" data-Signal="Src_Conn_State" alt="Status" style="width:50px; height:50px;">
+										</div>
 										<button id="Source_Reset_Button" data-Signal="BT_Src_Reset" onmousedown="Source_Reset.setValue(true)" onmouseup="Source_Reset.setValue(false)">
 											<img src="Images/reset.svg" alt="Start Scan" style="width:80px; height:50px;">
 											Reset
@@ -386,35 +395,30 @@
 							</div>
 							<div class="settingGroup">
 								<div class="settingGroup_2_Column">
+									<div class="settingGroup_Widget">
+										<div class="vertically_Alligned">
+											Found Speakers
+											<div id="deviceList" data-signal="Scan_BT_Devices"></div>
+										</div>
+									</div>
+									<div class="settingGroup_Button">
+										<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">
+											<img src="Images/radar-sweep.svg" alt="Discovery Mode" data-Signal="Src_Discov_Mode" style="width:80px; height:300px;">
+											Start Scan
+										</button>
+									</div>
+								</div>
+							</div>
+							<div class="settingGroup">
+								<div class="settingGroup_2_Column">
 									<div class="settingGroup_Title">
-										Bluetooth Speaker Auto ReConnect
+										Speaker Auto ReConnect
 									</div>
 									<div class="settingGroup_Widget">
 										<label for="Source_BT_Auto_ReConnect_Toggle_Button" class="widget_Toggle_Switch">
 											<input type="checkbox" data-Signal="BT_Source_AR" id="Source_BT_Auto_ReConnect_Toggle_Button">
 											<span class="slider Round"></span>
 										</label>
-									</div>
-								</div>
-							</div>
-							<div class="settingGroup">
-								<div class="settingGroup_3_Column">
-									<div class="settingGroup_Title">
-										Found Speakers
-									</div>
-									<div class="settingGroup_Widget">
-										<div id="deviceList" data-signal="Scan_BT_Devices">
-										</div>
-									</div>
-									<div class="settingGroup_Button">	
-										<div class="settingGroup_Button non-pressable-button">
-											<img src="Images/disconnected.svg" data-Signal="Src_Conn_State" alt="Status" style="width:50px; height:50px;">
-											<span data-Signal="Src_Conn_State" id="Source_Connection_State_Text">Disconnected</span>
-										</div>
-										<button id="Source_Connect_Button" data-Signal="Src_Connect" onmousedown="Source_Connect.setValue(true)" onmouseup="Source_Connect.setValue(false)">
-											<img src="Images/radar-sweep.svg" alt="Discovery Mode" data-Signal="Src_Discov_Mode" style="width:80px; height:250px;">
-											Start Scan
-										</button>
 									</div>
 								</div>
 							</div>

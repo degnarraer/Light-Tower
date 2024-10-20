@@ -29,10 +29,10 @@ I2S_Device::I2S_Device ( String Title
 					   , bool Use_APLL
                        , size_t BufferCount
                        , size_t BufferSize
-                       , int SerialClockPin
-                       , int WordSelectPin
-                       , int SerialDataInPin
-                       , int SerialDataOutPin )
+                       , int I2SClockPin
+                       , int I2SWordSelectPin
+                       , int I2SDataInPin
+                       , int I2SDataOutPin )
                        : NamedItem(Title)
 					   , m_I2S_PORT(i2S_PORT)
                        , m_SampleRate(SampleRate)
@@ -44,20 +44,15 @@ I2S_Device::I2S_Device ( String Title
 					   , m_Use_APLL(Use_APLL)
                        , m_BufferCount(BufferCount)
                        , m_BufferSize(BufferSize)
-                       , m_SerialClockPin(SerialClockPin)
-                       , m_WordSelectPin(WordSelectPin)
-                       , m_SerialDataInPin(SerialDataInPin)
-                       , m_SerialDataOutPin(SerialDataOutPin)
+                       , m_I2SClockPin(I2SClockPin)
+                       , m_I2SWordSelectPin(I2SWordSelectPin)
+                       , m_I2SDataInPin(I2SDataInPin)
+                       , m_I2SDataOutPin(I2SDataOutPin)
 {
 }
 I2S_Device::~I2S_Device()
 {
 	UninstallDevice();
-}
-
-bool I2S_Device::IsRunning()
-{
-  return m_Is_Started;
 }
 
 void I2S_Device::Setup()
@@ -68,56 +63,60 @@ void I2S_Device::Setup()
   m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
   m_TotalBytesToRead = m_ChannelBytesToRead * 2;
 }
-
 void I2S_Device::StartDevice()
 {
   ESP_LOGI("StartDevice", "%s: Starting I2S device.", GetTitle().c_str());
-	if(!m_Is_Started)
-	{
-		InstallDevice();
-    if(m_Is_Installed)
+  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
+  if(m_DeviceState != DeviceState::Running)
+  {
+    InstallDevice();
+    if(ESP_OK == i2s_start(m_I2S_PORT))
     {
-      i2s_start(m_I2S_PORT);
       CreateTask();
+      m_DeviceState = DeviceState::Running;
+      ESP_LOGI("StartDevice", "%s: I2S device started.", GetTitle().c_str());
     }
-    m_Is_Started = true;
-	}
+  }
   else
   {
-    ESP_LOGW("StartDevice", "%s: Device already started.", GetTitle().c_str());
+      ESP_LOGW("StartDevice", "WARNING! %s: I2S device already started.", GetTitle().c_str());
   }
 }
 
 void I2S_Device::StopDevice()
 {
   ESP_LOGI("StopDevice", "%s: Stopping I2S device.", GetTitle().c_str());
-	if(m_Is_Started)
-	{
-		if(ESP_OK == i2s_stop(m_I2S_PORT))
+  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
+  if(m_DeviceState == DeviceState::Running && IsInitialized())
+  {
+    ESP_LOGI("StopDevice", "%s: Stopping I2S driver.", GetTitle().c_str());
+    if(ESP_OK == i2s_stop(m_I2S_PORT))
     {
+      ESP_LOGI("StopDevice", "%s: I2S driver stopped.", GetTitle().c_str());
       DestroyTask();
-      UninstallDevice();
-      m_Is_Started = false;
       ESP_LOGI("StopDevice", "%s: I2S device stopped.", GetTitle().c_str());
     }
     else
     {
-      ESP_LOGE("StopDevice", "%s: Unable to stop I2S device.", GetTitle().c_str());
+      ESP_LOGW("StopDevice", "WARNING! %s: Unable to stop I2S driver.", GetTitle().c_str());
     }
-	}
+  }
   else
   {
-    ESP_LOGW("StopDevice", "%s: I2S device not running.", GetTitle().c_str());
+    ESP_LOGW("StopDevice", "%s: WARNING! I2S device not running.", GetTitle().c_str());
   }
+  UninstallDevice();
 }
 
 size_t I2S_Device::WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
+  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
 	return WriteSamples(SoundBufferData, ByteCount);
 }
 
 size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
+  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
 	size_t bytes_read = 0;
 	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, portMAX_DELAY ) != ESP_OK)
 	{
@@ -151,32 +150,33 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 	}
 	return bytes_written;
 }
-
 void I2S_Device::UninstallDevice()
 {
-  ESP_LOGI("i2S Device", "%s: Uninstalling I2S device.", GetTitle().c_str());
-  if(m_Is_Installed)
+  ESP_LOGI("Uninstall Device", "%s: Uninstalling I2S device.", GetTitle().c_str());
+  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
+  if(m_DeviceState == DeviceState::Stopped)
   {
-	  if(ESP_OK == i2s_driver_uninstall(m_I2S_PORT))
+    if(ESP_OK == i2s_driver_uninstall(m_I2S_PORT))
     {
-      ESP_LOGI("i2S Device", "%s: I2S device uninstalled.", GetTitle().c_str());
-      m_Is_Installed = false;
+      ESP_LOGI("Uninstall Device", "%s: I2S device uninstalled.", GetTitle().c_str());
+      m_DeviceState = DeviceState::Uninstalled;
     }
     else
     {
-      ESP_LOGE("i2S Device", "%s: Could not uninstall I2S device.", GetTitle().c_str());
+      ESP_LOGE("Uninstall Device", "%s: Uninstall I2S device failed.", GetTitle().c_str());
     }
   }
   else
   {
-    ESP_LOGW("i2S Device", "%s: I2S device not installed.", GetTitle().c_str());
+    ESP_LOGE("Uninstall Device", "%s: I2S device not stopped.", GetTitle().c_str());
   }
 }
+
 void I2S_Device::InstallDevice()
 {
-  ESP_LOGI("i2S Device", "%s: Installing I2S device.", GetTitle().c_str());
-  if(!m_Is_Installed)
+  if(m_DeviceState == DeviceState::Uninstalled)
   {
+    ESP_LOGI("i2S Device", "%s: Installing I2S device.", GetTitle().c_str());
     esp_err_t err;
     // The I2S config as per the example
     const i2s_config_t i2s_config = {
@@ -195,14 +195,14 @@ void I2S_Device::InstallDevice()
 
     // The pin config as per the setup
     const i2s_pin_config_t pin_config = 
-      {
-        .bck_io_num = m_SerialClockPin,         // Serial Clock (SCK)
-        .ws_io_num = m_WordSelectPin,           // Word Select (WS)
-        .data_out_num = m_SerialDataOutPin,     // not used (only for speakers)
-        .data_in_num = m_SerialDataInPin        // Serial Data (SD)
-      };
-      // Configuring the I2S driver and pins.
-      // This function must be called before any I2S driver read/write operations.
+    {
+      .bck_io_num = m_I2SClockPin,         // Serial Clock (SCK)
+      .ws_io_num = m_I2SWordSelectPin,           // Word Select (WS)
+      .data_out_num = m_I2SDataOutPin,     // not used (only for speakers)
+      .data_in_num = m_I2SDataInPin        // Serial Data (SD)
+    };
+    // Configuring the I2S driver and pins.
+    // This function must be called before any I2S driver read/write operations.
     err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queueHandle);
     if (err != ESP_OK)
     {
@@ -227,19 +227,24 @@ void I2S_Device::InstallDevice()
       ESP.restart();
     }
     ESP_LOGI("i2S Device", "%s: Device Installed.", GetTitle().c_str());
-    m_Is_Installed = true;
+    m_DeviceState = DeviceState::Installed;
   }
   else
   {
-    ESP_LOGW("i2S Device", "%s: Device already installed.", GetTitle().c_str());
+    ESP_LOGI("i2S Device", "%s: Device already Installed.", GetTitle().c_str());
   }
+}
+
+bool I2S_Device::IsInitialized() 
+{
+  return (m_I2S_PORT != I2S_NUM_MAX);
 }
 
 void I2S_Device::CreateTask()
 {
-  if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
   {
-    ESP_LOGI("StartDevice", "%s: I2S device started.", GetTitle().c_str());
+    ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
   }
   else
   {
@@ -249,10 +254,17 @@ void I2S_Device::CreateTask()
 
 void I2S_Device::DestroyTask()
 {
+  ESP_LOGI("DestroyTask", "%s: destroying I2S device task.", GetTitle().c_str());
   if(m_TaskHandle)
   {
     vTaskDelete(m_TaskHandle);
     m_TaskHandle = nullptr;
+    m_DeviceState = DeviceState::Stopped;
+    ESP_LOGI("DestroyTask", "%s: I2S device task destroyed.", GetTitle().c_str());
+  }
+  else
+  {
+    ESP_LOGW("DestroyTask", "WARNING! %s: Unable to destroy task!", GetTitle().c_str());
   }
 }
 
@@ -280,23 +292,23 @@ void I2S_Device::ProcessEventQueue()
           switch (i2sEvent.type)
           {
             case I2S_EVENT_DMA_ERROR:
-              ESP_LOGE("i2S Device", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
-              break;
+              ESP_LOGE("ProcessEventQueue", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
+            break;
             case I2S_EVENT_TX_DONE:
-              ESP_LOGV("i2S Device", "%s: TX Done", GetTitle().c_str());
-              break;
+              ESP_LOGV("ProcessEventQueue", "%s: TX Done", GetTitle().c_str());
+            break;
             case I2S_EVENT_RX_DONE:
               {
-                ESP_LOGV("i2S Device", "%s: RX", GetTitle().c_str());
+                ESP_LOGV("ProcessEventQueue", "%s: RX", GetTitle().c_str());
                 ReadSamples();
               }
-              break;
+            break;
             case I2S_EVENT_MAX:
-              ESP_LOGW("i2S Device", "WARNING! I2S_EVENT_MAX");
-              break;
+              ESP_LOGW("ProcessEventQueue", "WARNING! I2S_EVENT_MAX");
+            break;
           }	
         }
       }
-	  }
+    }
   }
 }

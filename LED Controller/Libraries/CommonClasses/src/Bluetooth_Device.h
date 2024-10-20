@@ -52,6 +52,15 @@ class Bluetooth_Source: public NamedItem
 					  , public QueueController
 {	
 	public:
+
+		enum class DeviceState
+		{
+			Installed,
+			Uninstalled,
+			Running,
+			Stopped
+		};
+		
 		Bluetooth_Source( String Title
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
@@ -104,13 +113,15 @@ class Bluetooth_Source: public NamedItem
 		music_data_cb_t m_MusicDataCallback = NULL;
 		String m_Name;
 		String m_Address;
-		bool m_ResetBLE = true;
-		bool m_AutoReConnect = false;
 		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
 		QueueHandle_t m_DeviceProcessorQueueHandle= nullptr;
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle= nullptr;
-		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;		
+		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;
+
+		
+    	DeviceState m_DeviceState = DeviceState::Uninstalled;
+    	std::recursive_mutex bT_mutex;
 		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
@@ -134,6 +145,14 @@ class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
 				    , public QueueController
 {
+	enum class DeviceState
+	{
+		Installed,
+		Uninstalled,
+		Running,
+		Stopped
+	};
+		
   public:
     Bluetooth_Sink( String Title
 				  , BluetoothA2DPSink& BTSink
@@ -163,16 +182,15 @@ class Bluetooth_Sink: public NamedItem
 				  , m_Use_APLL(Use_APLL)
 				  , m_BufferCount(BufferCount)
 				  , m_BufferSize(BufferSize)
-				  , m_SerialClockPin(SerialClockPin)
-				  , m_WordSelectPin(WordSelectPin)
-				  , m_SerialDataInPin(SerialDataInPin)
-				  , m_SerialDataOutPin(SerialDataOutPin)
+				  , m_I2SClockPin(SerialClockPin)
+				  , m_I2SWordSelectPin(WordSelectPin)
+				  , m_I2SDataInPin(SerialDataInPin)
+				  , m_I2SDataOutPin(SerialDataOutPin)
 	{
 		bT_sink_instance = this;
 	};		
 	virtual ~Bluetooth_Sink(){};
 	static Bluetooth_Sink* bT_sink_instance;
-	
 	void Setup();
 	void StartDevice();
 	void StopDevice();
@@ -216,11 +234,15 @@ class Bluetooth_Sink: public NamedItem
 		const bool m_Use_APLL;
 		const int m_BufferCount;
 		const int m_BufferSize;
-		const int m_SerialClockPin;
-		const int m_WordSelectPin;
-		const int m_SerialDataInPin;
-		const int m_SerialDataOutPin;
+		const int m_I2SClockPin;
+		const int m_I2SWordSelectPin;
+		const int m_I2SDataInPin;
+		const int m_I2SDataOutPin;
 		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;
+		
+    	DeviceState m_DeviceState = DeviceState::Uninstalled;
+    	std::recursive_mutex bT_mutex;
 		void InstallDevice();
+		void UninstallDevice();
 };
