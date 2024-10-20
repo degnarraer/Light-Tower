@@ -103,241 +103,241 @@ class PreferencesWrapper : public IPreferences
     public:
         bool begin(const char* name, bool readOnly = false, const char* partition_label = nullptr) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" begin", name);
+            ESP_LOGD("begin", "Preferences named: \"%s\" begin", name);
             assert(mp_preferences);
             return mp_preferences->begin(name, readOnly, partition_label);
         }
         void end() override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" end", mp_Name);
+            ESP_LOGD("end", "Preferences named: \"%s\" end", mp_Name);
             assert(mp_preferences);
             mp_preferences->end();
         }
         bool clear() override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" clear", mp_Name);
+            ESP_LOGD("clear", "Preferences named: \"%s\" clear", mp_Name);
             assert(mp_preferences);
             return mp_preferences->clear();
         }
         bool remove(const char* key) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" remove", mp_Name);
+            ESP_LOGD("remove", "Preferences named: \"%s\" remove", mp_Name);
             assert(mp_preferences);
             return mp_preferences->remove(key);
         }
         size_t putChar(const char* key, int8_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putChar", mp_Name);
+            ESP_LOGD("putChar", "Preferences named: \"%s\" putChar", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putChar(key, value);
         }
         size_t putUChar(const char* key, uint8_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putUChar", mp_Name);
+            ESP_LOGD("putUChar", "Preferences named: \"%s\" putUChar", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putUChar(key, value);
         }
         size_t putShort(const char* key, int16_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putShort", mp_Name);
+            ESP_LOGD("putShort", "Preferences named: \"%s\" putShort", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putShort(key, value);
         }
         size_t putUShort(const char* key, uint16_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putUShort", mp_Name);
+            ESP_LOGD("putUShort", "Preferences named: \"%s\" putUShort", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putUShort(key, value);
         }
         size_t putInt(const char* key, int32_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putInt", mp_Name);
+            ESP_LOGD("putInt", "Preferences named: \"%s\" putInt", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putInt(key, value);
         }
         size_t putUInt(const char* key, uint32_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putUInt", mp_Name);
+            ESP_LOGD("putUInt", "Preferences named: \"%s\" putUInt", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putUInt(key, value);
         }
         size_t putLong(const char* key, int32_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putLong", mp_Name);
+            ESP_LOGD("putLong", "Preferences named: \"%s\" putLong", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putLong(key, value);
         }
         size_t putULong(const char* key, uint32_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putULong", mp_Name);
+            ESP_LOGD("putULong", "Preferences named: \"%s\" putULong", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putULong(key, value);
         }
         size_t putLong64(const char* key, int64_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putLong64", mp_Name);
+            ESP_LOGD("putLong64", "Preferences named: \"%s\" putLong64", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putLong64(key, value);
         }
         size_t putULong64(const char* key, uint64_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putULong64", mp_Name);
+            ESP_LOGD("putULong64", "Preferences named: \"%s\" putULong64", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putULong64(key, value);
         }
         size_t putFloat(const char* key, float_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putFloat", mp_Name);
+            ESP_LOGD("putFloat", "Preferences named: \"%s\" putFloat", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putFloat(key, value);
         }
         size_t putDouble(const char* key, double_t value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putDouble", mp_Name);
+            ESP_LOGD("putDouble", "Preferences named: \"%s\" putDouble", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putDouble(key, value);
         }
         size_t putBool(const char* key, bool value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putBool", mp_Name);
+            ESP_LOGD("putBool", "Preferences named: \"%s\" putBool", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putBool(key, value);
         }
         size_t putString(const char* key, const char* value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putString", mp_Name);
+            ESP_LOGD("putString", "Preferences named: \"%s\" putString", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putString(key, value);
         }
         size_t putString(const char* key, String value) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putString", mp_Name);
+            ESP_LOGD("putString", "Preferences named: \"%s\" putString", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putString(key, value);
         }
         size_t putBytes(const char* key, const void* value, size_t len) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" putBytes", mp_Name);
+            ESP_LOGD("putBytes", "Preferences named: \"%s\" putBytes", mp_Name);
             assert(mp_preferences);
             return mp_preferences->putBytes(key, value, len);
         }
         bool isKey(const char* key) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" isKey", mp_Name);
+            ESP_LOGD("isKey", "Preferences named: \"%s\" isKey", mp_Name);
             assert(mp_preferences);
             return mp_preferences->isKey(key);
         }
         PreferenceType getType(const char* key) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getType", mp_Name);
+            ESP_LOGD("getType", "Preferences named: \"%s\" getType", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getType(key);
         }
         int8_t getChar(const char* key, int8_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getChar", mp_Name);
+            ESP_LOGD("getChar", "Preferences named: \"%s\" getChar", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getChar(key, defaultValue);
         }
         uint8_t getUChar(const char* key, uint8_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getUChar", mp_Name);
+            ESP_LOGD("getUChar", "Preferences named: \"%s\" getUChar", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getUChar(key, defaultValue);
         }
         int16_t getShort(const char* key, int16_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getShort", mp_Name);
+            ESP_LOGD("getShort", "Preferences named: \"%s\" getShort", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getShort(key, defaultValue);
         }
         uint16_t getUShort(const char* key, uint16_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getUShort", mp_Name);
+            ESP_LOGD("getUShort", "Preferences named: \"%s\" getUShort", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getUShort(key, defaultValue);
         }
         int32_t getInt(const char* key, int32_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getInt", mp_Name);
+            ESP_LOGD("getInt", "Preferences named: \"%s\" getInt", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getInt(key, defaultValue);
         }
         uint32_t getUInt(const char* key, uint32_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getUInt", mp_Name);
+            ESP_LOGD("getUInt", "Preferences named: \"%s\" getUInt", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getUInt(key, defaultValue);
         }
         int32_t getLong(const char* key, int32_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getLong", mp_Name);
+            ESP_LOGD("getLong", "Preferences named: \"%s\" getLong", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getLong(key, defaultValue);
         }
         uint32_t getULong(const char* key, uint32_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getULong", mp_Name);
+            ESP_LOGD("getULong", "Preferences named: \"%s\" getULong", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getULong(key, defaultValue);
         }
         int64_t getLong64(const char* key, int64_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getLong64", mp_Name);
+            ESP_LOGD("getLong64", "Preferences named: \"%s\" getLong64", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getLong64(key, defaultValue);
         }
         uint64_t getULong64(const char* key, uint64_t defaultValue = 0) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getULong64", mp_Name);
+            ESP_LOGD("getULong64", "Preferences named: \"%s\" getULong64", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getULong64(key, defaultValue);
         }
         float_t getFloat(const char* key, float_t defaultValue = NAN) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getFloat", mp_Name);
+            ESP_LOGD("getFloat", "Preferences named: \"%s\" getFloat", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getFloat(key, defaultValue);
         }
         double_t getDouble(const char* key, double_t defaultValue = NAN) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getDouble", mp_Name);
+            ESP_LOGD("getDouble", "Preferences named: \"%s\" getDouble", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getDouble(key, defaultValue);
         }
         bool getBool(const char* key, bool defaultValue = false) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getBool", mp_Name);
+            ESP_LOGD("getBool", "Preferences named: \"%s\" getBool", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getBool(key, defaultValue);
         }
         size_t getString(const char* key, char* value, size_t maxLen) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getString", mp_Name);
+            ESP_LOGD("getString", "Preferences named: \"%s\" getString", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getString(key, value, maxLen);
         }
         String getString(const char* key, String defaultValue = String()) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getString", mp_Name);
+            ESP_LOGD("getString", "Preferences named: \"%s\" getString", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getString(key, defaultValue);
         }
         size_t getBytesLength(const char* key) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getBytesLength", mp_Name);
+            ESP_LOGD("getBytesLength", "Preferences named: \"%s\" getBytesLength", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getBytesLength(key);
         }
         size_t getBytes(const char* key, void* buf, size_t maxLen) override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" getBytes", mp_Name);
+            ESP_LOGD("getBytes", "Preferences named: \"%s\" getBytes", mp_Name);
             assert(mp_preferences);
             return mp_preferences->getBytes(key, buf, maxLen);
         }
         size_t freeEntries() override
         {
-            ESP_LOGD("PreferencesWrapper", "Preferences named: \"%s\" freeEntries", mp_Name);
+            ESP_LOGD("freeEntries", "Preferences named: \"%s\" freeEntries", mp_Name);
             assert(mp_preferences);
             return mp_preferences->freeEntries();
         }
