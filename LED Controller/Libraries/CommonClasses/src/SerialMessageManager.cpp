@@ -70,20 +70,17 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 
 void SerialPortMessageManager::Setup()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) != pdPASS)
-	ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
-	else ESP_LOGD("Setup", "RX Task Created.");
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) == pdPASS)
+	ESP_LOGD("Setup", "RX Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) != pdPASS)
-	ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
-	else ESP_LOGD("Setup", "TX Task Created.");
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) == pdPASS)
+	ESP_LOGD("Setup", "TX Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
 	
-	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
-	if(nullptr == m_TXQueue)
-	{
-		ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
-	}
-	else ESP_LOGD("Setup", "TX Queue Created.");
+	if(m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength ))
+	ESP_LOGD("Setup", "TX Queue Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
 }
 
 bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)

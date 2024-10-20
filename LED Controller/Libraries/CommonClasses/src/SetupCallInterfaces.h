@@ -92,17 +92,18 @@ class SetupCallerInterface
 
         virtual void SetupAllSetupCallees()
 		{
-			ESP_LOGD("SetupCallerInterface", "Setup All Setup Callees");
+			ESP_LOGI("SetupAllSetupCallees", "Setup All Setup Callees");
 			std::lock_guard<std::recursive_mutex> lock(m_Mutex);
 			for (SetupCalleeInterface* callee : m_SetupCallees)
 			{
 				if (callee) 
 				{
 					callee->Setup();
+					ESP_LOGI("SetupAllSetupCallees", "Setting up: \"%s\".", callee->GetName().c_str());
 				}
 				else
 				{
-					ESP_LOGW("SetupCallerInterface", "WARNING! Null callee encountered in list");
+					ESP_LOGW("SetupAllSetupCallees", "WARNING! Null callee encountered in list");
 				}
 			}
 		}
