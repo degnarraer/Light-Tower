@@ -80,7 +80,6 @@ class I2S_Device: public NamedItem
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     void SetDataReceivedCallback(I2S_Device_Callback* callee)
     { 
-      std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
       m_Callee = callee;
     }
 	
@@ -111,14 +110,13 @@ class I2S_Device: public NamedItem
 
     //Device Installation
     DeviceState m_DeviceState = DeviceState::Uninstalled;
-    std::recursive_mutex i2s_mutex;
     void InstallDevice();
     void UninstallDevice();
 
     //Process Task
     void CreateTask();
     void DestroyTask();
-    static void Static_10mS_TaskLoop(void * parameter);
+    static void Static_ProcessEventQueue(void * parameter);
     void ProcessEventQueue();
 
     //Read & Write Data

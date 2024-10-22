@@ -39,7 +39,10 @@ class Manager: public NamedItem
 {
   public:
     Manager( String Title
-           , StatisticalEngine &StatisticalEngine );
+           , StatisticalEngine &statisticalEngine
+           , Bluetooth_Sink &bluetooth_Sink
+           , I2S_Device &microphone
+           , I2S_Device &i2S_Out );
 
     // Delete copy constructor and copy assignment operator
     Manager(const Manager&) = delete;
@@ -81,6 +84,9 @@ class Manager: public NamedItem
     Preferences m_Preferences;
     PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
     DataSerializer m_DataSerializer;
+    Bluetooth_Sink &m_Bluetooth_Sink;
+    I2S_Device &m_Microphone;
+    I2S_Device &m_I2S_Out;
 
     void SetupSerialPortManager();
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
@@ -90,56 +96,6 @@ class Manager: public NamedItem
     TaskHandle_t m_Manager_10mS_TaskHandle;
     TaskHandle_t m_Manager_1000mS_TaskHandle;
     TaskHandle_t m_Manager_300000mS_TaskHandle;
-
-    BluetoothA2DPSink m_BTSink;
-    Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
-                                          , m_BTSink
-                                          , I2S_NUM_1                          // I2S Interface
-                                          , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                          , I2S_SAMPLE_RATE
-                                          , I2S_BITS_PER_SAMPLE_16BIT
-                                          , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                          , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                          , I2S_CHANNEL_STEREO
-                                          , true                               // Use APLL                                    
-                                          , I2S_BUFFER_COUNT                   // Buffer Count
-                                          , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                          , I2S2_SCLCK_PIN                     // Serial Clock Pin
-                                          , I2S2_WD_PIN                        // Word Selection Pin
-                                          , I2S2_SDIN_PIN                      // Serial Data In Pin
-                                          , I2S2_SDOUT_PIN );                  // Serial Data Out Pin
-
-    I2S_Device m_Mic_In = I2S_Device( "Microphone"
-                                    , I2S_NUM_0                          // I2S Interface
-                                    , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
-                                    , I2S_SAMPLE_RATE
-                                    , I2S_BITS_PER_SAMPLE_32BIT
-                                    , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                    , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                    , I2S_CHANNEL_STEREO
-                                    , true                               // Use APLL
-                                    , I2S_BUFFER_COUNT                   // Buffer Count
-                                    , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
-                                    , I2S1_SCLCK_PIN                     // Serial Clock Pin
-                                    , I2S1_WD_PIN                        // Word Selection Pin
-                                    , I2S1_SDIN_PIN                      // Serial Data In Pin
-                                    , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
-
-    I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
-                                     , I2S_NUM_1                        // I2S Interface
-                                     , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
-                                     , I2S_SAMPLE_RATE
-                                     , I2S_BITS_PER_SAMPLE_16BIT
-                                     , I2S_CHANNEL_FMT_RIGHT_LEFT
-                                     , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
-                                     , I2S_CHANNEL_STEREO
-                                     , true                            // Use APLL
-                                     , I2S_BUFFER_COUNT                // Buffer Count
-                                     , I2S_CHANNEL_SAMPLE_COUNT        // Buffer Size
-                                     , I2S2_SCLCK_PIN                  // Serial Clock Pin
-                                     , I2S2_WD_PIN                     // Word Selection Pin
-                                     , I2S2_SDIN_PIN                   // Serial Data In Pin
-                                     , I2S2_SDOUT_PIN );               // Serial Data Out Pin
     
     String ConnectionStatusStrings[5]
     {
@@ -214,7 +170,7 @@ class Manager: public NamedItem
                                                                             , this );
 
     //Bluetooth Sink Auto Reconnect
-    CallbackArguments m_SinkAutoReConnect_CallbackArgs = { &m_BT_In, &m_SinkName };
+    CallbackArguments m_SinkAutoReConnect_CallbackArgs = { &m_Bluetooth_Sink, &m_SinkName };
     NamedCallback_t m_SinkAutoReConnect_Callback = { "Sink Connect Callback"
                                                    , &SinkAutoReConnect_ValueChanged
                                                    , &m_SinkAutoReConnect_CallbackArgs };
@@ -249,7 +205,7 @@ class Manager: public NamedItem
     }
 
     //Sink Connect
-    CallbackArguments m_SinkConnect_CallbackArgs = { &m_BT_In
+    CallbackArguments m_SinkConnect_CallbackArgs = { &m_Bluetooth_Sink
                                                     , &m_SinkName
                                                     , &m_SinkAutoReConnect };
     NamedCallback_t m_SinkConnect_Callback = { "Sink Connect Callback"
@@ -288,7 +244,7 @@ class Manager: public NamedItem
     }
 
     //Sink Disconnect
-    CallbackArguments m_SinkDisconnect_CallbackArgs = {&m_BT_In};
+    CallbackArguments m_SinkDisconnect_CallbackArgs = {&m_Bluetooth_Sink};
     NamedCallback_t m_SinkDisconnect_Callback = { "Sink Disconnect Callback"
                                                 , &SinkDisconnect_ValueChanged
                                                 , &m_SinkDisconnect_CallbackArgs };

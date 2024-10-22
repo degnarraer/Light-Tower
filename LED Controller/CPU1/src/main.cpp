@@ -37,13 +37,12 @@ void VisualizationTaskLoop(void * parameter)
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( VisualizationTaskLoop,     "VisualizationTask",      5000,  NULL,   THREAD_PRIORITY_MEDIUM,  &VisualizationTask,     1 );
+  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask", 5000, NULL, THREAD_PRIORITY_MEDIUM, &VisualizationTask, 1 );
 }
 
 void setup()
 {
   InitSerialCommunication();
-  SetComponentDebugLevels();
   TestPSRam();
   PrintFreeHeap();
   PrintStartupData();

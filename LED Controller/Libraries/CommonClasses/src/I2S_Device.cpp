@@ -66,7 +66,6 @@ void I2S_Device::Setup()
 void I2S_Device::StartDevice()
 {
   ESP_LOGI("StartDevice", "%s: Starting I2S device.", GetTitle().c_str());
-  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
   if(m_DeviceState != DeviceState::Running)
   {
     InstallDevice();
@@ -86,7 +85,6 @@ void I2S_Device::StartDevice()
 void I2S_Device::StopDevice()
 {
   ESP_LOGI("StopDevice", "%s: Stopping I2S device.", GetTitle().c_str());
-  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
   if(m_DeviceState == DeviceState::Running && IsInitialized())
   {
     ESP_LOGI("StopDevice", "%s: Stopping I2S driver.", GetTitle().c_str());
@@ -110,14 +108,17 @@ void I2S_Device::StopDevice()
 
 size_t I2S_Device::WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
-  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
 	return WriteSamples(SoundBufferData, ByteCount);
 }
 
 size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
-  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
 	size_t bytes_read = 0;
+  if(m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1)
+  {
+      ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
+      return bytes_read;
+  }
 	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, portMAX_DELAY ) != ESP_OK)
 	{
 		ESP_LOGE("i2S Device", "%s: ERROR! Unable to read samples.", GetTitle().c_str());
@@ -129,11 +130,12 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
 size_t I2S_Device::ReadSamples()
 {
 	size_t bytes_read = 0;
-	if(NULL != m_Callee)
+	uint8_t DataBuffer[m_BufferSize];
+  i2s_read(m_I2S_PORT, DataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
+  if(bytes_read == 0) return 0;
+  ESP_LOGI("i2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
+  if(m_Callee)
 	{
-		uint8_t DataBuffer[m_BufferSize];
-		i2s_read(m_I2S_PORT, DataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY );
-		if(bytes_read == 0) return 0;
 		m_Callee->I2SDataReceived(GetTitle().c_str(), DataBuffer, bytes_read);
 	}
 	return bytes_read;
@@ -148,12 +150,13 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
 	{
 		ESP_LOGE("i2S Device", "%s: ERROR! Unable to write all bytes.", GetTitle().c_str()); 
 	}
+	ESP_LOGI("i2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, ByteCount);
 	return bytes_written;
 }
+
 void I2S_Device::UninstallDevice()
 {
   ESP_LOGI("Uninstall Device", "%s: Uninstalling I2S device.", GetTitle().c_str());
-  std::lock_guard<std::recursive_mutex> lock(i2s_mutex);
   if(m_DeviceState == DeviceState::Stopped)
   {
     if(ESP_OK == i2s_driver_uninstall(m_I2S_PORT))
@@ -242,7 +245,7 @@ bool I2S_Device::IsInitialized()
 
 void I2S_Device::CreateTask()
 {
-  if( xTaskCreatePinnedToCore( Static_10mS_TaskLoop, "I2S_Device_10mS_Task", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_10mS_Task", 10000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
   {
     ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
   }
@@ -255,7 +258,7 @@ void I2S_Device::CreateTask()
 void I2S_Device::DestroyTask()
 {
   ESP_LOGI("DestroyTask", "%s: destroying I2S device task.", GetTitle().c_str());
-  if(m_TaskHandle)
+  if(m_TaskHandle != NULL)
   {
     vTaskDelete(m_TaskHandle);
     m_TaskHandle = nullptr;
@@ -268,7 +271,7 @@ void I2S_Device::DestroyTask()
   }
 }
 
-void I2S_Device::Static_10mS_TaskLoop(void * parameter)
+void I2S_Device::Static_ProcessEventQueue(void * parameter)
 {
   I2S_Device* device = static_cast<I2S_Device*>(parameter);
   device->ProcessEventQueue();
@@ -276,12 +279,12 @@ void I2S_Device::Static_10mS_TaskLoop(void * parameter)
 
 void I2S_Device::ProcessEventQueue()
 {
-  const TickType_t xFrequency = 10;
+  const TickType_t xFrequency = 20;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    if(nullptr != m_i2s_event_queueHandle)
+    if(m_i2s_event_queueHandle)
     {
       i2s_event_t i2sEvent = {};
       uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queueHandle);

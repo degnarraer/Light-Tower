@@ -62,7 +62,6 @@ class WebSocketDataProcessor
     }
     virtual ~WebSocketDataProcessor()
     {
-      std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
       if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
     }
     void RegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
@@ -274,7 +273,6 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
   private:
     void CreateUpdateTask()
     {
-      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
       if(!m_ActiveDeviceUpdateTask)
       {
         if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) == pdTRUE )
@@ -341,8 +339,8 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void CleanActiveCompatibleDevices()
     {
-        ESP_LOGV("CleanActiveCompatibleDevices", "Cleaning Stale Devices.");
         std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+        ESP_LOGV("CleanActiveCompatibleDevices", "Cleaning Stale Devices.");
         for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
         {
             ActiveBluetoothDevice_t& device = *it;

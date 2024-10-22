@@ -266,7 +266,7 @@ class Manager: public NamedItem
       if(arg && object)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        ESP_LOGI("Manager::TargetCompatibleDeviceValueChanged", "Bluetooth Source Enable Value Changed Value Changed");
+        ESP_LOGW("BluetoothSourceEnable_ValueChanged", "Source Enable Not Yet Implemented");
       }
     }
 
@@ -311,14 +311,15 @@ class Manager: public NamedItem
           DataItem<BluetoothDevice_t, 1> *pTargetDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg2);
           const BluetoothDevice_t InitialValue = {"", ""};
           bool resetBLE = *static_cast<bool*>(object);
-          ESP_LOGI("BluetoothReset_ValueChanged", "Bluetooth Source Reset Value Changed: %i", resetBLE);
           if(resetBLE)
           {
+            ESP_LOGW("BluetoothReset_ValueChanged", "Bluetooth Source Reset Not Yet Implemented");
             pTargetDevice->ResetToDefaultValue();
             pBT_Out->Disconnect();
             pBT_Out->Set_Reset_BLE(true);
             pBT_Out->Connect(pTargetDevice->GetValuePointer()->name, pTargetDevice->GetValuePointer()->address);
             pBT_Out->Set_Reset_BLE(false);
+            
           }
           */
         }
@@ -339,13 +340,14 @@ class Manager: public NamedItem
         assert((arguments->arg1) && "Null Pointer!");
         Manager* manager = static_cast<Manager*>(arguments->arg1);
         SoundOutputSource_t& soundOutputSource = *static_cast<SoundOutputSource_t*>(object);
-        ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: %i", soundOutputSource);
         switch(soundOutputSource)
         {
           case SoundOutputSource_t::OFF:
+            ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: \"OFF\"");
             manager->StopBluetooth();
           break;
           case SoundOutputSource_t::Bluetooth:
+            ESP_LOGI("Manager::SoundOutputSource_ValueChanged", "Sound Output Source Value Changed: \"Bluetooth\"");
             manager->StartBluetooth();
           break;
           default:

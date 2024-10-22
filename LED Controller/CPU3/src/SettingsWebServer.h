@@ -348,6 +348,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           if(wifiReady)
           {
             //pSettingWebServer->StartWiFi();
+            ESP_LOGW("Wifi_Mode_ValueChanged", "WARNING! Wifi mode change handler not yet implemented");
           }
         }
       }
@@ -373,6 +374,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           if(wifiReady)
           {
             //pSettingWebServer->StartWiFi();
+            ESP_LOGW("Host_Name_ValueChanged", "WARNING! Host name change handler not yet implemented");
           }
         }
       }
@@ -400,6 +402,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           if(wifiReady)
           {
             //pSettingWebServer->StartWiFi();
+            ESP_LOGW("STA_SSID_ValueChanged", "WARNING! Station SSID change handler not yet implemented");
           }
         }
       }
@@ -424,6 +427,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool wifiReady = *static_cast<bool*>(pArguments->arg2);
           if(wifiReady)
           {
+            ESP_LOGW("STA_Password_ValueChanged", "WARNING! Station Password change handler not yet implemented");
             //pSettingWebServer->StartWiFi();
           }
         }
@@ -447,7 +451,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         {
           SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
           char* pSSID = static_cast<char*>(object);
-          ESP_LOGI("SSID_ValueChanged", "Access Point SSID Changed: %s", pSSID);
+          ESP_LOGW("AP_SSID_ValueChanged", "WARNING! Access Point SSID change handler not yet implemented");
           
         }
       }
@@ -472,7 +476,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool wifiReady = *static_cast<bool*>(pArguments->arg2);
           if(wifiReady)
           {
-            //pSettingWebServer->StartWiFi();
+            ESP_LOGW("AP_Password_ValueChanged", "WARNING! Access Point password change handler not yet implemented");
           }
         }
       }
@@ -550,6 +554,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool sinkConnect = *static_cast<bool*>(object);
           if(sinkConnect)
           {
+            ESP_LOGW("SinkConnect_ValueChanged", "WARNING! Sink Connect change handler not yet implemented");
           }
         }
       }
@@ -731,7 +736,7 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Source Reset
     const bool m_SourceReset_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
+    DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
     WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset );    
     
     void HandleWebSocketMessage(uint8_t clientID, WStype_t type, uint8_t *payload, size_t length)

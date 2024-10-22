@@ -157,7 +157,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
                 if (m_message.endsWith("\n"))
                 {
                     m_message.trim();
-                    ESP_LOGD("SerialPortMessageManager", "\"%s\" Message Rx: \"%s\"", m_Name.c_str(), m_message.c_str());
+                    ESP_LOGD("SerialPortMessageManager", "Rx from: \"%s\" Message: \"%s\"", m_Name.c_str(), m_message.c_str());
 
                     NamedObject_t NamedObject;
                     if (mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
@@ -204,7 +204,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
                         ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: Address: \"%p\" Message: \"%s\"",m_Name.c_str(), static_cast<void*>(message), message);
+					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
 					mp_Serial->println(message);
 				}
 				else

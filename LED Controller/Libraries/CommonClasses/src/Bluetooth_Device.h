@@ -121,7 +121,6 @@ class Bluetooth_Source: public NamedItem
 
 		
     	DeviceState m_DeviceState = DeviceState::Uninstalled;
-    	std::recursive_mutex bT_mutex;
 		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
@@ -197,9 +196,9 @@ class Bluetooth_Sink: public NamedItem
 	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM);
-	
 	//Callback Registrtion to this class
 	void ResgisterForCallbacks(Bluetooth_Sink_Callbacks *callee);
+	void Set_Stream_Reader(void (*callBack)(const uint8_t *, uint32_t), bool is_i2s );
 
     //Bluetooth_Callbacks
     static void StaticBTDataReceived();
@@ -240,9 +239,9 @@ class Bluetooth_Sink: public NamedItem
 		const int m_I2SDataOutPin;
 		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;
+		void (*m_ScreamCallBack)(const uint8_t *, uint32_t);
 		
     	DeviceState m_DeviceState = DeviceState::Uninstalled;
-    	std::recursive_mutex bT_mutex;
 		void InstallDevice();
 		void UninstallDevice();
 };

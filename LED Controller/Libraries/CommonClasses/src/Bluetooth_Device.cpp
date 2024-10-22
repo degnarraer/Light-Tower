@@ -72,47 +72,38 @@ void Bluetooth_Source::InstallDevice()
 
 void Bluetooth_Source::StartDevice()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	InstallDevice();
-	m_BTSource.set_connectable(true);
     m_DeviceState = DeviceState::Running;
 }
 
 void Bluetooth_Source::StopDevice()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
-	m_BTSource.set_connectable(false);
 	m_BTSource.end();
     m_DeviceState = DeviceState::Stopped;
 }
 
 void Bluetooth_Source::StartDiscovery()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.start_Discovery();
 }
 
 void Bluetooth_Source::StopDiscovery()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.stop_Discovery();
 }
 
 void Bluetooth_Source::Connect()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.start_raw(StaticSetBTTxData);
 }
 
 void Bluetooth_Source::Disconnect()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.disconnect();
 }
 
 void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const std::string& sourceAddress )
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	ESP_LOGI( "ConnectToThisName", "Set name to connect: \"%s\" Address: \"%s\""
 			, sourceName.c_str()
 			, sourceAddress.c_str() );
@@ -122,7 +113,6 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 
 void Bluetooth_Source::ResgisterForCallbacks(Bluetooth_Source_Callbacks *callee) 
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_Callee = callee;
 }
 
@@ -134,13 +124,11 @@ int32_t Bluetooth_Source::StaticMusicDataCallback(uint8_t *data, int32_t len)
 
 int32_t Bluetooth_Source::MusicDataCallback(uint8_t *data, int32_t len)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		return m_Callee->MusicDataCallback(data, len);
 	}
 	return 0;
-
 }
 
 void Bluetooth_Sink::StaticBTDataReceived() 
@@ -150,7 +138,6 @@ void Bluetooth_Sink::StaticBTDataReceived()
 
 void Bluetooth_Sink::BTDataReceived()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		m_Callee->BT_Data_Received();
@@ -159,7 +146,6 @@ void Bluetooth_Sink::BTDataReceived()
 
 Bluetooth_Source::~Bluetooth_Source()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_CompatibleDeviceTrackerTaskHandle)
 	{
 		vTaskDelete(m_CompatibleDeviceTrackerTaskHandle);
@@ -183,7 +169,6 @@ void Bluetooth_Source::StaticBTReadDataStream(const uint8_t* data, uint32_t leng
 
 void Bluetooth_Source::BTReadDataStream(const uint8_t *data, uint32_t length)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		m_Callee->BT_Read_Data_Stream(data, length);
@@ -197,7 +182,6 @@ void Bluetooth_Source::StaticBTDataReceived()
 
 void Bluetooth_Source::BTDataReceived()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		m_Callee->BT_Data_Received();
@@ -211,7 +195,6 @@ int32_t Bluetooth_Source::StaticSetBTTxData(uint8_t *data, int32_t length)
 
 int32_t Bluetooth_Source::SetBTTxData(uint8_t *data, int32_t length)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		return m_Callee->SetBTTxData(data, length);
@@ -225,7 +208,6 @@ void Bluetooth_Source::StaticBluetoothConnectionStateChanged(const esp_a2d_conne
 }
 void Bluetooth_Source::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		m_Callee->BluetoothConnectionStateChanged(connectionState, object);
@@ -237,7 +219,6 @@ void Bluetooth_Source::Static_Discovery_Mode_Changed(esp_bt_gap_discovery_state_
 }
 void Bluetooth_Source::Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_Callee)
 	{
 		m_Callee->Discovery_Mode_Changed(discoveryMode);
@@ -251,7 +232,6 @@ bool Bluetooth_Source::StaticConnectToThisName(const char* name, esp_bd_addr_t a
 
 bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address, int rssi)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
     std::string addressString = GetAddressString(address);
     ESP_LOGD("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", 
              name.c_str(), addressString.c_str(), rssi, m_Name.c_str(), m_Address.c_str());
@@ -281,22 +261,18 @@ bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address
 
 void Bluetooth_Source::Set_NVS_Init(bool resetNVS)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.set_nvs_init(resetNVS);
 }
 void Bluetooth_Source::Set_Reset_BLE(bool resetBLE)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.set_reset_ble(resetBLE);
 }
 void Bluetooth_Source::Set_Auto_Reconnect(bool autoReConnect)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.set_auto_reconnect(autoReConnect);
 }
 void Bluetooth_Source::Set_SSP_Enabled(bool sSPEnabled)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSource.set_ssp_enabled(sSPEnabled);
 }
 
@@ -318,7 +294,6 @@ void Bluetooth_Source::DeviceProcessingTask()
 {
   	while(true)
   	{
-		std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 		BT_Device_Info receivedDevice;
         if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, portMAX_DELAY) == pdPASS)
         {
@@ -329,8 +304,8 @@ void Bluetooth_Source::DeviceProcessingTask()
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-    ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 	std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
+    ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 	bool found = false;
 	for (auto& device : m_ActiveCompatibleDevices)
 	{
@@ -380,7 +355,6 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 Bluetooth_Sink* Bluetooth_Sink::bT_sink_instance = nullptr;
 void Bluetooth_Sink::Setup()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setting Up", GetTitle().c_str());
 	esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
 	ESP_LOGI("Bluetooth_Device", "Bluetooth Sink: \"%s\": Setup", GetTitle().c_str());
@@ -397,13 +371,16 @@ void Bluetooth_Sink::StaticBTReadDataStream(const uint8_t* data, uint32_t length
 
 void Bluetooth_Sink::BTReadDataStream(const uint8_t *data, uint32_t length)
 {
-  	ESP_LOGI("BTDataReceived", "BT Data: %i bytes received.", length);
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
+  	ESP_LOGV("BTDataReceived", "BT Data: %i bytes received.", length);
 	if(m_Callee)
 	{
-		ESP_LOGI("Bluetooth Device", "Read data stream");
 		m_Callee->BT_Read_Data_Stream(data, length);
 	}
+}
+
+void Bluetooth_Sink::Set_Stream_Reader(void (*callBack)(const uint8_t *, uint32_t), bool is_i2s )
+{
+	m_ScreamCallBack = callBack;
 }
 
 void Bluetooth_Sink::InstallDevice()
@@ -417,7 +394,7 @@ void Bluetooth_Sink::InstallDevice()
 		.bits_per_sample = m_BitsPerSample,
 		.channel_format = m_Channel_Fmt,
 		.communication_format = m_CommFormat,
-		.intr_alloc_flags = 1,
+		.intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
 		.dma_buf_count = m_BufferCount,
 		.dma_buf_len = m_BufferSize,
 		.use_apll = m_Use_APLL,
@@ -439,8 +416,8 @@ void Bluetooth_Sink::InstallDevice()
 		m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
 		m_BTSink.set_volume_control(&m_VolumeControl);
 		m_BTSink.set_volume(100);
-		m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
-		m_BTSink.set_on_data_received(StaticBTDataReceived);
+		//m_BTSink.set_stream_reader(m_ScreamCallBack, true);
+		//m_BTSink.set_on_data_received(StaticBTDataReceived);
 		m_BTSink.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
 		m_DeviceState = DeviceState::Installed;
 		ESP_LOGI("InstallDevice", "\"%s\": Bluetooth Device installed.", GetTitle().c_str());
@@ -466,7 +443,6 @@ void Bluetooth_Sink::UninstallDevice()
 }
 void Bluetooth_Sink::StartDevice()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	ESP_LOGI("StartDevice", "\"%s\": Starting Bluetooth Device", GetTitle().c_str());
 	if(m_DeviceState != DeviceState::Running)
 	{
@@ -481,7 +457,6 @@ void Bluetooth_Sink::StartDevice()
 }
 void Bluetooth_Sink::StopDevice()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	ESP_LOGI("StopDevice", "\"%s\": Stopping Bluetooth Device", GetTitle().c_str());
 	if(m_DeviceState == DeviceState::Running)
 	{
@@ -497,7 +472,6 @@ void Bluetooth_Sink::StopDevice()
 }
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_DeviceState == DeviceState::Running)
 	{
 		m_SinkName = sinkName;
@@ -510,7 +484,6 @@ void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 }
 void Bluetooth_Sink::Disconnect()
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	if(m_DeviceState == DeviceState::Running)
 	{
 		m_BTSink.disconnect();
@@ -522,7 +495,6 @@ void Bluetooth_Sink::Disconnect()
 }
 void Bluetooth_Sink::Set_Auto_Reconnect(bool reconnect, int count)
 {
-	std::lock_guard<std::recursive_mutex> lock(bT_mutex);
 	m_BTSink.set_auto_reconnect(reconnect, count);
 }
 
