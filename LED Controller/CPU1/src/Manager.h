@@ -68,7 +68,7 @@ class Manager: public NamedItem
     }
 		void BT_Read_Data_Stream(const uint8_t *data, uint32_t length)
     {
-
+      m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
     }
 
     //I2S_Device_Callback

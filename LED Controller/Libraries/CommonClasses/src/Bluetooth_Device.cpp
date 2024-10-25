@@ -378,11 +378,6 @@ void Bluetooth_Sink::BTReadDataStream(const uint8_t *data, uint32_t length)
 	}
 }
 
-void Bluetooth_Sink::Set_Stream_Reader(void (*callBack)(const uint8_t *, uint32_t), bool is_i2s )
-{
-	m_ScreamCallBack = callBack;
-}
-
 void Bluetooth_Sink::InstallDevice()
 {
 	ESP_LOGI("InstallDevice", "\"%s\": Installing Bluetooth device.", GetTitle().c_str());
@@ -416,8 +411,8 @@ void Bluetooth_Sink::InstallDevice()
 		m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
 		m_BTSink.set_volume_control(&m_VolumeControl);
 		m_BTSink.set_volume(100);
-		//m_BTSink.set_stream_reader(m_ScreamCallBack, true);
-		//m_BTSink.set_on_data_received(StaticBTDataReceived);
+		m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
+		m_BTSink.set_on_data_received(StaticBTDataReceived);
 		m_BTSink.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
 		m_DeviceState = DeviceState::Installed;
 		ESP_LOGI("InstallDevice", "\"%s\": Bluetooth Device installed.", GetTitle().c_str());

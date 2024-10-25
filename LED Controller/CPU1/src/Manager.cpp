@@ -63,7 +63,6 @@ void Manager::SetupDevices()
 {
   m_Bluetooth_Sink.ResgisterForCallbacks(this);
   m_Bluetooth_Sink.Setup();
-  m_Bluetooth_Sink.Set_Stream_Reader(m_I2S_Out.WriteSoundBufferData);
 
   m_Microphone.SetDataReceivedCallback(this);
   m_Microphone.Setup();
@@ -158,14 +157,14 @@ void Manager::SetInputSource(SoundInputSource_t Type)
     case SoundInputSource_t::Microphone:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Microphone.\"");
       m_Bluetooth_Sink.StopDevice();
-      m_Microphone.StartDevice();
       m_I2S_Out.StartDevice();
+      m_Microphone.StartDevice();
     break;
     case SoundInputSource_t::Bluetooth:
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
       m_Microphone.StopDevice();
-      m_I2S_Out.StopDevice();
+      m_I2S_Out.StartDevice();
       m_Bluetooth_Sink.StartDevice();
       m_Bluetooth_Sink.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
     }
@@ -188,14 +187,7 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
   {
     case SoundInputSource_t::Microphone:
     {
-      uint16_t Buffer[length];
-      for(int i = 0; i < length / sizeof(uint32_t); ++i)
-      {
-        uint32_t Value32 = ((uint32_t*)data)[i];
-        uint16_t Value16 = Value32 >> 16;
-        Buffer[i] = Value16;
-      }
-      m_I2S_Out.WriteSoundBufferData((uint8_t *)Buffer, length); 
+      m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
     }
     break;
     case SoundInputSource_t::Bluetooth:

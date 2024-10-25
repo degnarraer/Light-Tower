@@ -198,7 +198,6 @@ class Bluetooth_Sink: public NamedItem
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM);
 	//Callback Registrtion to this class
 	void ResgisterForCallbacks(Bluetooth_Sink_Callbacks *callee);
-	void Set_Stream_Reader(void (*callBack)(const uint8_t *, uint32_t), bool is_i2s );
 
     //Bluetooth_Callbacks
     static void StaticBTDataReceived();
@@ -238,9 +237,7 @@ class Bluetooth_Sink: public NamedItem
 		const int m_I2SDataInPin;
 		const int m_I2SDataOutPin;
 		String m_SinkName;
-		A2DPDefaultVolumeControl m_VolumeControl;
-		void (*m_ScreamCallBack)(const uint8_t *, uint32_t);
-		
+		A2DPDefaultVolumeControl m_VolumeControl;		
     	DeviceState m_DeviceState = DeviceState::Uninstalled;
 		void InstallDevice();
 		void UninstallDevice();

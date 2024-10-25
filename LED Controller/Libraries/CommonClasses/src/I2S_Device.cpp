@@ -129,28 +129,60 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
 
 size_t I2S_Device::ReadSamples()
 {
-	size_t bytes_read = 0;
-	uint8_t DataBuffer[m_BufferSize];
-  i2s_read(m_I2S_PORT, DataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
-  if(bytes_read == 0) return 0;
-  ESP_LOGI("i2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
-  if(m_Callee)
-	{
-		m_Callee->I2SDataReceived(GetTitle().c_str(), DataBuffer, bytes_read);
-	}
-	return bytes_read;
+    size_t bytes_read = 0;
+    uint8_t *dataBuffer = (uint8_t*) ps_malloc(m_TotalBytesToRead);
+    if (dataBuffer == nullptr) {
+        ESP_LOGE("I2S Device", "%s: ERROR! Failed to allocate memory for DataBuffer.", GetTitle().c_str());
+        return 0;
+    }
+
+    if (m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1) {
+        ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S Port.", GetTitle().c_str());
+        free(dataBuffer);
+        return 0;
+    }
+
+    esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
+    if (result != ESP_OK) {
+        ESP_LOGE("I2S Device", "%s: ERROR! i2s_read failed with error: %s", GetTitle().c_str(), esp_err_to_name(result));
+        free(dataBuffer);
+        return 0;
+    }
+
+    if (bytes_read == 0) {
+        free(dataBuffer);
+        return 0;
+    }
+
+    ESP_LOGV("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
+
+    // Notify the callee if data was received
+    if (m_Callee) {
+        m_Callee->I2SDataReceived(GetTitle().c_str(), dataBuffer, bytes_read);
+    }
+
+    // Free the buffer after use
+    free(dataBuffer);
+
+    return bytes_read;
 }
 
-size_t I2S_Device::WriteSamples(uint8_t *samples, size_t ByteCount)
+size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 {
 	// write to i2s
 	size_t bytes_written = 0;
-	i2s_write(m_I2S_PORT, samples, ByteCount, &bytes_written, portMAX_DELAY);
-	if(bytes_written != ByteCount)
+
+  if (m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1) {
+      ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S Port.", GetTitle().c_str());
+      return 0;
+  }
+
+	i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, portMAX_DELAY);
+	if(bytes_written != byteCount)
 	{
 		ESP_LOGE("i2S Device", "%s: ERROR! Unable to write all bytes.", GetTitle().c_str()); 
 	}
-	ESP_LOGI("i2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, ByteCount);
+	ESP_LOGV("i2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
 	return bytes_written;
 }
 
@@ -245,7 +277,7 @@ bool I2S_Device::IsInitialized()
 
 void I2S_Device::CreateTask()
 {
-  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_10mS_Task", 10000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_10mS_Task", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
   {
     ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
   }
@@ -301,15 +333,17 @@ void I2S_Device::ProcessEventQueue()
               ESP_LOGV("ProcessEventQueue", "%s: TX Done", GetTitle().c_str());
             break;
             case I2S_EVENT_RX_DONE:
-              {
-                ESP_LOGV("ProcessEventQueue", "%s: RX", GetTitle().c_str());
-                ReadSamples();
-              }
+              ESP_LOGV("ProcessEventQueue", "%s: RX", GetTitle().c_str());
+              ReadSamples();
             break;
             case I2S_EVENT_MAX:
               ESP_LOGW("ProcessEventQueue", "WARNING! I2S_EVENT_MAX");
             break;
           }	
+        }
+        else
+        {
+              ESP_LOGE("ProcessEventQueue", "ERROR! %s: Failed to receive event queue.", GetTitle().c_str());
         }
       }
     }
