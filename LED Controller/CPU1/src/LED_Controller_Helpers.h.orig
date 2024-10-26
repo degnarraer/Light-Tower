@@ -23,7 +23,11 @@ Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
 
 I2S_Device m_Mic_In = I2S_Device( "Microphone"
                                 , I2S_NUM_0                          // I2S Interface
+<<<<<<< HEAD
+                                , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
+=======
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
+>>>>>>> 762c1d25d5bd772e7657f5c2cbe110fd6e6f6759
                                 , I2S_SAMPLE_RATE
                                 , I2S_BITS_PER_SAMPLE_32BIT
                                 , I2S_BITS_PER_SAMPLE_16BIT
