@@ -19,32 +19,26 @@
 #ifndef I2S_Device_H
 #define I2S_Device_H 
 
-//DEBUGGING
-#define DATA_RX_DEBUG false
-#define DATA_TX_DEBUG false
-#define QUEUE_DEBUG false
-#define QUEUE_INDEPTH_DEBUG false
-
 #include <Arduino.h>
 #include <DataTypes.h>
 #include <Helpers.h>
 #include <mutex>
 #include "driver/i2s.h"
 #include "Streaming.h"
-
-extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
+#include "BitDepthConverter.h"
 
 class I2S_Device_Callback
 {
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
+		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length, i2s_bits_per_sample_t bitDepth) = 0;
 };
 
 class I2S_Device: public NamedItem
-				, public CommonUtils
-				, public QueueController
+				        , public CommonUtils
+				        , public QueueController
+                , public BitDepthConverter
 {
   enum class DeviceState
   {
@@ -59,7 +53,8 @@ class I2S_Device: public NamedItem
               , i2s_port_t i2S_PORT
               , i2s_mode_t Mode
               , int SampleRate
-              , i2s_bits_per_sample_t BitsPerSample
+              , i2s_bits_per_sample_t BitsPerSampleIn
+              , i2s_bits_per_sample_t BitsPerSampleOut
               , i2s_channel_fmt_t i2s_Channel_Fmt
               , i2s_comm_format_t CommFormat
               , i2s_channel_t i2s_channel
@@ -89,7 +84,8 @@ class I2S_Device: public NamedItem
     const i2s_port_t m_I2S_PORT;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
-    const i2s_bits_per_sample_t m_BitsPerSample;
+    const i2s_bits_per_sample_t m_BitsPerSampleIn;
+    const i2s_bits_per_sample_t m_BitsPerSampleOut;
     const i2s_comm_format_t m_CommFormat;
     const i2s_channel_fmt_t m_Channel_Fmt;
     const i2s_channel_t m_i2s_channel;

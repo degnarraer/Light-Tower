@@ -72,7 +72,7 @@ class Manager: public NamedItem
     }
 
     //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
+    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length, i2s_bits_per_sample_t bitDepth);
 
     //SoundMeasureCalleeInterface Callback
     void SoundStateChange(SoundState_t SoundState);

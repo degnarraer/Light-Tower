@@ -22,11 +22,12 @@ I2S_Device::I2S_Device ( String Title
                        , i2s_port_t i2S_PORT
                        , i2s_mode_t Mode
                        , int SampleRate
-                       , i2s_bits_per_sample_t i2s_BitsPerSample
+                       , i2s_bits_per_sample_t i2s_BitsPerSampleIn
+                       , i2s_bits_per_sample_t i2s_BitsPerSampleOut
                        , i2s_channel_fmt_t i2s_Channel_Fmt
                        , i2s_comm_format_t i2s_CommFormat
                        , i2s_channel_t i2s_channel
-					   , bool Use_APLL
+					             , bool Use_APLL
                        , size_t BufferCount
                        , size_t BufferSize
                        , int I2SClockPin
@@ -34,14 +35,15 @@ I2S_Device::I2S_Device ( String Title
                        , int I2SDataInPin
                        , int I2SDataOutPin )
                        : NamedItem(Title)
-					   , m_I2S_PORT(i2S_PORT)
+					             , m_I2S_PORT(i2S_PORT)
                        , m_SampleRate(SampleRate)
                        , m_i2s_Mode(Mode)
-                       , m_BitsPerSample(i2s_BitsPerSample)
+                       , m_BitsPerSampleIn(i2s_BitsPerSampleIn)
+                       , m_BitsPerSampleOut(i2s_BitsPerSampleOut)
                        , m_CommFormat(i2s_CommFormat)
                        , m_Channel_Fmt(i2s_Channel_Fmt)
                        , m_i2s_channel(i2s_channel)
-					   , m_Use_APLL(Use_APLL)
+					             , m_Use_APLL(Use_APLL)
                        , m_BufferCount(BufferCount)
                        , m_BufferSize(BufferSize)
                        , m_I2SClockPin(I2SClockPin)
@@ -57,7 +59,7 @@ I2S_Device::~I2S_Device()
 
 void I2S_Device::Setup()
 {
-  m_BytesPerSample = m_BitsPerSample/8;
+  m_BytesPerSample = m_BitsPerSampleIn/8;
   m_ChannelSampleCount = m_BufferSize;
 	m_SampleCount = m_ChannelSampleCount * 2;
   m_ChannelBytesToRead  = m_BytesPerSample * m_ChannelSampleCount;
@@ -154,11 +156,13 @@ size_t I2S_Device::ReadSamples()
         return 0;
     }
 
-    ESP_LOGV("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
+    ESP_LOGI("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
 
     // Notify the callee if data was received
-    if (m_Callee) {
-        m_Callee->I2SDataReceived(GetTitle().c_str(), dataBuffer, bytes_read);
+    if (m_Callee)
+    {
+        std::vector<uint8_t> buffer = convertBitDepth(dataBuffer, bytes_read, m_BitsPerSampleIn, m_BitsPerSampleOut);
+        m_Callee->I2SDataReceived(GetTitle().c_str(), buffer.data(), buffer.size(), m_BitsPerSampleOut);
     }
 
     // Free the buffer after use
@@ -213,11 +217,10 @@ void I2S_Device::InstallDevice()
   {
     ESP_LOGI("i2S Device", "%s: Installing I2S device.", GetTitle().c_str());
     esp_err_t err;
-    // The I2S config as per the example
     const i2s_config_t i2s_config = {
       .mode = m_i2s_Mode,
       .sample_rate = m_SampleRate,
-      .bits_per_sample = m_BitsPerSample,
+      .bits_per_sample = m_BitsPerSampleIn,
       .channel_format = m_Channel_Fmt,
       .communication_format = m_CommFormat,
       .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
@@ -225,19 +228,17 @@ void I2S_Device::InstallDevice()
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
       .tx_desc_auto_clear = true,
-      .fixed_mclk = 0
+      .fixed_mclk = 1
     };
-
-    // The pin config as per the setup
+    
     const i2s_pin_config_t pin_config = 
     {
-      .bck_io_num = m_I2SClockPin,         // Serial Clock (SCK)
-      .ws_io_num = m_I2SWordSelectPin,           // Word Select (WS)
-      .data_out_num = m_I2SDataOutPin,     // not used (only for speakers)
-      .data_in_num = m_I2SDataInPin        // Serial Data (SD)
+      .bck_io_num = m_I2SClockPin,
+      .ws_io_num = m_I2SWordSelectPin,
+      .data_out_num = m_I2SDataOutPin,
+      .data_in_num = m_I2SDataInPin
     };
-    // Configuring the I2S driver and pins.
-    // This function must be called before any I2S driver read/write operations.
+
     err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queueHandle);
     if (err != ESP_OK)
     {
@@ -249,7 +250,7 @@ void I2S_Device::InstallDevice()
       ESP_LOGE("i2S Device", "ERROR! %s: Failed to setup event queue.", GetTitle().c_str());
       ESP.restart();
     }
-    err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSample, m_i2s_channel);
+    err = i2s_set_clk(m_I2S_PORT, m_SampleRate, m_BitsPerSampleIn, m_i2s_channel);
     if (err != ESP_OK)
     {
       ESP_LOGE("i2S Device", "ERROR! %s: Failed setting clock: %s.", GetTitle().c_str(), err);
@@ -343,7 +344,7 @@ void I2S_Device::ProcessEventQueue()
         }
         else
         {
-              ESP_LOGE("ProcessEventQueue", "ERROR! %s: Failed to receive event queue.", GetTitle().c_str());
+          ESP_LOGE("ProcessEventQueue", "ERROR! %s: Failed to receive event queue.", GetTitle().c_str());
         }
       }
     }

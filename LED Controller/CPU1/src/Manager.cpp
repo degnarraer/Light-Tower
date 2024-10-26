@@ -84,15 +84,15 @@ void Manager::SetupStatisticalEngine()
 
 void Manager::SetupTasks()
 {
-  if(xTaskCreatePinnedToCore( Static_Manager_10mS_TaskLoop,     "Manager_10mS_Task",      10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_10mS_TaskHandle,     0 ) != pdTRUE )
+  if(xTaskCreatePinnedToCore( Static_Manager_10mS_TaskLoop,     "Manager_10mS_Task",      1000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_10mS_TaskHandle,     0 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
-  if(xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_1000mS_TaskHandle,   0 ) != pdTRUE )
+  if(xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   1000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_1000mS_TaskHandle,   0 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
-  if(xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_300000mS_TaskHandle, 0 ) != pdTRUE )
+  if(xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  1000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_300000mS_TaskHandle, 0 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
@@ -179,25 +179,21 @@ void Manager::SetInputSource(SoundInputSource_t Type)
   }
 }
 
-//I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
+// I2S_Device_Callback
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length, i2s_bits_per_sample_t bitDepth)
 {
-  ESP_LOGV("I2SDataReceived", "I2S Data: %i bytes received.", length);
+  ESP_LOGI("I2SDataReceived", "I2S Data: %i bytes received.", length);
   switch(m_SoundInputSource.GetValue())
   {
     case SoundInputSource_t::Microphone:
-    {
       m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
-    }
-    break;
+      break;
     case SoundInputSource_t::Bluetooth:
-    {
       //m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
-    }
-    break;
+      break;
     case SoundInputSource_t::OFF:
     default:
-    break;
+      break;
   }
 }
 

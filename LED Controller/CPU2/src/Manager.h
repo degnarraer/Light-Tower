@@ -82,7 +82,7 @@ class Manager: public NamedItem
     void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices);
     
     //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len);
+    void I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len, i2s_bits_per_sample_t bitDepth);
 
   private:
     IPreferences& m_PreferencesInterface;

@@ -84,12 +84,12 @@ void Bluetooth_Source::StopDevice()
 
 void Bluetooth_Source::StartDiscovery()
 {
-	m_BTSource.start_Discovery();
+	//m_BTSource.start_Discovery();
 }
 
 void Bluetooth_Source::StopDiscovery()
 {
-	m_BTSource.stop_Discovery();
+	//m_BTSource.stop_Discovery();
 }
 
 void Bluetooth_Source::Connect()

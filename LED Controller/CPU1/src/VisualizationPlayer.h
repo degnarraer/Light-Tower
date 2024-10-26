@@ -24,10 +24,10 @@
 #include "Statistical_Engine.h"
 #include "LEDControllerInterface.h"
 
-class VisualizationPlayer : public Task
+class VisualizationPlayer : public TaskSchedulerTask
 {
   public:
-    VisualizationPlayer(StatisticalEngineModelInterface &StatisticalEngineModelInterface) : Task("VisualizationPlayer")
+    VisualizationPlayer(StatisticalEngineModelInterface &StatisticalEngineModelInterface) : TaskSchedulerTask("VisualizationPlayer")
                                                                                           , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface){}
     virtual ~VisualizationPlayer(){}
 
