@@ -195,6 +195,10 @@ class Bluetooth_Sink: public NamedItem
 	void StopDevice();
 	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
+    i2s_bits_per_sample_t GetBitDepth()
+    {
+      return m_BitsPerSample;
+    }
 	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM);
 	//Callback Registrtion to this class
 	void ResgisterForCallbacks(Bluetooth_Sink_Callbacks *callee);
