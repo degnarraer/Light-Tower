@@ -187,14 +187,7 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
   {
     case SoundInputSource_t::Microphone:
     {
-      size_t newBufferLength = 0;
-      uint8_t *newbuffer = m_I2S_Out.ConvertBitDepth( data 
-                                                    , length
-                                                    , m_Microphone.GetBitDepth()
-                                                    , m_I2S_Out.GetBitDepth()
-                                                    , newBufferLength );
-      m_I2S_Out.WriteSoundBufferData(newbuffer, newBufferLength);
-      free(newbuffer);
+      m_I2S_Out.WriteSoundBufferData(data, length);
     }
     break;
     case SoundInputSource_t::Bluetooth:
