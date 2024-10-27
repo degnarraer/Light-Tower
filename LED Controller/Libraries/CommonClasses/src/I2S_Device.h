@@ -27,18 +27,21 @@
 #include "Streaming.h"
 #include "BitDepthConverter.h"
 
+extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
+
 class I2S_Device_Callback
 {
 	public:
 		I2S_Device_Callback(){}
 		virtual ~I2S_Device_Callback(){}
-		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length, i2s_bits_per_sample_t bitDepth) = 0;
+		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
 };
 
 class I2S_Device: public NamedItem
-				        , public CommonUtils
-				        , public QueueController
+                , public CommonUtils
+                , public QueueController
                 , public BitDepthConverter
+
 {
   enum class DeviceState
   {

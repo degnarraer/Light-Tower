@@ -21,32 +21,31 @@
 #include "Streaming.h"
 #include "Tunes.h"
 
-class TaskSchedulerTask;
+class Task;
 class TaskScheduler
 {
   public:
     TaskScheduler(){}
     void RunScheduler();
-    void AddTask(TaskSchedulerTask &task);
-    void AddTasks(std::vector<TaskSchedulerTask*> &tasks);
-    bool RemoveTask(TaskSchedulerTask &task);
+    void AddTask(Task &task);
+    void AddTasks(std::vector<Task*> &tasks);
+    bool RemoveTask(Task &task);
     unsigned int GetTaskCount(){return m_MyTasks.size();}
   private:
-    std::vector<TaskSchedulerTask*> m_MyTasks = std::vector<TaskSchedulerTask*>();
+    std::vector<Task*> m_MyTasks = std::vector<Task*>();
 };
-
-class TaskSchedulerTask
+class Task
 {
   public:
-    TaskSchedulerTask(): m_Title("Unnamed"){}
-    TaskSchedulerTask(String title): m_Title(title){}
+    Task(): m_Title("Unnamed"){}
+    Task(String title): m_Title(title){}
     String GetTaskTitle() { return m_Title; }
     bool GetIsSetup() { return m_IsSetup; }
     bool SetIsSetup(bool IsSetup) { return m_IsSetup = IsSetup; }
-    void AddTask(TaskSchedulerTask &task);
-    void AddTasks(std::vector<TaskSchedulerTask*> &tasks);
+    void AddTask(Task &task);
+    void AddTasks(std::vector<Task*> &tasks);
     unsigned int GetTaskCount(){return m_Scheduler.GetTaskCount();}
-    bool RemoveTask(TaskSchedulerTask &task);
+    bool RemoveTask(Task &task);
     void RunScheduler();
     virtual void Setup() = 0;
     virtual void RunMyPreTask() = 0;
@@ -61,11 +60,11 @@ class TaskSchedulerTask
     
 };
 
-class CalculateFPS: public TaskSchedulerTask
+class CalculateFPS: public Task
 {
   public:
     CalculateFPS(String title, unsigned int updatePeriodMillis)
-      : TaskSchedulerTask("CalculateFPS")
+      : Task("CalculateFPS")
       , m_Title(title)
       , m_updatePeriodMillis(updatePeriodMillis){}
     String m_Title;

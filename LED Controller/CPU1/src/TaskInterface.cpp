@@ -19,19 +19,19 @@
 #include "TaskInterface.h"
 #include <typeinfo>
 
-void TaskSchedulerTask::AddTask(TaskSchedulerTask&task)
+void Task::AddTask(Task &task)
 {
   m_Scheduler.AddTask(task);
 }
-void TaskSchedulerTask::AddTasks(std::vector<TaskSchedulerTask*> &tasks)
+void Task::AddTasks(std::vector<Task*> &tasks)
 {
   m_Scheduler.AddTasks(tasks);
 }
-bool TaskSchedulerTask::RemoveTask(TaskSchedulerTask&task)
+bool Task::RemoveTask(Task &task)
 {
   return m_Scheduler.RemoveTask(task);
 }
-void TaskSchedulerTask::RunScheduler()
+void Task::RunScheduler()
 {
   m_Scheduler.RunScheduler();
 }
@@ -41,7 +41,7 @@ void TaskScheduler::RunScheduler()
   if(true == debugTasks && m_MyTasks.size() > 0) Serial << "TaskScheduler Trying to Run " << m_MyTasks.size() << " Task(s)\n";
   for(int t = 0; t < m_MyTasks.size(); ++t)
   {
-    TaskSchedulerTask *aTask = m_MyTasks[t];
+    Task *aTask = m_MyTasks[t];
     aTask->RunMyPreTask();
     aTask->RunScheduler();
     if(true==aTask->CanRunMyScheduledTask())
@@ -56,7 +56,7 @@ void TaskScheduler::RunScheduler()
     aTask->RunMyPostTask();
   }
 }
-void TaskScheduler::AddTask(TaskSchedulerTask &task)
+void TaskScheduler::AddTask(Task &task)
 {
   if(true == debugTasks) Serial << "TaskScheduler Adding Task: " << task.GetTaskTitle() << "\n";
   m_MyTasks.push_back(&task);
@@ -67,14 +67,14 @@ void TaskScheduler::AddTask(TaskSchedulerTask &task)
     task.SetIsSetup(true);
   }
 }
-void TaskScheduler::AddTasks(std::vector<TaskSchedulerTask*> &tasks)
+void TaskScheduler::AddTasks(std::vector<Task*> &tasks)
 {
   for(int t = 0; t < tasks.size(); ++t)
   {
     m_MyTasks.push_back(tasks[t]);
   }
 }
-bool TaskScheduler::RemoveTask(TaskSchedulerTask &task)
+bool TaskScheduler::RemoveTask(Task &task)
 {
   bool taskFound = false;
   for(int i = 0; i < m_MyTasks.size(); ++i)

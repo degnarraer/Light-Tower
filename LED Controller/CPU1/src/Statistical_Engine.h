@@ -91,14 +91,14 @@ class SoundMeasureCallerInterface
 };
 
 class StatisticalEngine : public NamedItem
-                        , public TaskSchedulerTask
+                        , public Task
                         , public SoundMeasureCallerInterface
                         , public QueueManager
 {
   public:
     StatisticalEngine()
       : NamedItem("StatisticalEngine")
-      , TaskSchedulerTask(GetTitle())
+      , Task(GetTitle())
       , QueueManager(GetTitle() + "_QueueManager", m_StatisticalEngineConfigCount)
       , m_Power(0)
       , m_PowerDb(0)

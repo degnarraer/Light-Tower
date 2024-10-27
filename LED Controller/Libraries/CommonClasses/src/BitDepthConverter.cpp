@@ -1,7 +1,7 @@
 
 #include "BitDepthConverter.h"
 
-std::vector<uint8_t> BitDepthConverter::convertBitDepth(const uint8_t* inputBuffer, size_t inputSize, i2s_bits_per_sample_t inputBits, i2s_bits_per_sample_t outputBits){
+std::vector<uint8_t> BitDepthConverter::ConvertBitDepth(const uint8_t* inputBuffer, size_t inputSize, i2s_bits_per_sample_t inputBits, i2s_bits_per_sample_t outputBits){
     int inputBitDepth = static_cast<int>(inputBits);
     int outputBitDepth = static_cast<int>(outputBits);
 
@@ -46,7 +46,7 @@ std::vector<uint8_t> BitDepthConverter::convertBitDepth(const uint8_t* inputBuff
                 return {}; // Unsupported bit depth
         }
 
-        sample = convertSample(sample, inputBitDepth, outputBitDepth);
+        sample = ConvertSample(sample, inputBitDepth, outputBitDepth);
 
         // Write sample based on output bit depth
         switch (outputBitDepth) {
@@ -79,25 +79,25 @@ std::vector<uint8_t> BitDepthConverter::convertBitDepth(const uint8_t* inputBuff
     return outputBuffer;
 }
 
-// Helper function to convert a single sample between bit depths
-int32_t BitDepthConverter::convertSample(int32_t sample, int inputBits, int outputBits) {
-    int32_t convertedSample = sample;
+// Helper function to Convert a single sample between bit depths
+int32_t BitDepthConverter::ConvertSample(int32_t sample, int inputBits, int outputBits) {
+    int32_t ConvertedSample = sample;
 
     if (inputBits < outputBits) {
-        // Shift up if converting to a higher bit depth
-        convertedSample <<= (outputBits - inputBits);
+        // Shift up if Converting to a higher bit depth
+        ConvertedSample <<= (outputBits - inputBits);
     } else if (inputBits > outputBits) {
-        // Shift down if converting to a lower bit depth, apply sign extension if necessary
-        convertedSample >>= (inputBits - outputBits);
+        // Shift down if Converting to a lower bit depth, apply sign extension if necessary
+        ConvertedSample >>= (inputBits - outputBits);
     }
 
-    return convertedSample;
+    return ConvertedSample;
 }
 
 // Implementation of conversion methods
 
 // Convert 8-bit to 16-bit
-std::vector<int16_t> BitDepthConverter::convert8To16(const std::vector<int8_t>& input) {
+std::vector<int16_t> BitDepthConverter::Convert8To16(const std::vector<int8_t>& input) {
     std::vector<int16_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int16_t>(input[i]) << 8; // Shift up to 16-bit
@@ -106,7 +106,7 @@ std::vector<int16_t> BitDepthConverter::convert8To16(const std::vector<int8_t>& 
 }
 
 // Convert 8-bit to 24-bit
-std::vector<int32_t> BitDepthConverter::convert8To24(const std::vector<int8_t>& input) {
+std::vector<int32_t> BitDepthConverter::Convert8To24(const std::vector<int8_t>& input) {
     std::vector<int32_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int32_t>(input[i]) << 16; // Shift up to 24-bit
@@ -115,7 +115,7 @@ std::vector<int32_t> BitDepthConverter::convert8To24(const std::vector<int8_t>& 
 }
 
 // Convert 8-bit to 32-bit
-std::vector<int32_t> BitDepthConverter::convert8To32(const std::vector<int8_t>& input) {
+std::vector<int32_t> BitDepthConverter::Convert8To32(const std::vector<int8_t>& input) {
     std::vector<int32_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int32_t>(input[i]) << 24; // Shift up to 32-bit
@@ -124,7 +124,7 @@ std::vector<int32_t> BitDepthConverter::convert8To32(const std::vector<int8_t>& 
 }
 
 // Convert 16-bit to 8-bit
-std::vector<int8_t> BitDepthConverter::convert16To8(const std::vector<int16_t>& input) {
+std::vector<int8_t> BitDepthConverter::Convert16To8(const std::vector<int16_t>& input) {
     std::vector<int8_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int8_t>(input[i] >> 8); // Shift down to 8-bit
@@ -133,7 +133,7 @@ std::vector<int8_t> BitDepthConverter::convert16To8(const std::vector<int16_t>& 
 }
 
 // Convert 16-bit to 24-bit
-std::vector<int32_t> BitDepthConverter::convert16To24(const std::vector<int16_t>& input) {
+std::vector<int32_t> BitDepthConverter::Convert16To24(const std::vector<int16_t>& input) {
     std::vector<int32_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int32_t>(input[i]) << 8; // Shift up to 24-bit
@@ -142,7 +142,7 @@ std::vector<int32_t> BitDepthConverter::convert16To24(const std::vector<int16_t>
 }
 
 // Convert 16-bit to 32-bit
-std::vector<int32_t> BitDepthConverter::convert16To32(const std::vector<int16_t>& input) {
+std::vector<int32_t> BitDepthConverter::Convert16To32(const std::vector<int16_t>& input) {
     std::vector<int32_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int32_t>(input[i]) << 16; // Shift up to 32-bit
@@ -151,7 +151,7 @@ std::vector<int32_t> BitDepthConverter::convert16To32(const std::vector<int16_t>
 }
 
 // Convert 24-bit to 8-bit
-std::vector<int8_t> BitDepthConverter::convert24To8(const std::vector<int32_t>& input) {
+std::vector<int8_t> BitDepthConverter::Convert24To8(const std::vector<int32_t>& input) {
     std::vector<int8_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int8_t>(input[i] >> 16); // Shift down to 8-bit
@@ -160,7 +160,7 @@ std::vector<int8_t> BitDepthConverter::convert24To8(const std::vector<int32_t>& 
 }
 
 // Convert 24-bit to 16-bit
-std::vector<int16_t> BitDepthConverter::convert24To16(const std::vector<int32_t>& input) {
+std::vector<int16_t> BitDepthConverter::Convert24To16(const std::vector<int32_t>& input) {
     std::vector<int16_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int16_t>(input[i] >> 8); // Shift down to 16-bit
@@ -169,7 +169,7 @@ std::vector<int16_t> BitDepthConverter::convert24To16(const std::vector<int32_t>
 }
 
 // Convert 24-bit to 32-bit
-std::vector<int32_t> BitDepthConverter::convert24To32(const std::vector<int32_t>& input) {
+std::vector<int32_t> BitDepthConverter::Convert24To32(const std::vector<int32_t>& input) {
     std::vector<int32_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = input[i] << 8; // Shift up to 32-bit
@@ -178,7 +178,7 @@ std::vector<int32_t> BitDepthConverter::convert24To32(const std::vector<int32_t>
 }
 
 // Convert 32-bit to 8-bit
-std::vector<int8_t> BitDepthConverter::convert32To8(const std::vector<int32_t>& input) {
+std::vector<int8_t> BitDepthConverter::Convert32To8(const std::vector<int32_t>& input) {
     std::vector<int8_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int8_t>(input[i] >> 24); // Shift down to 8-bit
@@ -187,7 +187,7 @@ std::vector<int8_t> BitDepthConverter::convert32To8(const std::vector<int32_t>& 
 }
 
 // Convert 32-bit to 16-bit
-std::vector<int16_t> BitDepthConverter::convert32To16(const std::vector<int32_t>& input) {
+std::vector<int16_t> BitDepthConverter::Convert32To16(const std::vector<int32_t>& input) {
     std::vector<int16_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = static_cast<int16_t>(input[i] >> 16); // Shift down to 16-bit
@@ -196,7 +196,7 @@ std::vector<int16_t> BitDepthConverter::convert32To16(const std::vector<int32_t>
 }
 
 // Convert 32-bit to 24-bit
-std::vector<int32_t> BitDepthConverter::convert32To24(const std::vector<int32_t>& input) {
+std::vector<int32_t> BitDepthConverter::Convert32To24(const std::vector<int32_t>& input) {
     std::vector<int32_t> output(input.size());
     for (size_t i = 0; i < input.size(); i++) {
         output[i] = input[i] >> 8; // Shift down to 24-bit

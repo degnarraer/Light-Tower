@@ -27,7 +27,7 @@ I2S_Device::I2S_Device ( String Title
                        , i2s_channel_fmt_t i2s_Channel_Fmt
                        , i2s_comm_format_t i2s_CommFormat
                        , i2s_channel_t i2s_channel
-					             , bool Use_APLL
+					   , bool Use_APLL
                        , size_t BufferCount
                        , size_t BufferSize
                        , int I2SClockPin
@@ -35,7 +35,7 @@ I2S_Device::I2S_Device ( String Title
                        , int I2SDataInPin
                        , int I2SDataOutPin )
                        : NamedItem(Title)
-					             , m_I2S_PORT(i2S_PORT)
+					   , m_I2S_PORT(i2S_PORT)
                        , m_SampleRate(SampleRate)
                        , m_i2s_Mode(Mode)
                        , m_BitsPerSampleIn(i2s_BitsPerSampleIn)
@@ -43,7 +43,7 @@ I2S_Device::I2S_Device ( String Title
                        , m_CommFormat(i2s_CommFormat)
                        , m_Channel_Fmt(i2s_Channel_Fmt)
                        , m_i2s_channel(i2s_channel)
-					             , m_Use_APLL(Use_APLL)
+					   , m_Use_APLL(Use_APLL)
                        , m_BufferCount(BufferCount)
                        , m_BufferSize(BufferSize)
                        , m_I2SClockPin(I2SClockPin)
@@ -156,13 +156,13 @@ size_t I2S_Device::ReadSamples()
         return 0;
     }
 
-    ESP_LOGI("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
+    ESP_LOGV("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
 
     // Notify the callee if data was received
     if (m_Callee)
     {
-        std::vector<uint8_t> buffer = convertBitDepth(dataBuffer, bytes_read, m_BitsPerSampleIn, m_BitsPerSampleOut);
-        m_Callee->I2SDataReceived(GetTitle().c_str(), buffer.data(), buffer.size(), m_BitsPerSampleOut);
+      std::vector<uint8_t> newBuffer = ConvertBitDepth(dataBuffer, bytes_read, m_BitsPerSampleIn, m_BitsPerSampleOut);
+      m_Callee->I2SDataReceived(GetTitle().c_str(), newBuffer.data(), newBuffer.size());
     }
 
     // Free the buffer after use
@@ -217,6 +217,7 @@ void I2S_Device::InstallDevice()
   {
     ESP_LOGI("i2S Device", "%s: Installing I2S device.", GetTitle().c_str());
     esp_err_t err;
+    // The I2S config as per the example
     const i2s_config_t i2s_config = {
       .mode = m_i2s_Mode,
       .sample_rate = m_SampleRate,
@@ -228,17 +229,19 @@ void I2S_Device::InstallDevice()
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
       .tx_desc_auto_clear = true,
-      .fixed_mclk = 1
-    };
-    
-    const i2s_pin_config_t pin_config = 
-    {
-      .bck_io_num = m_I2SClockPin,
-      .ws_io_num = m_I2SWordSelectPin,
-      .data_out_num = m_I2SDataOutPin,
-      .data_in_num = m_I2SDataInPin
+      .fixed_mclk = 0
     };
 
+    // The pin config as per the setup
+    const i2s_pin_config_t pin_config = 
+    {
+      .bck_io_num = m_I2SClockPin,         // Serial Clock (SCK)
+      .ws_io_num = m_I2SWordSelectPin,           // Word Select (WS)
+      .data_out_num = m_I2SDataOutPin,     // not used (only for speakers)
+      .data_in_num = m_I2SDataInPin        // Serial Data (SD)
+    };
+    // Configuring the I2S driver and pins.
+    // This function must be called before any I2S driver read/write operations.
     err = i2s_driver_install(m_I2S_PORT, &i2s_config, m_BufferCount, &m_i2s_event_queueHandle);
     if (err != ESP_OK)
     {
@@ -344,7 +347,7 @@ void I2S_Device::ProcessEventQueue()
         }
         else
         {
-          ESP_LOGE("ProcessEventQueue", "ERROR! %s: Failed to receive event queue.", GetTitle().c_str());
+              ESP_LOGE("ProcessEventQueue", "ERROR! %s: Failed to receive event queue.", GetTitle().c_str());
         }
       }
     }

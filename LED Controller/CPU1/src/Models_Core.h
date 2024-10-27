@@ -67,11 +67,11 @@ struct Coordinates
 
 class StatisticalEngineModelInterface;
 class Model: public NamedItem
-           , public TaskSchedulerTask
+           , public Task
 {
   public:
     Model(String Title): NamedItem(Title)
-                       , TaskSchedulerTask(GetTitle()) 
+                       , Task(GetTitle()) 
     { 
       if (true == debugMemory) Serial << "New Model: " << GetTitle() << "\n";
     }
@@ -185,13 +185,13 @@ class StatisticalEngineModelInterfaceUserTracker
 };
 
 class StatisticalEngineModelInterface : public NamedItem
-                                      , public TaskSchedulerTask
+                                      , public Task
                                       , public StatisticalEngineModelInterfaceUserTracker
                                       , SoundMeasureCalleeInterface
 {
   public:
     StatisticalEngineModelInterface(StatisticalEngine &StatisticalEngine) : NamedItem("StatisticalEngineModelInterface")
-                                                                          , TaskSchedulerTask(GetTitle())
+                                                                          , Task(GetTitle())
                                                                           , m_StatisticalEngine(StatisticalEngine)
     { 
     }

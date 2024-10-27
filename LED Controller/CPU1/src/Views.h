@@ -44,10 +44,10 @@ enum Direction
   Direction_Left
 };
 
-class View: public TaskSchedulerTask
+class View: public Task
 {
   public:
-    View(String Title, position X, position Y, size W, size H): TaskSchedulerTask(Title)
+    View(String Title, position X, position Y, size W, size H): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
@@ -55,7 +55,7 @@ class View: public TaskSchedulerTask
     {
       if(true == debugMemory) Serial << "New: View\n";
     }
-    View(String Title, position X, position Y, size W, size H, MergeType MergeType): TaskSchedulerTask(Title)
+    View(String Title, position X, position Y, size W, size H, MergeType MergeType): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)

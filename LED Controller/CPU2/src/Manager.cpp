@@ -64,7 +64,7 @@ void Manager::StopBluetooth()
 }
 
 //I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len, i2s_bits_per_sample_t bitDepth)
+void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len)
 {
   ESP_LOGV("I2SDataReceived", "I2S Data: %i bytes received.", channel_len);
 }
