@@ -136,12 +136,3 @@ void TestPSRam()
     ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
     assert(freeSizeAfterFree == freeSizeBefore);
 }
-
-void SetComponentDebugLevels()
-{ 
-  //Global Setting
-  esp_log_level_set("*", ESP_LOG_ERROR);
-
-  //Component Setting
-  esp_log_level_set("Startup", ESP_LOG_INFO);
-}

@@ -32,21 +32,6 @@ Manager::Manager( String Title
 }
 Manager::~Manager()
 {
-  if(m_Manager_10mS_TaskHandle)
-  {
-    vTaskDelete(m_Manager_10mS_TaskHandle);
-    m_Manager_10mS_TaskHandle = nullptr;
-  }
-  if(m_Manager_10mS_TaskHandle)
-  {
-    vTaskDelete(m_Manager_1000mS_TaskHandle);
-    m_Manager_1000mS_TaskHandle = nullptr;
-  }
-  if(m_Manager_300000mS_TaskHandle)
-  {
-    vTaskDelete(m_Manager_300000mS_TaskHandle);
-    m_Manager_300000mS_TaskHandle = nullptr;
-  }
 }
 
 void Manager::Setup()
@@ -56,7 +41,6 @@ void Manager::Setup()
   SetupSerialPortManager();
   SetupAllSetupCallees();
   SetupStatisticalEngine();
-  SetupTasks();
 }
 
 void Manager::SetupDevices()
@@ -82,72 +66,8 @@ void Manager::SetupStatisticalEngine()
   m_StatisticalEngine.RegisterForSoundStateChangeNotification(this);
 }
 
-void Manager::SetupTasks()
-{
-  if(xTaskCreatePinnedToCore( Static_Manager_10mS_TaskLoop,     "Manager_10mS_Task",      1000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_10mS_TaskHandle,     0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
-  if(xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   1000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_1000mS_TaskHandle,   0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
-  if(xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  1000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_300000mS_TaskHandle, 0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
-}
-
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-}
-
-void Manager::Static_Manager_10mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue10mS();
-}
-void Manager::ProcessEventQueue10mS()
-{
-  const TickType_t xFrequency = 10;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
-}
-
-void Manager::Static_Manager_1000mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue1000mS();
-}
-void Manager::ProcessEventQueue1000mS()
-{
-  
-  const TickType_t xFrequency = 1000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
-}
-
-void Manager::Static_Manager_300000mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue300000mS();
-}
-
-void Manager::ProcessEventQueue300000mS()
-{
-  const TickType_t xFrequency = 300000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    
-  }
 }
 
 void Manager::SetInputSource(SoundInputSource_t Type)
