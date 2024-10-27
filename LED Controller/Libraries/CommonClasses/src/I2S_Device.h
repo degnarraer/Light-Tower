@@ -62,6 +62,7 @@ class I2S_Device: public NamedItem
               , i2s_comm_format_t CommFormat
               , i2s_channel_t i2s_channel
 			        , bool Use_APLL
+              , bool fixedClock
               , size_t BufferCount
               , size_t BufferSize
               , int SerialClockPin
@@ -93,6 +94,7 @@ class I2S_Device: public NamedItem
     const i2s_channel_fmt_t m_Channel_Fmt;
     const i2s_channel_t m_i2s_channel;
 	  const bool m_Use_APLL;
+	  const bool m_FixedClock;
     const int m_BufferCount;
     const int m_BufferSize;
     const int m_I2SClockPin;

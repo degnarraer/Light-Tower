@@ -27,7 +27,8 @@ I2S_Device::I2S_Device ( String Title
                        , i2s_channel_fmt_t i2s_Channel_Fmt
                        , i2s_comm_format_t i2s_CommFormat
                        , i2s_channel_t i2s_channel
-					   , bool Use_APLL
+					             , bool Use_APLL
+                       , bool fixedClock
                        , size_t BufferCount
                        , size_t BufferSize
                        , int I2SClockPin
@@ -35,7 +36,7 @@ I2S_Device::I2S_Device ( String Title
                        , int I2SDataInPin
                        , int I2SDataOutPin )
                        : NamedItem(Title)
-					   , m_I2S_PORT(i2S_PORT)
+					             , m_I2S_PORT(i2S_PORT)
                        , m_SampleRate(SampleRate)
                        , m_i2s_Mode(Mode)
                        , m_BitsPerSampleIn(i2s_BitsPerSampleIn)
@@ -43,7 +44,8 @@ I2S_Device::I2S_Device ( String Title
                        , m_CommFormat(i2s_CommFormat)
                        , m_Channel_Fmt(i2s_Channel_Fmt)
                        , m_i2s_channel(i2s_channel)
-					   , m_Use_APLL(Use_APLL)
+					             , m_Use_APLL(Use_APLL)
+                       , m_FixedClock(fixedClock)
                        , m_BufferCount(BufferCount)
                        , m_BufferSize(BufferSize)
                        , m_I2SClockPin(I2SClockPin)
@@ -137,35 +139,27 @@ size_t I2S_Device::ReadSamples()
         ESP_LOGE("I2S Device", "%s: ERROR! Failed to allocate memory for DataBuffer.", GetTitle().c_str());
         return 0;
     }
-
     if (m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1) {
         ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S Port.", GetTitle().c_str());
         free(dataBuffer);
         return 0;
     }
-
     esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
     if (result != ESP_OK) {
         ESP_LOGE("I2S Device", "%s: ERROR! i2s_read failed with error: %s", GetTitle().c_str(), esp_err_to_name(result));
         free(dataBuffer);
         return 0;
     }
-
     if (bytes_read == 0) {
         free(dataBuffer);
         return 0;
     }
-
     ESP_LOGV("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
-
-    // Notify the callee if data was received
     if (m_Callee)
     {
       std::vector<uint8_t> newBuffer = ConvertBitDepth(dataBuffer, bytes_read, m_BitsPerSampleIn, m_BitsPerSampleOut);
       m_Callee->I2SDataReceived(GetTitle().c_str(), newBuffer.data(), newBuffer.size());
     }
-
-    // Free the buffer after use
     free(dataBuffer);
 
     return bytes_read;
@@ -173,7 +167,6 @@ size_t I2S_Device::ReadSamples()
 
 size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 {
-	// write to i2s
 	size_t bytes_written = 0;
 
   if (m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1) {
@@ -229,7 +222,7 @@ void I2S_Device::InstallDevice()
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
       .tx_desc_auto_clear = true,
-      .fixed_mclk = 0
+      .fixed_mclk = m_FixedClock
     };
 
     // The pin config as per the setup
