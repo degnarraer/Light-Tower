@@ -123,7 +123,7 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
       ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
       return bytes_read;
   }
-	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, portMAX_DELAY ) != ESP_OK)
+	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, pdMS_TO_TICKS(1000) ) != ESP_OK)
 	{
 		ESP_LOGE("i2S Device", "%s: ERROR! Unable to read samples.", GetTitle().c_str());
 		return bytes_read;
@@ -144,7 +144,7 @@ size_t I2S_Device::ReadSamples()
         free(dataBuffer);
         return 0;
     }
-    esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, portMAX_DELAY);
+    esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, pdMS_TO_TICKS(1000));
     if (result != ESP_OK) {
         ESP_LOGE("I2S Device", "%s: ERROR! i2s_read failed with error: %s", GetTitle().c_str(), esp_err_to_name(result));
         free(dataBuffer);
@@ -167,20 +167,25 @@ size_t I2S_Device::ReadSamples()
 
 size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 {
-	size_t bytes_written = 0;
+    size_t bytes_written = 0;
 
-  if (m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1) {
-      ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S Port.", GetTitle().c_str());
-      return 0;
-  }
+    // Check if the I2S port is valid
+    if (m_I2S_PORT != I2S_NUM_0 && m_I2S_PORT != I2S_NUM_1) {
+        ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S Port.", GetTitle().c_str());
+        return 0;
+    }
 
-	i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, portMAX_DELAY);
-	if(bytes_written != byteCount)
-	{
-		ESP_LOGE("i2S Device", "%s: ERROR! Unable to write all bytes.", GetTitle().c_str()); 
-	}
-	ESP_LOGV("i2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
-	return bytes_written;
+    // Write data with a 1-second timeout
+    esp_err_t result = i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, pdMS_TO_TICKS(1000));
+    if (result != ESP_OK) {
+        ESP_LOGE("I2S Device", "%s: ERROR! i2s_write failed with code: %d", GetTitle().c_str(), result);
+        return 0;
+    }
+
+    // Log the number of bytes written
+    ESP_LOGV("I2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
+
+    return bytes_written;
 }
 
 void I2S_Device::UninstallDevice()
