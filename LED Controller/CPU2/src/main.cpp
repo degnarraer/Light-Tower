@@ -35,7 +35,7 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
                                 , true
-                                , true
+                                , false
                                 , I2S_BUFFER_COUNT
                                 , I2S_SAMPLE_COUNT
                                 , I2S1_SCLCK_PIN
