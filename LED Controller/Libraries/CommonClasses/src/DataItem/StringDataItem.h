@@ -66,7 +66,6 @@ class StringDataItem: public LocalStringDataItem
 
 		virtual size_t GetChangeCount() const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::GetChangeCount();
 		}
 
@@ -77,12 +76,10 @@ class StringDataItem: public LocalStringDataItem
 		}
 		virtual bool EqualsValue(char *object, size_t count) const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::EqualsValue(object, count);
 		}
 		virtual String GetValueAsString() const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::GetValueAsString();
 		}
 		virtual DataType_t GetDataType() override
@@ -91,41 +88,34 @@ class StringDataItem: public LocalStringDataItem
 		}
 		bool UpdateStore(const char *newValues, const size_t changeCount)
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::UpdateStore(newValues, changeCount);
 		}
 		String ConvertValueToString(const char *values, size_t count) const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::ConvertValueToString(values, count);
 		}
 		size_t ParseStringValueIntoValues(const String& stringValue, char *values)
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::ParseStringValueIntoValues(stringValue, values);
 		}
 		virtual bool SetValue(const char* value, size_t count) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			bool valueChanged = Set_Tx_Value(value, count);
 			return valueChanged;
 		}
 
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::GetInitialValueAsString(stringValue);
 		}
 
 		String GetInitialValueAsString() const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return LocalStringDataItem::GetInitialValueAsString();
 		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("StringDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""

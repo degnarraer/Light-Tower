@@ -141,13 +141,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 
 		virtual size_t GetChangeCount() const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return DataItem<T, COUNT>::GetChangeCount();
 		}
 
 		virtual bool SetValue(const T* values, size_t count) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			bool result = DataItem<T, COUNT>::SetValue(values, count);
 			if(result)
 			{
@@ -159,13 +157,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		
 		virtual bool SetValue(const T& value) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return this->SetValue(&value, 1);
 		}
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);
 			if(result)
 			{

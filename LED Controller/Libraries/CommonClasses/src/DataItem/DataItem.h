@@ -173,7 +173,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValue(const T* values, size_t count) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			ESP_LOGD("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName().c_str(), this->ConvertValueToString(values, count).c_str() );
 			return this->Set_Tx_Value(values, count);
 		}
@@ -186,7 +185,6 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			ESP_LOGD( "DataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, this->GetName().c_str()

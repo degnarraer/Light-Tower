@@ -115,7 +115,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		
 		virtual ~LocalDataItem()
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
 			ESP_LOGI("DataItem<T, COUNT>::Setup()", "\"%s\": LocalDataItem Freeing Memory", m_Name.c_str());
 			if(mp_SetupCallerInterface)
 			{
@@ -129,11 +128,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			if(mp_Value)
 			{
+				std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
         		ESP_LOGD("~LocalDataItem", "freeing mp_Value Memory");
 				free(mp_Value);
 			}
 			if(mp_InitialValue) 
 			{
+				std::lock_guard<std::recursive_mutex> lock(m_ValueMutext);
         		ESP_LOGD("~LocalDataItem", "freeing mp_InitialValue Memory");
 				free(mp_InitialValue);
 			}
@@ -217,7 +218,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual size_t GetChangeCount() const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			return m_ChangeCount;
 		}
 
@@ -289,7 +289,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual String GetInitialValueAsString() const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			String value;
 			if(!GetInitialValueAsString(value))
 			{
@@ -318,7 +317,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual String GetValueAsString() const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			String value;
 			if(!GetValueAsString(value))
 			{
@@ -393,7 +391,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValueFromString(const String& stringValue)
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			ESP_LOGI("LocalDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
@@ -413,7 +410,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValue(const T *values, size_t count)
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
@@ -423,7 +419,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool SetValue(const T& value)
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
 			return SetValue(&value, 1);

@@ -279,7 +279,7 @@ bool I2S_Device::IsInitialized()
 
 void I2S_Device::CreateTask()
 {
-  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_10mS_Task", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_10mS_Task", 10000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
   {
     ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
   }

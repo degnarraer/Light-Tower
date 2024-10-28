@@ -66,7 +66,6 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual String GetInitialValueAsString() const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			String value;
 			if(!GetInitialValueAsString(value))
 			{
@@ -96,7 +95,6 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual String GetValueAsString() const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			String value;
 			if(!GetValueAsString(value))
 			{
@@ -107,7 +105,6 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValueFromString(const String& stringValue) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
 			ESP_LOGD("LocalStringDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()

@@ -61,6 +61,7 @@ void Bluetooth_Source::InstallDevice()
 		m_BTSource.set_ssid_callback(StaticConnectToThisName);
 		m_BTSource.set_discovery_mode_callback(Static_Discovery_Mode_Changed);
 		m_BTSource.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
+		m_BTSource.set_task_core(0);
 		m_DeviceState = DeviceState::Installed;
 		ESP_LOGI("Bluetooth_Device", "\"%s\": Bluetooth Device installed", GetTitle().c_str());
 	}
@@ -334,23 +335,27 @@ void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
 void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 {
 	const TickType_t xFrequency = 1000;
-  	TickType_t xLastWakeTime = xTaskGetTickCount();
-  	while(true)
-  	{
-		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
+	TickType_t xLastWakeTime = xTaskGetTickCount();
+
+	while (true)
+	{
+		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 		unsigned long CurrentTime = millis();
-		auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
-			[CurrentTime](const ActiveBluetoothDevice_t& device) {
-				return CurrentTime - device.lastUpdateTime >= BT_COMPATIBLE_DEVICE_TIMEOUT;
-			});
-		m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
+		{
+			std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
+			auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
+				[CurrentTime](const ActiveBluetoothDevice_t& device) {
+					return (CurrentTime - device.lastUpdateTime) >= BT_COMPATIBLE_DEVICE_TIMEOUT;
+				});
+			m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
+		}
 		if (m_Callee)
 		{
 			m_Callee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
 		}
 	}
 }
+
 
 Bluetooth_Sink* Bluetooth_Sink::bT_sink_instance = nullptr;
 void Bluetooth_Sink::Setup()
@@ -407,7 +412,7 @@ void Bluetooth_Sink::InstallDevice()
 		m_BTSink.set_i2s_config(i2s_config);
 		m_BTSink.set_i2s_port(m_I2S_PORT);
 		m_BTSink.set_bits_per_sample(m_BitsPerSample);
-		m_BTSink.set_task_core(1);
+		m_BTSink.set_task_core(0);
 		m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
 		m_BTSink.set_volume_control(&m_VolumeControl);
 		m_BTSink.set_volume(100);
