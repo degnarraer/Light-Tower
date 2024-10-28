@@ -18,8 +18,6 @@
 
 #include "I2S_Device.h"
 
-#define TIME_TO_WAIT_FOR_SOUND 500
-
 I2S_Device::I2S_Device ( String Title
                        , i2s_port_t i2S_PORT
                        , i2s_mode_t Mode
@@ -125,7 +123,7 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
       ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
       return bytes_read;
   }
-	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, pdMS_TO_TICKS(TIME_TO_WAIT_FOR_SOUND) ) != ESP_OK)
+	if(i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, TIME_TO_WAIT_FOR_SOUND ) != ESP_OK)
 	{
 		ESP_LOGE("i2S Device", "%s: ERROR! Unable to read samples.", GetTitle().c_str());
 		return bytes_read;
@@ -146,7 +144,7 @@ size_t I2S_Device::ReadSamples()
         free(dataBuffer);
         return 0;
     }
-    esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, pdMS_TO_TICKS(TIME_TO_WAIT_FOR_SOUND));
+    esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, TIME_TO_WAIT_FOR_SOUND );
     if (result != ESP_OK) {
         ESP_LOGE("I2S Device", "%s: ERROR! i2s_read failed with error: %s", GetTitle().c_str(), esp_err_to_name(result));
         free(dataBuffer);
@@ -178,7 +176,7 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
     }
 
     // Write data with a 1-second timeout
-    esp_err_t result = i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, pdMS_TO_TICKS(TIME_TO_WAIT_FOR_SOUND));
+    esp_err_t result = i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND );
     if (result != ESP_OK) {
         ESP_LOGE("I2S Device", "%s: ERROR! i2s_write failed with code: %d", GetTitle().c_str(), result);
         return 0;

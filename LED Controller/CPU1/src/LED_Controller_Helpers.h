@@ -13,7 +13,8 @@ Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , I2S_CHANNEL_FMT_RIGHT_LEFT
                                        , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                        , I2S_CHANNEL_STEREO
-                                       , true                               // Use APLL                                    
+                                       , true                               // Use APLL
+                                       , false
                                        , I2S_BUFFER_COUNT                   // Buffer Count
                                        , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
                                        , I2S2_SCLCK_PIN                     // Serial Clock Pin
@@ -31,7 +32,7 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone"
                                 , i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB)
                                 , I2S_CHANNEL_STEREO
                                 , true                               // Use APLL
-                                , false                               // Fixed Clock
+                                , false                              // Fixed Clock
                                 , I2S_BUFFER_COUNT                   // Buffer Count
                                 , I2S_CHANNEL_SAMPLE_COUNT           // Buffer Size
                                 , I2S1_SCLCK_PIN                     // Serial Clock Pin

@@ -192,7 +192,7 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
     break;
     case SoundInputSource_t::Bluetooth:
     {
-      //m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+      //m_I2S_Out.WriteSoundBufferData(data, length);
     }
     break;
     case SoundInputSource_t::OFF:

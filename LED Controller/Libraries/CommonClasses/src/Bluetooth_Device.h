@@ -163,6 +163,7 @@ class Bluetooth_Sink: public NamedItem
 				  , i2s_comm_format_t i2s_CommFormat
 				  , i2s_channel_t i2s_channel
 				  , bool Use_APLL
+				  , bool FixedClock
 				  , size_t BufferCount
 				  , size_t BufferSize
 				  , int SerialClockPin
@@ -179,6 +180,7 @@ class Bluetooth_Sink: public NamedItem
 				  , m_Channel_Fmt(i2s_Channel_Fmt)
 				  , m_i2s_channel(i2s_channel)
 				  , m_Use_APLL(Use_APLL)
+				  , m_FixedClock(FixedClock)
 				  , m_BufferCount(BufferCount)
 				  , m_BufferSize(BufferSize)
 				  , m_I2SClockPin(SerialClockPin)
@@ -234,6 +236,7 @@ class Bluetooth_Sink: public NamedItem
 		const i2s_channel_fmt_t m_Channel_Fmt;
 		const i2s_channel_t m_i2s_channel;
 		const bool m_Use_APLL;
+		const bool m_FixedClock;
 		const int m_BufferCount;
 		const int m_BufferSize;
 		const int m_I2SClockPin;

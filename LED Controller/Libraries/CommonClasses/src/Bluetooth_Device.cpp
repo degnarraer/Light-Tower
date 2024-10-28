@@ -394,7 +394,7 @@ void Bluetooth_Sink::InstallDevice()
 		.dma_buf_len = m_BufferSize,
 		.use_apll = m_Use_APLL,
 		.tx_desc_auto_clear = true,
-		.fixed_mclk = 1
+		.fixed_mclk = m_FixedClock
 		};
 		i2s_pin_config_t my_pin_config = 
 		{
