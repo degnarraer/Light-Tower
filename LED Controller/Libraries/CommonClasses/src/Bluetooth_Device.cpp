@@ -33,7 +33,7 @@ void Bluetooth_Source::Setup()
 	{
 		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Processor Queue.");
 	}
-	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_CompatibleDeviceTrackerTaskHandle, 1 ) == pdTRUE )
+	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_LOW, &m_CompatibleDeviceTrackerTaskHandle, 1 ) == pdTRUE )
 	{
 		ESP_LOGI("Setup", "Created compatible device Tracker task.");
 	}
@@ -41,7 +41,7 @@ void Bluetooth_Source::Setup()
 	{
 		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Tracker task.");
 	}
-	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_MEDIUM, &m_DeviceProcessorTaskHandle, 1 ) == pdTRUE)
+	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_LOW, &m_DeviceProcessorTaskHandle, 1 ) == pdTRUE)
 	{
 		ESP_LOGI("Setup", "Created compatible device Processor task.");
 	}
@@ -341,6 +341,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 	{
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 		unsigned long CurrentTime = millis();
+		std::vector<ActiveBluetoothDevice_t> activeDevicesCopy;
 		{
 			std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
 			auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
@@ -348,10 +349,11 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 					return (CurrentTime - device.lastUpdateTime) >= BT_COMPATIBLE_DEVICE_TIMEOUT;
 				});
 			m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
+			activeDevicesCopy = m_ActiveCompatibleDevices;
 		}
 		if (m_Callee)
 		{
-			m_Callee->BluetoothActiveDeviceListUpdated(m_ActiveCompatibleDevices);
+			m_Callee->BluetoothActiveDeviceListUpdated(activeDevicesCopy);
 		}
 	}
 }

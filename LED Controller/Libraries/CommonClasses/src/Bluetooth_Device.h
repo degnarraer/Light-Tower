@@ -18,7 +18,7 @@
 
 #pragma once
 #define BT_COMPATIBLE_DEVICE_TIMEOUT 10000
-#define DEVICE_QUEUE_SIZE 10
+#define DEVICE_QUEUE_SIZE 100
 
 #include <vector>
 #include <Arduino.h>
@@ -115,9 +115,9 @@ class Bluetooth_Source: public NamedItem
 		String m_Address;
 		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
 		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
-		QueueHandle_t m_DeviceProcessorQueueHandle= nullptr;
-		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle= nullptr;
-		TaskHandle_t m_DeviceProcessorTaskHandle= nullptr;
+		QueueHandle_t m_DeviceProcessorQueueHandle = nullptr;
+		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle = nullptr;
+		TaskHandle_t m_DeviceProcessorTaskHandle = nullptr;
 
 		
     	DeviceState m_DeviceState = DeviceState::Uninstalled;
