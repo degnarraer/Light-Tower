@@ -50,7 +50,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			if(mp_InitialValue)
 			{
 				stringValue = String(mp_InitialValue);
@@ -77,7 +77,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool GetValueAsString(String &stringValue) const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			if(mp_Value)
 			{
 				stringValue = String(mp_Value);
@@ -114,30 +114,27 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool SetValue(const char* value, size_t count) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutext);
+			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			assert(value != nullptr);
 			assert(mp_Value != nullptr);
 			assert(count <= DATAITEM_STRING_LENGTH);
-			String newValue = String(value);
-			ESP_LOGD( "DataItem: SetValue"
-					, "\"%s\" Set Value: \"%s\""
-					, m_Name.c_str()
-					, newValue.c_str() );
-			bool valueChanged = false;
-			if(0 != strcmp(mp_Value, value))
-			{
-				valueChanged = true;
-			}
+
+			std::string newValue(value, count);
+			ESP_LOGD("DataItem: SetValue", "\"%s\" Set Value: \"%s\"", m_Name.c_str(), newValue.c_str());
+
+			bool valueChanged = (strncmp(mp_Value, value, count) != 0);
 			bool validValue = ConfirmValueValidity(value, count);
 			bool updateAllowed = UpdateChangeCount(GetChangeCount(), (valueChanged && validValue));
-			bool valueUpdateAllowed = updateAllowed & validValue;
-			if(valueUpdateAllowed)
-			{	
+			bool valueUpdateAllowed = updateAllowed && validValue;
+
+			if (valueUpdateAllowed)
+			{   
 				ZeroOutMemory(mp_Value);
-				strcpy(mp_Value, value);
-				ESP_LOGI( "LocalDataItem: SetValue", "Set Value to \"%s\"", newValue.c_str());
+				strncpy(mp_Value, value, count);
+				ESP_LOGI("LocalDataItem: SetValue", "Set Value to \"%s\"", newValue.c_str());
 				this->CallNamedCallbacks(mp_Value);
 			}
+
 			return valueUpdateAllowed;
 		}
 
