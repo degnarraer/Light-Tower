@@ -56,6 +56,7 @@ class I2S_Device: public NamedItem
 
   public:
     I2S_Device( String Title
+              , BaseType_t Core
               , i2s_port_t i2S_PORT
               , i2s_mode_t Mode
               , int SampleRate
@@ -86,6 +87,7 @@ class I2S_Device: public NamedItem
     }
 
   private:
+		BaseType_t m_Core = 0;
 	  I2S_Device_Callback* m_Callee = NULL;
     DataItemConfig_t* m_ItemConfig = NULL;
     const i2s_port_t m_I2S_PORT;

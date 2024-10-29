@@ -19,6 +19,7 @@
 #include "I2S_Device.h"
 
 I2S_Device::I2S_Device ( String Title
+                       , BaseType_t Core
                        , i2s_port_t i2S_PORT
                        , i2s_mode_t Mode
                        , int SampleRate
@@ -36,6 +37,7 @@ I2S_Device::I2S_Device ( String Title
                        , int I2SDataInPin
                        , int I2SDataOutPin )
                        : NamedItem(Title)
+                       , m_Core(Core)
 					             , m_I2S_PORT(i2S_PORT)
                        , m_SampleRate(SampleRate)
                        , m_i2s_Mode(Mode)

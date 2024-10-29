@@ -62,8 +62,10 @@ class Bluetooth_Source: public NamedItem
 		};
 		
 		Bluetooth_Source( String Title
+						, BaseType_t Core
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
+						, m_Core(Core)
 						, m_BTSource(BTSource)
 		{
 			bT_source_instance = this;
@@ -108,6 +110,7 @@ class Bluetooth_Source: public NamedItem
 
 	private:
 	
+		BaseType_t m_Core = 0;
 		BluetoothA2DPSource& m_BTSource;
 		Bluetooth_Source_Callbacks* m_Callee = NULL;
 		music_data_cb_t m_MusicDataCallback = NULL;
@@ -118,7 +121,6 @@ class Bluetooth_Source: public NamedItem
 		QueueHandle_t m_DeviceProcessorQueueHandle = nullptr;
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle = nullptr;
 		TaskHandle_t m_DeviceProcessorTaskHandle = nullptr;
-
 		
     	DeviceState m_DeviceState = DeviceState::Uninstalled;
 		void InstallDevice();
@@ -154,6 +156,7 @@ class Bluetooth_Sink: public NamedItem
 		
   public:
     Bluetooth_Sink( String Title
+				  , BaseType_t Core
 				  , BluetoothA2DPSink& BTSink
 				  , i2s_port_t i2S_PORT
 				  , i2s_mode_t Mode
@@ -171,6 +174,7 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataInPin
 				  , int SerialDataOutPin )
 				  : NamedItem(Title)
+				  , m_Core(Core)
 				  , m_BTSink(BTSink)
 				  , m_I2S_PORT(i2S_PORT)
 				  , m_i2s_Mode(Mode)
@@ -226,6 +230,7 @@ class Bluetooth_Sink: public NamedItem
 	}
 
 	private:
+		BaseType_t m_Core = 0;
 		Bluetooth_Sink_Callbacks* m_Callee = NULL;
 		BluetoothA2DPSink& m_BTSink;
 		i2s_port_t m_I2S_PORT;

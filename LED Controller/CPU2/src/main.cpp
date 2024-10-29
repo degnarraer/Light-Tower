@@ -26,6 +26,7 @@ Preferences m_Preferences;
 PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
 
 I2S_Device m_I2S_In = I2S_Device( "I2S_In"
+                                , 0
                                 , I2S_NUM_1
                                 , i2s_mode_t(I2S_MODE_SLAVE | I2S_MODE_RX)
                                 , I2S_SAMPLE_RATE
@@ -44,7 +45,9 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
                                 , I2S1_SDOUT_PIN );
 
 BluetoothA2DPSource a2dp_source;
-Bluetooth_Source m_BT_Out( "Bluetooth Source", a2dp_source );
+Bluetooth_Source m_BT_Out( "Bluetooth Source"
+                         , 0
+                         , a2dp_source );
                                             
 ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
 
