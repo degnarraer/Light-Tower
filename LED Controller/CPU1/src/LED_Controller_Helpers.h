@@ -5,7 +5,7 @@
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
-                                       , 0
+                                       , 1
                                        , m_BTSink
                                        , I2S_NUM_0                          // I2S Interface
                                        , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
@@ -24,7 +24,7 @@ Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , I2S2_SDOUT_PIN );                  // Serial Data Out Pin
 
 I2S_Device m_Mic_In = I2S_Device( "Microphone"
-                                , 0
+                                , 1
                                 , I2S_NUM_0                          // I2S Interface
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
                                 , I2S_SAMPLE_RATE
@@ -43,7 +43,7 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone"
                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
 
 I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
-                                 , 0
+                                 , 1
                                  , I2S_NUM_1                        // I2S Interface
                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                                  , I2S_SAMPLE_RATE

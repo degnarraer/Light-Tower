@@ -281,7 +281,7 @@ bool I2S_Device::IsInitialized()
 
 void I2S_Device::CreateTask()
 {
-  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_10mS_Task", 10000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_Task", 2000, this, THREAD_PRIORITY_MEDIUM,  &m_TaskHandle, 0 ) == pdTRUE )
   {
     ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
   }
@@ -315,7 +315,7 @@ void I2S_Device::Static_ProcessEventQueue(void * parameter)
 
 void I2S_Device::ProcessEventQueue()
 {
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 50;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {

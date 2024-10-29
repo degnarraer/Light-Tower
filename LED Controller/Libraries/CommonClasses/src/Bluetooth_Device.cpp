@@ -62,6 +62,7 @@ void Bluetooth_Source::InstallDevice()
 		m_BTSource.set_discovery_mode_callback(Static_Discovery_Mode_Changed);
 		m_BTSource.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
 		m_BTSource.set_task_core(m_Core);
+		m_BTSource.set_task_priority(THREAD_PRIORITY_RT);
 		m_DeviceState = DeviceState::Installed;
 		ESP_LOGI("Bluetooth_Device", "\"%s\": Bluetooth Device installed", GetTitle().c_str());
 	}
@@ -415,8 +416,7 @@ void Bluetooth_Sink::InstallDevice()
 		m_BTSink.set_i2s_config(i2s_config);
 		m_BTSink.set_i2s_port(m_I2S_PORT);
 		m_BTSink.set_bits_per_sample(m_BitsPerSample);
-		m_BTSink.set_task_core(0);
-		m_BTSink.set_task_priority(THREAD_PRIORITY_HIGH);
+		m_BTSink.set_task_priority(THREAD_PRIORITY_RT);
 		m_BTSink.set_volume_control(&m_VolumeControl);
 		m_BTSink.set_volume(100);
 		m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
