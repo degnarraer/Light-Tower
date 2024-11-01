@@ -563,6 +563,17 @@ private:
             if (m_Callback && mp_Object)
             {
                 UpdateStatus_t updateStatus = m_Callback(loadedValue, mp_Object);
+                ESP_LOGI( "HandleLoad", "\"%s\" Loaded value: \"%s\" \n" 
+                          "ValueChanged: %i \n"
+                          "Value Valid: %i \n"
+                          "Value Update Allowed: %i \n"
+                          "Value Update Successful: %i "
+                          , m_Key.c_str()
+                          , m_InitialValue.c_str()
+                          , updateStatus.ValueChanged
+                          , updateStatus.ValidValue
+                          , updateStatus.UpdateAllowed
+                          , updateStatus.UpdateSuccessful );
                 if(updateStatus.ValueChanged)
                 {
                     if(updateStatus.UpdateSuccessful)
