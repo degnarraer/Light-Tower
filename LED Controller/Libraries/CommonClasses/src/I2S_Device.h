@@ -45,7 +45,7 @@ class I2S_Device: public NamedItem
                 , public BitDepthConverter
 
 {
-  enum class DeviceState
+  enum DeviceState
   {
     Installed,
     Uninstalled,
@@ -117,6 +117,7 @@ class I2S_Device: public NamedItem
     DeviceState m_DeviceState = DeviceState::Uninstalled;
     void InstallDevice();
     void UninstallDevice();
+    String GetDeviceState();
 
     //Process Task
     void CreateTask();
