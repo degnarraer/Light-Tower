@@ -55,7 +55,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			PreferenceManager::InitializeAndLoadPreference();
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("LocalStringDataItemWithPreferences::SetValueFromString"
@@ -65,10 +65,10 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			return SetValue(stringValue.c_str(), stringValue.length());
 		}
 		
-		virtual bool SetValue(const char* value, size_t count) override
+		virtual UpdateStatus_t SetValue(const char* value, size_t count) override
 		{
-			bool result = LocalStringDataItem::SetValue(value, count);
-			if(result)
+			UpdateStatus_t result = LocalStringDataItem::SetValue(value, count);
+			if(result.UpdateSuccessful)
 			{
 				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   , GetValueAsString() );

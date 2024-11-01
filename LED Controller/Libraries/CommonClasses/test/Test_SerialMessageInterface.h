@@ -72,7 +72,7 @@ class SerialMessageInterfaceTester: public SerialMessageInterface<T, COUNT>
         {
             return m_MockSerialMessageInterface.GetValuePointer();
         }
-		virtual bool UpdateStore(const T *newValues, const size_t changeCount) override
+		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t changeCount) override
         {
             return m_MockSerialMessageInterface.UpdateStore(newValues, changeCount);
         }

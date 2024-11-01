@@ -144,10 +144,10 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return DataItem<T, COUNT>::GetChangeCount();
 		}
 
-		virtual bool SetValue(const T* values, size_t count) override
+		virtual UpdateStatus_t SetValue(const T* values, size_t count) override
 		{
-			bool result = DataItem<T, COUNT>::SetValue(values, count);
-			if(result)
+			UpdateStatus_t result = DataItem<T, COUNT>::SetValue(values, count);
+			if(result.UpdateSuccessful)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   				   , this->GetValueAsString() );
@@ -155,15 +155,15 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return result;
 		}
 		
-		virtual bool SetValue(const T& value) override
+		virtual UpdateStatus_t SetValue(const T& value) override
 		{
 			return this->SetValue(&value, 1);
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
-			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);
-			if(result)
+			UpdateStatus_t result = DataItem<T, COUNT>::SetValueFromString(stringValue);
+			if(result.UpdateSuccessful)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   				   , this->GetValueAsString() );

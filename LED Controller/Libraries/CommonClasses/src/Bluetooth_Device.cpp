@@ -33,7 +33,7 @@ void Bluetooth_Source::Setup()
 	{
 		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Processor Queue.");
 	}
-	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_LOW, &m_CompatibleDeviceTrackerTaskHandle, 1 ) == pdTRUE )
+	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_LOW, &m_CompatibleDeviceTrackerTaskHandle, m_Core ) == pdTRUE )
 	{
 		ESP_LOGI("Setup", "Created compatible device Tracker task.");
 	}
@@ -41,7 +41,7 @@ void Bluetooth_Source::Setup()
 	{
 		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Tracker task.");
 	}
-	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_LOW, &m_DeviceProcessorTaskHandle, 1 ) == pdTRUE)
+	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_LOW, &m_DeviceProcessorTaskHandle, m_Core ) == pdTRUE)
 	{
 		ESP_LOGI("Setup", "Created compatible device Processor task.");
 	}

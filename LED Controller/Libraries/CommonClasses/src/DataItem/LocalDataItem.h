@@ -326,7 +326,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return value;
 		}
 
-		static bool StaticSetValueFromString(const String& stringValue, void* objectptr)
+		static UpdateStatus_t StaticSetValueFromString(const String& stringValue, void* objectptr)
 		{
 			if(objectptr)
 			{
@@ -338,13 +338,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				else
 				{
             		ESP_LOGE("StaticSetValueFromString", "ERROR! Null Object.");
-					return false;
+					return UpdateStatus_t();
 				}
 			}
 			else
 			{
             	ESP_LOGE("StaticSetValueFromString", "ERROR! Null Object Pointer.");
-				return false;
+				return UpdateStatus_t();
 			}
 		}
 
@@ -390,12 +390,12 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return substrings.size();
 		}
 
-		virtual bool SetValueFromString(const String& stringValue)
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue)
 		{
-			ESP_LOGI("LocalDataItem::SetValueFromString"
+			ESP_LOGI( "LocalDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
-					, stringValue.c_str());
+					, stringValue.c_str() );
 			T values[COUNT];
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
 			if(parseCount == COUNT)
@@ -405,11 +405,11 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			else
 			{
 				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
-				return false;
+				return UpdateStatus_t();
 			}
 		}
 
-		virtual bool SetValue(const T *values, size_t count)
+		virtual UpdateStatus_t SetValue(const T *values, size_t count)
 		{
 			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
@@ -418,7 +418,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return UpdateStore(values, GetChangeCount()+1);
 		}
 
-		virtual bool SetValue(const T& value)
+		virtual UpdateStatus_t SetValue(const T& value)
 		{
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
@@ -488,7 +488,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return (changeCount < m_ChangeCount) && (m_ChangeCount - changeCount <= (SIZE_MAX / 2));
 		}
 
-		virtual bool UpdateStore(const T *newValues, const size_t newChangeCount)
+		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t newChangeCount)
 		{
 			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
 			assert(newValues != nullptr);
@@ -500,23 +500,32 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, ConvertValueToString(newValues, COUNT).c_str()
 					, m_ChangeCount
 					, newChangeCount );
-			bool valueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
-			bool validValue = ConfirmValueValidity(newValues, COUNT);
-			const bool updateAllowed = valueChanged && validValue;
-			const bool storeUpdated = UpdateChangeCount(newChangeCount, updateAllowed);
+			UpdateStatus_t updateStatus;
+			updateStatus.ValueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
+			updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
+			updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
+			updateStatus.UpdateSuccessful = UpdateChangeCount(newChangeCount, updateStatus.UpdateAllowed);
 			ESP_LOGD( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
-			if(storeUpdated)
+			if(updateStatus.UpdateSuccessful)
 			{
 				ZeroOutMemory(mp_Value);
 				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
-				this->CallNamedCallbacks(mp_Value);
+				updateStatus.UpdateSuccessful = ( memcmp(mp_Value, newValues, sizeof(T) * COUNT) == 0);
+				if(updateStatus.UpdateSuccessful)
+				{
+					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+					this->CallNamedCallbacks(mp_Value);
+				}
+				else
+				{
+					ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+				}
 			}
 			else
 			{
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Successful. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
 			}
-			return storeUpdated;
+			return updateStatus;
 		}
 
 		virtual bool ConfirmValueValidity(const T* values, size_t count) const

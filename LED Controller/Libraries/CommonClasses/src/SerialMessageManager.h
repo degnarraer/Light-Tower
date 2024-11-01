@@ -173,7 +173,7 @@ class Named_Object_Callee_Interface
 		{
 			
 		}
-		virtual bool New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* object, const size_t changeCount) = 0;
+		virtual UpdateStatus_t New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* object, const size_t changeCount) = 0;
 		virtual String GetName() const = 0;
 		size_t GetCount(){ return m_Count;}
 	private:

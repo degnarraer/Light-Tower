@@ -17,6 +17,33 @@
 #define ENCODE_OBJECT_DIVIDER "|"
 #define ENCODE_VALUE_DIVIDER ","
 
+
+struct UpdateStatus
+{
+    bool ValueChanged = false;
+    bool ValidValue = false;
+    bool UpdateAllowed = false;
+    bool UpdateSuccessful = false;
+
+    bool operator==(const UpdateStatus& other) const
+    {
+        return ( this->ValueChanged == other.ValueChanged &&
+                 this->ValidValue == other.ValidValue &&
+                 this->UpdateAllowed == other.UpdateAllowed &&
+                 this->UpdateSuccessful == other.UpdateSuccessful );
+    }
+
+    UpdateStatus& operator|=(const UpdateStatus& other)
+    {
+        this->ValueChanged |= other.ValueChanged;
+        this->ValidValue |= other.ValidValue;
+        this->UpdateAllowed |= other.UpdateAllowed;
+        this->UpdateSuccessful |= other.UpdateSuccessful;
+        return *this;
+    }
+};
+typedef UpdateStatus UpdateStatus_t;
+
 template <typename T>
 struct TemplateObjectWithChangeCount
 {

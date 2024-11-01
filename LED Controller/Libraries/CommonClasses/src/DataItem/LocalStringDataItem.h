@@ -103,7 +103,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return value;
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
 			ESP_LOGD("LocalStringDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
@@ -112,7 +112,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return SetValue(stringValue.c_str(), stringValue.length());
 		}
 
-		virtual bool SetValue(const char* value, size_t count) override
+		virtual UpdateStatus_t SetValue(const char* value, size_t count) override
 		{
 			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			assert(value != nullptr);
@@ -121,21 +121,28 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 			std::string newValue(value, count);
 			ESP_LOGD("DataItem: SetValue", "\"%s\" Set Value: \"%s\"", m_Name.c_str(), newValue.c_str());
-
-			bool valueChanged = (strncmp(mp_Value, value, count) != 0);
-			bool validValue = ConfirmValueValidity(value, count);
-			bool updateAllowed = UpdateChangeCount(GetChangeCount(), (valueChanged && validValue));
-			bool valueUpdateAllowed = updateAllowed && validValue;
-
-			if (valueUpdateAllowed)
+			
+			UpdateStatus_t updateStatus;
+			updateStatus.ValueChanged = (strncmp(mp_Value, value, count) != 0);
+			updateStatus.ValidValue = ConfirmValueValidity(value, count);
+			updateStatus.UpdateAllowed = UpdateChangeCount(GetChangeCount(), (updateStatus.ValueChanged && updateStatus.ValidValue));
+			if (updateStatus.UpdateAllowed)
 			{   
 				ZeroOutMemory(mp_Value);
 				strncpy(mp_Value, value, count);
-				ESP_LOGI("LocalDataItem: SetValue", "Set Value to \"%s\"", newValue.c_str());
-				this->CallNamedCallbacks(mp_Value);
+				updateStatus.UpdateSuccessful = (strncmp(mp_Value, value, count) == 0);
+				if(updateStatus.UpdateSuccessful)
+				{
+					ESP_LOGI("LocalDataItem: SetValue", "\"%s\": Set Value to \"%s\".", GetName().c_str(), newValue.c_str());
+					this->CallNamedCallbacks(mp_Value);
+				}
+				else
+				{
+					ESP_LOGE("LocalDataItem: SetValue", "ERROR! \"%s\": Setting value to \"%s\".", GetName().c_str(), newValue.c_str());
+				}
 			}
 
-			return valueUpdateAllowed;
+			return updateStatus;
 		}
 
 		virtual bool ConfirmValueValidity(const char *values, size_t count) const override

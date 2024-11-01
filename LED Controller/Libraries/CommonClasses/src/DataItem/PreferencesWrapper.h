@@ -346,7 +346,7 @@ class PreferencesWrapper : public IPreferences
 class PreferenceManager : public DataTypeFunctions 
 {
 public:
-	typedef bool (*LoadedValueCallback_t)(const String&, void* object);
+	typedef UpdateStatus_t (*LoadedValueCallback_t)(const String&, void* object);
     enum class PreferenceUpdateType
     {
         Initialize,
@@ -562,23 +562,38 @@ private:
             ESP_LOGD("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
             if (m_Callback && mp_Object)
             {
-                if(m_Callback(loadedValue, mp_Object))
+                UpdateStatus_t updateStatus = m_Callback(loadedValue, mp_Object);
+                if(updateStatus.ValueChanged)
                 {
-                    ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
-                    result = true;
-                }
-                else
-                {
-                    ESP_LOGW("HandleLoad", "WARNING! \"%s\" Failed to Load Value. Loading Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
-                    if(m_Callback(m_InitialValue, mp_Object))
+                    if(updateStatus.UpdateSuccessful)
                     {
-                        ESP_LOGI("HandleLoad", "Successfully Loaded Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                        ESP_LOGI("HandleLoad", "Successfully loaded value. Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
                         result = true;
                     }
                     else
                     {
-                        ESP_LOGE("HandleLoad", "ERROR! \"%s\" Failed to Load Default Value: \"%s\".", m_Key.c_str(), m_InitialValue.c_str());
+                        ESP_LOGW("HandleLoad", "WARNING! \"%s\" Failed to Load. Trying Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+                        updateStatus = m_Callback(m_InitialValue, mp_Object);
+                        if(updateStatus.ValueChanged)
+                        {
+                            if(updateStatus.UpdateSuccessful)
+                            {
+                                ESP_LOGI("HandleLoad", "Successfully loaded value. Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                                result = true;
+                            }
+                            else
+                            {
+                                ESP_LOGE("HandleLoad", "ERROR! Unable to load value. Key: \"%s\".", m_Key.c_str());
+                                result = false;
+                            }
+                        }
                     }
+                }
+                else
+                {
+                    
+                    ESP_LOGI("HandleLoad", "Skipping load. Value already set for Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                    result = true;
                 }
             }
             else
