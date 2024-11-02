@@ -74,73 +74,83 @@ void I2S_Device::StartDevice()
   ESP_LOGI("StartDevice", "%s: Starting I2S device.", GetTitle().c_str());
   if(IsInitialized())
   {
-    if(m_DeviceState != DeviceState::Running)
+    if(m_DeviceState != DeviceState_t::Running)
     {
       InstallDevice();
       if(ESP_OK == i2s_start(m_I2S_PORT))
       {
         CreateTask();
-        m_DeviceState = DeviceState::Running;
-        ESP_LOGI("StartDevice", "%s: I2S device started. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        m_DeviceState = DeviceState_t::Running;
+        ESP_LOGI("StartDevice", "%s: I2S device started. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
     }
     else
     {
-        ESP_LOGW("StartDevice", "WARNING! %s: I2S device already started. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        ESP_LOGW("StartDevice", "WARNING! %s: I2S device already started. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
     }
   }
   else
   {
-    ESP_LOGW("StopDevice", "%s: WARNING! I2S device not initialized. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    ESP_LOGW("StopDevice", "%s: WARNING! I2S device not initialized. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   }
 }
 
 void I2S_Device::StopDevice()
 {
-  ESP_LOGI("StopDevice", "%s: Stopping I2S device. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+  ESP_LOGI("StopDevice", "%s: Stopping I2S device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   if(IsInitialized())
   {
-    if(m_DeviceState == DeviceState::Running)
+    if(m_DeviceState == DeviceState_t::Running)
     {
-      ESP_LOGI("StopDevice", "%s: Stopping I2S driver. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+      ESP_LOGI("StopDevice", "%s: Stopping I2S driver. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       if(ESP_OK == i2s_stop(m_I2S_PORT))
       {
-        ESP_LOGI("StopDevice", "%s: I2S driver stopped. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        ESP_LOGI("StopDevice", "%s: I2S driver stopped. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
         DestroyTask();
-        ESP_LOGI("StopDevice", "%s: I2S device stopped. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        ESP_LOGI("StopDevice", "%s: I2S device stopped. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
       else
       {
-        ESP_LOGW("StopDevice", "WARNING! %s: Unable to stop I2S driver. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        ESP_LOGW("StopDevice", "WARNING! %s: Unable to stop I2S driver. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
     }
     else
     {
-      ESP_LOGW("StopDevice", "%s: WARNING! I2S device not running. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+      ESP_LOGW("StopDevice", "%s: WARNING! I2S device not running. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
     }
   }
   else
   {
-    ESP_LOGW("StopDevice", "%s: WARNING! I2S device not initialized. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    ESP_LOGW("StopDevice", "%s: WARNING! I2S device not initialized. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   }
   UninstallDevice();
 }
 
-String I2S_Device::GetDeviceState()
+DeviceState_t I2S_Device::GetDeviceState()
+{
+  return m_DeviceState;
+}
+
+bool I2S_Device::IsRunning()
+{
+  return m_DeviceState == DeviceState_t::Running;
+}
+
+String I2S_Device::GetDeviceStateString()
 {
   String result = "";
   switch(m_DeviceState)
   {
-    case DeviceState::Installed:
+    case DeviceState_t::Installed:
       result = "Installed";
     break;
-    case DeviceState::Uninstalled:
+    case DeviceState_t::Uninstalled:
       result = "Uninstalled";
     break;
-    case DeviceState::Running:
+    case DeviceState_t::Running:
       result = "Running";
     break;
-    case DeviceState::Stopped:
+    case DeviceState_t::Stopped:
       result = "Stopped";
     break;
     default:
@@ -149,6 +159,9 @@ String I2S_Device::GetDeviceState()
   }
   return result;
 }
+
+
+
 size_t I2S_Device::WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
 	return WriteSamples(SoundBufferData, ByteCount);
@@ -229,37 +242,37 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 
 void I2S_Device::UninstallDevice()
 {
-  ESP_LOGI("Uninstall Device", "%s: Uninstalling I2S device. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
-  if(m_DeviceState == DeviceState::Uninstalled)
+  ESP_LOGI("Uninstall Device", "%s: Uninstalling I2S device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+  if(m_DeviceState == DeviceState_t::Uninstalled)
   {
-    ESP_LOGW("Uninstall Device", "%s: I2S device already uninstalled. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    ESP_LOGW("Uninstall Device", "%s: I2S device already uninstalled. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   }
   else
   {
-    if(m_DeviceState == DeviceState::Stopped)
+    if(m_DeviceState == DeviceState_t::Stopped)
     {
       if(ESP_OK == i2s_driver_uninstall(m_I2S_PORT))
       { 
-        m_DeviceState = DeviceState::Uninstalled;
-        ESP_LOGI("Uninstall Device", "%s: I2S device uninstalled. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        m_DeviceState = DeviceState_t::Uninstalled;
+        ESP_LOGI("Uninstall Device", "%s: I2S device uninstalled. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
       else
       {
-        ESP_LOGE("Uninstall Device", "%s: Uninstall I2S device failed. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+        ESP_LOGE("Uninstall Device", "%s: Uninstall I2S device failed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
     }
     else
     {
-      ESP_LOGE("Uninstall Device", "%s: I2S device not stopped. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+      ESP_LOGE("Uninstall Device", "%s: I2S device not stopped. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
     }
   }
 }
 
 void I2S_Device::InstallDevice()
 {
-  if(m_DeviceState == DeviceState::Uninstalled)
+  if(m_DeviceState == DeviceState_t::Uninstalled)
   {
-    ESP_LOGI("i2S Device", "%s: Installing I2S device. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    ESP_LOGI("i2S Device", "%s: Installing I2S device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
     esp_err_t err;
     // The I2S config as per the example
     const i2s_config_t i2s_config = {
@@ -309,23 +322,23 @@ void I2S_Device::InstallDevice()
       ESP_LOGE("i2S Device", "ERROR! %s: Failed setting pin: %s.", GetTitle().c_str(), err);
       ESP.restart();
     }
-    m_DeviceState = DeviceState::Installed;
-    ESP_LOGI("i2S Device", "%s: Device Installed. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    m_DeviceState = DeviceState_t::Installed;
+    ESP_LOGI("i2S Device", "%s: Device Installed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   }
   else
   {
-    ESP_LOGI("i2S Device", "%s: Device already Installed. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    ESP_LOGI("i2S Device", "%s: Device already Installed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   }
 }
 
 bool I2S_Device::IsInitialized() 
 {
-  return (m_I2S_PORT != I2S_NUM_MAX);
+  return (m_I2S_PORT < I2S_NUM_MAX);
 }
 
 void I2S_Device::CreateTask()
 {
-  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_Task", 2000, this, THREAD_PRIORITY_RT,  &m_TaskHandle, m_Core ) == pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_Task", 10000, this, THREAD_PRIORITY_RT,  &m_TaskHandle, m_Core ) == pdTRUE )
   {
     ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
   }
@@ -342,8 +355,8 @@ void I2S_Device::DestroyTask()
   {
     vTaskDelete(m_TaskHandle);
     m_TaskHandle = nullptr;
-    m_DeviceState = DeviceState::Stopped;
-    ESP_LOGI("DestroyTask", "%s: I2S device task destroyed. Device Currently: \"%s\".", GetTitle().c_str(), GetDeviceState().c_str());
+    m_DeviceState = DeviceState_t::Stopped;
+    ESP_LOGI("DestroyTask", "%s: I2S device task destroyed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   }
   else
   {

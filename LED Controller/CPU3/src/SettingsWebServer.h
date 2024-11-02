@@ -641,17 +641,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         }
       }
     }
-
-    //Output Source Start Scan
-    const bool m_SourceStartScan_InitialValue = false;
-    DataItem<bool, 1> m_SourceStartScan = DataItem<bool, 1>( "Src_Start_Scan", m_SourceStartScan_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
-    WebSocketDataHandler<bool, 1> m_SourceStartScan_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceStartScan );
-
-    //Output Source Stop Scan
-    const bool m_SourceStopScan_InitialValue = false;
-    DataItem<bool, 1> m_SourceStopScan = DataItem<bool, 1>( "Src_Stop_Scan", m_SourceStopScan_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
-    WebSocketDataHandler<bool, 1> m_SourceStopScan_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceStopScan );
-
+    
     //Output Source Connect
     CallbackArguments m_SourceConnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue, &m_ScannedDevice_DataHandler};
     NamedCallback_t m_SourceConnect_Callback = {"Test Name", &SourceConnect_ValueChanged, &m_SourceConnect_CallbackArgs};

@@ -18,6 +18,15 @@
 #define ENCODE_VALUE_DIVIDER ","
 
 
+enum DeviceState
+{
+Installed,
+Uninstalled,
+Running,
+Stopped
+};
+typedef DeviceState DeviceState_t;
+
 struct UpdateStatus
 {
     bool ValueChanged = false;

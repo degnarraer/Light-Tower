@@ -81,7 +81,7 @@ class Bluetooth_Source: public NamedItem
 		void Connect();
 		void Disconnect();
 		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
-		
+		String GetDeviceStateString();
 		//Callback Registrtion to this class
 		void ResgisterForCallbacks(Bluetooth_Source_Callbacks *callee);
 
@@ -122,7 +122,7 @@ class Bluetooth_Source: public NamedItem
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle = nullptr;
 		TaskHandle_t m_DeviceProcessorTaskHandle = nullptr;
 		
-    	DeviceState m_DeviceState = DeviceState::Uninstalled;
+    	DeviceState_t m_DeviceState = DeviceState_t::Uninstalled;
 		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
@@ -201,6 +201,7 @@ class Bluetooth_Sink: public NamedItem
 	void StopDevice();
 	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
+	String GetDeviceStateString();
     i2s_bits_per_sample_t GetBitDepth()
     {
       return m_BitsPerSample;
@@ -250,7 +251,7 @@ class Bluetooth_Sink: public NamedItem
 		const int m_I2SDataOutPin;
 		String m_SinkName;
 		A2DPDefaultVolumeControl m_VolumeControl;		
-    	DeviceState m_DeviceState = DeviceState::Uninstalled;
+    	DeviceState_t m_DeviceState = DeviceState_t::Uninstalled;
 		void InstallDevice();
 		void UninstallDevice();
 };

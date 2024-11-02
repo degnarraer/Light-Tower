@@ -53,8 +53,8 @@ void Bluetooth_Source::Setup()
 
 void Bluetooth_Source::InstallDevice()
 {
-	ESP_LOGI("InstallDevice", "\"%s\": Installing Bluetooth device.", GetTitle().c_str());
-	if(m_DeviceState == DeviceState::Uninstalled)
+	ESP_LOGI("InstallDevice", "\"%s\": Installing Bluetooth device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Uninstalled)
 	{
 		m_BTSource.set_ssp_enabled(false);
 		m_BTSource.set_local_name("LED Tower of Power.");
@@ -63,35 +63,67 @@ void Bluetooth_Source::InstallDevice()
 		m_BTSource.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
 		m_BTSource.set_task_core(m_Core);
 		m_BTSource.set_task_priority(THREAD_PRIORITY_RT);
-		m_DeviceState = DeviceState::Installed;
-		ESP_LOGI("Bluetooth_Device", "\"%s\": Bluetooth Device installed", GetTitle().c_str());
+		m_DeviceState = DeviceState_t::Installed;
+		ESP_LOGI("InstallDevice", "\"%s\": Bluetooth Device installed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 	else
 	{
-		ESP_LOGI("Bluetooth_Device", "\"%s\": Bluetooth Device already installed", GetTitle().c_str());
+		ESP_LOGW("InstallDevice", "WARNING! \"%s\": Bluetooth Device already installed", GetTitle().c_str());
 	}
 }
 
 void Bluetooth_Source::StartDevice()
 {
-	InstallDevice();
-    m_DeviceState = DeviceState::Running;
+	ESP_LOGI("StartDevice", "\"%s\": Starting Bluetooth Device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState != DeviceState_t::Running)
+	{
+		InstallDevice();
+    	m_DeviceState = DeviceState_t::Running;
+		ESP_LOGI("StartDevice", "\"%s\": Bluetooth Device Started. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	}
+	else
+	{
+		ESP_LOGW("StartDevice", "WARNING! \"%s\": Bluetooth Device already running. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	}
 }
 
 void Bluetooth_Source::StopDevice()
 {
-	m_BTSource.end();
-    m_DeviceState = DeviceState::Stopped;
+	ESP_LOGI("StopDevice", "\"%s\": Stopping Bluetooth Device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Running)
+	{
+		m_BTSource.end();
+    	m_DeviceState = DeviceState_t::Stopped;
+		ESP_LOGI("StopDevice", "\"%s\": Bluetooth Device Stopped. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	}
+	else
+	{
+		ESP_LOGW("StopDevice", "WARNING! \"%s\": Bluetooth Device not running. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	}
 }
 
-void Bluetooth_Source::StartDiscovery()
+String Bluetooth_Source::GetDeviceStateString()
 {
-	m_BTSource.start_Discovery();
-}
-
-void Bluetooth_Source::StopDiscovery()
-{
-	m_BTSource.stop_Discovery();
+  String result = "";
+  switch(m_DeviceState)
+  {
+    case DeviceState_t::Installed:
+      result = "Installed";
+    break;
+    case DeviceState_t::Uninstalled:
+      result = "Uninstalled";
+    break;
+    case DeviceState_t::Running:
+      result = "Running";
+    break;
+    case DeviceState_t::Stopped:
+      result = "Stopped";
+    break;
+    default:
+      result = "Unknown";
+    break;
+  }
+  return result;
 }
 
 void Bluetooth_Source::Connect()
@@ -388,8 +420,8 @@ void Bluetooth_Sink::BTReadDataStream(const uint8_t *data, uint32_t length)
 
 void Bluetooth_Sink::InstallDevice()
 {
-	ESP_LOGI("InstallDevice", "\"%s\": Installing Bluetooth device.", GetTitle().c_str());
-	if(m_DeviceState == DeviceState::Uninstalled)
+	ESP_LOGI("InstallDevice", "\"%s\": Installing Bluetooth Device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Uninstalled)
 	{
 		static i2s_config_t i2s_config = {
 		.mode = m_i2s_Mode,
@@ -422,80 +454,109 @@ void Bluetooth_Sink::InstallDevice()
 		m_BTSink.set_stream_reader(StaticBTReadDataStream, true);
 		m_BTSink.set_on_data_received(StaticBTDataReceived);
 		m_BTSink.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
-		m_DeviceState = DeviceState::Installed;
-		ESP_LOGI("InstallDevice", "\"%s\": Bluetooth Device installed.", GetTitle().c_str());
+		m_DeviceState = DeviceState_t::Installed;
+		ESP_LOGI("InstallDevice", "\"%s\": Bluetooth Device installed. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 	else
 	{
-		ESP_LOGW("InstallDevice", "\"%s\": Bluetooth Device already installed.", GetTitle().c_str());
+		ESP_LOGW("InstallDevice", "WARNING! \"%s\": Bluetooth Device already installed. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 }
 void Bluetooth_Sink::UninstallDevice()
 {
-	ESP_LOGI("UninstallDevice", "\"%s\": Uninstalling Bluetooth Device.", GetTitle().c_str());
-	if(m_DeviceState == DeviceState::Stopped)
+	ESP_LOGI("UninstallDevice", "\"%s\": Uninstalling Bluetooth Device. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Stopped)
 	{
 		m_BTSink.end();
-		m_DeviceState = DeviceState::Uninstalled;
-		ESP_LOGI("UninstallDevice", "\"%s\": Bluetooth Device Uninstalled.", GetTitle().c_str());
+		m_DeviceState = DeviceState_t::Uninstalled;
+		ESP_LOGI("UninstallDevice", "\"%s\": Bluetooth Device uninstalled. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 	else
 	{
-		ESP_LOGW("UninstallDevice", "WARNING! \"%s\": Bluetooth Device not stopped.", GetTitle().c_str());
+		ESP_LOGW("UninstallDevice", "WARNING! \"%s\": Bluetooth Device not stopped. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 }
 void Bluetooth_Sink::StartDevice()
 {
-	ESP_LOGI("StartDevice", "\"%s\": Starting Bluetooth Device", GetTitle().c_str());
-	if(m_DeviceState != DeviceState::Running)
+	ESP_LOGI("UninstallDevice", "\"%s\": Starting Bluetooth Device. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState != DeviceState_t::Running)
 	{
 		InstallDevice();
-		m_DeviceState = DeviceState::Running;
-		ESP_LOGI("StartDevice", "\"%s\": Bluetooth Device Started.", GetTitle().c_str());
+		m_DeviceState = DeviceState_t::Running;
+		ESP_LOGI("StartDevice", "\"%s\": Bluetooth Device Started. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 	else
 	{
-		ESP_LOGW("StartDevice", "WARNING! \"%s\": Bluetooth Device already running", GetTitle().c_str());
+		ESP_LOGW("StartDevice", "WARNING! \"%s\": Bluetooth Device already running. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 }
 void Bluetooth_Sink::StopDevice()
 {
-	ESP_LOGI("StopDevice", "\"%s\": Stopping Bluetooth Device", GetTitle().c_str());
-	if(m_DeviceState == DeviceState::Running)
+	ESP_LOGI("StopDevice", "\"%s\": Stopping Bluetooth Device. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Running)
 	{
-		m_BTSink.set_connectable(false);
-		m_DeviceState = DeviceState::Stopped;
-		UninstallDevice();
-		ESP_LOGI("StopDevice", "\"%s\": Bluetooth Device stopped.", GetTitle().c_str());
+		Disconnect();
+		m_DeviceState = DeviceState_t::Stopped;
+		ESP_LOGI("StopDevice", "\"%s\": Bluetooth Device stopped. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+		UninstallDevice();	
 	}
 	else
 	{
-		ESP_LOGW("StopDevice", "WARNING! \"%s\": Bluetooth Device already stopped.", GetTitle().c_str());
+		ESP_LOGW("StopDevice", "WARNING! \"%s\": Bluetooth Device already stopped. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 }
 void Bluetooth_Sink::Connect(String sinkName, bool reconnect)
 {
-	if(m_DeviceState == DeviceState::Running)
+	ESP_LOGI("Connect", "\"%s\": Connecting Bluetooth Device. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Running)
 	{
 		m_SinkName = sinkName;
 		m_BTSink.start(m_SinkName.c_str(), reconnect);
+		ESP_LOGI("Connect", "\"%s\": Bluetooth Device Connecting. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 	else
 	{
-		ESP_LOGW("Connect", "WARNING! \"%s\": Bluetooth must be running", GetTitle().c_str());
+		ESP_LOGW("Connect", "WARNING! \"%s\": Bluetooth must be running. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 }
 void Bluetooth_Sink::Disconnect()
 {
-	if(m_DeviceState == DeviceState::Running)
+	ESP_LOGI("Disconnect", "\"%s\": Disconnecting Bluetooth Device. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
+	if(m_DeviceState == DeviceState_t::Running)
 	{
 		m_BTSink.disconnect();
+		ESP_LOGI("Disconnect", "\"%s\": Bluetooth Device Disconnected. Device currently \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
 	}
 	else
 	{
 		ESP_LOGW("Disconnect", "WARNING! \"%s\": Bluetooth must be running", GetTitle().c_str());
 	}
 }
+
+String Bluetooth_Sink::GetDeviceStateString()
+{
+  String result = "";
+  switch(m_DeviceState)
+  {
+    case DeviceState_t::Installed:
+      result = "Installed";
+    break;
+    case DeviceState_t::Uninstalled:
+      result = "Uninstalled";
+    break;
+    case DeviceState_t::Running:
+      result = "Running";
+    break;
+    case DeviceState_t::Stopped:
+      result = "Stopped";
+    break;
+    default:
+      result = "Unknown";
+    break;
+  }
+  return result;
+}
+
 void Bluetooth_Sink::Set_Auto_Reconnect(bool reconnect, int count)
 {
 	m_BTSink.set_auto_reconnect(reconnect, count);

@@ -31,7 +31,7 @@ export const Source_Connect = new Model_Boolean('Src_Connect', Model_Boolean.val
 export const Source_Disconnect = new Model_Boolean('Src_Disconnect', Model_Boolean.values.False, wsManager);
 export const Source_Reset = new Model_Boolean('BT_Src_Reset', Model_Boolean.values.False, wsManager);
 export const Source_Auto_Reconnect = new Model_Boolean('BT_Source_AR', Model_Boolean.values.False, wsManager);
-export const Source_Discovery_Mode = new Model_DiscoveryMode('Src_Discov_Mode', 'Src_Start_Scan', 'Src_Stop_Scan', Model_DiscoveryMode.values.Discovery_Mode_Unknown, wsManager);
+export const Source_Discovery_Mode = new Model_DiscoveryMode('Src_Discov_Mode', Model_DiscoveryMode.values.Discovery_Mode_Unknown, wsManager);
 
 export const WIFI_Mode = new Model_WifiMode('WIFI_Mode', Model_WifiMode.values.Unknown, wsManager);
 export const Host_Name = new Model_Text('Host_Name', 'ENTER VALUE', wsManager);

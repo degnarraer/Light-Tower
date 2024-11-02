@@ -45,14 +45,6 @@ class I2S_Device: public NamedItem
                 , public BitDepthConverter
 
 {
-  enum DeviceState
-  {
-    Installed,
-    Uninstalled,
-    Running,
-    Stopped
-  };
-
   public:
     I2S_Device( String Title
               , BaseType_t Core
@@ -78,6 +70,9 @@ class I2S_Device: public NamedItem
     bool IsInitialized();
     void StartDevice();
     void StopDevice();
+    DeviceState_t GetDeviceState();
+    String GetDeviceStateString();
+    bool IsRunning();
     size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     void SetDataReceivedCallback(I2S_Device_Callback* callee)
@@ -114,10 +109,9 @@ class I2S_Device: public NamedItem
     size_t m_ChannelBytesToRead;
 
     //Device Installation
-    DeviceState m_DeviceState = DeviceState::Uninstalled;
+    DeviceState m_DeviceState = DeviceState_t::Uninstalled;
     void InstallDevice();
     void UninstallDevice();
-    String GetDeviceState();
 
     //Process Task
     void CreateTask();

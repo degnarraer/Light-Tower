@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 #include <DataTypes.h>
 #include <Helpers.h>
@@ -50,25 +49,20 @@ class Manager: public NamedItem
     
     virtual ~Manager();
     void Setup();
-
-    //Tasks
-    static void Static_Manager_10mS_TaskLoop(void * parameter);
-    void ProcessEventQueue10mS();
-    static void Static_Manager_1000mS_TaskLoop(void * parameter);
-    void ProcessEventQueue1000mS();
-    static void Static_Manager_300000mS_TaskLoop(void * parameter);
-    void ProcessEventQueue300000mS();
     
     void SetInputSource(SoundInputSource_t Type);
     
     //Bluetooth Callbacks
 		void BT_Data_Received()
     {
-      
     }
+
 		void BT_Read_Data_Stream(const uint8_t *data, uint32_t length)
     {
-      m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+      if(m_I2S_Out.IsRunning())
+      {
+        m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+      }
     }
 
     //I2S_Device_Callback
@@ -93,9 +87,6 @@ class Manager: public NamedItem
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
     
     void SetupTasks();
-    TaskHandle_t m_Manager_10mS_TaskHandle;
-    TaskHandle_t m_Manager_1000mS_TaskHandle;
-    TaskHandle_t m_Manager_300000mS_TaskHandle;
     
     String ConnectionStatusStrings[5]
     {

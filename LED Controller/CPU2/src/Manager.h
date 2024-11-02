@@ -162,6 +162,7 @@ class Manager: public NamedItem
     ConnectionStatus_t m_ConnectionStatus_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_ConnectionStatus = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State", m_ConnectionStatus_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU3SerialPortMessageManager, nullptr, this );
     
+    /*
     //Output Source Start Scan
     CallbackArguments m_SourceStartScan_CallbackArgs = { &m_BT_Out };
     NamedCallback_t m_SourceStartScan_Callback = { "Source StartScan Callback", &SourceStartScan_ValueChanged, &m_SourceStartScan_CallbackArgs};
@@ -207,6 +208,7 @@ class Manager: public NamedItem
         }
       }
     }
+    */
 
     //Output Source Connect
     CallbackArguments m_OuputSourceConnect_CallbackArgs = {&m_BT_Out};

@@ -32,21 +32,6 @@ Manager::Manager( String Title
 }
 Manager::~Manager()
 {
-  if(m_Manager_10mS_TaskHandle)
-  {
-    vTaskDelete(m_Manager_10mS_TaskHandle);
-    m_Manager_10mS_TaskHandle = nullptr;
-  }
-  if(m_Manager_10mS_TaskHandle)
-  {
-    vTaskDelete(m_Manager_1000mS_TaskHandle);
-    m_Manager_1000mS_TaskHandle = nullptr;
-  }
-  if(m_Manager_300000mS_TaskHandle)
-  {
-    vTaskDelete(m_Manager_300000mS_TaskHandle);
-    m_Manager_300000mS_TaskHandle = nullptr;
-  }
 }
 
 void Manager::Setup()
@@ -84,70 +69,10 @@ void Manager::SetupStatisticalEngine()
 
 void Manager::SetupTasks()
 {
-  if(xTaskCreatePinnedToCore( Static_Manager_10mS_TaskLoop,     "Manager_10mS_Task",      10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_10mS_TaskHandle,     0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
-  if(xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_1000mS_TaskHandle,   0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
-  if(xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  10000,  NULL,   THREAD_PRIORITY_HIGH,  &m_Manager_300000mS_TaskHandle, 0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
 }
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-}
-
-void Manager::Static_Manager_10mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue10mS();
-}
-void Manager::ProcessEventQueue10mS()
-{
-  const TickType_t xFrequency = 10;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
-}
-
-void Manager::Static_Manager_1000mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue1000mS();
-}
-void Manager::ProcessEventQueue1000mS()
-{
-  
-  const TickType_t xFrequency = 1000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
-}
-
-void Manager::Static_Manager_300000mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue300000mS();
-}
-
-void Manager::ProcessEventQueue300000mS()
-{
-  const TickType_t xFrequency = 300000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    
-  }
 }
 
 void Manager::SetInputSource(SoundInputSource_t Type)
@@ -164,7 +89,7 @@ void Manager::SetInputSource(SoundInputSource_t Type)
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
       m_Microphone.StopDevice();
-      m_I2S_Out.StartDevice();
+      m_I2S_Out.StopDevice();
       m_Bluetooth_Sink.StartDevice();
       m_Bluetooth_Sink.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
     }
@@ -192,7 +117,6 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
     break;
     case SoundInputSource_t::Bluetooth:
     {
-      //m_I2S_Out.WriteSoundBufferData(data, length);
     }
     break;
     case SoundInputSource_t::OFF:
