@@ -17,7 +17,7 @@
 #define I2S_SAMPLE_RATE                 44100
 #define MAX_VISUALIZATION_FREQUENCY     4000.0
 #define I2S_BUFFER_COUNT                20
-#define I2S_SAMPLE_COUNT                128
+#define I2S_SAMPLE_COUNT                512
 #define NUMBER_OF_BANDS                 32
 #define FFT_SIZE                        512
 #define AMPLITUDE_BUFFER_FRAME_COUNT    100
