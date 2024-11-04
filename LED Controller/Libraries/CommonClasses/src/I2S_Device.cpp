@@ -160,11 +160,23 @@ String I2S_Device::GetDeviceStateString()
   return result;
 }
 
-
-
 size_t I2S_Device::WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
 {
 	return WriteSamples(SoundBufferData, ByteCount);
+}
+
+bool I2S_Device::ESP_Process(const char* subject, esp_err_t result)
+{
+  if(ESP_OK == result)
+  {
+    ESP_LOGI("ESP_Process", "%s: OK.", subject);
+    return true;
+  }
+  else
+  {
+    ESP_LOGE("ESP_Process", "%s: Esp Error: %s", subject, esp_err_to_name(result));
+    return false;
+  }
 }
 
 size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
@@ -174,14 +186,12 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCoun
   {
     if(IsInitialized() && IsRunning())
     {
-      if(ESP_OK != i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, TIME_TO_WAIT_FOR_SOUND ))
-      {
-        ESP_LOGE("i2S Device", "%s: ERROR! Unable to read samples.", GetTitle().c_str());
-      }
+      String title = this->GetTitle() + String(" I2S Read Request");
+      ESP_Process(title.c_str(), i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, TIME_TO_WAIT_FOR_SOUND ));
     }
     else
     {
-        ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
+      ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
     }
   }
   else
@@ -206,11 +216,10 @@ size_t I2S_Device::ReadSamples()
         free(dataBuffer);
         return 0;
     }
-    esp_err_t result = i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, TIME_TO_WAIT_FOR_SOUND );
-    if (result != ESP_OK) {
-        ESP_LOGE("I2S Device", "%s: ERROR! i2s_read failed with error: %s", GetTitle().c_str(), esp_err_to_name(result));
-        free(dataBuffer);
-        return 0;
+    String title = this->GetTitle() + String(" I2S Read Task");
+    if(ESP_Process(title.c_str(), i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, TIME_TO_WAIT_FOR_SOUND ))){
+      free(dataBuffer);
+      return 0;
     }
     if (bytes_read == 0) {
         free(dataBuffer);
@@ -233,11 +242,8 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
     size_t bytes_written = 0;
     if (IsInitialized())
     {
-      esp_err_t result = i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND );
-      if(result != ESP_OK )
-      {
-        ESP_LOGE("I2S Device", "%s: ERROR! i2s_write failed to write. With Error: %s", GetTitle().c_str(), esp_err_to_name(result));
-      }
+      String title = this->GetTitle() + String(" I2S Write Request");
+      ESP_Process(title.c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
       ESP_LOGV("I2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
     }
     return bytes_written;

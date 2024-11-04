@@ -119,6 +119,7 @@ class I2S_Device: public NamedItem
     void DestroyTask();
     static void Static_ProcessEventQueue(void * parameter);
     void ProcessEventQueue();
+    bool ESP_Process(const char* subject, esp_err_t result);
 
     //Read & Write Data
     size_t ReadSamples();
