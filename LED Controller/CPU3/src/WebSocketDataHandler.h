@@ -359,33 +359,36 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void SendActiveCompatibleDevicesToWebSocket()
     {
-        std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
         const size_t preAllocSize = 1024;
         std::string jsonString;
         jsonString.reserve(preAllocSize);
 
-        jsonString.append("{\"Devices\":[");
-
-        bool firstDevice = true;
-        for (const auto& device : m_ActiveDevices)
         {
-            if (!firstDevice) 
-            {
-                jsonString.append(",");
-            }
-            firstDevice = false;
+            std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+            std::vector<ActiveBluetoothDevice_t> tempVector = m_ActiveDevices;
 
-            jsonString.append("{");
-            jsonString.append("\"Name\":\"" + std::string(device.name) + "\",");
-            jsonString.append("\"Address\":\"" + std::string(device.address) + "\",");
-            jsonString.append("\"RSSI\":\"" + std::to_string(device.rssi) + "\"");
-            jsonString.append("}");
+            jsonString += "{\"Devices\":[";
+
+            bool firstDevice = true;
+            for (const auto& device : tempVector)
+            {
+                if (!firstDevice)
+                {
+                    jsonString += ",";
+                }
+                firstDevice = false;
+                jsonString += "{";
+                jsonString += "\"Name\":\"" + std::string(device.name) + "\",";
+                jsonString += "\"Address\":\"" + std::string(device.address) + "\",";
+                jsonString += "\"RSSI\":\"" + std::to_string(device.rssi) + "\"";
+                jsonString += "}";
+            }
+            jsonString += "]}";
         }
-        jsonString.append("]}");
-        
+
         ESP_LOGD("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
-        
-        if (0 < jsonString.length())
+
+        if (!jsonString.empty())
         {
             String key = this->GetSignal();
             this->TxDataToWebSocket(key, jsonString.c_str());

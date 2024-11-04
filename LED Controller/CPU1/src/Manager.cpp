@@ -112,7 +112,8 @@ void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length
   {
     case SoundInputSource_t::Microphone:
     {
-      m_I2S_Out.WriteSoundBufferData(data, length);
+      size_t bytesWrote = m_I2S_Out.WriteSoundBufferData(data, length);
+      ESP_LOGI("I2SDataReceived", "I2S Data: %i bytes Wrote.", bytesWrote);
     }
     break;
     case SoundInputSource_t::Bluetooth:

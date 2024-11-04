@@ -75,9 +75,8 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes requested.", channel_len);
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
   ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes received.", ByteReceived);
-  assert(0 == ByteReceived % sizeof(uint32_t)); 
-  size_t FrameCount = ByteReceived / sizeof(uint32_t);
-  m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
+  //size_t FrameCount = ByteReceived / sizeof(uint32_t);
+  //m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }
 
@@ -104,28 +103,26 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
   switch(connectionState)
   {
     case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
-      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnected.");
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnected.");
       m_ConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
       break;
     case ESP_A2D_CONNECTION_STATE_CONNECTING:
-      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connecting.");
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connecting.");
       m_ConnectionStatus.SetValue(ConnectionStatus_t::Connecting);
       break;
     case ESP_A2D_CONNECTION_STATE_CONNECTED:
-      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connected.");
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connected.");
       m_ConnectionStatus.SetValue(ConnectionStatus_t::Connected);
       break;
     case ESP_A2D_CONNECTION_STATE_DISCONNECTING:
-      ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnecting.");
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnecting.");
       m_ConnectionStatus.SetValue(ConnectionStatus_t::Disconnecting);
       break;
     default:
-      ESP_LOGW("BluetoothConnectionStatusChanged", "WARNING! Unhandled Connection State Change. Changed to Disconnected.");
+      //ESP_LOGW("BluetoothConnectionStatusChanged", "WARNING! Unhandled Connection State Change. Changed to Disconnected.");
       m_ConnectionStatus.SetValue(ConnectionStatus_t::Unknown);
     break;
   }
-
-
 }
 
 void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices)
