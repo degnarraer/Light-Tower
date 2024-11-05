@@ -1,6 +1,86 @@
 
 #include "BitDepthConverter.h"
 
+size_t BitDepthConverter::ConvertBitDepth(const uint8_t* inputBuffer, size_t inputSize, uint8_t* outputBuffer, 
+                                          i2s_bits_per_sample_t inputBits, i2s_bits_per_sample_t outputBits)
+{
+    int inputBitDepth = static_cast<int>(inputBits);
+    int outputBitDepth = static_cast<int>(outputBits);
+
+    // If the input and output bit depths are the same, copy directly to output buffer
+    if (inputBitDepth == outputBitDepth) {
+        memcpy(outputBuffer, inputBuffer, inputSize);
+        return inputSize;
+    }
+
+    size_t inputBytesPerSample = inputBitDepth / 8;
+    size_t outputBytesPerSample = outputBitDepth / 8;
+    size_t outputSize = (inputSize / inputBytesPerSample) * outputBytesPerSample;
+
+    size_t inputIndex = 0;
+    size_t outputIndex = 0;
+
+    while (inputIndex < inputSize) {
+        int32_t sample = 0;
+
+        // Read sample based on input bit depth
+        switch (inputBitDepth) {
+            case 8:
+                sample = static_cast<int8_t>(inputBuffer[inputIndex]);
+                break;
+            case 16:
+                sample = static_cast<int16_t>(inputBuffer[inputIndex] | (inputBuffer[inputIndex + 1] << 8));
+                break;
+            case 24:
+                sample = (static_cast<int32_t>(inputBuffer[inputIndex]) |
+                          (static_cast<int32_t>(inputBuffer[inputIndex + 1]) << 8) |
+                          (static_cast<int32_t>(inputBuffer[inputIndex + 2]) << 16));
+                if (sample & 0x800000) sample |= 0xFF000000; // Sign extension for 24-bit
+                break;
+            case 32:
+                sample = static_cast<int32_t>(inputBuffer[inputIndex] |
+                                              (inputBuffer[inputIndex + 1] << 8) |
+                                              (inputBuffer[inputIndex + 2] << 16) |
+                                              (inputBuffer[inputIndex + 3] << 24));
+                break;
+            default:
+                return 0; // Unsupported bit depth
+        }
+
+        // Convert sample
+        sample = ConvertSample(sample, inputBitDepth, outputBitDepth);
+
+        // Write sample based on output bit depth
+        switch (outputBitDepth) {
+            case 8:
+                outputBuffer[outputIndex] = static_cast<uint8_t>(sample & 0xFF);
+                break;
+            case 16:
+                outputBuffer[outputIndex] = static_cast<uint8_t>(sample & 0xFF);
+                outputBuffer[outputIndex + 1] = static_cast<uint8_t>((sample >> 8) & 0xFF);
+                break;
+            case 24:
+                outputBuffer[outputIndex] = static_cast<uint8_t>(sample & 0xFF);
+                outputBuffer[outputIndex + 1] = static_cast<uint8_t>((sample >> 8) & 0xFF);
+                outputBuffer[outputIndex + 2] = static_cast<uint8_t>((sample >> 16) & 0xFF);
+                break;
+            case 32:
+                outputBuffer[outputIndex] = static_cast<uint8_t>(sample & 0xFF);
+                outputBuffer[outputIndex + 1] = static_cast<uint8_t>((sample >> 8) & 0xFF);
+                outputBuffer[outputIndex + 2] = static_cast<uint8_t>((sample >> 16) & 0xFF);
+                outputBuffer[outputIndex + 3] = static_cast<uint8_t>((sample >> 24) & 0xFF);
+                break;
+            default:
+                return 0; // Unsupported bit depth
+        }
+
+        inputIndex += inputBytesPerSample;
+        outputIndex += outputBytesPerSample;
+    }
+
+    return outputSize;
+}
+
 std::vector<uint8_t> BitDepthConverter::ConvertBitDepth(const uint8_t* inputBuffer, size_t inputSize, i2s_bits_per_sample_t inputBits, i2s_bits_per_sample_t outputBits){
     int inputBitDepth = static_cast<int>(inputBits);
     int outputBitDepth = static_cast<int>(outputBits);

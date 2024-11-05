@@ -48,11 +48,7 @@ void Manager::SetupDevices()
 {
   m_Bluetooth_Sink.ResgisterForCallbacks(this);
   m_Bluetooth_Sink.Setup();
-
-  m_Microphone.SetDataReceivedCallback(this);
   m_Microphone.Setup();
-
-  m_I2S_Out.SetDataReceivedCallback(this);
   m_I2S_Out.Setup();
 }
 
@@ -84,10 +80,12 @@ void Manager::SetInputSource(SoundInputSource_t Type)
       m_Bluetooth_Sink.StopDevice();
       m_I2S_Out.StartDevice();
       m_Microphone.StartDevice();
+      CreateMicrophoneTask();
     break;
     case SoundInputSource_t::Bluetooth:
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
+      DestroyMicrophoneTask();
       m_Microphone.StopDevice();
       m_I2S_Out.StopDevice();
       m_Bluetooth_Sink.StartDevice();
@@ -97,31 +95,10 @@ void Manager::SetInputSource(SoundInputSource_t Type)
     case SoundInputSource_t::OFF:
     default:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
+      DestroyMicrophoneTask();
       m_Bluetooth_Sink.StopDevice();
       m_Microphone.StopDevice();
       m_I2S_Out.StopDevice();
-    break;
-  }
-}
-
-//I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
-{
-  ESP_LOGV("I2SDataReceived", "I2S Data: %i bytes received.", length);
-  switch(m_SoundInputSource.GetValue())
-  {
-    case SoundInputSource_t::Microphone:
-    {
-      size_t bytesWrote = m_I2S_Out.WriteSoundBufferData(data, length);
-      ESP_LOGI("I2SDataReceived", "I2S Data: %i bytes Wrote.", bytesWrote);
-    }
-    break;
-    case SoundInputSource_t::Bluetooth:
-    {
-    }
-    break;
-    case SoundInputSource_t::OFF:
-    default:
     break;
   }
 }

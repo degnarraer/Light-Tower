@@ -31,7 +31,6 @@
 
 class Manager: public NamedItem
              , public Bluetooth_Source_Callbacks
-             , public I2S_Device_Callback
              , public CommonUtils
              , public QueueController
              , public SetupCallerInterface
@@ -52,12 +51,35 @@ class Manager: public NamedItem
     
     virtual ~Manager();
     void Setup();
+
+    void CreateTask()
+    {
+      if( xTaskCreatePinnedToCore( Static_I2S_Request_Task, "I2S Request", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+      {
+        ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
+      }
+      else
+      {
+        ESP_LOGE("StartDevice", "ERROR! Unable to create task!");
+      }
+    }
+
+    void DestroyTask()
+    {
+      ESP_LOGI("DestroyTask", "%s: destroying task.");
+      if(m_TaskHandle != nullptr)
+      {
+        vTaskDelete(m_TaskHandle);
+        m_TaskHandle = nullptr;
+      }
+      else
+      {
+        ESP_LOGW("DestroyTask", "WARNING! Unable to destroy task!");
+      }
+    }
+
     void StartBluetooth();
-    void StopBluetooth();
-    static void Static_TaskLoop_20mS(void * parameter);
-    void TaskLoop_20mS();
-    static void Static_TaskLoop_1000mS(void * parameter);
-    void TaskLoop_1000mS();
+    void StopBluetooth();  
    
     //Bluetooth Callbacks
     void BT_Data_Received()
@@ -98,6 +120,22 @@ class Manager: public NamedItem
     
     //Bluetooth Data
     Bluetooth_Source &m_BT_Out;
+    TaskHandle_t m_TaskHandle = nullptr;
+
+    static void Static_I2S_Request_Task(void * parameter)
+    {
+      Manager* manager = static_cast<Manager*>(parameter);
+      manager->I2S_Request_Task();
+    }
+
+    void I2S_Request_Task()
+    {
+      while(true)
+      {
+        uint8_t buffer[512] = {0};
+        m_I2S_In.ReadSoundBufferData(buffer, 512);
+      }
+    }
 
     String ConnectionStatusStrings[4]
     {

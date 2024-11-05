@@ -32,14 +32,6 @@
 
 extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
 
-class I2S_Device_Callback
-{
-	public:
-		I2S_Device_Callback(){}
-		virtual ~I2S_Device_Callback(){}
-		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
-};
-
 class I2S_Device: public NamedItem
                 , public CommonUtils
                 , public QueueController
@@ -76,14 +68,9 @@ class I2S_Device: public NamedItem
     bool IsRunning();
     size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
-    void SetDataReceivedCallback(I2S_Device_Callback* callee)
-    { 
-      m_Callee = callee;
-    }
 
   private:
 		BaseType_t m_Core = 0;
-	  I2S_Device_Callback* m_Callee = NULL;
     DataItemConfig_t* m_ItemConfig = NULL;
     const i2s_port_t m_I2S_PORT;
     const int m_SampleRate;

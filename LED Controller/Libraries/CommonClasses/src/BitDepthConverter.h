@@ -1,3 +1,4 @@
+#include <cstring>
 #include <cstdint>
 #include <vector>
 #include <esp_types.h>
@@ -5,7 +6,22 @@
 
 class BitDepthConverter {
 public:
-    static std::vector<uint8_t> ConvertBitDepth(const uint8_t* inputBuffer, size_t inputSize, i2s_bits_per_sample_t inputBits, i2s_bits_per_sample_t outputBits);
+    static size_t ConvertByteCount(size_t inputSize, i2s_bits_per_sample_t inputBits, i2s_bits_per_sample_t outputBits)
+    {
+        float scalar = inputBits / outputBits;
+        return inputSize * scalar;
+    }
+
+    static size_t ConvertBitDepth( const uint8_t* inputBuffer
+                                 , size_t inputSize
+                                 , uint8_t* outputBuffer
+                                 , i2s_bits_per_sample_t inputBits
+                                 , i2s_bits_per_sample_t outputBits );
+
+    static std::vector<uint8_t> ConvertBitDepth( const uint8_t* inputBuffer
+                                               , size_t inputSize
+                                               , i2s_bits_per_sample_t inputBits
+                                               , i2s_bits_per_sample_t outputBits );
     
     // Convert 8-bit data to other bit depths
     static std::vector<int16_t> Convert8To16(const std::vector<int8_t>& input);

@@ -71,15 +71,14 @@ void I2S_Device::Setup()
 }
 void I2S_Device::StartDevice()
 {
-  ESP_LOGI("StartDevice", "%s: Starting I2S device.", GetTitle().c_str());
   if(IsInitialized())
   {
     if(m_DeviceState != DeviceState_t::Running)
     {
       InstallDevice();
-      if(ESP_OK == i2s_start(m_I2S_PORT))
+      ESP_LOGI("StartDevice", "%s: Starting I2S device.", GetTitle().c_str());
+      if(ESP_Process("Start I2S", i2s_start(m_I2S_PORT)))
       {
-        CreateTask();
         m_DeviceState = DeviceState_t::Running;
         ESP_LOGI("StartDevice", "%s: I2S device started. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
@@ -97,16 +96,14 @@ void I2S_Device::StartDevice()
 
 void I2S_Device::StopDevice()
 {
-  ESP_LOGI("StopDevice", "%s: Stopping I2S device. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
   if(IsInitialized())
   {
     if(m_DeviceState == DeviceState_t::Running)
     {
       ESP_LOGI("StopDevice", "%s: Stopping I2S driver. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
-      if(ESP_OK == i2s_stop(m_I2S_PORT))
+      if(ESP_Process("Stop I2S", i2s_stop(m_I2S_PORT)))
       {
-        ESP_LOGI("StopDevice", "%s: I2S driver stopped. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
-        DestroyTask();
+        m_DeviceState = DeviceState_t::Stopped;
         ESP_LOGI("StopDevice", "%s: I2S device stopped. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
       }
       else
@@ -169,7 +166,7 @@ bool I2S_Device::ESP_Process(const char* subject, esp_err_t result)
 {
   if(ESP_OK == result)
   {
-    ESP_LOGI("ESP_Process", "%s: OK.", subject);
+    ESP_LOGV("ESP_Process", "%s: OK.", subject);
     return true;
   }
   else
@@ -179,71 +176,33 @@ bool I2S_Device::ESP_Process(const char* subject, esp_err_t result)
   }
 }
 
-size_t I2S_Device::ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount)
+size_t I2S_Device::ReadSoundBufferData(uint8_t *soundBufferData, size_t byteCount)
 {
-  size_t bytes_read = 0;
-  if(!m_Callee)
-  {
-    if(IsInitialized() && IsRunning())
+    size_t bytes_read = 0;
+    if (IsInitialized())
     {
-      String title = this->GetTitle() + String(" I2S Read Request");
-      ESP_Process(title.c_str(), i2s_read(m_I2S_PORT, SoundBufferData, ByteCount, &bytes_read, TIME_TO_WAIT_FOR_SOUND ));
+        size_t inputSize = ConvertByteCount(byteCount, m_BitsPerSampleIn, m_BitsPerSampleOut);
+        uint8_t buffer[inputSize];
+        ESP_LOGV("I2S Device", "%s I2S Read Request", GetTitle().c_str());
+        if(ESP_Process((this->GetTitle() + String(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, buffer, inputSize, &bytes_read, TIME_TO_WAIT_FOR_SOUND)))
+        {
+            bytes_read = BitDepthConverter::ConvertBitDepth(buffer, bytes_read, soundBufferData, m_BitsPerSampleIn, m_BitsPerSampleOut);
+        }
     }
     else
     {
-      ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
+        ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S port: %d", GetTitle().c_str(), m_I2S_PORT);
     }
-  }
-  else
-  {
-    ESP_LOGW("I2S Device", "%s: WARNING! Cannot call ReadSoundBufferData function when registered for callbacks: %d", GetTitle().c_str());
-  }
-	return bytes_read;
+    return bytes_read;
 }
 
-size_t I2S_Device::ReadSamples()
-{
-  size_t bytes_read = 0;
-  if(m_Callee)
-  {
-    uint8_t *dataBuffer = (uint8_t*) ps_malloc(m_TotalBytesToRead);
-    if (dataBuffer == nullptr) {
-        ESP_LOGE("I2S Device", "%s: ERROR! Failed to allocate memory for DataBuffer.", GetTitle().c_str());
-        return 0;
-    }
-    if (!IsInitialized()) {
-        ESP_LOGE("I2S Device", "%s: ERROR! Invalid I2S Port.", GetTitle().c_str());
-        free(dataBuffer);
-        return 0;
-    }
-    String title = this->GetTitle() + String(" I2S Read Task");
-    if(ESP_Process(title.c_str(), i2s_read(m_I2S_PORT, dataBuffer, m_TotalBytesToRead, &bytes_read, TIME_TO_WAIT_FOR_SOUND ))){
-      free(dataBuffer);
-      return 0;
-    }
-    if (bytes_read == 0) {
-        free(dataBuffer);
-        return 0;
-    }
-    ESP_LOGV("I2S Device", "%s: Read %i bytes of %i bytes.", GetTitle().c_str(), bytes_read, m_TotalBytesToRead);
-    std::vector<uint8_t> newBuffer = ConvertBitDepth(dataBuffer, bytes_read, m_BitsPerSampleIn, m_BitsPerSampleOut);
-    m_Callee->I2SDataReceived(GetTitle().c_str(), newBuffer.data(), newBuffer.size());
-    free(dataBuffer);
-  }
-  else
-  {
-    ESP_LOGW("I2S Device", "%s: WARNING! Cannot call ReadSamples function when not registered for callbacks: %d", GetTitle().c_str());
-  }
-  return bytes_read;
-}
 
 size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 {
     size_t bytes_written = 0;
     if (IsInitialized())
     {
-      String title = this->GetTitle() + String(" I2S Write Request");
-      ESP_Process(title.c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
+      ESP_Process((this->GetTitle() + String(" I2S Write Request")).c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
       ESP_LOGV("I2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
     }
     return bytes_written;
@@ -345,77 +304,4 @@ bool I2S_Device::IsInitialized()
   return (m_I2S_PORT < I2S_NUM_MAX);
 }
 
-void I2S_Device::CreateTask()
-{
-  if( xTaskCreatePinnedToCore( Static_ProcessEventQueue, "I2S_Device_Task", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, m_Core ) == pdTRUE )
-  {
-    ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
-  }
-  else
-  {
-    ESP_LOGE("StartDevice", "ERROR! %s: Unable to create task!", GetTitle().c_str());
-  }
-}
 
-void I2S_Device::DestroyTask()
-{
-  ESP_LOGI("DestroyTask", "%s: destroying I2S device task.", GetTitle().c_str());
-  if(m_TaskHandle != nullptr)
-  {
-    vTaskDelete(m_TaskHandle);
-    m_TaskHandle = nullptr;
-    m_DeviceState = DeviceState_t::Stopped;
-    ESP_LOGI("DestroyTask", "%s: I2S device task destroyed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());
-  }
-  else
-  {
-    ESP_LOGW("DestroyTask", "WARNING! %s: Unable to destroy task!", GetTitle().c_str());
-  }
-}
-
-void I2S_Device::Static_ProcessEventQueue(void * parameter)
-{
-  I2S_Device* device = static_cast<I2S_Device*>(parameter);
-  device->ProcessEventQueue();
-}
-
-void I2S_Device::ProcessEventQueue()
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    if(m_i2s_event_queueHandle)
-    {
-      i2s_event_t i2sEvent = {};
-      uint8_t i2sMsgCount = uxQueueMessagesWaiting(m_i2s_event_queueHandle);
-      for( int i = 0; i < i2sMsgCount; ++i )
-      {
-        if ( xQueueReceive(m_i2s_event_queueHandle, (void*) &i2sEvent, 0) == pdTRUE )
-        {
-          switch (i2sEvent.type)
-          {
-            case I2S_EVENT_DMA_ERROR:
-              ESP_LOGE("ProcessEventQueue", "ERROR! %s: I2S_EVENT_DMA_ERROR.", GetTitle().c_str());
-            break;
-            case I2S_EVENT_TX_DONE:
-              ESP_LOGV("ProcessEventQueue", "%s: TX Done", GetTitle().c_str());
-            break;
-            case I2S_EVENT_RX_DONE:
-              ESP_LOGV("ProcessEventQueue", "%s: RX", GetTitle().c_str());
-              if(m_Callee) ReadSamples();
-            break;
-            case I2S_EVENT_MAX:
-              ESP_LOGW("ProcessEventQueue", "WARNING! I2S_EVENT_MAX");
-            break;
-          }	
-        }
-        else
-        {
-          ESP_LOGE("ProcessEventQueue", "ERROR! %s: Failed to receive event queue.", GetTitle().c_str());
-        }
-      }
-    }
-  }
-}

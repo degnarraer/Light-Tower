@@ -30,7 +30,6 @@
 
 class Manager: public NamedItem
              , public Bluetooth_Sink_Callbacks
-             , public I2S_Device_Callback
              , public SoundMeasureCalleeInterface
              , public CommonUtils
              , public QueueController
@@ -59,14 +58,8 @@ class Manager: public NamedItem
 
 		void BT_Read_Data_Stream(const uint8_t *data, uint32_t length)
     {
-      if(m_I2S_Out.IsRunning())
-      {
-        m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
-      }
+      //m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
     }
-
-    //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
 
     //SoundMeasureCalleeInterface Callback
     void SoundStateChange(SoundState_t SoundState);
@@ -81,6 +74,22 @@ class Manager: public NamedItem
     Bluetooth_Sink &m_Bluetooth_Sink;
     I2S_Device &m_Microphone;
     I2S_Device &m_I2S_Out;
+    TaskHandle_t m_TaskHandle = nullptr;
+
+    static void Static_Microphone_Request_Task(void * parameter)
+    {
+      Manager* manager = static_cast<Manager*>(parameter);
+      manager->Microphone_Request_Task();
+    }
+
+    void Microphone_Request_Task()
+    {
+      while(true)
+      {
+        uint8_t buffer[512] = {0};
+        m_I2S_Out.WriteSoundBufferData(buffer, m_Microphone.ReadSoundBufferData(buffer, 512));
+      }
+    }
 
     void SetupSerialPortManager();
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
@@ -88,6 +97,34 @@ class Manager: public NamedItem
     
     void SetupTasks();
     
+
+    void CreateMicrophoneTask()
+    {
+      if( xTaskCreatePinnedToCore( Static_Microphone_Request_Task, "Microphone Request", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+      {
+        ESP_LOGI("StartDevice", "%s: Microphone task started.", GetTitle().c_str());
+      }
+      else
+      {
+        ESP_LOGE("StartDevice", "ERROR! Unable to create Microphone task!");
+      }
+    }
+
+    void DestroyMicrophoneTask()
+    {
+      ESP_LOGI("DestroyTask", "Destroying Microphone task.");
+      if(m_TaskHandle != nullptr)
+      {
+        vTaskDelete(m_TaskHandle);
+        m_TaskHandle = nullptr;
+      }
+      else
+      {
+        ESP_LOGW("DestroyTask", "WARNING! Unable to destroy Microphone task!");
+      }
+    }
+
+
     String ConnectionStatusStrings[5]
     {
       "DISCONNECTED",
