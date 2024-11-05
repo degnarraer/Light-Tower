@@ -4,13 +4,48 @@ html {
     text-align: center;
 }
 
+button {
+    border-radius: 0;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 0; /* No padding */
+    background-color: #bdbdbd; /* Default white background */
+    color: rgb(0, 0, 0); /* Default text color */
+    border: 0px solid #bdbdbd; /* Light gray border */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition */
+    -webkit-tap-highlight-color: transparent; /* Remove gray highlight on tap */
+	font-family: Arial, sans-serif;
+	cursor: pointer;
+}
+
+button:hover {
+    background-color: #a1a1a1; /* Light gray background on hover */
+    color: rgb(0, 0, 0);
+    border-color: #a1a1a1;
+	font-weight: bold;
+}
+
+button:active {
+    background-color: #32CD32; /* Green background when pressed */
+    color: rgb(0, 0, 0);
+    border-color: #32CD32;
+}
+
+.vertically_Alligned {
+	display: flex;
+    flex-direction: column;
+    align-items: center;
+	width: 100%
+}
+
 h1 {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
     color: White;
 }
 
 p {
-    font-size: 1.0rem;
+    font-size: 0.8rem;
 }
 
 .mainScreen {
@@ -20,7 +55,6 @@ p {
 
 .mainContentArea {	
   transition: margin-left .5s;
-  padding: 20px;
 }
 
 .modal {
@@ -55,7 +89,6 @@ p {
     width: 200px; /* Set square width */
     height: 200px; /* Set square height */
     background-color: white; /* Modal background color */
-    padding: 20px;
     border-radius: 15px; /* Rounded corners */
     border: 2px solid #4CAF50; /* Outline with green color */
     display: flex;
@@ -68,7 +101,7 @@ p {
 /* Modal Header Text */
 #loadingModal .modal-content h2 {
     margin: 0; /* Remove default margin */
-    font-size: 1.2em; /* Adjust text size */
+    font-size: 1.0rem; /* Adjust text size */
     color: #333; /* Text color */
 }
 
@@ -92,16 +125,15 @@ p {
   position: absolute;
   top: 0;
   right: 25px;
-  font-size: 36px;
+  font-size: 1.0rem;
   margin-left: 50px;
 }
 
 /* The navigation menu links */
 .leftSideNavigationMenu a {
   float: right;
-  padding: 8px 8px 8px 8px;
   text-decoration: none;
-  font-size: 25px;
+  font-size: 0.8rem;
   color: #818181;
   display: block;
   transition: 0.5s;
@@ -111,7 +143,7 @@ p {
 .leftSideNavigationMenu button {
 	width: 250px;
 	text-decoration: none;
-	font-size: 25px;
+	font-size: 0.5rem;
 	color: #818181;
 	display: block;
 	transition: 0.5s;
@@ -120,23 +152,50 @@ p {
 }
 
 .leftSideNavigationMenu button:hover {
-	background-color: Yellow;
+	background-color: #bdbdbd;
 	color: black;
 }
 
 .leftSideNavigationMenu button.active {
-	background-color: #2196F3;
+	background-color: #51ff00;
 	color: white;
+}
+
+.Tablinks {
+	display: flex;
+	align-items: right;
+	justify-content: flex-start;
+	cursor: pointer;
+	border: none;
+	background-color: #bdbdbd;
+	width: 100%;
+    height: 100px;
+}
+
+.Tablinks:hover {
+    background-color: #a1a1a1; /* Light gray background on hover */
+    color: white;
+    border-color: #a1a1a1;
+}
+
+.Tablinks:active {
+    background-color: #32CD32; /* Green background when pressed */
+    color: white;
+    border-color: #32CD32;
+}
+
+.Tablinks img {
+	width: 80px !important;
+	height: 80px !important;
+	object-fit: contain;
 }
 
 .mainMenu {
     overflow: hidden;
     background-color: Black;
-	/*border: 2px dashed green;*/
 }
 
 .mainMenu button {
-	padding: 10px 10px 10px 10px;
     float: left;
 	width: 50;
 	height: 50;
@@ -146,18 +205,17 @@ p {
 }
 
 .mainMenu button img{
-	width: 42px;
-	height: 42px;
+	width: 50px;
+	height: 50px;
 }
 
 .mainMenu h1 {
-	padding: 0px 0px 0px 0px;
 	vertical-align: center;
 }
 
 .menu-content {
 	display: none;
-	padding: 20px;
+	padding: 10px;
 	border: 1px solid #ccc;
 	background-color: white;
 	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -165,23 +223,27 @@ p {
 
 .menu-content.active {
 	display: block;
+	padding: 10px;
+	border: 1px solid #ccc;
+	background-color: white;
+	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.screen-content {
+	display: none;
+}
+
+.screen-content.active {
+	display: block;
 }
 
 body {
     margin: 0;
 }
 
-#deviceList {
-	list-style: none;
-	padding: 0;
-	max-height: 300px; /* Set the maximum height for the scroll bar */
-	overflow-y: auto; /* Add a vertical scroll bar if needed */
-}
-
 .deviceItem {
 	border: 1px solid #ccc;
 	margin-bottom: 10px;
-	padding: 10px;
 	border-radius: 5px;
 	cursor: pointer;
 }
@@ -196,8 +258,20 @@ body {
 
 .Content {
     float: left;
-	/*border: 2px dashed black;*/
 }
+
+.spin-image {
+	animation: spin 2s linear infinite;
+  }
+  
+  @keyframes spin {
+	from {
+	  transform: rotate(0deg);
+	}
+	to {
+	  transform: rotate(360deg);
+	}
+  }
 
 /*Selection Tabs*/
 .selection_tabs {
@@ -205,16 +279,15 @@ body {
 	justify-content: space-around;
 	align-items: center;
 	background-color: #333;
-	color: white;
+	color: rgb(0, 0, 0);
 	box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .selection_tab {
 	cursor: pointer;
-	padding: 15px;
 	border: none;
 	background-color: #555;
-	color: white;
+	color: rgb(0, 0, 0);
 	transition: background-color 0.3s ease;
 }
 
@@ -228,7 +301,6 @@ body {
 
 .selection_tab_content_input_source {
 	display: none;
-	padding: 20px;
 	border: 1px solid #ccc;
 	background-color: white;
 	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -240,7 +312,6 @@ body {
 
 .selection_tab_content_output_source {
 	display: none;
-	padding: 20px;
 	border: 1px solid #ccc;
 	background-color: white;
 	box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -250,130 +321,155 @@ body {
 	display: block;
 }
 
+.non-pressable-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ccc;
+    color: #000000;
+    font-weight: bold;
+    cursor: default;
+}
 
+.non-pressable-button span {
+    font-size: 0.5rem;
+}
 
-/* Settings Group */
-.settingGroup {
+/* Individual frame styling */
+.frame {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #ccc; /* Light gray border around each frame */
+    flex: 1; /* Divide the container equally among frames */
     box-sizing: border-box;
-	display: flex;
-	align-items: center;
-	height: auto;
-	background-color: Pink;
-    box-shadow: 2px 2px 12px 1px rgba(100,100,100,.5);
-	border: 2px dashed orange;
+    background-color: #f9f9f9; /* Light background for frames */
+    border-radius: 8px; /* Rounded corners for frames */
+    margin: 10px; /* Space between frames */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow for the frames */
 }
 
-.settingGroup_Horrizontal_Grid_TextInput{
-	box-sizing: border-box;
-	width: 100%;
-	align-content: center;
-	vertical-align: middle;
-	display: grid;
-	grid-template-columns: minmax(20%, 40%) minmax(30%, 60%) 100px;
-	border: 2px dashed blue;
+/* Header styling for each frame */
+.frame header {
+    background-color: #333; /* Green background for header */
+    font-size: 1.0rem; /* Larger font for the header text */
+    font-weight: bold; /* Bold text */
+    color: rgb(255, 255, 255); /* White text for contrast */
+    text-align: center; /* Center the header text */
+    border-bottom: 2px solid #333; /* Darker border below the header */
+    border-radius: 8px 8px 0 0; /* Rounded top corners */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Soft shadow for header */
 }
 
-.settingGroup_Horrizontal_Grid_slider {
-	box-sizing: border-box;
-	width: 100%;
-	align-content: center;
-	vertical-align: middle;
-	display: grid;
-	grid-template-columns: 200px minmax(20%, 80%) auto;
-	border: 2px dashed blue;
+/* Content inside each frame */
+.frame .content {
+    flex: 1; /* Content takes up the remaining space in the frame */
+    overflow: auto; /* Add scroll if content overflows */
+    font-size: 1.0em; /* Slightly larger font for content */
+    color: #333; /* Darker color for content text */
+    background-color: #fff; /* White background for content */
+    border-radius: 0 0 20px 20px; /* Rounded bottom corners for content area */
 }
 
-.settingGroup_Horrizontal_Grid_Toggle {
-	box-sizing: border-box;
-	width: 100%;
-	align-content: center;
-	vertical-align: middle;
+.settingGroup {
 	display: grid;
-	grid-template-columns: auto 100px;
-	border: 2px dashed blue;
+	width: 100%;
+	vertical-align: middle;
+    border-radius: 0 0 20px 20px;
+}
+
+.settingGroup_2_Column {
+	display: grid;
+	width: 100%;
+	vertical-align: middle;
+	grid-template-columns: 1fr 100px;
+    border-radius: 0 0 20px 20px;
+}
+
+.settingGroup_3_Column {
+	display: grid;
+	width: 100%;
+	vertical-align: middle;
+	grid-template-columns: 1fr 1fr 100px;
+    border-radius: 0 0 20px 20px;
 }
 
 .settingGroup_Horrizontal_Grid_Radio_Button {
-	box-sizing: border-box;
+	display: flex;
 	width: 100%;
-	align-content: center;
+	align-content: right;
+	justify-content: right;
 	vertical-align: middle;
-	display: grid;
-	grid-template-columns: auto 100px;
-	border: 2px dashed blue;
+	grid-template-columns: auto auto;
+    border-radius: 0 0 20px 20px;
 }
 
 .settingGroup_Horrizontal_Grid_Status {
-	box-sizing: border-box;
+	display: flex;
 	width: 100%;
 	align-content: center;
 	vertical-align: middle;
-	display: grid;
-	grid-template-columns: auto 100px;
-	border: 2px dashed blue;
+	grid-template-columns: auto auto;
+    border-radius: 0 0 20px 20px;
 }
 
 .settingGroup_Title {
-    box-sizing: border-box;
 	display: flex;
 	justify-content: right;
 	align-items: center;
-    font-size: 1.5rem;
-	border: 2px dashed black;
+    font-size: 1.0rem;
+	border: 2px solid #333;
+	padding: 10px;
+	margin: -1px;
 }
 
 .settingGroup_Widget {
-    box-sizing: border-box;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	border: 2px dashed yellow;
+	border: 2px solid #333;
+	margin: -1px;
+	width: 100%
+}
+
+.settingGroup_Button {
+	display: grid;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #333;
+	margin: -1px;
 }
 
 .settingGroup_Textbox {
-    width: 100%; /* make the text box fill the width of its container */
-	box-sizing: border-box; /* include the padding and border in the element's total width */
-	padding: 10px; /* add some padding to the text box */
-	border: 1px solid #ccc; /* add a border to the text box */
-	border-radius: 4px; /* add some border-radius to the text box */
+	display: flex;
+    width: 100%;
+	justify-content: center;
+	align-items: center;
+	border: 2px solid #333;
+	margin: -1px;
 }
 	
 .settingGroup_Value {
-    box-sizing: border-box;
 	display: flex;
 	justify-content: left;
 	align-items: center;
-	border: 2px dashed black;
-    font-size: 1rem;
+    font-size: 1.0rem;
     font-weight: bold;
     color: Black;
-	border: 2px dashed aqua;
+	border: 2px solid #333;
+	margin: -1px;
 }
-
-.settingGroup_Radio_Button {
-    box-sizing: border-box;
-	display: flex;
-	justify-content: left;
-	align-items: Left;
-	border: 2px dashed yellow;
-}
-
 
 /*Test Boxes */
 #Source_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
-	box-sizing: border-box; /* include the padding and border in the element's total width */
-	padding: 5px; /* add some padding to the text box */
-	border: 1px solid #ccc; /* add a border to the text box */
-	border-radius: 4px; /* add some border-radius to the text box */
+	/*border: 1px solid #ccc; /* add a border to the text box */
+	/*border-radius: 4px; /* add some border-radius to the text box */
 	text-align: right;
 }
 #Sink_SSID_Text_Box {
 	width: 100%; /* make the text box fill the width of its container */
-	box-sizing: border-box; /* include the padding and border in the element's total width */
-	padding: 5px; /* add some padding to the text box */
-	border: 1px solid #ccc; /* add a border to the text box */
-	border-radius: 4px; /* add some border-radius to the text box */
+	/*border: 1px solid #ccc; /* add a border to the text box */
+	/*border-radius: 4px; /* add some border-radius to the text box */
 	text-align: right;
 }
 
@@ -491,6 +587,7 @@ input:checked + .slider:before {
 	width: 60px;
 	height: 34px;
 }
+
 .widget_Toggle_Switch input { 
   opacity: 0;
   width: 0;
@@ -515,13 +612,11 @@ input:checked + .slider:before {
     vertical-align: middle;
     display: grid;
     grid-template-columns: auto auto auto; /* Adjust the number of tabs as needed */
-    border: 2px dashed blue;
 }
 
 .widget_Radio_Button label {
     display: inline-block;
     cursor: pointer;
-    padding: 10px;
     border: 2px solid #3498db;
     border-radius: 5px 5px 0 0; /* Rounded corners for the top */
     margin: 5px;
@@ -531,7 +626,7 @@ input:checked + .slider:before {
 
 .widget_Radio_Button input[type="radio"]:checked + label {
     background-color: #3498db;
-    color: #fff;
+    color: #000000;
 }
 
 .settingGroup_Horrizontal_Grid_Radio_Button {
@@ -541,7 +636,6 @@ input:checked + .slider:before {
     vertical-align: middle;
     display: grid;
     grid-template-columns: auto auto; /* Adjust the number of tabs as needed */
-    border: 2px dashed blue;
 }
 
 .widget_Radio_Button input[type="radio"] {
@@ -551,7 +645,6 @@ input:checked + .slider:before {
 .widget_Radio_Button label {
     display: inline-block;
     cursor: pointer;
-    padding: 10px;
     border: 2px solid #3498db;
     border-radius: 5px 5px 0 0; /* Rounded corners for the top */
     margin: 5px;
@@ -561,82 +654,95 @@ input:checked + .slider:before {
 
 .widget_Radio_Button input[type="radio"]:checked + label {
     background-color: #3498db;
-    color: #fff;
+    color: #000000;
 }
 
-/* Basic form styling */
-form {
-	background-color: #f9f9f9;
-	padding: 20px;
-	border-radius: 10px;
-	width: 300px;
-	margin: 0 auto;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	font-family: 'Arial', sans-serif;
-}
-
-/* Styling the labels and input wrapper */
 .radio-button-group {
-	margin-top: 5px;
-	margin-bottom: 5px;
+    display: grid;
+	padding: 10px;
 }
 
 .radio-button-group label {
-	display: flex;
-	align-items: left;
-	cursor: pointer;
-	margin-bottom: 10px;
-	font-size: 16px;
+    display: flex;
+    align-items: center;
+	justify-content: right;
+    cursor: pointer;
+    font-size: 1.0rem;
+}
+
+.radio-button-group img {
+    align-items: right;
+    cursor: pointer;
+    font-size: 1.0rem;
+	justify-content: right;
 }
 
 /* Hide default radio button */
 .radio-button-group input[type="radio"] {
-	display: none;
+    display: none;
 }
 
 /* Create custom radio button */
 .radio-button-group .custom-radio {
-	width: 18px;
-	height: 18px;
-	border: 2px solid #3498db;
-	border-radius: 20%;
-	position: relative;
-	margin-right: 10px;
-	transition: background 0.3s;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #3498db;
+    border-radius: 50%;
+    position: relative;
+    transition: background 0.3s;
 }
 
 /* Inner circle when checked */
 .radio-button-group input[type="radio"]:checked + .custom-radio::after {
-	content: '';
-	width: 10px;
-	height: 10px;
-	background-color: #3498db;
-	border-radius: 20%;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+    content: '';
+    width: 10px;
+    height: 10px;
+    background-color: #3498db;
+    border-radius: 50%; /* Changed to 50% for a perfect circle */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-/* Label hover effect */
-.radio-button-group label:hover .custom-radio {
-	background-color: rgba(52, 152, 219, 0.1);
+/* Focus Styles */
+.radio-button-group input[type="radio"]:focus + .custom-radio {
+    outline: 2px solid #3498db;
+    outline-offset: 2px; /* Optional: creates space around the outline */
 }
 
 /* Submit button */
 .submit-btn {
 	display: block;
 	width: 100%;
-	padding: 10px;
 	background-color: #3498db;
 	color: white;
 	border: none;
 	border-radius: 5px;
-	font-size: 16px;
+	font-size: 1.0rem;
 	cursor: pointer;
 	transition: background-color 0.3s;
 }
 
 .submit-btn:hover {
 	background-color: #2980b9;
+}
+
+#deviceList {
+    display: flex; /* Flexbox container */
+    flex-direction: column; /* Make items stack vertically */
+    overflow-y: scroll; /* Vertical scrolling */
+    height: 300px; /* Fixed height */
+    width: 100%; /* Full width of parent container */
+    border: 1px solid #f0f0f0;
+    font-family: Arial, sans-serif;
+    font-size: 0.8rem;
+}
+
+.device-item {
+	cursor: pointer;
+	border-bottom: 1px solid #ccc;
+}
+.device-item:hover {
+	background-color: #f0f0f0;
 }

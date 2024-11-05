@@ -26,8 +26,8 @@ class StringDataItem: public LocalStringDataItem
 			  		, public SerialMessageInterface<char, DATAITEM_STRING_LENGTH>
 {
 	public:
-		StringDataItem( const String name
-					  , const String &initialValue
+		StringDataItem( const std::string name
+					  , const std::string &initialValue
 					  , const RxTxType_t rxTxType
 					  , const uint16_t rate
 					  , SerialPortMessageManager *serialPortMessageManager
@@ -86,7 +86,7 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::GetDataType();
 		}
-		bool UpdateStore(const char *newValues, const size_t changeCount)
+		UpdateStatus_t UpdateStore(const char *newValues, const size_t changeCount)
 		{
 			return LocalStringDataItem::UpdateStore(newValues, changeCount);
 		}
@@ -98,10 +98,9 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::ParseStringValueIntoValues(stringValue, values);
 		}
-		virtual bool SetValue(const char* value, size_t count) override
+		virtual UpdateStatus_t SetValue(const char* value, size_t count) override
 		{
-			bool valueChanged = Set_Tx_Value(value, count);
-			return valueChanged;
+			return Set_Tx_Value(value, count);
 		}
 
 		virtual bool GetInitialValueAsString(String &stringValue) const override
@@ -114,7 +113,7 @@ class StringDataItem: public LocalStringDataItem
 			return LocalStringDataItem::GetInitialValueAsString();
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("StringDataItem::SetValueFromString"

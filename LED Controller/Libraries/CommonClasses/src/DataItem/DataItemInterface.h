@@ -36,8 +36,8 @@ class DataItemInterface
         virtual String GetInitialValueAsString() const = 0;
         virtual bool GetValueAsString(String &stringValue) const = 0;
         virtual String GetValueAsString() const = 0;
-        virtual bool SetValueFromString(const String& stringValue) = 0;
-        virtual bool SetValue(const T *value, size_t count) = 0;
-        virtual bool SetValue(const T& value) = 0;
+        virtual UpdateStatus_t SetValueFromString(const String& stringValue) = 0;
+        virtual UpdateStatus_t SetValue(const T *value, size_t count) = 0;
+        virtual UpdateStatus_t SetValue(const T& value) = 0;
         virtual bool EqualsValue(T *object, size_t count) const = 0;
 };

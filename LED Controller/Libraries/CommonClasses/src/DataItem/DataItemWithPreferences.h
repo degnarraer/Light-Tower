@@ -26,7 +26,7 @@ template <typename T, size_t COUNT>
 class DataItemWithPreferences: public DataItem<T, COUNT>
 {
 	public:
-		DataItemWithPreferences( const String name
+		DataItemWithPreferences( const std::string name
 							   , const T* initialValue
 							   , const RxTxType_t rxTxType
 							   , const uint16_t rate
@@ -43,7 +43,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 							   , mp_PreferenceManager(nullptr)
 		{
 		}		   
-		DataItemWithPreferences( const String name
+		DataItemWithPreferences( const std::string name
 							   , const T& initialValue
 							   , const RxTxType_t rxTxType
 							   , const uint16_t rate
@@ -63,7 +63,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 		}
 
-		DataItemWithPreferences( const String name
+		DataItemWithPreferences( const std::string name
 							   , const T* initialValue
 							   , const RxTxType_t rxTxType
 							   , const uint16_t rate
@@ -85,7 +85,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 		}
 							   
-		DataItemWithPreferences( const String name
+		DataItemWithPreferences( const std::string name
 							   , const T& initialValue
 							   , const RxTxType_t rxTxType
 							   , const uint16_t rate
@@ -121,7 +121,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 			DataItem<T, COUNT>::Setup();
 			mp_PreferenceManager = new PreferenceManager( mp_preferencesInterface
-							   					  		, this->m_Name
+							   					  		, String(this->m_Name.c_str())
 							   				 	  		, this->GetInitialValueAsString()
 												  		, PREFERENCE_TIMEOUT
 							   				 	  		, this->StaticSetValueFromString
@@ -129,6 +129,11 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			mp_PreferenceManager->InitializeAndLoadPreference();
 		}
 		
+		virtual String GetName() const override
+		{
+			return DataItem<T, COUNT>::GetName();
+		}
+
 		virtual size_t GetCount() const override
 		{
 			return DataItem<T, COUNT>::GetCount();
@@ -139,29 +144,26 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return DataItem<T, COUNT>::GetChangeCount();
 		}
 
-		virtual bool SetValue(const T* values, size_t count) override
+		virtual UpdateStatus_t SetValue(const T* values, size_t count) override
 		{
-			ESP_LOGI("SetValue", "SetValue for Data Item With Preferences 1");
-			bool result = DataItem<T, COUNT>::SetValue(values, count);
-			if(result)
+			UpdateStatus_t result = DataItem<T, COUNT>::SetValue(values, count);
+			if(result.UpdateSuccessful)
 			{
-				
-				ESP_LOGI("SetValue", "SetValue for Data Item With Preferences 2");
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   				   , this->GetValueAsString() );
 			}
 			return result;
 		}
 		
-		virtual bool SetValue(const T& value) override
+		virtual UpdateStatus_t SetValue(const T& value) override
 		{
 			return this->SetValue(&value, 1);
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
-			bool result = DataItem<T, COUNT>::SetValueFromString(stringValue);
-			if(result)
+			UpdateStatus_t result = DataItem<T, COUNT>::SetValueFromString(stringValue);
+			if(result.UpdateSuccessful)
 			{
 				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   				   , this->GetValueAsString() );

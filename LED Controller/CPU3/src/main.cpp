@@ -21,10 +21,12 @@
 
 #include "Tunes.h"
 #include "SettingsWebServer.h"
+
 #define SERIAL_RX_BUFFER_SIZE 2048
 
 Preferences m_Preferences;
-PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
+PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
+
 DataSerializer m_DataSerializer;  
 SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
 SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial2, &m_DataSerializer);
@@ -43,61 +45,74 @@ SettingsWebServerManager m_SettingsWebServerManager( "My Settings Web Server Man
                                                    , m_CPU1SerialPortMessageManager
                                                    , m_CPU2SerialPortMessageManager );
 
-void ClearSerialBuffers(HardwareSerial &serial)
-{
-    serial.flush();
-    while (serial.available() > 0) {
-        serial.read();
-    }
-}
 void SetupSerialPorts()
 {
-  delay(500);
-  Serial.begin(500000, SERIAL_8O2);
-  ClearSerialBuffers(Serial);
+  Serial.begin(115200, SERIAL_8O2);
+  Serial.flush();
   Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  ClearSerialBuffers(Serial1);
+  Serial1.flush();
   Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
   Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
-  ClearSerialBuffers(Serial2);
+  Serial2.flush();
+  ESP_LOGI("SetupSerialPorts", "Serial Ports Setup");
 }
 
 
 void TestPSRam()
 {
-  uint32_t expectedAllocationSize = 4096000; //4MB of PSRam
-  uint32_t allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "psram allocation should be 0 at start");
-  byte* psdRamBuffer = (byte*)ps_malloc(expectedAllocationSize);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(expectedAllocationSize == allocationSize && "Failed to allocated psram");
-  free(psdRamBuffer);
-  allocationSize = ESP.getPsramSize() - ESP.getFreePsram();
-  assert(0 == allocationSize && "Failed to free allocated psram");
+    const size_t theSize = 100;
+    size_t freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    void* buffer1 = heap_caps_malloc(theSize, MALLOC_CAP_SPIRAM);
+    assert(buffer1);
+    size_t freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    size_t allocatedSize = freeSizeBefore - freeSizeAfter;
+    ESP_LOGI("TestPSRam", "Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    assert(allocatedSize >= theSize);
+    free(buffer1);
+    buffer1 = nullptr;
+    size_t freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    assert(freeSizeAfterFree == freeSizeBefore);
+    
+    freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    void* buffer2 = ps_malloc(theSize);
+    assert(buffer2);
+    freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    allocatedSize = freeSizeBefore - freeSizeAfter;
+    ESP_LOGI("TestPSRam", "ps_malloc Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    assert(allocatedSize >= theSize);
+    free(buffer2);
+    buffer2 = nullptr;
+    freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    assert(freeSizeAfterFree == freeSizeBefore);
 }
 
 void InitLocalVariables()
 {
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU2SerialPortMessageManager.SetupSerialPortMessageManager();
+  m_CPU1SerialPortMessageManager.Setup();
+  m_CPU2SerialPortMessageManager.Setup();
   m_SettingsWebServerManager.SetupSettingsWebServerManager();
 }
 
-void PrintMemory()
+void PrintMemory(const char* message)
 {
-  ESP_LOGI("Settings_Web_Server", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGI("Settings_Web_Server", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGI("Settings_Web_Server", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGI("Settings_Web_Server", "Free PSRAM: %d", ESP.getFreePsram());
+  ESP_LOGI("PrintMemory", "%s", message);
+  ESP_LOGI("PrintMemory", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGI("PrintMemory", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGI("PrintMemory", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGI("PrintMemory", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void setup()
 {
   SetupSerialPorts();
+  PrintMemory("Before Initialization");
+  TestPSRam();
+  m_PreferencesWrapper.Setup();
   InitLocalVariables();
-  PrintMemory();
-  //TestPSRam();
+  PrintMemory("After Initialization");
 }
 
 void loop()

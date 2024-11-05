@@ -2,11 +2,11 @@
 
 void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
 {
-  ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %i", clientId );
-  std::vector<KVP> signalValues = std::vector<KVP>();
+  ESP_LOGI("WebSocketDataProcessor::UpdateAllDataToClient", "Sending All Data to Client: %u", clientId );
+  std::vector<KVP> signalValues;
   for(int i = 0; i < m_MyTxNotifyees.size(); ++i)
   {
-    m_MyTxNotifyees[i]->HandleWebSocketDataRequest();
+    signalValues.push_back(m_MyTxNotifyees[i]->HandleWebSocketDataRequest());
   }
   if(signalValues.size())
   {
@@ -24,16 +24,15 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
-    bool hasSize = (m_Tx_KeyValues.size() > 0);
-    if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "Before Size %i", m_Tx_KeyValues.size());
-    std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
-    if(hasSize) ESP_LOGD("WebSocketDataProcessor_WebSocket_TxTask", "After Size %i", m_Tx_KeyValues.size());
-    std::lock_guard<std::recursive_mutex> unlock(m_Tx_KeyValues_Mutex);
-    if(signalValues.size())
+    if(m_Tx_KeyValues.size() > 0)
     {
-      String message;
-      Encode_Signal_Values_To_JSON(signalValues, message);
-      NotifyClients(message);
+      std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
+      if(signalValues.size())
+      {
+        String message;
+        Encode_Signal_Values_To_JSON(signalValues, message);
+        NotifyClients(message);
+      }
     }
   }  
 }
@@ -43,7 +42,7 @@ void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const String& na
   auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
   if (it == m_MyRxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketRxNotification", "Registering %s as Web Socket Data Receiver.", name.c_str());
     m_MyRxNotifyees.push_back(aReceiver);
   }
 }
@@ -53,7 +52,7 @@ void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String& 
   auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
   if (it != m_MyRxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Receiver.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Receiver.", name.c_str());
     m_MyRxNotifyees.erase(it);
   }
 }
@@ -64,7 +63,7 @@ void WebSocketDataProcessor::RegisterForWebSocketTxNotification(const String& na
   auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
   if (it == m_MyTxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketTxNotification", "Registering %s as Web Socket Data Sender.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketTxNotification", "Registering %s as Web Socket Data Sender.", name.c_str());
     m_MyTxNotifyees.push_back(aSender);
   }
 }
@@ -74,7 +73,7 @@ void WebSocketDataProcessor::DeRegisterForWebSocketTxNotification(const String& 
   auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
   if (it != m_MyTxNotifyees.end())
   {
-    ESP_LOGI("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Sender.", name.c_str());
+    ESP_LOGD("RegisterForWebSocketTxNotification", "DeRegistering %s as Web Socket Data Sender.", name.c_str());
     m_MyTxNotifyees.erase(it);
   }
 }
@@ -97,15 +96,16 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& s
 
 void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyValuePairs, String &result)
 {
-  JSONVar jSONVars;
-  for(int i = 0; i < keyValuePairs.size(); ++i)
-  {
-    JSONVar SettingValues;
-    SettingValues["Id"] = keyValuePairs.at(i).Key;
-    SettingValues["Value"] = keyValuePairs.at(i).Value;
-    jSONVars["SignalValue" + String(i)] = SettingValues;
-  }
-  result = JSON.stringify(jSONVars);
+    JSONVar jsonArray;
+    for (int i = 0; i < keyValuePairs.size(); ++i)
+    {
+        JSONVar settingValues;
+        settingValues["Id"] = keyValuePairs.at(i).Key;
+        settingValues["Value"] = keyValuePairs.at(i).Value;
+        jsonArray[i] = settingValues;
+    }
+
+    result = JSON.stringify(jsonArray);
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& textString)
@@ -119,7 +119,7 @@ void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& 
 
 void WebSocketDataProcessor::NotifyClients(const String& textString)
 {
-  ESP_LOGI("NotifyClients", "Notify Clients: %s", textString.c_str());
+  ESP_LOGD("NotifyClients", "Notify Clients: %s", textString.c_str());
   if(0 < textString.length())
   {
     m_WebSocket.broadcastTXT(textString.c_str(), textString.length());

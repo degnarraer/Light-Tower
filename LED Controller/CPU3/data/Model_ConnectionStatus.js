@@ -22,10 +22,10 @@ export class Model_ConnectionStatus {
         this.wsManager.unregisterListener(this);
     }
 
-    getSignalName() {
-        return this.signalName;
-    }
-
+    getListnerName() {return this.signalName;}
+    onOpen(){}
+    onClose(){}
+    onError(){}
     onMessage(newValue) {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         try {
@@ -36,7 +36,7 @@ export class Model_ConnectionStatus {
     }
 
     setValue(newValue, updateWebsocket = true) {
-        console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
+        console.log(`ESP32 Model: Set Value for Signal: "${this.signalName}" to "${newValue}"`);
         if (Object.values(Model_ConnectionStatus.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
@@ -94,8 +94,23 @@ export class Model_ConnectionStatus {
     updateHTML() {
         const elementsWithDataValue = document.querySelectorAll(`[data-Signal="${this.signalName}"]`);
         elementsWithDataValue.forEach(element => {
-            if (element.tagName === "SPAN") {
+            if (element.tagName.toUpperCase() === "SPAN") {
                 element.innerHTML = this.value;
+            } else if(element.tagName.toUpperCase() === "IMG") {
+                switch(this.value){
+                    case Model_ConnectionStatus.values.Connected:
+                        element.src = "./Images/connected.svg"
+                    break;
+                    case Model_ConnectionStatus.values.Connecting:
+                        element.src = "./Images/connecting.svg"
+                    break;
+                    case Model_ConnectionStatus.values.Disconnecting:
+                        element.src = "./Images/disconnected.svg"
+                    break;
+                    case Model_ConnectionStatus.values.Disconnected:
+                        element.src = "./Images/disconnected.svg"
+                    break;
+                }
             } else {
                 console.error(`"${this.signalName}" Unsupported Element!`);
             }

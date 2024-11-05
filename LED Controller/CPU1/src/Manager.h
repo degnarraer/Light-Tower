@@ -16,7 +16,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
 #pragma once
 #include <DataTypes.h>
 #include <Helpers.h>
@@ -30,20 +29,18 @@
 #include "DataItem/DataItems.h"
 
 class Manager: public NamedItem
-             , public I2S_Device_Callback
-             , public Bluetooth_Sink_Callback
+             , public Bluetooth_Sink_Callbacks
              , public SoundMeasureCalleeInterface
-             , public BluetoothConnectionStateCallee
              , public CommonUtils
              , public QueueController
              , public SetupCallerInterface
 {
   public:
     Manager( String Title
-           , StatisticalEngine &StatisticalEngine
-           , Bluetooth_Sink &BT_In
-           , I2S_Device &Mic_In
-           , I2S_Device &I2S_Out );
+           , StatisticalEngine &statisticalEngine
+           , Bluetooth_Sink &bluetooth_Sink
+           , I2S_Device &microphone
+           , I2S_Device &i2S_Out );
 
     // Delete copy constructor and copy assignment operator
     Manager(const Manager&) = delete;
@@ -51,42 +48,83 @@ class Manager: public NamedItem
     
     virtual ~Manager();
     void Setup();
-
-    //Tasks
-    static void Static_Manager_20mS_TaskLoop(void * parameter);
-    void ProcessEventQueue20mS();
-    static void Static_Manager_1000mS_TaskLoop(void * parameter);
-    void ProcessEventQueue1000mS();
-    static void Static_Manager_300000mS_TaskLoop(void * parameter);
-    void ProcessEventQueue300000mS();
     
     void SetInputSource(SoundInputSource_t Type);
-    //Bluetooth_Callback
-    void BTDataReceived(uint8_t *data, uint32_t length);
     
-    //I2S_Device_Callback
-    void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length);
+    //Bluetooth Callbacks
+		void BT_Data_Received()
+    {
+    }
+
+		void BT_Read_Data_Stream(const uint8_t *data, uint32_t length)
+    {
+      //m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+    }
 
     //SoundMeasureCalleeInterface Callback
     void SoundStateChange(SoundState_t SoundState);
 
     //BluetoothConnectionStateCallee Callback
-    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState);
+    void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object);
     
   private:
     Preferences m_Preferences;
-    PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper(&m_Preferences);
+    PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
     DataSerializer m_DataSerializer;
+    Bluetooth_Sink &m_Bluetooth_Sink;
+    I2S_Device &m_Microphone;
+    I2S_Device &m_I2S_Out;
+    TaskHandle_t m_TaskHandle = nullptr;
+
+    static void Static_Microphone_Request_Task(void * parameter)
+    {
+      Manager* manager = static_cast<Manager*>(parameter);
+      manager->Microphone_Request_Task();
+    }
+
+    void Microphone_Request_Task()
+    {
+      while(true)
+      {
+        uint8_t buffer[512] = {0};
+        m_I2S_Out.WriteSoundBufferData(buffer, m_Microphone.ReadSoundBufferData(buffer, 512));
+      }
+    }
 
     void SetupSerialPortManager();
     SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
     
     void SetupTasks();
-    TaskHandle_t m_Manager_20mS_Task;
-    TaskHandle_t m_Manager_1000mS_Task;
-    TaskHandle_t m_Manager_300000mS_Task;
     
+
+    void CreateMicrophoneTask()
+    {
+      if( xTaskCreatePinnedToCore( Static_Microphone_Request_Task, "Microphone Request", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+      {
+        ESP_LOGI("StartDevice", "%s: Microphone task started.", GetTitle().c_str());
+      }
+      else
+      {
+        ESP_LOGE("StartDevice", "ERROR! Unable to create Microphone task!");
+      }
+    }
+
+    void DestroyMicrophoneTask()
+    {
+      ESP_LOGI("DestroyTask", "Destroying Microphone task.");
+      if(m_TaskHandle != nullptr)
+      {
+        vTaskDelete(m_TaskHandle);
+        m_TaskHandle = nullptr;
+      }
+      else
+      {
+        ESP_LOGW("DestroyTask", "WARNING! Unable to destroy Microphone task!");
+      }
+    }
+
+
     String ConnectionStatusStrings[5]
     {
       "DISCONNECTED",
@@ -101,19 +139,12 @@ class Manager: public NamedItem
     struct CallbackArguments 
     {
       void* arg1;
-    };
-
-    struct Callback2Arguments 
-    {
-      void* arg1;
-      void* arg2;
-    };
-
-    struct Callback3Arguments 
-    {
-      void* arg1;
       void* arg2;
       void* arg3;
+      void* arg4;
+      
+      CallbackArguments(void* a1 = nullptr, void* a2 = nullptr, void* a3 = nullptr, void* a4 = nullptr)
+        : arg1(a1), arg2(a2), arg3(a3), arg4(a4) {}
     };
 
     void SetupStatisticalEngine();
@@ -121,15 +152,11 @@ class Manager: public NamedItem
     Mute_State_t m_MuteState = Mute_State_t::Mute_State_Un_Muted;
 
     //Bluetooth Data
-    void SetupBlueTooth();
-    Bluetooth_Sink &m_BT_In;
+    void SetupDevices();
     
     //I2S Sound Data RX
     void SetupI2S();
-    I2S_Device &m_Mic_In; 
-    I2S_Device &m_I2S_Out;
 
-    void InitializePreferences();
     void MoveDataToStatisticalEngine();
 
     //Input Source
@@ -154,44 +181,24 @@ class Manager: public NamedItem
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
         assert(arguments->arg1 && "Null Pointer!");
         Manager *manager = static_cast<Manager*>(arguments->arg1);
-        SoundInputSource_t *inputSource = static_cast<SoundInputSource_t*>(object);
-        manager->SetInputSource(*inputSource);
+        SoundInputSource_t inputSource = *static_cast<SoundInputSource_t*>(object);
+        manager->SetInputSource(inputSource);
       }
     }
 
     //Bluetooth Sink Name
-    Callback2Arguments m_SinkName_CallbackArgs = { &m_BT_In
-                                                 , &m_SinkAutoReConnect };
-    NamedCallback_t m_SinkName_Callback = { "Sink Name Callback"
-                                          , &SinkName_ValueChanged
-                                          , &m_SinkName_CallbackArgs };
-    const String m_SinkName_InitialValue = "LED Tower of Power";
+    const std::string m_SinkName_InitialValue = "LED Tower of Power";
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name"
                                                                             , m_SinkName_InitialValue
                                                                             , RxTxType_Rx_Echo_Value
                                                                             , 0
                                                                             , &m_PreferencesWrapper
                                                                             , &m_CPU3SerialPortMessageManager
-                                                                            , &m_SinkName_Callback
+                                                                            , nullptr
                                                                             , this );
-    static void SinkName_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      if(arg && object)
-      {
-        Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
-        assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");
-        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-        DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
-        char* sinkName = static_cast<char*>(object);
-        ESP_LOGI("SinkName_ValueChanged", "Sink Name Changed: %s", sinkName);
-        pBT_In->Disconnect();
-        pBT_In->Connect(sinkName, pBluetoothSinkAutoReConnect->GetValue());
-      }
-    }
 
     //Bluetooth Sink Auto Reconnect
-    Callback2Arguments m_SinkAutoReConnect_CallbackArgs = { &m_BT_In
-                                                          , &m_SinkName };
+    CallbackArguments m_SinkAutoReConnect_CallbackArgs = { &m_Bluetooth_Sink, &m_SinkName };
     NamedCallback_t m_SinkAutoReConnect_Callback = { "Sink Connect Callback"
                                                    , &SinkAutoReConnect_ValueChanged
                                                    , &m_SinkAutoReConnect_CallbackArgs };
@@ -205,23 +212,28 @@ class Manager: public NamedItem
                                                                                            , NULL
                                                                                            , this
                                                                                            , &validBoolValues );
+
     static void SinkAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(arg && object)
       {
-        Callback2Arguments* pArguments = static_cast<Callback2Arguments*>(arg);
-        assert(pArguments->arg1 && pArguments->arg2 && "Null Pointers!");
-        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-        DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
-        ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
-        pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+        CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
+        if(pArguments->arg1 && pArguments->arg2)
+        {
+          Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+          DataItemWithPreferences<bool, 1> *sinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg2);
+          ESP_LOGI("SinkAutoReConnect_ValueChanged", "Sink Auto ReConnect Value Changed: %i", sinkAutoReConnect->GetValue());
+          pBT_In->Set_Auto_Reconnect(sinkAutoReConnect->GetValue());
+        }
+        else
+        {
+          ESP_LOGE("SinkAutoReConnect_ValueChanged", "ERROR! Null Pointers!");
+        }
       }
     }
 
-
-
     //Sink Connect
-    Callback3Arguments m_SinkConnect_CallbackArgs = { &m_BT_In
+    CallbackArguments m_SinkConnect_CallbackArgs = { &m_Bluetooth_Sink
                                                     , &m_SinkName
                                                     , &m_SinkAutoReConnect };
     NamedCallback_t m_SinkConnect_Callback = { "Sink Connect Callback"
@@ -239,22 +251,28 @@ class Manager: public NamedItem
     {
       if(arg && object)
       {
-        Callback3Arguments* pArguments = static_cast<Callback3Arguments*>(arg);
-        assert(pArguments->arg1 && pArguments->arg2 && pArguments->arg3 && "Null Pointers!");
-        Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
-        StringDataItemWithPreferences* pBluetoothSinkName = static_cast<StringDataItemWithPreferences*>(pArguments->arg2);
-        DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg3);
-        bool sinkConnect = *static_cast<bool*>(object);
-        if(sinkConnect)
+        CallbackArguments* pArguments = static_cast<CallbackArguments*>(arg);
+        if(pArguments->arg1 && pArguments->arg2 && pArguments->arg3)
         {
-          ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
-          pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
+          Bluetooth_Sink* pBT_In = static_cast<Bluetooth_Sink*>(pArguments->arg1);
+          StringDataItemWithPreferences* pBluetoothSinkName = static_cast<StringDataItemWithPreferences*>(pArguments->arg2);
+          DataItemWithPreferences<bool, 1>* pBluetoothSinkAutoReConnect = static_cast<DataItemWithPreferences<bool, 1>*>(pArguments->arg3);
+          bool sinkConnect = *static_cast<bool*>(object);
+          if(sinkConnect)
+          {
+            ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
+            pBT_In->Connect(pBluetoothSinkName->GetValuePointer(), pBluetoothSinkAutoReConnect->GetValue());
+          }
+        }
+        else
+        {
+            ESP_LOGI("SinkConnect_ValueChanged", "Sink Connecting");
         }
       }
     }
 
     //Sink Disconnect
-    CallbackArguments m_SinkDisconnect_CallbackArgs = {&m_BT_In};
+    CallbackArguments m_SinkDisconnect_CallbackArgs = {&m_Bluetooth_Sink};
     NamedCallback_t m_SinkDisconnect_Callback = { "Sink Disconnect Callback"
                                                 , &SinkDisconnect_ValueChanged
                                                 , &m_SinkDisconnect_CallbackArgs };

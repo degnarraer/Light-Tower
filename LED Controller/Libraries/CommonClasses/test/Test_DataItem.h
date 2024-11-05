@@ -52,7 +52,7 @@ class DataItemFunctionCallTests : public Test
         {
             mp_MockSetupCaller = new MockSetupCallerInterface();
             mp_MockSerialPortMessageManager = new MockSerialPortMessageManager();
-            ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
+            ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         }
         void CreateDataItem(RxTxType_t rxTxType, uint16_t rate)
@@ -69,7 +69,7 @@ class DataItemFunctionCallTests : public Test
             EXPECT_CALL(*mp_MockSerialPortMessageManager, RegisterForNewRxValueNotification(mp_DataItem)).Times(1);
             if( rxTxType == RxTxType_Tx_Periodic || rxTxType == RxTxType_Tx_On_Change || rxTxType == RxTxType_Tx_On_Change_With_Heartbeat )
             {
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_,_))
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(name,_,_,_,_))
                     .Times(1)
                     .WillOnce(Return(true));
             }
@@ -151,7 +151,7 @@ class DataItemRxTxTests : public Test
         void SetUp() override
         {
             mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
-            ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
+            ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
         }
 
@@ -190,7 +190,7 @@ class DataItemRxTxTests : public Test
 TEST_F(DataItemRxTxTests, Tx_Called_Periodically)
 {
     CreateDataItem(RxTxType_Tx_Periodic, 100);
-    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(name,_,_,_,_)).Times(10)
+    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(name,_,_,_,_)).Times(10)
         .WillRepeatedly(Return(true));
     std::this_thread::sleep_for(std::chrono::milliseconds(1050));
     ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
@@ -231,7 +231,7 @@ protected:
     void SetUp() override
     {
         mp_MockSerialPortMessageManager = new NiceMock<MockSerialPortMessageManager>();
-        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).WillByDefault(Return(true));
+        ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
 
@@ -298,13 +298,13 @@ protected:
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_Periodic");
                 if(expectValueAccepted)
                 {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(2).WillRepeatedly(Return(true));
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(2).WillRepeatedly(Return(true));
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 1");
                 }
                 else
                 {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(1);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 0");
                 }
                 if(expectValueAccepted)
                 {
@@ -323,13 +323,13 @@ protected:
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change");
                 if(expectValueAccepted)
                 {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(1).WillRepeatedly(Return(true));
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(1).WillRepeatedly(Return(true));
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 1");
                 }
                 else
                 {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(0);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(0);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 0");
                 }
                 if(expectValueAccepted)
                 {
@@ -348,13 +348,13 @@ protected:
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Tx_On_Change_With_Heartbeat");
                 if(expectValueAccepted)
                 {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(2).WillRepeatedly(Return(true));
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 1");
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(2).WillRepeatedly(Return(true));
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 1");
                 }
                 else
                 {
-                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(1);
-                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                    EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(1);
+                    ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 0");
                 }
                 if(expectValueAccepted)
                 {
@@ -371,8 +371,8 @@ protected:
             case RxTxType_Rx_Only:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Only");
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(0);
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(0);
+                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 0");
                 if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);
@@ -388,8 +388,8 @@ protected:
 	        case RxTxType_Rx_Echo_Value:
             {
                 ESP_LOGD( "SetRxTxCallExpectations", "RxTxType_Rx_Echo_Value");
-                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromData(_,_,_,_,_)).Times(0);
-                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromData x 0");
+                EXPECT_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).Times(0);
+                ESP_LOGD( "SetRxTxCallExpectations", "EXPECT_CALL: QueueMessageFromDataType x 0");
                 if(expectValueAccepted)
                 {
                     EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(name,_,_)).Times(1);

@@ -20,24 +20,29 @@
 
 #include "DataItem/LocalDataItem.h"
 #include "DataItem/PreferencesWrapper.h"
-#define PREFERENCE_TIMEOUT 10000UL
+#define PREFERENCE_TIMEOUT 5000UL
 
 template <typename T, size_t COUNT>
 class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
+							 	  , public PreferenceManager
 {
 	public:
-		LocalDataItemWithPreferences( const String name
+		LocalDataItemWithPreferences( const std::string name
 									, const T* initialValue
 									, IPreferences *preferencesInterface
 									, NamedCallback_t *namedCallback )
 									: LocalDataItem<T, COUNT>( name
 															 , initialValue
 															 , namedCallback )
-									, mp_preferencesInterface(preferencesInterface)
-									, mp_PreferenceManager(nullptr)
+									, PreferenceManager( preferencesInterface
+									 				   , String(this->m_Name.c_str())
+									 				   , this->GetInitialValueAsString()
+													   , PREFERENCE_TIMEOUT
+									 				   , this->StaticSetValueFromString
+									 				   , this )
 		{
 		}		   
-		LocalDataItemWithPreferences( const String name
+		LocalDataItemWithPreferences( const std::string name
 									, const T& initialValue
 									, IPreferences *preferencesInterface
 									, NamedCallback_t *namedCallback
@@ -46,12 +51,16 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , initialValue
 															 , namedCallback
 															 , setupCallerInterface )
-									, mp_preferencesInterface(preferencesInterface)
-									, mp_PreferenceManager(nullptr)
+									, PreferenceManager( preferencesInterface
+									 				   , String(this->m_Name.c_str())
+									 				   , this->GetInitialValueAsString()
+													   , PREFERENCE_TIMEOUT
+									 				   , this->StaticSetValueFromString
+									 				   , this )
 		{
 		}
 
-		LocalDataItemWithPreferences( const String name
+		LocalDataItemWithPreferences( const std::string name
 									, const T* initialValue
 									, IPreferences *preferencesInterface
 									, NamedCallback_t *namedCallback
@@ -62,12 +71,16 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , namedCallback
 															 , validStringValues
 															 , setupCallerInterface )
-									, mp_preferencesInterface(preferencesInterface)
-									, mp_PreferenceManager(nullptr)
+									, PreferenceManager( preferencesInterface
+									 				   , String(this->m_Name.c_str())
+									 				   , this->GetInitialValueAsString()
+													   , PREFERENCE_TIMEOUT
+									 				   , this->StaticSetValueFromString
+									 				   , this )
 		{
 		}
 							   
-		LocalDataItemWithPreferences( const String name
+		LocalDataItemWithPreferences( const std::string name
 									, const T& initialValue
 									, IPreferences *preferencesInterface
 									, NamedCallback_t *namedCallback
@@ -78,31 +91,24 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , namedCallback
 															 , setupCallerInterface
 															 , validStringValues )
-									, mp_preferencesInterface(preferencesInterface)
-									, mp_PreferenceManager(nullptr)
+									, PreferenceManager( preferencesInterface
+									 				   , String(this->m_Name.c_str())
+									 				   , this->GetInitialValueAsString()
+													   , PREFERENCE_TIMEOUT
+									 				   , this->StaticSetValueFromString
+									 				   , this )
 		{
 		}
 
 		virtual ~LocalDataItemWithPreferences()
 		{
 			ESP_LOGI("~LocalDataItemWithPreferences()", "\"%s\": Freeing Memory", this->m_Name.c_str());
-			if(mp_PreferenceManager)
-			{
-				delete mp_PreferenceManager;
-				mp_PreferenceManager = nullptr;
-			}
 		}
 
 		virtual void Setup() override
 		{
 			LocalDataItem<T, COUNT>::Setup();
-			mp_PreferenceManager = new PreferenceManager( mp_preferencesInterface
-							   					  		, this->m_Name
-							   				 	  		, this->GetInitialValueAsString()
-												  		, PREFERENCE_TIMEOUT
-							   				 	  		, this->StaticSetValueFromString
-							   				 	  		, this );
-			mp_PreferenceManager->InitializeAndLoadPreference();
+			PreferenceManager::InitializeAndLoadPreference();
 		}
 		
 		virtual size_t GetCount() const override
@@ -115,31 +121,28 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::GetChangeCount();
 		}
 
-		virtual bool SetValue(const T* values, size_t count) override
+		virtual UpdateStatus_t SetValue(const T* values, size_t count) override
 		{
-			ESP_LOGI("SetValue", "SetValue for Local Data Item With Preferences 1");
-			bool result = LocalDataItem<T, COUNT>::SetValue(values, count);
-			if(result)
+			UpdateStatus_t result = LocalDataItem<T, COUNT>::SetValue(values, count);
+			if(result.UpdateSuccessful)
 			{
-				
-				ESP_LOGI("SetValue", "SetValue for Local Data Item With Preferences 2");
-				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
-									   				   , this->GetValueAsString() );
+				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+									   , this->GetValueAsString() );
 			}
 			return result;
 		}
 		
-		virtual bool SetValue(const T& value) override
+		virtual UpdateStatus_t SetValue(const T& value) override
 		{
 			return this->SetValue(&value, 1);
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
-			bool result = LocalDataItem<T, COUNT>::SetValueFromString(stringValue);
-			if(result)
+			UpdateStatus_t result = LocalDataItem<T, COUNT>::SetValueFromString(stringValue);
+			if(result.UpdateSuccessful)
 			{
-				mp_PreferenceManager->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
+				this->Update_Preference( PreferenceManager::PreferenceUpdateType::Save
 									   				   , this->GetValueAsString() );
 			}
 			return result;
@@ -149,8 +152,4 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 		{
 			return LocalDataItem<T, COUNT>::ConfirmValueValidity(values, count);
 		}
-
-	private:
-		IPreferences *mp_preferencesInterface = nullptr;
-		PreferenceManager *mp_PreferenceManager = nullptr;
 };

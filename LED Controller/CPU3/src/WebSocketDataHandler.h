@@ -31,13 +31,15 @@
 #include <cstring>
 
 #define MESSAGE_LENGTH 500
+#define BLUETOOTH_DEVICE_TIMEOUT 10000
+#define BT_SCANNED_DEVICE_WEB_SOCKET_UPDATE_INTERVAL 1000
 
 class SettingsWebServerManager;
 
 class WebSocketDataHandlerSender
 {
   public:
-    virtual void HandleWebSocketDataRequest() = 0;
+    virtual KVP HandleWebSocketDataRequest() = 0;
 };
 
 
@@ -60,7 +62,6 @@ class WebSocketDataProcessor
     }
     virtual ~WebSocketDataProcessor()
     {
-      std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
       if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
     }
     void RegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
@@ -114,7 +115,6 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataHandler( const WebSocketDataHandler &t )
                         : m_WebSocketDataProcessor(t.m_WebSocketDataProcessor)
                         , m_DataItem(t.m_DataItem)
-                        , m_Debug(t.m_Debug)
                         , m_Name(t.m_Name)
                         , m_Signal(t.m_Signal)
     {
@@ -127,11 +127,9 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
     WebSocketDataHandler( WebSocketDataProcessor &webSocketDataProcessor
-                        , LocalDataItem<T, COUNT> &dataItem
-                        , const bool &debug )
+                        , LocalDataItem<T, COUNT> &dataItem )
                         : m_WebSocketDataProcessor(webSocketDataProcessor)
                         , m_DataItem(dataItem)
-                        , m_Debug(debug)
                         , m_Name(dataItem.GetName() + " Web Socket")
                         , m_Signal(dataItem.GetName())
     {
@@ -155,7 +153,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       }
     }
 
-    bool NewRxValueReceived(const T* values, size_t changeCount) override
+    virtual bool NewRxValueReceived(const T* values, size_t count, size_t changeCount) override
     {
       ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
       bool success = false;
@@ -163,7 +161,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       {
         m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
         success = true;
-        ESP_LOGI( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
+        ESP_LOGD( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
       }
       return success;
     }
@@ -179,15 +177,15 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
 
     
-    virtual void HandleWebSocketDataRequest() override
+    virtual KVP HandleWebSocketDataRequest() override
     {
-        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
-        m_ChangeCount = m_DataItem.GetChangeCount();
+      m_ChangeCount = m_DataItem.GetChangeCount();
+      return { m_Signal, m_DataItem.GetValueAsString() };
     }
     
     virtual void HandleWebSocketRxNotification(const String& stringValue) override
     {
-      ESP_LOGI( "Web Socket Rx"
+      ESP_LOGD( "Web Socket Rx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
               , m_Name.c_str()
               , m_Signal.c_str()
@@ -198,6 +196,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
 
     void TxDataToWebSocket(String key, String value)
     {
+      ESP_LOGD("TxDataToWebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
       m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
@@ -206,10 +205,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     LocalDataItem<T, COUNT> &m_DataItem;
     size_t m_ChangeCount;
-    const bool &m_Debug;
     const String m_Name;
     const String m_Signal;
-  private:
 		bool IsChangeCountGreater(size_t changeCount)
 		{
 			return (changeCount > m_ChangeCount) || (m_ChangeCount - changeCount > (SIZE_MAX / 2));
@@ -220,15 +217,185 @@ class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_S
 {
   public:
     WebSocket_String_DataHandler( WebSocketDataProcessor &WebSocketDataProcessor
-                                , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem
-                                , const bool Debug )
+                                , LocalDataItem<char, DATAITEM_STRING_LENGTH> &DataItem )
                                 : WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>( WebSocketDataProcessor
-                                                                                    , DataItem
-                                                                                    , Debug)
+                                                                                    , DataItem )
     {
     }
     
     virtual ~WebSocket_String_DataHandler()
     {
     }
+};
+
+
+class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>
+{
+  public:
+    BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler( WebSocketDataProcessor &WebSocketDataProcessor
+                                                               , LocalDataItem<BT_Device_Info_With_Time_Since_Update, 1> &DataItem )
+                                                               : WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>( WebSocketDataProcessor
+                                                                                                                               , DataItem )
+    {
+    }
+    
+    virtual ~BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler()
+    {
+      StopTrackingDevices();
+    }
+
+    bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t count, size_t changeCount) override
+    {
+      ESP_LOGD( "NewRxValueReceived", "New DataItem Rx Value");
+      bool success = false;
+      if(this->IsChangeCountGreater(m_DataItem.GetChangeCount()))
+      {
+        for(size_t i = 0; i < count; ++i)
+        {
+          ActiveCompatibleDeviceReceived(values[i]);
+        }
+        success = true;
+      }
+      m_ChangeCount = m_DataItem.GetChangeCount();
+      return success;
+    }
+
+    void StartTrackingDevices()
+    {
+      CreateUpdateTask();
+    }
+
+    void StopTrackingDevices()
+    {
+      DestroyUpdateTask();
+    }
+
+  private:
+    void CreateUpdateTask()
+    {
+      if(!m_ActiveDeviceUpdateTask)
+      {
+        if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) == pdTRUE )
+        {
+          ESP_LOGI("CreateUpdateTask", "Started Device Tracking Task");
+        }
+        else
+        {
+          ESP_LOGE("CreateUpdateTask", "ERROR! Unable to create task.");
+        }
+      }
+    }
+
+    void DestroyUpdateTask()
+    {
+      if(m_ActiveDeviceUpdateTask)
+      {
+        vTaskDelete(m_ActiveDeviceUpdateTask);
+        m_ActiveDeviceUpdateTask = nullptr;
+      }
+    }
+
+    void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
+    {
+      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+      ActiveBluetoothDevice_t newdevice( device.name
+                                        , device.address
+                                        , device.rssi
+                                        , millis()
+                                        , device.timeSinceUpdate );
+      auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), newdevice);
+      if (it != m_ActiveDevices.end())
+      {
+        *it = newdevice;
+        ESP_LOGD("ScannedDevice_ValueChanged", "Device Updated: \"%s\"", device.toString().c_str());
+      }
+      else 
+      {
+        if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
+        {
+          ESP_LOGI("ScannedDevice_ValueChanged", "New Device: \"%s\"", device.toString().c_str());
+          m_ActiveDevices.push_back(newdevice);
+        }
+      }
+    }
+
+    static void Static_UpdateActiveCompatibleDevices(void * parameter)
+    {
+      BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *handler = (BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*)parameter;
+      const TickType_t xFrequency = 1000;
+      TickType_t xLastWakeTime = xTaskGetTickCount();
+      unsigned long lastWebSocketUpdateTime = 0;
+      while(true)
+      {
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+        handler->CleanActiveCompatibleDevices();
+        unsigned long currentTime = millis();
+        if(currentTime - lastWebSocketUpdateTime >= BT_SCANNED_DEVICE_WEB_SOCKET_UPDATE_INTERVAL)
+        {
+          handler->SendActiveCompatibleDevicesToWebSocket();
+        }
+      }
+    }
+
+    void CleanActiveCompatibleDevices()
+    {
+        std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+        ESP_LOGV("CleanActiveCompatibleDevices", "Cleaning Stale Devices.");
+        for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
+        {
+            ActiveBluetoothDevice_t& device = *it;
+            if (device.timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT || 
+                millis() - device.lastUpdateTime > BLUETOOTH_DEVICE_TIMEOUT)
+            {
+                ESP_LOGI("CleanActiveCompatibleDevices", "Removing Device: \"%s\"", device.toString().c_str());
+                it = m_ActiveDevices.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
+
+    void SendActiveCompatibleDevicesToWebSocket()
+    {
+        const size_t preAllocSize = 1024;
+        std::string jsonString;
+        jsonString.reserve(preAllocSize);
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+            std::vector<ActiveBluetoothDevice_t> tempVector = m_ActiveDevices;
+
+            jsonString += "{\"Devices\":[";
+
+            bool firstDevice = true;
+            for (const auto& device : tempVector)
+            {
+                if (!firstDevice)
+                {
+                    jsonString += ",";
+                }
+                firstDevice = false;
+                jsonString += "{";
+                jsonString += "\"Name\":\"" + std::string(device.name) + "\",";
+                jsonString += "\"Address\":\"" + std::string(device.address) + "\",";
+                jsonString += "\"RSSI\":\"" + std::to_string(device.rssi) + "\"";
+                jsonString += "}";
+            }
+            jsonString += "]}";
+        }
+
+        ESP_LOGD("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
+
+        if (!jsonString.empty())
+        {
+            String key = this->GetSignal();
+            this->TxDataToWebSocket(key, jsonString.c_str());
+        }
+    }
+    private:
+      std::vector<ActiveBluetoothDevice_t> m_ActiveDevices;
+      std::recursive_mutex m_ActiveDevicesMutex;
+      TaskHandle_t m_ActiveDeviceUpdateTask;
 };

@@ -1,3 +1,6 @@
+import { showContent } from './main.js';
+import { hideContent } from './main.js';
+
 export class Model_WifiMode {
     
     constructor(signalName, initialValue, wsManager) {
@@ -21,20 +24,21 @@ export class Model_WifiMode {
         this.wsManager.unregisterListener(this);
     }
 
-    getSignalName() {
-        return this.signalName;
-    }
-
+    getListnerName() {return this.signalName;}
+    onOpen(){}
+    onClose(){}
+    onError(){}
     onMessage(newValue) {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
 
     setValue(newValue, updateWebsocket = true) {
-        console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
+        console.log(`ESP32 Model: Set Value for Signal: "${this.signalName}" to "${newValue}"`);
         if (Object.values(Model_WifiMode.values).includes(newValue)) {
             this.value = newValue;
             this.updateHTML();
+            this.updateUIVisibility(newValue);
         } else {
             console.error(`"${this.signalName}" Unknown Value: "${newValue}"`);
             throw new Error(`Invalid Value for ${this.signalName}: ${newValue}`);
@@ -44,8 +48,25 @@ export class Model_WifiMode {
         }
     }
 
+    updateUIVisibility(value) {
+        switch (value) {
+            case Model_WifiMode.values.Station:
+                showContent("screen-content", "station");
+                showContent("screen-content", "access_point");
+                break;
+            case Model_WifiMode.values.AccessPoint:
+                hideContent("screen-content", "station");
+                showContent("screen-content", "access_point");
+                break;
+            case Model_WifiMode.values.Unknown:
+                hideContent("screen-content", "access_point");
+                hideContent("screen-content", "station");
+                break;
+        }
+    }
+
     scheduleWebSocketUpdate() {
-        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
+        console.log(`ESP32: Schedule Update: "${this.signalName}" to "${this.value}"`);
         if (!this.updateWebSocketTimeout) {
             this.sendWebSocketUpdate();
             this.updateWebSocketTimeout = setTimeout(() => {
@@ -57,7 +78,25 @@ export class Model_WifiMode {
 
     sendWebSocketUpdate() {
         console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
-        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        this.Send_Signal_Value_To_Web_Socket(this.getListnerName(), this.toString());
+    }
+
+    Send_Signal_Value_To_Web_Socket(signal, value) {
+        if (this.wsManager) {
+            if (signal && value) {
+                var Root = {};
+                Root.SignalValue = {};
+                Root.SignalValue.Id = signal.toString();
+                Root.SignalValue.Value = value.toString();
+                var Message = JSON.stringify(Root);
+                console.log('ESP32 Web Socket Tx: \'' + Message + '\'');
+                this.wsManager.send(Message);
+            } else {
+                console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+            }
+        } else {
+            console.error('Null wsManager!');
+        }
     }
 
     getValue() {

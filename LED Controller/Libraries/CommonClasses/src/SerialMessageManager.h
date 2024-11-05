@@ -41,7 +41,7 @@ class Rx_Value_Callee_Interface
 		{
 			
 		}
-		virtual bool NewRxValueReceived(const T* values, size_t changeCount) = 0;
+		virtual bool NewRxValueReceived(const T* values, size_t count, size_t changeCount) = 0;
 		virtual String GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
@@ -122,13 +122,13 @@ class Rx_Value_Caller_Interface
 		}
 		virtual void RegisterForNewRxValueNotification(Rx_Value_Callee_Interface<T>* NewCallee)
 		{
-			ESP_LOGI("RegisterForNewRxValueNotification", "Try Registering Callee");
+			ESP_LOGD("RegisterForNewRxValueNotification", "Try Registering Callee");
 			bool IsFound = false;
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewRxValueCallees)
 			{
 				if(NewCallee == callee)
 				{
-					ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with this name already exists.");
+					ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
 					IsFound = true;
 					break;
 				}
@@ -148,12 +148,12 @@ class Rx_Value_Caller_Interface
 		}
 		
 	protected:
-		virtual void Notify_NewRxValue_Callees(T* values, size_t changeCount)
+		virtual void Notify_NewRxValue_Callees(T* values, size_t count, size_t changeCount)
 		{
 			ESP_LOGD("Notify_NewRxValue_Callees", "Notify Callees");
 			for (Rx_Value_Callee_Interface<T>* callee : m_NewRxValueCallees)
 			{
-				callee->NewRxValueReceived(values, changeCount);
+				callee->NewRxValueReceived(values, count, changeCount);
 			}
 		}
 	private:
@@ -173,7 +173,7 @@ class Named_Object_Callee_Interface
 		{
 			
 		}
-		virtual bool New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* object, const size_t changeCount) = 0;
+		virtual UpdateStatus_t New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* object, const size_t changeCount) = 0;
 		virtual String GetName() const = 0;
 		size_t GetCount(){ return m_Count;}
 	private:
@@ -243,8 +243,8 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			}
 			ESP_LOGD("~SerialPortMessageManager", "SerialPortMessageManager Deleted");
 		}
-		virtual void SetupSerialPortMessageManager();
-		virtual bool QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount);
+		virtual void Setup();
+		virtual bool QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount);
 		virtual bool QueueMessage(const String& message);
 		String GetName() const 
 		{

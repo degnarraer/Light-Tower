@@ -35,6 +35,7 @@ class SetupCalleeInterface
             ESP_LOGD("SetupCalleeInterface", "Deleting SetupCalleeInterface");
         }
         virtual void Setup() = 0;
+        virtual String GetName() const = 0;
 };
 
 class SetupCallerInterface
@@ -47,7 +48,7 @@ class SetupCallerInterface
 
         virtual ~SetupCallerInterface()
         {
-            std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+            std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
             ESP_LOGD("SetupCallerInterface", "Deleting SetupCallerInterface");
             for (SetupCalleeInterface* callee : m_SetupCallees)
             {
@@ -59,54 +60,55 @@ class SetupCallerInterface
 
         virtual void RegisterForSetupCall(SetupCalleeInterface* newCallee)
 		{
+			std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
 			ESP_LOGD("SetupCallerInterface", "Try Registering Callee");
-			std::lock_guard<std::recursive_mutex> lock(m_Mutex);
 			bool isFound = false;
 			for (SetupCalleeInterface* callee : m_SetupCallees)
 			{
 				if(newCallee == callee)
 				{
-					ESP_LOGE("SetupCallerInterface", "ERROR! A callee with this name already exists.");
+					ESP_LOGW("SetupCallerInterface", "WARNING! Setup Callee already added!");
 					isFound = true;
 					break;
 				}
 			}
 			if(!isFound)
 			{
-				ESP_LOGI("SetupCallerInterface", "Callee Registered");
+				ESP_LOGD("SetupCallerInterface", "Callee Registered");
 				m_SetupCallees.push_back(newCallee);
 			}
 		}
 
         virtual void DeRegisterForSetupCall(SetupCalleeInterface* callee)
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+			std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
 			auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), callee);
 			if (it != m_SetupCallees.end())
 			{
 				m_SetupCallees.erase(it);
-				ESP_LOGI("SetupCallerInterface", "Callee Deregistered");
+				ESP_LOGD("SetupCallerInterface", "Callee Deregistered");
 			}
 		}
 
         virtual void SetupAllSetupCallees()
 		{
-			ESP_LOGD("SetupCallerInterface", "Setup All Setup Callees");
-			std::lock_guard<std::recursive_mutex> lock(m_Mutex);
+			std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
+			ESP_LOGI("SetupAllSetupCallees", "Setup All Setup Callees");
 			for (SetupCalleeInterface* callee : m_SetupCallees)
 			{
 				if (callee) 
 				{
 					callee->Setup();
+					ESP_LOGI("SetupAllSetupCallees", "Setting up: \"%s\".", callee->GetName().c_str());
 				}
 				else
 				{
-					ESP_LOGW("SetupCallerInterface", "WARNING! Null callee encountered in list");
+					ESP_LOGW("SetupAllSetupCallees", "WARNING! Null callee encountered in list");
 				}
 			}
 		}
 
     private:
         std::vector<SetupCalleeInterface*> m_SetupCallees;
-        std::recursive_mutex m_Mutex;
+        std::recursive_mutex m_SetupMutex;
 };

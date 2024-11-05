@@ -26,27 +26,27 @@ class DataItem: public LocalDataItem<T, COUNT>
 			  , public SerialMessageInterface<T, COUNT>
 {
 	public:
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate )
 				: LocalDataItem<T, COUNT>(name, initialValue)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate)
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 1");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Default Constructor 1");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate )
 				: LocalDataItem<T, COUNT>(name, initialValue)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate)
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Default Constructor 2");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Default Constructor 2");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -56,10 +56,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 1");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Constructor 3");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -69,10 +69,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)				
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 2");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Constructor 4");
 		}
 		
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T* initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -83,10 +83,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 3");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Constructor 5");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -97,10 +97,10 @@ class DataItem: public LocalDataItem<T, COUNT>
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, validStringValues)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 4");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Constructor 6");
 		}
 
-		DataItem( const String name
+		DataItem( const std::string name
 				, const T& initialValue
 				, const RxTxType_t rxTxType
 				, const uint16_t rate
@@ -111,12 +111,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 				: LocalDataItem<T, COUNT>( name, initialValue, namedCallback, setupCallerInterface, printDelimited)
 				, SerialMessageInterface<T, COUNT>(rxTxType, rate, serialPortMessageManager)
 		{
-			ESP_LOGI("DataItem", "DataItem Instantiated: Constructor 5");
+			ESP_LOGD("DataItem", "DataItem Instantiated: Constructor 7");
 		}
 		
 		virtual ~DataItem() override
 		{
-			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());				
+			ESP_LOGD("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());				
 		}
 
 		//SetupCalleeInterface
@@ -171,19 +171,19 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::ParseStringValueIntoValues(stringValue, values);
 		}
 
-		virtual bool SetValue(const T* values, size_t count) override
+		virtual UpdateStatus_t SetValue(const T* values, size_t count) override
 		{
 			ESP_LOGD("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName().c_str(), this->ConvertValueToString(values, count).c_str() );
 			return this->Set_Tx_Value(values, count);
 		}
 
-		virtual bool SetValue(const T& value) override
+		virtual UpdateStatus_t SetValue(const T& value) override
 		{
 			assert(COUNT == 1);
 			return this->SetValue(&value, 1);
 		}
 
-		virtual bool SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
 		{
 			ESP_LOGD( "DataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
@@ -198,7 +198,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			else
 			{
 				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
-				return false;
+				return UpdateStatus_t();
 			}
 		}
 
@@ -207,7 +207,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::ConfirmValueValidity(values, count);
 		}
 
-		virtual bool UpdateStore(const T *newValues, const size_t changeCount) override
+		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t changeCount) override
 		{
 			return LocalDataItem<T,COUNT>::UpdateStore(newValues, changeCount);
 		}

@@ -21,7 +21,7 @@
 #include "DataItem/DataItems.h"
 #include <ESPmDNS.h>
 
-#define BLUETOOTH_DEVICE_TIMEOUT 5000
+#define BLUETOOTH_DEVICE_TIMEOUT 10000
 
 class SettingsWebServerManager: public SetupCallerInterface
 {  
@@ -54,14 +54,11 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     virtual ~SettingsWebServerManager()
     {
-      DestroyTasks();
     }
     
     void SetupSettingsWebServerManager()
     {
       InitializeLocalvariables();
-      CreateTasks();
-      InitializePreferences();
       SetupAllSetupCallees();
       InitFileSystem();
       InitWebServer();
@@ -70,25 +67,10 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void InitializeLocalvariables()
     {
-      m_ActiveDevicesMutex = xSemaphoreCreateRecursiveMutex();
-    }
-
-    void CreateTasks()
-    {
-      if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) != pdTRUE )
-      {
-        ESP_LOGE("CreateTasks", "ERROR! Unable to create task.");
-      }
-    }
-
-    void DestroyTasks()
-    {
-      if(m_ActiveDeviceUpdateTask) vTaskDelete(m_ActiveDeviceUpdateTask);
     }
 
     void StartWiFi()
     {
-      ESP_LOGI("StartWiFi", "Starting Wifi");
       if(m_WiFi_Ready)
       {
         EndWiFi();
@@ -96,7 +78,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       if( Wifi_Mode_t::AccessPoint == m_Wifi_Mode.GetValue() )
       {
         InitWiFi_AccessPoint( m_AP_SSID.GetValueAsString().c_str()
-             
                             , m_AP_Password.GetValueAsString().c_str() );
       }
       else if(Wifi_Mode_t::Station == m_Wifi_Mode.GetValue())
@@ -108,10 +89,8 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
       else
       {
-        InitWiFi_AccessPoint_Station( "LED Tower of Power"
-                                    , "LEDs Rock"
-                                    , ""
-                                    , "" );
+        InitWiFi_AccessPoint( "LED Tower of Power"
+                            , "LEDs Rock" );
       }
     }
     
@@ -121,25 +100,6 @@ class SettingsWebServerManager: public SetupCallerInterface
       EndWebServer();
       WiFi.disconnect(false, true);
       m_WiFi_Ready = false;
-    }
-
-    void InitializePreferences()
-    {
-      if(!m_preferenceInterface.begin("Settings", false))
-      {
-        ESP_LOGE("InitializePreferences", "ERROR! Unable to initialize preferences. Resseting Device to Factory Defaults.");
-        nvs_flash_erase();
-        ESP_LOGI("InitializePreferences", "NVS Cleared!");
-        nvs_flash_init();
-        ESP_LOGI("InitializePreferences", "NVS Initialized");
-        ESP.restart();
-      }
-      else if(m_preferenceInterface.getBool("Pref_Reset", true))
-      {
-        m_preferenceInterface.clear();
-        ESP_LOGI("InitializePreferences", "Preferences Cleared!");
-        m_preferenceInterface.putBool("Pref_Reset", false);
-      }
     }
 
     // Init the web server to use the local SPIFFS memory and serve up index.html file.
@@ -197,8 +157,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           case SYSTEM_EVENT_WIFI_READY:
             ESP_LOGI("Wifi Event", "Wifi Ready!");
             m_WiFi_Ready = true;
-            BeginWebServer();
-            StartDNSServer();
+            TryBeginWebServer();
           break;
           case SYSTEM_EVENT_SCAN_DONE:
             ESP_LOGI("Wifi Event", "Scan Done!");
@@ -213,9 +172,13 @@ class SettingsWebServerManager: public SetupCallerInterface
           break;
           case SYSTEM_EVENT_STA_CONNECTED:
             ESP_LOGI("Wifi Event", "Station connected.");
+            m_Station_Connected = true;
+            TryBeginWebServer();
           break;
           case SYSTEM_EVENT_STA_DISCONNECTED:
             ESP_LOGI("Wifi Event", "Station disconnected.");
+            m_Station_Connected = false;
+            TryEndWebServer();
           break;
           case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
             ESP_LOGI("Wifi Event", "Station Auth Mode Change.");
@@ -247,10 +210,12 @@ class SettingsWebServerManager: public SetupCallerInterface
           case SYSTEM_EVENT_AP_START:
             ESP_LOGI("Wifi Event", "Access Point started!");
             m_AccessPoint_Running = true;
+            TryBeginWebServer();
           break;
           case SYSTEM_EVENT_AP_STOP:
             ESP_LOGI("Wifi Event", "Access Point stopped!");
             m_AccessPoint_Running = false;
+            TryEndWebServer();
           break;
           case SYSTEM_EVENT_AP_STACONNECTED:
             ESP_LOGI("Wifi Event", "Station Connected to the Access Point.");
@@ -317,21 +282,21 @@ class SettingsWebServerManager: public SetupCallerInterface
           case WStype_CONNECTED:
           {
               IPAddress ip = m_WebSocket.remoteIP(clientID);
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u connected from %s\n", clientID, ip.toString().c_str());
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u connected from %s", clientID, ip.toString().c_str());
               break;
           }
           case WStype_PONG:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Pinged Us!\n", clientID);
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Pinged Us!", clientID);
               break;
           case WStype_TEXT:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u sent Text #%s\n", clientID, String((char*)payload, length).c_str());
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u sent Text #%s", clientID, String((char*)payload, length).c_str());
               HandleWebSocketMessage(clientID, type, payload, length);
               break;
           case WStype_ERROR:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Error. Closing Connection!\n", clientID);
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u Error. Closing Connection!", clientID);
               break;
           case WStype_DISCONNECTED:
-              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u disconnected. Closing Connection.\n", clientID);
+              ESP_LOGI("OnWebSocketEvent", "WebSocket client #%u disconnected. Closing Connection.", clientID);
               break;
       }
     }
@@ -345,6 +310,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     bool m_WiFi_Ready = false;
     bool m_AccessPoint_Running = false;
     bool m_Station_Running = false;
+    bool m_Station_Connected = false;
     bool m_Web_Server_Running = false;
     const int maxClients = 4;
 
@@ -358,20 +324,15 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     const ValidStringValues_t validBoolValues = { "0", "1" };
 
+    //Wifi ReStart
+
     //Wifi Mode
     const ValidStringValues_t m_Wifi_Mode_ValidValues = { "Station", "AccessPoint" };
     CallbackArguments m_Wifi_Mode_CallbackArgs = { this };
-    NamedCallback_t m_Wifi_Mode_Callback = { "Wifi Mode Callback"
-                                           , &Wifi_Mode_ValueChanged
-                                           , &m_Wifi_Mode_CallbackArgs };
-    const Wifi_Mode_t m_Wifi_Mode_InitialValue = Wifi_Mode_t::AccessPoint;
-    LocalDataItemWithPreferences<Wifi_Mode_t, 1> m_Wifi_Mode = LocalDataItemWithPreferences<Wifi_Mode_t, 1>( "WIFI_Mode"
-                                                                                                           , m_Wifi_Mode_InitialValue
-                                                                                                           , &m_preferenceInterface
-                                                                                                           , &m_Wifi_Mode_Callback
-                                                                                                           , this
-                                                                                                           , &m_Wifi_Mode_ValidValues );
-    WebSocketDataHandler<Wifi_Mode_t, 1> m_Wifi_Mode_DataHandler = WebSocketDataHandler<Wifi_Mode_t, 1>( m_WebSocketDataProcessor, m_Wifi_Mode, false );
+    NamedCallback_t m_Wifi_Mode_Callback = { "Wifi Mode Callback", &Wifi_Mode_ValueChanged, &m_Wifi_Mode_CallbackArgs };
+    const Wifi_Mode_t m_Wifi_Mode_InitialValue = Wifi_Mode_t::Station;
+    LocalDataItemWithPreferences<Wifi_Mode_t, 1> m_Wifi_Mode = LocalDataItemWithPreferences<Wifi_Mode_t, 1>( "WIFI_Mode", m_Wifi_Mode_InitialValue, &m_preferenceInterface, &m_Wifi_Mode_Callback, this, &m_Wifi_Mode_ValidValues );
+    WebSocketDataHandler<Wifi_Mode_t, 1> m_Wifi_Mode_DataHandler = WebSocketDataHandler<Wifi_Mode_t, 1>( m_WebSocketDataProcessor, m_Wifi_Mode );
     static void Wifi_Mode_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("Wifi_Mode_ValueChanged", "Wifi Mode ValueChanged");
@@ -386,7 +347,8 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool wifiReady = *static_cast<bool*>(pArguments->arg2);
           if(wifiReady)
           {
-            pSettingWebServer->StartWiFi();
+            //pSettingWebServer->StartWiFi();
+            ESP_LOGW("Wifi_Mode_ValueChanged", "WARNING! Wifi mode change handler not yet implemented");
           }
         }
       }
@@ -394,16 +356,10 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //WIFI Host Name
     CallbackArguments m_Host_Name_CallbackArgs = { this, &m_WiFi_Ready };
-    NamedCallback_t m_Host_Name_Callback = { "Host Name"
-                                           , &Host_Name_ValueChanged
-                                           , &m_Host_Name_CallbackArgs };
-    const String m_Host_Name_InitialValue = "LTOP";
-    LocalStringDataItemWithPreferences m_Host_Name = LocalStringDataItemWithPreferences( "Host_Name"
-                                                                                       , m_Host_Name_InitialValue
-                                                                                       , &m_preferenceInterface
-                                                                                       , &m_Host_Name_Callback
-                                                                                       , this );
-    WebSocket_String_DataHandler m_Host_Name_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_Host_Name, false );
+    NamedCallback_t m_Host_Name_Callback = { "Host Name", &Host_Name_ValueChanged, &m_Host_Name_CallbackArgs };
+    const std::string m_Host_Name_InitialValue = "LTOP";
+    LocalStringDataItemWithPreferences m_Host_Name = LocalStringDataItemWithPreferences( "Host_Name", m_Host_Name_InitialValue, &m_preferenceInterface, &m_Host_Name_Callback, this );
+    WebSocket_String_DataHandler m_Host_Name_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_Host_Name );
     static void Host_Name_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -418,6 +374,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           if(wifiReady)
           {
             //pSettingWebServer->StartWiFi();
+            ESP_LOGW("Host_Name_ValueChanged", "WARNING! Host name change handler not yet implemented");
           }
         }
       }
@@ -428,13 +385,9 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_STA_SSID_Callback = { "Station SSID Callback"
                                           , &STA_SSID_ValueChanged
                                           , &m_STA_SSID_CallbackArgs };
-    const String m_STA_SSID_InitialValue = "";
-    LocalStringDataItemWithPreferences m_STA_SSID = LocalStringDataItemWithPreferences( "STA_SSID"
-                                                                                      , m_STA_SSID_InitialValue
-                                                                                      , &m_preferenceInterface
-                                                                                      , &m_STA_SSID_Callback
-                                                                                      , this );
-    WebSocket_String_DataHandler m_STA_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_SSID, false );
+    const std::string m_STA_SSID_InitialValue = "";
+    LocalStringDataItemWithPreferences m_STA_SSID = LocalStringDataItemWithPreferences( "STA_SSID", m_STA_SSID_InitialValue, &m_preferenceInterface, &m_STA_SSID_Callback, this );
+    WebSocket_String_DataHandler m_STA_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_SSID );
     static void STA_SSID_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -449,6 +402,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           if(wifiReady)
           {
             //pSettingWebServer->StartWiFi();
+            ESP_LOGW("STA_SSID_ValueChanged", "WARNING! Station SSID change handler not yet implemented");
           }
         }
       }
@@ -456,16 +410,10 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //WIFI Access Point Password
     CallbackArguments m_STA_Password_CallbackArgs = { this, &m_WiFi_Ready };
-    NamedCallback_t m_STA_Password_Callback = { "Station Password Callback"
-                                              , &STA_Password_ValueChanged
-                                              , &m_STA_Password_CallbackArgs };
-    const String m_STA_Password_InitialValue = "";
-    LocalStringDataItemWithPreferences m_STA_Password = LocalStringDataItemWithPreferences( "STA_Password"
-                                                                                          , m_STA_Password_InitialValue
-                                                                                          , &m_preferenceInterface
-                                                                                          , &m_STA_Password_Callback
-                                                                                          , this );
-    WebSocket_String_DataHandler m_STA_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_Password, false );
+    NamedCallback_t m_STA_Password_Callback = { "Station Password Callback", &STA_Password_ValueChanged, &m_STA_Password_CallbackArgs };
+    const std::string m_STA_Password_InitialValue = "";
+    LocalStringDataItemWithPreferences m_STA_Password = LocalStringDataItemWithPreferences( "STA_Password", m_STA_Password_InitialValue, &m_preferenceInterface, &m_STA_Password_Callback, this );
+    WebSocket_String_DataHandler m_STA_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_Password );
     static void STA_Password_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -479,6 +427,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool wifiReady = *static_cast<bool*>(pArguments->arg2);
           if(wifiReady)
           {
+            ESP_LOGW("STA_Password_ValueChanged", "WARNING! Station Password change handler not yet implemented");
             //pSettingWebServer->StartWiFi();
           }
         }
@@ -490,14 +439,9 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_AP_SSID_Callback = { "Access Point SSID Callback"
                                          , &AP_SSID_ValueChanged
                                          , &m_AP_SSID_CallbackArgs };
-    const String m_AP_SSID_InitialValue = "LED Tower of Power";
-    LocalStringDataItemWithPreferences m_AP_SSID = LocalStringDataItemWithPreferences( "AP_SSID"
-                                                       
-                                                                                     , m_AP_SSID_InitialValue
-                                                                                     , &m_preferenceInterface
-                                                                                     , &m_AP_SSID_Callback
-                                                                                     , this );
-    WebSocket_String_DataHandler m_AP_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_SSID, false );
+    const std::string m_AP_SSID_InitialValue = "LED Tower of Power";
+    LocalStringDataItemWithPreferences m_AP_SSID = LocalStringDataItemWithPreferences( "AP_SSID", m_AP_SSID_InitialValue, &m_preferenceInterface, &m_AP_SSID_Callback, this );
+    WebSocket_String_DataHandler m_AP_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_SSID );
     static void AP_SSID_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -507,7 +451,7 @@ class SettingsWebServerManager: public SetupCallerInterface
         {
           SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(object);
           char* pSSID = static_cast<char*>(object);
-          ESP_LOGI("SSID_ValueChanged", "Access Point SSID Changed: %s", pSSID);
+          ESP_LOGW("AP_SSID_ValueChanged", "WARNING! Access Point SSID change handler not yet implemented");
           
         }
       }
@@ -515,16 +459,10 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //WIFI Access Point Password
     CallbackArguments m_AP_Password_CallbackArgs = { this, &m_WiFi_Ready };
-    NamedCallback_t m_AP_Password_Callback = { "Access Point Password Callback"
-                                          , &AP_Password_ValueChanged
-                                          , &m_AP_Password_CallbackArgs };
-    const String m_AP_Password_InitialValue = "LEDs Rock";
-    LocalStringDataItemWithPreferences m_AP_Password = LocalStringDataItemWithPreferences( "AP_Password"
-                                                                                         , m_AP_Password_InitialValue
-                                                                                         , &m_preferenceInterface
-                                                                                         , &m_AP_Password_Callback
-                                                                                         , this );
-    WebSocket_String_DataHandler m_AP_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_Password, false );
+    NamedCallback_t m_AP_Password_Callback = { "Access Point Password Callback", &AP_Password_ValueChanged, &m_AP_Password_CallbackArgs };
+    const std::string m_AP_Password_InitialValue = "LEDs Rock";
+    LocalStringDataItemWithPreferences m_AP_Password = LocalStringDataItemWithPreferences( "AP_Password", m_AP_Password_InitialValue, &m_preferenceInterface, &m_AP_Password_Callback, this );
+    WebSocket_String_DataHandler m_AP_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_Password );
     static void AP_Password_ValueChanged(const String &Name, void* object, void* arg)
     {
       if(object && arg)
@@ -538,7 +476,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool wifiReady = *static_cast<bool*>(pArguments->arg2);
           if(wifiReady)
           {
-            //pSettingWebServer->StartWiFi();
+            ESP_LOGW("AP_Password_ValueChanged", "WARNING! Access Point password change handler not yet implemented");
           }
         }
       }
@@ -546,106 +484,65 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Amplitude Gain
     const float m_AmplitudeGain_InitialValue = 2.0;
-    DataItemWithPreferences <float, 1> m_AmplitudeGain = DataItemWithPreferences<float, 1>( "Amp_Gain"
-                                                                                          , m_AmplitudeGain_InitialValue
-                                                                                          , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                          , 5000
-                                                                                          , &m_preferenceInterface
-                                                                                          , &m_CPU2SerialPortMessageManager
-                                                                                          , nullptr
-                                                                                          , this );
-    WebSocketDataHandler<float, 1> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor
-                                                                                                , m_AmplitudeGain
-                                                                                                , false );    
+    DataItemWithPreferences <float, 1> m_AmplitudeGain = DataItemWithPreferences<float, 1>( "Amp_Gain", m_AmplitudeGain_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this );
+    WebSocketDataHandler<float, 1> m_Amplitude_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor, m_AmplitudeGain );    
     
     //FFT Gain
     const float m_FFTGain_InitialValue = 2.0;
-    DataItemWithPreferences <float, 1> m_FFTGain = DataItemWithPreferences<float, 1>( "FFT_Gain"
-                                                                                    , m_FFTGain_InitialValue
-                                                                                    , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                    , 5000
-                                                                                    , &m_preferenceInterface
-                                                                                    , &m_CPU2SerialPortMessageManager
-                                                                                    , nullptr
-                                                                                    , this );
-    WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor
-                                                                                          , m_FFTGain
-                                                                                          , false );
-
-    //Microphone Enable
-    //TBD
+    DataItemWithPreferences <float, 1> m_FFTGain = DataItemWithPreferences<float, 1>( "FFT_Gain", m_FFTGain_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this );
+    WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor, m_FFTGain );
 
     //Input Source
     const ValidStringValues_t validInputSourceValues = { "OFF", "Microphone", "Bluetooth" };
-    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source"
-                                                                                                                      , SoundInputSource_t::OFF
-                                                                                                                      , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                                                      , 5000
-                                                                                                                      , &m_preferenceInterface
-                                                                                                                      , &m_CPU1SerialPortMessageManager
-                                                                                                                      , nullptr
-                                                                                                                      , this
-                                                                                                                      , &validInputSourceValues );
-    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( m_WebSocketDataProcessor
-                                                                                                                            , m_SoundInputSource
-                                                                                                                            , false );
+    DataItemWithPreferences<SoundInputSource_t, 1> m_SoundInputSource = DataItemWithPreferences<SoundInputSource_t, 1>( "Input_Source", SoundInputSource_t::OFF, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this, &validInputSourceValues );
+    WebSocketDataHandler<SoundInputSource_t, 1> m_SoundInputSource_DataHandler = WebSocketDataHandler<SoundInputSource_t, 1>( m_WebSocketDataProcessor, m_SoundInputSource );
     
     //Output Source
     const ValidStringValues_t validOutputSourceValues = { "OFF", "Bluetooth" };
-    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source"
-                                                                                                                        , SoundOutputSource_t::OFF
-                                                                                                                        , RxTxType_Tx_On_Change_With_Heartbeat
-                                                                                                                        , 5000
-                                                                                                                        , &m_preferenceInterface
-                                                                                                                        , &m_CPU2SerialPortMessageManager
-                                                                                                                        , nullptr
-                                                                                                                        , this
-                                                                                                                        , &validOutputSourceValues);
-    WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( m_WebSocketDataProcessor
-                                                                                                                              , m_SoundOuputSource
-                                                                                                                              , false );
+    DataItemWithPreferences<SoundOutputSource_t, 1> m_SoundOuputSource = DataItemWithPreferences<SoundOutputSource_t, 1>( "Output_Source", SoundOutputSource_t::OFF, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validOutputSourceValues);
+    WebSocketDataHandler<SoundOutputSource_t, 1> m_SoundOuputSource_DataHandler = WebSocketDataHandler<SoundOutputSource_t, 1>( m_WebSocketDataProcessor, m_SoundOuputSource );
     
     //Bluetooth Sink Enable
     const bool m_BluetoothSinkEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkEnable = DataItemWithPreferences<bool, 1>( "BT_Sink_En", m_BluetoothSinkEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this, nullptr);
-    WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkEnable, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSinkEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkEnable );
 
     //Sink Name
-    const String m_SinkName_InitialValue = "LED Tower of Power";  
+    const std::string m_SinkName_InitialValue = "LED Tower of Power";  
     StringDataItemWithPreferences m_SinkName = StringDataItemWithPreferences( "Sink_Name", m_SinkName_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this);
-    WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SinkName, false );
+    WebSocket_String_DataHandler m_SinkName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SinkName );
 
     //Source Name
-    const String m_SourceName_InitialValue = "";  
+    const std::string m_SourceName_InitialValue = "";  
     StringDataItemWithPreferences m_SourceName = StringDataItemWithPreferences( "Source_Name", m_SourceName_InitialValue, RxTxType_Rx_Only, 0, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SourceName, false );
+    WebSocket_String_DataHandler m_SourceName_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_SourceName );
 
     //Sink Connection State
     const ConnectionStatus_t m_SinkConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SinkConnectionState = DataItem<ConnectionStatus_t, 1>( "Sink_Conn_State", m_SinkConnectionState_InitialValue, RxTxType_Rx_Only, 0, &m_CPU1SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<ConnectionStatus_t, 1> m_SinkConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SinkConnectionState, false );    
+    WebSocketDataHandler<ConnectionStatus_t, 1> m_SinkConnectionStatus_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SinkConnectionState );    
     
     //Bluetooth Sink Auto Reconnect
     const bool m_BluetoothSinkAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSinkAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Sink_AR", m_BluetoothSinkAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU1SerialPortMessageManager, nullptr, this, nullptr);
-    WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkAutoReConnect, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSinkAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSinkAutoReConnect );
     
     //Bluetooth Source Enable
     const bool m_BluetoothSourceEnable_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceEnable = DataItemWithPreferences<bool, 1>( "BT_Source_En", m_BluetoothSourceEnable_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, nullptr);
-    WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceEnable, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSourceEnable_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceEnable );
 
     //Target Device
-    CompatibleDevice_t m_TargetCompatibleDevice_InitialValue = {"", ""};
-    DataItem<CompatibleDevice_t, 1> m_TargetCompatibleDevice = DataItem<CompatibleDevice_t, 1>( "Target_Device", m_TargetCompatibleDevice_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<CompatibleDevice_t, 1> m_TargetCompatibleDevice_DataHandler = WebSocketDataHandler<CompatibleDevice_t, 1>( m_WebSocketDataProcessor, m_TargetCompatibleDevice, false );
+    BluetoothDevice_t m_Selected_Device_InitialValue = {"", ""};
+    DataItem<BluetoothDevice_t, 1> m_Selected_Device = DataItem<BluetoothDevice_t, 1>( "Selected_Device", m_Selected_Device_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this);
+    WebSocketDataHandler<BluetoothDevice_t, 1> m_Selected_Device_DataHandler = WebSocketDataHandler<BluetoothDevice_t, 1>( m_WebSocketDataProcessor, m_Selected_Device );
 
     //Sink Connect
     CallbackArguments m_SinkConnect_CallbackArgs = {this};
     NamedCallback_t m_SinkConnect_Callback = {"m_SinkConnect_Callback", &SinkConnect_ValueChanged, &m_SinkConnect_CallbackArgs};
     const bool m_SinkConnect_InitialValue = false;
     DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect", m_SinkConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU1SerialPortMessageManager, &m_SinkConnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SinkConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkConnect, false );
+    WebSocketDataHandler<bool, 1> m_SinkConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkConnect );
     static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
@@ -657,6 +554,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool sinkConnect = *static_cast<bool*>(object);
           if(sinkConnect)
           {
+            ESP_LOGW("SinkConnect_ValueChanged", "WARNING! Sink Connect change handler not yet implemented");
           }
         }
       }
@@ -667,7 +565,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     NamedCallback_t m_SinkDisconnect_Callback = {"m_SinkDisconnect_Callback", &SinkDisconnect_ValueChanged, &m_SinkDisconnect_CallbackArgs};
     const bool m_SinkDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Sink_Disconnect", m_SinkDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU1SerialPortMessageManager, &m_SinkDisconnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SinkDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkDisconnect, false );
+    WebSocketDataHandler<bool, 1> m_SinkDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkDisconnect );
     static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkDisconnect_ValueChanged", "Sink DisConnect Value Changed");
@@ -684,28 +582,90 @@ class SettingsWebServerManager: public SetupCallerInterface
       }
     }
 
+    //Wifi Restart
+    CallbackArguments m_SourceRestart_CallbackArgs = {this};
+    NamedCallback_t m_SourceRestart_Callback = {"SourceRestart Callback", &SourceRestart_ValueChanged, &m_SourceRestart_CallbackArgs};
+    const bool m_SourceRestart_InitialValue = false;
+    LocalDataItem<bool, 1> m_SourceRestart = LocalDataItem<bool, 1>( "Wifi_Restart", m_SourceRestart_InitialValue, &m_SourceRestart_Callback, this);
+    WebSocketDataHandler<bool, 1> m_SourceRestart_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceRestart );
+    static void SourceRestart_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("SourceRestart_ValueChanged", "Source Restart Value Changed");
+      if(object && arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1 && object)
+        {
+          SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
+          bool sourceRestart = *static_cast<bool*>(object);
+          if(sourceRestart)
+          {
+            pSettingWebServer->StartWiFi();
+          }
+        }
+      }
+    }
+
+    //Bluetooth Source Discovery Mode
+    CallbackArguments m_Bluetooth_Discovery_Mode_CallbackArgs = {&m_ScannedDevice_DataHandler};
+    NamedCallback_t m_Bluetooth_Discovery_Mode_Callback = {"Discovery Mode Callback", &Bluetooth_Discovery_Mode_ValueChanged, &m_Bluetooth_Discovery_Mode_CallbackArgs};
+    Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
+    DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode", m_Bluetooth_Discovery_Mode_initialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this );
+    WebSocketDataHandler<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_DataHandler = WebSocketDataHandler<Bluetooth_Discovery_Mode_t, 1>( m_WebSocketDataProcessor, m_Bluetooth_Discovery_Mode );
+    static void Bluetooth_Discovery_Mode_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(object && arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1)
+        {
+          Bluetooth_Discovery_Mode_t discoveryMode = *static_cast<Bluetooth_Discovery_Mode_t*>(object);
+          BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *dataHandler = static_cast<BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*>(arguments->arg1);
+          switch(discoveryMode)
+          {
+            case Bluetooth_Discovery_Mode_t::Discovery_Mode_Started:
+              ESP_LOGI("Bluetooth_Discovery_Mode_t_ValueChanged", "Discovery Mode Started");
+              dataHandler->StartTrackingDevices();
+            break;
+            case Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped:
+              ESP_LOGI("Bluetooth_Discovery_Mode_t_ValueChanged", "Discovery Mode Stopped");
+              dataHandler->StopTrackingDevices();
+            break;
+            case::Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown:
+            break;            
+          }
+        }
+        else
+        {
+          ESP_LOGE("SourceConnect_ValueChanged", "ERROR! Invalid Pointer.");
+        }
+      }
+    }
+    
     //Output Source Connect
-    CallbackArguments m_SourceConnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    CallbackArguments m_SourceConnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue, &m_ScannedDevice_DataHandler};
     NamedCallback_t m_SourceConnect_Callback = {"Test Name", &SourceConnect_ValueChanged, &m_SourceConnect_CallbackArgs};
     const bool m_SourceConnect_InitialValue = false;
     DataItem<bool, 1> m_SourceConnect = DataItem<bool, 1>( "Src_Connect", m_SourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceConnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceConnect, false );
+    WebSocketDataHandler<bool, 1> m_SourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceConnect );
     static void SourceConnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceConnect_ValueChanged", "Source Connect Value Changed");
       if(object && arg)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2 && object)
+        if(arguments->arg1 && arguments->arg2 && arguments->arg3 && object)
         {
           bool sourceConnect = *static_cast<bool*>(object);
           if(sourceConnect)
           {
-            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
-            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
-            if(targetCompatibleDevice && initialValue)
+            DataItem<BluetoothDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg1);
+            BluetoothDevice_t *initialValue = static_cast<BluetoothDevice_t*>(arguments->arg2);
+            BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler *dataHandler = static_cast<BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler*>(arguments->arg3);
+            dataHandler->StartTrackingDevices();
+            if(targetCompatibleDevice && initialValue && dataHandler)
             {
-              //targetCompatibleDevice->SetValue(initialValue, 1);
+              targetCompatibleDevice->SetValue(initialValue, 1);
             }
           }
         }
@@ -717,11 +677,11 @@ class SettingsWebServerManager: public SetupCallerInterface
     }
 
     //Output Source Disconnect
-    CallbackArguments m_SourceDisconnect_CallbackArgs = {&m_TargetCompatibleDevice, &m_TargetCompatibleDevice_InitialValue};
+    CallbackArguments m_SourceDisconnect_CallbackArgs = {&m_Selected_Device, &m_Selected_Device_InitialValue};
     NamedCallback_t m_SourceDisconnect_Callback = {"m_SourceDisconnect_Callback", &SourceDisconnect_ValueChanged, &m_SourceDisconnect_CallbackArgs};
     const bool m_SourceDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_SourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceDisconnect_Callback, this);
-    WebSocketDataHandler<bool, 1> m_SourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceDisconnect, false );
+    WebSocketDataHandler<bool, 1> m_SourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceDisconnect );
     static void SourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceDisconnect_ValueChanged", "Source Disconnect Value Changed");
@@ -733,11 +693,11 @@ class SettingsWebServerManager: public SetupCallerInterface
           bool sourceDisconnect = *static_cast<bool*>(object);
           if(sourceDisconnect)
           {
-            DataItem<CompatibleDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<CompatibleDevice_t, 1>*>(arguments->arg1);
-            CompatibleDevice_t *initialValue = static_cast<CompatibleDevice_t*>(arguments->arg2);
+            DataItem<BluetoothDevice_t, 1> *targetCompatibleDevice = static_cast<DataItem<BluetoothDevice_t, 1>*>(arguments->arg1);
+            BluetoothDevice_t *initialValue = static_cast<BluetoothDevice_t*>(arguments->arg2);
             if(targetCompatibleDevice && initialValue)
             {
-              //targetCompatibleDevice->SetValue(initialValue, 1);
+              targetCompatibleDevice->SetValue(initialValue, 1);
             }
           }
         }
@@ -750,121 +710,24 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     //Scanned Device
     CallbackArguments m_ScannedDevice_CallbackArgs = {this, &m_WebSocketDataProcessor};
-    std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
-    SemaphoreHandle_t m_ActiveDevicesMutex;
-    TaskHandle_t m_ActiveDeviceUpdateTask;
-    NamedCallback_t m_ScannedDevice_Callback = {"m_ScannedDevice_Callback", &ScannedDevice_ValueChanged, &m_ScannedDevice_CallbackArgs};
-    ActiveCompatibleDevice_t m_ScannedDevice_InitialValue = {"", "", 0, 0, 0};
-    DataItem<ActiveCompatibleDevice_t, 1> m_ScannedDevice = DataItem<ActiveCompatibleDevice_t, 1>( "Scan_BT_Device", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, &m_ScannedDevice_Callback, this);
-    static void ScannedDevice_ValueChanged(const String &Name, void* object, void* arg)
-    {
-      if(arg)
-      {
-        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
-        if(arguments->arg1 && arguments->arg2)
-        {
-          SettingsWebServerManager* pSettingWebServer = static_cast<SettingsWebServerManager*>(arguments->arg1);
-          WebSocketDataProcessor* processor = static_cast<WebSocketDataProcessor*>(arguments->arg2);
-          ActiveCompatibleDevice_t device = *static_cast<ActiveCompatibleDevice_t*>(object);
-          ESP_LOGI("ScannedDevice_ValueChanged", "Scanned Device: \"%s\"", device.toString().c_str());
-          pSettingWebServer->ActiveCompatibleDeviceReceived(device);
-        }
-      }
-    }
+    BT_Device_Info_With_Time_Since_Update m_ScannedDevice_InitialValue = {"", "", 0, 0 };
+    DataItem<BT_Device_Info_With_Time_Since_Update, 1> m_ScannedDevice = DataItem<BT_Device_Info_With_Time_Since_Update, 1>( "Scan_BT_Devices", m_ScannedDevice_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this);
+    BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler m_ScannedDevice_DataHandler = BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler(m_WebSocketDataProcessor, m_ScannedDevice);
 
-    void ActiveCompatibleDeviceReceived(ActiveCompatibleDevice_t device)
-    {
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        auto it = std::find(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(), device);
-        if (it != m_ActiveCompatibleDevices.end())
-        {
-          *it = device;
-          ESP_LOGI("ScannedDevice_ValueChanged", "Existing Scanned Device Update: \"%s\"", device.toString().c_str());
-        }
-        else 
-        {
-          ESP_LOGI("ScannedDevice_ValueChanged", "New Scanned Device: \"%s\"", device.toString().c_str());
-          m_ActiveCompatibleDevices.push_back(device);
-          SendActiveCompatibleDevicesToWebSocket();
-        }
-      }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-    }
-
-    static void Static_UpdateActiveCompatibleDevices(void * parameter)
-    {
-      SettingsWebServerManager *manager = (SettingsWebServerManager*)parameter;
-      const TickType_t xFrequency = 1000;
-      TickType_t xLastWakeTime = xTaskGetTickCount();
-      while(true)
-      {
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-        manager->CleanActiveCompatibleDevices();
-      }
-    }
-
-    void CleanActiveCompatibleDevices()
-    {
-      ESP_LOGV("UpdateActiveCompatibleDevices", "Cleaning Stale Devices.");
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        for (auto it = m_ActiveCompatibleDevices.begin(); it != m_ActiveCompatibleDevices.end();) 
-        {
-          ActiveCompatibleDevice_t* device = static_cast<ActiveCompatibleDevice_t*>(&(*it));
-          if(device->timeSinceUpdate > BLUETOOTH_DEVICE_TIMEOUT)
-          {
-            ESP_LOGI("UpdateActiveCompatibleDevices", "Removing Device: \"%s\"", device->toString().c_str());
-            it = m_ActiveCompatibleDevices.erase(it);
-            SendActiveCompatibleDevicesToWebSocket();
-          }
-          else
-          {
-              ++it;
-          }
-        }
-      }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-    }
-
-    void SendActiveCompatibleDevicesToWebSocket()
-    {
-      ESP_LOGI("SendActiveCompatibleDevicesToWebSocket", "Updating Web Socket:");
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesMutex, portMAX_DELAY))
-      {
-        String key = "Key";
-        String value = "Value";
-        m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
-      }
-      xSemaphoreGiveRecursive(m_ActiveDevicesMutex);
-    }
-
-
-
-
-
-
-
-
-
-
-
-    
     //Bluetooth Source Auto Reconnect
     const bool m_BluetoothSourceAutoReConnect_InitialValue = false;
     DataItemWithPreferences<bool, 1> m_BluetoothSourceAutoReConnect = DataItemWithPreferences<bool, 1>( "BT_Source_AR", m_BluetoothSourceAutoReConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
-    WebSocketDataHandler<bool, 1> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceAutoReConnect, false );
+    WebSocketDataHandler<bool, 1> m_BluetoothSourceAutoReConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_BluetoothSourceAutoReConnect );
 
     //Source Connection State
     const ConnectionStatus_t m_SourceConnectionState_InitialValue = ConnectionStatus_t::Disconnected;
     DataItem<ConnectionStatus_t, 1> m_SourceConnectionState = DataItem<ConnectionStatus_t, 1>( "Src_Conn_State", m_SourceConnectionState_InitialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this);
-    WebSocketDataHandler<ConnectionStatus_t, 1> m_SourceConnectionState_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SourceConnectionState, false );    
+    WebSocketDataHandler<ConnectionStatus_t, 1> m_SourceConnectionState_DataHandler = WebSocketDataHandler<ConnectionStatus_t, 1>( m_WebSocketDataProcessor, m_SourceConnectionState );    
 
     //Source Reset
     const bool m_SourceReset_InitialValue = false;
-    DataItemWithPreferences<bool, 1> m_SourceReset = DataItemWithPreferences<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
-    WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset, false );    
-    
+    DataItem<bool, 1> m_SourceReset = DataItem<bool, 1>( "BT_Src_Reset", m_SourceReset_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, nullptr, this, &validBoolValues);
+    WebSocketDataHandler<bool, 1> m_SourceReset_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceReset );    
     
     void HandleWebSocketMessage(uint8_t clientID, WStype_t type, uint8_t *payload, size_t length)
     {
@@ -874,11 +737,11 @@ class SettingsWebServerManager: public SetupCallerInterface
             payload[length] = 0;
 
             String WebSocketData = String((char*)payload);
-            Serial.printf("WebSocket Data from Client %u: %s\n", clientID, WebSocketData.c_str());
+            ESP_LOGD("HandleWebSocketMessage", "WebSocket Data from Client %u: %s", clientID, WebSocketData.c_str());
 
-            if (WebSocketData.equals("Hello I am here!")) 
+            if (WebSocketData.equals("New client is here!")) 
             {
-                Serial.printf("New Client Message from %u: \"Hello I am here!\"\n", clientID);
+                ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"", clientID);
                 m_WebSocketDataProcessor.UpdateAllDataToClient(clientID);
                 return;
             } 
@@ -887,13 +750,13 @@ class SettingsWebServerManager: public SetupCallerInterface
                 JSONVar jsonObject = JSON.parse(WebSocketData);
                 if (JSON.typeof(jsonObject) == "undefined") 
                 {
-                    Serial.printf("ERROR! Parsing failed for Input from Client %u: %s.\n", clientID, WebSocketData.c_str());
+                    ESP_LOGE("HandleWebSocketMessage", "ERROR! Parsing failed for Input from Client %u: %s.", clientID, WebSocketData.c_str());
                 } 
                 else 
                 {
                     if (HandleSignalValue(jsonObject)) {} 
                     else if (HandleJSONValue(jsonObject)){} 
-                    else{ ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown WebSocket Message from Client %u: %s.\n", clientID, WebSocketData.c_str()); }
+                    else{ ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown WebSocket Message from Client %u: %s.", clientID, WebSocketData.c_str()); }
                 }
             }
         }
@@ -953,32 +816,20 @@ class SettingsWebServerManager: public SetupCallerInterface
       return result;
     }
     
-    void BeginWebServer()
+    void TryBeginWebServer()
     {
-      ESP_LOGI("BeginWebServer", "Starting Web Server");
-      m_WebServer.begin();
-      m_WebSocket.begin();
-      m_Web_Server_Running = true;
+      if(m_WiFi_Ready || m_Station_Connected || m_AccessPoint_Running)
+      {
+        BeginWebServer();
+      }
     }
 
     void TryEndWebServer()
     {
-      ESP_LOGI("BeginWebServer", "Try Ending Web Server");
-      if(!m_Station_Running && !m_AccessPoint_Running)
+      ESP_LOGI("TryEndWebServer", "Try Ending Web Server");
+      if(!m_Station_Connected && !m_AccessPoint_Running)
       {
         EndWebServer();
-      }
-    }
-
-    void EndWebServer()
-    {
-      ESP_LOGI("BeginWebServer", "Ending Web Server");
-      if(m_Web_Server_Running)
-      {
-        m_WebServer.stop();
-        m_WebSocket.close();
-        m_Web_Server_Running = false;
-        ESP_LOGI("BeginWebServer", "Web Server Stopped");
       }
     }
 
@@ -1005,16 +856,10 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void TryEndDNSServer()
     {
-      if(!m_Station_Running && !m_AccessPoint_Running)
+      if(!m_Station_Connected && !m_AccessPoint_Running)
       {
         End_DNS_Server();
       }
-    }
-
-    void End_DNS_Server()
-    {
-      ESP_LOGI( "InitWifiClient", "Ending DNS Server");
-      MDNS.end();
     }
 
     void InitWiFi_AccessPoint(const char* apSSID, const char* apPassword)
@@ -1036,5 +881,36 @@ class SettingsWebServerManager: public SetupCallerInterface
       IPAddress NMask(255, 255, 255, 0);
       WiFi.softAPConfig(Ip, Ip, NMask);
       WiFi.softAP(apSSID, apPassword);
+    }
+
+  private:
+    void EndWebServer()
+    {
+      ESP_LOGI("EndWebServer", "Ending Web Server");
+      if(m_Web_Server_Running)
+      {
+        m_WebServer.stop();
+        m_WebSocket.close();
+        m_Web_Server_Running = false;
+        ESP_LOGI("EndWebServer", "Web Server Stopped");
+      }
+    }
+
+    void BeginWebServer()
+    {
+      if(!m_Web_Server_Running)
+      {
+        ESP_LOGI("BeginWebServer", "Starting Web Server");
+        m_WebServer.begin();
+        m_WebSocket.begin();
+        StartDNSServer();
+        m_Web_Server_Running = true;
+      }
+    }
+
+    void End_DNS_Server()
+    {
+      ESP_LOGI( "InitWifiClient", "Ending DNS Server");
+      MDNS.end();
     }
 };

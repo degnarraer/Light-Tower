@@ -20,72 +20,42 @@
 
 Manager::Manager( String Title
                 , StatisticalEngine &StatisticalEngine
-                , Bluetooth_Sink &BT_In
-                , I2S_Device &Mic_In
-                , I2S_Device &I2S_Out )
+                , Bluetooth_Sink &bluetooth_Sink
+                , I2S_Device &microphone
+                , I2S_Device &i2S_Out )
                 : NamedItem(Title)
                 , m_StatisticalEngine(StatisticalEngine)
-                , m_BT_In(BT_In)
-                , m_Mic_In(Mic_In) 
-                , m_I2S_Out(I2S_Out)
+                , m_Bluetooth_Sink(bluetooth_Sink)
+                , m_Microphone(microphone)
+                , m_I2S_Out(i2S_Out)
 {
 }
 Manager::~Manager()
 {
-  vTaskDelete(m_Manager_20mS_Task);
-  vTaskDelete(m_Manager_1000mS_Task);
-  vTaskDelete(m_Manager_300000mS_Task);
 }
 
 void Manager::Setup()
 {
-  InitializePreferences();
-  SetupAllSetupCallees();
+  m_PreferencesWrapper.Setup();
+  SetupDevices();
   SetupSerialPortManager();
-  SetupBlueTooth();
-  SetupI2S();
+  SetupAllSetupCallees();
   SetupStatisticalEngine();
   SetupTasks();
 }
 
-void Manager::SetupBlueTooth()
+void Manager::SetupDevices()
 {
-  //Set Bluetooth Power to Max
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9);
-  m_BT_In.Setup();
-  m_BT_In.RegisterForConnectionStateChangedCallBack(this);
+  m_Bluetooth_Sink.ResgisterForCallbacks(this);
+  m_Bluetooth_Sink.Setup();
+  m_Microphone.Setup();
+  m_I2S_Out.Setup();
 }
 
 void Manager::SetupSerialPortManager()
 {
-  m_CPU1SerialPortMessageManager.SetupSerialPortMessageManager();
-  m_CPU3SerialPortMessageManager.SetupSerialPortMessageManager();
-}
-
-void Manager::InitializePreferences()
-{
-  if(!m_Preferences.begin("Settings", false))
-  {
-    ESP_LOGE("InitializePreferences", "Unable to initialize preferences! Resseting Device to Factory Defaults");
-    nvs_flash_erase();
-    ESP_LOGI("InitializePreferences", "NVS Cleared!");
-    nvs_flash_init();
-    ESP_LOGI("InitializePreferences", "NVS Initialized");
-    ESP.restart();
-  }
-  else if(m_Preferences.getBool("Pref_Reset", true))
-  {
-    m_Preferences.clear();
-    ESP_LOGI("InitializePreferences", "Preferences Cleared!");
-    m_Preferences.putBool("Pref_Reset", false);
-  }
-}
-
-void Manager::SetupI2S()
-{
-  m_Mic_In.Setup();
-  m_I2S_Out.Setup();
-  m_Mic_In.SetCallback(this); 
+  m_CPU1SerialPortMessageManager.Setup();
+  m_CPU3SerialPortMessageManager.Setup();
 }
 
 void Manager::SetupStatisticalEngine()
@@ -95,62 +65,10 @@ void Manager::SetupStatisticalEngine()
 
 void Manager::SetupTasks()
 {
-  xTaskCreatePinnedToCore( Static_Manager_20mS_TaskLoop,     "Manager_20mS_Task",      5000,  NULL,   configMAX_PRIORITIES - 1,  &m_Manager_20mS_Task,     0 );
-  xTaskCreatePinnedToCore( Static_Manager_1000mS_TaskLoop,   "Manager_1000mS_rTask",   5000,  NULL,   configMAX_PRIORITIES - 3,  &m_Manager_1000mS_Task,   0 );
-  xTaskCreatePinnedToCore( Static_Manager_300000mS_TaskLoop, "Manager_300000mS_Task",  5000,  NULL,   configMAX_PRIORITIES - 3,  &m_Manager_300000mS_Task, 0 );
 }
 
 void Manager::SoundStateChange(SoundState_t SoundState)
 {
-}
-
-void Manager::Static_Manager_20mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue20mS();
-}
-void Manager::ProcessEventQueue20mS()
-{
-  const TickType_t xFrequency = 10;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    MoveDataToStatisticalEngine();
-  }
-}
-
-void Manager::Static_Manager_1000mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue1000mS();
-}
-void Manager::ProcessEventQueue1000mS()
-{
-  
-  const TickType_t xFrequency = 1000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-  }
-}
-
-void Manager::Static_Manager_300000mS_TaskLoop(void * parameter)
-{
-  Manager* manager = static_cast<Manager*>(parameter);
-  manager->ProcessEventQueue300000mS();
-}
-
-void Manager::ProcessEventQueue300000mS()
-{
-  const TickType_t xFrequency = 300000;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    
-  }
 }
 
 void Manager::SetInputSource(SoundInputSource_t Type)
@@ -159,58 +77,28 @@ void Manager::SetInputSource(SoundInputSource_t Type)
   {
     case SoundInputSource_t::Microphone:
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Microphone.\"");
-      m_BT_In.StopDevice();
-      m_Mic_In.StartDevice();
+      m_Bluetooth_Sink.StopDevice();
       m_I2S_Out.StartDevice();
+      m_Microphone.StartDevice();
+      CreateMicrophoneTask();
     break;
     case SoundInputSource_t::Bluetooth:
     {
       ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"Bluetooth.\"");
-      m_Mic_In.StopDevice();
+      DestroyMicrophoneTask();
+      m_Microphone.StopDevice();
       m_I2S_Out.StopDevice();
-      m_BT_In.StartDevice();
-      m_BT_In.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
-      break;
-    }
-    case SoundInputSource_t::OFF:
-    default:
-      ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
-      m_BT_In.StopDevice();
-      m_Mic_In.StopDevice();
-      m_I2S_Out.StopDevice();
-    break;
-  }
-}
-
-//Bluetooth_Callback
-void Manager::BTDataReceived(uint8_t *data, uint32_t length)
-{
-}
-
-//I2S_Device_Callback
-void Manager::I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length)
-{  
-  switch(m_SoundInputSource.GetValue())
-  {
-    case SoundInputSource_t::Microphone:
-    {
-      uint16_t Buffer[length];
-      for(int i = 0; i < length / sizeof(uint32_t); ++i)
-      {
-        uint32_t Value32 = ((uint32_t*)data)[i];
-        uint16_t Value16 = Value32 >> 16;
-        Buffer[i] = Value16;
-      }
-      m_I2S_Out.WriteSoundBufferData((uint8_t *)Buffer, length); 
-    }
-    break;
-    case SoundInputSource_t::Bluetooth:
-    {
-      m_I2S_Out.WriteSoundBufferData((uint8_t *)data, length);
+      m_Bluetooth_Sink.StartDevice();
+      m_Bluetooth_Sink.Connect(m_SinkName.GetValuePointer(), m_SinkAutoReConnect.GetValue());
     }
     break;
     case SoundInputSource_t::OFF:
     default:
+      ESP_LOGI("Manager::SetInputType", "Setting Sound Input Type to \"OFF.\"");
+      DestroyMicrophoneTask();
+      m_Bluetooth_Sink.StopDevice();
+      m_Microphone.StopDevice();
+      m_I2S_Out.StopDevice();
     break;
   }
 }
@@ -220,9 +108,8 @@ void Manager::MoveDataToStatisticalEngine()
 }
 
 //BluetoothConnectionStateCallee Callback
-void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
+void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
-  ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection State Change Callback");
   switch(connectionState)
   {
     case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
@@ -242,9 +129,8 @@ void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t c
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Disconnecting);
       break;
     default:
-      ESP_LOGW("BluetoothConnectionStatusChanged", "Unhandled Connection State Change. Changed to Disconnected.");
+      ESP_LOGW("BluetoothConnectionStatusChanged", "WARNING! Unhandled Connection State Change. Changed to Disconnected.");
       m_BluetoothSinkConnectionStatus.SetValue(ConnectionStatus_t::Unknown);
     break;
   }
-  
 }

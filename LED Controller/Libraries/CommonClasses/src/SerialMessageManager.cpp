@@ -26,7 +26,7 @@ void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Obje
 	{
 		if(NewCallee == callee)
 		{
-			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with this name already exists.");
+			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
 			IsFound = true;
 			break;
 		}
@@ -68,45 +68,38 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Rx Value Callee Not Found Found: \"%s\"", name.c_str());
 }
 
-void SerialPortMessageManager::SetupSerialPortMessageManager()
+void SerialPortMessageManager::Setup()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) != pdPASS)
-	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the RX Task.");
-	else ESP_LOGD("SetupSerialPortMessageManager", "RX Task Created.");
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  m_CoreId ) == pdPASS)
+	ESP_LOGD("Setup", "RX Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 10000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) != pdPASS)
-	ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Task.");
-	else ESP_LOGD("SetupSerialPortMessageManager", "TX Task Created.");
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  m_CoreId ) == pdPASS)
+	ESP_LOGD("Setup", "TX Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
 	
-	m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength );
-	if(nullptr == m_TXQueue)
-	{
-		ESP_LOGE("SetupSerialPortMessageManager", "ERROR! Error creating the TX Queue.");
-	}
-	else ESP_LOGD("SetupSerialPortMessageManager", "TX Queue Created.");
+	if(m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength ))
+	ESP_LOGD("Setup", "TX Queue Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
 }
 
-bool SerialPortMessageManager::QueueMessageFromData(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
+bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 {
 	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
 	{
-		ESP_LOGE("QueueMessageFromData", "ERROR! Invalid Data.");
+		ESP_LOGE("QueueMessageFromDataType", "ERROR! Invalid Data.");
 	}
 	else
 	{
 		if(mp_DataSerializer)
 		{
-			if(this->GetName().equals("Amp_Gain"))
-			{
-				ESP_LOGI("QueueMessageFromData", "Serializing Data for: \"%s\" Data Type: \"%i\", Pointer: \"%p\" Count: \"%i\" Change Count: \"%i\" ", Name.c_str(), DataType, static_cast<void*>(Object), Count, ChangeCount);
-			}
-			String message = mp_DataSerializer->SerializeDataToJson(Name, DataType, Object, Count, ChangeCount);
+			String message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
 			result = QueueMessage( message.c_str() );
 		}
 		else
 		{
-			ESP_LOGE("QueueMessageFromData", "ERROR! Null Pointer.");
+			ESP_LOGE("QueueMessageFromDataType", "ERROR! Null Pointer.");
 		}
 	}
 	return result;
@@ -117,9 +110,9 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 	bool result = false;
 	if(m_TXQueue)
 	{	
-		if( message.length() > 0 &&                   // Check if the message is not empty
-            message.length() <= MaxMessageLength &&   // Check if the message length is within bounds
-            message.indexOf('\0') != -1 &&            // Check if the message is null terminated
+		if( message.length() > 0 &&
+            message.length() <= MaxMessageLength &&
+            message.indexOf('\0') != -1 &&
             xQueueSend(m_TXQueue, message.c_str(), portMAX_DELAY) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());
@@ -139,7 +132,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
-    ESP_LOGD("SetupSerialPortMessageManager", "Starting RX Task.");
+    ESP_LOGD("Setup", "Starting RX Task.");
     const TickType_t xFrequency = 25;
     TickType_t xLastWakeTime = xTaskGetTickCount();
     
@@ -164,7 +157,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
                 if (m_message.endsWith("\n"))
                 {
                     m_message.trim();
-                    ESP_LOGD("SerialPortMessageManager", "\"%s\" Message Rx: \"%s\"", m_Name.c_str(), m_message.c_str());
+                    ESP_LOGD("SerialPortMessageManager", "Rx from: \"%s\" Message: \"%s\"", m_Name.c_str(), m_message.c_str());
 
                     NamedObject_t NamedObject;
                     if (mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
@@ -191,7 +184,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
-	ESP_LOGD("SetupSerialPortMessageManager", "Starting TX Task.");
+	ESP_LOGD("Setup", "Starting TX Task.");
 	const TickType_t xFrequency = 25;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
@@ -211,7 +204,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
                         ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: Address: \"%p\" Message: \"%s\"",m_Name.c_str(), static_cast<void*>(message), message);
+					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
 					mp_Serial->println(message);
 				}
 				else

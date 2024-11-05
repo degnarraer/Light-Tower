@@ -95,7 +95,7 @@ public:
                 }
                 if (isValid)
                 {
-                    ESP_LOGI("ValidValueChecker:IsValidStringValue", 
+                    ESP_LOGD("ValidValueChecker:IsValidStringValue", 
                              "\"%s\" IsValidStringValue VALID VALUE: \"%s\" with comparator %d", 
                              stringValue.c_str(), comparator.StringValue.c_str(), comparator.ComparatorType);
                     return true;

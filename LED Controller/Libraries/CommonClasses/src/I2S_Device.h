@@ -19,41 +19,38 @@
 #ifndef I2S_Device_H
 #define I2S_Device_H 
 
-//DEBUGGING
-#define DATA_RX_DEBUG false
-#define DATA_TX_DEBUG false
-#define QUEUE_DEBUG false
-#define QUEUE_INDEPTH_DEBUG false
-
 #include <Arduino.h>
 #include <DataTypes.h>
 #include <Helpers.h>
+#include <mutex>
 #include "driver/i2s.h"
 #include "Streaming.h"
+#include "BitDepthConverter.h"
 
-class I2S_Device_Callback
-{
-	public:
-		I2S_Device_Callback(){}
-		virtual ~I2S_Device_Callback(){}
-				//Callbacks called by this class
-		virtual void I2SDataReceived(String DeviceTitle, uint8_t *data, uint32_t length) = 0;
-};
+//#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
+#define TIME_TO_WAIT_FOR_SOUND pdMS_TO_TICKS(500)
+
+extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
 
 class I2S_Device: public NamedItem
-				, public CommonUtils
-				, public QueueController
+                , public CommonUtils
+                , public QueueController
+                , public BitDepthConverter
+
 {
   public:
     I2S_Device( String Title
+              , BaseType_t Core
               , i2s_port_t i2S_PORT
               , i2s_mode_t Mode
               , int SampleRate
-              , i2s_bits_per_sample_t BitsPerSample
+              , i2s_bits_per_sample_t BitsPerSampleIn
+              , i2s_bits_per_sample_t BitsPerSampleOut
               , i2s_channel_fmt_t i2s_Channel_Fmt
               , i2s_comm_format_t CommFormat
               , i2s_channel_t i2s_channel
 			        , bool Use_APLL
+              , bool fixedClock
               , size_t BufferCount
               , size_t BufferSize
               , int SerialClockPin
@@ -61,46 +58,59 @@ class I2S_Device: public NamedItem
               , int SerialDataInPin
               , int SerialDataOutPin );
     virtual ~I2S_Device();
-    void SetCallback(I2S_Device_Callback* callee){ m_Callee = callee; }
+
+    void Setup();
+    bool IsInitialized();
     void StartDevice();
     void StopDevice();
-
+    DeviceState_t GetDeviceState();
+    String GetDeviceStateString();
+    bool IsRunning();
     size_t WriteSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
-	
-    void Setup();
-    void ProcessEventQueue();
-	
+
   private:
-	  I2S_Device_Callback* m_Callee = NULL;
+		BaseType_t m_Core = 0;
     DataItemConfig_t* m_ItemConfig = NULL;
     const i2s_port_t m_I2S_PORT;
     const int m_SampleRate;
     const i2s_mode_t m_i2s_Mode;
-    const i2s_bits_per_sample_t m_BitsPerSample;
+    const i2s_bits_per_sample_t m_BitsPerSampleIn;
+    const i2s_bits_per_sample_t m_BitsPerSampleOut;
     const i2s_comm_format_t m_CommFormat;
     const i2s_channel_fmt_t m_Channel_Fmt;
     const i2s_channel_t m_i2s_channel;
 	  const bool m_Use_APLL;
+	  const bool m_FixedClock;
     const int m_BufferCount;
     const int m_BufferSize;
-    const int m_SerialClockPin;
-    const int m_WordSelectPin;
-    const int m_SerialDataInPin;
-    const int m_SerialDataOutPin;
-
-	  bool m_Is_Running = false;
-    QueueHandle_t m_i2s_event_queue = NULL;
+    const int m_I2SClockPin;
+    const int m_I2SWordSelectPin;
+    const int m_I2SDataInPin;
+    const int m_I2SDataOutPin;
+    QueueHandle_t m_i2s_event_queueHandle = nullptr;
+    TaskHandle_t m_TaskHandle = nullptr;
     size_t m_SampleCount;
     size_t m_ChannelSampleCount;
     size_t m_BytesPerSample;
     size_t m_TotalBytesToRead;
     size_t m_ChannelBytesToRead;
 
-    size_t ReadSamples();
-    size_t WriteSamples(uint8_t *samples, size_t ByteCount);
+    //Device Installation
+    DeviceState m_DeviceState = DeviceState_t::Uninstalled;
     void InstallDevice();
     void UninstallDevice();
+
+    //Process Task
+    void CreateTask();
+    void DestroyTask();
+    static void Static_ProcessEventQueue(void * parameter);
+    void ProcessEventQueue();
+    bool ESP_Process(const char* subject, esp_err_t result);
+
+    //Read & Write Data
+    size_t ReadSamples();
+    size_t WriteSamples(uint8_t *samples, size_t ByteCount);
 };
 
 #endif

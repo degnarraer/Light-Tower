@@ -17,8 +17,8 @@
 */
 
 #pragma once
-#define BT_COMPATIBLE_DEVICE_TIMEOUT 30000
-#define DEVICE_QUEUE_SIZE 10
+#define BT_COMPATIBLE_DEVICE_TIMEOUT 10000
+#define DEVICE_QUEUE_SIZE 100
 
 #include <vector>
 #include <Arduino.h>
@@ -30,143 +30,100 @@
 #include "BluetoothA2DPCommon.h"
 #include "Helpers.h"
 
-class BluetoothConnectionStateCallee
-{
-	public:
-		BluetoothConnectionStateCallee(){};
-		virtual void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t ConnectionState) = 0;
-};
 
-class BluetoothConnectionStateCaller
+class Bluetooth_Source_Callbacks
 {
 	public:
-		BluetoothConnectionStateCaller( BluetoothA2DPCommon *BT );
-		virtual ~BluetoothConnectionStateCaller()
-		{
-			vTaskDelete(m_Handle);
-		}
-		static void Static_BT_Connection_State_Change_Callback(esp_a2d_connection_state_t state, void *);
-		void BT_Connection_State_Change_Callback(esp_a2d_connection_state_t state);
-		void RegisterForConnectionStateChangedCallBack(BluetoothConnectionStateCallee *Callee);
-		bool IsConnected();
+		Bluetooth_Source_Callbacks(){}
+		virtual ~Bluetooth_Source_Callbacks(){}
 	
-	protected:
-		virtual bool GetConnectionStatus() = 0;
-		BluetoothConnectionStateCallee *mp_ConnectionStateCallee = NULL;
-	
-	private:
-		TaskHandle_t m_Handle;
-		BluetoothA2DPCommon *mp_BT;
-};
-
-class BluetoothActiveDeviceUpdatee
-{
-	public:
-		BluetoothActiveDeviceUpdatee(){};
-		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices) = 0;
-};
-
-class BluetoothActiveDeviceUpdater
-{
-	public:
-		BluetoothActiveDeviceUpdater()
-		{
-		}
-		virtual ~BluetoothActiveDeviceUpdater()
-		{
-		}
-		void RegisterForActiveDeviceUpdate(BluetoothActiveDeviceUpdatee *Callee)
-		{
-			m_BluetoothActiveDeviceUpdatee = Callee;
-		}
-	protected:
-		BluetoothActiveDeviceUpdatee *m_BluetoothActiveDeviceUpdatee = NULL;
+		//Callbacks called by this class
+		virtual void BT_Data_Received() = 0;
+		virtual void BT_Read_Data_Stream(const uint8_t *data, uint32_t length) = 0;
+		virtual int32_t SetBTTxData(uint8_t *Data, int32_t channel_len) = 0;
+		virtual void Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode) = 0;
+		virtual int32_t MusicDataCallback(uint8_t *data, int32_t len) = 0;
+		virtual void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object) = 0;
+		virtual void BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices) = 0;
 };
 
 class Bluetooth_Source: public NamedItem
-					  , public BluetoothConnectionStateCaller
-					  , public BluetoothActiveDeviceUpdater
 					  , public CommonUtils
 					  , public QueueController
 {	
 	public:
+
+		enum class DeviceState
+		{
+			Installed,
+			Uninstalled,
+			Running,
+			Stopped
+		};
+		
 		Bluetooth_Source( String Title
+						, BaseType_t Core
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
-						, BluetoothConnectionStateCaller(&BTSource)
+						, m_Core(Core)
 						, m_BTSource(BTSource)
 		{
+			bT_source_instance = this;
 		}
 		Bluetooth_Source(const Bluetooth_Source&) = delete;
-		virtual ~Bluetooth_Source()
-		{
-			if(m_CompatibleDeviceTrackerTaskHandle)
-			{
-				vTaskDelete(m_CompatibleDeviceTrackerTaskHandle);
-				m_CompatibleDeviceTrackerTaskHandle = nullptr;
-			}
-			if(m_DeviceProcessorTaskHandle)
-			{
-				vTaskDelete(m_DeviceProcessorTaskHandle);
-				m_DeviceProcessorTaskHandle = nullptr;
-			}
-			if(m_DeviceProcessorQueueHandle) 
-			{
-				vQueueDelete(m_DeviceProcessorQueueHandle);
-				m_DeviceProcessorQueueHandle = nullptr;
-			}
-		}
+		virtual ~Bluetooth_Source();
+		static Bluetooth_Source* bT_source_instance;
 		void Setup();
-		void InstallDevice();
 		void StartDevice();
 		void StopDevice();
-		void Connect( const char *SourceName, const char *SourceAddress );
+		void StartDiscovery();
+		void StopDiscovery();
+		void Connect();
 		void Disconnect();
 		void SetNameToConnect( const std::string& SourceName, const std::string& SourceAddress );
-		void SetMusicDataCallback(music_data_cb_t callback);
-		
-		//Callback from BT Source for compatible devices to connect to
-		bool ConnectToThisName(const std::string& name, esp_bd_addr_t address, int32_t rssi);
-		void Set_NVS_Init(bool ResetNVS)
-		{ 
-			m_BTSource.set_nvs_init(ResetNVS);
-		}
-		void Set_Reset_BLE(bool ResetBLE)
-		{
-			m_ResetBLE = ResetBLE;
-		}
-		void Set_Auto_Reconnect(bool AutoReConnect)
-		{
-			m_AutoReConnect = AutoReConnect;
-		}
-		void Set_SSP_Enabled(bool SSPEnabled)
-		{
-			m_BTSource.set_ssp_enabled(SSPEnabled);
-		}
+		String GetDeviceStateString();
+		//Callback Registrtion to this class
+		void ResgisterForCallbacks(Bluetooth_Source_Callbacks *callee);
+
+		//Bluetooth_Callbacks
+		static int32_t StaticMusicDataCallback(uint8_t *data, int32_t len);
+		int32_t MusicDataCallback(uint8_t *data, int32_t len);
+		static void StaticBTDataReceived();
+		void BTDataReceived();
+		static void StaticBTReadDataStream(const uint8_t* data, uint32_t length);
+		void BTReadDataStream(const uint8_t *data, uint32_t length);
+		static int32_t StaticSetBTTxData(uint8_t *data, int32_t length);
+		int32_t SetBTTxData(uint8_t *data, int32_t length);
+		static void StaticBluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object);
+		void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object);
+		static void Static_Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode);
+		void Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode);
+		static bool StaticConnectToThisName(const char* name, esp_bd_addr_t address, int rssi);
+		bool ConnectToThisName(std::string name, esp_bd_addr_t address, int rssi);
+		void Set_NVS_Init(bool resetNVS);
+		void Set_Reset_BLE(bool resetBLE);
+		void Set_Auto_Reconnect(bool autoReConnect);
+		void Set_SSP_Enabled(bool sSPEnabled);
+
 		/// converts a esp_bd_addr_t to a string - the string is 18 characters long!
-		const char* GetAddressString(esp_bd_addr_t bda)
-		{
-			static char bda_str[18];
-			sprintf(bda_str, "%02x:%02x:%02x:%02x:%02x:%02x", bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
-			return (const char*)bda_str;
-		}
-	protected:
-		bool GetConnectionStatus(){ return m_BTSource.is_connected(); }
+		const char* GetAddressString(esp_bd_addr_t bda);
+
 	private:
 	
+		BaseType_t m_Core = 0;
 		BluetoothA2DPSource& m_BTSource;
+		Bluetooth_Source_Callbacks* m_Callee = NULL;
 		music_data_cb_t m_MusicDataCallback = NULL;
 		String m_Name;
 		String m_Address;
-		bool m_ResetBLE = true;
-		bool m_AutoReConnect = false;
 		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
-		std::vector<ActiveCompatibleDevice_t> m_ActiveCompatibleDevices;
-		QueueHandle_t m_DeviceProcessorQueueHandle;
-		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle;
-		TaskHandle_t m_DeviceProcessorTaskHandle;
-		bool m_Is_Running = false;
+		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
+		QueueHandle_t m_DeviceProcessorQueueHandle = nullptr;
+		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle = nullptr;
+		TaskHandle_t m_DeviceProcessorTaskHandle = nullptr;
 		
+    	DeviceState_t m_DeviceState = DeviceState_t::Uninstalled;
+		void InstallDevice();
 		void Compatible_Device_Found(BT_Device_Info newDevice);
 		static void StaticCompatibleDeviceTrackerTaskLoop(void * Parameters);
 		void CompatibleDeviceTrackerTaskLoop();
@@ -174,22 +131,32 @@ class Bluetooth_Source: public NamedItem
 		void DeviceProcessingTask();
 };
 
-class Bluetooth_Sink_Callback
+class Bluetooth_Sink_Callbacks
 {
 	public:
-		Bluetooth_Sink_Callback(){}
-		virtual ~Bluetooth_Sink_Callback(){}
+		Bluetooth_Sink_Callbacks(){}
+		virtual ~Bluetooth_Sink_Callbacks(){}
 	
-		//Callbacks called by this class
-		virtual void BTDataReceived(uint8_t *data, uint32_t length) = 0;
+		virtual void BT_Data_Received() = 0;
+		virtual void BT_Read_Data_Stream(const uint8_t *data, uint32_t length) = 0;
+		virtual void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object) = 0;
 };
+
 class Bluetooth_Sink: public NamedItem
 					, public CommonUtils
 				    , public QueueController
-					, public BluetoothConnectionStateCaller
 {
+	enum class DeviceState
+	{
+		Installed,
+		Uninstalled,
+		Running,
+		Stopped
+	};
+		
   public:
     Bluetooth_Sink( String Title
+				  , BaseType_t Core
 				  , BluetoothA2DPSink& BTSink
 				  , i2s_port_t i2S_PORT
 				  , i2s_mode_t Mode
@@ -199,6 +166,7 @@ class Bluetooth_Sink: public NamedItem
 				  , i2s_comm_format_t i2s_CommFormat
 				  , i2s_channel_t i2s_channel
 				  , bool Use_APLL
+				  , bool FixedClock
 				  , size_t BufferCount
 				  , size_t BufferSize
 				  , int SerialClockPin
@@ -206,7 +174,7 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataInPin
 				  , int SerialDataOutPin )
 				  : NamedItem(Title)
-				  , BluetoothConnectionStateCaller(&BTSink)
+				  , m_Core(Core)
 				  , m_BTSink(BTSink)
 				  , m_I2S_PORT(i2S_PORT)
 				  , m_i2s_Mode(Mode)
@@ -216,34 +184,55 @@ class Bluetooth_Sink: public NamedItem
 				  , m_Channel_Fmt(i2s_Channel_Fmt)
 				  , m_i2s_channel(i2s_channel)
 				  , m_Use_APLL(Use_APLL)
+				  , m_FixedClock(FixedClock)
 				  , m_BufferCount(BufferCount)
 				  , m_BufferSize(BufferSize)
-				  , m_SerialClockPin(SerialClockPin)
-				  , m_WordSelectPin(WordSelectPin)
-				  , m_SerialDataInPin(SerialDataInPin)
-				  , m_SerialDataOutPin(SerialDataOutPin){};		
+				  , m_I2SClockPin(SerialClockPin)
+				  , m_I2SWordSelectPin(WordSelectPin)
+				  , m_I2SDataInPin(SerialDataInPin)
+				  , m_I2SDataOutPin(SerialDataOutPin)
+	{
+		bT_sink_instance = this;
+	};		
 	virtual ~Bluetooth_Sink(){};
+	static Bluetooth_Sink* bT_sink_instance;
 	void Setup();
 	void StartDevice();
 	void StopDevice();
 	void Connect(String SinkName, bool reconnect);
 	void Disconnect();
-	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM )
-	{
-		m_AutoReConnect = reconnect;
+	String GetDeviceStateString();
+    i2s_bits_per_sample_t GetBitDepth()
+    {
+      return m_BitsPerSample;
     }
-
-	//Callbacks from BluetoothSink  
-	void data_received_callback();
-	void read_data_stream(const uint8_t *data, uint32_t length);
-
+	void Set_Auto_Reconnect(bool reconnect, int count=AUTOCONNECT_TRY_NUM);
 	//Callback Registrtion to this class
-	void ResgisterForRxCallback(Bluetooth_Sink_Callback *callee);
-   
-	protected:
-		bool GetConnectionStatus(){ return m_BTSink.is_connected(); } 
+	void ResgisterForCallbacks(Bluetooth_Sink_Callbacks *callee);
+
+    //Bluetooth_Callbacks
+    static void StaticBTDataReceived();
+    void BTDataReceived();
+    static void StaticBTReadDataStream(const uint8_t* data, uint32_t length);
+    void BTReadDataStream(const uint8_t *data, uint32_t length);
+	static void StaticBluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
+	{
+		if (bT_sink_instance) {
+			bT_sink_instance->BluetoothConnectionStateChanged(connectionState, object);
+		}
+	}
+	void BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
+	{
+		ESP_LOGI("BluetoothConnectionStateChanged", "Connection State: %i", connectionState);
+		if(NULL != m_Callee)
+		{
+			m_Callee->BluetoothConnectionStateChanged(connectionState, object);
+		}
+	}
+
 	private:
-		Bluetooth_Sink_Callback* m_Callee = NULL;
+		BaseType_t m_Core = 0;
+		Bluetooth_Sink_Callbacks* m_Callee = NULL;
 		BluetoothA2DPSink& m_BTSink;
 		i2s_port_t m_I2S_PORT;
 		const i2s_mode_t m_i2s_Mode;
@@ -253,16 +242,16 @@ class Bluetooth_Sink: public NamedItem
 		const i2s_channel_fmt_t m_Channel_Fmt;
 		const i2s_channel_t m_i2s_channel;
 		const bool m_Use_APLL;
+		const bool m_FixedClock;
 		const int m_BufferCount;
 		const int m_BufferSize;
-		const int m_SerialClockPin;
-		const int m_WordSelectPin;
-		const int m_SerialDataInPin;
-		const int m_SerialDataOutPin;
-		
-		bool m_Is_Running = false;
-		bool m_AutoReConnect = false;
+		const int m_I2SClockPin;
+		const int m_I2SWordSelectPin;
+		const int m_I2SDataInPin;
+		const int m_I2SDataOutPin;
 		String m_SinkName;
-		A2DPDefaultVolumeControl m_VolumeControl;
+		A2DPDefaultVolumeControl m_VolumeControl;		
+    	DeviceState_t m_DeviceState = DeviceState_t::Uninstalled;
 		void InstallDevice();
+		void UninstallDevice();
 };

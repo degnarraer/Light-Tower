@@ -42,14 +42,8 @@ Manager::~Manager()
 
 void Manager::Setup()
 {
-  esp_ble_tx_power_set(ESP_BLE_PWR_TYPE_DEFAULT, ESP_PWR_LVL_P9); //Set Bluetooth Power to Max
   m_AudioBuffer.Initialize();
-  m_BT_Out.RegisterForConnectionStateChangedCallBack(this);
-  m_BT_Out.RegisterForActiveDeviceUpdate(this);
-  if( xTaskCreatePinnedToCore( Static_TaskLoop_20mS, "Manager_20mS_Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Manager_20mS_Task, 1 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
+  m_BT_Out.ResgisterForCallbacks(this);
   SetupAllSetupCallees();
 }
 
@@ -58,6 +52,7 @@ void Manager::StartBluetooth()
   ESP_LOGI("StartBluetooth", "Starting Bluetooth!" );
   m_BT_Out.Set_Auto_Reconnect(m_BluetoothSourceAutoReConnect.GetValue());
   m_BT_Out.Set_Reset_BLE(m_BluetoothReset.GetValue());
+  m_I2S_In.StartDevice();
   m_BT_Out.StartDevice();
 }
 
@@ -65,74 +60,94 @@ void Manager::StopBluetooth()
 {
   ESP_LOGI("StopBluetooth", "Stopping Bluetooth!" );
   m_BT_Out.StopDevice();
-}
-
-void Manager::Static_TaskLoop_20mS(void * parameter)
-{
-  Manager *aManager = (Manager*)parameter;
-  aManager->TaskLoop_20mS();
-}
-
-void Manager::TaskLoop_20mS()
-{
-  const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    m_I2S_In.ProcessEventQueue();
-  }
+  m_I2S_In.StopDevice();
 }
 
 //I2S_Device_Callback
 void Manager::I2SDataReceived(String DeviceTitle, uint8_t *Data, uint32_t channel_len)
 {
+  ESP_LOGV("I2SDataReceived", "I2S Data: %i bytes received.", channel_len);
 }
 
 //Bluetooth Source Callback
 int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
 {
+  ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes requested.", channel_len);
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
-  assert(0 == ByteReceived % sizeof(uint32_t)); 
-  size_t FrameCount = ByteReceived / sizeof(uint32_t);
-  m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
+  ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes received.", ByteReceived);
+  //size_t FrameCount = ByteReceived / sizeof(uint32_t);
+  //m_AudioBuffer.Push((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }
 
-//BluetoothConnectionStateCallee Callback 
-void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState)
+void Manager::Discovery_Mode_Changed(esp_bt_gap_discovery_state_t discoveryMode)
 {
-  ConnectionStatus_t newValue = static_cast<ConnectionStatus_t>(connectionState);
-  if(m_ConnectionStatus.GetValue() != newValue)
+  switch(discoveryMode)
   {
-    m_ConnectionStatus.SetValue(newValue);
-    ESP_LOGI("Manager: BluetoothConnectionStatusChanged", "Connection Status Changed to %s", String(ConnectionStatusStrings[connectionState]).c_str());
+    case ESP_BT_GAP_DISCOVERY_STOPPED:
+      ESP_LOGI("DiscoveryModeChanged", "Discovery Mode Stopped");
+      m_Bluetooth_Discovery_Mode_t.SetValue(Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped);
+    break;
+    case ESP_BT_GAP_DISCOVERY_STARTED:
+      ESP_LOGI("DiscoveryModeChanged", "Discovery Mode Started");
+      m_Bluetooth_Discovery_Mode_t.SetValue(Bluetooth_Discovery_Mode_t::Discovery_Mode_Started);
+    break;
+    default:
+      ESP_LOGI("DiscoveryModeChanged", "Unknown Discovery Mode");
+      m_Bluetooth_Discovery_Mode_t.SetValue(Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown);
   }
 }
 
-//BluetoothActiveDeviceUpdatee Callback 
-void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveCompatibleDevice_t> Devices)
+void Manager::BluetoothConnectionStateChanged(const esp_a2d_connection_state_t connectionState, void* object)
 {
-  ESP_LOGD("BluetoothActiveDeviceListUpdated","Updating %i Devices.", Devices.size());
+  switch(connectionState)
+  {
+    case ESP_A2D_CONNECTION_STATE_DISCONNECTED:
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnected.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Disconnected);
+      break;
+    case ESP_A2D_CONNECTION_STATE_CONNECTING:
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connecting.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Connecting);
+      break;
+    case ESP_A2D_CONNECTION_STATE_CONNECTED:
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Connected.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Connected);
+      break;
+    case ESP_A2D_CONNECTION_STATE_DISCONNECTING:
+      //ESP_LOGI("BluetoothConnectionStatusChanged", "Connection State Changed to Disconnecting.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Disconnecting);
+      break;
+    default:
+      //ESP_LOGW("BluetoothConnectionStatusChanged", "WARNING! Unhandled Connection State Change. Changed to Disconnected.");
+      m_ConnectionStatus.SetValue(ConnectionStatus_t::Unknown);
+    break;
+  }
+}
+
+void Manager::BluetoothActiveDeviceListUpdated(const std::vector<ActiveBluetoothDevice_t> Devices)
+{
   unsigned long currentMillis = millis();
   for(int i = 0; i < Devices.size(); ++i)
   {
     unsigned long elapsedTime;
     unsigned long previousMillis = Devices[i].lastUpdateTime;
-    if (currentMillis >= previousMillis) { elapsedTime = currentMillis - previousMillis; } 
-    else { elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1; }
-    ESP_LOGD("BluetoothActiveDeviceListUpdated", "Active Device List Item %i: Name: \"%s\": Address: \"%s\" Last Update Time: \"%i\" RSSI: \"%i\""
+    if (currentMillis >= previousMillis)
+    { 
+      elapsedTime = currentMillis - previousMillis;
+    } 
+    else
+    { 
+      elapsedTime = (ULONG_MAX - previousMillis) + currentMillis + 1;
+    }
+    ESP_LOGD("BluetoothActiveDeviceListUpdated", "Device: %i Name: \"%s\" Address: \"%s\"  RSSI: \"%i\" Last Update Time: \"%i\""
             , i
             , Devices[i].name
             , Devices[i].address
-            , elapsedTime
-            , Devices[i].rssi );
-    ActiveCompatibleDevice_t ActiveDevice = ActiveCompatibleDevice_t( Devices[i].name
-                                                                    , Devices[i].address
-                                                                    , Devices[i].rssi
-                                                                    , Devices[i].lastUpdateTime
-                                                                    , elapsedTime );
-    m_ScannedDevice.SetValue(ActiveDevice);                                            
+            , Devices[i].rssi 
+            , elapsedTime );
+    BT_Device_Info_With_Time_Since_Update ActiveDevice = BT_Device_Info_With_Time_Since_Update( Devices[i], elapsedTime );
+    m_ScannedDevice.SetValue(ActiveDevice);                                          
   }
 }
 

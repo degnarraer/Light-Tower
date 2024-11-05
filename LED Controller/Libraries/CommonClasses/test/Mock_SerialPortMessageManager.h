@@ -26,7 +26,7 @@
 template <typename T>
 class MockRx_Value_Callee_Interface : public Rx_Value_Callee_Interface<T> {
 public:
-    MOCK_METHOD(bool, NewRxValueReceived, (const Rx_Value_Caller_Interface<T>* sender, const T* values, size_t changeCount), (override));
+    MOCK_METHOD(bool, NewRxValueReceived, (const T* values, size_t count, size_t changeCount), (override));
     MOCK_METHOD(String, GetName, (), (override));
     MOCK_METHOD(size_t, GetCount, (), (override));
 };
@@ -117,7 +117,7 @@ private:
 class MockDataSerializer : public DataSerializer {
 public:
     MOCK_METHOD(void, SetDataSerializerDataItems, (DataItem_t& DataItem, size_t DataItemCount), (override));
-    MOCK_METHOD(String, SerializeDataToJson, (String Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
+    MOCK_METHOD(String, SerializeDataItemToJson, (String Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, DeSerializeJsonToNamedObject, (String json, NamedObject_t &NamedObject), (override));
     MOCK_METHOD(void, FailPercentage, (), (override));
     MOCK_METHOD(bool, AllTagsExist, (JSONVar &jsonObject), (override));
@@ -136,8 +136,8 @@ public:
         ESP_LOGD("MockSerialPortMessageManager", "Deleting MockSerialPortMessageManager");
     }
     
-    MOCK_METHOD(void, SetupSerialPortMessageManager, (), (override));
-    MOCK_METHOD(bool, QueueMessageFromData, (const String& Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
+    MOCK_METHOD(void, Setup, (), (override));
+    MOCK_METHOD(bool, QueueMessageFromDataType, (const String& Name, DataType_t DataType, void* Object, size_t Count, size_t changeCount), (override));
     MOCK_METHOD(bool, QueueMessage, (const String& message), (override));
     MOCK_METHOD(String, GetName, (), ());
     MOCK_METHOD(void, SerialPortMessageManager_RxTask, (), (override));

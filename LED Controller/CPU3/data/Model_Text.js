@@ -14,17 +14,17 @@ export class Model_Text {
         this.wsManager.unregisterListener(this);
     }
 
-    getSignalName() {
-        return this.signalName;
-    }
-
+    getListnerName() {return this.signalName;}
+    onOpen(){}
+    onClose(){}
+    onError(){}
     onMessage(newValue) {
         console.debug(`Message Rx for: "${this.signalName}" with value: "${newValue}"`);
         this.setValue(newValue);
     }
     
     setValue(newValue, updateWebsocket = true) {
-        console.log(`Set Value for Signal: "${this.signalName}" to "${newValue}"`);
+        console.log(`ESP32 Model: Set Value for Signal: "${this.signalName}" to "${newValue}"`);
         if (typeof newValue === 'string') {
             this.value = newValue;
             this.updateHTML();
@@ -38,7 +38,7 @@ export class Model_Text {
     }
 
     scheduleWebSocketUpdate() {
-        console.log(`Schedule Update: "${this.signalName}" to "${this.value}"`);
+        console.log(`ESP32: Schedule Update: "${this.signalName}" to "${this.value}"`);
         if (!this.updateWebSocketTimeout) {
             this.sendWebSocketUpdate();
             this.updateWebSocketTimeout = setTimeout(() => {
@@ -50,7 +50,25 @@ export class Model_Text {
 
     sendWebSocketUpdate() {
         console.log(`sendWebSocketUpdate: "${this.signalName}" to "${this.value}"`);
-        this.wsManager.Send_Signal_Value_To_Web_Socket(this.getSignalName(), this.toString());
+        this.Send_Signal_Value_To_Web_Socket(this.getListnerName(), this.toString());
+    }
+
+    Send_Signal_Value_To_Web_Socket(signal, value) {
+        if (this.wsManager) {
+            if (signal && value) {
+                var Root = {};
+                Root.SignalValue = {};
+                Root.SignalValue.Id = signal.toString();
+                Root.SignalValue.Value = value.toString();
+                var Message = JSON.stringify(Root);
+                console.log('ESP32 Web Socket Tx: \'' + Message + '\'');
+                this.wsManager.send(Message);
+            } else {
+                console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
+            }
+        } else {
+            console.error('Null wsManager!');
+        }
     }
 
     getValue() {

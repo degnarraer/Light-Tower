@@ -39,23 +39,23 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			 	   , public StringEncoderDecoder<T>
 {
 	public:
-		LocalDataItem( const String name
+		LocalDataItem( const std::string name
 					 , const T* initialValue )
 					 : m_Name(name)
 					 , mp_InitialValuePtr(initialValue)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 1");
 			CommonSetup();
 		}
-		LocalDataItem( const String name
+		LocalDataItem( const std::string name
 					 , const T& initialValue )
 					 : m_Name(name)
 					 , mp_InitialValuePtr(&initialValue)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 2");
 			CommonSetup();
 		}
-		LocalDataItem( const String name
+		LocalDataItem( const std::string name
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface )
@@ -65,11 +65,11 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 3");
 			CommonSetup();
 		}
 		
-		LocalDataItem( const String name
+		LocalDataItem( const std::string name
 					 , const T& initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface )
@@ -79,11 +79,11 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 4");
 			CommonSetup();
 		}
 
-		LocalDataItem( const String name
+		LocalDataItem( const std::string name
 					 , const T* initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface
@@ -94,11 +94,11 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 5");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 5");
 			CommonSetup();
 		}
 		
-		LocalDataItem( const String name
+		LocalDataItem( const std::string name
 					 , const T& initialValue
 					 , NamedCallback_t *namedCallback
 					 , SetupCallerInterface *setupCallerInterface
@@ -109,7 +109,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					 , mp_NamedCallback(namedCallback)
 					 , mp_SetupCallerInterface(setupCallerInterface)
 		{
-			ESP_LOGI("LocalDataItem", "LocalDataItem Instantiated: Constructor 6");
+			ESP_LOGD("LocalDataItem", "LocalDataItem Instantiated: Constructor 6");
 			CommonSetup();
 		}
 		
@@ -128,6 +128,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			if(mp_Value)
 			{
+				std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
         		ESP_LOGD("~LocalDataItem", "freeing mp_Value Memory");
 				free(mp_Value);
 			}
@@ -145,6 +146,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
 			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
 			mp_Value = (T*)malloc(sizeof(T)*COUNT);
@@ -165,7 +167,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 						memcpy(mp_Value+i, &value, sizeof(char));
 						memcpy(mp_InitialValue+i, &value, sizeof(char));
 					}
-					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
+					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 					this->CallNamedCallbacks(mp_Value);
@@ -177,7 +179,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 						memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
 						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
 					}
-					ESP_LOGI( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
+					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
 							, m_Name.c_str()
 							, GetInitialValueAsString().c_str());
 					this->CallNamedCallbacks(mp_Value);
@@ -205,7 +207,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		//DataItemInterface
 		String GetName() const
 		{
-			return m_Name;
+			return String(m_Name.c_str());
 		}
 
 		virtual size_t GetCount() const
@@ -223,22 +225,32 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return GetDataTypeFromTemplateType<T>();
 		}
 
+		void ResetToDefaultValue()
+		{
+			SetValue(mp_InitialValue, COUNT);
+		}
+
 		void GetValue(void* object, size_t count) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			assert((count == COUNT) && "Counts must be equal");
-			if(mp_Value)
+			if (mp_Value)
 			{
-				memcpy(object, mp_Value, sizeof(T)*count);
+				memcpy(object, mp_Value, sizeof(T) * count);
 			}
 			else
 			{
-				ESP_LOGE("GetValueAsString", "ERROR! NULL Pointer.");
-				*reinterpret_cast<T**>(object) = nullptr;
+				ESP_LOGE("GetValue", "ERROR! NULL Pointer in mp_Value.");
+				if constexpr (std::is_pointer_v<T>)
+				{
+					*reinterpret_cast<T*>(object) = nullptr;
+				}
 			}
 		}
 
 		T* GetValuePointer() const
 		{
+			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			if(!mp_Value)
 			{
 				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
@@ -248,6 +260,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual T GetValue() const
 		{
+			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
 			assert((1 == COUNT) && "Count must 1 to use this function");
 			if(mp_Value)
 			{
@@ -288,6 +301,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool GetValueAsString(String &stringValue) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
 			stringValue = "";
 			if (mp_Value && COUNT > 0)
 			{
@@ -312,7 +326,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return value;
 		}
 
-		static bool StaticSetValueFromString(const String& stringValue, void* objectptr)
+		static UpdateStatus_t StaticSetValueFromString(const String& stringValue, void* objectptr)
 		{
 			if(objectptr)
 			{
@@ -324,13 +338,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				else
 				{
             		ESP_LOGE("StaticSetValueFromString", "ERROR! Null Object.");
-					return false;
+					return UpdateStatus_t();
 				}
 			}
 			else
 			{
             	ESP_LOGE("StaticSetValueFromString", "ERROR! Null Object Pointer.");
-				return false;
+				return UpdateStatus_t();
 			}
 		}
 
@@ -368,7 +382,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
-					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
+					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
 					return 0;
 				}
 				values[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
@@ -376,12 +390,12 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return substrings.size();
 		}
 
-		virtual bool SetValueFromString(const String& stringValue)
+		virtual UpdateStatus_t SetValueFromString(const String& stringValue)
 		{
-			ESP_LOGD("LocalDataItem::SetValueFromString"
+			ESP_LOGI( "LocalDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
 					, m_Name.c_str()
-					, stringValue.c_str());
+					, stringValue.c_str() );
 			T values[COUNT];
 			size_t parseCount = ParseStringValueIntoValues(stringValue, values);
 			if(parseCount == COUNT)
@@ -391,20 +405,20 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			else
 			{
 				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
-				return false;
+				return UpdateStatus_t();
 			}
 		}
 
-		virtual bool SetValue(const T *values, size_t count)
+		virtual UpdateStatus_t SetValue(const T *values, size_t count)
 		{
-			ESP_LOGI( "LocalDataItem: SetValue"
+			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
 					, this->ConvertValueToString(values, count).c_str() );
-			return UpdateStore(values, GetChangeCount());
+			return UpdateStore(values, GetChangeCount()+1);
 		}
 
-		virtual bool SetValue(const T& value)
+		virtual UpdateStatus_t SetValue(const T& value)
 		{
 			assert(COUNT == 1);
 			assert(mp_Value != nullptr);	
@@ -413,9 +427,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		bool EqualsValue(T *values, size_t count) const
 		{
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
 			if(COUNT == count)
 			{
-				return (memcmp(mp_Value, values, count) == 0);
+				return (memcmp(mp_Value, values, sizeof(T)*count) == 0);
 			}
 			return false;
 		}
@@ -444,7 +459,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 	protected:
 		ValidValueChecker m_ValidValueChecker;
-		String m_Name;
+		std::string m_Name;
 		const T* const mp_InitialValuePtr;
 		T *mp_Value = nullptr;
 		T *mp_InitialValue = nullptr;
@@ -461,7 +476,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			if(incrementChangeCount)
 			{
-				m_ChangeCount = m_ChangeCount+1;
+				m_ChangeCount += 1;
 				allowUpdate = true;
 				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
 			}
@@ -473,8 +488,9 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return (changeCount < m_ChangeCount) && (m_ChangeCount - changeCount <= (SIZE_MAX / 2));
 		}
 
-		virtual bool UpdateStore(const T *newValues, const size_t newChangeCount)
+		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t newChangeCount)
 		{
+			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
 			assert(newValues != nullptr);
 			assert(mp_Value != nullptr);
 			assert(COUNT > 0);
@@ -484,24 +500,32 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					, ConvertValueToString(newValues, COUNT).c_str()
 					, m_ChangeCount
 					, newChangeCount );
-			bool storeUpdated = false;
-			bool valueChanged = (0 != memcmp(mp_Value, newValues, COUNT));
-			bool validValue = ConfirmValueValidity(newValues, COUNT);
-			const bool updateAllowed = valueChanged && validValue;
-			ESP_LOGD( "UpdateStore", "\"%s\": Value Changed: \"%i\" Value Valid: \"%i\"", GetName().c_str(), valueChanged, validValue);
-			if(UpdateChangeCount(newChangeCount, updateAllowed))
+			UpdateStatus_t updateStatus;
+			updateStatus.ValueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
+			updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
+			updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
+			updateStatus.UpdateSuccessful = UpdateChangeCount(newChangeCount, updateStatus.UpdateAllowed);
+			ESP_LOGD( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
+			if(updateStatus.UpdateSuccessful)
 			{
 				ZeroOutMemory(mp_Value);
 				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
-				storeUpdated = true;
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
-				this->CallNamedCallbacks(mp_Value);
+				updateStatus.UpdateSuccessful = ( memcmp(mp_Value, newValues, sizeof(T) * COUNT) == 0);
+				if(updateStatus.UpdateSuccessful)
+				{
+					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+					this->CallNamedCallbacks(mp_Value);
+				}
+				else
+				{
+					ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+				}
 			}
 			else
 			{
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Successful. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
 			}
-			return storeUpdated;
+			return updateStatus;
 		}
 
 		virtual bool ConfirmValueValidity(const T* values, size_t count) const
@@ -511,7 +535,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				String stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
 				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
 				{
-					ESP_LOGE("SetValue", "\"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
+					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
 					return false;
 				}
 			}
@@ -529,4 +553,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		size_t m_Count = COUNT;
 		size_t m_ChangeCount = 0;
 		bool m_ChangeCountInitialized = false;
+	protected:
+		mutable std::recursive_mutex m_ValueMutex;
 };
