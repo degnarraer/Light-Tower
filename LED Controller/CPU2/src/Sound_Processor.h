@@ -74,6 +74,41 @@ class Sound_Processor: public NamedItem
                                                                                     , NULL
                                                                                     , this );
     
+    MaxBandSoundData_t m_R_Max_Band_InitialValue = MaxBandSoundData_t();
+    DataItem<MaxBandSoundData_t, 1> m_R_Max_Band = DataItem<MaxBandSoundData_t, 1>( "R_Max_Band"
+                                                                                  , m_R_Max_Band_InitialValue
+                                                                                  , RxTxType_Tx_On_Change
+                                                                                  , 0
+                                                                                  , &m_CPU1SerialPortMessageManager
+                                                                                  , NULL
+                                                                                  , this );
+    float m_R_Bands_InitialValue = 0.0;
+    DataItem<float, 32> m_R_Bands = DataItem<float, 32>( "R_Bands"
+                                                       , m_R_Bands_InitialValue
+                                                       , RxTxType_Tx_On_Change
+                                                       , 0
+                                                       , &m_CPU1SerialPortMessageManager
+                                                       , NULL
+                                                       , this );
+    
+    MaxBandSoundData_t m_L_Max_Band_InitialValue = MaxBandSoundData_t();
+    DataItem<MaxBandSoundData_t, 1> m_L_Max_Band = DataItem<MaxBandSoundData_t, 1>( "L_Max_Band"
+                                                                                  , m_L_Max_Band_InitialValue
+                                                                                  , RxTxType_Tx_On_Change
+                                                                                  , 0
+                                                                                  , &m_CPU1SerialPortMessageManager
+                                                                                  , NULL
+                                                                                  , this );
+    
+    float m_L_Bands_InitialValue = 0.0;
+    DataItem<float, 32> m_L_Bands = DataItem<float, 32>( "L_Bands"
+                                                       , m_L_Bands_InitialValue
+                                                       , RxTxType_Tx_On_Change
+                                                       , 0
+                                                       , &m_CPU1SerialPortMessageManager
+                                                       , NULL
+                                                       , this );
+    
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA
     float m_IMNP441_1PA_Value = 420426.0;     //Digital output at 1PA

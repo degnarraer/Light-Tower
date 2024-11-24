@@ -36,17 +36,11 @@ class AudioBuffer
     void Initialize()
 	{
 		AllocateMemory();
-		pthread_mutexattr_t Attr;
-		pthread_mutexattr_init(&Attr);
-		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
-		if(0 != pthread_mutex_init(&m_Lock, &Attr))
-		{   
-			ESP_LOGE("TestClass", "ERROR! Failed to Create Lock.");
-		}
 	}
 
 	void AllocateMemory()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
         ESP_LOGD("AllocateMemory", "Allocating memory");
 		size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, COUNT>);
 		void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, COUNT>*)malloc(CircleBuffSize);
@@ -64,29 +58,26 @@ class AudioBuffer
 	}
 	size_t GetFrameCapacity()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Capacity = 0;
-		pthread_mutex_lock(&m_Lock);
 		Capacity = m_CircularAudioBuffer->capacity();
-		pthread_mutex_unlock(&m_Lock);
 		return Capacity;
 	}
 
 	bool ClearAudioBuffer()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bool Success = false;
-		pthread_mutex_lock(&m_Lock);
 		m_CircularAudioBuffer->Clear();
 		Success = true;
-		pthread_mutex_unlock(&m_Lock);
 		return Success;
 	}
 
 	size_t GetFrameCount()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t size = 0;
-		pthread_mutex_lock(&m_Lock);
 		size = m_CircularAudioBuffer->size();
-		pthread_mutex_unlock(&m_Lock);
 		return size;
 	}
 
@@ -97,37 +88,33 @@ class AudioBuffer
 
 	size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount )
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t FramesWritten = 0;
-		pthread_mutex_lock(&m_Lock);
 		FramesWritten = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
-		pthread_mutex_unlock(&m_Lock);
 		return FramesWritten;
 	}
 
 	bool WriteAudioFrame( Frame_t Frame )
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bool Success = false;
-		pthread_mutex_lock(&m_Lock);
 		Success = m_CircularAudioBuffer->Write(Frame);
-		pthread_mutex_unlock(&m_Lock);
 		return Success;
 	}
 
 	size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t FramesRead = 0;
-		pthread_mutex_lock(&m_Lock);
 		FramesRead = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
-		pthread_mutex_unlock(&m_Lock);
 		return FramesRead;
 	}
 
 	bfs::optional<Frame_t> ReadAudioFrame()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bfs::optional<Frame_t> FrameRead;
-		pthread_mutex_lock(&m_Lock);
 		FrameRead = m_CircularAudioBuffer->Read();
-		pthread_mutex_unlock(&m_Lock);
 		return FrameRead;
 	}
 	
@@ -149,17 +136,11 @@ class ContinuousAudioBuffer
     void Initialize()
 	{ 
 		AllocateMemory();  
-		pthread_mutexattr_t Attr;
-		pthread_mutexattr_init(&Attr);
-		pthread_mutexattr_settype(&Attr, PTHREAD_MUTEX_RECURSIVE);	  
-		if(0 != pthread_mutex_init(&m_Lock, &Attr))
-		{
-			ESP_LOGE("Initialize", "ERROR! Failed to Create Lock.");
-		}
 	}
 
 	void AllocateMemory()
     {
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
         ESP_LOGD("AllocateMemory", "Allocating memory");
         size_t CircleBuffSize = sizeof(CircularBuffer<Frame_t, COUNT>);
         void* CircularBuffer_Raw = malloc (CircleBuffSize );
@@ -173,6 +154,7 @@ class ContinuousAudioBuffer
 
 	void FreeMemory()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		if (m_CircularAudioBuffer != nullptr) {
             m_CircularAudioBuffer->~CircularBuffer<Frame_t, COUNT>();
             free(m_CircularAudioBuffer);
@@ -182,21 +164,20 @@ class ContinuousAudioBuffer
 	
 	uint32_t GetAudioFrames(Frame_t *Buffer, uint32_t Count)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		uint32_t ReturnCount = 0;
-		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count && i < m_CircularAudioBuffer->size(); ++i)
 		{
 			Buffer[i] = ((Frame_t*)m_CircularAudioBuffer)[i];
 			++ReturnCount;
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return ReturnCount;
 	}
 	
 	bool Push(Frame_t Frame)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bool result = false;
-		pthread_mutex_lock(&m_Lock);
 		result = m_CircularAudioBuffer->push(Frame);
 		if(result)
 		{
@@ -206,14 +187,13 @@ class ContinuousAudioBuffer
 		{
 			ESP_LOGD("Push", "Pushed and overwrote %i|%i", Frame.channel1, Frame.channel2);
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return result;
 	}
 
 	size_t Push(Frame_t *Frame, size_t Count)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Result = 0;
-		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
 			if(m_CircularAudioBuffer->push(Frame[i]))
@@ -226,23 +206,21 @@ class ContinuousAudioBuffer
 				ESP_LOGD("Push", "Pushed and overwrote %i|%i", Frame[i].channel1, Frame[i].channel2);
 			}
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	Frame_t Pop()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		Frame_t Result;
-		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->pop();
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	size_t Pop(Frame_t *Frame, size_t Count)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Result = 0;
-		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
 			if(0 < COUNT - m_CircularAudioBuffer->available())
@@ -252,14 +230,13 @@ class ContinuousAudioBuffer
 				++Result;
 			}
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	bool Unshift(Frame_t Frame)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bool result = false;
-		pthread_mutex_lock(&m_Lock);
 		result = m_CircularAudioBuffer->unshift(Frame);
 		if(result)
 		{
@@ -269,14 +246,13 @@ class ContinuousAudioBuffer
 		{
 			ESP_LOGD("Push", "Unshifted and overwrote %i|%i", Frame.channel1, Frame.channel2);
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return result;
 	}
 
 	size_t Unshift(Frame_t *Frame, size_t Count)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Result = 0;
-		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
 			if( m_CircularAudioBuffer->unshift(Frame[i]) )
@@ -289,23 +265,21 @@ class ContinuousAudioBuffer
 				ESP_LOGD("Unshift", "Unshifted and Overwrote %i|%i", Frame[i].channel1, Frame[i].channel2);
 			}
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	Frame_t Shift()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		Frame_t Result;
-		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->shift();
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	size_t Shift(Frame_t *Frame, size_t Count)
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Result = 0;
-		pthread_mutex_lock(&m_Lock);
 		for(int i = 0; i < Count; ++i)
 		{
 			if( 0 < COUNT - m_CircularAudioBuffer->available() )
@@ -314,55 +288,49 @@ class ContinuousAudioBuffer
 				++Result;
 			}
 		}
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	bool IsEmpty()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bool Result = false;
-		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->isEmpty();
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	bool IsFull()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		bool Result = false;
-		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->isFull();
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	size_t Size()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Result = 0;
-		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->size();
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	size_t Available()
 	{
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		size_t Result = 0;
-		pthread_mutex_lock(&m_Lock);
 		Result = m_CircularAudioBuffer->available();
-		pthread_mutex_unlock(&m_Lock);
 		return Result;
 	}
 
 	void Clear()
 	{
-		pthread_mutex_lock(&m_Lock);
+		std::lock_guard<std::recursive_mutex> lock(m_Lock)
 		m_CircularAudioBuffer->clear();
-		pthread_mutex_unlock(&m_Lock);
 	}
 	  private:
 		CircularBuffer<Frame_t, COUNT> *m_CircularAudioBuffer = nullptr;
-		pthread_mutex_t m_Lock;
+		std::recursive_mutex m_Lock;
 };
 
 #endif

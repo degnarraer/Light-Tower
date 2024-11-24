@@ -24,7 +24,7 @@
 #include "DataSerializer.h"
 
 #define MaxQueueCount 10
-#define MaxMessageLength 500
+#define MaxMessageLength 1000
 
 template <typename T>
 class Rx_Value_Caller_Interface;

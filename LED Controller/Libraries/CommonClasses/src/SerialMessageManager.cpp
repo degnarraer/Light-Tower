@@ -204,7 +204,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
                         ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
+					ESP_LOGI("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
 					mp_Serial->println(message);
 				}
 				else

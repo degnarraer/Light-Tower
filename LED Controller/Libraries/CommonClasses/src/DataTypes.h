@@ -1141,9 +1141,64 @@ struct MaxBandSoundData_t
 	float MaxBandNormalizedPower;
 	int16_t MaxBandIndex;
 	int16_t TotalBands;
+    MaxBandSoundData_t()
+    {
+	    float MaxBandNormalizedPower = 0.0;
+	    int16_t MaxBandIndex = 0;
+	    int16_t TotalBands = 0;
+    }
+    MaxBandSoundData_t(float MaxBandNormalizedPower_In, int16_t MaxBandIndex_In, int16_t TotalBands_In)
+    {
+        MaxBandNormalizedPower = MaxBandNormalizedPower_In;
+        MaxBandIndex = MaxBandIndex_In;
+        TotalBands = TotalBands_In;
+    }
     bool operator==(const MaxBandSoundData_t& other) const
     {
         return this->MaxBandNormalizedPower == other.MaxBandNormalizedPower && this->MaxBandIndex == other.MaxBandIndex && this->TotalBands == other.TotalBands;
+    }
+
+    bool operator!=(const MaxBandSoundData_t& other) const
+    {
+        return !(*this == other);
+    }
+
+    operator String() const
+    {
+        return toString();
+    }
+
+    String toString() const
+    {
+        return String(MaxBandNormalizedPower) + ENCODE_VALUE_DIVIDER + String(MaxBandIndex) + ENCODE_VALUE_DIVIDER + String(TotalBands);
+    }
+
+    static MaxBandSoundData_t fromString(const std::string &str)
+    {
+        const std::string delimiter = ENCODE_VALUE_DIVIDER;
+        size_t delimiterIndex = str.find(delimiter);
+
+        if (delimiterIndex == std::string::npos)
+        {
+            return MaxBandSoundData_t();
+        }
+
+        float maxBandNormalizedPower = std::stof(str.substr(0, delimiterIndex));
+        int16_t maxBandIndex = std::stoi(str.substr(delimiterIndex + delimiter.length()));
+	    int16_t totalBands = std::stoi(str.substr(delimiterIndex + delimiter.length()));
+        return MaxBandSoundData_t(maxBandNormalizedPower, maxBandIndex, totalBands);
+    }
+
+    friend std::istream& operator>>(std::istream& is, MaxBandSoundData_t& device) {
+        std::string str;
+        std::getline(is, str);
+        device = MaxBandSoundData_t::fromString(str);
+        return is;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const MaxBandSoundData_t& device) {
+        os << device.toString().c_str();
+        return os;
     }
 };
 
