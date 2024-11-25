@@ -115,6 +115,8 @@ class FFT_Calculator
     bool PushValueAndCalculateNormalizedFFT(int32_t value, float Gain)
     {
       m_SolutionReady = false;
+      m_MaxFFTBinValue = 0;
+      m_MaxFFTBinIndex = 0;
       mp_RealBuffer[m_CurrentIndex] = value;
       mp_ImaginaryBuffer[m_CurrentIndex] = 0.0;
       ++m_CurrentIndex;
@@ -129,7 +131,7 @@ class FFT_Calculator
         m_MajorPeak = m_MyFFT->majorPeak();
         for(int i = 0; i < m_FFT_Size; ++i)
         {
-          mp_RealBuffer[i] = ( ( (2.0 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * Gain ) / m_BitLengthMaxValue;
+          mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * Gain ) / m_BitLengthMaxValue;
           if(mp_RealBuffer[i] > 1.0)
           {
             mp_RealBuffer[i] = 1.0;

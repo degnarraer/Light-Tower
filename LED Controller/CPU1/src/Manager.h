@@ -92,8 +92,8 @@ class Manager: public NamedItem
     }
 
     void SetupSerialPortManager();
-    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial1, &m_DataSerializer);
-    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
+    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial1, &m_DataSerializer, 1);
+    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, 1);
     
     void SetupTasks();
     
@@ -380,6 +380,28 @@ class Manager: public NamedItem
     static void L_Bands_ValueChanged(const String &Name, void* object, void* arg)
     {
       ESP_LOGI("L_Max_Band_ValueChanged", "L_Bands_ValueChanged Callback Called");
+    }
+
+    CallbackArguments m_PSF_CallbackArgs = {this};
+    NamedCallback_t m_PSF_Callback = {"L Bands Callback", &m_PSF_ValueChanged, &m_PSF_CallbackArgs};
+    ProcessedSoundFrame_t m_PSF_InitialValue = ProcessedSoundFrame_t();
+    DataItem<ProcessedSoundFrame_t, 1> m_PSF = DataItem<ProcessedSoundFrame_t, 1>( "PSF"
+                                                                               , m_PSF_InitialValue
+                                                                               , RxTxType_Rx_Only
+                                                                               , 0
+                                                                               , &m_CPU2SerialPortMessageManager
+                                                                               , &m_PSF_Callback
+                                                                               , this );
+    static void m_PSF_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      if(arg && object)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        assert(arguments->arg1 && "Null Pointer!");
+        Manager *manager = static_cast<Manager*>(arguments->arg1);
+        ProcessedSoundFrame_t PSF = *static_cast<ProcessedSoundFrame_t*>(object);
+        ESP_LOGI("m_PSF_ValueChanged", "R Channel Power: %f L Channel Power: %f", PSF.Channel1.NormalizedPower, PSF.Channel2.NormalizedPower);
+      }
     }
 
 };

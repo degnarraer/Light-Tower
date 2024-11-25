@@ -91,6 +91,7 @@ class Amplitude_Calculator
       {
         int32_t peakToPeak = (m_ProcessedSoundData.Maximum - m_ProcessedSoundData.Minimum);
         m_ProcessedSoundData.NormalizedPower = ((float)peakToPeak / (float)GetBitMax()) * Gain;
+        if(m_ProcessedSoundData.NormalizedPower > 1.0) m_ProcessedSoundData.NormalizedPower = 1.0;
         m_ProcessedSoundDataOutput = m_ProcessedSoundData;
         m_SolutionReady = true;
         ResetData();

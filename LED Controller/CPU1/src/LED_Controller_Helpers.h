@@ -17,14 +17,13 @@ Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
                                        , true                               // Use APLL
                                        , false                              // Fixed Clock
                                        , I2S_BUFFER_COUNT                   // Buffer Count
-                                       , I2S_SAMPLE_COUNT           // Buffer Size
+                                       , I2S_SAMPLE_COUNT                   // Buffer Size
                                        , I2S2_SCLCK_PIN                     // Serial Clock Pin
                                        , I2S2_WD_PIN                        // Word Selection Pin
                                        , I2S2_SDIN_PIN                      // Serial Data In Pin
                                        , I2S2_SDOUT_PIN );                  // Serial Data Out Pin
 
 I2S_Device m_Mic_In = I2S_Device( "Microphone"
-                                , 1                                  // Core
                                 , I2S_NUM_0                          // I2S Interface
                                 , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX)
                                 , I2S_SAMPLE_RATE
@@ -36,14 +35,13 @@ I2S_Device m_Mic_In = I2S_Device( "Microphone"
                                 , true                               // Use APLL
                                 , false                              // Fixed Clock
                                 , I2S_BUFFER_COUNT                   // Buffer Count
-                                , I2S_SAMPLE_COUNT           // Buffer Size
+                                , I2S_SAMPLE_COUNT                   // Buffer Size
                                 , I2S1_SCLCK_PIN                     // Serial Clock Pin
                                 , I2S1_WD_PIN                        // Word Selection Pin
                                 , I2S1_SDIN_PIN                      // Serial Data In Pin
                                 , I2S1_SDOUT_PIN );                  // Serial Data Out Pin
 
-I2S_Device m_I2S_Out = I2S_Device( "I2S Out"
-                                 , 1                                // Core
+I2S_Device m_I2S_Out = I2S_Device( "I2S Out"                              // Core
                                  , I2S_NUM_1                        // I2S Interface
                                  , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)
                                  , I2S_SAMPLE_RATE

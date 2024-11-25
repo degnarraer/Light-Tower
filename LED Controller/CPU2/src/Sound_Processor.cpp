@@ -57,7 +57,7 @@ void Sound_Processor::Static_Calculate_FFTs(void * parameter)
 
 void Sound_Processor::Calculate_FFTs()
 {
-  const TickType_t xFrequency = 20;
+  const TickType_t xFrequency = 100;
   m_R_FFT.ResetCalculator();
   m_L_FFT.ResetCalculator();
   while(true)
@@ -158,11 +158,10 @@ void Sound_Processor::Static_Calculate_Power(void * parameter)
 void Sound_Processor::Calculate_Power()
 {
   const TickType_t xFrequency = 20;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    
     Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
     float Gain = m_Amplitude_Gain.GetValue();
@@ -172,7 +171,7 @@ void Sound_Processor::Calculate_Power()
       bool L_Amplitude_Calculated = false;
       ProcessedSoundData_t R_PSD;
       ProcessedSoundData_t L_PSD;
-      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, Gain))
+      if(m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, Gain))
       {
         R_Amplitude_Calculated = true;
         R_PSD = m_RightSoundData.GetProcessedSoundData();
