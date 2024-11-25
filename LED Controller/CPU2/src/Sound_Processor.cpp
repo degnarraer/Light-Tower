@@ -57,10 +57,10 @@ void Sound_Processor::Static_Calculate_FFTs(void * parameter)
 
 void Sound_Processor::Calculate_FFTs()
 {
-  const TickType_t xFrequency = 500;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
+  const TickType_t xFrequency = 20;
   while(true)
   {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     m_R_FFT.ResetCalculator();
     m_L_FFT.ResetCalculator();

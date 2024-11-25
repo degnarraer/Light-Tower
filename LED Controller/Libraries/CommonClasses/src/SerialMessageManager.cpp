@@ -18,6 +18,9 @@
 
 #include "SerialMessageManager.h"
 
+//#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
+#define TIME_TO_WAIT_TO_SEND pdMS_TO_TICKS(500)
+
 void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Object_Callee_Interface* NewCallee)
 {
 	ESP_LOGD("RegisterForNewRxValueNotification", "Try Registering Callee");
@@ -113,7 +116,7 @@ bool SerialPortMessageManager::QueueMessage(const String& message)
 		if( message.length() > 0 &&
             message.length() <= MaxMessageLength &&
             message.indexOf('\0') != -1 &&
-            xQueueSend(m_TXQueue, message.c_str(), portMAX_DELAY) == pdTRUE )
+            xQueueSend(m_TXQueue, message.c_str(), TIME_TO_WAIT_TO_SEND) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());
 			result = true;
@@ -204,7 +207,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
                         ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGI("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
+					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
 					mp_Serial->println(message);
 				}
 				else

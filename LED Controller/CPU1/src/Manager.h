@@ -92,7 +92,7 @@ class Manager: public NamedItem
     }
 
     void SetupSerialPortManager();
-    SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer);
+    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial1, &m_DataSerializer);
     SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer);
     
     void SetupTasks();
@@ -321,5 +321,65 @@ class Manager: public NamedItem
                                                                                                      , &m_CPU3SerialPortMessageManager
                                                                                                      , NULL
                                                                                                      , this );
+                                                                                                     
+    CallbackArguments m_R_Max_Band_CallbackArgs = {this};
+    NamedCallback_t m_R_Max_Band_Callback = {"R Max Band Callback", &R_Max_Band_ValueChanged, &m_R_Max_Band_CallbackArgs};
+    MaxBandSoundData_t m_R_Max_Band_InitialValue = MaxBandSoundData_t();
+    DataItem<MaxBandSoundData_t, 1> m_R_Max_Band = DataItem<MaxBandSoundData_t, 1>( "R_Max_Band"
+                                                                                  , m_R_Max_Band_InitialValue
+                                                                                  , RxTxType_Rx_Only
+                                                                                  , 0
+                                                                                  , &m_CPU2SerialPortMessageManager
+                                                                                  , &m_R_Max_Band_Callback
+                                                                                  , this );
+    static void R_Max_Band_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("R_Max_Band_ValueChanged", "R_Max_Band_ValueChanged Callback Called");
+    }
+                                                                                                     
+    CallbackArguments m_R_Bands_CallbackArgs = {this};
+    NamedCallback_t m_R_Bands_Callback = {"R Bands Callback", &R_Bands_ValueChanged, &m_R_Bands_CallbackArgs};
+    float m_R_Bands_InitialValue = 0.0;
+    DataItem<float, 32> m_R_Bands = DataItem<float, 32>( "R_Bands"
+                                                       , m_R_Bands_InitialValue
+                                                       , RxTxType_Rx_Only
+                                                       , 0
+                                                       , &m_CPU2SerialPortMessageManager
+                                                       , &m_R_Bands_Callback
+                                                       , this );
+    static void R_Bands_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("R_Max_Band_ValueChanged", "R_Bands_ValueChanged Callback Called");
+    }
+
+    CallbackArguments m_L_Max_Band_CallbackArgs = {this};
+    NamedCallback_t m_L_Max_Band_Callback = {"L Max Bands Callback", &L_Max_Band_ValueChanged, &m_L_Max_Band_CallbackArgs};
+    MaxBandSoundData_t m_L_Max_Band_InitialValue = MaxBandSoundData_t();
+    DataItem<MaxBandSoundData_t, 1> m_L_Max_Band = DataItem<MaxBandSoundData_t, 1>( "L_Max_Band"
+                                                                                  , m_L_Max_Band_InitialValue
+                                                                                  , RxTxType_Rx_Only
+                                                                                  , 0
+                                                                                  , &m_CPU2SerialPortMessageManager
+                                                                                  , &m_L_Max_Band_Callback
+                                                                                  , this );
+    static void L_Max_Band_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("L_Max_Band_ValueChanged", "L_Max_Band_ValueChanged Callback Called");
+    }
+                                                                                 
+    CallbackArguments m_L_Bands_CallbackArgs = {this};
+    NamedCallback_t m_L_Bands_Callback = {"L Bands Callback", &L_Bands_ValueChanged, &m_L_Bands_CallbackArgs};
+    float m_L_Bands_InitialValue = 0.0;
+    DataItem<float, 32> m_L_Bands = DataItem<float, 32>( "L_Bands"
+                                                       , m_L_Bands_InitialValue
+                                                       , RxTxType_Rx_Only
+                                                       , 0
+                                                       , &m_CPU2SerialPortMessageManager
+                                                       , &m_L_Bands_Callback
+                                                       , this );
+    static void L_Bands_ValueChanged(const String &Name, void* object, void* arg)
+    {
+      ESP_LOGI("L_Max_Band_ValueChanged", "L_Bands_ValueChanged Callback Called");
+    }
 
 };
