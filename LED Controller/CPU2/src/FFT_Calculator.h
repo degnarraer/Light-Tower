@@ -114,13 +114,27 @@ class FFT_Calculator
     }
     bool PushValueAndCalculateNormalizedFFT(int32_t value, float Gain)
     {
+      if (!mp_RealBuffer || !mp_ImaginaryBuffer || !m_MyFFT) 
+      {
+        Serial.println("Error: Buffers or FFT object not initialized.");
+        return false;
+      }
+
+      if (m_BitLengthMaxValue == 0) 
+      {
+        Serial.println("Error: m_BitLengthMaxValue is zero.");
+        return false;
+      }
+
       m_SolutionReady = false;
       m_MaxFFTBinValue = 0;
       m_MaxFFTBinIndex = 0;
+
       mp_RealBuffer[m_CurrentIndex] = value;
       mp_ImaginaryBuffer[m_CurrentIndex] = 0.0;
       ++m_CurrentIndex;
-      if(m_CurrentIndex >= m_FFT_Size)
+
+      if (m_CurrentIndex >= m_FFT_Size) 
       {
         m_CurrentIndex = 0;
         m_MaxFFTBinValue = 0;
@@ -129,23 +143,24 @@ class FFT_Calculator
         m_MyFFT->compute(FFTDirection::Forward);
         m_MyFFT->complexToMagnitude();
         m_MajorPeak = m_MyFFT->majorPeak();
-        for(int i = 0; i < m_FFT_Size; ++i)
+        for (int i = 0; i < m_FFT_Size; ++i) 
         {
-          mp_RealBuffer[i] = ( ( (2 * mp_RealBuffer[i]) / (float)m_FFT_Size ) * Gain ) / m_BitLengthMaxValue;
-          if(mp_RealBuffer[i] > 1.0)
-          {
-            mp_RealBuffer[i] = 1.0;
-          }
-          if(i < m_FFT_Size/2 && mp_RealBuffer[i] > m_MaxFFTBinValue)
-          {
-            m_MaxFFTBinValue = mp_RealBuffer[i];
-            m_MaxFFTBinIndex = i;
-          }
+            mp_RealBuffer[i] = ((2 * mp_RealBuffer[i]) / (float)m_FFT_Size) * Gain / m_BitLengthMaxValue;
+            if (mp_RealBuffer[i] > 1.0) 
+            {
+                mp_RealBuffer[i] = 1.0;
+            }
+            if (i < m_FFT_Size / 2 && mp_RealBuffer[i] > m_MaxFFTBinValue)
+            {
+                m_MaxFFTBinValue = mp_RealBuffer[i];
+                m_MaxFFTBinIndex = i;
+            }
         }
         m_SolutionReady = true;
       }
       return m_SolutionReady;
-    }
+  }
+
   private:
     int32_t m_CurrentIndex = 0;
     int32_t m_FFT_Size = 0;

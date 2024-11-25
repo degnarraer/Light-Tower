@@ -64,11 +64,15 @@ class DataSerializer: public CommonUtils
 			m_SerializeDoc[m_CheckSumTag] = CheckSum;
 			return JSON.stringify(m_SerializeDoc);
 		}
+		
 		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 			bool deserialized = false;
+
+			// Parse the JSON
 			m_DeserializeDoc = JSON.parse(json);
+
 			if (JSON.typeof(m_DeserializeDoc) == "undefined")
 			{
 				++m_FailCount;
@@ -78,102 +82,170 @@ class DataSerializer: public CommonUtils
 			}
 			else
 			{
-				if(AllTagsExist(m_DeserializeDoc))
+				if (AllTagsExist(m_DeserializeDoc)) // Check all tags before proceeding
 				{
+					// Extract necessary values
 					const String Name = m_DeserializeDoc[m_NameTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Name: %s", Name.c_str());
 					NamedObject.Name = Name;
+
 					size_t CheckSumCalc = 0;
 					size_t CheckSumIn = m_DeserializeDoc[m_CheckSumTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Sum: %i", CheckSumIn);
+
 					size_t CountIn = m_DeserializeDoc[m_CountTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Object Count: %i", CountIn);
+
 					size_t ChangeCountIn = m_DeserializeDoc[m_ChangeCountTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Change Count: %i", ChangeCountIn);
 					NamedObject.ChangeCount = ChangeCountIn;
+
 					size_t ByteCountIn = m_DeserializeDoc[m_TotalByteCountTag];
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Byte Count: %i", ByteCountIn);
+
 					DataType_t DataType = GetDataTypeFromString(m_DeserializeDoc[m_DataTypeTag]);
-					ESP_LOGD("DeSerializeJsonToNamedObject", "DataType: %i", DataType);	
+					ESP_LOGD("DeSerializeJsonToNamedObject", "DataType: %i", DataType);
+
 					size_t ActualDataCount = m_DeserializeDoc[m_DataTag].length();
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Count: %i", ActualDataCount);
+
 					size_t ObjectByteCount = GetSizeOfDataType(DataType);
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Byte Count: %i", ObjectByteCount);
-					//This memory needs deleted by caller of function.
-					uint8_t *Buffer = (uint8_t*)malloc(sizeof(uint8_t)* ByteCountIn);								
-					if( ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount )
+
+					// Allocate buffer to store deserialized data
+					uint8_t *Buffer = (uint8_t *)malloc(sizeof(uint8_t) * ByteCountIn); // Raw pointer allocation
+					if (Buffer == nullptr)
 					{
-						for(int j = 0; j < CountIn; ++j)
+						ESP_LOGW("DeSerializeJsonToNamedObject", "Memory allocation failed for Buffer");
+						NamedObject.Object = nullptr; // Set Object to nullptr if allocation fails
+						++m_FailCount;
+						return deserialized;
+					}
+
+					// Ensure the deserialized data is valid
+					if (ActualDataCount == CountIn && ByteCountIn == ActualDataCount * ObjectByteCount)
+					{
+						// Process the data and calculate checksum
+						for (int j = 0; j < CountIn; ++j)
 						{
 							String BytesString = m_DeserializeDoc[m_DataTag][j];
-							for(int k = 0; k < ObjectByteCount; ++k)
+							for (int k = 0; k < ObjectByteCount; ++k)
 							{
-								size_t startIndex = 2*k;
+								size_t startIndex = 2 * k;
 								char hexArray[2];
-								strcpy(hexArray, BytesString.substring(startIndex,startIndex+2).c_str());
+								strcpy(hexArray, BytesString.substring(startIndex, startIndex + 2).c_str());
 								long decValue = strtol(String(hexArray).c_str(), NULL, 16);
 								CheckSumCalc += decValue;
 								Buffer[j * ObjectByteCount + k] = decValue;
 							}
-							ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Sum: %i", CheckSumCalc);
 						}
-						if(CheckSumCalc == CheckSumIn)
+						ESP_LOGD("DeSerializeJsonToNamedObject", "Calculated Checksum: %i", CheckSumCalc);
+
+						// Check if the calculated checksum matches the expected checksum
+						if (CheckSumCalc == CheckSumIn)
 						{
-							ESP_LOGD("DeSerializeJsonToNamedObject", "Setting Buffer");
-							NamedObject.Object = Buffer;
+							ESP_LOGD("DeSerializeJsonToNamedObject", "Checksum matched, setting buffer");
+							NamedObject.Object = Buffer; // Assign the buffer to NamedObject
 							deserialized = true;
-							ESP_LOGD("DeSerializeJsonToNamedObject", "Buffer Set");
+							ESP_LOGD("DeSerializeJsonToNamedObject", "Buffer set successfully");
 						}
 						else
 						{
-							ESP_LOGD("DeSerializeJsonToNamedObject", "CheckSumCalc Did Not Match!");
-							free(Buffer);
+							ESP_LOGD("DeSerializeJsonToNamedObject", "Checksum mismatch!");
+							free(Buffer); // Free buffer if checksum does not match
 							NamedObject.Object = nullptr;
 							++m_FailCount;
-							ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Checksum Error\" Value: \"(%i != %i)\"", CheckSumCalc, CheckSumIn);
+							ESP_LOGW("DeSerializeJsonToNamedObject", "Checksum error: (%i != %i)", CheckSumCalc, CheckSumIn);
 						}
 					}
 					else
 					{
+						// Byte count or object count mismatch
 						++m_FailCount;
 						NamedObject.Object = nullptr;
-						ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: Byte Count Error.");
+						ESP_LOGW("DeSerializeJsonToNamedObject", "Byte count or object count mismatch.");
 					}
 				}
 				else
 				{
+					// Missing or invalid tags
 					++m_FailCount;
 					NamedObject.Object = nullptr;
-					ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Deserialize failed: \"Missing Tags\" Input: \"%s\"", json.c_str());
+					ESP_LOGW("DeSerializeJsonToNamedObject", "Missing or invalid tags in input: %s", json.c_str());
 				}
 			}
+
 			FailPercentage();
 			return deserialized;
 		}
-		virtual void FailPercentage()
+
+		bool isHexadecimal(const String &str)
+		{
+			for (char c : str)
+			{
+				if (!isxdigit(c))
+					return false;
+			}
+			return true;
+		}
+
+		void FailPercentage()
 		{
 			m_CurrentTime = millis();
 			++m_TotalCount;
-			if(m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
+			if (m_CurrentTime - m_FailCountTimer >= m_FailCountDuration)
 			{
 				m_FailCountTimer = m_CurrentTime;
 				ESP_LOGD("Serial_Datalink", "Deserialization Failure Percentage: %f", 100.0 * (float)m_FailCount / (float)m_TotalCount);
 				m_FailCount = 0;
 				m_TotalCount = 0;
-			}	
-		}
-		virtual bool AllTagsExist(JSONVar &jsonObject)
-		{
-			const String tags[] = {m_NameTag, m_CheckSumTag, m_CountTag, m_ChangeCountTag, m_DataTag, m_DataTypeTag, m_TotalByteCountTag};
-			bool result = true;
-			for (const String& tag : tags) {
-				if (!jsonObject.hasOwnProperty(tag)) {
-					ESP_LOGW("AllTagsExist", "WARNING! Missing Tag: \"%s\"", tag.c_str());
-					result = false;
-				}
 			}
-			return result;
 		}
+
+		bool AllTagsExist(JSONVar &doc)
+		{
+			// Check if all required tags are present and valid
+			if (!doc.hasOwnProperty(m_NameTag) || doc[m_NameTag] == nullptr)
+			{
+				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_NameTag.c_str());
+				return false;
+			}
+
+			if (!doc.hasOwnProperty(m_CheckSumTag) || doc[m_CheckSumTag] == nullptr)
+			{
+				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_CheckSumTag.c_str());
+				return false;
+			}
+
+			if (!doc.hasOwnProperty(m_CountTag) || doc[m_CountTag] == nullptr)
+			{
+				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_CountTag.c_str());
+				return false;
+			}
+
+			if (!doc.hasOwnProperty(m_ChangeCountTag) || doc[m_ChangeCountTag] == nullptr)
+			{
+				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_ChangeCountTag.c_str());
+				return false;
+			}
+
+			if (!doc.hasOwnProperty(m_TotalByteCountTag) || doc[m_TotalByteCountTag] == nullptr)
+			{
+				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_TotalByteCountTag.c_str());
+				return false;
+			}
+
+			if (!doc.hasOwnProperty(m_DataTag) || doc[m_DataTag] == nullptr)
+			{
+				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_DataTag.c_str());
+				return false;
+			}
+
+			// If all tags are valid
+			return true;
+		}
+
+
 	private:
 		size_t m_TotalCount = 0;
 		size_t m_FailCount = 0;

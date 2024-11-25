@@ -94,19 +94,40 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String& s
   return SignalFound;
 }
 
-void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(std::vector<KVP> &keyValuePairs, String &result)
+void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP> &keyValuePairs, String &result)
 {
-    JSONVar jsonArray;
-    for (int i = 0; i < keyValuePairs.size(); ++i)
+    if (keyValuePairs.empty())
     {
+        result = "[]";
+        return;
+    }
+
+    JSONVar jsonArray;
+
+    for (size_t i = 0; i < keyValuePairs.size(); ++i)
+    {
+        if (keyValuePairs[i].Key.isEmpty() || keyValuePairs[i].Value.isEmpty())
+        {
+            ESP_LOGW("Encode_Signal_Values_To_JSON", "WARNING! Key or Value is empty at index %i", i);
+            continue;
+        }
+
         JSONVar settingValues;
-        settingValues["Id"] = keyValuePairs.at(i).Key;
-        settingValues["Value"] = keyValuePairs.at(i).Value;
+        settingValues["Id"] = keyValuePairs[i].Key;
+        settingValues["Value"] = keyValuePairs[i].Value;
+
         jsonArray[i] = settingValues;
     }
 
     result = JSON.stringify(jsonArray);
+
+    if (result.isEmpty())
+    {
+        ESP_LOGE("Encode_Signal_Values_To_JSON", "ERROR! Failed to serialize JSON array.");
+        result = "[]";
+    }
 }
+
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String& textString)
 {

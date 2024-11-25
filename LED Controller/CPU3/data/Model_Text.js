@@ -61,8 +61,11 @@ export class Model_Text {
                 Root.SignalValue.Id = signal.toString();
                 Root.SignalValue.Value = value.toString();
                 var Message = JSON.stringify(Root);
-                console.log('ESP32 Web Socket Tx: \'' + Message + '\'');
-                this.wsManager.send(Message);
+                if (!Root.isNull())
+                {
+                    console.log('ESP32 Web Socket Tx: \'' + Message + '\'');
+                    this.wsManager.send(Message);
+                }
             } else {
                 console.error('Invalid Call to Update_Signal_Value_To_Web_Socket!');
             }

@@ -86,7 +86,7 @@ class WebSocketDataProcessor
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
     std::recursive_mutex m_Tx_KeyValues_Mutex;
     void WebSocketDataProcessor_WebSocket_TxTask();
-    void Encode_Signal_Values_To_JSON(std::vector<KVP> &signalValue, String &result);
+    void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, String &result);
     void NotifyClient(uint8_t clientID, const String& textString);
     void NotifyClients(const String& textString);
 
