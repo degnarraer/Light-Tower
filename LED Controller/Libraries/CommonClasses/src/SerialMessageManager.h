@@ -208,7 +208,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		SerialPortMessageManager( const String& name
 								, HardwareSerial *serial
 								, DataSerializer *dataSerializer
-								, BaseType_t coreId = 1 )
+								, BaseType_t coreId )
 								: m_Name(name)
 								, mp_Serial(serial)
 								, mp_DataSerializer(dataSerializer)

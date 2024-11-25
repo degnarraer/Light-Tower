@@ -40,7 +40,6 @@ class I2S_Device: public NamedItem
 {
   public:
     I2S_Device( String Title
-              , BaseType_t Core
               , i2s_port_t i2S_PORT
               , i2s_mode_t Mode
               , int SampleRate
@@ -70,7 +69,6 @@ class I2S_Device: public NamedItem
     size_t ReadSoundBufferData(uint8_t *SoundBufferData, size_t ByteCount);
 
   private:
-		BaseType_t m_Core = 0;
     DataItemConfig_t* m_ItemConfig = NULL;
     const i2s_port_t m_I2S_PORT;
     const int m_SampleRate;

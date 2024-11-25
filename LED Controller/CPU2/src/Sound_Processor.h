@@ -48,11 +48,10 @@ class Sound_Processor: public NamedItem
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
     FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
-
-    
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     IPreferences& m_Preferences;
+    bool m_BufferReadError = false;
 
     const float m_Amplitude_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_Amplitude_Gain = DataItemWithPreferences<float, 1>( "Amp_Gain"
@@ -108,6 +107,15 @@ class Sound_Processor: public NamedItem
                                                        , &m_CPU1SerialPortMessageManager
                                                        , NULL
                                                        , this );
+
+    ProcessedSoundFrame_t PSF_InitialValue = ProcessedSoundFrame_t();
+    DataItem<ProcessedSoundFrame_t, 1> PSF = DataItem<ProcessedSoundFrame_t, 1>( "PSF"
+                                                                               , PSF_InitialValue
+                                                                               , RxTxType_Tx_On_Change
+                                                                               , 0
+                                                                               , &m_CPU1SerialPortMessageManager
+                                                                               , NULL
+                                                                               , this );
     
     //DB Conversion taken from INMP441 Datasheet
     float m_IMNP441_1PA_Offset = 94;          //DB Output at 1PA

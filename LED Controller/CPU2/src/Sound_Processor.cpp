@@ -38,11 +38,11 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::Setup()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  if( xTaskCreatePinnedToCore( Static_Calculate_FFTs, "ProcessFFTTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessFFTTask, 1 ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_FFTs, "ProcessFFTTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessFFTTask, 0 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
-  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "ProcessSoundPowerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask,   1 ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "ProcessSoundPowerTask", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask,   0 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
@@ -58,81 +58,97 @@ void Sound_Processor::Static_Calculate_FFTs(void * parameter)
 void Sound_Processor::Calculate_FFTs()
 {
   const TickType_t xFrequency = 20;
+  m_R_FFT.ResetCalculator();
+  m_L_FFT.ResetCalculator();
   while(true)
   {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    m_R_FFT.ResetCalculator();
-    m_L_FFT.ResetCalculator();
-    bool R_FFT_Calculated = false;
-    bool L_FFT_Calculated = false;
-    Frame_t Buffer[FFT_SIZE];
-    size_t ReadFrames = m_AudioBuffer.GetAudioFrames(Buffer, FFT_SIZE);
-    float fftGain = m_FFT_Gain.GetValue();
-    for(int i = 0; i < ReadFrames; ++i)
+    if(m_AudioBuffer.Size() >= FFT_SIZE)
     {
-      if(m_R_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel1, fftGain))
+      Frame_t Buffer[FFT_SIZE];
+      size_t readFrameCount = m_AudioBuffer.GetAudioFrames(Buffer, FFT_SIZE);
+      if(readFrameCount == FFT_SIZE )
       {
-        Update_Right_Bands_And_Send_Result();
-        R_FFT_Calculated = true;
+        if(m_BufferReadError) ESP_LOGW("Calculate_FFTs", "Successfully Read Buffer.");
+        m_BufferReadError = false;
+        float fftGain = m_FFT_Gain.GetValue();
+        ESP_LOGW("Calculate_FFTs", "Read Buffer Size: %i  FFT_Gain: %f.", readFrameCount, fftGain);
+        for(int i = 0; i < readFrameCount; ++i)
+        {
+          if( m_R_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel1, fftGain) )
+          {
+            Update_Right_Bands_And_Send_Result();
+            m_R_FFT.ResetCalculator();
+          }
+          if( m_L_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel2, fftGain) )
+          {
+            Update_Left_Bands_And_Send_Result();
+            m_L_FFT.ResetCalculator();
+          }
+        }
       }
-      if(m_L_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel2, fftGain))
+      else
       {
-        Update_Left_Bands_And_Send_Result();
-        L_FFT_Calculated = true;
+        if(!m_BufferReadError) ESP_LOGE("Calculate_FFTs", "WARNING! Read Buffer Error.");
+        m_BufferReadError = true;
       }
-      assert(R_FFT_Calculated == L_FFT_Calculated); 
     }
   }
 }
 
 void Sound_Processor::Update_Right_Bands_And_Send_Result()
 {
-    float R_Bands_DataBuffer[32] = {0.0};
+    String message;
+    float R_Bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
     MaxBandSoundData_t R_MaxBand;
     float MaxBandMagnitude = 0.0;
     int16_t MaxBandIndex = 0;
 
-    ESP_LOGI("Sound_Processor", "Updating Right Channel FFT Bands");
     AssignToBands(R_Bands_DataBuffer, &m_R_FFT, FFT_SIZE);
-    for(size_t i = 0; i < 32; ++i)
+    for(size_t i = 0; i < NUMBER_OF_BANDS; ++i)
     {
+      if(i != 0) message += "|";
+      message += String(R_Bands_DataBuffer[i]);
       if(R_Bands_DataBuffer[i] > MaxBandMagnitude)
       {
         MaxBandMagnitude = R_Bands_DataBuffer[i];
         MaxBandIndex = i;
       }
     }
-    m_R_Bands.SetValue(R_Bands_DataBuffer, 32);
+    ESP_LOGW("Update_Right_Bands_And_Send_Result", "Right Bands: %s", message.c_str());
+    m_R_Bands.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
     R_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     R_MaxBand.MaxBandIndex = MaxBandIndex;
-    R_MaxBand.TotalBands = 32;
+    R_MaxBand.TotalBands = NUMBER_OF_BANDS;
     m_R_Max_Band.SetValue(R_MaxBand);
 }
 void Sound_Processor::Update_Left_Bands_And_Send_Result()
 {
-    float L_Bands_DataBuffer[32] = {0.0};
+    String message;
+    float L_Bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
     MaxBandSoundData_t L_MaxBand;
     float MaxBandMagnitude = 0.0;
     int16_t MaxBandIndex = 0;
 
-    ESP_LOGI("Sound_Processor", "Updating Left Channel FFT Bands");
     AssignToBands(L_Bands_DataBuffer, &m_L_FFT, FFT_SIZE);
-    for(size_t i = 0; i < 32; ++i)
+    for(size_t i = 0; i < NUMBER_OF_BANDS; ++i)
     {
+      if(i != 0) message += "|";
+      message += String(L_Bands_DataBuffer[i]);
       if(L_Bands_DataBuffer[i] > MaxBandMagnitude)
       {
         MaxBandMagnitude = L_Bands_DataBuffer[i];
         MaxBandIndex = i;
       }
     }
-    m_L_Bands.SetValue(L_Bands_DataBuffer, 32);
+    ESP_LOGW("Update_Right_Bands_And_Send_Result", "Left Bands: %s", message.c_str());
+    m_L_Bands.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
     L_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     L_MaxBand.MaxBandIndex = MaxBandIndex;
-    L_MaxBand.TotalBands = 32;
+    L_MaxBand.TotalBands = NUMBER_OF_BANDS;
     m_L_Max_Band.SetValue(L_MaxBand);
 }
-
 
 void Sound_Processor::Static_Calculate_Power(void * parameter)
 {
@@ -146,26 +162,22 @@ void Sound_Processor::Calculate_Power()
   while(true)
   {
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    /*
-    size_t PSF_ByteCount = m_SPIDataLinkToCPU1.GetTotalByteCountForDataItem("Processed_Frame");
-    size_t PSF_SampleCount = m_SPIDataLinkToCPU1.GetSampleCountForDataItem("Processed_Frame");
-    assert(1 == PSF_SampleCount);
-    assert(sizeof(ProcessedSoundFrame_t) == PSF_ByteCount);
     
     Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
     size_t ReadFrames = m_AudioBuffer.GetAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
+    float Gain = m_Amplitude_Gain.GetValue();
     for(int i = 0; i < ReadFrames; ++i)
     {
       bool R_Amplitude_Calculated = false;
       bool L_Amplitude_Calculated = false;
       ProcessedSoundData_t R_PSD;
       ProcessedSoundData_t L_PSD;
-      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, m_Gain))
+      if(true == m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, Gain))
       {
         R_Amplitude_Calculated = true;
         R_PSD = m_RightSoundData.GetProcessedSoundData();
       }
-      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, m_Gain))
+      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, Gain))
       {
         L_Amplitude_Calculated = true;
         L_PSD = m_LeftSoundData.GetProcessedSoundData();
@@ -173,18 +185,17 @@ void Sound_Processor::Calculate_Power()
       assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
       if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
       {
-        ProcessedSoundFrame_t PSF;
-        PSF.Channel1 = R_PSD;
-        PSF.Channel2 = L_PSD;
-        static bool PSF_Push_Successful = true;
-        PushValueToQueue(&PSF, QueueOut, "Processed Sound Frame: Processed_Frame", 0, PSF_Push_Successful);
+        ProcessedSoundFrame_t PSF_Temp;
+        PSF_Temp.Channel1 = R_PSD;
+        PSF_Temp.Channel2 = L_PSD;
+        PSF.SetValue(PSF_Temp);
       }
     }
-    */
   }
 }
 void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size)
 {
+  String output = "";
   for(int i = 0; i < FFT_Size/2; ++i)
   {
     float magnitude = FFT_Calculator->GetFFTBufferValue(i);
@@ -231,6 +242,12 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
       Band_Data[bandIndex] = 1.0;
     }
   }
+  for(int i = 0; i < 32; ++i)
+  {
+    if(i!=0) output += "|";
+    output += String(Band_Data[i]); 
+  }
+  ESP_LOGI("AssignToBands", "Band Data: %s", output.c_str());
 }
 
 float Sound_Processor::GetFreqForBin(int Bin)

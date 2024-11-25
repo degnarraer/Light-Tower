@@ -410,48 +410,38 @@ struct BT_Device_Info_With_Time_Since_Update
 
 		static BT_Device_Info_With_Time_Since_Update fromString(const std::string &str)
         {
-            const std::string delimiter = ENCODE_VALUE_DIVIDER; // Assuming ENCODE_VALUE_DIVIDER is a string or char
-            size_t delimiterIndex = str.find(delimiter);
-            
-            if (delimiterIndex == std::string::npos)
+            const std::string delimiter = ENCODE_VALUE_DIVIDER;
+            std::vector<std::string> fields;
+            size_t start = 0, delimiterIndex;
+
+            while ((delimiterIndex = str.find(delimiter, start)) != std::string::npos)
             {
-                return BT_Device_Info_With_Time_Since_Update();  // Return default if delimiter not found
+                fields.push_back(str.substr(start, delimiterIndex - start));
+                start = delimiterIndex + delimiter.length();
             }
+            fields.push_back(str.substr(start));
 
-            // Extract name
-            std::string name = str.substr(0, delimiterIndex);
-
-            // Find the next delimiter for the address
-            size_t nextDelimiterIndex = str.find(delimiter, delimiterIndex + delimiter.length());
-            if (nextDelimiterIndex == std::string::npos)
+            if (fields.size() != 4)
             {
                 return BT_Device_Info_With_Time_Since_Update();
             }
 
-            // Extract address
-            std::string address = str.substr(delimiterIndex + delimiter.length(), nextDelimiterIndex - delimiterIndex - delimiter.length());
+            try
+            {
+                const std::string& name = fields[0];
+                const std::string& address = fields[1];
+                int32_t rssi = std::stoi(fields[2]);
+                uint32_t timeSinceUpdate = std::stoul(fields[3]);
 
-            // Find the next delimiter for RSSI
-            size_t nextDelimiterIndex2 = str.find(delimiter, nextDelimiterIndex + delimiter.length());
-            if (nextDelimiterIndex2 == std::string::npos)
+                return BT_Device_Info_With_Time_Since_Update(name.c_str(), address.c_str(), rssi, timeSinceUpdate);
+            }
+            catch (const std::exception &e)
             {
                 return BT_Device_Info_With_Time_Since_Update();
             }
-
-            // Extract RSSI
-            std::string rssiStr = str.substr(nextDelimiterIndex + delimiter.length(), nextDelimiterIndex2 - nextDelimiterIndex - delimiter.length());
-            int32_t rssi = std::stoi(rssiStr);
-
-            // Extract timeSinceUpdate (assuming it's the last part of the string)
-            std::string timeSinceUpdateStr = str.substr(nextDelimiterIndex2 + delimiter.length());
-            uint32_t timeSinceUpdate = std::stoul(timeSinceUpdateStr);
-
-            // Create and return the BT_Device_Info_With_Time_Since_Update object without lastUpdateTime
-            return BT_Device_Info_With_Time_Since_Update(name.c_str(), address.c_str(), rssi, timeSinceUpdate);
         }
 
 
-		
 		friend std::istream& operator>>(std::istream& is, BT_Device_Info_With_Time_Since_Update& device) {
 			std::string str;
 			std::getline(is, str);
@@ -459,7 +449,6 @@ struct BT_Device_Info_With_Time_Since_Update
 			return is;
 		}
 
-		
 		friend std::ostream& operator<<(std::ostream& os, const BT_Device_Info_With_Time_Since_Update& device) {
 			os << device.toString().c_str();
 			return os;
@@ -532,7 +521,10 @@ struct  BluetoothDevice_t
 
             std::string name = str.substr(0, delimiterIndex);
             std::string address = str.substr(delimiterIndex + delimiter.length());
-
+            if (name.empty() || address.empty())
+            {
+                return BluetoothDevice_t(); // Return a default object if fields are invalid
+            }
             return BluetoothDevice_t(name.c_str(), address.c_str());
         }
 
@@ -579,14 +571,12 @@ class SoundInputSource
             return OFF;
         }
 
-        
         friend std::ostream& operator<<(std::ostream& os, const SoundInputSource::Value& value) {
             String result = SoundInputSource::ToString(value);
             ESP_LOGD("SoundInputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result.c_str());
             os << result.c_str();
             return os;
         }
-        
         
         friend std::istream& operator>>(std::istream& is, SoundInputSource::Value& value) 
         {
@@ -627,14 +617,12 @@ class SoundOutputSource
             return OFF;
         }
 
-        
         friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
             String result = SoundOutputSource::ToString(value);
             ESP_LOGD("SoundOutputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result.c_str());
             os << result.c_str();
             return os;
         }
-        
         
         friend std::istream& operator>>(std::istream& is, SoundOutputSource::Value& value) 
         {
@@ -656,7 +644,6 @@ class Mute_State
             Mute_State_Muted = 1
         };
 
-        
         static String ToString(Value state)
         {
             switch (state)
@@ -667,7 +654,6 @@ class Mute_State
             }
         }
 
-        
         static Value FromString(const String& str)
         {
             if (str == "Mute_State_Un_Muted") return Mute_State_Un_Muted;
@@ -675,7 +661,6 @@ class Mute_State
             return Mute_State_Un_Muted;
         }
 
-        
         friend std::istream& operator>>(std::istream& is, Mute_State::Value& value) 
         {
             std::string token;
@@ -683,7 +668,6 @@ class Mute_State
             value = Mute_State::FromString(token.c_str());
             return is;
         }
-        
         
         friend std::ostream& operator<<(std::ostream& os, const Mute_State::Value& value) {
             os << Mute_State::ToString(value).c_str();
@@ -755,7 +739,6 @@ class SoundState
             Sound_Level11_Detected = 12
         };
 
-        
         static String ToString(Value state)
         {
             switch (state)
@@ -777,7 +760,6 @@ class SoundState
             }
         }
 
-        
         static Value FromString(const String& str)
         {
             if (str == "LastingSilenceDetected")    return LastingSilenceDetected;
@@ -796,7 +778,6 @@ class SoundState
             return  LastingSilenceDetected;
         }
 
-        
         friend std::istream& operator>>(std::istream& is, SoundState::Value& value) 
         {
             std::string token;
@@ -804,7 +785,6 @@ class SoundState
             value = SoundState::FromString(token.c_str());
             return is;
         }
-        
         
         friend std::ostream& operator<<(std::ostream& os, const SoundState::Value& value) {
             os << SoundState::ToString(value).c_str();
@@ -824,7 +804,6 @@ class Transciever
             Transciever_TXRX = 3
         };
 
-        
         static String ToString(Value transciever)
         {
             switch (transciever)
@@ -837,7 +816,6 @@ class Transciever
             }
         }
 
-        
         static Value FromString(const String& str)
         {
             if (str == "Transciever_None") return Transciever_None;
@@ -848,7 +826,6 @@ class Transciever
             return Transciever_None; // Default or error value
         }
 
-        
         friend std::istream& operator>>(std::istream& is, Transciever::Value& value) 
         {
             std::string token;
@@ -856,7 +833,6 @@ class Transciever
             value = Transciever::FromString(token.c_str());
             return is;
         }
-        
         
         friend std::ostream& operator<<(std::ostream& os, const Transciever::Value& value) {
             os << Transciever::ToString(value).c_str();
@@ -958,7 +934,6 @@ public:
         Unknown = 2
     };
 
-    
     static String ToString(Value status)
     {
         switch (status)
@@ -969,7 +944,6 @@ public:
         }
     }
 
-    
     static Value FromString(const String& str)
     {
         if (str == "Station") return Station;
@@ -977,7 +951,6 @@ public:
         return Unknown; // Default or error value
     }
 
-    
 	friend std::istream& operator>>(std::istream& is, Wifi_Mode::Value& value) 
 	{
 		std::string token;
@@ -985,7 +958,6 @@ public:
 		value = Wifi_Mode::FromString(token.c_str());
 		return is;
 	}
-    
     
     friend std::ostream& operator<<(std::ostream& os, const Wifi_Mode::Value& value) {
         ESP_LOGD("operator<<", "Wifi Mode to String: \"%s\"", Wifi_Mode::ToString(value).c_str());
@@ -1120,9 +1092,84 @@ struct ProcessedSoundData_t
 	float NormalizedPower;
 	int32_t Minimum;
 	int32_t Maximum;
+
+    ProcessedSoundData_t()
+    {
+        NormalizedPower = 0.0;
+        Minimum = 0;
+        Maximum = 0;
+    }
+
+    ProcessedSoundData_t(float NormalizedPower_In, int32_t Minimum_In, int32_t Maximum_In)
+    {
+        NormalizedPower = NormalizedPower_In;
+        Minimum = Minimum_In;
+        Maximum = Maximum_In;
+    }
     bool operator==(const ProcessedSoundData_t& other) const
     {
         return this->NormalizedPower == other.NormalizedPower && this->Minimum == other.Minimum && this->Maximum == other.Maximum;
+    }
+
+    bool operator!=(const ProcessedSoundData_t& other) const
+    {
+        return !(*this == other);
+    }
+
+    operator String() const
+    {
+        return toString();
+    }
+
+    String toString() const
+    {
+        return String(NormalizedPower) + ENCODE_VALUE_DIVIDER + String(Minimum) + ENCODE_VALUE_DIVIDER + String(Maximum);
+    }
+    
+    static ProcessedSoundData_t fromString(const std::string &str)
+    {
+        const std::string delimiter = ENCODE_VALUE_DIVIDER;
+        std::vector<std::string> fields;
+        size_t start = 0, delimiterIndex;
+
+        // Split the string into fields using the delimiter
+        while ((delimiterIndex = str.find(delimiter, start)) != std::string::npos)
+        {
+            fields.push_back(str.substr(start, delimiterIndex - start));
+            start = delimiterIndex + delimiter.length();
+        }
+        fields.push_back(str.substr(start)); // Add the last field
+
+        // Ensure we have exactly three fields
+        if (fields.size() != 3)
+        {
+            return ProcessedSoundData_t(); // Return default object on failure
+        }
+
+        try
+        {
+            float NormalizedPower = std::stof(fields[0]);
+            int32_t Minimum = std::stoi(fields[1]);
+            int32_t Maximum = std::stoi(fields[2]);
+
+            return ProcessedSoundData_t(NormalizedPower, Minimum, Maximum);
+        }
+        catch (const std::exception &e)
+        {
+            return ProcessedSoundData_t();
+        }
+    }
+
+    friend std::istream& operator>>(std::istream& is, ProcessedSoundData_t& psd) {
+        std::string str;
+        std::getline(is, str);
+        psd = ProcessedSoundData_t::fromString(str);
+        return is;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const ProcessedSoundData_t& psd) {
+        os << psd.toString().c_str();
+        return os;
     }
 };
 
@@ -1130,9 +1177,83 @@ struct ProcessedSoundFrame_t
 {
 	ProcessedSoundData_t Channel1;
 	ProcessedSoundData_t Channel2;
+    ProcessedSoundFrame_t()
+    {
+        Channel1 = ProcessedSoundData_t();
+        Channel2 = ProcessedSoundData_t();
+    }
+
+    ProcessedSoundFrame_t(ProcessedSoundData_t Channel1_In, ProcessedSoundData_t Channel2_In)
+    {
+        Channel1_In = Channel1_In;
+        Channel2_In = Channel2_In;
+    }
+
     bool operator==(const ProcessedSoundFrame_t& other) const
     {
         return this->Channel1 == other.Channel1 && this->Channel2 == other.Channel2;
+    }
+
+    bool operator!=(const ProcessedSoundFrame_t& other) const
+    {
+        return !(*this == other);
+    }
+
+    operator String() const
+    {
+        return toString();
+    }
+
+    String toString() const
+    {
+        return String(Channel1) + ENCODE_VALUE_DIVIDER + String(Channel2);
+    }
+    
+    static ProcessedSoundFrame_t fromString(const std::string &str)
+    {
+        const std::string delimiter = ENCODE_VALUE_DIVIDER;
+        std::vector<std::string> fields;
+        size_t start = 0, delimiterIndex;
+
+        // Split the string into fields using the delimiter
+        while ((delimiterIndex = str.find(delimiter, start)) != std::string::npos)
+        {
+            fields.push_back(str.substr(start, delimiterIndex - start));
+            start = delimiterIndex + delimiter.length();
+        }
+        fields.push_back(str.substr(start)); // Add the last field
+
+        // Ensure we have exactly two fields
+        if (fields.size() != 2)
+        {
+            return ProcessedSoundFrame_t(); // Return default object on failure
+        }
+
+        try
+        {
+            // Parse the fields into respective types
+            ProcessedSoundData_t channel1 = ProcessedSoundData_t::fromString(fields[0]);
+            ProcessedSoundData_t channel2 = ProcessedSoundData_t::fromString(fields[1]);
+
+            return ProcessedSoundFrame_t(channel1, channel2);
+        }
+        catch (const std::exception &e)
+        {
+            // Handle parsing errors gracefully
+            return ProcessedSoundFrame_t();
+        }
+    }
+
+    friend std::istream& operator>>(std::istream& is, ProcessedSoundFrame_t& psf) {
+        std::string str;
+        std::getline(is, str);
+        psf = ProcessedSoundFrame_t::fromString(str);
+        return is;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const ProcessedSoundFrame_t& psf) {
+        os << psf.toString().c_str();
+        return os;
     }
 };
 
@@ -1176,17 +1297,37 @@ struct MaxBandSoundData_t
     static MaxBandSoundData_t fromString(const std::string &str)
     {
         const std::string delimiter = ENCODE_VALUE_DIVIDER;
-        size_t delimiterIndex = str.find(delimiter);
+        std::vector<std::string> fields;
+        size_t start = 0, delimiterIndex;
 
-        if (delimiterIndex == std::string::npos)
+        // Split the string into fields using the delimiter
+        while ((delimiterIndex = str.find(delimiter, start)) != std::string::npos)
         {
-            return MaxBandSoundData_t();
+            fields.push_back(str.substr(start, delimiterIndex - start));
+            start = delimiterIndex + delimiter.length();
+        }
+        fields.push_back(str.substr(start)); // Add the last field
+
+        // Ensure we have exactly three fields
+        if (fields.size() != 3)
+        {
+            return MaxBandSoundData_t(); // Return default object on failure
         }
 
-        float maxBandNormalizedPower = std::stof(str.substr(0, delimiterIndex));
-        int16_t maxBandIndex = std::stoi(str.substr(delimiterIndex + delimiter.length()));
-	    int16_t totalBands = std::stoi(str.substr(delimiterIndex + delimiter.length()));
-        return MaxBandSoundData_t(maxBandNormalizedPower, maxBandIndex, totalBands);
+        try
+        {
+            // Parse the fields into respective types
+            float maxBandNormalizedPower = std::stof(fields[0]);
+            int16_t maxBandIndex = static_cast<int16_t>(std::stoi(fields[1]));
+            int16_t totalBands = static_cast<int16_t>(std::stoi(fields[2]));
+
+            return MaxBandSoundData_t(maxBandNormalizedPower, maxBandIndex, totalBands);
+        }
+        catch (const std::exception &e)
+        {
+            // Handle parsing errors gracefully
+            return MaxBandSoundData_t();
+        }
     }
 
     friend std::istream& operator>>(std::istream& is, MaxBandSoundData_t& device) {
