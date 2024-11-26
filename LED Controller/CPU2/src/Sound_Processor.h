@@ -51,7 +51,8 @@ class Sound_Processor: public NamedItem
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     IPreferences& m_Preferences;
-    bool m_BufferReadError = false;
+    bool m_R_BufferReadError = false;
+    bool m_L_BufferReadError = false;
 
     const float m_Amplitude_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_Amplitude_Gain = DataItemWithPreferences<float, 1>( "Amp_Gain"
@@ -128,9 +129,12 @@ class Sound_Processor: public NamedItem
     TaskHandle_t m_ProcessSoundPowerTask;
     static void Static_Calculate_Power(void * parameter);
     void Calculate_Power();
-    TaskHandle_t m_ProcessFFTTask;
-    static void Static_Calculate_FFTs(void * parameter);
-    void Calculate_FFTs();
+    TaskHandle_t m_Process_R_FFTTask;
+    TaskHandle_t m_Process_L_FFTTask;
+    static void Static_Calculate_R_FFT(void * parameter);
+    void Calculate_R_FFT();
+    static void Static_Calculate_L_FFT(void * parameter);
+    void Calculate_L_FFT();
     void Update_Right_Bands_And_Send_Result();
     void Update_Left_Bands_And_Send_Result();
 

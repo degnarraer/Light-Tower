@@ -74,7 +74,20 @@ class DataSerializer: public CommonUtils
 			m_SerializeDoc[m_DataTag] = data;
 			m_SerializeDoc[m_CheckSumTag] = CheckSum;
 
-			return JSON.stringify(m_SerializeDoc);
+			try
+			{
+				return JSON.stringify(m_SerializeDoc);
+			}
+			catch (const std::exception& e)
+			{
+				ESP_LOGE("SerializeDataItemToJson", "ERROR! Error during JSON serialization: %s", e.what() );
+				return "{}";
+			}
+			catch (...)
+			{
+				ESP_LOGE("SerializeDataItemToJson", "ERROR! Unknown error during JSON serialization.");
+				return "{}";
+			}
 		}
 
 		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
