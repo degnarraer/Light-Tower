@@ -34,37 +34,49 @@ class DataSerializer: public CommonUtils
 			m_DataItems = &DataItem;
 			m_DataItemsCount = DataItemCount;
 		}
+		
 		virtual String SerializeDataItemToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
+			if (Object == nullptr) {
+				ESP_LOGW("SerializeDataItemToJson", "Object is null, serialization skipped");
+				return "";
+			}
+
 			int32_t CheckSum = 0;
 			size_t ObjectByteCount = GetSizeOfDataType(DataType);
-			
-			JSONVar data;
 
+			if (DataType >= DataType_Undef) {
+				ESP_LOGW("SerializeDataItemToJson", "Invalid DataType index: %d", DataType);
+				return "";
+			}
+
+			JSONVar data;
 			m_SerializeDoc[m_NameTag] = Name;
 			m_SerializeDoc[m_CountTag] = Count;
 			m_SerializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
 			m_SerializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
 			m_SerializeDoc[m_ChangeCountTag] = ChangeCount;
-			
+
 			char ByteHexValue[3];
-			for(int i = 0; i < Count; ++i)
+			for (int i = 0; i < Count; ++i)
 			{
 				String BytesString = "";
-				for(int j = 0; j < ObjectByteCount; ++j)
+				for (int j = 0; j < ObjectByteCount; ++j)
 				{
-					uint8_t DecValue = ((uint8_t*)Object)[i*ObjectByteCount + j];
-					sprintf(ByteHexValue,"%02X", DecValue);
+					uint8_t DecValue = ((uint8_t*)Object)[i * ObjectByteCount + j];
+					sprintf(ByteHexValue, "%02X", DecValue);
 					BytesString += String(ByteHexValue);
 					CheckSum += DecValue;
 				}
 				data[i] = BytesString;
 			}
+			
 			m_SerializeDoc[m_DataTag] = data;
 			m_SerializeDoc[m_CheckSumTag] = CheckSum;
+
 			return JSON.stringify(m_SerializeDoc);
 		}
-		
+
 		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
