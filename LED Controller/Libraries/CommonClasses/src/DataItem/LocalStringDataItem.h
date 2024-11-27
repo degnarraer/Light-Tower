@@ -50,18 +50,23 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool GetInitialValueAsString(String &stringValue) const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
-			if(mp_InitialValue)
+			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				stringValue = String(mp_InitialValue);
-				ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
-				return true;
+				if(mp_InitialValue)
+				{
+					stringValue = String(mp_InitialValue);
+					ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
+					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
+					return true;
+				}
+				else
+				{
+					ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
+					return false;
+				}
 			}
-			else
-			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
-				return false;
-			}
+			return false;
 		}
 
 		virtual String GetInitialValueAsString() const
@@ -77,20 +82,25 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual bool GetValueAsString(String &stringValue) const override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
-			if(mp_Value)
+			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				stringValue = String(mp_Value);
-				ESP_LOGD("GetValueAsString"
-						, "\"%s\": GetValueAsString: %s"
-						, m_Name.c_str()
-						, stringValue.c_str());
-				return true;
+				if(mp_Value)
+				{
+					stringValue = String(mp_Value);
+					ESP_LOGD("GetValueAsString"
+							, "\"%s\": GetValueAsString: %s"
+							, m_Name.c_str()
+							, stringValue.c_str());
+					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
+					return true;
+				}
+				else
+				{
+					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
+					return false;
+				}
 			}
-			else
-			{
-				return false;
-			}
+			return false;
 		}
 
 		virtual String GetValueAsString() const override
@@ -114,34 +124,36 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 
 		virtual UpdateStatus_t SetValue(const char* value, size_t count) override
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
-			assert(value != nullptr);
-			assert(mp_Value != nullptr);
-			assert(count <= DATAITEM_STRING_LENGTH);
-
-			std::string newValue(value, count);
-			ESP_LOGD("DataItem: SetValue", "\"%s\" Set Value: \"%s\"", m_Name.c_str(), newValue.c_str());
-			
 			UpdateStatus_t updateStatus;
-			updateStatus.ValueChanged = (strncmp(mp_Value, value, count) != 0);
-			updateStatus.ValidValue = ConfirmValueValidity(value, count);
-			updateStatus.UpdateAllowed = UpdateChangeCount(GetChangeCount(), (updateStatus.ValueChanged && updateStatus.ValidValue));
-			if (updateStatus.UpdateAllowed)
-			{   
-				ZeroOutMemory(mp_Value);
-				strncpy(mp_Value, value, count);
-				updateStatus.UpdateSuccessful = (strncmp(mp_Value, value, count) == 0);
-				if(updateStatus.UpdateSuccessful)
-				{
-					ESP_LOGI("LocalDataItem: SetValue", "\"%s\": Set Value to \"%s\".", GetName().c_str(), newValue.c_str());
-					this->CallNamedCallbacks(mp_Value);
-				}
-				else
-				{
-					ESP_LOGE("LocalDataItem: SetValue", "ERROR! \"%s\": Setting value to \"%s\".", GetName().c_str(), newValue.c_str());
-				}
-			}
+			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			{
+				assert(value != nullptr);
+				assert(mp_Value != nullptr);
+				assert(count <= DATAITEM_STRING_LENGTH);
 
+				std::string newValue(value, count);
+				ESP_LOGD("DataItem: SetValue", "\"%s\" Set Value: \"%s\"", m_Name.c_str(), newValue.c_str());
+				
+				updateStatus.ValueChanged = (strncmp(mp_Value, value, count) != 0);
+				updateStatus.ValidValue = ConfirmValueValidity(value, count);
+				updateStatus.UpdateAllowed = UpdateChangeCount(GetChangeCount(), (updateStatus.ValueChanged && updateStatus.ValidValue));
+				if (updateStatus.UpdateAllowed)
+				{   
+					ZeroOutMemory(mp_Value);
+					strncpy(mp_Value, value, count);
+					updateStatus.UpdateSuccessful = (strncmp(mp_Value, value, count) == 0);
+					if(updateStatus.UpdateSuccessful)
+					{
+						ESP_LOGI("LocalDataItem: SetValue", "\"%s\": Set Value to \"%s\".", GetName().c_str(), newValue.c_str());
+						this->CallNamedCallbacks(mp_Value);
+					}
+					else
+					{
+						ESP_LOGE("LocalDataItem: SetValue", "ERROR! \"%s\": Setting value to \"%s\".", GetName().c_str(), newValue.c_str());
+					}
+				}
+				xSemaphoreGiveRecursive(this->m_ValueSemaphore);
+			}
 			return updateStatus;
 		}
 

@@ -43,6 +43,11 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 							  , mp_SerialPortMessageManager(serialPortMessageManager)
 							  {
 								ESP_LOGD("SerialMessageInterface", "Constructor1 SerialMessageInterface");
+								m_ValueSemaphore = xSemaphoreCreateMutex();
+								if (m_ValueSemaphore == nullptr)
+								{
+									ESP_LOGE("AudioBuffer", "ERROR! Failed to create semaphore.");
+								}
 							  }
 		SerialMessageInterface( RxTxType_t rxTxType
 							  , uint16_t rate
@@ -53,25 +58,39 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 							  , mp_SerialPortMessageManager(serialPortMessageManager)
 							  {
 								ESP_LOGD("SerialMessageInterface", "Constructor2 SerialMessageInterface");
+								m_ValueSemaphore = xSemaphoreCreateMutex();
+								if (m_ValueSemaphore == nullptr)
+								{
+									ESP_LOGE("AudioBuffer", "ERROR! Failed to create semaphore.");
+								}
 							  }
 
 		virtual ~SerialMessageInterface()
 		{
-			ESP_LOGD("~DataItem", "Deleting SerialMessageInterface");
-			DestroyTimer(m_TxTimer);
-			if(mp_SerialPortMessageManager)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				mp_SerialPortMessageManager->DeRegisterForNewRxValueNotification(this);
+				ESP_LOGD("~DataItem", "Deleting SerialMessageInterface");
+				DestroyTimer(m_TxTimer);
+				if(mp_SerialPortMessageManager)
+				{
+					mp_SerialPortMessageManager->DeRegisterForNewRxValueNotification(this);
+				}
+				if(mp_RxValue)
+				{
+					ESP_LOGD("~SerialMessageInterface", "freeing mp_RxValue Memory");
+					free(mp_RxValue);
+				}
+				if(mp_TxValue)
+				{
+					ESP_LOGD("~SerialMessageInterface", "freeing mp_TxValue Memory");
+					free(mp_TxValue);	
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
-			if(mp_RxValue)
+			if(m_ValueSemaphore)
 			{
-        		ESP_LOGD("~SerialMessageInterface", "freeing mp_RxValue Memory");
-				free(mp_RxValue);
-			}
-			if(mp_TxValue)
-			{
-        		ESP_LOGD("~SerialMessageInterface", "freeing mp_TxValue Memory");
-				free(mp_TxValue);	
+				vSemaphoreDelete(m_ValueSemaphore);
+				m_ValueSemaphore = nullptr;
 			}
 		}
 		virtual T* GetValuePointer() const = 0;
@@ -94,16 +113,20 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		UpdateStatus_t Try_Echo_Value(const T* receivedValues)
 		{
 			UpdateStatus_t storeUpdated;
-			if(RxTxType_Rx_Echo_Value == m_RxTxType)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				ESP_LOGD( "NewRxValueReceived"
-						, "Rx Echo for: \"%s\" with Value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(receivedValues, GetCount()).c_str() );
-				if(UpdateTxStore(mp_RxValue).UpdateSuccessful)
+				if(RxTxType_Rx_Echo_Value == m_RxTxType)
 				{
-					storeUpdated |= Tx_Now(GetChangeCount());
+					ESP_LOGD( "NewRxValueReceived"
+							, "Rx Echo for: \"%s\" with Value: \"%s\""
+							, GetName().c_str()
+							, ConvertValueToString(receivedValues, GetCount()).c_str() );
+					if(UpdateTxStore(mp_RxValue).UpdateSuccessful)
+					{
+						storeUpdated |= Tx_Now(GetChangeCount());
+					}
 				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return storeUpdated;
 		}
@@ -117,168 +140,192 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		virtual UpdateStatus_t New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) override
 		{
 			UpdateStatus_t storeUpdated;
-			const T* receivedValues = static_cast<const T*>(values);
-			ESP_LOGD( "NewRxValueReceived"
-					, "\"%s\" Rx: \"%s\" Value: \"%s\" Change Count: \"%i\""
-					, mp_SerialPortMessageManager->GetName().c_str()
-					, GetName().c_str()
-					, ConvertValueToString(receivedValues, GetCount()).c_str()
-					, GetChangeCount());
-			if(UpdateRxStore(receivedValues).UpdateSuccessful)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				storeUpdated |= UpdateStore(mp_RxValue, changeCount);
-				this->Notify_NewRxValue_Callees(mp_RxValue, COUNT, changeCount);
+				const T* receivedValues = static_cast<const T*>(values);
+				ESP_LOGD( "NewRxValueReceived"
+						, "\"%s\" Rx: \"%s\" Value: \"%s\" Change Count: \"%i\""
+						, mp_SerialPortMessageManager->GetName().c_str()
+						, GetName().c_str()
+						, ConvertValueToString(receivedValues, GetCount()).c_str()
+						, GetChangeCount());
+				if(UpdateRxStore(receivedValues).UpdateSuccessful)
+				{
+					storeUpdated |= UpdateStore(mp_RxValue, changeCount);
+					this->Notify_NewRxValue_Callees(mp_RxValue, COUNT, changeCount);
+				}
+				storeUpdated |= Try_Echo_Value(receivedValues);
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
-			storeUpdated |= Try_Echo_Value(receivedValues);
 			return storeUpdated;
 		}
 
 		void Setup()
 		{
-			if(!mp_RxValue) mp_RxValue = (T*)malloc(sizeof(T)*COUNT);
-			if(!mp_TxValue) mp_TxValue = (T*)malloc(sizeof(T)*COUNT);
-			if(GetValuePointer())
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				if (mp_RxValue && mp_TxValue)
+				if(!mp_RxValue) mp_RxValue = (T*)malloc(sizeof(T)*COUNT);
+				if(!mp_TxValue) mp_TxValue = (T*)malloc(sizeof(T)*COUNT);
+				if(GetValuePointer())
 				{
-					ESP_LOGD("DataItem<T, COUNT>::Setup()", "Setting Initial Tx/Rx Values to: %s", GetValueAsString().c_str());
-					UpdateRxStore(GetValuePointer());
-					UpdateTxStore(GetValuePointer());
-					SetDataLinkEnabled(true);
+					if (mp_RxValue && mp_TxValue)
+					{
+						ESP_LOGD("DataItem<T, COUNT>::Setup()", "Setting Initial Tx/Rx Values to: %s", GetValueAsString().c_str());
+						UpdateRxStore(GetValuePointer());
+						UpdateTxStore(GetValuePointer());
+						SetDataLinkEnabled(true);
+					}
+					else
+					{
+						ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Failed to allocate memory on SPI RAM.");
+					}
 				}
 				else
 				{
-					ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Failed to allocate memory on SPI RAM.");
+					ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Null Pointer.");
 				}
-			}
-			else
-			{
-				ESP_LOGE("DataItem<T, COUNT>::Setup()", "ERROR! Null Pointer.");
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 		}
 
 		UpdateStatus_t Set_Tx_Value(const T* newTxValues, size_t count)
 		{
-			ESP_LOGD( "Set_Tx_Value"
-					, "\"%s\" Set Tx Value: \"%s\""
-					, GetName().c_str()
-					, ConvertValueToString(newTxValues, count).c_str());
-			assert(newTxValues != nullptr);
-			assert(mp_TxValue != nullptr);
-			assert(COUNT > 0);
-			assert(count <= COUNT);
 			UpdateStatus_t updateStatus;
-			updateStatus.ValueChanged = (0 != memcmp(mp_TxValue, newTxValues, sizeof(T)*count));
-			updateStatus.ValidValue = ConfirmValueValidity(newTxValues, COUNT);
-			updateStatus.UpdateAllowed = (updateStatus.ValueChanged && updateStatus.ValidValue);
-			ESP_LOGD( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\""
-					, GetName().c_str()
-					, updateStatus.UpdateAllowed
-					, ConvertValueToString(mp_TxValue, count).c_str()
-					, ConvertValueToString(newTxValues, count).c_str() );
-			if(updateStatus.UpdateAllowed)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
-							, mp_SerialPortMessageManager->GetName().c_str()
-							, GetName().c_str() );
-				updateStatus |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);
-			}
-			else
-			{
-				ESP_LOGD( "LocalDataItem: SetValue", "Set Value Failed");
+				ESP_LOGD( "Set_Tx_Value"
+						, "\"%s\" Set Tx Value: \"%s\""
+						, GetName().c_str()
+						, ConvertValueToString(newTxValues, count).c_str());
+				assert(newTxValues != nullptr);
+				assert(mp_TxValue != nullptr);
+				assert(COUNT > 0);
+				assert(count <= COUNT);
+				updateStatus.ValueChanged = (0 != memcmp(mp_TxValue, newTxValues, sizeof(T)*count));
+				updateStatus.ValidValue = ConfirmValueValidity(newTxValues, COUNT);
+				updateStatus.UpdateAllowed = (updateStatus.ValueChanged && updateStatus.ValidValue);
+				ESP_LOGD( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\""
+						, GetName().c_str()
+						, updateStatus.UpdateAllowed
+						, ConvertValueToString(mp_TxValue, count).c_str()
+						, ConvertValueToString(newTxValues, count).c_str() );
+				if(updateStatus.UpdateAllowed)
+				{
+					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
+								, mp_SerialPortMessageManager->GetName().c_str()
+								, GetName().c_str() );
+					updateStatus |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);
+				}
+				else
+				{
+					ESP_LOGD( "LocalDataItem: SetValue", "Set Value Failed");
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return updateStatus;
 		}
 
 		UpdateStatus_t UpdateRxStore(const T *newValues)
 		{
-			assert(newValues != nullptr);
-			assert(mp_RxValue != nullptr);
-			assert(COUNT > 0);
-			ESP_LOGD( "UpdateRxStore"
-					, "Name: \"%s\" Update Rx Store with value: \"%s\""
-					, GetName().c_str()
-					, ConvertValueToString(newValues, COUNT).c_str());
 			UpdateStatus_t updateStatus;
-			updateStatus.ValueChanged= (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
-			updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
-			updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-			ESP_LOGD( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
-			if(updateStatus.UpdateAllowed)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				ZeroOutMemory(mp_RxValue);
-				memcpy(mp_RxValue, newValues, sizeof(T) * COUNT);
-				updateStatus.UpdateSuccessful = ( memcmp(mp_RxValue, newValues, sizeof(T) * COUNT) == 0 );
-				if(updateStatus.UpdateSuccessful)
+				assert(newValues != nullptr);
+				assert(mp_RxValue != nullptr);
+				assert(COUNT > 0);
+				ESP_LOGD( "UpdateRxStore"
+						, "Name: \"%s\" Update Rx Store with value: \"%s\""
+						, GetName().c_str()
+						, ConvertValueToString(newValues, COUNT).c_str());
+				updateStatus.ValueChanged= (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
+				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
+				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
+				ESP_LOGD( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
+				if(updateStatus.UpdateAllowed)
 				{
-					ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Successful.", GetName().c_str());
+					ZeroOutMemory(mp_RxValue);
+					memcpy(mp_RxValue, newValues, sizeof(T) * COUNT);
+					updateStatus.UpdateSuccessful = ( memcmp(mp_RxValue, newValues, sizeof(T) * COUNT) == 0 );
+					if(updateStatus.UpdateSuccessful)
+					{
+						ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Successful.", GetName().c_str());
+					}
+					else
+					{
+						ESP_LOGE( "UpdateRxStore", "\"%s\": Update Rx Store: Not Successful.", GetName().c_str());
+					}
 				}
 				else
 				{
-					ESP_LOGE( "UpdateRxStore", "\"%s\": Update Rx Store: Not Successful.", GetName().c_str());
+					ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Not Allowed.", GetName().c_str());
 				}
-			}
-			else
-			{
-				ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Not Allowed.", GetName().c_str());
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return updateStatus;
 		}
 
 		UpdateStatus_t UpdateTxStore(const T *newValues)
 		{
-			assert(newValues != nullptr);
-			assert(mp_TxValue != nullptr);
-			assert(COUNT > 0);
-			ESP_LOGD( "UpdateTxStore"
-					, "Name: \"%s\" Update Tx Store with value: \"%s\""
-					, GetName().c_str()
-					, ConvertValueToString(newValues, COUNT).c_str());
 			UpdateStatus_t updateStatus;
-			updateStatus.ValueChanged = (0 != memcmp(mp_TxValue, newValues, sizeof(T)*COUNT));
-			updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
-			updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-			if(updateStatus.UpdateAllowed)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				ZeroOutMemory(mp_TxValue);
-				memcpy(mp_TxValue, newValues, sizeof(T) * COUNT);
-				updateStatus.UpdateSuccessful = (memcmp(mp_TxValue, newValues, sizeof(T) * COUNT) == 0);
-				if(updateStatus.UpdateSuccessful)
+				assert(newValues != nullptr);
+				assert(mp_TxValue != nullptr);
+				assert(COUNT > 0);
+				ESP_LOGD( "UpdateTxStore"
+						, "Name: \"%s\" Update Tx Store with value: \"%s\""
+						, GetName().c_str()
+						, ConvertValueToString(newValues, COUNT).c_str());
+				updateStatus.ValueChanged = (0 != memcmp(mp_TxValue, newValues, sizeof(T)*COUNT));
+				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
+				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
+				if(updateStatus.UpdateAllowed)
 				{
-					ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Successful.", GetName().c_str());
+					ZeroOutMemory(mp_TxValue);
+					memcpy(mp_TxValue, newValues, sizeof(T) * COUNT);
+					updateStatus.UpdateSuccessful = (memcmp(mp_TxValue, newValues, sizeof(T) * COUNT) == 0);
+					if(updateStatus.UpdateSuccessful)
+					{
+						ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Successful.", GetName().c_str());
+					}
+					else
+					{
+						ESP_LOGE( "UpdateTxStore", "\"%s\": Update Tx Store: Not Successful.", GetName().c_str());
+					}
 				}
 				else
 				{
-					ESP_LOGE( "UpdateTxStore", "\"%s\": Update Tx Store: Not Successful.", GetName().c_str());
+					ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Not Allowed.", GetName().c_str());
 				}
-			}
-			else
-			{
-				ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Not Allowed.", GetName().c_str());
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return updateStatus;
 		}
 
 		UpdateStatus_t Tx_Now(size_t changeCount)
 		{
-			ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\""
-					, mp_SerialPortMessageManager->GetName().c_str()
-					, GetName().c_str()
-					, ConvertValueToString(mp_TxValue, COUNT)
-					, GetChangeCount() );
 			UpdateStatus_t updateStatus;
-			if(mp_SerialPortMessageManager)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				updateStatus |= UpdateStore(mp_TxValue, changeCount);
-				ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
-				if(!mp_SerialPortMessageManager->QueueMessageFromDataType(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
+				ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\""
+						, mp_SerialPortMessageManager->GetName().c_str()
+						, GetName().c_str()
+						, ConvertValueToString(mp_TxValue, COUNT)
+						, GetChangeCount() );
+				if(mp_SerialPortMessageManager)
 				{
-					ESP_LOGE("Tx_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", GetName().c_str());
+					updateStatus |= UpdateStore(mp_TxValue, changeCount);
+					ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName().c_str(), GetChangeCount());
+					if(!mp_SerialPortMessageManager->QueueMessageFromDataType(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
+					{
+						ESP_LOGE("Tx_Now", "ERROR! Data Item: \"%s\": Unable to Tx Message.", GetName().c_str());
+					}
 				}
-			}
-			else
-			{
-				ESP_LOGE("Tx_Now", "ERROR! Null Pointer!");
+				else
+				{
+					ESP_LOGE("Tx_Now", "ERROR! Null Pointer!");
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return updateStatus;
 		}		
@@ -289,6 +336,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		SerialPortMessageManager *mp_SerialPortMessageManager = nullptr;
 		T *mp_RxValue = nullptr;
 		T *mp_TxValue = nullptr;
+		SemaphoreHandle_t m_ValueSemaphore;
 	private:
 		esp_timer_handle_t m_TxTimer = nullptr;
 		esp_timer_create_args_t m_TxTimerArgs;

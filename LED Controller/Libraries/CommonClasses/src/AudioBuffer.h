@@ -15,325 +15,313 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-
 #ifndef AudioBuffer_H
 #define AudioBuffer_H
+
 #include "Datatypes.h"
 #include "CircularBuffer.h" 
 #include "circle_buf.h"
 #include "Streaming.h"
-#include <mutex>
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 template <uint32_t COUNT>
 class AudioBuffer
 {
   public:
-    AudioBuffer(){}
+    AudioBuffer() 
+    {
+        m_Lock = xSemaphoreCreateMutex();
+        if (m_Lock == nullptr)
+        {
+            ESP_LOGE("AudioBuffer", "ERROR! Failed to create semaphore.");
+        }
+    }
+
     virtual ~AudioBuffer()
     {
-      FreeMemory();
-    }
-    void Initialize()
-	{
-		AllocateMemory();
-	}
-
-	void AllocateMemory()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-        ESP_LOGD("AllocateMemory", "Allocating memory");
-		size_t CircleBuffSize = sizeof(bfs::CircleBuf<Frame_t, COUNT>);
-		void *CircularBuffer_Raw = (bfs::CircleBuf<Frame_t, COUNT>*)malloc(CircleBuffSize);
-		if (CircularBuffer_Raw == nullptr) 
-		{
-            ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
-            return;
+        FreeMemory();
+        if (m_Lock != nullptr)
+        {
+            vSemaphoreDelete(m_Lock);
+            m_Lock = nullptr;
         }
-		m_CircularAudioBuffer = new(CircularBuffer_Raw) bfs::CircleBuf<Frame_t, COUNT>;
-	}
+    }
 
-	void FreeMemory()
-	{
-		free(m_CircularAudioBuffer);
-	}
-	size_t GetFrameCapacity()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Capacity = 0;
-		Capacity = m_CircularAudioBuffer->capacity();
-		return Capacity;
-	}
+    void Initialize()
+    {
+        AllocateMemory();
+    }
 
-	bool ClearAudioBuffer()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bool Success = false;
-		m_CircularAudioBuffer->Clear();
-		Success = true;
-		return Success;
-	}
+    void AllocateMemory()
+    {
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            ESP_LOGD("AllocateMemory", "Allocating memory");
+            m_CircularAudioBuffer = new(std::nothrow) bfs::CircleBuf<Frame_t, COUNT>;
 
-	size_t GetFrameCount()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t size = 0;
-		size = m_CircularAudioBuffer->size();
-		return size;
-	}
+            if (m_CircularAudioBuffer == nullptr)
+            {
+                ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
+            }
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+    }
 
-	size_t GetFreeFrameCount()
-	{
-		return GetFrameCapacity() - GetFrameCount();
-	}
+    void FreeMemory()
+    {
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            if (m_CircularAudioBuffer != nullptr)
+            {
+                delete m_CircularAudioBuffer;
+                m_CircularAudioBuffer = nullptr;
+            }
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+    }
 
-	size_t WriteAudioFrames( Frame_t *FrameBuffer, size_t FrameCount )
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t FramesWritten = 0;
-		FramesWritten = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
-		return FramesWritten;
-	}
+    size_t GetFrameCapacity()
+    {
+        size_t capacity = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            capacity = m_CircularAudioBuffer->capacity();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return capacity;
+    }
 
-	bool WriteAudioFrame( Frame_t Frame )
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bool Success = false;
-		Success = m_CircularAudioBuffer->Write(Frame);
-		return Success;
-	}
+    bool ClearAudioBuffer()
+    {
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            m_CircularAudioBuffer->Clear();
+            xSemaphoreGiveRecursive(m_Lock);
+            return true;
+        }
+        return false;
+    }
 
-	size_t ReadAudioFrames(Frame_t *FrameBuffer, size_t FrameCount)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t FramesRead = 0;
-		FramesRead = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
-		return FramesRead;
-	}
+    size_t GetFrameCount()
+    {
+        size_t count = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            count = m_CircularAudioBuffer->size();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return count;
+    }
 
-	bfs::optional<Frame_t> ReadAudioFrame()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bfs::optional<Frame_t> FrameRead;
-		FrameRead = m_CircularAudioBuffer->Read();
-		return FrameRead;
-	}
-	
-	private:
-		bfs::CircleBuf<Frame_t, COUNT> *m_CircularAudioBuffer = nullptr;
-		pthread_mutex_t m_Lock;
+    size_t GetFreeFrameCount()
+    {
+        return GetFrameCapacity() - GetFrameCount();
+    }
+
+    size_t WriteAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
+    {
+        size_t written = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            written = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return written;
+    }
+
+    bool WriteAudioFrame(Frame_t Frame)
+    {
+        bool result = false;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            result = m_CircularAudioBuffer->Write(Frame);
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return result;
+    }
+
+    size_t ReadAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
+    {
+        size_t read = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            read = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return read;
+    }
+
+    bfs::optional<Frame_t> ReadAudioFrame()
+    {
+        bfs::optional<Frame_t> frame;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            frame = m_CircularAudioBuffer->Read();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return frame;
+    }
+
+  private:
+    bfs::CircleBuf<Frame_t, COUNT>* m_CircularAudioBuffer = nullptr;
+    SemaphoreHandle_t m_Lock;
 };
-
 
 template <uint32_t COUNT>
 class ContinuousAudioBuffer
 {
   public:
-    ContinuousAudioBuffer(){}
+    ContinuousAudioBuffer() 
+    {
+        m_Lock = xSemaphoreCreateMutex();
+        if (m_Lock == nullptr)
+        {
+            ESP_LOGE("ContinuousAudioBuffer", "ERROR! Failed to create semaphore.");
+        }
+    }
+
     virtual ~ContinuousAudioBuffer()
     {
-      FreeMemory();
+        FreeMemory();
+        if (m_Lock)
+        {
+            vSemaphoreDelete(m_Lock);
+            m_Lock = nullptr;
+        }
     }
+
     void Initialize()
-	{ 
-		AllocateMemory();  
-	}
-
-	void AllocateMemory()
     {
-		std::lock_guard<std::mutex> lock(m_Lock);
-        ESP_LOGD("AllocateMemory", "Allocating memory");
-        size_t CircleBuffSize = sizeof(CircularBuffer<Frame_t, COUNT>);
-        void* CircularBuffer_Raw = malloc (CircleBuffSize );
-        if (CircularBuffer_Raw == nullptr)
-		{
-            ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
-            return;
-        }
-        m_CircularAudioBuffer = new(CircularBuffer_Raw) CircularBuffer<Frame_t, COUNT>;
+        AllocateMemory();
     }
 
-	void FreeMemory()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		if (m_CircularAudioBuffer != nullptr) {
-            m_CircularAudioBuffer->~CircularBuffer<Frame_t, COUNT>();
-            free(m_CircularAudioBuffer);
-            m_CircularAudioBuffer = nullptr;
+    void AllocateMemory()
+    {
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            ESP_LOGD("AllocateMemory", "Allocating memory");
+            m_CircularAudioBuffer = new(std::nothrow) CircularBuffer<Frame_t, COUNT>;
+            if (m_CircularAudioBuffer == nullptr)
+            {
+                ESP_LOGE("AllocateMemory", "ERROR! Memory allocation failed.");
+            }
+            xSemaphoreGiveRecursive(m_Lock);
         }
-	}
+    }
+
+    void FreeMemory()
+    {
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            if (m_CircularAudioBuffer != nullptr)
+            {
+                delete m_CircularAudioBuffer;
+                m_CircularAudioBuffer = nullptr;
+            }
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+    }
+
+    bool Push(Frame_t Frame)
+    {
+        bool result = false;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            result = m_CircularAudioBuffer->push(Frame);
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return result;
+    }
+
+    size_t Push(Frame_t* Frames, size_t Count)
+    {
+        size_t pushed = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            for (size_t i = 0; i < Count; ++i)
+            {
+                if (m_CircularAudioBuffer->push(Frames[i]))
+                {
+                    ++pushed;
+                }
+            }
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return pushed;
+    }
+
+    Frame_t Pop()
+    {
+        Frame_t frame;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            frame = m_CircularAudioBuffer->pop();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return frame;
+    }
+
+    size_t Pop(Frame_t* Frames, size_t Count)
+    {
+        size_t popped = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            for (size_t i = 0; i < Count; ++i)
+            {
+                if (m_CircularAudioBuffer->available() > 0)
+                {
+                    Frames[i] = m_CircularAudioBuffer->pop();
+                    ++popped;
+                }
+            }
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return popped;
+    }
+
+    bool IsEmpty()
+    {
+        bool isEmpty = false;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            isEmpty = m_CircularAudioBuffer->isEmpty();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return isEmpty;
+    }
+
+    size_t Size()
+    {
+        size_t size = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+            size = m_CircularAudioBuffer->size();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        return size;
+    }
 	
-	uint32_t GetAudioFrames(Frame_t *Buffer, uint32_t Count)
+	size_t ReadAudioFrames(Frame_t *Buffer, uint32_t Count)
 	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		uint32_t ReturnCount = 0;
-		uint32_t ElementsToRead = std::min(Count, static_cast<uint32_t>(m_CircularAudioBuffer->size()));
-		uint32_t StartIndex = m_CircularAudioBuffer->size() - ElementsToRead;
-		for(int i = 0; i < ElementsToRead; ++i)
-		{
-			Buffer[i] = (*m_CircularAudioBuffer)[StartIndex + i];
-			++ReturnCount;
-		}
-		return ReturnCount;
-	}
-	
-	bool Push(Frame_t Frame)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bool result = false;
-		result = m_CircularAudioBuffer->push(Frame);
-		if(result)
-		{
-			ESP_LOGD("Push", "Pushed %i|%i", Frame.channel1, Frame.channel2);
-		}
-		else
-		{
-			ESP_LOGD("Push", "Pushed and overwrote %i|%i", Frame.channel1, Frame.channel2);
-		}
-		return result;
-	}
-
-	size_t Push(Frame_t *Frame, size_t Count)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Result = 0;
-		for(int i = 0; i < Count; ++i)
-		{
-			if(m_CircularAudioBuffer->push(Frame[i]))
+		uint32_t ElementsToRead = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        {
+			ElementsToRead = std::min(Count, static_cast<uint32_t>(m_CircularAudioBuffer->size()));
+			uint32_t StartIndex = m_CircularAudioBuffer->size() - ElementsToRead;
+			for(int i = 0; i < ElementsToRead; ++i)
 			{
-				ESP_LOGD("Push", "Pushed %i|%i", Frame[i].channel1, Frame[i].channel2);
-				++Result;
+				Buffer[i] = (*m_CircularAudioBuffer)[StartIndex + i];
 			}
-			else
-			{
-				ESP_LOGD("Push", "Pushed and overwrote %i|%i", Frame[i].channel1, Frame[i].channel2);
-			}
+            xSemaphoreGiveRecursive(m_Lock);
 		}
-		return Result;
+		return ElementsToRead;
 	}
 
-	Frame_t Pop()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		Frame_t Result;
-		Result = m_CircularAudioBuffer->pop();
-		return Result;
-	}
-
-	size_t Pop(Frame_t *Frame, size_t Count)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Result = 0;
-		for(int i = 0; i < Count; ++i)
-		{
-			if(0 < COUNT - m_CircularAudioBuffer->available())
-			{
-				Frame[i] = m_CircularAudioBuffer->pop();
-				ESP_LOGD("Pop", "Popped %i|%i", Frame[i].channel1, Frame[i].channel2);
-				++Result;
-			}
-		}
-		return Result;
-	}
-
-	bool Unshift(Frame_t Frame)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bool result = false;
-		result = m_CircularAudioBuffer->unshift(Frame);
-		if(result)
-		{
-			ESP_LOGD("Push", "Unshifted %i|%i", Frame.channel1, Frame.channel2);
-		}
-		else
-		{
-			ESP_LOGD("Push", "Unshifted and overwrote %i|%i", Frame.channel1, Frame.channel2);
-		}
-		return result;
-	}
-
-	size_t Unshift(Frame_t *Frame, size_t Count)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Result = 0;
-		for(int i = 0; i < Count; ++i)
-		{
-			if( m_CircularAudioBuffer->unshift(Frame[i]) )
-			{
-				ESP_LOGD("Unshift", "Unshifted %i|%i", Frame[i].channel1, Frame[i].channel2);
-				++Result;
-			}
-			else
-			{
-				ESP_LOGD("Unshift", "Unshifted and Overwrote %i|%i", Frame[i].channel1, Frame[i].channel2);
-			}
-		}
-		return Result;
-	}
-
-	Frame_t Shift()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		Frame_t Result;
-		Result = m_CircularAudioBuffer->shift();
-		return Result;
-	}
-
-	size_t Shift(Frame_t *Frame, size_t Count)
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Result = 0;
-		for(int i = 0; i < Count; ++i)
-		{
-			if( 0 < COUNT - m_CircularAudioBuffer->available() )
-			{
-				Frame[i] = m_CircularAudioBuffer->shift();
-				++Result;
-			}
-		}
-		return Result;
-	}
-
-	bool IsEmpty()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bool Result = false;
-		Result = m_CircularAudioBuffer->isEmpty();
-		return Result;
-	}
-
-	bool IsFull()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		bool Result = false;
-		Result = m_CircularAudioBuffer->isFull();
-		return Result;
-	}
-
-	size_t Size()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Result = 0;
-		Result = m_CircularAudioBuffer->size();
-		return Result;
-	}
-
-	size_t Available()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		size_t Result = 0;
-		Result = m_CircularAudioBuffer->available();
-		return Result;
-	}
-
-	void Clear()
-	{
-		std::lock_guard<std::mutex> lock(m_Lock);
-		m_CircularAudioBuffer->clear();
-	}
-	  private:
-		CircularBuffer<Frame_t, COUNT> *m_CircularAudioBuffer = nullptr;
-		std::mutex m_Lock;
+  private:
+    CircularBuffer<Frame_t, COUNT>* m_CircularAudioBuffer = nullptr;
+    SemaphoreHandle_t m_Lock;  // FreeRTOS mutex with priority inheritance
 };
 
 #endif
+

@@ -69,6 +69,11 @@ class Bluetooth_Source: public NamedItem
 						, m_BTSource(BTSource)
 		{
 			bT_source_instance = this;
+			m_ActiveCompatibleDevicesSemaphore = xSemaphoreCreateMutex();
+			if(!m_ActiveCompatibleDevicesSemaphore)
+			{
+				ESP_LOGE("FFT_Calculator", "ERROR! Unable to create Semaphore.");
+			}
 		}
 		Bluetooth_Source(const Bluetooth_Source&) = delete;
 		virtual ~Bluetooth_Source();
@@ -116,7 +121,7 @@ class Bluetooth_Source: public NamedItem
 		music_data_cb_t m_MusicDataCallback = NULL;
 		String m_Name;
 		String m_Address;
-		std::recursive_mutex m_ActiveCompatibleDevicesMutex;
+		SemaphoreHandle_t m_ActiveCompatibleDevicesSemaphore;
 		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
 		QueueHandle_t m_DeviceProcessorQueueHandle = nullptr;
 		TaskHandle_t m_CompatibleDeviceTrackerTaskHandle = nullptr;

@@ -126,68 +126,86 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
         		ESP_LOGD("~LocalDataItem", "DeRegistering Named Callback");
 				this->DeRegisterNamedCallback(mp_NamedCallback);
 			}
-			if(mp_Value)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
-        		ESP_LOGD("~LocalDataItem", "freeing mp_Value Memory");
-				free(mp_Value);
+				if(mp_Value)
+				{
+					ESP_LOGD("~LocalDataItem", "freeing mp_Value Memory");
+					free(mp_Value);
+					mp_Value = nullptr;
+				}
+				if(mp_InitialValue) 
+				{
+					ESP_LOGD("~LocalDataItem", "freeing mp_InitialValue Memory");
+					free(mp_InitialValue);
+					mp_InitialValue = nullptr;
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
-			if(mp_InitialValue) 
+			if (m_ValueSemaphore)
 			{
-        		ESP_LOGD("~LocalDataItem", "freeing mp_InitialValue Memory");
-				free(mp_InitialValue);
+				vSemaphoreDelete(m_ValueSemaphore);
+				m_ValueSemaphore = nullptr;
 			}
 		}
 
 		void CommonSetup()
 		{
 			RegisterForSetup();
+			m_ValueSemaphore = xSemaphoreCreateMutex();
+			if (m_ValueSemaphore == nullptr)
+			{
+				ESP_LOGE("AudioBuffer", "ERROR! Failed to create semaphore.");
+			}
 		}
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
-			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
-			if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
-			mp_Value = (T*)malloc(sizeof(T)*COUNT);
-			mp_InitialValue = (T*)malloc(sizeof(T)*COUNT);
-			if (mp_Value && mp_InitialValue && mp_InitialValuePtr)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				if (std::is_same<T, char>::value)
+				ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
+				if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
+				mp_Value = (T*)malloc(sizeof(T)*COUNT);
+				mp_InitialValue = (T*)malloc(sizeof(T)*COUNT);
+				if (mp_Value && mp_InitialValue && mp_InitialValuePtr)
 				{
-					String InitialValue = String((char*)mp_InitialValuePtr);
-					for (size_t i = 0; i < COUNT; ++i)
+					if (std::is_same<T, char>::value)
 					{
-						char value;
-						memcpy(&value, mp_InitialValuePtr+i, sizeof(char));
-						if (i >= InitialValue.length())
+						String InitialValue = String((char*)mp_InitialValuePtr);
+						for (size_t i = 0; i < COUNT; ++i)
 						{
-							value = '\0';
+							char value;
+							memcpy(&value, mp_InitialValuePtr+i, sizeof(char));
+							if (i >= InitialValue.length())
+							{
+								value = '\0';
+							}
+							memcpy(mp_Value+i, &value, sizeof(char));
+							memcpy(mp_InitialValue+i, &value, sizeof(char));
 						}
-						memcpy(mp_Value+i, &value, sizeof(char));
-						memcpy(mp_InitialValue+i, &value, sizeof(char));
+						ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
+								, m_Name.c_str()
+								, GetInitialValueAsString().c_str());
+						this->CallNamedCallbacks(mp_Value);
 					}
-					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <char>: \"%s\""
-							, m_Name.c_str()
-							, GetInitialValueAsString().c_str());
-					this->CallNamedCallbacks(mp_Value);
+					else
+					{
+						for (size_t i = 0; i < COUNT; ++i)
+						{
+							memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
+							memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
+						}
+						ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
+								, m_Name.c_str()
+								, GetInitialValueAsString().c_str());
+						this->CallNamedCallbacks(mp_Value);
+					}
 				}
 				else
 				{
-					for (size_t i = 0; i < COUNT; ++i)
-					{
-						memcpy(mp_Value+i, mp_InitialValuePtr, sizeof(T));
-						memcpy(mp_InitialValue+i, mp_InitialValuePtr, sizeof(T));
-					}
-					ESP_LOGD( "DataItem<T, COUNT>::Setup()", "\"%s\": Set initial value <T>: \"%s\""
-							, m_Name.c_str()
-							, GetInitialValueAsString().c_str());
-					this->CallNamedCallbacks(mp_Value);
+					ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on spi ram.");
 				}
-			}
-			else
-			{
-				ESP_LOGE("DataItem<T, COUNT>::Setup()", "Failed to allocate memory on spi ram.");
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 		}
 		
@@ -232,45 +250,56 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		void GetValue(void* object, size_t count) const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
-			assert((count == COUNT) && "Counts must be equal");
-			if (mp_Value)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				memcpy(object, mp_Value, sizeof(T) * count);
-			}
-			else
-			{
-				ESP_LOGE("GetValue", "ERROR! NULL Pointer in mp_Value.");
-				if constexpr (std::is_pointer_v<T>)
+				assert((count == COUNT) && "Counts must be equal");
+				if (mp_Value)
 				{
-					*reinterpret_cast<T*>(object) = nullptr;
+					memcpy(object, mp_Value, sizeof(T) * count);
 				}
+				else
+				{
+					ESP_LOGE("GetValue", "ERROR! NULL Pointer in mp_Value.");
+					if constexpr (std::is_pointer_v<T>)
+					{
+						*reinterpret_cast<T*>(object) = nullptr;
+					}
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 		}
 
 		T* GetValuePointer() const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
-			if(!mp_Value)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+				if(!mp_Value)
+				{
+					ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return mp_Value;
 		}
 
 		virtual T GetValue() const
 		{
-			std::lock_guard<std::recursive_mutex> lock(this->m_ValueMutex);
-			assert((1 == COUNT) && "Count must 1 to use this function");
-			if(mp_Value)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				return static_cast<T>(*mp_Value);
+				assert((1 == COUNT) && "Count must 1 to use this function");
+				if(mp_Value)
+				{
+					xSemaphoreGiveRecursive(m_ValueSemaphore);
+					return static_cast<T>(*mp_Value);
+				}
+				else
+				{
+					ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+					xSemaphoreGiveRecursive(m_ValueSemaphore);
+					return T();
+				}
 			}
-			else
-			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
-				return T();
-			}
+			return T();
 		}
 
 		virtual bool GetInitialValueAsString(String &stringValue) const
@@ -301,19 +330,24 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool GetValueAsString(String &stringValue) const
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
-			stringValue = "";
-			if (mp_Value && COUNT > 0)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				stringValue = ConvertValueToString(mp_Value, COUNT);
-				ESP_LOGV("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
-				return true;
+				stringValue = "";
+				if (mp_Value && COUNT > 0)
+				{
+					stringValue = ConvertValueToString(mp_Value, COUNT);
+					ESP_LOGV("GetValueAsString", "\"%s\": String Value: \"%s\"", m_Name.c_str(), stringValue.c_str());
+					xSemaphoreGiveRecursive(m_ValueSemaphore);
+					return true;
+				}
+				else
+				{
+					ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
+					xSemaphoreGiveRecursive(m_ValueSemaphore);
+					return false;
+				}
 			}
-			else
-			{
-				ESP_LOGE("GetValueAsString", "ERROR! \"%s\": NULL Pointer.", m_Name.c_str());
-				return false;
-			}
+			return false;
 		}
 
 		virtual String GetValueAsString() const
@@ -427,10 +461,15 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		bool EqualsValue(T *values, size_t count) const
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
-			if(COUNT == count)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				return (memcmp(mp_Value, values, sizeof(T)*count) == 0);
+				if(COUNT == count)
+				{
+					bool result = (memcmp(mp_Value, values, sizeof(T)*count) == 0);
+					xSemaphoreGiveRecursive(m_ValueSemaphore);
+					return result;
+				}
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return false;
 		}
@@ -490,40 +529,43 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t newChangeCount)
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ValueMutex);
-			assert(newValues != nullptr);
-			assert(mp_Value != nullptr);
-			assert(COUNT > 0);
-			ESP_LOGD( "UpdateStore"
-					, "Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\" New Change Count: \"%i\""
-					, GetName().c_str()
-					, ConvertValueToString(newValues, COUNT).c_str()
-					, m_ChangeCount
-					, newChangeCount );
 			UpdateStatus_t updateStatus;
-			updateStatus.ValueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
-			updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
-			updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-			updateStatus.UpdateSuccessful = UpdateChangeCount(newChangeCount, updateStatus.UpdateAllowed);
-			ESP_LOGD( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
-			if(updateStatus.UpdateSuccessful)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
-				ZeroOutMemory(mp_Value);
-				memcpy(mp_Value, newValues, sizeof(T) * COUNT);
-				updateStatus.UpdateSuccessful = ( memcmp(mp_Value, newValues, sizeof(T) * COUNT) == 0);
+				assert(newValues != nullptr);
+				assert(mp_Value != nullptr);
+				assert(COUNT > 0);
+				ESP_LOGD( "UpdateStore"
+						, "Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\" New Change Count: \"%i\""
+						, GetName().c_str()
+						, ConvertValueToString(newValues, COUNT).c_str()
+						, m_ChangeCount
+						, newChangeCount );
+				updateStatus.ValueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
+				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
+				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
+				updateStatus.UpdateSuccessful = UpdateChangeCount(newChangeCount, updateStatus.UpdateAllowed);
+				ESP_LOGD( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
 				if(updateStatus.UpdateSuccessful)
 				{
-					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
-					this->CallNamedCallbacks(mp_Value);
+					ZeroOutMemory(mp_Value);
+					memcpy(mp_Value, newValues, sizeof(T) * COUNT);
+					updateStatus.UpdateSuccessful = ( memcmp(mp_Value, newValues, sizeof(T) * COUNT) == 0);
+					if(updateStatus.UpdateSuccessful)
+					{
+						ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+						this->CallNamedCallbacks(mp_Value);
+					}
+					else
+					{
+						ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+					}
 				}
 				else
 				{
-					ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
 				}
-			}
-			else
-			{
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
+				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			return updateStatus;
 		}
@@ -554,5 +596,5 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		size_t m_ChangeCount = 0;
 		bool m_ChangeCountInitialized = false;
 	protected:
-		mutable std::recursive_mutex m_ValueMutex;
+		SemaphoreHandle_t m_ValueSemaphore;
 };

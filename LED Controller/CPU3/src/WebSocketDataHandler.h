@@ -27,7 +27,7 @@
 #include "Tunes.h"
 #include "DataItem/DataItems.h"
 #include "Arduino_JSON.h"
-#include <mutex>
+#include "freertos/semphr.h"
 #include <cstring>
 
 #define MESSAGE_LENGTH 500
@@ -58,11 +58,25 @@ class WebSocketDataProcessor
                           : m_WebServer(webServer)
                           , m_WebSocket(webSocket)
     {
+      m_Tx_KeyValues_Semaphore = xSemaphoreCreateMutex();
+      if (m_Tx_KeyValues_Semaphore == nullptr)
+      {
+          ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
+      }
       xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
     }
     virtual ~WebSocketDataProcessor()
     {
-      if(m_WebSocketTaskHandle) vTaskDelete(m_WebSocketTaskHandle);
+      if(m_WebSocketTaskHandle)
+      {
+        vTaskDelete(m_WebSocketTaskHandle);
+        m_WebSocketTaskHandle = nullptr;
+      }
+      if (m_Tx_KeyValues_Semaphore)
+      {
+          vSemaphoreDelete(m_Tx_KeyValues_Semaphore);
+          m_Tx_KeyValues_Semaphore = nullptr;
+      }
     }
     void RegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
     void DeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
@@ -73,9 +87,12 @@ class WebSocketDataProcessor
     static void StaticWebSocketDataProcessor_WebSocket_TxTask(void * parameter);
     void TxDataToWebSocket(String key, String value)
     {
-      std::lock_guard<std::recursive_mutex> lock(m_Tx_KeyValues_Mutex);
-      KVP keyValuePair = {key, value};
-      m_Tx_KeyValues.push_back(keyValuePair);
+      if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, portMAX_DELAY) == pdTRUE)
+      {
+        KVP keyValuePair = {key, value};
+        m_Tx_KeyValues.push_back(keyValuePair);
+        xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
+      }
     }
   private:
     WebServer &m_WebServer;
@@ -84,7 +101,7 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
-    std::recursive_mutex m_Tx_KeyValues_Mutex;
+    SemaphoreHandle_t m_Tx_KeyValues_Semaphore;
     void WebSocketDataProcessor_WebSocket_TxTask();
     void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, String &result);
     void NotifyClient(uint8_t clientID, const String& textString);
@@ -237,11 +254,21 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                                                                : WebSocketDataHandler<BT_Device_Info_With_Time_Since_Update, 1>( WebSocketDataProcessor
                                                                                                                                , DataItem )
     {
+      m_ActiveDevicesSemaphore = xSemaphoreCreateMutex();
+      if (m_ActiveDevicesSemaphore == nullptr)
+      {
+          ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
+      }
     }
     
     virtual ~BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler()
     {
       StopTrackingDevices();
+      if (m_ActiveDevicesSemaphore != nullptr)
+      {
+          vSemaphoreDelete(m_ActiveDevicesSemaphore);
+          m_ActiveDevicesSemaphore = nullptr;
+      }
     }
 
     bool NewRxValueReceived(const BT_Device_Info_With_Time_Since_Update* values, size_t count, size_t changeCount) override
@@ -297,25 +324,28 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
     {
-      std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-      ActiveBluetoothDevice_t newdevice( device.name
-                                        , device.address
-                                        , device.rssi
-                                        , millis()
-                                        , device.timeSinceUpdate );
-      auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), newdevice);
-      if (it != m_ActiveDevices.end())
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, portMAX_DELAY) == pdTRUE)
       {
-        *it = newdevice;
-        ESP_LOGD("ScannedDevice_ValueChanged", "Device Updated: \"%s\"", device.toString().c_str());
-      }
-      else 
-      {
-        if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
+        ActiveBluetoothDevice_t newdevice( device.name
+                                          , device.address
+                                          , device.rssi
+                                          , millis()
+                                          , device.timeSinceUpdate );
+        auto it = std::find(m_ActiveDevices.begin(), m_ActiveDevices.end(), newdevice);
+        if (it != m_ActiveDevices.end())
         {
-          ESP_LOGI("ScannedDevice_ValueChanged", "New Device: \"%s\"", device.toString().c_str());
-          m_ActiveDevices.push_back(newdevice);
+          *it = newdevice;
+          ESP_LOGD("ScannedDevice_ValueChanged", "Device Updated: \"%s\"", device.toString().c_str());
         }
+        else 
+        {
+          if(device.timeSinceUpdate < BLUETOOTH_DEVICE_TIMEOUT)
+          {
+            ESP_LOGI("ScannedDevice_ValueChanged", "New Device: \"%s\"", device.toString().c_str());
+            m_ActiveDevices.push_back(newdevice);
+          }
+        }
+        xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore);
       }
     }
 
@@ -339,7 +369,8 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void CleanActiveCompatibleDevices()
     {
-        std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, portMAX_DELAY) == pdTRUE)
+      {
         ESP_LOGV("CleanActiveCompatibleDevices", "Cleaning Stale Devices.");
         for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
         {
@@ -355,6 +386,8 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                 ++it;
             }
         }
+        xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore);
+      }
     }
 
     void SendActiveCompatibleDevicesToWebSocket()
@@ -362,30 +395,28 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         const size_t preAllocSize = 1024;
         std::string jsonString;
         jsonString.reserve(preAllocSize);
-
+        if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, portMAX_DELAY) == pdTRUE)
         {
-            std::lock_guard<std::recursive_mutex> lock(m_ActiveDevicesMutex);
-            std::vector<ActiveBluetoothDevice_t> tempVector = m_ActiveDevices;
-
-            jsonString += "{\"Devices\":[";
-
-            bool firstDevice = true;
-            for (const auto& device : tempVector)
-            {
-                if (!firstDevice)
-                {
-                    jsonString += ",";
-                }
-                firstDevice = false;
-                jsonString += "{";
-                jsonString += "\"Name\":\"" + std::string(device.name) + "\",";
-                jsonString += "\"Address\":\"" + std::string(device.address) + "\",";
-                jsonString += "\"RSSI\":\"" + std::to_string(device.rssi) + "\"";
-                jsonString += "}";
-            }
-            jsonString += "]}";
+          std::vector<ActiveBluetoothDevice_t> tempVector = m_ActiveDevices;
+          jsonString += "{\"Devices\":[";
+          bool firstDevice = true;
+          for (const auto& device : tempVector)
+          {
+              if (!firstDevice)
+              {
+                  jsonString += ",";
+              }
+              firstDevice = false;
+              jsonString += "{";
+              jsonString += "\"Name\":\"" + std::string(device.name) + "\",";
+              jsonString += "\"Address\":\"" + std::string(device.address) + "\",";
+              jsonString += "\"RSSI\":\"" + std::to_string(device.rssi) + "\"";
+              jsonString += "}";
+          }
+          jsonString += "]}";
+          xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore);
         }
-
+        
         ESP_LOGD("SendActiveCompatibleDevicesToWebSocket", "JSON: %s", jsonString.c_str());
 
         if (!jsonString.empty())
@@ -396,6 +427,6 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     }
     private:
       std::vector<ActiveBluetoothDevice_t> m_ActiveDevices;
-      std::recursive_mutex m_ActiveDevicesMutex;
+      SemaphoreHandle_t m_ActiveDevicesSemaphore;
       TaskHandle_t m_ActiveDeviceUpdateTask;
 };

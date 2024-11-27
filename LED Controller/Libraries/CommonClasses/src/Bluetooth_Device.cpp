@@ -25,6 +25,11 @@ void Bluetooth_Source::Setup()
 {
 	ESP_LOGI("Setup", "\"%s\": Setup", GetTitle().c_str());
 	m_DeviceProcessorQueueHandle = xQueueCreate(DEVICE_QUEUE_SIZE, sizeof(BT_Device_Info));
+	m_ActiveCompatibleDevicesSemaphore = xSemaphoreCreateMutex();
+	if (m_ActiveCompatibleDevicesSemaphore == nullptr)
+	{
+		ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
+	}
 	if(m_DeviceProcessorQueueHandle != NULL)
 	{
 		ESP_LOGI("Setup", "Created compatible device Processor Queue.");
@@ -195,6 +200,11 @@ Bluetooth_Source::~Bluetooth_Source()
 		vQueueDelete(m_DeviceProcessorQueueHandle);
 		m_DeviceProcessorQueueHandle = nullptr;
 	}
+	if(m_ActiveCompatibleDevicesSemaphore)
+	{
+		vSemaphoreDelete(m_ActiveCompatibleDevicesSemaphore);
+		m_ActiveCompatibleDevicesSemaphore = nullptr;
+	}
 }
 void Bluetooth_Source::StaticBTReadDataStream(const uint8_t* data, uint32_t length) 
 {
@@ -338,24 +348,27 @@ void Bluetooth_Source::DeviceProcessingTask()
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-	std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
-    ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
-	bool found = false;
-	for (auto& device : m_ActiveCompatibleDevices)
+	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, portMAX_DELAY) == pdTRUE)
 	{
-		if (device == newDevice)
+		ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
+		bool found = false;
+		for (auto& device : m_ActiveCompatibleDevices)
 		{
-			found = true;
-			device = newDevice;
-			device.lastUpdateTime = millis();
-			ESP_LOGD("Bluetooth_Device", "compatible device \"%s\" Updated", newDevice.name);
-			break;
+			if (device == newDevice)
+			{
+				found = true;
+				device = newDevice;
+				device.lastUpdateTime = millis();
+				ESP_LOGD("Bluetooth_Device", "compatible device \"%s\" Updated", newDevice.name);
+				break;
+			}
 		}
-	}
-	if (!found)
-	{
-		ESP_LOGI("Bluetooth_Device", "New compatible device Found: %s", newDevice.name);
-		m_ActiveCompatibleDevices.push_back(newDevice);
+		if (!found)
+		{
+			ESP_LOGI("Bluetooth_Device", "New compatible device Found: %s", newDevice.name);
+			m_ActiveCompatibleDevices.push_back(newDevice);
+		}
+		xSemaphoreGiveRecursive(m_ActiveCompatibleDevicesSemaphore);
 	}
 }
 
@@ -375,15 +388,28 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 		unsigned long CurrentTime = millis();
 		std::vector<ActiveBluetoothDevice_t> activeDevicesCopy;
+
+		if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, portMAX_DELAY) == pdTRUE)
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_ActiveCompatibleDevicesMutex);
-			auto newEnd = std::remove_if(m_ActiveCompatibleDevices.begin(), m_ActiveCompatibleDevices.end(),
+			// Use standard erase-remove idiom to filter devices
+			auto newEnd = std::remove_if(
+				m_ActiveCompatibleDevices.begin(),
+				m_ActiveCompatibleDevices.end(),
 				[CurrentTime](const ActiveBluetoothDevice_t& device) {
 					return (CurrentTime - device.lastUpdateTime) >= BT_COMPATIBLE_DEVICE_TIMEOUT;
 				});
+
+			// Erase outdated devices
 			m_ActiveCompatibleDevices.erase(newEnd, m_ActiveCompatibleDevices.end());
+
+			// Make a copy of the updated device list
 			activeDevicesCopy = m_ActiveCompatibleDevices;
+
+			// Release the semaphore after modifications
+			xSemaphoreGiveRecursive(m_ActiveCompatibleDevicesSemaphore);
 		}
+
+		// Notify the callee about updated active devices
 		if (m_Callee)
 		{
 			m_Callee->BluetoothActiveDeviceListUpdated(activeDevicesCopy);

@@ -401,26 +401,28 @@ public:
         bool result = false;
         m_Preferences_Last_Update = millis();
         ESP_LOGD("InitializeAndLoadPreference", "Initializing Preference: \"%s\" with Initial Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
-        xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);   
-        if (mp_PreferencesInterface)
-        {
-            bool isKey = mp_PreferencesInterface->isKey(m_Key.c_str());
-            if (isKey)
+        if(xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY) == pdTRUE)
+        {   
+            if (mp_PreferencesInterface)
             {
-                ESP_LOGD("InitializeAndLoadPreference", "Preference Found: \"%s\" Loading saved value", m_Key.c_str());
-                result = Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
+                bool isKey = mp_PreferencesInterface->isKey(m_Key.c_str());
+                if (isKey)
+                {
+                    ESP_LOGD("InitializeAndLoadPreference", "Preference Found: \"%s\" Loading saved value", m_Key.c_str());
+                    result = Update_Preference(PreferenceUpdateType::Load, m_InitialValue);
+                }
+                else
+                {
+                    ESP_LOGD("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
+                    result = Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
+                }
             }
             else
             {
-                ESP_LOGD("InitializeAndLoadPreference", "Preference Not Found: \"%s\" Initializing with: \"%s\" ", m_Key.c_str(), m_InitialValue.c_str());
-                result = Update_Preference(PreferenceUpdateType::Initialize, m_InitialValue);
+                ESP_LOGE("InitializeAndLoadPreference", "ERROR! Null Preferences Pointer.");
             }
+            xSemaphoreGiveRecursive(m_PreferencesMutex);
         }
-        else
-        {
-            ESP_LOGE("InitializeAndLoadPreference", "ERROR! Null Preferences Pointer.");
-        }
-        xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
     }
 

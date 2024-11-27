@@ -44,71 +44,94 @@ class SetupCallerInterface
         SetupCallerInterface()
         {
             ESP_LOGD("SetupCallerInterface", "Constructing SetupCallerInterface");
+			m_SetupCallesSemaphore = xSemaphoreCreateMutex();
+			if (m_SetupCallesSemaphore == nullptr)
+			{
+				ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
+			}
         }
 
         virtual ~SetupCallerInterface()
         {
-            std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
-            ESP_LOGD("SetupCallerInterface", "Deleting SetupCallerInterface");
-            for (SetupCalleeInterface* callee : m_SetupCallees)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
             {
-                DeRegisterForSetupCall(callee);
+                ESP_LOGD("SetupCallerInterface", "Deleting SetupCallerInterface");
+                for (SetupCalleeInterface* callee : m_SetupCallees)
+                {
+                    DeRegisterForSetupCall(callee);
+                }
+                m_SetupCallees.clear();
+                ESP_LOGD("SetupCallerInterface", "SetupCallerInterface Deleted");
+                xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
             }
-            m_SetupCallees.clear();
-            ESP_LOGD("SetupCallerInterface", "SetupCallerInterface Deleted");
+            if(m_SetupCallesSemaphore)
+            {
+                vSemaphoreDelete(m_SetupCallesSemaphore);
+                m_SetupCallesSemaphore == nullptr;
+            }
         }
 
         virtual void RegisterForSetupCall(SetupCalleeInterface* newCallee)
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
-			ESP_LOGD("SetupCallerInterface", "Try Registering Callee");
-			bool isFound = false;
-			for (SetupCalleeInterface* callee : m_SetupCallees)
-			{
-				if(newCallee == callee)
-				{
-					ESP_LOGW("SetupCallerInterface", "WARNING! Setup Callee already added!");
-					isFound = true;
-					break;
-				}
-			}
-			if(!isFound)
-			{
-				ESP_LOGD("SetupCallerInterface", "Callee Registered");
-				m_SetupCallees.push_back(newCallee);
-			}
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+            {
+                ESP_LOGD("SetupCallerInterface", "Try Registering Callee");
+                bool isFound = false;
+                for (SetupCalleeInterface* callee : m_SetupCallees)
+                {
+                    if(newCallee == callee)
+                    {
+                        ESP_LOGW("SetupCallerInterface", "WARNING! Setup Callee already added!");
+                        isFound = true;
+                        break;
+                    }
+                }
+                if(!isFound)
+                {
+                    ESP_LOGD("SetupCallerInterface", "Callee Registered");
+                    m_SetupCallees.push_back(newCallee);
+                }
+                xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
+            }
 		}
 
         virtual void DeRegisterForSetupCall(SetupCalleeInterface* callee)
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
-			auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), callee);
-			if (it != m_SetupCallees.end())
-			{
-				m_SetupCallees.erase(it);
-				ESP_LOGD("SetupCallerInterface", "Callee Deregistered");
-			}
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+            {
+                auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), callee);
+                if (it != m_SetupCallees.end())
+                {
+                    m_SetupCallees.erase(it);
+                    ESP_LOGD("SetupCallerInterface", "Callee Deregistered");
+                }
+                xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
+            }
 		}
 
         virtual void SetupAllSetupCallees()
 		{
-			std::lock_guard<std::recursive_mutex> lock(m_SetupMutex);
-			ESP_LOGI("SetupAllSetupCallees", "Setup All Setup Callees");
-			for (SetupCalleeInterface* callee : m_SetupCallees)
-			{
-				if (callee) 
-				{
-					callee->Setup();
-					ESP_LOGI("SetupAllSetupCallees", "Setting up: \"%s\".", callee->GetName().c_str());
-				}
-				else
-				{
-					ESP_LOGW("SetupAllSetupCallees", "WARNING! Null callee encountered in list");
-				}
-			}
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+            {
+                ESP_LOGI("SetupAllSetupCallees", "Setup All Setup Callees");
+                for (SetupCalleeInterface* callee : m_SetupCallees)
+                {
+                    if (callee) 
+                    {
+                        ESP_LOGI("SetupAllSetupCallees", "Setting up: \"%s\".", callee->GetName().c_str());
+                        callee->Setup();
+                        ESP_LOGI("SetupAllSetupCallees", "\"%s\" Setup.", callee->GetName().c_str());
+                    }
+                    else
+                    {
+                        ESP_LOGW("SetupAllSetupCallees", "WARNING! Null callee encountered in list");
+                    }
+                }
+                xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
+            }
 		}
 
     private:
         std::vector<SetupCalleeInterface*> m_SetupCallees;
-        std::recursive_mutex m_SetupMutex;
+        SemaphoreHandle_t m_SetupCallesSemaphore;
 };

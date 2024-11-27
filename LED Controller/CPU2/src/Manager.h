@@ -52,7 +52,7 @@ class Manager: public NamedItem
     virtual ~Manager();
     void Setup();
 
-    void CreateTask()
+    void CreateRxTask()
     {
       if( xTaskCreatePinnedToCore( Static_I2S_Request_Task, "I2S Request", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
       {
