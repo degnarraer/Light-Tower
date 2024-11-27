@@ -401,7 +401,7 @@ public:
         bool result = false;
         m_Preferences_Last_Update = millis();
         ESP_LOGD("InitializeAndLoadPreference", "Initializing Preference: \"%s\" with Initial Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
-        if(xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY) == pdTRUE)
+        if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(100)) == pdTRUE)
         {   
             if (mp_PreferencesInterface)
             {
@@ -422,6 +422,10 @@ public:
                 ESP_LOGE("InitializeAndLoadPreference", "ERROR! Null Preferences Pointer.");
             }
             xSemaphoreGiveRecursive(m_PreferencesMutex);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return result;
     }
@@ -555,71 +559,77 @@ private:
 
     bool HandleLoad()
     {
-        xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
         bool result = false;
-        if(mp_PreferencesInterface)
+        if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(100)) == pdTRUE)
         {
-            ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
-            String loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-            ESP_LOGD("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
-            if (m_Callback && mp_Object)
+            if(mp_PreferencesInterface)
             {
-                UpdateStatus_t updateStatus = m_Callback(loadedValue, mp_Object);
-                ESP_LOGI( "HandleLoad", "\"%s\" Loaded value: \"%s\" \n" 
-                          "ValueChanged: %i \n"
-                          "Value Valid: %i \n"
-                          "Value Update Allowed: %i \n"
-                          "Value Update Successful: %i "
-                          , m_Key.c_str()
-                          , m_InitialValue.c_str()
-                          , updateStatus.ValueChanged
-                          , updateStatus.ValidValue
-                          , updateStatus.UpdateAllowed
-                          , updateStatus.UpdateSuccessful );
-                if(updateStatus.ValueChanged)
+                ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
+                String loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                ESP_LOGD("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                if (m_Callback && mp_Object)
                 {
-                    if(updateStatus.UpdateSuccessful)
+                    UpdateStatus_t updateStatus = m_Callback(loadedValue, mp_Object);
+                    ESP_LOGI( "HandleLoad", "\"%s\" Loaded value: \"%s\" \n" 
+                            "ValueChanged: %i \n"
+                            "Value Valid: %i \n"
+                            "Value Update Allowed: %i \n"
+                            "Value Update Successful: %i "
+                            , m_Key.c_str()
+                            , m_InitialValue.c_str()
+                            , updateStatus.ValueChanged
+                            , updateStatus.ValidValue
+                            , updateStatus.UpdateAllowed
+                            , updateStatus.UpdateSuccessful );
+                    if(updateStatus.ValueChanged)
                     {
-                        ESP_LOGI("HandleLoad", "Successfully loaded value. Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
-                        result = true;
+                        if(updateStatus.UpdateSuccessful)
+                        {
+                            ESP_LOGI("HandleLoad", "Successfully loaded value. Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                            result = true;
+                        }
+                        else
+                        {
+                            ESP_LOGW("HandleLoad", "WARNING! \"%s\" Failed to Load. Trying Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
+                            updateStatus = m_Callback(m_InitialValue, mp_Object);
+                            if(updateStatus.ValueChanged)
+                            {
+                                if(updateStatus.UpdateSuccessful)
+                                {
+                                    ESP_LOGI("HandleLoad", "Successfully loaded value. Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                                    result = true;
+                                }
+                                else
+                                {
+                                    ESP_LOGE("HandleLoad", "ERROR! Unable to load value. Key: \"%s\".", m_Key.c_str());
+                                    result = false;
+                                }
+                            }
+                        }
                     }
                     else
                     {
-                        ESP_LOGW("HandleLoad", "WARNING! \"%s\" Failed to Load. Trying Default Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
-                        updateStatus = m_Callback(m_InitialValue, mp_Object);
-                        if(updateStatus.ValueChanged)
-                        {
-                            if(updateStatus.UpdateSuccessful)
-                            {
-                                ESP_LOGI("HandleLoad", "Successfully loaded value. Key: \"%s\" Default Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
-                                result = true;
-                            }
-                            else
-                            {
-                                ESP_LOGE("HandleLoad", "ERROR! Unable to load value. Key: \"%s\".", m_Key.c_str());
-                                result = false;
-                            }
-                        }
+                        
+                        ESP_LOGI("HandleLoad", "Skipping load. Value already set for Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                        result = true;
                     }
                 }
                 else
                 {
-                    
-                    ESP_LOGI("HandleLoad", "Skipping load. Value already set for Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
+                    ESP_LOGD("HandleLoad", "\"%s\" No Callback Pointers", m_Key.c_str());
                     result = true;
                 }
             }
             else
             {
-                ESP_LOGD("HandleLoad", "\"%s\" No Callback Pointers", m_Key.c_str());
-                result = true;
+                ESP_LOGE("HandleLoad", "ERROR! \"%s\" Null PreferencesInterface Pointer.", m_Key.c_str());
             }
+            xSemaphoreGiveRecursive(m_PreferencesMutex);
         }
         else
         {
-            ESP_LOGE("HandleLoad", "ERROR! \"%s\" Null PreferencesInterface Pointer.", m_Key.c_str());
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
-        xSemaphoreGiveRecursive(m_PreferencesMutex);
         return result;
     }
     
@@ -684,18 +694,24 @@ private:
             }
             else
             {
-                xSemaphoreTakeRecursive(m_PreferencesMutex, portMAX_DELAY);
-                String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
-                ESP_LOGD("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
-                if(stringToSave.equals(savedString))
+                if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(100)) == pdTRUE)
                 {
-                    ESP_LOGD("TrySave", "Key: \"%s\" Skipping save as String to Save: \"%s\" equals Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());       
+                    String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                    ESP_LOGD("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
+                    if(stringToSave.equals(savedString))
+                    {
+                        ESP_LOGD("TrySave", "Key: \"%s\" Skipping save as String to Save: \"%s\" equals Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());       
+                    }
+                    else
+                    {
+                        result = PerformSave(stringToSave);
+                    }
+                    xSemaphoreGiveRecursive(m_PreferencesMutex);
                 }
                 else
                 {
-                    result = PerformSave(stringToSave);
+                    ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
                 }
-                xSemaphoreGiveRecursive(m_PreferencesMutex);
             }
         }
         else

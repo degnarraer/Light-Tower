@@ -55,7 +55,7 @@ class AudioBuffer
 
     void AllocateMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             ESP_LOGD("AllocateMemory", "Allocating memory");
             m_CircularAudioBuffer = new(std::nothrow) bfs::CircleBuf<Frame_t, COUNT>;
@@ -66,11 +66,15 @@ class AudioBuffer
             }
             xSemaphoreGiveRecursive(m_Lock);
         }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
     }
 
     void FreeMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             if (m_CircularAudioBuffer != nullptr)
             {
@@ -79,26 +83,38 @@ class AudioBuffer
             }
             xSemaphoreGiveRecursive(m_Lock);
         }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
     }
 
     size_t GetFrameCapacity()
     {
         size_t capacity = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             capacity = m_CircularAudioBuffer->capacity();
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return capacity;
     }
 
     bool ClearAudioBuffer()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             m_CircularAudioBuffer->Clear();
             xSemaphoreGiveRecursive(m_Lock);
             return true;
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return false;
     }
@@ -106,10 +122,14 @@ class AudioBuffer
     size_t GetFrameCount()
     {
         size_t count = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             count = m_CircularAudioBuffer->size();
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return count;
     }
@@ -122,10 +142,14 @@ class AudioBuffer
     size_t WriteAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
     {
         size_t written = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             written = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return written;
     }
@@ -133,10 +157,14 @@ class AudioBuffer
     bool WriteAudioFrame(Frame_t Frame)
     {
         bool result = false;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             result = m_CircularAudioBuffer->Write(Frame);
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return result;
     }
@@ -144,10 +172,14 @@ class AudioBuffer
     size_t ReadAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
     {
         size_t read = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             read = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return read;
     }
@@ -155,10 +187,14 @@ class AudioBuffer
     bfs::optional<Frame_t> ReadAudioFrame()
     {
         bfs::optional<Frame_t> frame;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             frame = m_CircularAudioBuffer->Read();
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return frame;
     }
@@ -198,7 +234,7 @@ class ContinuousAudioBuffer
 
     void AllocateMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             ESP_LOGD("AllocateMemory", "Allocating memory");
             m_CircularAudioBuffer = new(std::nothrow) CircularBuffer<Frame_t, COUNT>;
@@ -208,11 +244,15 @@ class ContinuousAudioBuffer
             }
             xSemaphoreGiveRecursive(m_Lock);
         }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
     }
 
     void FreeMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             if (m_CircularAudioBuffer != nullptr)
             {
@@ -221,15 +261,23 @@ class ContinuousAudioBuffer
             }
             xSemaphoreGiveRecursive(m_Lock);
         }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
     }
 
     bool Push(Frame_t Frame)
     {
         bool result = false;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             result = m_CircularAudioBuffer->push(Frame);
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return result;
     }
@@ -237,7 +285,7 @@ class ContinuousAudioBuffer
     size_t Push(Frame_t* Frames, size_t Count)
     {
         size_t pushed = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             for (size_t i = 0; i < Count; ++i)
             {
@@ -248,16 +296,24 @@ class ContinuousAudioBuffer
             }
             xSemaphoreGiveRecursive(m_Lock);
         }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
         return pushed;
     }
 
     Frame_t Pop()
     {
         Frame_t frame;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             frame = m_CircularAudioBuffer->pop();
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return frame;
     }
@@ -265,7 +321,7 @@ class ContinuousAudioBuffer
     size_t Pop(Frame_t* Frames, size_t Count)
     {
         size_t popped = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             for (size_t i = 0; i < Count; ++i)
             {
@@ -277,16 +333,24 @@ class ContinuousAudioBuffer
             }
             xSemaphoreGiveRecursive(m_Lock);
         }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
         return popped;
     }
 
     bool IsEmpty()
     {
         bool isEmpty = false;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             isEmpty = m_CircularAudioBuffer->isEmpty();
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return isEmpty;
     }
@@ -294,10 +358,14 @@ class ContinuousAudioBuffer
     size_t Size()
     {
         size_t size = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             size = m_CircularAudioBuffer->size();
             xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return size;
     }
@@ -305,7 +373,7 @@ class ContinuousAudioBuffer
 	size_t ReadAudioFrames(Frame_t *Buffer, uint32_t Count)
 	{
 		uint32_t ElementsToRead = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
 			ElementsToRead = std::min(Count, static_cast<uint32_t>(m_CircularAudioBuffer->size()));
 			uint32_t StartIndex = m_CircularAudioBuffer->size() - ElementsToRead;
@@ -315,6 +383,10 @@ class ContinuousAudioBuffer
 			}
             xSemaphoreGiveRecursive(m_Lock);
 		}
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
 		return ElementsToRead;
 	}
 

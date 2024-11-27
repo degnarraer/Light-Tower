@@ -62,7 +62,7 @@ class DataSerializer: public CommonUtils
 		
 		virtual String SerializeDataItemToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
-			if (xSemaphoreTakeRecursive(m_SerializeDocLock, portMAX_DELAY) == pdTRUE)
+			if (xSemaphoreTakeRecursive(m_SerializeDocLock, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				if (Object == nullptr)
 				{
@@ -124,12 +124,16 @@ class DataSerializer: public CommonUtils
 					return "{}";
 				}
 			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 		}
 
 		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			bool deserialized = false;
-			if (xSemaphoreTakeRecursive(m_DeSerializeDocLock, portMAX_DELAY) == pdTRUE)
+			if (xSemaphoreTakeRecursive(m_DeSerializeDocLock, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 				// Parse the JSON
@@ -240,6 +244,10 @@ class DataSerializer: public CommonUtils
 				}
 				FailPercentage();
 				xSemaphoreGiveRecursive(m_DeSerializeDocLock);
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return deserialized;
 		}

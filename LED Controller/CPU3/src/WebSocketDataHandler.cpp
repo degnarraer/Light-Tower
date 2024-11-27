@@ -26,7 +26,7 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
     while (true)
     {
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             if (!m_Tx_KeyValues.empty())
             {
@@ -39,6 +39,10 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
                 }
             }
             xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
     }
 }

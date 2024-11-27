@@ -53,7 +53,7 @@ class SetupCallerInterface
 
         virtual ~SetupCallerInterface()
         {
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
             {
                 ESP_LOGD("SetupCallerInterface", "Deleting SetupCallerInterface");
                 for (SetupCalleeInterface* callee : m_SetupCallees)
@@ -64,6 +64,10 @@ class SetupCallerInterface
                 ESP_LOGD("SetupCallerInterface", "SetupCallerInterface Deleted");
                 xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
             }
+            else
+            {
+                ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+            }
             if(m_SetupCallesSemaphore)
             {
                 vSemaphoreDelete(m_SetupCallesSemaphore);
@@ -73,7 +77,7 @@ class SetupCallerInterface
 
         virtual void RegisterForSetupCall(SetupCalleeInterface* newCallee)
 		{
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
             {
                 ESP_LOGD("SetupCallerInterface", "Try Registering Callee");
                 bool isFound = false;
@@ -93,11 +97,15 @@ class SetupCallerInterface
                 }
                 xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
             }
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 		}
 
         virtual void DeRegisterForSetupCall(SetupCalleeInterface* callee)
 		{
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
             {
                 auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), callee);
                 if (it != m_SetupCallees.end())
@@ -107,11 +115,15 @@ class SetupCallerInterface
                 }
                 xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
             }
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 		}
 
         virtual void SetupAllSetupCallees()
 		{
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
             {
                 ESP_LOGI("SetupAllSetupCallees", "Setup All Setup Callees");
                 for (SetupCalleeInterface* callee : m_SetupCallees)
@@ -129,6 +141,10 @@ class SetupCallerInterface
                 }
                 xSemaphoreGiveRecursive(m_SetupCallesSemaphore);
             }
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 		}
 
     private:

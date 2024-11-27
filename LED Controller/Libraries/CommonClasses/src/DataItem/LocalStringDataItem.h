@@ -66,6 +66,10 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 					return false;
 				}
 			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 			return false;
 		}
 
@@ -99,6 +103,10 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
 					return false;
 				}
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return false;
 		}
@@ -153,6 +161,10 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 					}
 				}
 				xSemaphoreGiveRecursive(this->m_ValueSemaphore);
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return updateStatus;
 		}

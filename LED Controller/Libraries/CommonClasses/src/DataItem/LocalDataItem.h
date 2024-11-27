@@ -126,7 +126,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
         		ESP_LOGD("~LocalDataItem", "DeRegistering Named Callback");
 				this->DeRegisterNamedCallback(mp_NamedCallback);
 			}
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				if(mp_Value)
 				{
@@ -141,6 +141,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					mp_InitialValue = nullptr;
 				}
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			if (m_ValueSemaphore)
 			{
@@ -161,7 +165,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 				if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
@@ -207,6 +211,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				}
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 		}
 		
 		virtual void RegisterForSetup()
@@ -250,7 +258,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		void GetValue(void* object, size_t count) const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				assert((count == COUNT) && "Counts must be equal");
 				if (mp_Value)
@@ -267,11 +275,15 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				}
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 		}
 
 		T* GetValuePointer() const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				if(!mp_Value)
 				{
@@ -279,12 +291,16 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				}
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+			}
 			return mp_Value;
 		}
 
 		virtual T GetValue() const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				assert((1 == COUNT) && "Count must 1 to use this function");
 				if(mp_Value)
@@ -298,6 +314,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					xSemaphoreGiveRecursive(m_ValueSemaphore);
 					return T();
 				}
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return T();
 		}
@@ -330,7 +350,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool GetValueAsString(String &stringValue) const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				stringValue = "";
 				if (mp_Value && COUNT > 0)
@@ -346,6 +366,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					xSemaphoreGiveRecursive(m_ValueSemaphore);
 					return false;
 				}
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return false;
 		}
@@ -461,7 +485,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		bool EqualsValue(T *values, size_t count) const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				if(COUNT == count)
 				{
@@ -470,6 +494,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					return result;
 				}
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return false;
 		}
@@ -530,7 +558,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t newChangeCount)
 		{
 			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 			{
 				assert(newValues != nullptr);
 				assert(mp_Value != nullptr);
@@ -566,6 +594,10 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
 				}
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
+			}
+			else
+			{
+				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
 			return updateStatus;
 		}

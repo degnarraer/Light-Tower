@@ -67,13 +67,17 @@ public:
 
     void ResetCalculator()
     {
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             m_SolutionReady = false;
             m_CurrentIndex = 0;
             m_MaxFFTBinValue = 0;
             m_MaxFFTBinIndex = 0;
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
     }
 
@@ -82,12 +86,16 @@ public:
     float GetFFTBufferValue(int32_t index)
     {
         float value = 0.0f;
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             assert(true == m_SolutionReady);
             assert(index < m_FFT_Size / 2);
             value = mp_RealBuffer[index];
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return value;
     }
@@ -97,11 +105,15 @@ public:
     int32_t GetFFTMaxValueBin()
     {
         int32_t index = 0;
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             assert(true == m_SolutionReady);
             index = m_MaxFFTBinIndex;
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return index;
     }
@@ -109,11 +121,15 @@ public:
     float GetMajorPeak()
     {
         float peak = 0.0f;
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             assert(true == m_SolutionReady);
             peak = m_MajorPeak;
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return peak;
     }
@@ -121,11 +137,15 @@ public:
     float *GetMajorPeakPointer()
     {
         float *peak = nullptr;
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             assert(true == m_SolutionReady);
             peak = &m_MajorPeak;
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return peak;
     }
@@ -133,10 +153,14 @@ public:
     size_t GetRequiredValueCount()
     {
         size_t requiredCount = 0;
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             requiredCount = m_FFT_Size - m_CurrentIndex;
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return requiredCount;
     }
@@ -160,7 +184,7 @@ public:
             return m_SolutionReady;
         }
 
-        if (xSemaphoreTakeRecursive(m_Semaphore, portMAX_DELAY) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             value = std::clamp(value, -m_BitLengthMaxValue, m_BitLengthMaxValue);
 
@@ -174,8 +198,11 @@ public:
             if (m_CurrentIndex >= m_FFT_Size)
             {
                 m_CurrentIndex = 0;
+                vTaskDelay(pdMS_TO_TICKS(1));
                 m_MyFFT->compute(FFTDirection::Forward);
+                vTaskDelay(pdMS_TO_TICKS(1));
                 m_MyFFT->complexToMagnitude();
+                vTaskDelay(pdMS_TO_TICKS(1));
                 m_MajorPeak = m_MyFFT->majorPeak();
 
                 for (int i = 0; i < m_FFT_Size; ++i)
@@ -190,6 +217,10 @@ public:
                 m_SolutionReady = true;
             }
             xSemaphoreGiveRecursive(m_Semaphore);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return m_SolutionReady;
     }

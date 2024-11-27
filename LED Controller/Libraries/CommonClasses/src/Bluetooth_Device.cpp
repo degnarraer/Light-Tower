@@ -339,7 +339,7 @@ void Bluetooth_Source::DeviceProcessingTask()
   	while(true)
   	{
 		BT_Device_Info receivedDevice;
-        if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, portMAX_DELAY) == pdPASS)
+        if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, pdMS_TO_TICKS(100)) == pdPASS)
         {
             Compatible_Device_Found(receivedDevice);
         }
@@ -348,7 +348,7 @@ void Bluetooth_Source::DeviceProcessingTask()
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, portMAX_DELAY) == pdTRUE)
+	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 	{
 		ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 		bool found = false;
@@ -370,6 +370,10 @@ void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 		}
 		xSemaphoreGiveRecursive(m_ActiveCompatibleDevicesSemaphore);
 	}
+	else
+	{
+		ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+	}
 }
 
 void Bluetooth_Source::StaticCompatibleDeviceTrackerTaskLoop(void * Parameters)
@@ -389,7 +393,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		unsigned long CurrentTime = millis();
 		std::vector<ActiveBluetoothDevice_t> activeDevicesCopy;
 
-		if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, portMAX_DELAY) == pdTRUE)
+		if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
 		{
 			// Use standard erase-remove idiom to filter devices
 			auto newEnd = std::remove_if(
@@ -408,6 +412,10 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 			// Release the semaphore after modifications
 			xSemaphoreGiveRecursive(m_ActiveCompatibleDevicesSemaphore);
 		}
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
 
 		// Notify the callee about updated active devices
 		if (m_Callee)

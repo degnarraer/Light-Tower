@@ -62,7 +62,7 @@ void Sound_Processor::Static_Calculate_R_FFT(void * parameter)
 
 void Sound_Processor::Calculate_R_FFT()
 {
-  const TickType_t xFrequency = 250;
+  const TickType_t xFrequency = 100;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   m_R_FFT.ResetCalculator();
   while(true)
@@ -70,7 +70,6 @@ void Sound_Processor::Calculate_R_FFT()
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     if(m_AudioBuffer.Size() >= FFT_SIZE)
     {
-      esp_task_wdt_reset();
       Frame_t Buffer[FFT_SIZE];
       size_t readFrameCount = m_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
       if(readFrameCount == FFT_SIZE )
@@ -81,7 +80,6 @@ void Sound_Processor::Calculate_R_FFT()
         ESP_LOGW("Calculate_FFTs", "Read Buffer Size: %i  FFT_Gain: %f.", readFrameCount, fftGain);
         for(int i = 0; i < readFrameCount; ++i)
         {
-          esp_task_wdt_reset();
           if( m_R_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel1, fftGain) )
           {
             Update_Right_Bands_And_Send_Result();
@@ -95,7 +93,6 @@ void Sound_Processor::Calculate_R_FFT()
         m_R_BufferReadError = true;
       }
     }
-    taskYIELD();
   }
 }
 
@@ -107,7 +104,7 @@ void Sound_Processor::Static_Calculate_L_FFT(void * parameter)
 
 void Sound_Processor::Calculate_L_FFT()
 {
-  const TickType_t xFrequency = 250;
+  const TickType_t xFrequency = 100;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   m_L_FFT.ResetCalculator();
   while(true)
@@ -115,7 +112,6 @@ void Sound_Processor::Calculate_L_FFT()
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     if(m_AudioBuffer.Size() >= FFT_SIZE)
     {
-      esp_task_wdt_reset();
       Frame_t Buffer[FFT_SIZE];
       size_t readFrameCount = m_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
       if(readFrameCount == FFT_SIZE )
@@ -126,7 +122,6 @@ void Sound_Processor::Calculate_L_FFT()
         ESP_LOGW("Calculate_FFTs", "Read Buffer Size: %i  FFT_Gain: %f.", readFrameCount, fftGain);
         for(int i = 0; i < readFrameCount; ++i)
         {
-          esp_task_wdt_reset();
           if( m_L_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel2, fftGain) )
           {
             Update_Left_Bands_And_Send_Result();
@@ -140,7 +135,6 @@ void Sound_Processor::Calculate_L_FFT()
         m_L_BufferReadError = true;
       }
     }
-    taskYIELD();
   }
 }
 
