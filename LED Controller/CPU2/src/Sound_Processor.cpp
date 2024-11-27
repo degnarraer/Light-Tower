@@ -32,37 +32,32 @@ Sound_Processor::Sound_Processor( String Title
 }
 Sound_Processor::~Sound_Processor()
 {
-  if(m_Process_R_FFTTask) vTaskDelete(m_Process_R_FFTTask);
-  if(m_Process_L_FFTTask) vTaskDelete(m_Process_L_FFTTask);
+  if(m_Process_FFTTask) vTaskDelete(m_Process_FFTTask);
   if(m_ProcessSoundPowerTask) vTaskDelete(m_ProcessSoundPowerTask);
 }
 void Sound_Processor::Setup()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  if( xTaskCreatePinnedToCore( Static_Calculate_R_FFT, "R FFT Task", 7500, this, THREAD_PRIORITY_MEDIUM, &m_Process_R_FFTTask, 0 ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_FFT, "FFT Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Process_FFTTask, 0 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
-  if( xTaskCreatePinnedToCore( Static_Calculate_L_FFT, "L FFT Task", 7500, this, THREAD_PRIORITY_MEDIUM, &m_Process_L_FFTTask, 0 ) != pdTRUE )
-  {
-    ESP_LOGE("Setup", "ERROR! Unable to create task.");
-  }
-  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "ProcessSoundPowerTask", 7500, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask,   1 ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "Sound Power Task", 7500, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask, 1 ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
   SetupAllSetupCallees();
 }
 
-void Sound_Processor::Static_Calculate_R_FFT(void * parameter)
+void Sound_Processor::Static_Calculate_FFT(void * parameter)
 {
   Sound_Processor *aSound_Processor = (Sound_Processor*)parameter;
-  aSound_Processor->Calculate_R_FFT();
+  aSound_Processor->Calculate_FFT();
 }
 
-void Sound_Processor::Calculate_R_FFT()
+void Sound_Processor::Calculate_FFT()
 {
-  const TickType_t xFrequency = 100;
+  const TickType_t xFrequency = 1;
   TickType_t xLastWakeTime = xTaskGetTickCount();
   m_R_FFT.ResetCalculator();
   while(true)
@@ -74,8 +69,8 @@ void Sound_Processor::Calculate_R_FFT()
       size_t readFrameCount = m_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
       if(readFrameCount == FFT_SIZE )
       {
-        if(m_R_BufferReadError) ESP_LOGW("Calculate_FFTs", "Successfully Read Buffer.");
-        m_R_BufferReadError = false;
+        if(m_BufferReadError) ESP_LOGW("Calculate_FFTs", "Successfully Read Buffer.");
+        m_BufferReadError = false;
         float fftGain = m_FFT_Gain.GetValue();
         ESP_LOGW("Calculate_FFTs", "Read Buffer Size: %i  FFT_Gain: %f.", readFrameCount, fftGain);
         for(int i = 0; i < readFrameCount; ++i)
@@ -85,43 +80,6 @@ void Sound_Processor::Calculate_R_FFT()
             Update_Right_Bands_And_Send_Result();
             m_R_FFT.ResetCalculator();
           }
-        }
-      }
-      else
-      {
-        if(!m_R_BufferReadError) ESP_LOGE("Calculate_FFTs", "WARNING! Read Buffer Error.");
-        m_R_BufferReadError = true;
-      }
-    }
-  }
-}
-
-void Sound_Processor::Static_Calculate_L_FFT(void * parameter)
-{
-  Sound_Processor *aSound_Processor = (Sound_Processor*)parameter;
-  aSound_Processor->Calculate_L_FFT();
-}
-
-void Sound_Processor::Calculate_L_FFT()
-{
-  const TickType_t xFrequency = 100;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
-  m_L_FFT.ResetCalculator();
-  while(true)
-  {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    if(m_AudioBuffer.Size() >= FFT_SIZE)
-    {
-      Frame_t Buffer[FFT_SIZE];
-      size_t readFrameCount = m_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
-      if(readFrameCount == FFT_SIZE )
-      {
-        if(m_L_BufferReadError) ESP_LOGW("Calculate_FFTs", "Successfully Read Buffer.");
-        m_L_BufferReadError = false;
-        float fftGain = m_FFT_Gain.GetValue();
-        ESP_LOGW("Calculate_FFTs", "Read Buffer Size: %i  FFT_Gain: %f.", readFrameCount, fftGain);
-        for(int i = 0; i < readFrameCount; ++i)
-        {
           if( m_L_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel2, fftGain) )
           {
             Update_Left_Bands_And_Send_Result();
@@ -131,8 +89,8 @@ void Sound_Processor::Calculate_L_FFT()
       }
       else
       {
-        if(!m_L_BufferReadError) ESP_LOGE("Calculate_FFTs", "WARNING! Read Buffer Error.");
-        m_L_BufferReadError = true;
+        if(!m_BufferReadError) ESP_LOGE("Calculate_FFTs", "WARNING! Read Buffer Error.");
+        m_BufferReadError = true;
       }
     }
   }

@@ -198,11 +198,9 @@ public:
             if (m_CurrentIndex >= m_FFT_Size)
             {
                 m_CurrentIndex = 0;
-                vTaskDelay(pdMS_TO_TICKS(1));
                 m_MyFFT->compute(FFTDirection::Forward);
-                vTaskDelay(pdMS_TO_TICKS(1));
+                vTaskDelay(1);
                 m_MyFFT->complexToMagnitude();
-                vTaskDelay(pdMS_TO_TICKS(1));
                 m_MajorPeak = m_MyFFT->majorPeak();
 
                 for (int i = 0; i < m_FFT_Size; ++i)
