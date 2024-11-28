@@ -19,7 +19,7 @@
 #include "SerialMessageManager.h"
 
 //#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
-#define TIME_TO_WAIT_TO_SEND pdMS_TO_TICKS(500)
+#define TIME_TO_WAIT_TO_SEND pdMS_TO_TICKS(10)
 
 void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Object_Callee_Interface* NewCallee)
 {

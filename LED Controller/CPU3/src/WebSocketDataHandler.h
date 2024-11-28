@@ -87,7 +87,7 @@ class WebSocketDataProcessor
     static void StaticWebSocketDataProcessor_WebSocket_TxTask(void * parameter);
     void TxDataToWebSocket(String key, String value)
     {
-      if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+      if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(5)) == pdTRUE)
       {
         KVP keyValuePair = {key, value};
         m_Tx_KeyValues.push_back(keyValuePair);
@@ -328,7 +328,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void ActiveCompatibleDeviceReceived(const BT_Device_Info_With_Time_Since_Update &device)
     {
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
       {
         ActiveBluetoothDevice_t newdevice( device.name
                                           , device.address
@@ -377,7 +377,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
     void CleanActiveCompatibleDevices()
     {
-      if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+      if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
       {
         ESP_LOGV("CleanActiveCompatibleDevices", "Cleaning Stale Devices.");
         for (auto it = m_ActiveDevices.begin(); it != m_ActiveDevices.end();)
@@ -407,7 +407,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         const size_t preAllocSize = 1024;
         std::string jsonString;
         jsonString.reserve(preAllocSize);
-        if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_ActiveDevicesSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
         {
           std::vector<ActiveBluetoothDevice_t> tempVector = m_ActiveDevices;
           jsonString += "{\"Devices\":[";

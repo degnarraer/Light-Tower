@@ -1,29 +1,46 @@
 #ifndef FFT_CALCULATOR_H
 #define FFT_CALCULATOR_H
 
-#include "arduinoFFT.h"
+#include <Arduino.h>
 #include <DataTypes.h>
-#include "Streaming.h"
-#include "esp_system.h"
-#include "esp_task_wdt.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
+#include <cmath>
+#include <cstring>
+#include <cassert>
+#include <esp_log.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
+// Include FFT libraries
+#include <arduinoFFT.h>
+#include <kiss_fft.h>
+#include <dsp/dsp.h>
+
+// FFT Type Enumeration
+enum class FFT_Type
+{
+    ArduinoFFT,
+    KissFFT,
+    ESPDSP
+};
 
 class FFT_Calculator
 {
 public:
-    FFT_Calculator(int32_t FFT_Size, int32_t SampleRate, BitLength_t BitLength)
-        : m_FFT_Size(FFT_Size), m_FFT_SampleRate(SampleRate)
+    FFT_Calculator(int32_t FFT_Size, int32_t SampleRate, BitLength_t BitLength, FFT_Type fftType)
+        : m_FFT_Size(FFT_Size), m_FFT_SampleRate(SampleRate), m_FFT_Type(fftType)
     {
+        // Allocate buffers
         mp_RealBuffer = (float *)malloc(sizeof(float) * m_FFT_Size);
         mp_ImaginaryBuffer = (float *)malloc(sizeof(float) * m_FFT_Size);
-        m_MyFFT = new ArduinoFFT<float>(mp_RealBuffer, mp_ImaginaryBuffer, m_FFT_Size, m_FFT_SampleRate);
+
+        // Initialize semaphore
         m_Semaphore = xSemaphoreCreateMutex();
-        if(m_Semaphore == nullptr)
+        if (!m_Semaphore)
         {
             ESP_LOGE("FFT_Calculator", "ERROR! Unable to create Semaphore.");
         }
 
+        // Configure bit length
         switch (BitLength)
         {
         case BitLength_32:
@@ -39,6 +56,23 @@ public:
             m_BitLengthMaxValue = 1 << 32;
             break;
         }
+
+        // Initialize based on FFT type
+        switch (m_FFT_Type)
+        {
+        case FFT_Type::ArduinoFFT:
+            m_ArduinoFFT = new ArduinoFFT<float>(mp_RealBuffer, mp_ImaginaryBuffer, m_FFT_Size, m_FFT_SampleRate);
+            break;
+        case FFT_Type::KissFFT:
+            m_KissCfg = kiss_fft_alloc(m_FFT_Size, 0, nullptr, nullptr);
+            break;
+        case FFT_Type::ESPDSP:
+            // No additional initialization needed for ESP-DSP
+            break;
+        default:
+            ESP_LOGE("FFT_Calculator", "ERROR! Unknown FFT type.");
+            break;
+        }
     }
 
     virtual ~FFT_Calculator()
@@ -46,196 +80,137 @@ public:
         if (m_Semaphore)
         {
             vSemaphoreDelete(m_Semaphore);
-            m_Semaphore = nullptr;
         }
         if (mp_RealBuffer)
         {
             free(mp_RealBuffer);
-            mp_RealBuffer = nullptr;
         }
         if (mp_ImaginaryBuffer)
         {
             free(mp_ImaginaryBuffer);
-            mp_ImaginaryBuffer = nullptr;
         }
-        if (m_MyFFT)
+        if (m_ArduinoFFT)
         {
-            delete m_MyFFT;
-            m_MyFFT = nullptr;
+            delete m_ArduinoFFT;
+        }
+        if (m_KissCfg)
+        {
+            free(m_KissCfg);
         }
     }
 
-    void ResetCalculator()
+    bool CalculateFFT(float *inputBuffer, size_t inputSize, float gain)
     {
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+        if (inputSize != m_FFT_Size)
         {
-            m_SolutionReady = false;
-            m_CurrentIndex = 0;
-            m_MaxFFTBinValue = 0;
-            m_MaxFFTBinIndex = 0;
+            ESP_LOGE("FFT_Calculator", "ERROR! Input size does not match FFT size.");
+            return false;
+        }
+
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            // Populate real and imaginary buffers
+            for (size_t i = 0; i < m_FFT_Size; ++i)
+            {
+                mp_RealBuffer[i] = inputBuffer[i] * gain;
+                mp_ImaginaryBuffer[i] = 0.0f;
+            }
+
+            switch (m_FFT_Type)
+            {
+            case FFT_Type::ArduinoFFT:
+                m_ArduinoFFT->compute(FFTDirection::Forward);
+                m_ArduinoFFT->complexToMagnitude();
+                m_MajorPeak = m_ArduinoFFT->majorPeak();
+                break;
+
+            case FFT_Type::KissFFT:
+            {
+                kiss_fft_cpx *kissInput = new kiss_fft_cpx[m_FFT_Size];
+                kiss_fft_cpx *kissOutput = new kiss_fft_cpx[m_FFT_Size];
+
+                for (size_t i = 0; i < m_FFT_Size; ++i)
+                {
+                    kissInput[i].r = mp_RealBuffer[i];
+                    kissInput[i].i = mp_ImaginaryBuffer[i];
+                }
+
+                kiss_fft(m_KissCfg, kissInput, kissOutput);
+
+                for (size_t i = 0; i < m_FFT_Size; ++i)
+                {
+                    mp_RealBuffer[i] = sqrtf(kissOutput[i].r * kissOutput[i].r + kissOutput[i].i * kissOutput[i].i);
+                }
+
+                delete[] kissInput;
+                delete[] kissOutput;
+                break;
+            }
+
+            case FFT_Type::ESPDSP:
+                dsps_fft2r_init_fc32(NULL, m_FFT_Size);
+                dsps_fft2r_fc32(mp_RealBuffer, m_FFT_Size);
+                dsps_bit_rev_fc32(mp_RealBuffer, m_FFT_Size);
+                dsps_cplx2reC_fc32(mp_RealBuffer, m_FFT_Size);
+                for (size_t i = 0; i < m_FFT_Size; ++i)
+                {
+                    mp_RealBuffer[i] = sqrtf(mp_RealBuffer[2 * i] * mp_RealBuffer[2 * i] + mp_RealBuffer[2 * i + 1] * mp_RealBuffer[2 * i + 1]);
+                }
+                break;
+
+            default:
+                ESP_LOGE("FFT_Calculator", "ERROR! Unsupported FFT type.");
+                break;
+            }
+
             xSemaphoreGiveRecursive(m_Semaphore);
+            return true;
         }
         else
         {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+            ESP_LOGW("FFT_Calculator", "WARNING! Failed to take semaphore.");
+            return false;
         }
     }
-
-    int32_t GetFreeSpace() { return m_FFT_Size - m_CurrentIndex; }
 
     float GetFFTBufferValue(int32_t index)
     {
         float value = 0.0f;
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(5)) == pdTRUE)
         {
-            assert(true == m_SolutionReady);
             assert(index < m_FFT_Size / 2);
             value = mp_RealBuffer[index];
             xSemaphoreGiveRecursive(m_Semaphore);
         }
         else
         {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+            ESP_LOGW("FFT_Calculator", "WARNING! Failed to take semaphore.");
         }
         return value;
     }
 
-    float GetFFTMaxValue() { return m_MaxFFTBinValue; }
-
-    int32_t GetFFTMaxValueBin()
-    {
-        int32_t index = 0;
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-            assert(true == m_SolutionReady);
-            index = m_MaxFFTBinIndex;
-            xSemaphoreGiveRecursive(m_Semaphore);
-        }
-        else
-        {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-        }
-        return index;
-    }
-
     float GetMajorPeak()
     {
-        float peak = 0.0f;
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-            assert(true == m_SolutionReady);
-            peak = m_MajorPeak;
-            xSemaphoreGiveRecursive(m_Semaphore);
-        }
-        else
-        {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-        }
-        return peak;
-    }
-
-    float *GetMajorPeakPointer()
-    {
-        float *peak = nullptr;
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-            assert(true == m_SolutionReady);
-            peak = &m_MajorPeak;
-            xSemaphoreGiveRecursive(m_Semaphore);
-        }
-        else
-        {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-        }
-        return peak;
-    }
-
-    size_t GetRequiredValueCount()
-    {
-        size_t requiredCount = 0;
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-            requiredCount = m_FFT_Size - m_CurrentIndex;
-            xSemaphoreGiveRecursive(m_Semaphore);
-        }
-        else
-        {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-        }
-        return requiredCount;
-    }
-
-    bool PushValuesAndCalculateNormalizedFFT(int32_t *value, size_t Count, float Gain)
-    {
-        bool result = false;
-        for (int i = 0; i < Count; ++i)
-        {
-            result = PushValueAndCalculateNormalizedFFT(value[i], Gain);
-        }
-        return result;
-    }
-
-    bool PushValueAndCalculateNormalizedFFT(int32_t value, float Gain)
-    {
-        if (!mp_RealBuffer || !mp_ImaginaryBuffer || !m_MyFFT || m_BitLengthMaxValue == 0 || m_FFT_Size == 0)
-        {
-            ESP_LOGE("PushValueAndCalculateNormalizedFFT", "ERROR!: Initialization or parameter error.");
-            ResetCalculator();
-            return m_SolutionReady;
-        }
-
-        if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(100)) == pdTRUE)
-        {
-            value = std::clamp(value, -m_BitLengthMaxValue, m_BitLengthMaxValue);
-
-            if (m_CurrentIndex < m_FFT_Size)
-            {
-                mp_RealBuffer[m_CurrentIndex] = value;
-                mp_ImaginaryBuffer[m_CurrentIndex] = 0.0f;
-                ++m_CurrentIndex;
-            }
-
-            if (m_CurrentIndex >= m_FFT_Size)
-            {
-                m_CurrentIndex = 0;
-                m_MyFFT->compute(FFTDirection::Forward);
-                vTaskDelay(1);
-                m_MyFFT->complexToMagnitude();
-                m_MajorPeak = m_MyFFT->majorPeak();
-
-                for (int i = 0; i < m_FFT_Size; ++i)
-                {
-                    mp_RealBuffer[i] = ((2.0f * mp_RealBuffer[i]) / (float)m_FFT_Size) * Gain / m_BitLengthMaxValue;
-                    if (i < m_FFT_Size / 2 && mp_RealBuffer[i] > m_MaxFFTBinValue)
-                    {
-                        m_MaxFFTBinValue = mp_RealBuffer[i];
-                        m_MaxFFTBinIndex = i;
-                    }
-                }
-                m_SolutionReady = true;
-            }
-            xSemaphoreGiveRecursive(m_Semaphore);
-        }
-        else
-        {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-        }
-        return m_SolutionReady;
+        return m_MajorPeak;
     }
 
 private:
-    uint32_t m_CurrentIndex = 0;
-    uint32_t m_FFT_Size = 0;
-    uint32_t m_FFT_SampleRate = 0;
-    float *mp_RealBuffer = nullptr;
-    float *mp_ImaginaryBuffer = nullptr;
-    float m_MaxFFTBinValue = 0.0f;
-    uint32_t m_MaxFFTBinIndex = 0;
+    FFT_Type m_FFT_Type;
+    uint32_t m_FFT_Size;
+    uint32_t m_FFT_SampleRate;
+    float *mp_RealBuffer;
+    float *mp_ImaginaryBuffer;
+    int32_t m_BitLengthMaxValue;
     float m_MajorPeak = 0.0f;
-    bool m_SolutionReady = false;
-    int32_t m_BitLengthMaxValue = 0;
-    ArduinoFFT<float> *m_MyFFT = nullptr;
-    SemaphoreHandle_t m_Semaphore = nullptr; // FreeRTOS semaphore
+
+    // ArduinoFFT
+    ArduinoFFT<float> *m_ArduinoFFT = nullptr;
+
+    // kissFFT
+    kiss_fft_cfg m_KissCfg = nullptr;
+
+    // Semaphore for thread safety
+    SemaphoreHandle_t m_Semaphore = nullptr;
 };
 
 #endif

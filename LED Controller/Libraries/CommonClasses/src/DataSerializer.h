@@ -62,7 +62,7 @@ class DataSerializer: public CommonUtils
 		
 		virtual String SerializeDataItemToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
-			if (xSemaphoreTakeRecursive(m_SerializeDocLock, pdMS_TO_TICKS(100)) == pdTRUE)
+			if (xSemaphoreTakeRecursive(m_SerializeDocLock, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				if (Object == nullptr)
 				{
@@ -88,23 +88,33 @@ class DataSerializer: public CommonUtils
 				m_SerializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
 				m_SerializeDoc[m_ChangeCountTag] = ChangeCount;
 
-				char ByteHexValue[3];
-				for (int i = 0; i < Count; ++i)
+				// Buffer to hold hex values for each byte
+				char ByteHexValue[3]; // For hex byte conversion
+
+				// Use an array of fixed-length strings or memory buffers to hold byte data
+				String BytesString;
+				BytesString.reserve(ObjectByteCount * 2); // Reserve enough space for hex values
+
+				for (size_t i = 0; i < Count; ++i)
 				{
-					String BytesString = "";
-					for (int j = 0; j < ObjectByteCount; ++j)
+					BytesString = "";  // Reset BytesString for each frame
+
+					// Construct each frame's hex string
+					for (size_t j = 0; j < ObjectByteCount; ++j)
 					{
 						uint8_t DecValue = ((uint8_t*)Object)[i * ObjectByteCount + j];
-						sprintf(ByteHexValue, "%02X", DecValue);
-						BytesString += String(ByteHexValue);
-						CheckSum += DecValue;
+						sprintf(ByteHexValue, "%02X", DecValue);  // Convert byte to hex
+						BytesString += ByteHexValue;  // Append hex byte value
+						CheckSum += DecValue;  // Accumulate checksum
 					}
-					data[i] = BytesString;
+
+					data[i] = BytesString;  // Store hex data in JSON object
 				}
-				
+
 				m_SerializeDoc[m_DataTag] = data;
 				m_SerializeDoc[m_CheckSumTag] = CheckSum;
 
+				// Use try-catch for error handling during serialization
 				try
 				{
 					String result = JSON.stringify(m_SerializeDoc);
@@ -113,7 +123,7 @@ class DataSerializer: public CommonUtils
 				}
 				catch (const std::exception& e)
 				{
-					ESP_LOGE("SerializeDataItemToJson", "ERROR! Error during JSON serialization: %s", e.what() );
+					ESP_LOGE("SerializeDataItemToJson", "ERROR! Error during JSON serialization: %s", e.what());
 					xSemaphoreGiveRecursive(m_SerializeDocLock);
 					return "{}";
 				}
@@ -128,12 +138,14 @@ class DataSerializer: public CommonUtils
 			{
 				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
+			return "";
 		}
+
 
 		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
 		{
 			bool deserialized = false;
-			if (xSemaphoreTakeRecursive(m_DeSerializeDocLock, pdMS_TO_TICKS(100)) == pdTRUE)
+			if (xSemaphoreTakeRecursive(m_DeSerializeDocLock, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 				// Parse the JSON
@@ -332,11 +344,11 @@ class DataSerializer: public CommonUtils
 		DataItem_t* m_DataItems;
 		size_t m_DataItemsCount = 0;
 		//Tags
-		String m_NameTag = "Name";
-		String m_CheckSumTag = "Sum";
-		String m_CountTag = "Count";
-		String m_ChangeCountTag = "Change Count";
-		String m_DataTag = "Data";
-		String m_DataTypeTag = "Type";
-		String m_TotalByteCountTag = "Bytes";
+		String m_NameTag = "N";
+		String m_CheckSumTag = "S";
+		String m_CountTag = "C";
+		String m_ChangeCountTag = "I";
+		String m_DataTag = "D";
+		String m_DataTypeTag = "T";
+		String m_TotalByteCountTag = "B";
 };

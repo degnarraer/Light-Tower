@@ -19,12 +19,14 @@
 #include "Sound_Processor.h"
 
 Sound_Processor::Sound_Processor( String Title
-                                , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
+                                , ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &FFT_AudioBuffer
+                                , ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &Amplitude_AudioBuffer
                                 , SerialPortMessageManager &CPU1SerialPortMessageManager
                                 , SerialPortMessageManager &CPU3SerialPortMessageManager
                                 , IPreferences& preferences )
                                 : NamedItem(Title)
-                                , m_AudioBuffer(AudioBuffer)
+                                , m_FFT_AudioBuffer(FFT_AudioBuffer)
+                                , m_Amplitude_AudioBuffer(Amplitude_AudioBuffer)
                                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                                 , m_CPU3SerialPortMessageManager(CPU3SerialPortMessageManager)
                                 , m_Preferences(preferences)
@@ -38,11 +40,11 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::Setup()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  if( xTaskCreatePinnedToCore( Static_Calculate_FFT, "FFT Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_Process_FFTTask, 0 ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_FFT, "FFT Task", 10000, this, THREAD_PRIORITY_HIGH, &m_Process_FFTTask, FFT_TASK_CORE ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
-  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "Sound Power Task", 7500, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask, 1 ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "Sound Power Task", 7500, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask, AMPLITUDE_TASK_CORE ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
@@ -57,34 +59,38 @@ void Sound_Processor::Static_Calculate_FFT(void * parameter)
 
 void Sound_Processor::Calculate_FFT()
 {
-  const TickType_t xFrequency = 1;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
   m_R_FFT.ResetCalculator();
+  m_L_FFT.ResetCalculator();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    if(m_AudioBuffer.Size() >= FFT_SIZE)
+    vTaskDelay(pdMS_TO_TICKS(10));
+    size_t availableFrames = m_FFT_AudioBuffer.GetFrameCount();
+    if(availableFrames >= FFT_SIZE)
     {
       Frame_t Buffer[FFT_SIZE];
-      size_t readFrameCount = m_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
+      size_t readFrameCount = m_FFT_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
       if(readFrameCount == FFT_SIZE )
       {
+        int32_t R_Buffer[FFT_SIZE];
+        int32_t L_Buffer[FFT_SIZE];
         if(m_BufferReadError) ESP_LOGW("Calculate_FFTs", "Successfully Read Buffer.");
         m_BufferReadError = false;
         float fftGain = m_FFT_Gain.GetValue();
-        ESP_LOGW("Calculate_FFTs", "Read Buffer Size: %i  FFT_Gain: %f.", readFrameCount, fftGain);
-        for(int i = 0; i < readFrameCount; ++i)
+        ESP_LOGW("Calculate_FFTs", "Read %i frames of %i. Gain: %f.", readFrameCount, availableFrames, fftGain);
+        for(int i = 0; i < FFT_SIZE; ++i)
         {
-          if( m_R_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel1, fftGain) )
-          {
-            Update_Right_Bands_And_Send_Result();
-            m_R_FFT.ResetCalculator();
-          }
-          if( m_L_FFT.PushValueAndCalculateNormalizedFFT(Buffer[i].channel2, fftGain) )
-          {
-            Update_Left_Bands_And_Send_Result();
-            m_L_FFT.ResetCalculator();
-          }
+          R_Buffer[i] = Buffer[i].channel1;
+          L_Buffer[i] = Buffer[i].channel2;
+        }
+        if( m_R_FFT.CalculateNormalizedFFT(R_Buffer, FFT_SIZE, fftGain) )
+        {
+          Update_Right_Bands_And_Send_Result();
+          m_R_FFT.ResetCalculator();
+        }
+        if( m_L_FFT.CalculateNormalizedFFT(L_Buffer, FFT_SIZE, fftGain) )
+        {
+          Update_Left_Bands_And_Send_Result();
+          m_L_FFT.ResetCalculator();
         }
       }
       else
@@ -156,37 +162,43 @@ void Sound_Processor::Static_Calculate_Power(void * parameter)
 }
 void Sound_Processor::Calculate_Power()
 {
-  const TickType_t xFrequency = 250;
-  TickType_t xLastWakeTime = xTaskGetTickCount();
   while(true)
   {
-    vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-    size_t ReadFrames = m_AudioBuffer.ReadAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
-    float Gain = m_Amplitude_Gain.GetValue();
-    for(int i = 0; i < ReadFrames; ++i)
+    vTaskDelay(pdMS_TO_TICKS(10));
+    size_t availableFrames = m_Amplitude_AudioBuffer.GetFrameCount();
+    if(availableFrames >= AMPLITUDE_BUFFER_FRAME_COUNT)
     {
-      bool R_Amplitude_Calculated = false;
-      bool L_Amplitude_Calculated = false;
-      ProcessedSoundData_t R_PSD;
-      ProcessedSoundData_t L_PSD;
-      if(m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, Gain))
+      Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+      size_t ReadFrameCount = m_Amplitude_AudioBuffer.ReadAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
+      float AmplitudeGain = m_Amplitude_Gain.GetValue();
+      ESP_LOGW("Calculate_Power", "Read %i frames of %i. Gain: %f.", ReadFrameCount, availableFrames, AmplitudeGain);
+      if(AMPLITUDE_BUFFER_FRAME_COUNT == ReadFrameCount)
       {
-        R_Amplitude_Calculated = true;
-        R_PSD = m_RightSoundData.GetProcessedSoundData();
-      }
-      if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, Gain))
-      {
-        L_Amplitude_Calculated = true;
-        L_PSD = m_LeftSoundData.GetProcessedSoundData();
-      }
-      assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
-      if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
-      {
-        ProcessedSoundFrame_t PSF_Temp;
-        PSF_Temp.Channel1 = R_PSD;
-        PSF_Temp.Channel2 = L_PSD;
-        PSF.SetValue(PSF_Temp);
+        for(int i = 0; i < AMPLITUDE_BUFFER_FRAME_COUNT; ++i)
+        {
+          bool R_Amplitude_Calculated = false;
+          bool L_Amplitude_Calculated = false;
+          ProcessedSoundData_t R_PSD;
+          ProcessedSoundData_t L_PSD;
+          if(m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, AmplitudeGain))
+          {
+            R_Amplitude_Calculated = true;
+            R_PSD = m_RightSoundData.GetProcessedSoundData();
+          }
+          if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, AmplitudeGain))
+          {
+            L_Amplitude_Calculated = true;
+            L_PSD = m_LeftSoundData.GetProcessedSoundData();
+          }
+          assert(R_Amplitude_Calculated == L_Amplitude_Calculated);
+          if(true == R_Amplitude_Calculated && true == L_Amplitude_Calculated)
+          {
+            ProcessedSoundFrame_t PSF_Temp;
+            PSF_Temp.Channel1 = R_PSD;
+            PSF_Temp.Channel2 = L_PSD;
+            PSF.SetValue(PSF_Temp);
+          }
+        }
       }
     }
   }

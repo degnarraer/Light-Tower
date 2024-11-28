@@ -126,7 +126,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
         		ESP_LOGD("~LocalDataItem", "DeRegistering Named Callback");
 				this->DeRegisterNamedCallback(mp_NamedCallback);
 			}
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				if(mp_Value)
 				{
@@ -165,7 +165,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name.c_str());
 				if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
@@ -258,7 +258,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		void GetValue(void* object, size_t count) const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				assert((count == COUNT) && "Counts must be equal");
 				if (mp_Value)
@@ -283,7 +283,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		T* GetValuePointer() const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				if(!mp_Value)
 				{
@@ -300,7 +300,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual T GetValue() const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				assert((1 == COUNT) && "Count must 1 to use this function");
 				if(mp_Value)
@@ -350,7 +350,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		virtual bool GetValueAsString(String &stringValue) const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				stringValue = "";
 				if (mp_Value && COUNT > 0)
@@ -485,7 +485,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 
 		bool EqualsValue(T *values, size_t count) const
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				if(COUNT == count)
 				{
@@ -558,7 +558,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t newChangeCount)
 		{
 			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(100)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				assert(newValues != nullptr);
 				assert(mp_Value != nullptr);

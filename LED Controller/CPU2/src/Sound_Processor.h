@@ -35,7 +35,8 @@ class Sound_Processor: public NamedItem
 {
   public:
     Sound_Processor( String Title
-                   , ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &AudioBuffer
+                   , ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &FFT_AudioBuffer
+                   , ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &Amplitude_AudioBuffer
                    , SerialPortMessageManager &CPU1SerialPortMessageManager
                    , SerialPortMessageManager &CPU3SerialPortMessageManager
                    , IPreferences& preferences );
@@ -43,11 +44,12 @@ class Sound_Processor: public NamedItem
     void Setup();
     
   private:
-    ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> &m_AudioBuffer;
+    ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &m_FFT_AudioBuffer;
+    ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
     Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
-    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
-    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    FFT_Calculator m_R_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16, FFT_Calculator::FFTType::ArduinoFFT);
+    FFT_Calculator m_L_FFT = FFT_Calculator(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16, FFT_Calculator::FFTType::ArduinoFFT);
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     IPreferences& m_Preferences;

@@ -45,18 +45,20 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out( "Bluetooth Source"
-                         , 1
+                         , BLUETOOTH_CORE
                          , a2dp_source );
                                             
-ContinuousAudioBuffer<AUDIO_BUFFER_SIZE> m_AudioBuffer;                                            
+ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> m_FFT_AudioBuffer;
+ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, 1);
-SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, 1);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, DATALINK_CORE);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_CORE);
 
 
 Sound_Processor m_SoundProcessor ( "Sound Processor"
-                                 , m_AudioBuffer
+                                 , m_FFT_AudioBuffer
+                                 , m_Amplitude_AudioBuffer
                                  , m_CPU1SerialPortMessageManager
                                  , m_CPU3SerialPortMessageManager
                                  , m_PreferencesWrapper );                                            
@@ -67,7 +69,8 @@ Manager m_Manager( "Manager"
                  , m_CPU3SerialPortMessageManager
                  , m_BT_Out
                  , m_I2S_In
-                 , m_AudioBuffer
+                 , m_FFT_AudioBuffer
+                 , m_Amplitude_AudioBuffer
                  , m_PreferencesWrapper);
 
 void OutputSystemStatus()
@@ -126,7 +129,8 @@ void setup()
   Serial2.flush();
 
   TestPSRam();
-  m_AudioBuffer.Initialize();
+  m_FFT_AudioBuffer.Initialize();
+  m_Amplitude_AudioBuffer.Initialize();
   m_PreferencesWrapper.Setup();
   m_CPU1SerialPortMessageManager.Setup();
   m_CPU3SerialPortMessageManager.Setup();

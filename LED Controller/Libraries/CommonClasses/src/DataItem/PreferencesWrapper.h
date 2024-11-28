@@ -401,7 +401,7 @@ public:
         bool result = false;
         m_Preferences_Last_Update = millis();
         ESP_LOGD("InitializeAndLoadPreference", "Initializing Preference: \"%s\" with Initial Value: \"%s\"", m_Key.c_str(), m_InitialValue.c_str());
-        if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(100)) == pdTRUE)
+        if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(5)) == pdTRUE)
         {   
             if (mp_PreferencesInterface)
             {
@@ -560,7 +560,7 @@ private:
     bool HandleLoad()
     {
         bool result = false;
-        if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(100)) == pdTRUE)
+        if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(5)) == pdTRUE)
         {
             if(mp_PreferencesInterface)
             {
@@ -694,7 +694,7 @@ private:
             }
             else
             {
-                if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(100)) == pdTRUE)
+                if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(5)) == pdTRUE)
                 {
                     String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                     ESP_LOGD("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  

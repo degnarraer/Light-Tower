@@ -23,7 +23,7 @@
 #include "Helpers.h"
 #include "DataSerializer.h"
 
-#define MaxQueueCount 10
+#define MaxQueueCount 50
 #define MaxMessageLength 1000
 
 template <typename T>
