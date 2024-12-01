@@ -40,11 +40,11 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::Setup()
 {
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-  if( xTaskCreatePinnedToCore( Static_Calculate_FFT, "FFT Task", 10000, this, THREAD_PRIORITY_HIGH, &m_Process_FFTTask, FFT_TASK_CORE ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_FFT, "FFT Task", 5000, this, THREAD_PRIORITY_HIGH, &m_Process_FFTTask, FFT_TASK_CORE ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
-  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "Sound Power Task", 7500, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask, AMPLITUDE_TASK_CORE ) != pdTRUE )
+  if( xTaskCreatePinnedToCore( Static_Calculate_Power, "Sound Power Task", 5000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask, AMPLITUDE_TASK_CORE ) != pdTRUE )
   {
     ESP_LOGE("Setup", "ERROR! Unable to create task.");
   }
@@ -63,20 +63,19 @@ void Sound_Processor::Calculate_FFT()
   m_L_FFT.ResetCalculator();
   while(true)
   {
-    vTaskDelay(pdMS_TO_TICKS(10));
     size_t availableFrames = m_FFT_AudioBuffer.GetFrameCount();
     if(availableFrames >= FFT_SIZE)
     {
-      Frame_t Buffer[FFT_SIZE];
+      Frame_t *Buffer = (Frame_t*)malloc(sizeof(Frame_t*) * FFT_SIZE);
       size_t readFrameCount = m_FFT_AudioBuffer.ReadAudioFrames(Buffer, FFT_SIZE);
       if(readFrameCount == FFT_SIZE )
       {
-        int32_t R_Buffer[FFT_SIZE];
-        int32_t L_Buffer[FFT_SIZE];
-        if(m_BufferReadError) ESP_LOGW("Calculate_FFTs", "Successfully Read Buffer.");
+        int32_t *R_Buffer = (int32_t*)malloc(sizeof(int32_t*) * FFT_SIZE);
+        int32_t *L_Buffer = (int32_t*)malloc(sizeof(int32_t*) * FFT_SIZE);
+        if(m_BufferReadError) ESP_LOGD("Calculate_FFTs", "Successfully Read Buffer.");
         m_BufferReadError = false;
         float fftGain = m_FFT_Gain.GetValue();
-        ESP_LOGW("Calculate_FFTs", "Read %i frames of %i. Gain: %f.", readFrameCount, availableFrames, fftGain);
+        ESP_LOGD("Calculate_FFTs", "Read %i frames of %i. Gain: %f.", readFrameCount, availableFrames, fftGain);
         for(int i = 0; i < FFT_SIZE; ++i)
         {
           R_Buffer[i] = Buffer[i].channel1;
@@ -92,13 +91,17 @@ void Sound_Processor::Calculate_FFT()
           Update_Left_Bands_And_Send_Result();
           m_L_FFT.ResetCalculator();
         }
+        free(R_Buffer);
+        free(L_Buffer);
       }
       else
       {
         if(!m_BufferReadError) ESP_LOGE("Calculate_FFTs", "WARNING! Read Buffer Error.");
         m_BufferReadError = true;
       }
+      free(Buffer);
     }
+    vTaskDelay(pdMS_TO_TICKS(10));
   }
 }
 
@@ -121,7 +124,7 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result()
         MaxBandIndex = i;
       }
     }
-    ESP_LOGI("Update_Right_Bands_And_Send_Result", "Right Bands: %s", message.c_str());
+    ESP_LOGD("Update_Right_Bands_And_Send_Result", "Right Bands: %s", message.c_str());
     m_R_Bands.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
     R_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     R_MaxBand.MaxBandIndex = MaxBandIndex;
@@ -147,7 +150,7 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
         MaxBandIndex = i;
       }
     }
-    ESP_LOGI("Update_Left_Bands_And_Send_Result", "Left Bands: %s", message.c_str());
+    ESP_LOGD("Update_Left_Bands_And_Send_Result", "Left Bands: %s", message.c_str());
     m_L_Bands.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
     L_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     L_MaxBand.MaxBandIndex = MaxBandIndex;
@@ -168,10 +171,10 @@ void Sound_Processor::Calculate_Power()
     size_t availableFrames = m_Amplitude_AudioBuffer.GetFrameCount();
     if(availableFrames >= AMPLITUDE_BUFFER_FRAME_COUNT)
     {
-      Frame_t Buffer[AMPLITUDE_BUFFER_FRAME_COUNT];
+      Frame_t *Buffer = (Frame_t*)malloc(sizeof(Frame_t*) * AMPLITUDE_BUFFER_FRAME_COUNT);
       size_t ReadFrameCount = m_Amplitude_AudioBuffer.ReadAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
       float AmplitudeGain = m_Amplitude_Gain.GetValue();
-      ESP_LOGW("Calculate_Power", "Read %i frames of %i. Gain: %f.", ReadFrameCount, availableFrames, AmplitudeGain);
+      ESP_LOGD("Calculate_Power", "Read %i frames of %i. Gain: %f.", ReadFrameCount, availableFrames, AmplitudeGain);
       if(AMPLITUDE_BUFFER_FRAME_COUNT == ReadFrameCount)
       {
         for(int i = 0; i < AMPLITUDE_BUFFER_FRAME_COUNT; ++i)
@@ -200,19 +203,55 @@ void Sound_Processor::Calculate_Power()
           }
         }
       }
+      free(Buffer);
     }
   }
 }
-void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calculator, int16_t FFT_Size)
+void Sound_Processor::AssignToBands(float* Band_Data, FFT_CalculatorBase* fft_calculator, uint16_t FFT_Size)
 {
   String output = "";
   for(int i = 0; i < FFT_Size/2; ++i)
   {
-    float magnitude = FFT_Calculator->GetFFTBufferValue(i);
+    float magnitude = fft_calculator->GetNormalizedFFTBuffer()[i];
     float freq = GetFreqForBin(i);
     int bandIndex = -1;
 
     //SAE BAND BRAKEDOWN
+    if (freq >= 20 && freq <= 25) bandIndex = 0;
+    else if (freq > 25 && freq <= 31.5) bandIndex = 1;
+    else if (freq > 31.5 && freq <= 40) bandIndex = 2;
+    else if (freq > 40 && freq <= 50) bandIndex = 3;
+    else if (freq > 50 && freq <= 63) bandIndex = 4;
+    else if (freq > 63 && freq <= 80) bandIndex = 5;
+    else if (freq > 80 && freq <= 100) bandIndex = 6;
+    else if (freq > 100 && freq <= 125) bandIndex = 7;
+    else if (freq > 125 && freq <= 160) bandIndex = 8;
+    else if (freq > 160 && freq <= 200) bandIndex = 9;
+    else if (freq > 200 && freq <= 250) bandIndex = 10;
+    else if (freq > 250 && freq <= 315) bandIndex = 11;
+    else if (freq > 315 && freq <= 400) bandIndex = 12;
+    else if (freq > 400 && freq <= 500) bandIndex = 13;
+    else if (freq > 500 && freq <= 630) bandIndex = 14;
+    else if (freq > 630 && freq <= 800) bandIndex = 15;
+    else if (freq > 800 && freq <= 1000) bandIndex = 16;
+    else if (freq > 1000 && freq <= 1250) bandIndex = 17;
+    else if (freq > 1250 && freq <= 1600) bandIndex = 18;
+    else if (freq > 1600 && freq <= 2000) bandIndex = 19;
+    else if (freq > 2000 && freq <= 2500) bandIndex = 20;
+    else if (freq > 2500 && freq <= 3150) bandIndex = 21;
+    else if (freq > 3150 && freq <= 4000) bandIndex = 22;
+    else if (freq > 4000 && freq <= 5000) bandIndex = 23;
+    else if (freq > 5000 && freq <= 6300) bandIndex = 24;
+    else if (freq > 6300 && freq <= 8000) bandIndex = 25;
+    else if (freq > 8000 && freq <= 10000) bandIndex = 26;
+    else if (freq > 10000 && freq <= 12500) bandIndex = 27;
+    else if (freq > 12500 && freq <= 16000) bandIndex = 28;
+    else if (freq > 16000 && freq <= 20000) bandIndex = 29;
+    else if (freq > 20000 && freq <= 25000) bandIndex = 30;
+    else if (freq > 25000 && freq <= 32000) bandIndex = 31;
+
+    //MY BAND BRAKEDOWN
+    /*
     if(freq > 0 && freq <= 43) bandIndex = 0;
     else if(freq > 43 && freq <= 86) bandIndex = 1;
     else if(freq > 86 && freq <= 129) bandIndex = 2;
@@ -245,7 +284,7 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
     else if(freq > 12500 && freq <= 16000) bandIndex = 29;
     else if(freq > 16000 && freq <= 20000) bandIndex = 30;
     else if(freq > 20000 ) bandIndex = 31;
-    
+    */
     if(bandIndex >= 0 && freq < I2S_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
     if(Band_Data[bandIndex] > 1.0)
     {
@@ -257,7 +296,7 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Calculator* FFT_Calcul
     if(i!=0) output += "|";
     output += String(Band_Data[i]); 
   }
-  ESP_LOGI("AssignToBands", "Band Data: %s", output.c_str());
+  ESP_LOGD("AssignToBands", "Band Data: %s", output.c_str());
 }
 
 float Sound_Processor::GetFreqForBin(int Bin)

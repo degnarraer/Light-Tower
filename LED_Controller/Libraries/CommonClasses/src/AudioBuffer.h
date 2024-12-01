@@ -387,7 +387,7 @@ class ContinuousAudioBuffer
 	
     size_t ReadAudioFrames(Frame_t *Buffer, uint32_t Count)
     {
-        uint32_t ElementsToRead = 0;
+        uint32_t elementsToRead = 0;
 
         if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
         {
@@ -399,22 +399,11 @@ class ContinuousAudioBuffer
                 return 0;
             }
 
-            ElementsToRead = std::min(Count, bufferSize);
-            uint32_t StartIndex = bufferSize - ElementsToRead;
-
-            uint32_t tailCount = std::min(ElementsToRead, bufferSize - StartIndex);
-            uint32_t headCount = ElementsToRead - tailCount;
-
-            // Read from the tail of the buffer
-            for (uint32_t i = 0; i < tailCount; ++i)
+            elementsToRead = std::min(Count, bufferSize);
+            
+            for(int i = 0; i < elementsToRead; ++i)
             {
-                Buffer[i] = (*m_CircularAudioBuffer)[StartIndex + i];
-            }
-
-            // Read from the head of the buffer if wraparound occurred
-            for (uint32_t i = 0; i < headCount; ++i)
-            {
-                Buffer[tailCount + i] = (*m_CircularAudioBuffer)[i];
+                Buffer[i] = m_CircularAudioBuffer->shift();
             }
 
             if (xSemaphoreGiveRecursive(m_Lock) != pdTRUE)
@@ -428,7 +417,7 @@ class ContinuousAudioBuffer
             return 0;  // Return 0 if semaphore acquisition fails
         }
 
-        return ElementsToRead;
+        return elementsToRead;
     }
 
     size_t WriteAudioFrames(const Frame_t *Buffer, uint32_t Count)

@@ -45,15 +45,15 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out( "Bluetooth Source"
-                         , BLUETOOTH_CORE
+                         , BLUETOOTH_TASK_CORE
                          , a2dp_source );
                                             
 ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> m_FFT_AudioBuffer;
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, DATALINK_CORE);
-SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_CORE);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE);
 
 
 Sound_Processor m_SoundProcessor ( "Sound Processor"

@@ -334,7 +334,7 @@ class Manager: public NamedItem
                                                                                   , this );
     static void R_Max_Band_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("R_Max_Band_ValueChanged", "R_Max_Band_ValueChanged Callback Called");
+      //ESP_LOGI("R_Max_Band_ValueChanged", "R_Max_Band_ValueChanged.");
     }
                                                                                                      
     CallbackArguments m_R_Bands_CallbackArgs = {this};
@@ -349,7 +349,15 @@ class Manager: public NamedItem
                                                        , this );
     static void R_Bands_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("R_Max_Band_ValueChanged", "R_Bands_ValueChanged Callback Called");
+      float *bands;
+      bands = static_cast<float*>(object);
+      String message;
+      for(int i = 0; i < 32; ++i)
+      {
+        if(i != 0) message += "|";
+        message += String(bands[i]);
+      }
+      ESP_LOGI("R_Max_Band_ValueChanged", "R_Band_ValueChanged: %s", message.c_str());
     }
 
     CallbackArguments m_L_Max_Band_CallbackArgs = {this};
@@ -364,7 +372,7 @@ class Manager: public NamedItem
                                                                                   , this );
     static void L_Max_Band_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("L_Max_Band_ValueChanged", "L_Max_Band_ValueChanged Callback Called");
+      //ESP_LOGI("L_Max_Band_ValueChanged", "L_Max_Band_ValueChanged.");
     }
                                                                                  
     CallbackArguments m_L_Bands_CallbackArgs = {this};
@@ -379,7 +387,15 @@ class Manager: public NamedItem
                                                        , this );
     static void L_Bands_ValueChanged(const String &Name, void* object, void* arg)
     {
-      ESP_LOGI("L_Max_Band_ValueChanged", "L_Bands_ValueChanged Callback Called");
+      float *bands;
+      bands = static_cast<float*>(object);
+      String message;
+      for(int i = 0; i < 32; ++i)
+      {
+        if(i != 0) message += "|";
+        message += String(bands[i]);
+      }
+      ESP_LOGI("L_Band_ValueChanged", "L_Band_ValueChanged: %s", message.c_str());
     }
 
     CallbackArguments m_PSF_CallbackArgs = {this};
@@ -400,7 +416,7 @@ class Manager: public NamedItem
         assert(arguments->arg1 && "Null Pointer!");
         Manager *manager = static_cast<Manager*>(arguments->arg1);
         ProcessedSoundFrame_t PSF = *static_cast<ProcessedSoundFrame_t*>(object);
-        ESP_LOGI("m_PSF_ValueChanged", "R Channel Power: %f L Channel Power: %f", PSF.Channel1.NormalizedPower, PSF.Channel2.NormalizedPower);
+        //ESP_LOGI("m_PSF_ValueChanged", "R Channel Power: %f L Channel Power: %f", PSF.Channel1.NormalizedPower, PSF.Channel2.NormalizedPower);
       }
     }
 

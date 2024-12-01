@@ -99,7 +99,8 @@
 			"semaphore": "cpp",
 			"span": "cpp",
 			"stop_token": "cpp",
-			"variant": "cpp"
+			"variant": "cpp",
+			"complex": "cpp"
 		}
 	},
 	"launch": {
