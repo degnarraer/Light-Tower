@@ -8,6 +8,7 @@ import { Model_Text } from './Model_Text.js';
 import { Model_WifiMode } from './Model_WifiMode.js';
 import { Model_BtDeviceSelector } from './Model_BtDeviceSelector.js'
 import { Model_DiscoveryMode } from './Model_DiscoveryMode.js'
+import { Model_Bands } from './Model_Bands.js'
 
 const wsManager = new WebSocketManager();
 
@@ -42,7 +43,11 @@ export const AP_Password = new Model_Text('AP_Password', 'ENTER VALUE', wsManage
 export const Wifi_Restart = new Model_Boolean('Wifi_Restart', Model_Boolean.values.False, wsManager);
 
 export const Amplitude_Gain = new Model_Numeric('Amp_Gain', 2.0, wsManager);
+
+
 export const FFT_Gain = new Model_Numeric('FFT_Gain', 2.0, wsManager);
+export const R_FFT_Bands = new Model_Bands("R_Bands", Array(32).fill(0.5), wsManager);
+export const L_FFT_Bands = new Model_Bands("L_Bands", Array(32).fill(0.5), wsManager);
 
 
 //Compatible Devices

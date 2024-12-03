@@ -297,7 +297,7 @@ public:
                 mp_ImaginaryBufferChar[i] = 0;
             }
 
-            convertInt32ToChar(inputBuffer, mp_RealBufferChar, m_FFT_Size);
+            convertInt32ToChar(mp_BufferInt, mp_RealBufferChar, m_FFT_Size);
             fix_fft(mp_RealBufferChar, mp_ImaginaryBufferChar, m_FFT_Size, 0);
 
             for (size_t i = 0; i < bufferSize; ++i)
@@ -317,17 +317,8 @@ public:
     {
         if (xSemaphoreTakeRecursive(m_Semaphore, pdMS_TO_TICKS(5)) == pdTRUE)
         {
-            int32_t maxValue = 0;
 
-            for (size_t i = 0; i < length; ++i)
-            {
-                if (abs(input[i]) > maxValue)
-                {
-                    maxValue = abs(input[i]);
-                }
-            }
-
-            float scaleFactor = (maxValue > 127) ? (127.0 / maxValue) : 1.0;
+            float scaleFactor = 127.0 / (float)m_BitLengthMaxValue;
 
             for (size_t i = 0; i < length; ++i)
             {

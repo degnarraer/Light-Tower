@@ -48,8 +48,8 @@ class Sound_Processor: public NamedItem
     ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
     Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
-    FFT_Calculator_Fix m_R_FFT = FFT_Calculator_Fix(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
-    FFT_Calculator_Fix m_L_FFT = FFT_Calculator_Fix(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    FFT_Calculator_Arduino m_R_FFT = FFT_Calculator_Arduino(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    FFT_Calculator_Arduino m_L_FFT = FFT_Calculator_Arduino(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     IPreferences& m_Preferences;
@@ -84,11 +84,18 @@ class Sound_Processor: public NamedItem
                                                                                   , NULL
                                                                                   , this );
     float m_R_Bands_InitialValue = 0.0;
-    DataItem<float, 32> m_R_Bands = DataItem<float, 32>( "R_Bands"
+    DataItem<float, 32> m_R_Bands1 = DataItem<float, 32>( "R_Bands"
                                                        , m_R_Bands_InitialValue
                                                        , RxTxType_Tx_On_Change
                                                        , 0
                                                        , &m_CPU1SerialPortMessageManager
+                                                       , NULL
+                                                       , this );
+    DataItem<float, 32> m_R_Bands3 = DataItem<float, 32>( "R_Bands"
+                                                       , m_R_Bands_InitialValue
+                                                       , RxTxType_Tx_On_Change
+                                                       , 0
+                                                       , &m_CPU3SerialPortMessageManager
                                                        , NULL
                                                        , this );
     
@@ -102,11 +109,18 @@ class Sound_Processor: public NamedItem
                                                                                   , this );
     
     float m_L_Bands_InitialValue = 0.0;
-    DataItem<float, 32> m_L_Bands = DataItem<float, 32>( "L_Bands"
+    DataItem<float, 32> m_L_Bands1 = DataItem<float, 32>( "L_Bands"
                                                        , m_L_Bands_InitialValue
                                                        , RxTxType_Tx_On_Change
                                                        , 0
                                                        , &m_CPU1SerialPortMessageManager
+                                                       , NULL
+                                                       , this );
+    DataItem<float, 32> m_L_Bands3 = DataItem<float, 32>( "L_Bands"
+                                                       , m_L_Bands_InitialValue
+                                                       , RxTxType_Tx_On_Change
+                                                       , 0
+                                                       , &m_CPU3SerialPortMessageManager
                                                        , NULL
                                                        , this );
 

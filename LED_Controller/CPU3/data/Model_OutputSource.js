@@ -66,7 +66,7 @@ export class Model_OutputSource {
                 Root.SignalValue = {};
                 Root.SignalValue.Id = signal.toString();
                 Root.SignalValue.Value = value.toString();
-                if (!Root.isNull())
+                if (Root && Root.SignalValue && Root.SignalValue.Id && Root.SignalValue.Value)
                 {
                     var Message = JSON.stringify(Root);
                     console.log('ESP32 Web Socket Tx: \'' + Message + '\'');

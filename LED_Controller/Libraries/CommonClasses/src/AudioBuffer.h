@@ -389,7 +389,7 @@ class ContinuousAudioBuffer
     {
         uint32_t elementsToRead = 0;
 
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             uint32_t bufferSize = m_CircularAudioBuffer->size();
             
@@ -424,7 +424,7 @@ class ContinuousAudioBuffer
     {
         uint32_t ElementsWritten = 0;
 
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
         {
             uint32_t bufferSize = m_CircularAudioBuffer->capacity; // Get the buffer's maximum size
             uint32_t currentSize = m_CircularAudioBuffer->size();   // Get the current number of elements in the buffer

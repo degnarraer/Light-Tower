@@ -125,7 +125,8 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result()
       }
     }
     ESP_LOGD("Update_Right_Bands_And_Send_Result", "Right Bands: %s", message.c_str());
-    m_R_Bands.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
+    m_R_Bands1.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
+    m_R_Bands3.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
     R_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     R_MaxBand.MaxBandIndex = MaxBandIndex;
     R_MaxBand.TotalBands = NUMBER_OF_BANDS;
@@ -151,7 +152,8 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result()
       }
     }
     ESP_LOGD("Update_Left_Bands_And_Send_Result", "Left Bands: %s", message.c_str());
-    m_L_Bands.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
+    m_L_Bands1.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
+    m_L_Bands3.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
     L_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     L_MaxBand.MaxBandIndex = MaxBandIndex;
     L_MaxBand.TotalBands = NUMBER_OF_BANDS;

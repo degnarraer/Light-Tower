@@ -491,6 +491,29 @@ class SettingsWebServerManager: public SetupCallerInterface
     const float m_FFTGain_InitialValue = 2.0;
     DataItemWithPreferences <float, 1> m_FFTGain = DataItemWithPreferences<float, 1>( "FFT_Gain", m_FFTGain_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_preferenceInterface, &m_CPU2SerialPortMessageManager, nullptr, this );
     WebSocketDataHandler<float, 1> m_FFT_Gain_DataHandler = WebSocketDataHandler<float, 1>( m_WebSocketDataProcessor, m_FFTGain );
+    
+    float m_R_Bands_InitialValue = 0.0;
+    DataItem<float, 32> m_R_Bands = DataItem<float, 32>( "R_Bands"
+                                                       , m_R_Bands_InitialValue
+                                                       , RxTxType_Rx_Only
+                                                       , 0
+                                                       , &m_CPU2SerialPortMessageManager
+                                                       , NULL
+                                                       , this );
+    WebSocketDataHandler<float, 32> m_R_Bands_DataHandler = WebSocketDataHandler<float, 32>( m_WebSocketDataProcessor, m_R_Bands );
+
+    float m_L_Bands_InitialValue = 0.0;
+    DataItem<float, 32> m_L_Bands = DataItem<float, 32>( "L_Bands"
+                                                       , m_L_Bands_InitialValue
+                                                       , RxTxType_Rx_Only
+                                                       , 0
+                                                       , &m_CPU2SerialPortMessageManager
+                                                       , NULL
+                                                       , this );
+    WebSocketDataHandler<float, 32> m_L_Bands_DataHandler = WebSocketDataHandler<float, 32>( m_WebSocketDataProcessor, m_L_Bands );
+
+
+
 
     //Input Source
     const ValidStringValues_t validInputSourceValues = { "OFF", "Microphone", "Bluetooth" };

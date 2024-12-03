@@ -746,3 +746,24 @@ input:checked + .slider:before {
 .device-item:hover {
 	background-color: #f0f0f0;
 }
+
+.fft-widget {
+    display: flex;
+    gap: 1px;
+  }
+  .fft-bar {
+    width: 20px;
+    height: 150px;
+    background-color: #444;
+    position: relative;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .fft-bar-fill {
+    width: 100%;
+    background-color: #4caf50;
+    position: absolute;
+    bottom: 0;
+    height: 0;
+    transition: height 0.2s ease-in-out;
+  }
