@@ -3,6 +3,89 @@
 #include "DataTypes.h"
 #include "Streaming.h"
 
+class LogWithRateLimit
+{
+public:
+    LogWithRateLimit(unsigned long interval) : logInterval(interval), lastLogTime(0), occurrenceCount(0) {}
+
+    // Log function that supports different log levels and tracks occurrences
+    void Log(esp_log_level_t level, const char* tag, const char* message)
+    {
+        unsigned long currentTime = millis();
+
+        if (currentTime - lastLogTime >= logInterval) // If enough time has passed
+        {
+            if (occurrenceCount > 1)
+            {
+                // Log the number of occurrences if more than 1
+                char messageWithCount[256];
+                snprintf(messageWithCount, sizeof(messageWithCount), "%s (Repeated %d times)", message, occurrenceCount);
+                switch (level)
+                {
+                    case ESP_LOG_ERROR:
+                        ESP_LOGE(tag, "%s", messageWithCount);
+                        break;
+                    case ESP_LOG_WARN:
+                        ESP_LOGW(tag, "%s", messageWithCount);
+                        break;
+                    case ESP_LOG_INFO:
+                        ESP_LOGI(tag, "%s", messageWithCount);
+                        break;
+                    case ESP_LOG_DEBUG:
+                        ESP_LOGD(tag, "%s", messageWithCount);
+                        break;
+                    case ESP_LOG_VERBOSE:
+                        ESP_LOGV(tag, "%s", messageWithCount);
+                        break;
+                    default:
+                        ESP_LOGI(tag, "%s", messageWithCount); // Default to INFO if no valid level
+                        break;
+                }
+            }
+            else
+            {
+                // Log the message normally if occurrence count is 1
+                switch (level)
+                {
+                    case ESP_LOG_ERROR:
+                        ESP_LOGE(tag, "%s", message);
+                        break;
+                    case ESP_LOG_WARN:
+                        ESP_LOGW(tag, "%s", message);
+                        break;
+                    case ESP_LOG_INFO:
+                        ESP_LOGI(tag, "%s", message);
+                        break;
+                    case ESP_LOG_DEBUG:
+                        ESP_LOGD(tag, "%s", message);
+                        break;
+                    case ESP_LOG_VERBOSE:
+                        ESP_LOGV(tag, "%s", message);
+                        break;
+                    default:
+                        ESP_LOGI(tag, "%s", message); // Default to INFO if no valid level
+                        break;
+                }
+            }
+
+            // Reset count and update the last log time
+            occurrenceCount = 0;
+            lastLogTime = currentTime;
+        }
+        else
+        {
+            // Increment occurrence count if within the rate limit period
+            ++occurrenceCount;
+        }
+    }
+
+private:
+    unsigned long lastLogTime;
+    unsigned long logInterval;
+    int occurrenceCount; // Track the number of occurrences within the rate-limited period
+};
+
+
 class CommonUtils
 {
 	public:

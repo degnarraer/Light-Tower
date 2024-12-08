@@ -73,11 +73,11 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 
 void SerialPortMessageManager::Setup()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_HIGH,  &m_RXTaskHandle,  m_CoreId ) == pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) == pdPASS)
 	ESP_LOGD("Setup", "RX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
 	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_HIGH,  &m_TXTaskHandle,  m_CoreId ) == pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) == pdPASS)
 	ESP_LOGD("Setup", "TX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
 	

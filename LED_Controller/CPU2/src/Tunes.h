@@ -14,10 +14,10 @@
 #define CPU3_TX     15
 
 //THREAD CORE ASSIGNMENTS
-#define BLUETOOTH_TASK_CORE      0
-#define DATALINK_TASK_CORE       0
-#define FFT_TASK_CORE       1
-#define AMPLITUDE_TASK_CORE 0
+#define BLUETOOTH_TASK_CORE     0
+#define DATALINK_TASK_CORE      0
+#define FFT_COMPUTE_TASK_CORE   1
+#define AMPLITUDE_TASK_CORE     0
 
 //App Tunes
 #define I2S_SAMPLE_RATE                 44100
@@ -26,9 +26,10 @@
 #define I2S_SAMPLE_COUNT                512
 #define NUMBER_OF_BANDS                 32
 #define FFT_SIZE                        2048
-#define FFT_AUDIO_BUFFER_SIZE           2048
-#define AMPLITUDE_BUFFER_FRAME_COUNT    100
-#define AMPLITUDE_AUDIO_BUFFER_SIZE     100
+#define HOP_SIZE                        4096
+#define FFT_AUDIO_BUFFER_SIZE           4096
+#define AMPLITUDE_BUFFER_FRAME_COUNT    128
+#define AMPLITUDE_AUDIO_BUFFER_SIZE     128
 
 #define TASK_STACK_SIZE_DEBUG           false
 #define TASK_LOOP_COUNT_DEBUG           false

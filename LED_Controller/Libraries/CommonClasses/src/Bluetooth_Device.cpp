@@ -67,6 +67,7 @@ void Bluetooth_Source::InstallDevice()
 		m_BTSource.set_discovery_mode_callback(Static_Discovery_Mode_Changed);
 		m_BTSource.set_on_connection_state_changed(StaticBluetoothConnectionStateChanged);
 		m_BTSource.set_task_core(m_Core);
+		m_BTSource.set_event_stack_size(5000);
 		m_BTSource.set_task_priority(THREAD_PRIORITY_HIGH);
 		m_DeviceState = DeviceState_t::Installed;
 		ESP_LOGI("InstallDevice", "\"%s\": Bluetooth Device installed. Device currently: \"%s\".", GetTitle().c_str(), GetDeviceStateString().c_str());

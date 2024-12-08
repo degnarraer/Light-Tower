@@ -35,21 +35,25 @@ class Sound_Processor: public NamedItem
 {
   public:
     Sound_Processor( String Title
-                   , ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &FFT_AudioBuffer
+                   , FFT_Computer &r_FFT
                    , ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &Amplitude_AudioBuffer
                    , SerialPortMessageManager &CPU1SerialPortMessageManager
                    , SerialPortMessageManager &CPU3SerialPortMessageManager
                    , IPreferences& preferences );
     virtual ~Sound_Processor();
     void Setup();
+    static void StaticMagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args)
+    {
+      Sound_Processor *aSound_Processor = static_cast<Sound_Processor*>(args);
+      aSound_Processor->MagnitudesCallback(leftMagnitudes, rightMagnitudes, count);
+    }
+    void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count);
     
   private:
-    ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &m_FFT_AudioBuffer;
     ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
     Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
     Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
-    FFT_Calculator_Arduino m_R_FFT = FFT_Calculator_Arduino(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
-    FFT_Calculator_Arduino m_L_FFT = FFT_Calculator_Arduino(FFT_SIZE, I2S_SAMPLE_RATE, BitLength_16);
+    FFT_Computer &m_FFT_Computer;
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     IPreferences& m_Preferences;
@@ -144,13 +148,10 @@ class Sound_Processor: public NamedItem
     TaskHandle_t m_ProcessSoundPowerTask;
     static void Static_Calculate_Power(void * parameter);
     void Calculate_Power();
-    TaskHandle_t m_Process_FFTTask;
-    static void Static_Calculate_FFT(void * parameter);
-    void Calculate_FFT();
-    void Update_Right_Bands_And_Send_Result();
-    void Update_Left_Bands_And_Send_Result();
+    void Update_Right_Bands_And_Send_Result(float* magnitudes, size_t count);
+    void Update_Left_Bands_And_Send_Result(float* magnitudes, size_t count);
 
-    void AssignToBands(float* Band_Data, FFT_CalculatorBase* fft_calculator, uint16_t FFT_Size);
+    void AssignToBands(float* Band_Data, float* magnitudes, size_t count);
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
     int16_t m_AudioBinLimit;

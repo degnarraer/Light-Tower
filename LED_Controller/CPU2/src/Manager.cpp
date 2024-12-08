@@ -24,7 +24,7 @@ Manager::Manager( String Title
                 , SerialPortMessageManager &CPU3SerialPortMessageManager
                 , Bluetooth_Source &BT_Out
                 , I2S_Device &I2S_In
-                , ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &FFT_AudioBuffer
+                , FFT_Computer &r_FFT
                 , ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &Amplitude_AudioBuffer
                 , IPreferences& preferencesInterface)
                 : NamedItem(Title)
@@ -32,7 +32,7 @@ Manager::Manager( String Title
                 , m_CPU1SerialPortMessageManager(CPU1SerialPortMessageManager)
                 , m_CPU3SerialPortMessageManager(CPU3SerialPortMessageManager)
                 , m_SoundProcessor(SoundProcessor)
-                , m_FFT_AudioBuffer(FFT_AudioBuffer)
+                , m_FFT_Computer(r_FFT)
                 , m_Amplitude_AudioBuffer(Amplitude_AudioBuffer)
                 , m_I2S_In(I2S_In)
                 , m_BT_Out(BT_Out)
@@ -76,9 +76,9 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes requested.", channel_len);
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
   ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes received.", ByteReceived);
-  size_t FrameCount = ByteReceived / ( sizeof(uint16_t) * 2 );
-  m_FFT_AudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
-  m_Amplitude_AudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
+  size_t FrameCount = ByteReceived / ( sizeof(Frame_t) );
+  m_FFT_Computer.PushFrames((Frame_t*)Data, FrameCount);
+  //m_Amplitude_AudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }
 

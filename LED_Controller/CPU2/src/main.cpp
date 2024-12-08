@@ -47,8 +47,8 @@ BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out( "Bluetooth Source"
                          , BLUETOOTH_TASK_CORE
                          , a2dp_source );
-                                            
-ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> m_FFT_AudioBuffer;
+                              
+FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, THREAD_PRIORITY_HIGH, FFT_COMPUTE_TASK_CORE, true, BitLength_16);
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
@@ -57,7 +57,7 @@ SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManag
 
 
 Sound_Processor m_SoundProcessor ( "Sound Processor"
-                                 , m_FFT_AudioBuffer
+                                 , m_FFT_Computer
                                  , m_Amplitude_AudioBuffer
                                  , m_CPU1SerialPortMessageManager
                                  , m_CPU3SerialPortMessageManager
@@ -69,19 +69,19 @@ Manager m_Manager( "Manager"
                  , m_CPU3SerialPortMessageManager
                  , m_BT_Out
                  , m_I2S_In
-                 , m_FFT_AudioBuffer
+                 , m_FFT_Computer
                  , m_Amplitude_AudioBuffer
                  , m_PreferencesWrapper);
 
 void OutputSystemStatus()
 {
-  ESP_LOGI("SystemStatus", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
-  ESP_LOGI("SystemStatus", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
-  ESP_LOGI("SystemStatus", "Apb Clock Frequency: %i Hz", getApbFrequency());
-  ESP_LOGI("SystemStatus", "Total heap: %d", ESP.getHeapSize());
-  ESP_LOGI("SystemStatus", "Free heap: %d", ESP.getFreeHeap());
-  ESP_LOGI("SystemStatus", "Total PSRAM: %d", ESP.getPsramSize());
-  ESP_LOGI("SystemStatus", "Free PSRAM: %d", ESP.getFreePsram());
+  ESP_LOGW("SystemStatus", "Xtal Clock Frequency: %i MHz", getXtalFrequencyMhz());
+  ESP_LOGW("SystemStatus", "CPU Clock Frequency: %i MHz", getCpuFrequencyMhz());
+  ESP_LOGW("SystemStatus", "Apb Clock Frequency: %i Hz", getApbFrequency());
+  ESP_LOGW("SystemStatus", "Total heap: %d", ESP.getHeapSize());
+  ESP_LOGW("SystemStatus", "Free heap: %d", ESP.getFreeHeap());
+  ESP_LOGW("SystemStatus", "Total PSRAM: %d", ESP.getPsramSize());
+  ESP_LOGW("SystemStatus", "Free PSRAM: %d", ESP.getFreePsram());
 }
 
 void TestPSRam()
@@ -92,12 +92,12 @@ void TestPSRam()
     assert(buffer1);
     size_t freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     size_t allocatedSize = freeSizeBefore - freeSizeAfter;
-    ESP_LOGI("TestPSRam", "Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    ESP_LOGW("TestPSRam", "Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
     assert(allocatedSize >= theSize);
     free(buffer1);
     buffer1 = nullptr;
     size_t freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    ESP_LOGW("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
     assert(freeSizeAfterFree == freeSizeBefore);
     
     freeSizeBefore = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
@@ -105,12 +105,12 @@ void TestPSRam()
     assert(buffer2);
     freeSizeAfter = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     allocatedSize = freeSizeBefore - freeSizeAfter;
-    ESP_LOGI("TestPSRam", "ps_malloc Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
+    ESP_LOGW("TestPSRam", "ps_malloc Requested: %zu bytes, Allocated (including overhead): %zu bytes", theSize, allocatedSize);
     assert(allocatedSize >= theSize);
     free(buffer2);
     buffer2 = nullptr;
     freeSizeAfterFree = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    ESP_LOGI("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
+    ESP_LOGW("TestPSRam", "Free size before: %zu, after: %zu, after free: %zu", freeSizeBefore, freeSizeAfter, freeSizeAfterFree);
     assert(freeSizeAfterFree == freeSizeBefore);
 }
 
@@ -129,15 +129,14 @@ void setup()
   Serial2.flush();
 
   TestPSRam();
-  m_FFT_AudioBuffer.Initialize();
-  m_Amplitude_AudioBuffer.Initialize();
+  m_Amplitude_AudioBuffer.Setup();
   m_PreferencesWrapper.Setup();
   m_CPU1SerialPortMessageManager.Setup();
   m_CPU3SerialPortMessageManager.Setup();
   m_I2S_In.Setup();
   m_BT_Out.Setup();
   m_Manager.Setup();
-  m_SoundProcessor.Setup(); 
+  m_SoundProcessor.Setup();
   OutputSystemStatus();
 }
 

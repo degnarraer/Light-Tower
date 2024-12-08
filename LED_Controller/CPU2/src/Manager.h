@@ -42,7 +42,7 @@ class Manager: public NamedItem
            , SerialPortMessageManager &CPU3SerialPortMessageManager
            , Bluetooth_Source &BT_Out
            , I2S_Device &I2S_Out
-           , ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &FFT_AudioBuffer
+           , FFT_Computer &r_FFT
            , ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &Amplitude_AudioBuffer
            , IPreferences& preferencesInterface );
     
@@ -112,10 +112,9 @@ class Manager: public NamedItem
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     Sound_Processor &m_SoundProcessor;
-    ContinuousAudioBuffer<FFT_AUDIO_BUFFER_SIZE> &m_FFT_AudioBuffer;
+    FFT_Computer &m_FFT_Computer;
     ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
     Frame_t m_AmplitudeFrameBuffer[AMPLITUDE_BUFFER_FRAME_COUNT];
-    Frame_t m_FFTFrameBuffer[FFT_SIZE];
 
     //I2S Sound Data
     I2S_Device &m_I2S_In;

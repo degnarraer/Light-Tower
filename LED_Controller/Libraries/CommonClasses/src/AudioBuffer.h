@@ -227,7 +227,7 @@ class ContinuousAudioBuffer
         }
     }
 
-    void Initialize()
+    void Setup()
     {
         AllocateMemory();
     }
@@ -301,6 +301,21 @@ class ContinuousAudioBuffer
             ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return pushed;
+    }
+
+    Frame_t Shift()
+    {
+        Frame_t frame;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            frame = m_CircularAudioBuffer->shift();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return frame;
     }
 
     Frame_t Pop()
@@ -459,7 +474,7 @@ class ContinuousAudioBuffer
         else
         {
             ESP_LOGW("Semaphore Take Failure", "Task %s failed to acquire semaphore", pcTaskGetName(NULL));
-            return 0;  // Return 0 if semaphore acquisition fails
+            return 0;
         }
 
         return ElementsWritten;
