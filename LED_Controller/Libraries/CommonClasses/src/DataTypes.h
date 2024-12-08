@@ -850,13 +850,6 @@ struct __attribute__((packed)) Frame_t {
     }
 };
 
-enum BitLength_t
-{
-  BitLength_32,
-  BitLength_16,
-  BitLength_8,
-};
-
 enum DataType_t
 {
   DataType_Bool_t,

@@ -5,6 +5,13 @@
 #include "freertos/task.h"
 #include "Helpers.h"
 
+enum BitLength_t
+{
+  BitLength_32,
+  BitLength_16,
+  BitLength_8,
+};
+
 class FFT_Computer {
     typedef void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args);
 private:

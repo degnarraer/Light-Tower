@@ -1,3 +1,4 @@
+
 /*
     Light Tower by Rob Shockency
     Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
@@ -16,23 +17,34 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include "AllTests.h"
 
-#if __cplusplus < 201402L
-#error "C++14 or later is required!"
+#if defined(ARDUINO)
+#include <Arduino.h>
+
+void setup()
+{
+    Serial.begin(500000);
+    ::testing::InitGoogleMock();
+    ::testing::InitGoogleTest();
+    ::testing::GTEST_FLAG(break_on_failure) = false;
+}
+
+void loop()
+{
+    RUN_ALL_TESTS();
+    Serial.flush();
+    delay(1000);
+}
+
+#else
+int main(int argc, char **argv)
+{
+    ::testing::InitGoogleMock(&argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
+    RUN_ALL_TESTS();
+    return result;
+}
 #endif
-
-#include "Test_FFT_Computer.h"
-/*
-#include "Test_PreferencesWrapper.h"
-#include "Test_AudioBuffer.h"
-#include "Test_DataSerializer.h"
-#include "Test_SetupCallerInterface.h"
-#include "Test_ValidValueChecker.h"
-#include "Test_LocalDataItem.h"
-#include "Test_LocalStringDataItem.h"
-#include "Test_SerialMessageInterface.h"
-#include "Test_DataItem.h"
-#include "Test_DataItemWithPreferences.h"
-#include "Test_StringDataItem.h"
-*/

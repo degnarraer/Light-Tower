@@ -19,7 +19,7 @@
 #pragma once
 
 #include "arduinoFFT.h"
-#include "FFT_Calculator.h"
+#include "FFT_Computer.h"
 #include "Amplitude_Calculator.h"
 #include <DataTypes.h>
 #include <Helpers.h>

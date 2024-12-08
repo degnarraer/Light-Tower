@@ -16,23 +16,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include "FFT_Computer.h"
 
-#if __cplusplus < 201402L
-#error "C++14 or later is required!"
-#endif
-
-#include "Test_FFT_Computer.h"
-/*
-#include "Test_PreferencesWrapper.h"
-#include "Test_AudioBuffer.h"
-#include "Test_DataSerializer.h"
-#include "Test_SetupCallerInterface.h"
-#include "Test_ValidValueChecker.h"
-#include "Test_LocalDataItem.h"
-#include "Test_LocalStringDataItem.h"
-#include "Test_SerialMessageInterface.h"
-#include "Test_DataItem.h"
-#include "Test_DataItemWithPreferences.h"
-#include "Test_StringDataItem.h"
-*/
+TEST(FFT_Computer_Test, Frequency_Checks)
+{
+    FFT_Computer fft_Computer = FFT_Computer(128, 128, configMAX_PRIORITIES - 1, 0, true, BitLength_16);
+    EXPECT_TRUE(1);
+}
