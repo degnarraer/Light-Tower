@@ -16,6 +16,7 @@ class FFT_Computer {
     typedef void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args);
 private:
     MagnitudesCallback* m_CallBack = nullptr;
+    bool m_IsMultithreaded = false;
     void* m_CallBackArgs = nullptr;
     int m_fftSize;                      // FFT size (e.g., 8192)
     int m_magnitudeSize;
@@ -42,14 +43,25 @@ private:
 
 public:    
     // Constructor with optional normalizeMagnitudes and dataWidth
-    FFT_Computer(int fftSize, int hopSize, UBaseType_t uxPriority, BaseType_t xCoreID, bool normalizeMagnitudes, int dataWidth)
+    FFT_Computer(int fftSize, int hopSize, bool normalizeMagnitudes, int dataWidth)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
-        , m_uxPriority(uxPriority)
-        , m_xCoreID(xCoreID)
         , m_normalizeMagnitudes(normalizeMagnitudes)
         , m_dataWidth(dataWidth)
         , m_isInitialized(false)
+        , m_IsMultithreaded(false)
+        , m_bufferIndex(0)
+        , m_samplesSinceLastFFT(0)
+        , m_magnitudeSize(m_fftSize/2) {}
+    FFT_Computer(int fftSize, int hopSize, bool normalizeMagnitudes, int dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+        : m_fftSize(fftSize)
+        , m_hopSize(hopSize)
+        , m_normalizeMagnitudes(normalizeMagnitudes)
+        , m_dataWidth(dataWidth)
+        , m_uxPriority(uxPriority)
+        , m_xCoreID(xCoreID)
+        , m_isInitialized(false)
+        , m_IsMultithreaded(true)
         , m_bufferIndex(0)
         , m_samplesSinceLastFFT(0)
         , m_magnitudeSize(m_fftSize/2) {}
@@ -101,7 +113,7 @@ public:
         }
 
         m_mutex = xSemaphoreCreateMutex();
-        xTaskCreatePinnedToCore(Static_PerformFFT, "FFTTask", 5000, this, m_uxPriority, &m_fftTaskHandle, m_xCoreID);
+        if(m_IsMultithreaded) xTaskCreatePinnedToCore(Static_PerformFFT, "FFTTask", 5000, this, m_uxPriority, &m_fftTaskHandle, m_xCoreID);
         m_isInitialized = true;
     }
 
@@ -127,7 +139,14 @@ public:
             if (m_samplesSinceLastFFT >= m_hopSize)
             {
                 ESP_LOGD("PushFrames", "Samples: \"%i\" Hop Length: \"%i\" Buffer Index: \"%i\"", m_samplesSinceLastFFT, m_hopSize, m_bufferIndex);
-                xTaskNotifyGive(m_fftTaskHandle);
+                if(m_IsMultithreaded)
+                {
+                    xTaskNotifyGive(m_fftTaskHandle);
+                }
+                else
+                {
+                    PerformFFT();
+                }
                 m_samplesSinceLastFFT = 0;
             }
         }

@@ -139,6 +139,36 @@ class AudioBuffer
         return GetFrameCapacity() - GetFrameCount();
     }
 
+    bool IsEmpty()
+    {
+        bool isEmpty = false;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            isEmpty = m_CircularAudioBuffer->isEmpty();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return isEmpty;
+    }
+
+    bool IsFull()
+    {
+        bool isFull = false;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            isFull = m_CircularAudioBuffer->isFull();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return isFull;
+    }
+
     size_t WriteAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
     {
         size_t written = 0;
@@ -318,6 +348,21 @@ class ContinuousAudioBuffer
         return frame;
     }
 
+    Frame_t Unshift()
+    {
+        Frame_t frame;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            frame = m_CircularAudioBuffer->unshift();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return frame;
+    }
+
     Frame_t Pop()
     {
         Frame_t frame;
@@ -368,6 +413,21 @@ class ContinuousAudioBuffer
             ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return isEmpty;
+    }
+
+    bool IsFull()
+    {
+        bool isFull = false;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            isFull = m_CircularAudioBuffer->isFull();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return isFull;
     }
 
     size_t Size()

@@ -39,7 +39,7 @@ class ContinuousAudioBufferTests : public Test
         void SetUp() override
         {
             audioBuffer = new ContinuousAudioBuffer<bufferSize>();
-            audioBuffer->Initialize();
+            audioBuffer->Setup();
         }
         void TearDown() override 
         {
@@ -55,7 +55,7 @@ TEST_F(ContinuousAudioBufferTests, Starting_State)
 {
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
-    EXPECT_EQ(bufferSize, audioBuffer->Available());
+    EXPECT_EQ(bufferSize, audioBuffer->GetFreeFrameCount());
 }
 
 TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Popping_To_Empty)
@@ -68,21 +68,21 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Popping_To_Empty)
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Push(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(false, audioBuffer->IsFull());
         }
         else if(i == bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Push(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
         else if(i > bufferSize-1)
         {
-            EXPECT_EQ(0, audioBuffer->Available());
+            EXPECT_EQ(0, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(false, audioBuffer->Push(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
@@ -99,7 +99,7 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Popping_To_Empty)
     EXPECT_EQ(resultingBuffer[7], (Frame_t{3, 3}));
     EXPECT_EQ(resultingBuffer[8], (Frame_t{2, 2}));
     EXPECT_EQ(resultingBuffer[9], (Frame_t{1, 1}));
-    EXPECT_EQ(bufferSize, audioBuffer->Available());
+    EXPECT_EQ(bufferSize, audioBuffer->GetFreeFrameCount());
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
 }
@@ -133,7 +133,7 @@ TEST_F(ContinuousAudioBufferTests, Pushing_Array_To_Full_Popping_To_Empty)
     EXPECT_EQ(resultingBuffer[7], (Frame_t{3, 3}));
     EXPECT_EQ(resultingBuffer[8], (Frame_t{2, 2}));
     EXPECT_EQ(resultingBuffer[9], (Frame_t{1, 1}));
-    EXPECT_EQ(bufferSize, audioBuffer->Available());
+    EXPECT_EQ(bufferSize, audioBuffer->GetFreeFrameCount());
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
 }
@@ -149,21 +149,21 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Shifting_To_Empty)
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Push(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(false, audioBuffer->IsFull());
         }
         else if(i == bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Push(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
         else if(i > bufferSize-1)
         {
-            EXPECT_EQ(0, audioBuffer->Available());
+            EXPECT_EQ(0, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(false, audioBuffer->Push(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
@@ -180,7 +180,7 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Shifting_To_Empty)
     EXPECT_EQ(resultingBuffer[7], (Frame_t{8, 8}));
     EXPECT_EQ(resultingBuffer[8], (Frame_t{9, 9}));
     EXPECT_EQ(resultingBuffer[9], (Frame_t{10, 10}));
-    EXPECT_EQ(bufferSize, audioBuffer->Available());
+    EXPECT_EQ(bufferSize, audioBuffer->GetFreeFrameCount());
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
 }
@@ -196,21 +196,21 @@ TEST_F(ContinuousAudioBufferTests, Unshift_To_Full_Popping_To_Empty)
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Unshift(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(false, audioBuffer->IsFull());
         }
         else if(i == bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Unshift(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
         else if(i > bufferSize-1)
         {
-            EXPECT_EQ(0, audioBuffer->Available());
+            EXPECT_EQ(0, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(false, audioBuffer->Unshift(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
@@ -227,7 +227,7 @@ TEST_F(ContinuousAudioBufferTests, Unshift_To_Full_Popping_To_Empty)
     EXPECT_EQ(resultingBuffer[7], (Frame_t{8, 8}));
     EXPECT_EQ(resultingBuffer[8], (Frame_t{9, 9}));
     EXPECT_EQ(resultingBuffer[9], (Frame_t{10, 10}));
-    EXPECT_EQ(bufferSize, audioBuffer->Available());
+    EXPECT_EQ(bufferSize, audioBuffer->GetFreeFrameCount());
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
 }
@@ -261,7 +261,7 @@ TEST_F(ContinuousAudioBufferTests, Unshifting_Array_To_Full_Popping_To_Empty)
     EXPECT_EQ(resultingBuffer[7], (Frame_t{8, 8}));
     EXPECT_EQ(resultingBuffer[8], (Frame_t{9, 9}));
     EXPECT_EQ(resultingBuffer[9], (Frame_t{10, 10}));
-    EXPECT_EQ(bufferSize, audioBuffer->Available());
+    EXPECT_EQ(bufferSize, audioBuffer->GetFreeFrameCount());
     EXPECT_EQ(true, audioBuffer->IsEmpty());
     EXPECT_EQ(false, audioBuffer->IsFull());
 }
@@ -277,21 +277,21 @@ TEST_F(ContinuousAudioBufferTests, Unshift_To_Full_Shift_To_Empty)
         Frame_t newFrame = {i,i};
         if(i < bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Unshift(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(false, audioBuffer->IsFull());
         }
         else if(i == bufferSize-1)
         {
-            EXPECT_EQ(bufferSize-i, audioBuffer->Available());
+            EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(true, audioBuffer->Unshift(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
         else if(i > bufferSize-1)
         {
-            EXPECT_EQ(0, audioBuffer->Available());
+            EXPECT_EQ(0, audioBuffer->GetFreeFrameCount());
             EXPECT_EQ(false, audioBuffer->Unshift(newFrame));
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());

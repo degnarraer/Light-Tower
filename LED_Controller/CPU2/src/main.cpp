@@ -48,7 +48,7 @@ Bluetooth_Source m_BT_Out( "Bluetooth Source"
                          , BLUETOOTH_TASK_CORE
                          , a2dp_source );
                               
-FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, THREAD_PRIORITY_HIGH, FFT_COMPUTE_TASK_CORE, true, BitLength_16);
+FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, true, BitLength_16, THREAD_PRIORITY_HIGH, FFT_COMPUTE_TASK_CORE);
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
