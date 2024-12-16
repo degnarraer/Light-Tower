@@ -23,7 +23,7 @@
 class BandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    BandPowerModel( String Title
+    BandPowerModel( std::string Title
                   , unsigned int Band
                   , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
                   : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
@@ -54,7 +54,7 @@ class BandPowerModel: public DataModelWithNewValueNotification<float>
 class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    ReducedBandsBandPowerModel( String Title
+    ReducedBandsBandPowerModel( std::string Title
                                 , unsigned int band
                                 , unsigned int depth
                                 , unsigned int totalBands
@@ -91,7 +91,7 @@ class ReducedBandsBandPowerModel: public DataModelWithNewValueNotification<float
 class MaximumBandModel: public DataModelWithNewValueNotification<struct BandData>
 {
 public:
-    MaximumBandModel( String Title
+    MaximumBandModel( std::string Title
                     , unsigned int Depth
                     , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
                     : DataModelWithNewValueNotification<struct BandData>(Title, StatisticalEngineModelInterface)
@@ -136,7 +136,7 @@ private:
 class BinPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    BinPowerModel( String title
+    BinPowerModel( std::string title
                  , unsigned int startBin
                  , unsigned int endBin
                  , StatisticalEngineModelInterface &statisticalEngineModelInterface )

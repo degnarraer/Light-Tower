@@ -257,9 +257,9 @@ class QueueManager: public CommonUtils
 				  , public QueueController
 {
 	public:
-		QueueManager(String Title): m_Title(Title){
+		QueueManager(std::string Title): m_Title(Title){
 		}
-		QueueManager(String Title, size_t DataItemCount): m_Title(Title)
+		QueueManager(std::string Title, size_t DataItemCount): m_Title(Title)
 													    , m_DataItemCount(DataItemCount){
 		}
 		virtual ~QueueManager(){
@@ -287,13 +287,13 @@ class QueueManager: public CommonUtils
 			}
 		}
 		//Data Items
-		DataItem_t *GetPointerToDataItemWithName(String Name)
+		DataItem_t *GetPointerToDataItemWithName(std::string Name)
 		{
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(true == Name.equals(m_DataItem[i].Name))
+					if(Name == m_DataItem[i].Name)
 					{
 						return &(m_DataItem[i]);
 					}
@@ -306,12 +306,12 @@ class QueueManager: public CommonUtils
 			}
 			return NULL;
 		}
-		QueueHandle_t GetQueueHandleRXForDataItem(String Name){
+		QueueHandle_t GetQueueHandleRXForDataItem(std::string Name){
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(true == Name.equals(m_DataItem[i].Name))
+					if(Name == m_DataItem[i].Name)
 					{
 						return m_DataItem[i].QueueHandle_RX;
 					}
@@ -324,12 +324,12 @@ class QueueManager: public CommonUtils
 			}
 			return NULL;
 		}
-		QueueHandle_t GetQueueHandleTXForDataItem(String Name){
+		QueueHandle_t GetQueueHandleTXForDataItem(std::string Name){
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(true == Name.equals(m_DataItem[i].Name))
+					if(Name == m_DataItem[i].Name)
 					{
 						return m_DataItem[i].QueueHandle_TX;
 					}
@@ -342,12 +342,12 @@ class QueueManager: public CommonUtils
 			}
 			return NULL;
 		}
-		size_t GetQueueByteCountForDataItem(String Name){
+		size_t GetQueueByteCountForDataItem(std::string Name){
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(true == Name.equals(m_DataItem[i].Name))
+					if(Name == m_DataItem[i].Name)
 					{
 						return m_DataItem[i].TotalByteCount;
 					}
@@ -361,12 +361,12 @@ class QueueManager: public CommonUtils
 			return 0;
 		}
 		
-		size_t GetTotalByteCountForDataItem(String Name){
+		size_t GetTotalByteCountForDataItem(std::string Name){
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(true == Name.equals(m_DataItem[i].Name))
+					if(Name == m_DataItem[i].Name)
 					{
 						return m_DataItem[i].TotalByteCount;
 					}
@@ -378,12 +378,12 @@ class QueueManager: public CommonUtils
 			}
 			return 0;
 		}	
-		size_t GetSampleCountForDataItem(String Name){
+		size_t GetSampleCountForDataItem(std::string Name){
 			if(NULL != m_DataItem)
 			{
 				for(int i = 0; i < m_DataItemCount; ++i)
 				{
-					if(true == Name.equals(m_DataItem[i].Name))
+					if(Name == m_DataItem[i].Name)
 					{
 						return m_DataItem[i].Count;
 					}
@@ -398,7 +398,7 @@ class QueueManager: public CommonUtils
 	
 		
 		//Queues
-		bool GetValueFromRXQueue(void* Value, const String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
+		bool GetValueFromRXQueue(void* Value, const std::string Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
 			bool result = false;
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
@@ -431,7 +431,7 @@ class QueueManager: public CommonUtils
 			}
 			return result;
 		}
-		bool GetValueFromTXQueue(void* Value, String Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
+		bool GetValueFromTXQueue(void* Value, std::string Name, bool ReadUntilEmpty, TickType_t TicksToWait, bool &DataPullHasErrored){
 			bool Result = false;
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
@@ -464,11 +464,10 @@ class QueueManager: public CommonUtils
 			}
 			return Result;
 		}
-		void PushValueToRXQueue(void* Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
+		void PushValueToRXQueue(void* Value, std::string Name, TickType_t TicksToWait, bool &DataPushHasErrored){
 			QueueHandle_t Queue = GetQueueHandleRXForDataItem(Name);
 			if(NULL != Queue)
 			{
-				if(true == Name.equals("Amplitude Gain"))  Serial << "Push RX\n";
 				if(xQueueSend(Queue, Value, TicksToWait) != pdTRUE)
 				{
 					if(false == DataPushHasErrored)
@@ -483,7 +482,7 @@ class QueueManager: public CommonUtils
 				ESP_LOGE("CommonUtils", "ERROR! NULL Queue for: %s.", Name.c_str());
 			}
 		}
-		void PushValueToTXQueue(void* Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
+		void PushValueToTXQueue(void* Value, std::string Name, TickType_t TicksToWait, bool &DataPushHasErrored){
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
@@ -501,7 +500,7 @@ class QueueManager: public CommonUtils
 				ESP_LOGE("CommonUtils", "ERROR! NULL Queue.");
 			}
 		}
-		void PushValueToTXQueue(String &Value, String Name, TickType_t TicksToWait, bool &DataPushHasErrored){
+		void PushValueToTXQueue(String &Value, std::string Name, TickType_t TicksToWait, bool &DataPushHasErrored){
 			QueueHandle_t Queue = GetQueueHandleTXForDataItem(Name);
 			if(NULL != Queue)
 			{
@@ -522,7 +521,7 @@ class QueueManager: public CommonUtils
 		
 	private:
 		DataItem_t* m_DataItem = nullptr;
-		String m_Title = "";
+		std::string m_Title = "";
 		size_t m_DataItemCount = 0;
 		bool m_MemoryAllocated = false;
 		void AllocateMemory(){
@@ -586,7 +585,7 @@ class QueueManager: public CommonUtils
 			free(m_DataItem);
 			m_MemoryAllocated = false;
 		}		
-		void CreateManagedQueue(String Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage){
+		void CreateManagedQueue(std::string Name, QueueHandle_t &Queue, size_t ByteCount, size_t QueueCount, bool DebugMessage){
 			ESP_LOGV("Helpers", "Creating %i Queue(s), Named: %s of size: %i for a total of %i", QueueCount, Name.c_str(), ByteCount, ByteCount*QueueCount);
 			Queue = xQueueCreate(QueueCount, ByteCount );
 			if(Queue == NULL)

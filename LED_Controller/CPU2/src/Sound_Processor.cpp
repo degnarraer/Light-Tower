@@ -18,7 +18,7 @@
 
 #include "Sound_Processor.h"
 
-Sound_Processor::Sound_Processor( String Title          
+Sound_Processor::Sound_Processor( std::string Title          
                                 , FFT_Computer &r_FFT
                                 , ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &Amplitude_AudioBuffer
                                 , SerialPortMessageManager &CPU1SerialPortMessageManager

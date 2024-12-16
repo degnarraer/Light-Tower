@@ -919,7 +919,7 @@ static const char* DataTypeStrings[] =
 
 struct DataItemConfig_t
 {
-  String Name;
+  std::string Name;
   DataType_t DataType;
   size_t Count;
   Transciever_t TransceiverConfig;
@@ -1079,7 +1079,7 @@ struct NamedCallback_t
 
 struct DataItem_t
 {
-	String Name;
+	std::string Name;
 	QueueHandle_t QueueHandle_RX = NULL;
 	QueueHandle_t QueueHandle_TX = NULL;
 	Transciever_t TransceiverConfig;

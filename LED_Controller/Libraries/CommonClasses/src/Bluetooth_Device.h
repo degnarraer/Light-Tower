@@ -61,7 +61,7 @@ class Bluetooth_Source: public NamedItem
 			Stopped
 		};
 		
-		Bluetooth_Source( String Title
+		Bluetooth_Source( std::string Title
 						, BaseType_t Core
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
@@ -160,7 +160,7 @@ class Bluetooth_Sink: public NamedItem
 	};
 		
   public:
-    Bluetooth_Sink( String Title
+    Bluetooth_Sink( std::string Title
 				  , BaseType_t Core
 				  , BluetoothA2DPSink& BTSink
 				  , i2s_port_t i2S_PORT

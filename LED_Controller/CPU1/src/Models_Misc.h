@@ -22,7 +22,7 @@ class GravitationalModel: public ModelWithNewValueNotification<Position>
                         , public ModelEventNotificationCallee<Position>
 {
   public:
-    GravitationalModel( String title
+    GravitationalModel( std::string title
                       , float gravitationalScaler
                       , float maxInitialVelocity)
                       : ModelWithNewValueNotification<Position>(title)

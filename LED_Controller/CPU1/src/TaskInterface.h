@@ -38,8 +38,8 @@ class Task
 {
   public:
     Task(): m_Title("Unnamed"){}
-    Task(String title): m_Title(title){}
-    String GetTaskTitle() { return m_Title; }
+    Task(std::string title): m_Title(title){}
+    std::string GetTaskTitle() { return m_Title; }
     bool GetIsSetup() { return m_IsSetup; }
     bool SetIsSetup(bool IsSetup) { return m_IsSetup = IsSetup; }
     void AddTask(Task &task);
@@ -55,19 +55,19 @@ class Task
   private:
     TaskScheduler m_Scheduler;
     bool m_IsSetup = false;
-    String m_Title;
-    void SetTaskTitle(String title) { m_Title = title; }
+    std::string m_Title;
+    void SetTaskTitle(std::string title) { m_Title = title; }
     
 };
 
 class CalculateFPS: public Task
 {
   public:
-    CalculateFPS(String title, unsigned int updatePeriodMillis)
+    CalculateFPS(std::string title, unsigned int updatePeriodMillis)
       : Task("CalculateFPS")
       , m_Title(title)
       , m_updatePeriodMillis(updatePeriodMillis){}
-    String m_Title;
+    std::string m_Title;
     unsigned int m_updatePeriodMillis;
     unsigned long m_lapsedTime;
     void Setup()
@@ -93,7 +93,7 @@ class CalculateFPS: public Task
     void RunMyScheduledTask()
     {
       m_startMillis = millis();
-      if(true == debugFPS) Serial << "FPS for " << m_Title << ": " << m_frameCount / (m_lapsedTime/1000.0) << "\n";
+      if(true == debugFPS) Serial << "FPS for " << m_Title.c_str() << ": " << m_frameCount / (m_lapsedTime/1000.0) << "\n";
       m_frameCount = 0;
     }
     void RunMyPostTask(){}

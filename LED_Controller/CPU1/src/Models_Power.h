@@ -21,7 +21,7 @@
 class SoundPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    SoundPowerModel( String Title
+    SoundPowerModel( std::string Title
                    , unsigned int depth
                    , StatisticalEngineModelInterface &StatisticalEngineModelInterface )
       : DataModelWithNewValueNotification<float>(Title, StatisticalEngineModelInterface)
@@ -85,7 +85,7 @@ class SoundPowerModel: public DataModelWithNewValueNotification<float>
 class CyclingPowerModel: public DataModelWithNewValueNotification<float>
 {
   public:
-    CyclingPowerModel( String Title
+    CyclingPowerModel( std::string Title
                      , unsigned int MilliSeconds
                      , unsigned int MaxCount
                      , StatisticalEngineModelInterface &StatisticalEngineModelInterface )

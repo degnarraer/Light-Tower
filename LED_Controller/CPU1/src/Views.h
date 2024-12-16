@@ -47,7 +47,7 @@ enum Direction
 class View: public Task
 {
   public:
-    View(String Title, position X, position Y, size W, size H): Task(Title)
+    View(std::string Title, position X, position Y, size W, size H): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
@@ -55,7 +55,7 @@ class View: public Task
     {
       if(true == debugMemory) Serial << "New: View\n";
     }
-    View(String Title, position X, position Y, size W, size H, MergeType MergeType): Task(Title)
+    View(std::string Title, position X, position Y, size W, size H, MergeType MergeType): Task(Title)
                                                               , m_X(X)
                                                               , m_Y(Y)
                                                               , m_W(W)
@@ -125,7 +125,7 @@ class View: public Task
 class SubView: public View
 {
   public:
-    SubView( String title
+    SubView( std::string title
            , bool clearBeforeMergeSubViews
            , position x
            , position y
@@ -136,7 +136,7 @@ class SubView: public View
     {
       if(true == debugMemory) Serial << "New: SubView\n";
     }
-    SubView( String title
+    SubView( std::string title
            , bool clearBeforeMergeSubViews
            , position x
            , position y
@@ -180,17 +180,17 @@ class VerticalBarView: public View
                      , public ModelEventNotificationCallee<CRGB>
 {
   public:
-    VerticalBarView(String title): View(title, 0, 0, 0, 0)
+    VerticalBarView(std::string title): View(title, 0, 0, 0, 0)
                                  , ModelWithNewValueNotification<Position>(title)
     {
       if(true == debugMemory) Serial << "New: VerticalBarView\n";
     }
-    VerticalBarView(String title, position X, position Y, size W, size H): View(title, X, Y, W, H)
+    VerticalBarView(std::string title, position X, position Y, size W, size H): View(title, X, Y, W, H)
                                                                          , ModelWithNewValueNotification<Position>(title)
     {
       if(true == debugMemory) Serial << "New: VerticalBarView\n";
     }
-    VerticalBarView(String title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
+    VerticalBarView(std::string title, position X, position Y, size W, size H, MergeType MergeType): View(title, X, Y, W, H, MergeType)
                                                                                               , ModelWithNewValueNotification<Position>(title)
     {
       if(true == debugMemory) Serial << "New: VerticalBarView\n";
@@ -232,7 +232,7 @@ class BassSpriteView: public View
                     , public ModelEventNotificationCallee<Position>
 {
   public:
-    BassSpriteView( String title
+    BassSpriteView( std::string title
                   , position x
                   , position y
                   , int minWidth
@@ -255,7 +255,7 @@ class BassSpriteView: public View
     {
       if(true == debugMemory) Serial << "New: BassSpriteView\n";
     }
-    BassSpriteView( String title
+    BassSpriteView( std::string title
                   , position x
                   , position y
                   , int minWidth
@@ -331,7 +331,7 @@ enum ScrollDirection
 class ScrollingView: public View
 {
   public:
-    ScrollingView( String title
+    ScrollingView( std::string title
                  , ScrollDirection scrollDirection
                  , position X
                  , position Y
@@ -342,7 +342,7 @@ class ScrollingView: public View
     {
       if(true == debugMemory) Serial << "New: ScrollingView\n";  
     }
-    ScrollingView( String title
+    ScrollingView( std::string title
                  , ScrollDirection scrollDirection
                  , position X
                  , position Y
@@ -376,7 +376,7 @@ class ColorSpriteView: public View
                      , public ModelEventNotificationCallee<BandData>
 {
   public:
-    ColorSpriteView( String title
+    ColorSpriteView( std::string title
                    , position x
                    , position y
                    , size w
@@ -385,7 +385,7 @@ class ColorSpriteView: public View
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
-    ColorSpriteView( String title
+    ColorSpriteView( std::string title
                    , position x
                    , position y
                    , size w
@@ -396,7 +396,7 @@ class ColorSpriteView: public View
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
-    ColorSpriteView( String title
+    ColorSpriteView( std::string title
                    , position x
                    , position y
                    , size w
@@ -408,7 +408,7 @@ class ColorSpriteView: public View
     {
       if(true == debugMemory) Serial << "New: ColorSpriteView\n";  
     }
-    ColorSpriteView( String title
+    ColorSpriteView( std::string title
                    , position x
                    , position y
                    , size w
@@ -444,7 +444,7 @@ class ColorSpriteView: public View
 class FadingView: public View
 {
   public:
-    FadingView( String title
+    FadingView( std::string title
               , unsigned int FadeLength
               , Direction Direction
               , position x
@@ -457,7 +457,7 @@ class FadingView: public View
     {
       if(true == debugMemory) Serial << "New: FadingView\n";  
     }
-    FadingView( String title
+    FadingView( std::string title
               , unsigned int FadeLength
               , Direction Direction
               , position x
@@ -492,7 +492,7 @@ class FadingView: public View
 class RotatingView: public View
 {
   public:
-    RotatingView( String title
+    RotatingView( std::string title
                 , Direction Direction
                 , unsigned int updatePeriodMillis
                 , RotationType rotationType
@@ -507,7 +507,7 @@ class RotatingView: public View
     {
       if(true == debugMemory) Serial << "New: RotatingView\n";  
     }
-    RotatingView( String title
+    RotatingView( std::string title
                 , Direction Direction
                 , unsigned int updatePeriodMillis
                 , RotationType rotationType

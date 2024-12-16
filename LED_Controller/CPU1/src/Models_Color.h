@@ -23,7 +23,7 @@
 class RandomColorFadingModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
-    RandomColorFadingModel( String Title
+    RandomColorFadingModel( std::string Title
                           , unsigned long Duration)
                           : ModelWithNewValueNotification<CRGB>(Title)
                           , m_Duration(Duration)
@@ -57,7 +57,7 @@ class ColorFadingModel: public ModelWithNewValueNotification<CRGB>
                       , public ModelEventNotificationCallee<BandData>
 {
   public:
-    ColorFadingModel( String Title
+    ColorFadingModel( std::string Title
                     , unsigned long Duration
                     , unsigned long minimumUpdateTime)
                     : ModelWithNewValueNotification<CRGB>(Title)
@@ -103,7 +103,7 @@ class ColorFadingModel: public ModelWithNewValueNotification<CRGB>
 class RainbowColorModel: public ModelWithNewValueNotification<CRGB>
 {
   public:
-    RainbowColorModel( String Title
+    RainbowColorModel( std::string Title
                      , unsigned int Numerator
                      , unsigned int Denominator)
                      : ModelWithNewValueNotification<CRGB>(Title)
@@ -140,7 +140,7 @@ class ColorPowerModel: public DataModelWithNewValueNotification<CRGB>
                      , public ModelEventNotificationCallee<CRGB>
 {
   public:
-    ColorPowerModel( String Title
+    ColorPowerModel( std::string Title
                    , CRGB Color
                    , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
                    : DataModelWithNewValueNotification<CRGB>(Title, StatisticalEngineModelInterface)
@@ -194,7 +194,7 @@ class SettableColorPowerModel: public ModelWithNewValueNotification<CRGB>
                              , public ModelEventNotificationCallee<float>
 {
   public:
-    SettableColorPowerModel( String Title ) : ModelWithNewValueNotification<CRGB>(Title)
+    SettableColorPowerModel( std::string Title ) : ModelWithNewValueNotification<CRGB>(Title)
     {
       if (true == debugMemory) Serial << "New: SettableColorPowerModel\n";
     }
@@ -240,7 +240,7 @@ class BandDataColorModel: public ModelWithNewValueNotification<CRGB>
                         , public ModelEventNotificationCallee<BandData>
 {
   public:
-    BandDataColorModel( String Title ): ModelWithNewValueNotification<CRGB>(Title)
+    BandDataColorModel( std::string Title ): ModelWithNewValueNotification<CRGB>(Title)
     {
       if (true == debugMemory) Serial << "New: BandDataColorModel\n";
     }

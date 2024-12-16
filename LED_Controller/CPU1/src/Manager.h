@@ -36,7 +36,7 @@ class Manager: public NamedItem
              , public SetupCallerInterface
 {
   public:
-    Manager( String Title
+    Manager( std::string Title
            , StatisticalEngine &statisticalEngine
            , Bluetooth_Sink &bluetooth_Sink
            , I2S_Device &microphone
@@ -174,7 +174,7 @@ class Manager: public NamedItem
                                                                                                                       , &m_SoundInputSource_Callback
                                                                                                                       , this
                                                                                                                       , NULL );
-    static void SoundInputSource_ValueChanged(const String &Name, void* object, void* arg)
+    static void SoundInputSource_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(arg && object)
       {
@@ -213,7 +213,7 @@ class Manager: public NamedItem
                                                                                            , this
                                                                                            , &validBoolValues );
 
-    static void SinkAutoReConnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SinkAutoReConnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(arg && object)
       {
@@ -247,7 +247,7 @@ class Manager: public NamedItem
                                                        , &m_CPU3SerialPortMessageManager
                                                        , &m_SinkConnect_Callback
                                                        , this );
-    static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SinkConnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(arg && object)
       {
@@ -284,7 +284,7 @@ class Manager: public NamedItem
                                                           , &m_CPU3SerialPortMessageManager
                                                           , &m_SinkDisconnect_Callback
                                                           , this );
-    static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SinkDisconnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(arg && object)
       {
@@ -332,7 +332,7 @@ class Manager: public NamedItem
                                                                                   , &m_CPU2SerialPortMessageManager
                                                                                   , &m_R_Max_Band_Callback
                                                                                   , this );
-    static void R_Max_Band_ValueChanged(const String &Name, void* object, void* arg)
+    static void R_Max_Band_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       //ESP_LOGI("R_Max_Band_ValueChanged", "R_Max_Band_ValueChanged.");
     }
@@ -347,7 +347,7 @@ class Manager: public NamedItem
                                                        , &m_CPU2SerialPortMessageManager
                                                        , &m_R_Bands_Callback
                                                        , this );
-    static void R_Bands_ValueChanged(const String &Name, void* object, void* arg)
+    static void R_Bands_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       float *bands;
       bands = static_cast<float*>(object);
@@ -370,7 +370,7 @@ class Manager: public NamedItem
                                                                                   , &m_CPU2SerialPortMessageManager
                                                                                   , &m_L_Max_Band_Callback
                                                                                   , this );
-    static void L_Max_Band_ValueChanged(const String &Name, void* object, void* arg)
+    static void L_Max_Band_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       //ESP_LOGI("L_Max_Band_ValueChanged", "L_Max_Band_ValueChanged.");
     }
@@ -385,7 +385,7 @@ class Manager: public NamedItem
                                                        , &m_CPU2SerialPortMessageManager
                                                        , &m_L_Bands_Callback
                                                        , this );
-    static void L_Bands_ValueChanged(const String &Name, void* object, void* arg)
+    static void L_Bands_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       float *bands;
       bands = static_cast<float*>(object);
@@ -408,7 +408,7 @@ class Manager: public NamedItem
                                                                                , &m_CPU2SerialPortMessageManager
                                                                                , &m_PSF_Callback
                                                                                , this );
-    static void m_PSF_ValueChanged(const String &Name, void* object, void* arg)
+    static void m_PSF_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(arg && object)
       {

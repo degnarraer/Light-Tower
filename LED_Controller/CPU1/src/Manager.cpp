@@ -18,7 +18,7 @@
 
 #include "Manager.h"
 
-Manager::Manager( String Title
+Manager::Manager( std::string Title
                 , StatisticalEngine &StatisticalEngine
                 , Bluetooth_Sink &bluetooth_Sink
                 , I2S_Device &microphone

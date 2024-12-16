@@ -70,14 +70,14 @@ class Model: public NamedItem
            , public Task
 {
   public:
-    Model(String Title): NamedItem(Title)
+    Model(std::string Title): NamedItem(Title)
                        , Task(GetTitle()) 
     { 
-      if (true == debugMemory) Serial << "New Model: " << GetTitle() << "\n";
+      if (true == debugMemory) Serial << "New Model: " << GetTitle().c_str() << "\n";
     }
     virtual ~Model()
     {
-      if (true == debugMemory) Serial << "Delete Model: " << GetTitle() << "\n";
+      if (true == debugMemory) Serial << "Delete Model: " << GetTitle().c_str() << "\n";
     }
 
     //ModelEventNotificationCaller
@@ -227,7 +227,7 @@ class DataModel: public Model
                , public StatisticalEngineModelInterfaceUsers
 {
   public:
-    DataModel( String Title
+    DataModel( std::string Title
                , StatisticalEngineModelInterface &StatisticalEngineModelInterface)
       : Model(Title)
       , m_StatisticalEngineModelInterface(StatisticalEngineModelInterface)
@@ -265,7 +265,7 @@ class ModelWithNewValueNotification: public Model
                                    , public ModelEventNotificationCaller<T>
 {
   public:
-    ModelWithNewValueNotification<T>(String Title): Model(Title)
+    ModelWithNewValueNotification<T>(std::string Title): Model(Title)
     {
       if (true == debugMemory) Serial << "New: ModelWithNewValueNotification\n";
     }
@@ -304,7 +304,7 @@ class DataModelWithNewValueNotification: public DataModel
   , public ModelEventNotificationCaller<T>
 {
   public:
-    DataModelWithNewValueNotification<T>(String Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface)
+    DataModelWithNewValueNotification<T>(std::string Title, StatisticalEngineModelInterface &StatisticalEngineModelInterface): DataModel(Title, StatisticalEngineModelInterface)
     {
       if (true == debugMemory) Serial << "New: DataModelWithNewValueNotification\n";
     }

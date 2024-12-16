@@ -18,7 +18,7 @@
 
 #include "Manager.h"
 
-Manager::Manager( String Title
+Manager::Manager( std::string Title
                 , Sound_Processor &SoundProcessor
                 , SerialPortMessageManager &CPU1SerialPortMessageManager
                 , SerialPortMessageManager &CPU3SerialPortMessageManager
