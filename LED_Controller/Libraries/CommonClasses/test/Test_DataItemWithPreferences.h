@@ -39,10 +39,10 @@ class DataItemWithPreferencesFunctionCallTests : public Test
 {
     protected:
         const int32_t initialValue = 10;
-        const String initialValueString = "10";
-        const String spmm = "Serial Port Message Manager";
-        const String name = "Test Name";
-        const String key1 = "key1";
+        const std::string initialValueString = "10";
+        const std::string spmm = "Serial Port Message Manager";
+        const std::string name = "Test Name";
+        const std::string key1 = "key1";
         MockSetupCallerInterface *mp_MockSetupCaller;
         MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
         MockNamedCallback *mp_mockNamedCallback;
@@ -167,10 +167,10 @@ class DataItemWithPreferencesRxTxTests : public Test
 {
     protected:
         const int32_t initialValue = 10;
-        const String initialValueString = "10";
-        const String name = "Test Name1";
-        const String spmm = "Serial Port Message Manager";
-        const String key1 = "key1";
+        const std::string initialValueString = "10";
+        const std::string name = "Test Name1";
+        const std::string spmm = "Serial Port Message Manager";
+        const std::string key1 = "key1";
         NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
         MockNamedCallback *mp_mockNamedCallback;
         NiceMock<MockPreferences> *mp_mockPreferences;
@@ -187,7 +187,7 @@ class DataItemWithPreferencesRxTxTests : public Test
             ON_CALL(*mp_MockSerialPortMessageManager, QueueMessageFromDataType(_,_,_,_,_)).WillByDefault(Return(true));
             ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
             ON_CALL(*mp_mockPreferences, isKey( StrEq(key1.c_str()) )).WillByDefault(Return(false));
-            ON_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValueString )).WillByDefault(Return(initialValueString));
+            ON_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), StrEq(initialValueString.c_str()) )).WillByDefault(Return(initialValueString));
             ON_CALL(*mp_mockPreferences, putString( StrEq(key1.c_str()), initialValueString )).WillByDefault(Return(initialValueString.length()));
         }
 
@@ -257,27 +257,27 @@ protected:
     const int32_t validValue20 = 20;
     const int32_t validValue30 = 30;
     const int32_t invalidValue = 40;
-    const String validValue10String = String(validValue10);
-    const String validValue20String = String(validValue20);
-    const String validValue30String = String(validValue30);
-    const String invalidValueString = String(invalidValue);
+    const std::string validValue10String = std::to_string(validValue10);
+    const std::string validValue20String = std::to_string(validValue20);
+    const std::string validValue30String = std::to_string(validValue30);
+    const std::string invalidValueString = std::to_string(invalidValue);
     const int32_t validValue10Array[10] = {10,10,10,10,10,10,10,10,10,10};
     const int32_t validValue20Array[10] = {20,20,20,20,20,20,20,20,20,20};
     const int32_t validValue30Array[10] = {30,30,30,30,30,30,30,30,30,30};
     const int32_t invalidValueArray[10] = {40,40,40,40,40,40,40,40,40,40};
-    const String validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
-    const String validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
-    const String validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
-    const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
+    const std::string validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
+    const std::string validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
+    const std::string validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
+    const std::string invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
     NiceMock<MockPreferences> *mp_mockPreferences;
     NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     MockNamedCallback *mp_mockNamedCallback;
     DataItemWithPreferences<T, COUNT> *mp_DataItemWithPreferences;
-    const String spmm = "Serial Port Message Manager";
-    const String name1 = "Test Name1";
-    const String name2 = "Test Name2";
-    const String name3 = "Test Name3";
-    const String name4 = "Test Name4";
+    const std::string spmm = "Serial Port Message Manager";
+    const std::string name1 = "Test Name1";
+    const std::string name2 = "Test Name2";
+    const std::string name3 = "Test Name3";
+    const std::string name4 = "Test Name4";
     const String key1 = "key1";
 
     void SetUp() override
@@ -289,7 +289,7 @@ protected:
         ON_CALL(*mp_mockPreferences, isKey( StrEq(key1.c_str()) )).WillByDefault(Return(false));
     }
 
-    void CreateDataItemWithPreferences( const String name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void CreateDataItemWithPreferences( const std::string name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
         mp_DataItemWithPreferences = new DataItemWithPreferences<T, COUNT>( name, initialValue, rxTxType, rate, mp_mockPreferences, mp_MockSerialPortMessageManager, mp_mockNamedCallback, this, validStringValues);
@@ -328,7 +328,7 @@ protected:
         }
     }
 
-    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType,  bool expectValueAccepted )
+    void SetRxTxCallExpectations( const std::string name, RxTxType_t rxTxType,  bool expectValueAccepted )
     {
         bool loggedType = false;
         switch(rxTxType)
@@ -446,19 +446,19 @@ protected:
                 break;
         }
     }
-    void TestNameIsSet( const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestNameIsSet( const std::string name, int32_t initialValue, std::string initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, rxTxType, rate, validStringValues);
         EXPECT_STREQ(name.c_str(), mp_DataItemWithPreferences->GetName().c_str());
         ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
     }
 
-    void TestInitialValueIsSet( const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestInitialValueIsSet( const std::string name, int32_t initialValue, std::string initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, rxTxType, rate, validStringValues);
         for(size_t i = 0; i < mp_DataItemWithPreferences->GetCount(); ++i)
         {
@@ -467,19 +467,19 @@ protected:
         ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
     }
 
-    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestInitialValueReturnedAsString( const std::string name, int32_t initialValue, std::string initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, validValue10, rxTxType, rate, validStringValues);
         EXPECT_STREQ(initialValueString.c_str(), mp_DataItemWithPreferences->GetInitialValueAsString().c_str());
         ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
     }
 
-    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const String resultString, const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const std::string resultString, const std::string name, int32_t initialValue, std::string initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, rxTxType, rate, validStringValues);
         SetRxTxCallExpectations(name, rxTxType, true);
         mp_DataItemWithPreferences->SetValue(testValue, COUNT);
@@ -487,10 +487,10 @@ protected:
         ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
     }
 
-    void TestSetValueFromStringConvertsToValue( const String testString, const int32_t* resultValue, const String name, int32_t initialValue, String initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestSetValueFromStringConvertsToValue( const std::string testString, const int32_t* resultValue, const std::string name, int32_t initialValue, std::string initialValueString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, rxTxType, rate, validStringValues);
         SetRxTxCallExpectations(name, rxTxType, true);
         mp_DataItemWithPreferences->SetValueFromString(testString);
@@ -501,10 +501,10 @@ protected:
         ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
     }
 
-    void TestSettingValue(const String name, const int32_t initialValue, String initialValueString, const int32_t* testValue, const String testValueString, bool expectEqual)
+    void TestSettingValue(const std::string name, const int32_t initialValue, std::string initialValueString, const int32_t* testValue, const std::string testValueString, bool expectEqual)
     {
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
-        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<String>() )).Times(1).WillOnce(Return(initialValueString));
+        EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, RxTxType_Tx_On_Change, 0, &validValues);
         SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, expectEqual);
         mp_DataItemWithPreferences->SetValue(testValue, COUNT);

@@ -18,7 +18,7 @@
 
 #include "I2S_Device.h"
 
-I2S_Device::I2S_Device ( String Title
+I2S_Device::I2S_Device ( std::string Title
                        , i2s_port_t i2S_PORT
                        , i2s_mode_t Mode
                        , int SampleRate
@@ -182,7 +182,7 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *soundBufferData, size_t byteCoun
         size_t inputSize = ConvertByteCount(byteCount, m_BitsPerSampleIn, m_BitsPerSampleOut);
         uint8_t *buffer = (uint8_t*)malloc(sizeof(uint8_t)*inputSize);
         ESP_LOGV("I2S Device", "%s I2S Read Request", GetTitle().c_str());
-        if(ESP_Process((this->GetTitle() + String(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, buffer, inputSize, &bytes_read, TIME_TO_WAIT_FOR_SOUND)))
+        if(ESP_Process((this->GetTitle() + std::string(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, buffer, inputSize, &bytes_read, TIME_TO_WAIT_FOR_SOUND)))
         {
             bytes_read = BitDepthConverter::ConvertBitDepth(buffer, bytes_read, soundBufferData, m_BitsPerSampleIn, m_BitsPerSampleOut);
         }
@@ -201,7 +201,7 @@ size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
     size_t bytes_written = 0;
     if (IsInitialized())
     {
-      ESP_Process((this->GetTitle() + String(" I2S Write Request")).c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
+      ESP_Process((this->GetTitle() + std::string(" I2S Write Request")).c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
       ESP_LOGV("I2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
     }
     return bytes_written;

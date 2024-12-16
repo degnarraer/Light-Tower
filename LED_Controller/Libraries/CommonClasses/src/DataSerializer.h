@@ -42,7 +42,7 @@ class DataSerializer: public CommonUtils
 			m_DataItemsCount = DataItemCount;
 		}
 		
-		virtual String SerializeDataItemToJson(String Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
+		virtual std::string SerializeDataItemToJson(std::string Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 		{
 			if (Object == nullptr)
 			{
@@ -61,7 +61,7 @@ class DataSerializer: public CommonUtils
 
 			JSONVar data;
 			JSONVar serializeDoc;
-			serializeDoc[m_NameTag] = Name;
+			serializeDoc[m_NameTag] = Name.c_str();
 			serializeDoc[m_CountTag] = Count;
 			serializeDoc[m_DataTypeTag] = DataTypeStrings[DataType];
 			serializeDoc[m_TotalByteCountTag] = ObjectByteCount * Count;
@@ -71,7 +71,7 @@ class DataSerializer: public CommonUtils
 			char ByteHexValue[3]; // For hex byte conversion
 
 			// Use an array of fixed-length strings or memory buffers to hold byte data
-			String BytesString;
+			std::string BytesString;
 			BytesString.reserve(ObjectByteCount * 2); // Reserve enough space for hex values
 
 			for (size_t i = 0; i < Count; ++i)
@@ -87,7 +87,7 @@ class DataSerializer: public CommonUtils
 					CheckSum += DecValue;  // Accumulate checksum
 				}
 
-				data[i] = BytesString;  // Store hex data in JSON object
+				data[i] = BytesString.c_str();  // Store hex data in JSON object
 			}
 
 			serializeDoc[m_DataTag] = data;
@@ -96,7 +96,7 @@ class DataSerializer: public CommonUtils
 			// Use try-catch for error handling during serialization
 			try
 			{
-				String result = JSON.stringify(serializeDoc);
+				std::string result = JSON.stringify(serializeDoc).c_str();
 				return result;
 			}
 			catch (const std::exception& e)
@@ -113,13 +113,14 @@ class DataSerializer: public CommonUtils
 		}
 
 
-		virtual bool DeSerializeJsonToNamedObject(String json, NamedObject_t &NamedObject)
+		virtual bool DeSerializeJsonToNamedObject(std::string
+		 json, NamedObject_t &NamedObject)
 		{
 			bool deserialized = false;
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
 			
 			JSONVar deserializeDoc;
-			deserializeDoc = JSON.parse(json);
+			deserializeDoc = JSON.parse(json.c_str());
 
 			if (JSON.typeof(deserializeDoc) == "undefined")
 			{
@@ -133,7 +134,7 @@ class DataSerializer: public CommonUtils
 				if (AllTagsExist(deserializeDoc)) // Check all tags before proceeding
 				{
 					// Extract necessary values
-					const String Name = deserializeDoc[m_NameTag];
+					const std::string Name = std::string(deserializeDoc[m_NameTag]);
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Name: %s", Name.c_str());
 					NamedObject.Name = Name;
 
@@ -236,7 +237,7 @@ class DataSerializer: public CommonUtils
 			return true;
 		}
 
-		void FailPercentage()
+		virtual void FailPercentage()
 		{
 			m_CurrentTime = millis();
 			++m_TotalCount;
@@ -249,7 +250,7 @@ class DataSerializer: public CommonUtils
 			}
 		}
 
-		bool AllTagsExist(JSONVar &doc)
+		virtual bool AllTagsExist(JSONVar &doc)
 		{
 			// Check if all required tags are present and valid
 			if (!doc.hasOwnProperty(m_NameTag) || doc[m_NameTag] == nullptr)

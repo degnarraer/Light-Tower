@@ -35,8 +35,8 @@ class LocalStringDataItemSetupCallerTest : public Test
 protected:
     NiceMock<MockSetupCallerInterface> *mp_MockSetupCaller;
     LocalStringDataItem *mp_DataItem;
-    const String name = "name";
-    const String initialValue = "Initial Value";
+    const std::string name = "name";
+    const std::string initialValue = "Initial Value";
 
     void SetUp() override
     {
@@ -65,12 +65,12 @@ class LocalStringDataItemTest: public Test
                              , public SetupCallerInterface
 {
 protected:
-    const String initialValue = "Initial Value";
+    const std::string initialValue = "Initial Value";
     const String value1 = "Value 1";
     const String value2 = "Value 2";
     MockNamedCallback *mp_mockNamedCallback;
     LocalStringDataItem *mp_DataItem;
-    const String name = "Name";
+    const std::string name = "Name";
 
     void SetUp() override
     {

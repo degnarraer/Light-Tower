@@ -35,8 +35,8 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 						   				  , SetupCallerInterface *setupCallerInterface )
 						   				  : LocalStringDataItem( name, initialValue, namedCallback, setupCallerInterface)
 										  , PreferenceManager( preferencesInterface
-											  				 , String(this->m_Name.c_str())
-											  				 , String(initialValue.c_str())
+											  				 , this->m_Name
+											  				 , initialValue
 												  			 , PREFERENCE_TIMEOUT
 											  				 , this->StaticSetValueFromString
 											  				 , this )
@@ -55,7 +55,7 @@ class LocalStringDataItemWithPreferences: public LocalStringDataItem
 			PreferenceManager::InitializeAndLoadPreference();
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("LocalStringDataItemWithPreferences::SetValueFromString"
@@ -97,7 +97,7 @@ class StringDataItemWithPreferences: public StringDataItem
 													 , namedCallback
 													 , setupCallerInterface )
 									 , PreferenceManager( preferencesInterface
-									 					, String(this->m_Name.c_str())
+									 					, name
 									 					, this->GetInitialValueAsString()
 														, PREFERENCE_TIMEOUT
 									 					, this->StaticSetValueFromString

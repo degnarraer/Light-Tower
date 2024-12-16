@@ -35,6 +35,7 @@ public:
         ESP_LOGD("MockSetupCalleeInterface", "Deleting MockSetupCalleeInterface");
     }
     MOCK_METHOD(void, Setup, (), (override));
+    MOCK_METHOD(std::string, GetName, (), (const, override));
 };
 
 class MockSetupCallerInterface : public SetupCallerInterface

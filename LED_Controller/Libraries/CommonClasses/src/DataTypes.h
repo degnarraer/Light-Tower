@@ -34,7 +34,16 @@ struct UpdateStatus
     bool ValidValue = false;
     bool UpdateAllowed = false;
     bool UpdateSuccessful = false;
-
+    UpdateStatus()
+    {
+    }
+    UpdateStatus(bool ValueChanged_in, bool ValidValue_in, bool UpdateAllowed_in, bool UpdateSuccessful_in)
+    {
+        bool ValueChanged = ValueChanged_in;
+        bool ValidValue = ValidValue_in;
+        bool UpdateAllowed = UpdateAllowed_in;
+        bool UpdateSuccessful = UpdateSuccessful_in;
+    }
     bool operator==(const UpdateStatus& other) const
     {
         return ( this->ValueChanged == other.ValueChanged &&
@@ -67,20 +76,20 @@ using TemplateObjectWithChangeCount_t = TemplateObjectWithChangeCount<T>;
 class NamedItem
 {
   public:
-	NamedItem(String Title): m_Title(Title){}
+	NamedItem(std::string Title): m_Title(Title){}
 	virtual ~NamedItem(){}
-    String GetTitle()
+    std::string GetTitle()
     { 
       return m_Title;
     }
   private:
-    String m_Title;
+    std::string m_Title;
 };
 
 struct KeyValuePair
 {
-  String Key;
-  String Value;
+  std::string Key;
+  std::string Value;
 };
 typedef KeyValuePair KVP;
 
@@ -1019,7 +1028,7 @@ typedef ConnectionStatus::Value ConnectionStatus_t;
 struct NamedObject_t
 {
 	void* Object;
-	String Name = "";
+	std::string Name = "";
     size_t ChangeCount = 0;
 	
 	// Destructor to release memory when the object is destroyed.
@@ -1037,11 +1046,11 @@ struct NamedObject_t
 struct NamedCallback_t
 {
     public:
-        String Name;
-        void (*Callback)(const String& name, void* callback, void* arg);
+        std::string Name;
+        void (*Callback)(const std::string& name, void* callback, void* arg);
         void* Arg;
         NamedCallback_t(){}
-        NamedCallback_t(String name, void (*callback)(const String& name, void* callback, void* arg), void* arg = nullptr)
+        NamedCallback_t(std::string name, void (*callback)(const std::string& name, void* callback, void* arg), void* arg = nullptr)
             : Name(name), Callback(callback), Arg(arg)
         {
         }
@@ -1053,7 +1062,7 @@ struct NamedCallback_t
 
         bool operator==(const NamedCallback_t& other) const
         {
-            return this->Name.equals(other.Name) && this->Callback == other.Callback && this->Arg == other.Arg;
+            return this->Name == other.Name && this->Callback == other.Callback && this->Arg == other.Arg;
         }
 
         NamedCallback_t& operator=(const NamedCallback_t& other)

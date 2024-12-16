@@ -19,10 +19,10 @@ typedef enum ComparatorType_t {
 
 typedef struct ValidValueComparator_t {
     const ComparatorType_t ComparatorType;
-    const String StringValue;
+    const std::string StringValue;
 } ValidValueComparator_t;
 
-typedef const std::vector<String> ValidStringValues_t;
+typedef const std::vector<std::string> ValidStringValues_t;
 typedef const std::vector<ValidValueComparator_t> ValidValueComparators_t;
 
 class ValidValueChecker {
@@ -49,16 +49,16 @@ public:
 
     virtual ~ValidValueChecker() {}
 
-    virtual bool IsValidStringValue(const String &stringValue) const
+    virtual bool IsValidStringValue(const std::string &stringValue) const
     {
         if (mp_ValidStrings)
         {
-            for (const String& validValue : *mp_ValidStrings)
+            for (const std::string& validValue : *mp_ValidStrings)
             {
                 ESP_LOGD("ValidValueChecker:IsValidStringValue", 
                          "IsValidStringValue Match Check between: \"%s\" and \"%s\"", 
                          stringValue.c_str(), validValue.c_str());
-                if (stringValue.equals(validValue))
+                if (stringValue == validValue)
                 {
                     ESP_LOGD("ValidValueChecker:IsValidStringValue", 
                              "\"%s\" IsValidStringValue VALID VALUE: \"%s\"", 
@@ -70,10 +70,10 @@ public:
         } 
         else if (mp_ValidValueComparators)
         {
-            float numericValue = stringValue.toFloat();  // Convert the string to a float
+            float numericValue = std::stof(stringValue);  // Convert the string to a float
             for (const ValidValueComparator_t& comparator : *mp_ValidValueComparators)
             {
-                float comparatorValue = comparator.StringValue.toFloat();  // Convert comparator value to float
+                float comparatorValue = std::stof(comparator.StringValue);  // Convert comparator value to float
                 bool isValid = false;
                 switch (comparator.ComparatorType) 
                 {

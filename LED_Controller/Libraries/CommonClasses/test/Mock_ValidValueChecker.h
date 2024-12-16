@@ -26,5 +26,5 @@
 class MockValidValueChecker : public ValidValueChecker
 {
 public:
-    MOCK_METHOD(bool, IsValidStringValue, (const String &stringValue), (const, override));
+    MOCK_METHOD(bool, IsValidStringValue, (const std::string &stringValue), (const, override));
 };

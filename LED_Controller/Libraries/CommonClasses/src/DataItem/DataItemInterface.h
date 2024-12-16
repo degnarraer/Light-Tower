@@ -25,18 +25,18 @@ class DataItemInterface
 {
     public:
         DataItemInterface(){}
-        virtual String GetName() const = 0;
+        virtual std::string GetName() const = 0;
 		virtual size_t GetCount() const = 0;
 		virtual size_t GetChangeCount() const = 0;
 		virtual DataType_t GetDataType() = 0;
         virtual T* GetValuePointer() const = 0;
         virtual void GetValue(void* object, size_t count) const = 0;
         virtual T GetValue() const = 0;
-        virtual bool GetInitialValueAsString(String &stringValue) const = 0;
-        virtual String GetInitialValueAsString() const = 0;
-        virtual bool GetValueAsString(String &stringValue) const = 0;
-        virtual String GetValueAsString() const = 0;
-        virtual UpdateStatus_t SetValueFromString(const String& stringValue) = 0;
+        virtual bool GetInitialValueAsString(std::string &stringValue) const = 0;
+        virtual std::string GetInitialValueAsString() const = 0;
+        virtual bool GetValueAsString(std::string &stringValue) const = 0;
+        virtual std::string GetValueAsString() const = 0;
+        virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) = 0;
         virtual UpdateStatus_t SetValue(const T *value, size_t count) = 0;
         virtual UpdateStatus_t SetValue(const T& value) = 0;
         virtual bool EqualsValue(T *object, size_t count) const = 0;

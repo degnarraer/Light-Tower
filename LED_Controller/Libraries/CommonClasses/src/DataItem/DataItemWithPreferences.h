@@ -121,7 +121,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 		{
 			DataItem<T, COUNT>::Setup();
 			mp_PreferenceManager = new PreferenceManager( mp_preferencesInterface
-							   					  		, String(this->m_Name.c_str())
+							   					  		, this->m_Name
 							   				 	  		, this->GetInitialValueAsString()
 												  		, PREFERENCE_TIMEOUT
 							   				 	  		, this->StaticSetValueFromString
@@ -129,7 +129,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			mp_PreferenceManager->InitializeAndLoadPreference();
 		}
 		
-		virtual String GetName() const override
+		virtual std::string GetName() const override
 		{
 			return DataItem<T, COUNT>::GetName();
 		}
@@ -160,7 +160,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 			return this->SetValue(&value, 1);
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) override
 		{
 			UpdateStatus_t result = DataItem<T, COUNT>::SetValueFromString(stringValue);
 			if(result.UpdateSuccessful)

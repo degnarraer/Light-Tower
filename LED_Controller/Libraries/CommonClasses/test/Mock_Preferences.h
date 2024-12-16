@@ -23,6 +23,7 @@
 
 class MockPreferences : public IPreferences {
 public:
+    MOCK_METHOD(void, InitializePreferences, (const char* name), (override));
     MOCK_METHOD(bool, begin, (const char* name, bool readOnly, const char* partition_label), (override));
     MOCK_METHOD(void, end, (), (override));
     MOCK_METHOD(bool, clear, (), (override));
@@ -41,7 +42,7 @@ public:
     MOCK_METHOD(size_t, putDouble, (const char* key, double_t value), (override));
     MOCK_METHOD(size_t, putBool, (const char* key, bool value), (override));
     MOCK_METHOD(size_t, putString, (const char* key, const char* value), (override));
-    MOCK_METHOD(size_t, putString, (const char* key, String value), (override));
+    MOCK_METHOD(size_t, putString, (const char* key, const std::string value), (override));
     MOCK_METHOD(size_t, putBytes, (const char* key, const void* value, size_t len), (override));
     MOCK_METHOD(bool, isKey, (const char* key), (override));
     MOCK_METHOD(PreferenceType, getType, (const char* key), (override));
@@ -59,7 +60,7 @@ public:
     MOCK_METHOD(double_t, getDouble, (const char* key, double_t defaultValue), (override));
     MOCK_METHOD(bool, getBool, (const char* key, bool defaultValue), (override));
     MOCK_METHOD(size_t, getString, (const char* key, char* value, size_t maxLen), (override));
-    MOCK_METHOD(String, getString, (const char* key, String defaultValue), (override));
+    MOCK_METHOD(std::string, getString, (const char* key, std::string defaultValue), (override));
     MOCK_METHOD(size_t, getBytesLength, (const char* key), (override));
     MOCK_METHOD(size_t, getBytes, (const char* key, void* buf, size_t maxLen), (override));
     MOCK_METHOD(size_t, freeEntries, (), (override));

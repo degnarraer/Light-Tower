@@ -55,7 +55,7 @@ class StringDataItem: public LocalStringDataItem
 		}
 
 		//DataItemInterface
-		virtual String GetName() const override
+		virtual std::string GetName() const override
 		{
 			return LocalStringDataItem::GetName();
 		}
@@ -78,7 +78,7 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::EqualsValue(object, count);
 		}
-		virtual String GetValueAsString() const override
+		virtual std::string GetValueAsString() const override
 		{
 			return LocalStringDataItem::GetValueAsString();
 		}
@@ -90,11 +90,11 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::UpdateStore(newValues, changeCount);
 		}
-		String ConvertValueToString(const char *values, size_t count) const
+		std::string ConvertValueToString(const char *values, size_t count) const
 		{
 			return LocalStringDataItem::ConvertValueToString(values, count);
 		}
-		size_t ParseStringValueIntoValues(const String& stringValue, char *values)
+		size_t ParseStringValueIntoValues(const std::string& stringValue, char *values)
 		{
 			return LocalStringDataItem::ParseStringValueIntoValues(stringValue, values);
 		}
@@ -103,17 +103,17 @@ class StringDataItem: public LocalStringDataItem
 			return Set_Tx_Value(value, count);
 		}
 
-		virtual bool GetInitialValueAsString(String &stringValue) const override
+		virtual bool GetInitialValueAsString(std::string &stringValue) const override
 		{
 			return LocalStringDataItem::GetInitialValueAsString(stringValue);
 		}
 
-		String GetInitialValueAsString() const override
+		std::string GetInitialValueAsString() const override
 		{
 			return LocalStringDataItem::GetInitialValueAsString();
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) override
 		{
 			assert(stringValue.length() <= DATAITEM_STRING_LENGTH);
 			ESP_LOGD("StringDataItem::SetValueFromString"

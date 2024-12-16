@@ -38,8 +38,8 @@ class LocalDataItemFunctionCallTests : public Test
 {
     protected:
         const int32_t initialValue = 10;
-        const String spmm = "Serial Port Message Manager";
-        const String name = "Test Name";
+        const std::string spmm = "Serial Port Message Manager";
+        const std::string name = "Test Name";
         MockSetupCallerInterface *mp_MockSetupCaller;
         LocalDataItem<int32_t, 1> *mp_DataItem;
         LocalDataItemFunctionCallTests(): mp_MockSetupCaller(nullptr), mp_DataItem(nullptr)
@@ -95,30 +95,30 @@ protected:
     const int32_t validValue20 = 20;
     const int32_t validValue30 = 30;
     const int32_t invalidValue = 40;
-    const String validValue10String = String(validValue10);
-    const String validValue20String = String(validValue20);
-    const String validValue30String = String(validValue30);
-    const String invalidValueString = String(invalidValue);
+    const std::string validValue10String = std::to_string(validValue10);
+    const std::string validValue20String = std::to_string(validValue20);
+    const std::string validValue30String = std::to_string(validValue30);
+    const std::string invalidValueString = std::to_string(invalidValue);
     const int32_t validValue10Array[10] = {10,10,10,10,10,10,10,10,10,10};
     const int32_t validValue20Array[10] = {20,20,20,20,20,20,20,20,20,20};
     const int32_t validValue30Array[10] = {30,30,30,30,30,30,30,30,30,30};
     const int32_t invalidValueArray[10] = {40,40,40,40,40,40,40,40,40,40};
-    const String validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
-    const String validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
-    const String validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
-    const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
+    const std::string validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
+    const std::string validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
+    const std::string validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
+    const std::string invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
     MockNamedCallback *mp_mockNamedCallback;
     LocalDataItem<T, COUNT> *mp_DataItem;
-    const String name1 = "Test Name1";
-    const String name2 = "Test Name2";
-    const String name3 = "Test Name3";
-    const String name4 = "Test Name4";
+    const std::string name1 = "Test Name1";
+    const std::string name2 = "Test Name2";
+    const std::string name3 = "Test Name3";
+    const std::string name4 = "Test Name4";
 
     void SetUp() override
     {
     }
 
-    void CreateDataItem( const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    void CreateDataItem( const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )
     {
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
         mp_DataItem = new LocalDataItem<T, COUNT>( name, initialValue, mp_mockNamedCallback, this, validStringValues);
@@ -141,13 +141,13 @@ protected:
         DestroyDataItem();
     }
 
-    void TestNameIsSet( const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    void TestNameIsSet( const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, validStringValues);
         EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
     }
 
-    void TestInitialValueIsSet( const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    void TestInitialValueIsSet( const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, validStringValues);
         for(size_t i = 0; i < mp_DataItem->GetCount(); ++i)
@@ -156,13 +156,13 @@ protected:
         }
     }
 
-    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, String resultString, ValidStringValues_t *validStringValues )
+    void TestInitialValueReturnedAsString( const std::string name, int32_t initialValue, std::string resultString, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, validValue10, validStringValues);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
     }
 
-    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const String resultString, const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    void TestSetValueFromValueConvertsToString( const int32_t* testValue, const std::string resultString, const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, validStringValues);
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
@@ -170,7 +170,7 @@ protected:
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
     }
 
-    void TestSetValueFromStringConvertsToValue( const String testString, const int32_t* resultValue, const String name, int32_t initialValue, ValidStringValues_t *validStringValues )
+    void TestSetValueFromStringConvertsToValue( const std::string testString, const int32_t* resultValue, const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, validStringValues);
         EXPECT_CALL(mockNamedCallback_Callback, NewValueCallbackFunction(_,_,_)).Times(1);
@@ -208,7 +208,7 @@ protected:
         ::testing::Mock::VerifyAndClearExpectations(&mockNamedCallback_Callback);
     }
     
-    void TestSettingStringValue(const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectValueAccepted)
+    void TestSettingStringValue(const int32_t initialValue, const int32_t* testValue, const std::string testValueString, bool expectValueAccepted)
     {
         CreateDataItem(name1, initialValue, &validValues);
         if(expectValueAccepted)

@@ -39,7 +39,7 @@ class I2S_Device: public NamedItem
 
 {
   public:
-    I2S_Device( String Title
+    I2S_Device( std::string Title
               , i2s_port_t i2S_PORT
               , i2s_mode_t Mode
               , int SampleRate

@@ -1,13 +1,13 @@
+
 #pragma once
 #include "DataTypes.h"
 #include "Preferences.h"
+#include "nvs_flash.h"
 
 class IPreferences
 {
     public:
-        virtual ~IPreferences() {}
-
-        virtual void InitializePreferences(const char* name)=0;
+        virtual void InitializePreferences(const char* name) = 0;
         virtual bool begin(const char* name, bool readOnly = false, const char* partition_label = nullptr) = 0;
         virtual void end() = 0;
         virtual bool clear() = 0;
@@ -26,7 +26,7 @@ class IPreferences
         virtual size_t putDouble(const char* key, double_t value) = 0;
         virtual size_t putBool(const char* key, bool value) = 0;
         virtual size_t putString(const char* key, const char* value) = 0;
-        virtual size_t putString(const char* key, String value) = 0;
+        virtual size_t putString(const char* key, std::string value) = 0;
         virtual size_t putBytes(const char* key, const void* value, size_t len) = 0;
         virtual bool isKey(const char* key) = 0;
         virtual PreferenceType getType(const char* key) = 0;
@@ -44,7 +44,7 @@ class IPreferences
         virtual double_t getDouble(const char* key, double_t defaultValue = NAN) = 0;
         virtual bool getBool(const char* key, bool defaultValue = false) = 0;
         virtual size_t getString(const char* key, char* value, size_t maxLen) = 0;
-        virtual String getString(const char* key, String defaultValue = String()) = 0;
+        virtual std::string getString(const char* key, std::string defaultValue = std::string()) = 0;
         virtual size_t getBytesLength(const char* key) = 0;
         virtual size_t getBytes(const char* key, void* buf, size_t maxLen) = 0;
         virtual size_t freeEntries() = 0;
@@ -54,19 +54,20 @@ class PreferencesWrapper : public IPreferences
                          , public SetupCalleeInterface
 {
     public:
-        PreferencesWrapper(const char* name, Preferences* preferences)
+        PreferencesWrapper( const char* name, Preferences* preferences )
                           : mp_preferences(preferences)
                           , mp_Name(name)
         {
         }
+
         void Setup()
         {
             InitializePreferences(mp_Name);
         }
         
-		virtual String GetName() const override
+		virtual std::string GetName() const
 		{
-			return String(mp_Name);
+			return std::string(mp_Name);
 		}
     private:
         Preferences* mp_preferences = nullptr;
@@ -209,11 +210,11 @@ class PreferencesWrapper : public IPreferences
             assert(mp_preferences);
             return mp_preferences->putString(key, value);
         }
-        size_t putString(const char* key, String value) override
+        size_t putString(const char* key, std::string value) override
         {
             ESP_LOGD("putString", "Preferences named: \"%s\" putString", mp_Name);
             assert(mp_preferences);
-            return mp_preferences->putString(key, value);
+            return mp_preferences->putString(key, String(value.c_str()));
         }
         size_t putBytes(const char* key, const void* value, size_t len) override
         {
@@ -317,11 +318,13 @@ class PreferencesWrapper : public IPreferences
             assert(mp_preferences);
             return mp_preferences->getString(key, value, maxLen);
         }
-        String getString(const char* key, String defaultValue = String()) override
+        std::string getString(const char* key, std::string defaultValue = std::string()) override
         {
             ESP_LOGD("getString", "Preferences named: \"%s\" getString", mp_Name);
             assert(mp_preferences);
-            return mp_preferences->getString(key, defaultValue);
+            // Convert Arduino String to std::string
+            String arduinoString = mp_preferences->getString(key, String(defaultValue.c_str()));
+            return std::string(arduinoString.c_str());
         }
         size_t getBytesLength(const char* key) override
         {
@@ -346,7 +349,7 @@ class PreferencesWrapper : public IPreferences
 class PreferenceManager : public DataTypeFunctions 
 {
 public:
-	typedef UpdateStatus_t (*LoadedValueCallback_t)(const String&, void* object);
+	typedef UpdateStatus_t (*LoadedValueCallback_t)(const std::string&, void* object);
     enum class PreferenceUpdateType
     {
         Initialize,
@@ -359,16 +362,16 @@ public:
     struct PreferenceManagerTimerArgs
     {
         PreferenceManager* PreferenceManagerInstance;
-        const String Value;
+        const std::string Value;
         PreferenceManagerTimerArgs( PreferenceManager* preferenceManagerInstance
-                                  , const String value )
+                                  , const std::string value )
                                   : PreferenceManagerInstance(preferenceManagerInstance)
                                   , Value(value) {}
     };
 
     PreferenceManager( IPreferences* preferencesInterface
-                     , const String key
-                     , const String initialValue
+                     , const std::string key
+                     , const std::string initialValue
                      , const unsigned long timeoutTime
                      , LoadedValueCallback_t callback
                      , void* object)
@@ -431,7 +434,7 @@ public:
     }
 
     bool Update_Preference( const PreferenceUpdateType updateType
-						  , const String stringToSave )
+						  , const std::string stringToSave )
     {
         ESP_LOGD("Update_Preference", "Update Prefernce for: \"%s\" with new value: \"%s\"", m_Key.c_str(), stringToSave.c_str());
         bool result = false;
@@ -505,7 +508,7 @@ private:
         m_PreferenceTimerActive = false;
         return result;
     }
-    bool DelaySaveValue(const String &saveValue, unsigned long elapsedTime)
+    bool DelaySaveValue(const std::string &saveValue, unsigned long elapsedTime)
     {
         bool result = false;
         ESP_LOGD("DelaySaveValue", "Entering DelaySaveValue for Key: \"%s\"", m_Key.c_str());
@@ -565,7 +568,7 @@ private:
             if(mp_PreferencesInterface)
             {
                 ESP_LOGD("HandleLoad", "Loading Key: \"%s\"", m_Key.c_str());
-                String loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                const std::string loadedValue = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                 ESP_LOGD("HandleLoad", "Loaded Key: \"%s\" Value: \"%s\"", m_Key.c_str(), loadedValue.c_str());
                 if (m_Callback && mp_Object)
                 {
@@ -633,16 +636,16 @@ private:
         return result;
     }
     
-    bool PerformSave(const String &stringToSave)
+    bool PerformSave(const std::string &stringToSave)
     {
         unsigned long currentMillis = millis();
         bool result = false;
         size_t saveLength = mp_PreferencesInterface->putString(m_Key.c_str(), stringToSave);
         if(stringToSave.length() == saveLength)
         {
-            String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+            std::string savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
             ESP_LOGD("PerformSave", "Key: \"%s\" Comparing Strings: String to Save: \"%s\" Actual String Saved: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
-            if(savedString.equals(stringToSave))
+            if(savedString == stringToSave)
             {
                 ESP_LOGI("PerformSave", "Key: \"%s\" String Saved: \"%s\"", m_Key.c_str(), savedString.c_str());
                 m_Preferences_Last_Update = currentMillis;
@@ -662,7 +665,7 @@ private:
         return result;
     }
 
-    bool TrySave(const String &stringToSave)
+    bool TrySave(const std::string &stringToSave)
     {
         ESP_LOGD("TrySave", "Try Saving Key: \"%s\" Value: \"%s\"", m_Key.c_str(), stringToSave.c_str());
         bool result = false;
@@ -696,9 +699,9 @@ private:
             {
                 if(xSemaphoreTakeRecursive(m_PreferencesMutex, pdMS_TO_TICKS(5)) == pdTRUE)
                 {
-                    String savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
+                    std::string savedString = mp_PreferencesInterface->getString(m_Key.c_str(), m_InitialValue);
                     ESP_LOGD("TrySave", "Key: \"%s\" Comparing Strings: New: \"%s\" Existing: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());  
-                    if(stringToSave.equals(savedString))
+                    if(stringToSave == savedString)
                     {
                         ESP_LOGD("TrySave", "Key: \"%s\" Skipping save as String to Save: \"%s\" equals Saved String: \"%s\".", m_Key.c_str(), stringToSave.c_str(), savedString.c_str());       
                     }
@@ -723,8 +726,8 @@ private:
 
 private:
     IPreferences* mp_PreferencesInterface = nullptr;
-    const String m_Key;
-    const String m_InitialValue;
+    const std::string m_Key;
+    const std::string m_InitialValue;
     const unsigned long m_TimeoutTime;
     LoadedValueCallback_t m_Callback;
     void* mp_Object;

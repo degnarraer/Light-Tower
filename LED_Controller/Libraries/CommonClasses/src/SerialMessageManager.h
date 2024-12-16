@@ -42,7 +42,7 @@ class Rx_Value_Callee_Interface
 			
 		}
 		virtual bool NewRxValueReceived(const T* values, size_t count, size_t changeCount) = 0;
-		virtual String GetName() const = 0;
+		virtual std::string GetName() const = 0;
 		virtual size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
@@ -97,7 +97,7 @@ class Named_Callback_Caller_Interface
 			for (NamedCallback_t* namedCallback : m_NamedCallbacks)
 			{
 				ESP_LOGD("NotifyCallee", "Calling Callback %s", namedCallback->Name.c_str());
-				void (*aCallback)(const String&, void*, void*);
+				void (*aCallback)(const std::string&, void*, void*);
 				aCallback = namedCallback->Callback;
 				void* arg = namedCallback->Arg;
 				aCallback(namedCallback->Name, object, arg);
@@ -174,7 +174,7 @@ class Named_Object_Callee_Interface
 			
 		}
 		virtual UpdateStatus_t New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* object, const size_t changeCount) = 0;
-		virtual String GetName() const = 0;
+		virtual std::string GetName() const = 0;
 		size_t GetCount(){ return m_Count;}
 	private:
 		size_t m_Count = 0;
@@ -193,9 +193,9 @@ class Named_Object_Caller_Interface
 		}
 		virtual void RegisterForNewRxValueNotification(Named_Object_Callee_Interface* newCallee);
 		virtual void DeRegisterForNewRxValueNotification(Named_Object_Callee_Interface* callee);
-		virtual String GetName() const = 0;
+		virtual std::string GetName() const = 0;
 	protected:
-		virtual void Call_Named_Object_Callback(const String& name, void* object, const size_t changeCount);
+		virtual void Call_Named_Object_Callback(const std::string& name, void* object, const size_t changeCount);
 	private:
 		std::vector<Named_Object_Callee_Interface*> m_NewValueCallees = std::vector<Named_Object_Callee_Interface*>();
 		std::vector<NamedCallback_t*> m_NamedCallbacks = std::vector<NamedCallback_t*>();
@@ -205,7 +205,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 {
 	public:
 		SerialPortMessageManager(){}
-		SerialPortMessageManager( const String& name
+		SerialPortMessageManager( const std::string& name
 								, HardwareSerial *serial
 								, DataSerializer *dataSerializer
 								, BaseType_t coreId )
@@ -244,18 +244,18 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			ESP_LOGD("~SerialPortMessageManager", "SerialPortMessageManager Deleted");
 		}
 		virtual void Setup();
-		virtual bool QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount);
-		virtual bool QueueMessage(const String& message);
-		String GetName() const 
+		virtual bool QueueMessageFromDataType(const std::string& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount);
+		virtual bool QueueMessage(const std::string& message);
+		virtual std::string GetName() const override
 		{
 			return m_Name;
 		}
 	private:
-		String m_Name;
+		std::string m_Name;
 		HardwareSerial *mp_Serial = nullptr;
 		DataSerializer *mp_DataSerializer = nullptr;
 		BaseType_t  m_CoreId = 1;
-		String m_message;
+		std::string m_message;
 		TaskHandle_t m_RXTaskHandle = nullptr;
 		TaskHandle_t m_TXTaskHandle = nullptr;
 		QueueHandle_t m_TXQueue = nullptr;
@@ -271,4 +271,13 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			aSerialPortMessageManager->SerialPortMessageManager_TxTask();
 		}
 		virtual void SerialPortMessageManager_TxTask();
+		
+		std::string trim(const std::string &str) {
+			size_t start = str.find_first_not_of(" \t\n\r");
+			size_t end = str.find_last_not_of(" \t\n\r");
+			if (start == std::string::npos || end == std::string::npos) {
+				return ""; // All whitespace
+			}
+			return str.substr(start, end - start + 1);
+		}
 };

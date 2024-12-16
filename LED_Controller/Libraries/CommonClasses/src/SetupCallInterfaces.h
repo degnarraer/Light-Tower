@@ -35,7 +35,7 @@ class SetupCalleeInterface
             ESP_LOGD("SetupCalleeInterface", "Deleting SetupCalleeInterface");
         }
         virtual void Setup() = 0;
-        virtual String GetName() const = 0;
+        virtual std::string GetName() const = 0;
 };
 
 class SetupCallerInterface

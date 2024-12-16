@@ -92,7 +92,7 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , setupCallerInterface
 															 , validStringValues )
 									, PreferenceManager( preferencesInterface
-									 				   , String(this->m_Name.c_str())
+									 				   , name
 									 				   , this->GetInitialValueAsString()
 													   , PREFERENCE_TIMEOUT
 									 				   , this->StaticSetValueFromString
@@ -137,7 +137,7 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 			return this->SetValue(&value, 1);
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) override
 		{
 			UpdateStatus_t result = LocalDataItem<T, COUNT>::SetValueFromString(stringValue);
 			if(result.UpdateSuccessful)

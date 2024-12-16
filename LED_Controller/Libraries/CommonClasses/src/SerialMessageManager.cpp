@@ -51,7 +51,7 @@ void Named_Object_Caller_Interface::DeRegisterForNewRxValueNotification(Named_Ob
 	}
 }
 
-void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& name, void* object, const size_t changeCount)
+void Named_Object_Caller_Interface::Call_Named_Object_Callback(const std::string& name, void* object, const size_t changeCount)
 {
 	ESP_LOGD("Call_Named_Object_Callback", "Notify Callee: \"%s\"", name.c_str());
 	bool found = false;
@@ -59,7 +59,7 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const String& nam
 	{
 		if (callee) 
 		{
-			if (callee->GetName().equals(name))
+			if (callee->GetName() == name)
 			{
 				found = true;
 				ESP_LOGD("Call_Named_Object_Callback", "Callee Found: \"%s\"", name.c_str());
@@ -86,7 +86,7 @@ void SerialPortMessageManager::Setup()
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
 }
 
-bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
+bool SerialPortMessageManager::QueueMessageFromDataType(const std::string& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 {
 	bool result = false;
 	if(nullptr == Object || 0 == Name.length() || 0 == Count)
@@ -97,7 +97,7 @@ bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, Data
 	{
 		if(mp_DataSerializer)
 		{
-			String message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
+			std::string message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
 			result = QueueMessage( message.c_str() );
 		}
 		else
@@ -108,14 +108,14 @@ bool SerialPortMessageManager::QueueMessageFromDataType(const String& Name, Data
 	return result;
 }
 
-bool SerialPortMessageManager::QueueMessage(const String& message)
+bool SerialPortMessageManager::QueueMessage(const std::string& message)
 {
 	bool result = false;
 	if(m_TXQueue)
 	{	
 		if( message.length() > 0 &&
             message.length() <= MaxMessageLength &&
-            message.indexOf('\0') != -1 &&
+            message.find('\0') != std::string::npos &&
             xQueueSend(m_TXQueue, message.c_str(), TIME_TO_WAIT_TO_SEND) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());
@@ -157,9 +157,9 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 
                 m_message += character;
 
-                if (m_message.endsWith("\n"))
+                if (m_message.size() >= 1 && m_message.compare(m_message.size() - 1, 1, "\n") == 0)
                 {
-                    m_message.trim();
+                    m_message = trim(m_message);
                     ESP_LOGD("SerialPortMessageManager", "Rx from: \"%s\" Message: \"%s\"", m_Name.c_str(), m_message.c_str());
 
                     NamedObject_t NamedObject;

@@ -348,19 +348,62 @@ class ContinuousAudioBuffer
         return frame;
     }
 
-    Frame_t Unshift()
+    size_t Shift(Frame_t* Frames, size_t Count)
     {
-        Frame_t frame;
+        size_t shifted = 0;
         if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
         {
-            frame = m_CircularAudioBuffer->unshift();
+            for (size_t i = 0; i < Count; ++i)
+            {
+                if (m_CircularAudioBuffer->available() > 0)
+                {
+                    Frames[i] = m_CircularAudioBuffer->shift();
+                    ++shifted;
+                }
+            }
             xSemaphoreGiveRecursive(m_Lock);
         }
         else
         {
             ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
-        return frame;
+        return shifted;
+    }
+
+    bool Unshift(Frame_t Frame)
+    {
+        bool result = false;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            result = m_CircularAudioBuffer->unshift(Frame);
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return result;
+    }
+
+    size_t Unshift(Frame_t* Frames, size_t Count)
+    {
+        size_t pushed = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            for (size_t i = 0; i < Count; ++i)
+            {
+                if (m_CircularAudioBuffer->unshift(Frames[i]))
+                {
+                    ++pushed;
+                }
+            }
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return pushed;
     }
 
     Frame_t Pop()
@@ -398,6 +441,56 @@ class ContinuousAudioBuffer
             ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return popped;
+    }
+
+    size_t GetFrameCapacity()
+    {
+        size_t frameCapacity = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            frameCapacity = m_CircularAudioBuffer->capacity;
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return frameCapacity;
+    }
+
+    bool ClearAudioBuffer()
+    {
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            m_CircularAudioBuffer->Clear();
+            xSemaphoreGiveRecursive(m_Lock);
+            return true;
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return false;
+    }
+
+    size_t GetFrameCount()
+    {
+        size_t count = 0;
+        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
+        {
+            count = m_CircularAudioBuffer->size();
+            xSemaphoreGiveRecursive(m_Lock);
+        }
+        else
+        {
+            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        }
+        return count;
+    }
+
+    size_t GetFreeFrameCount()
+    {
+        return GetFrameCapacity() - GetFrameCount();
     }
 
     bool IsEmpty()
@@ -443,21 +536,6 @@ class ContinuousAudioBuffer
             ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
         return size;
-    }
-
-    size_t GetFrameCount()
-    {
-        size_t count = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(5)) == pdTRUE)
-        {
-            count = m_CircularAudioBuffer->size();
-            xSemaphoreGiveRecursive(m_Lock);
-        }
-        else
-        {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-        }
-        return count;
     }
 	
     size_t ReadAudioFrames(Frame_t *Buffer, uint32_t Count)

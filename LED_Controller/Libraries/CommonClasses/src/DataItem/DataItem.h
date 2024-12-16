@@ -146,12 +146,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::EqualsValue(object, count);
 		}
 
-		virtual String GetName() const override
+		virtual std::string GetName() const override
 		{
 			return LocalDataItem<T, COUNT>::GetName();
 		}
 
-		virtual String GetValueAsString() const override
+		virtual std::string GetValueAsString() const override
 		{
 			return LocalDataItem<T, COUNT>::GetValueAsString();
 		}
@@ -161,12 +161,12 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::GetDataType();
 		}
 		
-		virtual String ConvertValueToString(const T *pvalue, size_t count) const override
+		virtual std::string ConvertValueToString(const T *pvalue, size_t count) const override
 		{
 			return LocalDataItem<T, COUNT>::ConvertValueToString(pvalue, count);
 		}
 
-		virtual size_t ParseStringValueIntoValues(const String& stringValue, T* values) override
+		virtual size_t ParseStringValueIntoValues(const std::string& stringValue, T* values) override
 		{
 			return LocalDataItem<T, COUNT>::ParseStringValueIntoValues(stringValue, values);
 		}
@@ -183,7 +183,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return this->SetValue(&value, 1);
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) override
 		{
 			ESP_LOGD( "DataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""

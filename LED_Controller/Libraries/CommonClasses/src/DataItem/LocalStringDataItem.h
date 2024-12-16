@@ -48,13 +48,13 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::GetChangeCount();
 		}
 
-		virtual bool GetInitialValueAsString(String &stringValue) const override
+		virtual bool GetInitialValueAsString(std::string &stringValue) const override
 		{
 			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
 				if(mp_InitialValue)
 				{
-					stringValue = String(mp_InitialValue);
+					stringValue = std::string(mp_InitialValue);
 					ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
 					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
 					return true;
@@ -73,9 +73,9 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return false;
 		}
 
-		virtual String GetInitialValueAsString() const
+		virtual std::string GetInitialValueAsString() const
 		{
-			String value;
+			std::string value;
 			if(!GetInitialValueAsString(value))
 			{
 				ESP_LOGE("GetInitialValueAsString", "ERROR! \"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
@@ -84,13 +84,13 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return value;
 		}
 
-		virtual bool GetValueAsString(String &stringValue) const override
+		virtual bool GetValueAsString(std::string &stringValue) const override
 		{
 			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
 			{
 				if(mp_Value)
 				{
-					stringValue = String(mp_Value);
+					stringValue = std::string(mp_Value);
 					ESP_LOGD("GetValueAsString"
 							, "\"%s\": GetValueAsString: %s"
 							, m_Name.c_str()
@@ -111,9 +111,9 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return false;
 		}
 
-		virtual String GetValueAsString() const override
+		virtual std::string GetValueAsString() const override
 		{
-			String value;
+			std::string value;
 			if(!GetValueAsString(value))
 			{
 				value = "";
@@ -121,7 +121,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return value;
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue) override
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue) override
 		{
 			ESP_LOGD("LocalStringDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
@@ -174,8 +174,8 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			return LocalDataItem<char, DATAITEM_STRING_LENGTH>::ConfirmValueValidity(values, count);
 		}
 
-		virtual String ConvertValueToString(const char* pvalue, size_t count) const override
+		virtual std::string ConvertValueToString(const char* pvalue, size_t count) const override
 		{
-			return String(pvalue);
+			return std::string(pvalue);
 		}
 };

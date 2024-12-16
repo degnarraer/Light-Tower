@@ -18,7 +18,6 @@
 #pragma once
 
 #include <freertos/portmacro.h>
-#include <WiFi.h>
 #include <WebServer.h>
 #include <WebSocketsServer.h>
 #include "Streaming.h"
@@ -46,8 +45,8 @@ class WebSocketDataHandlerSender
 class WebSocketDataHandlerReceiver
 {
   public:
-    virtual void HandleWebSocketRxNotification(const String& stringValue) = 0;
-    virtual String GetSignal() = 0;
+    virtual void HandleWebSocketRxNotification(const std::string& stringValue) = 0;
+    virtual std::string GetSignal() = 0;
 };
 
 class WebSocketDataProcessor
@@ -78,14 +77,14 @@ class WebSocketDataProcessor
           m_Tx_KeyValues_Semaphore = nullptr;
       }
     }
-    void RegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
-    void DeRegisterForWebSocketRxNotification(const String& name, WebSocketDataHandlerReceiver *aReceiver);
-    void RegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender);
-    void DeRegisterForWebSocketTxNotification(const String& name, WebSocketDataHandlerSender *aSender);
-    bool ProcessSignalValueAndSendToDatalink(const String& signalId, const String& value);
+    void RegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
+    void DeRegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
+    void RegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
+    void DeRegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
+    bool ProcessSignalValueAndSendToDatalink(const std::string& signalId, const std::string& value);
     void UpdateAllDataToClient(uint8_t clientId);
     static void StaticWebSocketDataProcessor_WebSocket_TxTask(void * parameter);
-    void TxDataToWebSocket(String key, String value)
+    void TxDataToWebSocket(std::string key, std::string value)
     {
       if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(5)) == pdTRUE)
       {
@@ -107,9 +106,9 @@ class WebSocketDataProcessor
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
     SemaphoreHandle_t m_Tx_KeyValues_Semaphore;
     void WebSocketDataProcessor_WebSocket_TxTask();
-    void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, String &result);
-    void NotifyClient(uint8_t clientID, const String& textString);
-    void NotifyClients(const String& textString);
+    void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, std::string &result);
+    void NotifyClient(uint8_t clientID, const std::string& textString);
+    void NotifyClients(const std::string& textString);
 
     template<typename T>
     std::vector<T>* AllocateVectorOnHeap(size_t count)
@@ -187,12 +186,12 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return success;
     }
     
-    String GetSignal()
+    std::string GetSignal()
     {
       return m_Signal;
     }
 
-    virtual String GetName() const
+    virtual std::string GetName() const
     {
       return m_Name;
     }
@@ -204,7 +203,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       return { m_Signal, m_DataItem.GetValueAsString() };
     }
     
-    virtual void HandleWebSocketRxNotification(const String& stringValue) override
+    virtual void HandleWebSocketRxNotification(const std::string& stringValue) override
     {
       ESP_LOGD( "Web Socket Rx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
@@ -215,7 +214,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
 
-    void TxDataToWebSocket(String key, String value)
+    void TxDataToWebSocket(std::string key, std::string value)
     {
       ESP_LOGD("TxDataToWebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
       m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
@@ -226,8 +225,8 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     WebSocketDataProcessor &m_WebSocketDataProcessor;
     LocalDataItem<T, COUNT> &m_DataItem;
     size_t m_ChangeCount;
-    const String m_Name;
-    const String m_Signal;
+    const std::string m_Name;
+    const std::string m_Signal;
 		bool IsChangeCountGreater(size_t changeCount)
 		{
 			return (changeCount > m_ChangeCount) || (m_ChangeCount - changeCount > (SIZE_MAX / 2));
@@ -437,7 +436,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
 
         if (!jsonString.empty())
         {
-            String key = this->GetSignal();
+            std::string key = this->GetSignal();
             this->TxDataToWebSocket(key, jsonString.c_str());
         }
     }

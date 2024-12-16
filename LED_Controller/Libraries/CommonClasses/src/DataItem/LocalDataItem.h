@@ -231,9 +231,9 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		}
 
 		//DataItemInterface
-		String GetName() const
+		virtual std::string GetName() const
 		{
-			return String(m_Name.c_str());
+			return m_Name;
 		}
 
 		virtual size_t GetCount() const
@@ -322,7 +322,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return T();
 		}
 
-		virtual bool GetInitialValueAsString(String &stringValue) const
+		virtual bool GetInitialValueAsString(std::string &stringValue) const
 		{
 			stringValue = "";
 			if (mp_InitialValue && COUNT > 0)
@@ -337,9 +337,9 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
-		virtual String GetInitialValueAsString() const
+		virtual std::string GetInitialValueAsString() const
 		{
-			String value;
+			std::string value;
 			if(!GetInitialValueAsString(value))
 			{
 				ESP_LOGE("GetInitialValueAsString", "ERROR! \"%s\": Unable to Get String Value! Returning Empty String.", m_Name.c_str());
@@ -348,7 +348,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return value;
 		}
 
-		virtual bool GetValueAsString(String &stringValue) const
+		virtual bool GetValueAsString(std::string &stringValue) const
 		{
 			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
@@ -374,9 +374,9 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return false;
 		}
 
-		virtual String GetValueAsString() const
+		virtual std::string GetValueAsString() const
 		{
-			String value;
+			std::string value;
 			if(!GetValueAsString(value))
 			{
 				value = "";
@@ -384,7 +384,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return value;
 		}
 
-		static UpdateStatus_t StaticSetValueFromString(const String& stringValue, void* objectptr)
+		static UpdateStatus_t StaticSetValueFromString(const std::string& stringValue, void* objectptr)
 		{
 			if(objectptr)
 			{
@@ -406,49 +406,64 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
-		virtual size_t ParseStringValueIntoValues(const String& stringValue, T* values)
+		virtual size_t ParseStringValueIntoValues(const std::string& stringValue, T* values)
 		{
-			std::vector<String> substrings;
+			std::vector<std::string> substrings;
 			size_t start = 0;
-			size_t end = stringValue.indexOf(ENCODE_OBJECT_DIVIDER);
+			size_t end = stringValue.find(ENCODE_OBJECT_DIVIDER);
 
 			// Split the input string by ENCODE_OBJECT_DIVIDER
-			while (end != -1)
+			while (end != std::string::npos)
 			{
-				String parsedString = stringValue.substring(start, end);
+				std::string parsedString = stringValue.substr(start, end - start);
 				ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
+				if (parsedString.empty()) {
+					ESP_LOGW("SetValue", "WARNING! Empty Value Rejected: \"%s\".", parsedString.c_str());
+					return 0;
+				}
 				substrings.push_back(parsedString);
 				start = end + 1;
-				end = stringValue.indexOf(ENCODE_OBJECT_DIVIDER, start);
+				end = stringValue.find(ENCODE_OBJECT_DIVIDER, start);
 			}
-			String parsedString = stringValue.substring(start);
+
+			std::string parsedString = stringValue.substr(start);
 			ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
+			if (parsedString.empty()) {
+				ESP_LOGW("SetValue", "WARNING! Empty Value Rejected: \"%s\".", parsedString.c_str());
+				return 0;
+			}
 			substrings.push_back(parsedString);
 
 			// Check if the number of substrings matches the expected COUNT
 			if (substrings.size() != COUNT) 
 			{
-				ESP_LOGE( "SetValueFromString",
-						  "Expected %zu substrings but got %zu in string: \"%s\".",
-						  COUNT, substrings.size(), stringValue.c_str());
+				ESP_LOGE("SetValueFromString", "Expected %zu substrings but got %zu in string: \"%s\".",
+						COUNT, substrings.size(), stringValue.c_str());
 				return 0;
 			}
 
 			// Decode each substring and store it in the value array
-			ESP_LOGD("ParseStringValueIntoValues", "\"%s\" Parsed %i Strings.", m_Name.c_str(), substrings.size() );
+			ESP_LOGD("ParseStringValueIntoValues", "\"%s\" Parsed %i Strings.", m_Name.c_str(), substrings.size());
 			for (size_t i = 0; i < substrings.size(); ++i) 
 			{
-				if(false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
+				if (false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
 				{
-					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str() );
+					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str());
 					return 0;
 				}
+
+				// Ensure decoding is safe for the type
+				if (substrings[i].empty()) {
+					ESP_LOGW("SetValue", "WARNING! Empty Value Rejected: \"%s\".", substrings[i].c_str());
+					return 0;
+				}
+
 				values[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
 			}
 			return substrings.size();
 		}
 
-		virtual UpdateStatus_t SetValueFromString(const String& stringValue)
+		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue)
 		{
 			ESP_LOGI( "LocalDataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
@@ -502,19 +517,19 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return false;
 		}
 
-		virtual String ConvertValueToString(const T *pvalue, size_t count) const
+		virtual std::string ConvertValueToString(const T *pvalue, size_t count) const
 		{
-			std::vector<String> valueStrings;
+			std::vector<std::string> valueStrings;
 			if(pvalue && count > 0)
 			{
 				for (size_t i = 0; i < count; ++i)
 				{
-					String encodedString = StringEncoderDecoder<T>::EncodeToString(pvalue[i]);
+					std::string encodedString = StringEncoderDecoder<T>::EncodeToString(pvalue[i]);
 					ESP_LOGD("ConvertValueToString", "Encoded String \"%s\"", encodedString.c_str());
 					valueStrings.push_back(encodedString);
 				}
 			}
-			String stringValue = "";
+			std::string stringValue = "";
 			for (size_t i = 0; i < count - 1; ++i)
 			{
 				stringValue += valueStrings[i];
@@ -606,7 +621,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 		{
 			for(int i = 0; i < count; ++i)
 			{
-				String stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
+				std::string stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
 				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
 				{
 					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );

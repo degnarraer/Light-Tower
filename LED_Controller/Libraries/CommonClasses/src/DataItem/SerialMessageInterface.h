@@ -100,13 +100,13 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		virtual T* GetValuePointer() const = 0;
 		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t changeCount) = 0;
 		virtual bool EqualsValue(T *Object, size_t Count) const = 0;
-		virtual String GetName() const = 0;
+		virtual std::string GetName() const = 0;
 		virtual size_t GetChangeCount() const = 0;
 		virtual bool ConfirmValueValidity(const T* values, size_t count) const = 0;
-		virtual String GetValueAsString() const = 0;
+		virtual std::string GetValueAsString() const = 0;
 		virtual DataType_t GetDataType() = 0;
-		virtual String ConvertValueToString(const T *pvalue, size_t count) const = 0;
-		virtual size_t ParseStringValueIntoValues(const String& stringValue, T* values) = 0;
+		virtual std::string ConvertValueToString(const T *pvalue, size_t count) const = 0;
+		virtual size_t ParseStringValueIntoValues(const std::string& stringValue, T* values) = 0;
 
 		bool IsChangeCountGreater(size_t changeCount)
 		{

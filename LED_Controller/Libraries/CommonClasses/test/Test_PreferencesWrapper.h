@@ -29,8 +29,8 @@
 
 TEST(PreferencesWrapperInstantiation, Instantion_Destruction)
 {
-    const String key = "key1";
-    const String testValue = "Key 1 Value";
+    const std::string key = "key1";
+    const std::string testValue = "Key 1 Value";
     MockPreferences *mockPreferences = new MockPreferences();
     PreferenceManager *preferenceManager = new PreferenceManager(mockPreferences, key, testValue, TIMEOUT_TIME, nullptr, nullptr);
     delete mockPreferences;
@@ -52,14 +52,14 @@ class PreferenceManagerTests : public Test
         PreferenceManager *mp_preferenceManagerWithCallback;
         PreferenceManager *mp_preferenceManagerNoCallback;
     protected:
-        const String key1 = "key1";
-        const String key2 = "key2";
-        const String testValue = "Key 1 Value";
-        const String invalidTestValue = "Key 1 Vslue";
+        const std::string key1 = "key1";
+        const std::string key2 = "key2";
+        const std::string testValue = "Key 1 Value";
+        const std::string invalidTestValue = "Key 1 Vslue";
         const size_t testValueLength = testValue.length();
         const size_t invalidTestValueLength = testValue.length()+1;
-        const String initialValue = "Initial Value";
-        const String invalidInitialValue = "Initibl Value";
+        const std::string initialValue = "Initial Value";
+        const std::string invalidInitialValue = "Initibl Value";
         const size_t validInitialValueLength = initialValue.length();
         const size_t invalidInitialValueLength = initialValue.length()+1;
         void SetUp() override
@@ -79,14 +79,14 @@ class PreferenceManagerTests : public Test
             {
                 FAIL() << "Failed to create PreferenceManager without callback";
             }
-            ON_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).WillByDefault(Return(true));
+            ON_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).WillByDefault(Return((UpdateStatus_t(true,true,true,true))));
         }
 
         void InitializeNewPreference()
         {
             EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(key1.c_str()) )).Times(1).WillOnce(Return(false));
             EXPECT_CALL(*mp_mockPreferences, putString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(validInitialValueLength));
-            EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).Times(1).WillOnce(Return(UpdateStatus_t(true, true, true, true)));
 
             EXPECT_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue));
             EXPECT_EQ(true, mp_preferenceManagerWithCallback->InitializeAndLoadPreference());
@@ -99,7 +99,7 @@ class PreferenceManagerTests : public Test
             EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(key1.c_str()) )).Times(1).WillOnce(Return(true));
             EXPECT_CALL(*mp_mockPreferences, putString( StrEq(key1.c_str()), initialValue )).Times(0);
             EXPECT_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue));
-            EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).Times(1).WillOnce(Return(true));
+            EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).Times(1).WillOnce(Return(UpdateStatus_t(true, true, true, true)));
             EXPECT_EQ(true, mp_preferenceManagerWithCallback->InitializeAndLoadPreference());
             ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
             ::testing::Mock::VerifyAndClearExpectations(&mp_preferenceManagerWithCallback);
@@ -110,7 +110,7 @@ class PreferenceManagerTests : public Test
             std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
         }
 
-        void SaveValue(const String valueBeforeSave, const String valueToSave, bool waitForSaveTimerToExpire, bool expectValueToSave )
+        void SaveValue(const std::string valueBeforeSave, const std::string valueToSave, bool waitForSaveTimerToExpire, bool expectValueToSave )
         {
             if (expectValueToSave) 
             {
@@ -158,7 +158,7 @@ TEST_F(PreferenceManagerTests, Initialization_Of_New_Preference_Immediately_Save
     EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(key1.c_str()) )).Times(1).WillOnce(Return(false));
     EXPECT_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue));
     EXPECT_CALL(*mp_mockPreferences, putString( StrEq(key1.c_str()), initialValue )).WillOnce(Return(validInitialValueLength));
-    EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_,_)).Times(1).WillOnce(Return(UpdateStatus_t(true, true, true, true)));
     EXPECT_EQ(true, mp_preferenceManagerWithCallback->InitializeAndLoadPreference());
     std::this_thread::sleep_for(std::chrono::milliseconds(TIMEOUT_TIME + 50));
 }
@@ -167,7 +167,7 @@ TEST_F(PreferenceManagerTests, Initialization_Of_Existing_Preference_Triggers_Lo
 {
     EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(key1.c_str() ))).Times(1).WillOnce(Return(true));
     EXPECT_CALL(*mp_mockPreferences, getString( StrEq(key1.c_str()), initialValue )).Times(1).WillOnce(Return(initialValue));
-    EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_, _)).Times(1).WillOnce(Return(true));
+    EXPECT_CALL(mockPreferenceCallback, LoadValueCallbackFunction(_, _)).Times(1).WillOnce(Return(UpdateStatus_t(true, true, true, true)));
     EXPECT_EQ(true, mp_preferenceManagerWithCallback->InitializeAndLoadPreference());
 }
 

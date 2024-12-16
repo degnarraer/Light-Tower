@@ -40,9 +40,9 @@ protected:
     MockSetupCallerInterface *mp_MockSetupCaller;
     MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
     StringDataItem *mp_DataItem;
-    const String spmm = "Serial Port Message Manager";
-    const String name = "name";
-    const String initialValue = "Initial Value";
+    const std::string spmm = "Serial Port Message Manager";
+    const std::string name = "name";
+    const std::string initialValue = "Initial Value";
 
     void SetUp() override
     {
@@ -110,9 +110,9 @@ class StringDataItemRxTxTests : public Test
                               , public SetupCallerInterface
 {
 protected:
-    const String initialValue = "Initial Value";
-    const String name = "Name";
-    const String spmm = "Serial Port Message Manager";
+    const std::string initialValue = "Initial Value";
+    const std::string name = "Name";
+    const std::string spmm = "Serial Port Message Manager";
     NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     StringDataItem *mp_DataItem;
 
@@ -166,11 +166,11 @@ class StringDataItemTest: public Test
                         , public SetupCallerInterface
 {
 protected:
-    const String initialValue = "Initial Value";
-    const String value1 = "Value 1";
-    const String value2 = "Value 2";
-    const String name = "Name";
-    const String spmm = "Serial Port Message Manager";
+    const std::string initialValue = "Initial Value";
+    const std::string value1 = "Value 1";
+    const std::string value2 = "Value 2";
+    const std::string name = "Name";
+    const std::string spmm = "Serial Port Message Manager";
     NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     MockNamedCallback *mp_mockNamedCallback;
     StringDataItem *mp_DataItem;
@@ -219,7 +219,7 @@ protected:
             mp_MockSerialPortMessageManager = nullptr;
         }
     }
-    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType,  bool expectValueAccepted )
+    void SetRxTxCallExpectations( const std::string name, RxTxType_t rxTxType,  bool expectValueAccepted )
     {
         bool loggedType = false;
         switch(rxTxType)

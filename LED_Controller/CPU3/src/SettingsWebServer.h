@@ -333,7 +333,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const Wifi_Mode_t m_Wifi_Mode_InitialValue = Wifi_Mode_t::Station;
     LocalDataItemWithPreferences<Wifi_Mode_t, 1> m_Wifi_Mode = LocalDataItemWithPreferences<Wifi_Mode_t, 1>( "WIFI_Mode", m_Wifi_Mode_InitialValue, &m_preferenceInterface, &m_Wifi_Mode_Callback, this, &m_Wifi_Mode_ValidValues );
     WebSocketDataHandler<Wifi_Mode_t, 1> m_Wifi_Mode_DataHandler = WebSocketDataHandler<Wifi_Mode_t, 1>( m_WebSocketDataProcessor, m_Wifi_Mode );
-    static void Wifi_Mode_ValueChanged(const String &Name, void* object, void* arg)
+    static void Wifi_Mode_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       ESP_LOGI("Wifi_Mode_ValueChanged", "Wifi Mode ValueChanged");
       if(object && arg)
@@ -360,7 +360,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const std::string m_Host_Name_InitialValue = "LTOP";
     LocalStringDataItemWithPreferences m_Host_Name = LocalStringDataItemWithPreferences( "Host_Name", m_Host_Name_InitialValue, &m_preferenceInterface, &m_Host_Name_Callback, this );
     WebSocket_String_DataHandler m_Host_Name_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_Host_Name );
-    static void Host_Name_ValueChanged(const String &Name, void* object, void* arg)
+    static void Host_Name_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(object && arg)
       {
@@ -388,7 +388,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const std::string m_STA_SSID_InitialValue = "";
     LocalStringDataItemWithPreferences m_STA_SSID = LocalStringDataItemWithPreferences( "STA_SSID", m_STA_SSID_InitialValue, &m_preferenceInterface, &m_STA_SSID_Callback, this );
     WebSocket_String_DataHandler m_STA_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_SSID );
-    static void STA_SSID_ValueChanged(const String &Name, void* object, void* arg)
+    static void STA_SSID_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(object && arg)
       {
@@ -414,7 +414,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const std::string m_STA_Password_InitialValue = "";
     LocalStringDataItemWithPreferences m_STA_Password = LocalStringDataItemWithPreferences( "STA_Password", m_STA_Password_InitialValue, &m_preferenceInterface, &m_STA_Password_Callback, this );
     WebSocket_String_DataHandler m_STA_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_STA_Password );
-    static void STA_Password_ValueChanged(const String &Name, void* object, void* arg)
+    static void STA_Password_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(object && arg)
       {
@@ -442,7 +442,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const std::string m_AP_SSID_InitialValue = "LED Tower of Power";
     LocalStringDataItemWithPreferences m_AP_SSID = LocalStringDataItemWithPreferences( "AP_SSID", m_AP_SSID_InitialValue, &m_preferenceInterface, &m_AP_SSID_Callback, this );
     WebSocket_String_DataHandler m_AP_SSID_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_SSID );
-    static void AP_SSID_ValueChanged(const String &Name, void* object, void* arg)
+    static void AP_SSID_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(object && arg)
       {
@@ -463,7 +463,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const std::string m_AP_Password_InitialValue = "LEDs Rock";
     LocalStringDataItemWithPreferences m_AP_Password = LocalStringDataItemWithPreferences( "AP_Password", m_AP_Password_InitialValue, &m_preferenceInterface, &m_AP_Password_Callback, this );
     WebSocket_String_DataHandler m_AP_Password_DataHandler = WebSocket_String_DataHandler( m_WebSocketDataProcessor, m_AP_Password );
-    static void AP_Password_ValueChanged(const String &Name, void* object, void* arg)
+    static void AP_Password_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(object && arg)
       {
@@ -566,7 +566,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SinkConnect_InitialValue = false;
     DataItem<bool, 1> m_SinkConnect = DataItem<bool, 1>( "Sink_Connect", m_SinkConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU1SerialPortMessageManager, &m_SinkConnect_Callback, this);
     WebSocketDataHandler<bool, 1> m_SinkConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkConnect );
-    static void SinkConnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SinkConnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkConnect_ValueChanged", "Sink Connect Value Changed");
       if(object && arg)
@@ -589,7 +589,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SinkDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SinkDisconnect = DataItem<bool, 1>( "Sink_Disconnect", m_SinkDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU1SerialPortMessageManager, &m_SinkDisconnect_Callback, this);
     WebSocketDataHandler<bool, 1> m_SinkDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SinkDisconnect );
-    static void SinkDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SinkDisconnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       ESP_LOGI("SinkDisconnect_ValueChanged", "Sink DisConnect Value Changed");
       if(object && arg)
@@ -611,7 +611,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SourceRestart_InitialValue = false;
     LocalDataItem<bool, 1> m_SourceRestart = LocalDataItem<bool, 1>( "Wifi_Restart", m_SourceRestart_InitialValue, &m_SourceRestart_Callback, this);
     WebSocketDataHandler<bool, 1> m_SourceRestart_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceRestart );
-    static void SourceRestart_ValueChanged(const String &Name, void* object, void* arg)
+    static void SourceRestart_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceRestart_ValueChanged", "Source Restart Value Changed");
       if(object && arg)
@@ -635,7 +635,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     Bluetooth_Discovery_Mode_t m_Bluetooth_Discovery_Mode_initialValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Unknown;
     DataItem<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode = DataItem<Bluetooth_Discovery_Mode_t, 1>( "Src_Discov_Mode", m_Bluetooth_Discovery_Mode_initialValue, RxTxType_Rx_Only, 0, &m_CPU2SerialPortMessageManager, nullptr, this );
     WebSocketDataHandler<Bluetooth_Discovery_Mode_t, 1> m_Bluetooth_Discovery_Mode_DataHandler = WebSocketDataHandler<Bluetooth_Discovery_Mode_t, 1>( m_WebSocketDataProcessor, m_Bluetooth_Discovery_Mode );
-    static void Bluetooth_Discovery_Mode_ValueChanged(const String &Name, void* object, void* arg)
+    static void Bluetooth_Discovery_Mode_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       if(object && arg)
       {
@@ -671,7 +671,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SourceConnect_InitialValue = false;
     DataItem<bool, 1> m_SourceConnect = DataItem<bool, 1>( "Src_Connect", m_SourceConnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceConnect_Callback, this);
     WebSocketDataHandler<bool, 1> m_SourceConnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceConnect );
-    static void SourceConnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SourceConnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceConnect_ValueChanged", "Source Connect Value Changed");
       if(object && arg)
@@ -705,7 +705,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     const bool m_SourceDisconnect_InitialValue = false;
     DataItem<bool, 1> m_SourceDisconnect = DataItem<bool, 1>( "Src_Disconnect", m_SourceDisconnect_InitialValue, RxTxType_Tx_On_Change_With_Heartbeat, 5000, &m_CPU2SerialPortMessageManager, &m_SourceDisconnect_Callback, this);
     WebSocketDataHandler<bool, 1> m_SourceDisconnect_DataHandler = WebSocketDataHandler<bool, 1>( m_WebSocketDataProcessor, m_SourceDisconnect );
-    static void SourceDisconnect_ValueChanged(const String &Name, void* object, void* arg)
+    static void SourceDisconnect_ValueChanged(const std::string &Name, void* object, void* arg)
     {
       ESP_LOGI("SourceDisconnect_ValueChanged", "Source Disconnect Value Changed");
       if(object && arg)
@@ -794,8 +794,8 @@ class SettingsWebServerManager: public SetupCallerInterface
         JSONVar signalValue = jsonObject["SignalValue"];
         if (signalValue.hasOwnProperty("Id") && signalValue.hasOwnProperty("Value"))
         {
-          const String Id = signalValue["Id"];
-          const String Value = signalValue["Value"];
+          const std::string Id = std::string(signalValue["Id"]);
+          const std::string Value = std::string(signalValue["Value"]);
           ESP_LOGD( "HandleWebSocketMessage", "Signal Value Message Received. ID: \"%s\" Value: \"%s\""
                   , Id.c_str()
                   , Value.c_str() );
@@ -858,7 +858,7 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void StartDNSServer()
     {
-      String hostName = m_Host_Name.GetValueAsString();
+      std::string hostName = m_Host_Name.GetValueAsString();
       if (MDNS.begin(hostName.c_str()))
       {
         ESP_LOGI( "StartDNSServer", "Started DNS Server with Host Name: \"%s\"", hostName.c_str());

@@ -12,7 +12,7 @@ void WebSocketDataProcessor::UpdateAllDataToClient(uint8_t clientId)
 
     if (!signalValues.empty())
     {
-        String message;
+        std::string message;
         Encode_Signal_Values_To_JSON(signalValues, message);
         NotifyClient(clientId, message);
     }
@@ -33,7 +33,7 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
                 std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
                 if (!signalValues.empty())
                 {
-                    String message;
+                    std::string message;
                     Encode_Signal_Values_To_JSON(signalValues, message);
                     NotifyClients(message);
                 }
@@ -53,7 +53,7 @@ void WebSocketDataProcessor::StaticWebSocketDataProcessor_WebSocket_TxTask(void 
     processor->WebSocketDataProcessor_WebSocket_TxTask();
 }
 
-void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const String &name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const std::string &name, WebSocketDataHandlerReceiver *aReceiver)
 {
     auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
     if (it == m_MyRxNotifyees.end())
@@ -63,7 +63,7 @@ void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const String &na
     }
 }
 
-void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String &name, WebSocketDataHandlerReceiver *aReceiver)
+void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const std::string &name, WebSocketDataHandlerReceiver *aReceiver)
 {
     auto it = std::find(m_MyRxNotifyees.begin(), m_MyRxNotifyees.end(), aReceiver);
     if (it != m_MyRxNotifyees.end())
@@ -73,7 +73,7 @@ void WebSocketDataProcessor::DeRegisterForWebSocketRxNotification(const String &
     }
 }
 
-void WebSocketDataProcessor::RegisterForWebSocketTxNotification(const String &name, WebSocketDataHandlerSender *aSender)
+void WebSocketDataProcessor::RegisterForWebSocketTxNotification(const std::string &name, WebSocketDataHandlerSender *aSender)
 {
     auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
     if (it == m_MyTxNotifyees.end())
@@ -83,7 +83,7 @@ void WebSocketDataProcessor::RegisterForWebSocketTxNotification(const String &na
     }
 }
 
-void WebSocketDataProcessor::DeRegisterForWebSocketTxNotification(const String &name, WebSocketDataHandlerSender *aSender)
+void WebSocketDataProcessor::DeRegisterForWebSocketTxNotification(const std::string &name, WebSocketDataHandlerSender *aSender)
 {
     auto it = std::find(m_MyTxNotifyees.begin(), m_MyTxNotifyees.end(), aSender);
     if (it != m_MyTxNotifyees.end())
@@ -93,12 +93,12 @@ void WebSocketDataProcessor::DeRegisterForWebSocketTxNotification(const String &
     }
 }
 
-bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String &signalId, const String &value)
+bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const std::string &signalId, const std::string &value)
 {
     bool SignalFound = false;
     for (int i = 0; i < m_MyRxNotifyees.size(); ++i)
     {
-        if (m_MyRxNotifyees[i]->GetSignal().equals(signalId))
+        if (m_MyRxNotifyees[i]->GetSignal() == signalId)
         {
             SignalFound = true;
             ESP_LOGD("ProcessSignalValueAndSendToDatalink", "Sending Value: \"%s\" to receiver.", value.c_str());
@@ -108,7 +108,7 @@ bool WebSocketDataProcessor::ProcessSignalValueAndSendToDatalink(const String &s
     return SignalFound;
 }
 
-void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP> &keyValuePairs, String &result)
+void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP> &keyValuePairs, std::string &result)
 {
     if (keyValuePairs.empty())
     {
@@ -120,41 +120,41 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP>
 
     for (size_t i = 0; i < keyValuePairs.size(); ++i)
     {
-        if (keyValuePairs[i].Key.isEmpty() || keyValuePairs[i].Value.isEmpty())
+        if (keyValuePairs[i].Key.empty() || keyValuePairs[i].Value.empty())
         {
             ESP_LOGW("Encode_Signal_Values_To_JSON", "WARNING! Key or Value is empty at index %zu", i);
             continue;
         }
 
         JSONVar settingValues;
-        settingValues["Id"] = keyValuePairs[i].Key;
-        settingValues["Value"] = keyValuePairs[i].Value;
+        settingValues["Id"] = keyValuePairs[i].Key.c_str();
+        settingValues["Value"] = keyValuePairs[i].Value.c_str();
 
         jsonArray[i] = settingValues;
     }
 
-    result = JSON.stringify(jsonArray);
+    result = std::string(JSON.stringify(jsonArray).c_str());
 
-    if (result.isEmpty())
+    if (result.empty())
     {
         ESP_LOGE("Encode_Signal_Values_To_JSON", "ERROR! Failed to serialize JSON array.");
         result = "[]";
     }
 }
 
-void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const String &textString)
+void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const std::string &textString)
 {
     ESP_LOGD("NotifyClients", "Notify Client: %s", textString.c_str());
-    if (!textString.isEmpty())
+    if (!textString.empty())
     {
         m_WebSocket.sendTXT(clientID, textString.c_str(), textString.length());
     }
 }
 
-void WebSocketDataProcessor::NotifyClients(const String &textString)
+void WebSocketDataProcessor::NotifyClients(const std::string &textString)
 {
     ESP_LOGD("NotifyClients", "Notify Clients: %s", textString.c_str());
-    if (!textString.isEmpty())
+    if (!textString.empty())
     {
         m_WebSocket.broadcastTXT(textString.c_str(), textString.length());
     }

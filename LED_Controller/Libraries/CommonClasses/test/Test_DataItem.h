@@ -38,8 +38,8 @@ class DataItemFunctionCallTests : public Test
 {
     protected:
         const int32_t initialValue = 10;
-        const String spmm = "Serial Port Message Manager";
-        const String name = "Test Name";
+        const std::string spmm = "Serial Port Message Manager";
+        const std::string name = "Test Name";
         MockSetupCallerInterface *mp_MockSetupCaller;
         MockSerialPortMessageManager *mp_MockSerialPortMessageManager;
         DataItem<int32_t, 1> *mp_DataItem;
@@ -139,8 +139,8 @@ class DataItemRxTxTests : public Test
 {
     protected:
         const int32_t initialValue = 10;
-        const String name = "Test Name1";
-        const String spmm = "Serial Port Message Manager";
+        const std::string name = "Test Name1";
+        const std::string spmm = "Serial Port Message Manager";
         NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
         DataItem<int32_t, 1> *mp_DataItem;
         DataItemRxTxTests()
@@ -158,12 +158,12 @@ class DataItemRxTxTests : public Test
         void CreateDataItem(RxTxType_t rxTxType, uint16_t rate)
         {
             mp_DataItem = new DataItem<int32_t, 1>( name 
-                                                , initialValue
-                                                , rxTxType
-                                                , rate
-                                                , mp_MockSerialPortMessageManager
-                                                , nullptr
-                                                , this );
+                                                  , initialValue
+                                                  , rxTxType
+                                                  , rate
+                                                  , mp_MockSerialPortMessageManager
+                                                  , nullptr
+                                                  , this );
             SetupAllSetupCallees();
         }
 
@@ -207,26 +207,26 @@ protected:
     const int32_t validValue20 = 20;
     const int32_t validValue30 = 30;
     const int32_t invalidValue = 40;
-    const String validValue10String = String(validValue10);
-    const String validValue20String = String(validValue20);
-    const String validValue30String = String(validValue30);
-    const String invalidValueString = String(invalidValue);
+    const std::string validValue10String = std::to_string(validValue10);
+    const std::string validValue20String = std::to_string(validValue20);
+    const std::string validValue30String = std::to_string(validValue30);
+    const std::string invalidValueString = std::to_string(invalidValue);
     const int32_t validValue10Array[10] = {10,10,10,10,10,10,10,10,10,10};
     const int32_t validValue20Array[10] = {20,20,20,20,20,20,20,20,20,20};
     const int32_t validValue30Array[10] = {30,30,30,30,30,30,30,30,30,30};
     const int32_t invalidValueArray[10] = {40,40,40,40,40,40,40,40,40,40};
-    const String validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
-    const String validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
-    const String validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
-    const String invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
+    const std::string validValue10ArrayString = "10|10|10|10|10|10|10|10|10|10";
+    const std::string validValue20ArrayString = "20|20|20|20|20|20|20|20|20|20";
+    const std::string validValue30ArrayString = "30|30|30|30|30|30|30|30|30|30";
+    const std::string invalidValueArrayString = "40|40|40|40|40|40|40|40|40|40";
     NiceMock<MockSerialPortMessageManager> *mp_MockSerialPortMessageManager;
     DataItem<T, COUNT> *mp_DataItem;
     MockNamedCallback *mp_mockNamedCallback;
-    const String spmm = "Serial Port Message Manager";
-    const String name1 = "Test Name1";
-    const String name2 = "Test Name2";
-    const String name3 = "Test Name3";
-    const String name4 = "Test Name4";
+    const std::string spmm = "Serial Port Message Manager";
+    const std::string name1 = "Test Name1";
+    const std::string name2 = "Test Name2";
+    const std::string name3 = "Test Name3";
+    const std::string name4 = "Test Name4";
 
     void SetUp() override
     {
@@ -235,7 +235,7 @@ protected:
         ON_CALL(*mp_MockSerialPortMessageManager, GetName()).WillByDefault(Return(spmm));
     }
 
-    void CreateDataItem( const String name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void CreateDataItem( const std::string name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         mp_mockNamedCallback = new MockNamedCallback(name, nullptr);
         mp_DataItem = new DataItem<T, COUNT>( name, initialValue, rxTxType, rate, mp_MockSerialPortMessageManager, mp_mockNamedCallback, this, validStringValues);
@@ -264,14 +264,14 @@ protected:
         }
     }
 
-    void TestNameIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestNameIsSet( const std::string name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, rate, validStringValues);
         EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
         DestroyDataItem();
     }
 
-    void TestInitialValueIsSet( const String name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestInitialValueIsSet( const std::string name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, rate, validStringValues);
         for(size_t i = 0; i < mp_DataItem->GetCount(); ++i)
@@ -281,14 +281,14 @@ protected:
         DestroyDataItem();
     }
 
-    void TestInitialValueReturnedAsString( const String name, int32_t initialValue, const String resultString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestInitialValueReturnedAsString( const std::string name, int32_t initialValue, const std::string resultString, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, rate, validStringValues);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetInitialValueAsString().c_str());
         DestroyDataItem();
     }
 
-    void SetRxTxCallExpectations( const String name, RxTxType_t rxTxType,  bool expectValueAccepted )
+    void SetRxTxCallExpectations( const std::string name, RxTxType_t rxTxType,  bool expectValueAccepted )
     {
         bool loggedType = false;
         switch(rxTxType)
@@ -407,7 +407,7 @@ protected:
         }
     }
 
-    void TestSetValueFromValueConvertsToString( const String name, const int32_t* testValue, const String resultString, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestSetValueFromValueConvertsToString( const std::string name, const int32_t* testValue, const std::string resultString, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, rate, validStringValues);
         SetRxTxCallExpectations(name, rxTxType, true);
@@ -416,7 +416,7 @@ protected:
         ::testing::Mock::VerifyAndClearExpectations(&mp_MockSerialPortMessageManager);
         EXPECT_STREQ(resultString.c_str(), mp_DataItem->GetValueAsString().c_str());
     }
-    void TestSetValueFromStringConvertsToValue( const String name, const String testString, const int32_t* resultValue, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
+    void TestSetValueFromStringConvertsToValue( const std::string name, const std::string testString, const int32_t* resultValue, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, rate, validStringValues);
         SetRxTxCallExpectations(name, rxTxType, true);
@@ -429,7 +429,7 @@ protected:
         }
     }
 
-    void TestSettingValue( const String name, const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectValueAccepted)
+    void TestSettingValue( const std::string name, const int32_t initialValue, const int32_t* testValue, const std::string testValueString, bool expectValueAccepted)
     {
         CreateDataItem(name, initialValue, RxTxType_Tx_On_Change, 0, &validValues);
         SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, expectValueAccepted);
@@ -450,7 +450,7 @@ protected:
         }
     }
 
-    void TestSettingStringValue( const String name, const int32_t initialValue, const int32_t* testValue, const String testValueString, bool expectValueAccepted)
+    void TestSettingStringValue( const std::string name, const int32_t initialValue, const int32_t* testValue, const std::string testValueString, bool expectValueAccepted)
     {
         CreateDataItem(name, initialValue, RxTxType_Tx_On_Change, 0, &validValues);
         SetRxTxCallExpectations(name, RxTxType_Tx_On_Change, expectValueAccepted);

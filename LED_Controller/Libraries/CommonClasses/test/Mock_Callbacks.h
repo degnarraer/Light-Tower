@@ -24,13 +24,13 @@
 class MockPreferenceCallback
 {
     public:
-        MOCK_METHOD(bool, LoadValueCallbackFunction, (const String&, void* object));
+        MOCK_METHOD(UpdateStatus_t, LoadValueCallbackFunction, (const std::string&, void* object));
 };
 static MockPreferenceCallback mockPreferenceCallback;
 class PreferenceCallback
 {
     protected:
-        static bool LoadValueCallbackFunction(const String& value, void* object)
+        static UpdateStatus_t LoadValueCallbackFunction(const std::string& value, void* object)
         {
             ESP_LOGD("LoadValueCallbackFunction", "Load Value Callback called with Value: \"%s\"", value.c_str());
             return mockPreferenceCallback.LoadValueCallbackFunction(value, object);  
@@ -40,13 +40,13 @@ class PreferenceCallback
 class MockNamedCallback_Callback
 {
     public:
-        MOCK_METHOD(void, NewValueCallbackFunction, (const String& name, void* callback, void* arg));
+        MOCK_METHOD(void, NewValueCallbackFunction, (const std::string& name, void* callback, void* arg));
 };
 static MockNamedCallback_Callback mockNamedCallback_Callback;
 class MockNamedCallback: public NamedCallback_t
 {
     protected:
-        static void NewValueCallbackFunction(const String& name, void* callback, void* arg)
+        static void NewValueCallbackFunction(const std::string& name, void* callback, void* arg)
         {
             mockNamedCallback_Callback.NewValueCallbackFunction(name, callback, arg);  
         }
@@ -55,7 +55,7 @@ class MockNamedCallback: public NamedCallback_t
         {
             ESP_LOGD("MockNamedCallback", "MockNamedCallback Default Constructor called");
         }
-        MockNamedCallback(const String& name, void* arg): NamedCallback_t(name, NewValueCallbackFunction, arg)
+        MockNamedCallback(const std::string& name, void* arg): NamedCallback_t(name, NewValueCallbackFunction, arg)
         {
             ESP_LOGD("MockNamedCallback", "MockNamedCallback Constructor1 called. Name: \"%s\"", name.c_str());
         }

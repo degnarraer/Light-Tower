@@ -22,7 +22,7 @@
 
 TEST(ValidValueCheckerTest, Positive_Value_Test)
 {
-    String validValue = "A String";
+    std::string validValue = "A String";
     ValidStringValues_t validStrings = {validValue};
     ValidValueChecker valueChecker = ValidValueChecker(&validStrings);
     EXPECT_TRUE(valueChecker.IsValidStringValue(validValue));
@@ -30,8 +30,8 @@ TEST(ValidValueCheckerTest, Positive_Value_Test)
 
 TEST(ValidValueCheckerTest, Negative_Value_Test)
 {
-    String validValue = "A String";
-    String invalidValue = "B String";
+    std::string validValue = "A String";
+    std::string invalidValue = "B String";
     ValidStringValues_t validStrings = {validValue};
     ValidValueChecker valueChecker = ValidValueChecker(&validStrings);
     EXPECT_FALSE(valueChecker.IsValidStringValue(invalidValue));
@@ -39,8 +39,8 @@ TEST(ValidValueCheckerTest, Negative_Value_Test)
 
 TEST(ValidValueCheckerTest, Is_Not_Configured)
 {
-    String validValue = "A String";
-    String invalidValue = "B String";
+    std::string validValue = "A String";
+    std::string invalidValue = "B String";
     ValidStringValues_t validStrings = {validValue};
     ValidValueChecker valueChecker = ValidValueChecker();
     EXPECT_TRUE(valueChecker.IsValidStringValue(validValue));
