@@ -260,7 +260,6 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				updateStatus.ValueChanged= (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
 				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
 				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-				ESP_LOGD( "UpdateRxStore", "\"%s\": UpdateAllowed: \"%i\"", GetName().c_str(), storeUpdated);
 				if(updateStatus.UpdateAllowed)
 				{
 					ZeroOutMemory(mp_RxValue);
@@ -279,6 +278,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				{
 					ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Not Allowed.", GetName().c_str());
 				}
+				ESP_LOGD( "UpdateStore", "\"%s\": Update Status: \"%i|%i|%i|%i\"", GetName().c_str(), updateStatus.ValueChanged, updateStatus.ValidValue, updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			else

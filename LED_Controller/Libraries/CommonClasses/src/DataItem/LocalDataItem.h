@@ -588,7 +588,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
 				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
 				updateStatus.UpdateSuccessful = UpdateChangeCount(newChangeCount, updateStatus.UpdateAllowed);
-				ESP_LOGD( "UpdateStore", "\"%s\": UpdateAllowed: \"%i\" Store Updated: \"%i\"", GetName().c_str(), updateAllowed, storeUpdated);
 				if(updateStatus.UpdateSuccessful)
 				{
 					ZeroOutMemory(mp_Value);
@@ -596,7 +595,6 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					updateStatus.UpdateSuccessful = ( memcmp(mp_Value, newValues, sizeof(T) * COUNT) == 0);
 					if(updateStatus.UpdateSuccessful)
 					{
-						ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
 						this->CallNamedCallbacks(mp_Value);
 					}
 					else
@@ -608,6 +606,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				{
 					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
 				}
+				ESP_LOGD( "UpdateStore", "\"%s\": Update Status: \"%i|%i|%i|%i\"", GetName().c_str(), updateStatus.ValueChanged, updateStatus.ValidValue, updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			else

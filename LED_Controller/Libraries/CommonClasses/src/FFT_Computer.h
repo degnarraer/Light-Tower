@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <math.h>
+#include <vector>
 #include "xtensa/core-macros.h"  // For ESP32 low-level operations
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -17,33 +18,34 @@ class FFT_Computer {
 private:
     MagnitudesCallback* m_CallBack = nullptr;
     bool m_IsMultithreaded = false;
-    void* m_CallBackArgs = nullptr;
-    int m_fftSize;                      // FFT size (e.g., 8192)
-    int m_magnitudeSize;
-    int m_hopSize;                      // Hop size (number of samples between FFTs)
-    RingbufHandle_t m_ringBuffer;       // DMA-friendly ring buffer handle
-    float* m_real_right_channel;        // Real part of FFT input
-    float* m_imag_right_channel;        // Imaginary part of FFT input
-    float* m_magnitudes_right_channel;  // FFT magnitudes
-    float* m_real_left_channel;         // Real part of FFT input
-    float* m_imag_left_channel;         // Imaginary part of FFT input
-    float* m_magnitudes_left_channel;   // FFT magnitudes
-    int m_bufferIndex;                  // Current write index in the circular buffer
-    int m_samplesSinceLastFFT;          // Counter for samples pushed since the last FFT
-    SemaphoreHandle_t m_mutex;          // mutex for thread-safe access to the circular buffer
+    void* mp_CallBackArgs = nullptr;
+    int m_fftSize;                                  // FFT size (e.g., 8192)
+    int m_magnitudeSize;    
+    int m_hopSize;                                  // Hop size (number of samples between FFTs)
+    float m_f_s;                                    // Sample Rate
+    RingbufHandle_t m_ringBuffer;                   // DMA-friendly ring buffer handle
+    std::vector<float> mp_real_right_channel;         // Real part of FFT input
+    std::vector<float> mp_imag_right_channel;         // Imaginary part of FFT input
+    std::vector<float> mp_magnitudes_right_channel;   // FFT magnitudes
+    std::vector<float> mp_real_left_channel;          // Real part of FFT input
+    std::vector<float> mp_imag_left_channel;          // Imaginary part of FFT input
+    std::vector<float> mp_magnitudes_left_channel;    // FFT magnitudes
+    int m_bufferIndex;                              // Current write index in the circular buffer
+    int m_samplesSinceLastFFT;                      // Counter for samples pushed since the last FFT
+    SemaphoreHandle_t m_mutex;                      // mutex for thread-safe access to the circular buffer
     UBaseType_t m_uxPriority;
     BaseType_t m_xCoreID;
 
-    TaskHandle_t m_fftTaskHandle; // Task handle for the FFT computation thread
-    bool m_normalizeMagnitudes;   // Whether to normalize the magnitudes to 0.0 to 1.0
-    bool m_isInitialized;         // Whether the setup function has been called
+    TaskHandle_t m_fftTaskHandle = nullptr;         // Task handle for the FFT computation thread
+    bool m_normalizeMagnitudes = false;             // Whether to normalize the magnitudes to 0.0 to 1.0
+    bool m_isInitialized = false;                   // Whether the setup function has been called
 
     // Data width (8, 16, or 32-bit)
     int m_dataWidth;
 
 public:    
     // Constructor with optional normalizeMagnitudes and dataWidth
-    FFT_Computer(int fftSize, int hopSize, bool normalizeMagnitudes, int dataWidth)
+    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, int dataWidth)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
         , m_normalizeMagnitudes(normalizeMagnitudes)
@@ -53,7 +55,7 @@ public:
         , m_bufferIndex(0)
         , m_samplesSinceLastFFT(0)
         , m_magnitudeSize(m_fftSize/2) {}
-    FFT_Computer(int fftSize, int hopSize, bool normalizeMagnitudes, int dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, int dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
         , m_normalizeMagnitudes(normalizeMagnitudes)
@@ -68,43 +70,42 @@ public:
 
     // Destructor
     ~FFT_Computer() {
-        if (m_isInitialized) {
-            free(m_real_right_channel);
-            free(m_imag_right_channel);
-            free(m_magnitudes_right_channel);
-            free(m_real_left_channel);
-            free(m_imag_left_channel);
-            free(m_magnitudes_left_channel);
-            vSemaphoreDelete(m_mutex);
-            vRingbufferDelete(m_ringBuffer);
-            vTaskDelete(m_fftTaskHandle);
+        if (m_isInitialized)
+        {
+            if(m_mutex)
+            {
+                ESP_LOGD("~FFT_Computer", "m_mutex");
+                free(m_mutex);
+                m_mutex = nullptr;
+            }
+            if(m_ringBuffer)
+            {
+                ESP_LOGD("~FFT_Computer", "m_ringBuffer");
+                free(m_ringBuffer);
+                m_ringBuffer = nullptr;
+            }
+            if(m_fftTaskHandle)
+            {
+                ESP_LOGD("~FFT_Computer", "m_fftTaskHandle");
+                free(m_fftTaskHandle);
+                m_fftTaskHandle= nullptr;
+            }
         }
     }
 
     void Setup(MagnitudesCallback* callback, void* callBackArgs) {
         m_CallBack = callback;
-        m_CallBackArgs = callBackArgs;
+        mp_CallBackArgs = callBackArgs;
         if (m_isInitialized) {
             return;
         }
 
-        m_real_right_channel = (float*)heap_caps_malloc(m_fftSize * sizeof(float), MALLOC_CAP_SPIRAM);
-        m_imag_right_channel = (float*)heap_caps_malloc(m_fftSize * sizeof(float), MALLOC_CAP_SPIRAM);
-        m_magnitudes_right_channel = (float*)heap_caps_malloc((m_magnitudeSize) * sizeof(float), MALLOC_CAP_SPIRAM);
-        m_real_left_channel = (float*)heap_caps_malloc(m_fftSize * sizeof(float), MALLOC_CAP_SPIRAM);
-        m_imag_left_channel = (float*)heap_caps_malloc(m_fftSize * sizeof(float), MALLOC_CAP_SPIRAM);
-        m_magnitudes_left_channel = (float*)heap_caps_malloc((m_magnitudeSize) * sizeof(float), MALLOC_CAP_SPIRAM);
-
-        if (!m_real_right_channel || !m_imag_right_channel || !m_magnitudes_right_channel ||
-            !m_real_left_channel || !m_imag_left_channel || !m_magnitudes_left_channel) {
-            Serial.println("Failed to allocate memory in PSRAM!");
-            while (1);
-        }
-
-        memset(m_real_right_channel, 0, m_fftSize * sizeof(float));
-        memset(m_imag_right_channel, 0, m_fftSize * sizeof(float));
-        memset(m_real_left_channel, 0, m_fftSize * sizeof(float));
-        memset(m_imag_left_channel, 0, m_fftSize * sizeof(float));
+        mp_real_right_channel.resize(m_fftSize, 0.0f);
+        mp_imag_right_channel.resize(m_fftSize, 0.0f);
+        mp_magnitudes_right_channel.resize(m_magnitudeSize, 0.0f);
+        mp_real_left_channel.resize(m_fftSize, 0.0f);
+        mp_imag_left_channel.resize(m_fftSize, 0.0f);
+        mp_magnitudes_left_channel.resize(m_magnitudeSize, 0.0f);
 
         m_ringBuffer = xRingbufferCreate((m_fftSize * 2) * sizeof(Frame_t), RINGBUF_TYPE_BYTEBUF);
         if (!m_ringBuffer) {
@@ -113,7 +114,7 @@ public:
         }
 
         m_mutex = xSemaphoreCreateMutex();
-        if(m_IsMultithreaded) xTaskCreatePinnedToCore(Static_PerformFFT, "FFTTask", 5000, this, m_uxPriority, &m_fftTaskHandle, m_xCoreID);
+        if(m_IsMultithreaded) xTaskCreatePinnedToCore(Static_PerformFFTTask, "FFTTask", 5000, this, m_uxPriority, &m_fftTaskHandle, m_xCoreID);
         m_isInitialized = true;
     }
 
@@ -153,101 +154,102 @@ public:
     }
 
     float* GetMagnitudes() {
-        return m_magnitudes_right_channel;
+        return mp_magnitudes_right_channel.data();
     }
 
-    void PrintMagnitudes() {
-        Serial.println("Magnitudes:");
-        for (int i = 0; i < m_magnitudeSize; i++) {
-            Serial.printf("%d: %f\n", i, m_magnitudes_right_channel[i]);
+    void PrintBuffer(char* title, std::vector<float>& buffer) {
+        Serial.printf("%s:", title);
+        for (int i = 0; i < buffer.size(); i++) {
+            if(i!=0) Serial.print("|");
+            Serial.printf("%i:%f", i, buffer[i]);
         }
+        Serial.print("\n");
     }
 
 private:
-    void PerformFFT() 
+
+    void PerformFFTTask() 
     {
         while (true)
         {
             // Wait for notification to start FFT processing
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-            // Retrieve frames from the ring buffer
-            size_t receivedByteCount;
-            size_t requestedByteCount = std::min(m_hopSize*sizeof(Frame_t), m_fftSize*sizeof(Frame_t));
-            ESP_LOGD("PerformFFT", "Requested %i bytes", requestedByteCount);
-            Frame_t *frames = (Frame_t *)xRingbufferReceiveUpTo(m_ringBuffer, &receivedByteCount, pdMS_TO_TICKS(0), requestedByteCount);
-            ESP_LOGD("PerformFFT", "Received %i bytes", receivedByteCount);
-            if (!frames)
-            {
-                ESP_LOGW("PerformFFT", "WARNING! Ring buffer is empty or timed out.");
-                continue;
-            }
-            if(receivedByteCount % sizeof(Frame_t) != 0)
-            {
-                ESP_LOGW("PerformFFT", "WARNING! Improper received byte count.");
-                vRingbufferReturnItem(m_ringBuffer, frames); // Return the item
-                continue;
-            }
-            size_t frameCount = receivedByteCount / sizeof(Frame_t);
-            ESP_LOGD("PerformFFT", "Received %i Frames", frameCount);
-
-            // Slide FFT input buffers
-            size_t slideSize = m_fftSize - frameCount;
-            memmove(m_real_right_channel, m_real_right_channel + frameCount, slideSize * sizeof(float));
-            memmove(m_imag_right_channel, m_imag_right_channel + frameCount, slideSize * sizeof(float));
-            memmove(m_real_left_channel, m_real_left_channel + frameCount, slideSize * sizeof(float));
-            memmove(m_imag_left_channel, m_imag_left_channel + frameCount, slideSize * sizeof(float));
-
-            // Fill the new data into FFT input buffers
-            for (size_t i = 0; i < frameCount; ++i)
-            {
-                size_t slideIndex = slideSize + i;
-                assert(slideIndex < m_fftSize);
-                m_real_right_channel[slideIndex] = static_cast<float>(frames[i].channel1);
-                m_imag_right_channel[slideIndex] = 0.0f;
-                m_real_left_channel[slideIndex] = static_cast<float>(frames[i].channel2);
-                m_imag_left_channel[slideIndex] = 0.0f;
-            }
-
-            // Update buffer index and process FFT if the buffer is full
-            m_bufferIndex += frameCount;
-            if (m_bufferIndex >= m_fftSize)
-            {
-                ESP_LOGW("PerformFFT", "Performing FFT with buffer size: %i", m_fftSize);
-                ProcessFFT();
-                m_bufferIndex -= m_hopSize;
-            }
-            vRingbufferReturnItem(m_ringBuffer, frames);
+            PerformFFT();
         }
     }
+    void PerformFFT() 
+    {
+        // Retrieve frames from the ring buffer
+        size_t receivedByteCount;
+        size_t requestedByteCount = std::min(m_hopSize*sizeof(Frame_t), m_fftSize*sizeof(Frame_t));
+        ESP_LOGD("PerformFFT", "Requested %i bytes", requestedByteCount);
+        Frame_t *frames = (Frame_t *)xRingbufferReceiveUpTo(m_ringBuffer, &receivedByteCount, pdMS_TO_TICKS(0), requestedByteCount);
+        ESP_LOGD("PerformFFT", "Received %i bytes", receivedByteCount);
+        if (!frames)
+        {
+            ESP_LOGW("PerformFFT", "WARNING! Ring buffer is empty or timed out.");
+            return;
+        }
+        if(receivedByteCount % sizeof(Frame_t) != 0)
+        {
+            ESP_LOGW("PerformFFT", "WARNING! Improper received byte count.");
+            vRingbufferReturnItem(m_ringBuffer, frames); // Return the item
+            return;
+        }
+        size_t frameCount = receivedByteCount / sizeof(Frame_t);
+        ESP_LOGD("PerformFFT", "Received %i Frames", frameCount);
 
-    static void Static_PerformFFT(void* pvParameters) {
+        PrintBuffer("Right Channel Before Slide: ", mp_real_right_channel);
+        for (size_t i = 0; i < frameCount; ++i)
+        {
+            // Sliding window
+            mp_real_left_channel.push_back(frames[i].channel1);
+            mp_real_left_channel.erase(mp_real_left_channel.begin());
+            mp_real_right_channel.push_back(frames[i].channel2);
+            mp_real_right_channel.erase(mp_real_right_channel.begin());
+        }
+        mp_imag_right_channel.resize(m_fftSize, 0.0f);
+        mp_imag_left_channel.resize(m_fftSize, 0.0f);
+        PrintBuffer("Right Channel After Slide: ", mp_real_right_channel);
+
+        // Update buffer index and process FFT if the buffer is full
+        m_bufferIndex += frameCount;
+        if (m_bufferIndex >= m_fftSize)
+        {
+            ESP_LOGW("PerformFFT", "Performing FFT with buffer size: %i", m_fftSize);
+            ProcessFFT();
+            m_bufferIndex -= m_hopSize;
+        }
+        vRingbufferReturnItem(m_ringBuffer, frames);
+    }
+
+    static void Static_PerformFFTTask(void* pvParameters) {
         FFT_Computer* fft = (FFT_Computer*)pvParameters;
-        fft->PerformFFT();  
+        fft->PerformFFTTask();  
     }
 
     void ProcessFFT()
     {
-        ComputeFFT(m_real_right_channel, m_imag_right_channel);
-        ComputeFFT(m_real_left_channel, m_imag_left_channel); 
+        ComputeFFT(mp_real_right_channel, mp_imag_right_channel);
+        ComputeFFT(mp_real_left_channel, mp_imag_left_channel); 
         float maxMagnitude = GetMaxMagnitude();
         for (int i = 0; i < m_magnitudeSize; i++)
         {
-            m_magnitudes_right_channel[i] = sqrtf(m_real_right_channel[i] * m_real_right_channel[i] + m_imag_right_channel[i] * m_imag_right_channel[i]);
-            m_magnitudes_left_channel[i] = sqrtf(m_real_left_channel[i] * m_real_left_channel[i] + m_imag_left_channel[i] * m_imag_left_channel[i]);
+            mp_magnitudes_right_channel[i] = sqrtf(mp_real_right_channel[i] * mp_real_right_channel[i] + mp_imag_right_channel[i] * mp_imag_right_channel[i]);
+            mp_magnitudes_left_channel[i] = sqrtf(mp_real_left_channel[i] * mp_real_left_channel[i] + mp_imag_left_channel[i] * mp_imag_left_channel[i]);
             if (m_normalizeMagnitudes && maxMagnitude > 0.0f)
             {
-                m_magnitudes_right_channel[i] /= maxMagnitude;
-                m_magnitudes_left_channel[i] /= maxMagnitude;
+                mp_magnitudes_right_channel[i] /= maxMagnitude;
+                mp_magnitudes_left_channel[i] /= maxMagnitude;
             }
         }
         if (m_CallBack)
         {
-            m_CallBack(m_magnitudes_left_channel, m_magnitudes_right_channel, m_magnitudeSize, m_CallBackArgs);
+            m_CallBack(mp_magnitudes_left_channel.data(), mp_magnitudes_right_channel.data(), m_magnitudeSize, mp_CallBackArgs);
         }    
     }
 
-    void ComputeFFT(float* real, float* imag)
+    void ComputeFFT(std::vector<float>& real, std::vector<float>& imag)
     {
         int n = m_fftSize;
         int logN = log2(n);
@@ -356,5 +358,15 @@ private:
                 return 1.0;
             break;
         }
+    }
+
+    float binToFrequency(int binIndex)
+    {
+        if (binIndex < 0 || binIndex >= m_fftSize / 2)
+        {
+            return -1.0f;
+        }
+        
+        return (binIndex * m_f_s) / m_fftSize;
     }
 };

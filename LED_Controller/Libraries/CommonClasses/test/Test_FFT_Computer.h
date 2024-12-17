@@ -22,6 +22,7 @@
 #include <gmock/gmock.h>
 #include <thread>
 #include <chrono>
+#include <vector>
 #include "FFT_Computer.h"
 
 using ::testing::_;
@@ -29,81 +30,143 @@ using ::testing::NotNull;
 using ::testing::NiceMock;
 using namespace testing;
 
-// Test Fixture for DataItemFunctionCallTests
 class FFT_Computer_Tests : public Test
 {
     protected:
         void SetUp() override
         {
+            ESP_LOGD("SetUp", "SetUp");
         }
+        
         void TearDown() override 
         {
+            ESP_LOGD("TearDown", "TearDown");
+            if(mp_FFT_Computer)
+            {
+                ESP_LOGD("TestFFT", "Delete FFT Computer");
+                delete mp_FFT_Computer;
+                mp_FFT_Computer = nullptr;
+            }
         }
-        void TestFFT(int fftSize, int hopSize, UBaseType_t uxPriority, BaseType_t xCoreID, bool normalizeMagnitudes, int dataWidth, bool isThreaded)
+        void TestFFT(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, int dataWidth)
         {
+            m_IsThreaded = false;
+            TestFFT(fftSize, hopSize, f_s, f_signal, magnitude, normalizeMagnitudes, dataWidth, THREAD_PRIORITY_IDLE, tskNO_AFFINITY);
+        }
+        void TestFFT(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, int dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+        {
+            ESP_LOGD("TestFFT", "TestFFT");
             m_FFT_Size = fftSize;
             m_Hop_Size = hopSize;
-            m_IsThreaded = isThreaded;
+            m_IsThreaded = true;
+
             if(m_IsThreaded)
             {
-                m_FFT_Computer = new FFT_Computer(fftSize, hopSize, normalizeMagnitudes, dataWidth, uxPriority, xCoreID);
+                ESP_LOGD("TestFFT", "Threaded");
+                mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, normalizeMagnitudes, dataWidth, uxPriority, xCoreID);
             }
             else
             {
-                m_FFT_Computer = new FFT_Computer(fftSize, hopSize, normalizeMagnitudes, dataWidth);
+                ESP_LOGD("TestFFT", "Unthreaded");
+                mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, normalizeMagnitudes, dataWidth);
             }
-            m_FFT_Computer->Setup(Static_MagnitudesCallback, this);
-            CreateInputSignals();
-            m_FFT_Computer->PushFrames(m_Frames, m_FFT_Size);
+
+            mp_FFT_Computer->Setup(Static_MagnitudesCallback, this);
+            CreateInputSignals(f_s, f_signal, magnitude);
+            mp_FFT_Computer->PushFrames(mp_Frames.data(), m_FFT_Size);
         }
-    private:
-        float* m_Sine_Table = nullptr;
-        Frame_t* m_Frames = nullptr;
-        int m_Table_Size = 0;
-        int m_FFT_Size = 0;
-        int m_Hop_Size = 0;
-        bool m_IsThreaded = false;
-        FFT_Computer* m_FFT_Computer;
+
+    protected:
+        FFT_Computer* mp_FFT_Computer = nullptr;
         
         static void Static_MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args)
         {
-
+            FFT_Computer_Tests* aTest = static_cast<FFT_Computer_Tests*>(args);
+            aTest->MagnitudesCallback(leftMagnitudes, rightMagnitudes, count);
         }
-        void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args)
-        {
 
-        }
-        void CreateInputSignals()
+    private:
+        std::vector<float> mp_Sine_Table;
+        std::vector<Frame_t> mp_Frames;
+        int m_FFT_Size = 0;
+        int m_Hop_Size = 0;
+        bool m_IsThreaded = false;
+
+        void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count)
         {
-            if (m_Table_Size != m_FFT_Size) 
+            ESP_LOGD("MagnitudesCallback", "MagnitudesCallback");
+            
+            Serial.print("Left Magnitudes: ");
+            for(int i = 0; i < count; ++i)
             {
-                // Free old tables if they exist
-                if(m_Sine_Table)
-                {
-                    delete[] m_Sine_Table;
-                    m_Sine_Table = nullptr;
-                }
+                if(i!=0) Serial.print("|");
+                Serial.printf("%i:%f",i,leftMagnitudes[i]);
+            }
+            Serial.print("\n");
 
-                // Allocate new tables
-                m_Table_Size = m_FFT_Size;
-                m_Sine_Table = new float[m_Table_Size];
+            Serial.print("Right Magnitudes: ");
+            for(int i = 0; i < count; ++i)
+            {
+                if(i!=0) Serial.print("|");
+                Serial.printf("%i:%f",i,rightMagnitudes[i]);
+            }
+            Serial.print("\n");
+        }
 
-                // Fill the tables
-                for (int i = 0; i < m_Table_Size; ++i)
+        void CreateInputSignals(float f_s, float f_signal, float magnitude)
+        {
+            ESP_LOGD("CreateInputSignals", "CreateInputSignals");
+
+            // Ensure m_FFT_Size is correctly set before proceeding
+            Serial.print("Input Signal: ");
+            if (mp_Sine_Table.size() != m_FFT_Size)
+            {
+                // Resize the vectors to match the FFT size
+                mp_Sine_Table.resize(m_FFT_Size);
+                mp_Frames.resize(m_FFT_Size);
+
+                // Calculate the sine wave at the specified signal frequency
+                for (int i = 0; i < m_FFT_Size; ++i)
                 {
-                    float angle = -2.0f * M_PI * i / m_FFT_Size;
-                    float sinAngle = sinf(angle);
-                    m_Sine_Table[i] = sinAngle;
-                    m_Frames[i].channel1 = sinAngle;
-                    m_Frames[i].channel2 = sinAngle;
+                    // Calculate the phase angle for the sine wave based on the sample frequency (f_s) and signal frequency (f_signal)
+                    float angle = -2.0f * M_PI * f_signal * i / f_s;  // Adjusted for f_signal and f_s
+
+                    // Generate the sine wave value for this sample
+                    float sinAngle = magnitude*sinf(angle);
+
+                    // Store the sine wave value in the table and in the frames
+                    mp_Sine_Table[i] = sinAngle;
+                    mp_Frames[i].channel1 = sinAngle;
+                    mp_Frames[i].channel2 = sinAngle;
+                    if(i!=0) Serial.print("|");
+                    Serial.printf("%i:%.1f",i, sinAngle);
                 }
+                Serial.print("\n");
             }
         }
 };
 
+
 TEST_F(FFT_Computer_Tests, Allocation_DeAllocation)
 {
-    TestFFT(128, 128, configMAX_PRIORITIES - 1, 0, false, BitLength_16, false);
-    EXPECT_TRUE(true);
+    size_t freeMemoryBeforeAllocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGD("FFT_Computer_Tests", "Free heap before allocation: %u bytes", freeMemoryBeforeAllocation);
+
+    ESP_LOGD("FFT_Computer_Tests", "Starting Allocation_DeAllocation");
+    mp_FFT_Computer = new FFT_Computer(128, 128, 44100, false, BitLength_16);
+    mp_FFT_Computer->Setup(Static_MagnitudesCallback, this);
+    size_t freeMemoryAfterAllocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGD("FFT_Computer_Tests", "Free heap after allocation: %u bytes", freeMemoryAfterAllocation);
+    delete mp_FFT_Computer;
+    mp_FFT_Computer = nullptr;
+    size_t freeMemoryAfterDeallocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
+    ESP_LOGD("FFT_Computer_Tests", "Free heap after deallocation: %u bytes", freeMemoryAfterDeallocation);
+    EXPECT_TRUE(freeMemoryAfterAllocation == freeMemoryBeforeAllocation);
+    EXPECT_TRUE(freeMemoryBeforeAllocation == freeMemoryAfterDeallocation);
+}
+
+TEST_F(FFT_Computer_Tests, FFT_Calculation_Testing)
+{
+    TestFFT(128, 128, 44100, 1000, 100, true, BitLength_16);
 }
 
