@@ -42,17 +42,17 @@ class Sound_Processor: public NamedItem
                    , IPreferences& preferences );
     virtual ~Sound_Processor();
     void Setup();
-    static void StaticMagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args)
+    static void StaticFFT_Results_Callback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args)
     {
       Sound_Processor *aSound_Processor = static_cast<Sound_Processor*>(args);
-      aSound_Processor->MagnitudesCallback(leftMagnitudes, rightMagnitudes, count);
+      aSound_Processor->FFT_Results_Callback(leftMagnitudes, rightMagnitudes, count);
     }
-    void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count);
+    void FFT_Results_Callback(float *leftMagnitudes, float* rightMagnitudes, size_t count);
     
   private:
     ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
-    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
-    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, BitLength_16);
+    Amplitude_Calculator m_RightSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, DataWidth_16);
+    Amplitude_Calculator m_LeftSoundData = Amplitude_Calculator(AMPLITUDE_BUFFER_FRAME_COUNT, DataWidth_16);
     FFT_Computer &m_FFT_Computer;
     SerialPortMessageManager &m_CPU1SerialPortMessageManager;
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;

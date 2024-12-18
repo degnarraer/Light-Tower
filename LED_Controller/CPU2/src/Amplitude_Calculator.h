@@ -109,13 +109,13 @@ class Amplitude_Calculator
     {
       switch(m_BitLength)
       {
-        case BitLength_32:
+        case DataWidth_32:
           return INT32_MAX;
         break;
-        case BitLength_16:
+        case DataWidth_16:
           return INT16_MAX;
         break;
-        case BitLength_8:
+        case DataWidth_8:
           return INT8_MAX;
         break;
         default:
@@ -127,13 +127,13 @@ class Amplitude_Calculator
     {
       switch(m_BitLength)
       {
-        case BitLength_32:
+        case DataWidth_32:
           return INT32_MIN;
         break;
-        case BitLength_16:
+        case DataWidth_16:
           return INT16_MIN;
         break;
-        case BitLength_8:
+        case DataWidth_8:
           return INT8_MIN;
         break;
         default:
@@ -145,13 +145,13 @@ class Amplitude_Calculator
     {
       switch(m_BitLength)
       {
-        case BitLength_32:
+        case DataWidth_32:
           return m_32BitLength;
         break;
-        case BitLength_16:
+        case DataWidth_16:
           return m_16BitLength;
         break;
-        case BitLength_8:
+        case DataWidth_8:
           return m_8BitLength;
         break;
         default:

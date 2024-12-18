@@ -39,7 +39,7 @@ Sound_Processor::~Sound_Processor()
 void Sound_Processor::Setup()
 {
   SetupAllSetupCallees();
-  m_FFT_Computer.Setup(&StaticMagnitudesCallback, this);
+  m_FFT_Computer.Setup(&StaticFFT_Results_Callback, this);
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   if( xTaskCreatePinnedToCore( Static_Calculate_Power, "Sound Power Task", 5000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask, AMPLITUDE_TASK_CORE ) != pdTRUE )
   {
@@ -47,9 +47,9 @@ void Sound_Processor::Setup()
   }
 }
 
-void Sound_Processor::MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count)
+void Sound_Processor::FFT_Results_Callback(float *leftMagnitudes, float* rightMagnitudes, size_t count)
 {
-    ESP_LOGD("MagnitudesCallback", "MagnitudesCallback.");
+    ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback.");
     Update_Left_Bands_And_Send_Result(leftMagnitudes, count);
     Update_Right_Bands_And_Send_Result(rightMagnitudes, count);
 }

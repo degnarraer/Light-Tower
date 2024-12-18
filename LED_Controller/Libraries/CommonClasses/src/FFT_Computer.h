@@ -6,17 +6,17 @@
 #include "freertos/task.h"
 #include "Helpers.h"
 
-enum BitLength_t
+enum DataWidth_t
 {
-  BitLength_32,
-  BitLength_16,
-  BitLength_8,
+  DataWidth_32,
+  DataWidth_16,
+  DataWidth_8,
 };
 
 class FFT_Computer {
-    typedef void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args);
+    typedef void FFT_Results_Callback(float *leftMagnitudes, float* sortedFrequenciesLeft, float* rightMagnitudes, float* sortedFrequenciesRight, size_t count, void* args);
 private:
-    MagnitudesCallback* m_CallBack = nullptr;
+    FFT_Results_Callback* m_CallBack = nullptr;
     bool m_IsMultithreaded = false;
     void* mp_CallBackArgs = nullptr;
     int m_fftSize;                                  // FFT size (e.g., 8192)
@@ -41,13 +41,14 @@ private:
     bool m_isInitialized = false;                   // Whether the setup function has been called
 
     // Data width (8, 16, or 32-bit)
-    int m_dataWidth;
+    DataWidth_t m_dataWidth;
 
 public:    
     // Constructor with optional normalizeMagnitudes and dataWidth
-    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, int dataWidth)
+    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, DataWidth_t dataWidth)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
+        , m_f_s(f_s)
         , m_normalizeMagnitudes(normalizeMagnitudes)
         , m_dataWidth(dataWidth)
         , m_isInitialized(false)
@@ -55,9 +56,10 @@ public:
         , m_bufferIndex(0)
         , m_samplesSinceLastFFT(0)
         , m_magnitudeSize(m_fftSize/2) {}
-    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, int dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
+        , m_f_s(f_s)
         , m_normalizeMagnitudes(normalizeMagnitudes)
         , m_dataWidth(dataWidth)
         , m_uxPriority(uxPriority)
@@ -93,7 +95,7 @@ public:
         }
     }
 
-    void Setup(MagnitudesCallback* callback, void* callBackArgs) {
+    void Setup(FFT_Results_Callback* callback, void* callBackArgs) {
         m_CallBack = callback;
         mp_CallBackArgs = callBackArgs;
         if (m_isInitialized) {
@@ -199,7 +201,6 @@ private:
         size_t frameCount = receivedByteCount / sizeof(Frame_t);
         ESP_LOGD("PerformFFT", "Received %i Frames", frameCount);
 
-        PrintBuffer("Right Channel Before Slide: ", mp_real_right_channel);
         for (size_t i = 0; i < frameCount; ++i)
         {
             // Sliding window
@@ -210,7 +211,7 @@ private:
         }
         mp_imag_right_channel.resize(m_fftSize, 0.0f);
         mp_imag_left_channel.resize(m_fftSize, 0.0f);
-        PrintBuffer("Right Channel After Slide: ", mp_real_right_channel);
+
 
         // Update buffer index and process FFT if the buffer is full
         m_bufferIndex += frameCount;
@@ -231,13 +232,14 @@ private:
     void ProcessFFT()
     {
         ComputeFFT(mp_real_right_channel, mp_imag_right_channel);
-        ComputeFFT(mp_real_left_channel, mp_imag_left_channel); 
+        ComputeFFT(mp_real_left_channel, mp_imag_left_channel);
         float maxMagnitude = GetMaxMagnitude();
+        Serial.println(maxMagnitude);
         for (int i = 0; i < m_magnitudeSize; i++)
         {
             mp_magnitudes_right_channel[i] = sqrtf(mp_real_right_channel[i] * mp_real_right_channel[i] + mp_imag_right_channel[i] * mp_imag_right_channel[i]);
             mp_magnitudes_left_channel[i] = sqrtf(mp_real_left_channel[i] * mp_real_left_channel[i] + mp_imag_left_channel[i] * mp_imag_left_channel[i]);
-            if (m_normalizeMagnitudes && maxMagnitude > 0.0f)
+            if (m_normalizeMagnitudes && maxMagnitude != 0.0f)
             {
                 mp_magnitudes_right_channel[i] /= maxMagnitude;
                 mp_magnitudes_left_channel[i] /= maxMagnitude;
@@ -245,7 +247,12 @@ private:
         }
         if (m_CallBack)
         {
-            m_CallBack(mp_magnitudes_left_channel.data(), mp_magnitudes_right_channel.data(), m_magnitudeSize, mp_CallBackArgs);
+            m_CallBack( mp_magnitudes_left_channel.data()
+                      , GetSortedFrequencies(mp_magnitudes_left_channel).data()
+                      , mp_magnitudes_right_channel.data()
+                      , GetSortedFrequencies(mp_magnitudes_right_channel).data()
+                      , m_magnitudeSize
+                      , mp_CallBackArgs);
         }    
     }
 
@@ -345,16 +352,17 @@ private:
     {
         switch (m_dataWidth)
         {
-            case 8:
+            case DataWidth_8:
                 return 255.0f;
             break;
-            case 16:
+            case DataWidth_16:
                 return 65535.0f;
             break;
-            case 32:
+            case DataWidth_32:
                 return 4294967295.0f;
             break;
             default:
+                ESP_LOGW("GetMaxMagnitude", "WARNING! Undefined Bit Width!");
                 return 1.0;
             break;
         }
@@ -367,6 +375,29 @@ private:
             return -1.0f;
         }
         
-        return (binIndex * m_f_s) / m_fftSize;
+        return m_f_s * binIndex / m_fftSize;
     }
+
+    std::vector<float> GetSortedFrequencies(std::vector<float>& inputArray) {
+        std::vector<int> indexes(inputArray.size());
+        
+        // Initialize the indexes array with 0, 1, 2, ..., N-1
+        for (int i = 0; i < inputArray.size(); ++i) {
+            indexes[i] = i;
+        }
+
+        // Sort indexes based on the values in inputArray
+        std::sort(indexes.begin(), indexes.end(), [&inputArray](int a, int b) {
+            return inputArray[a] > inputArray[b]; // Descending order of magnitudes
+        });
+
+        // Map sorted indices to their corresponding frequencies
+        std::vector<float> sortedFrequencies(indexes.size());
+        for (int i = 0; i < indexes.size(); ++i) {
+            sortedFrequencies[i] = binToFrequency(indexes[i]);
+        }
+
+        return sortedFrequencies;
+    }
+
 };

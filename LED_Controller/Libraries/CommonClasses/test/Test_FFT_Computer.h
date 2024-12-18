@@ -48,17 +48,47 @@ class FFT_Computer_Tests : public Test
                 mp_FFT_Computer = nullptr;
             }
         }
-        void TestFFT(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, int dataWidth)
+        void TestFFT(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, DataWidth_t dataWidth)
         {
             m_IsThreaded = false;
-            TestFFT(fftSize, hopSize, f_s, f_signal, magnitude, normalizeMagnitudes, dataWidth, THREAD_PRIORITY_IDLE, tskNO_AFFINITY);
+            RunTest(fftSize, hopSize, f_s, f_signal, magnitude, normalizeMagnitudes, dataWidth, THREAD_PRIORITY_IDLE, tskNO_AFFINITY);
         }
-        void TestFFT(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, int dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+        void TestFFT(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+        {
+            m_IsThreaded = true;
+            RunTest(fftSize, hopSize, f_s, f_signal, magnitude, normalizeMagnitudes, dataWidth, uxPriority, xCoreID);
+        }
+        
+
+    protected:
+        FFT_Computer* mp_FFT_Computer = nullptr;
+        
+        static void Static_FFT_Results_Callback(float *leftMagnitudes, float* sortedFrequenciesLeft, float* rightMagnitudes, float* sortedFrequenciesRight, size_t count, void* args)
+        {
+            FFT_Computer_Tests* aTest = static_cast<FFT_Computer_Tests*>(args);
+            aTest->FFT_Results_Callback(leftMagnitudes, sortedFrequenciesLeft, rightMagnitudes, sortedFrequenciesRight, count);
+        }
+
+    private:
+        std::vector<float> mp_Sine_Table;
+        std::vector<Frame_t> mp_Frames;
+        int m_FFT_Size = 0;
+        int m_Hop_Size = 0;
+        bool m_IsThreaded = false;
+        float m_max_Freq_Result_Left = 0.0f;
+        float m_max_Freq_Result_Right = 0.0f;
+
+        void FFT_Results_Callback(float *leftMagnitudes, float* sortedFrequenciesLeft, float* rightMagnitudes, float* sortedFrequenciesRight, size_t count)
+        {
+            m_max_Freq_Result_Left = sortedFrequenciesLeft[0];
+            m_max_Freq_Result_Right = sortedFrequenciesRight[0];
+        }
+
+        void RunTest(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
         {
             ESP_LOGD("TestFFT", "TestFFT");
             m_FFT_Size = fftSize;
             m_Hop_Size = hopSize;
-            m_IsThreaded = true;
 
             if(m_IsThreaded)
             {
@@ -71,46 +101,16 @@ class FFT_Computer_Tests : public Test
                 mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, normalizeMagnitudes, dataWidth);
             }
 
-            mp_FFT_Computer->Setup(Static_MagnitudesCallback, this);
+            mp_FFT_Computer->Setup(Static_FFT_Results_Callback, this);
             CreateInputSignals(f_s, f_signal, magnitude);
             mp_FFT_Computer->PushFrames(mp_Frames.data(), m_FFT_Size);
-        }
 
-    protected:
-        FFT_Computer* mp_FFT_Computer = nullptr;
-        
-        static void Static_MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count, void* args)
-        {
-            FFT_Computer_Tests* aTest = static_cast<FFT_Computer_Tests*>(args);
-            aTest->MagnitudesCallback(leftMagnitudes, rightMagnitudes, count);
-        }
-
-    private:
-        std::vector<float> mp_Sine_Table;
-        std::vector<Frame_t> mp_Frames;
-        int m_FFT_Size = 0;
-        int m_Hop_Size = 0;
-        bool m_IsThreaded = false;
-
-        void MagnitudesCallback(float *leftMagnitudes, float* rightMagnitudes, size_t count)
-        {
-            ESP_LOGD("MagnitudesCallback", "MagnitudesCallback");
-            
-            Serial.print("Left Magnitudes: ");
-            for(int i = 0; i < count; ++i)
-            {
-                if(i!=0) Serial.print("|");
-                Serial.printf("%i:%f",i,leftMagnitudes[i]);
-            }
-            Serial.print("\n");
-
-            Serial.print("Right Magnitudes: ");
-            for(int i = 0; i < count; ++i)
-            {
-                if(i!=0) Serial.print("|");
-                Serial.printf("%i:%f",i,rightMagnitudes[i]);
-            }
-            Serial.print("\n");
+            float allowed_Freq_Error = f_s / fftSize;
+            float freq_Error_Left = f_signal - m_max_Freq_Result_Left;
+            float freq_Error_Right = f_signal - m_max_Freq_Result_Right;
+            ESP_LOGD("TestFFT", "Error Left: \"%f\" Error Right: \"%f\"", freq_Error_Left, freq_Error_Right);
+            EXPECT_TRUE(freq_Error_Left <= allowed_Freq_Error);
+            EXPECT_TRUE(freq_Error_Right <= allowed_Freq_Error);
         }
 
         void CreateInputSignals(float f_s, float f_signal, float magnitude)
@@ -138,10 +138,7 @@ class FFT_Computer_Tests : public Test
                     mp_Sine_Table[i] = sinAngle;
                     mp_Frames[i].channel1 = sinAngle;
                     mp_Frames[i].channel2 = sinAngle;
-                    if(i!=0) Serial.print("|");
-                    Serial.printf("%i:%.1f",i, sinAngle);
                 }
-                Serial.print("\n");
             }
         }
 };
@@ -151,10 +148,9 @@ TEST_F(FFT_Computer_Tests, Allocation_DeAllocation)
 {
     size_t freeMemoryBeforeAllocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     ESP_LOGD("FFT_Computer_Tests", "Free heap before allocation: %u bytes", freeMemoryBeforeAllocation);
-
     ESP_LOGD("FFT_Computer_Tests", "Starting Allocation_DeAllocation");
-    mp_FFT_Computer = new FFT_Computer(128, 128, 44100, false, BitLength_16);
-    mp_FFT_Computer->Setup(Static_MagnitudesCallback, this);
+    mp_FFT_Computer = new FFT_Computer(128, 128, 44100, false, DataWidth_16);
+    mp_FFT_Computer->Setup(Static_FFT_Results_Callback, this);
     size_t freeMemoryAfterAllocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     ESP_LOGD("FFT_Computer_Tests", "Free heap after allocation: %u bytes", freeMemoryAfterAllocation);
     delete mp_FFT_Computer;
@@ -167,6 +163,27 @@ TEST_F(FFT_Computer_Tests, Allocation_DeAllocation)
 
 TEST_F(FFT_Computer_Tests, FFT_Calculation_Testing)
 {
-    TestFFT(128, 128, 44100, 1000, 100, true, BitLength_16);
+    TestFFT(128, 128, 44100, 1000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 2000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 3000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 4000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 5000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 6000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 7000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 8000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 9000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 10000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 11000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 12000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 13000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 14000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 15000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 16000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 17000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 18000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 19000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 20000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 21000, 100, true, DataWidth_16);
+    TestFFT(128, 128, 44100, 22000, 100, true, DataWidth_16);
 }
 
