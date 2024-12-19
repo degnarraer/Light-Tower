@@ -96,8 +96,8 @@ class DataSerializer: public CommonUtils
 			// Use try-catch for error handling during serialization
 			try
 			{
-				std::string result = JSON.stringify(serializeDoc).c_str();
-				return result;
+				String result = JSON.stringify(serializeDoc).c_str();
+				return result.c_str();
 			}
 			catch (const std::exception& e)
 			{
@@ -113,11 +113,10 @@ class DataSerializer: public CommonUtils
 		}
 
 
-		virtual bool DeSerializeJsonToNamedObject(std::string
-		 json, NamedObject_t &NamedObject)
+		virtual bool DeSerializeJsonToNamedObject(std::string json, NamedObject_t &NamedObject)
 		{
 			bool deserialized = false;
-			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json.c_str());
+			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json);
 			
 			JSONVar deserializeDoc;
 			deserializeDoc = JSON.parse(json.c_str());
@@ -126,7 +125,7 @@ class DataSerializer: public CommonUtils
 			{
 				++m_FailCount;
 				NamedObject.Object = nullptr;
-				ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Parsing failed for Input: %s", json.c_str());
+				ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Parsing failed for Input: %s", json);
 				return deserialized;
 			}
 			else
@@ -135,7 +134,7 @@ class DataSerializer: public CommonUtils
 				{
 					// Extract necessary values
 					const std::string Name = std::string(deserializeDoc[m_NameTag]);
-					ESP_LOGD("DeSerializeJsonToNamedObject", "Name: %s", Name.c_str());
+					ESP_LOGD("DeSerializeJsonToNamedObject", "Name: %s", Name);
 					NamedObject.Name = Name;
 
 					size_t CheckSumCalc = 0;
@@ -220,7 +219,7 @@ class DataSerializer: public CommonUtils
 					// Missing or invalid tags
 					++m_FailCount;
 					NamedObject.Object = nullptr;
-					ESP_LOGW("DeSerializeJsonToNamedObject", "Missing or invalid tags in input: %s", json.c_str());
+					ESP_LOGW("DeSerializeJsonToNamedObject", "Missing or invalid tags in input: %s", json);
 				}
 			}
 			FailPercentage();

@@ -116,13 +116,13 @@ class DataItem: public LocalDataItem<T, COUNT>
 		
 		virtual ~DataItem() override
 		{
-			ESP_LOGD("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName().c_str());				
+			ESP_LOGD("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalDataItem<T,COUNT>::GetName());				
 		}
 
 		//SetupCalleeInterface
 		virtual void Setup() override
 		{
-			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalDataItem<T,COUNT>::GetName().c_str());
+			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalDataItem<T,COUNT>::GetName());
 			LocalDataItem<T, COUNT>::Setup();
 			SerialMessageInterface<T, COUNT>::Setup();
 		}
@@ -173,7 +173,7 @@ class DataItem: public LocalDataItem<T, COUNT>
 
 		virtual UpdateStatus_t SetValue(const T* values, size_t count) override
 		{
-			ESP_LOGD("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName().c_str(), this->ConvertValueToString(values, count).c_str() );
+			ESP_LOGD("SetValue", "Name: \"%s\" SetValue: \"%s\"", this->GetName(), this->ConvertValueToString(values, count).c_str() );
 			return this->Set_Tx_Value(values, count);
 		}
 
@@ -187,17 +187,17 @@ class DataItem: public LocalDataItem<T, COUNT>
 		{
 			ESP_LOGD( "DataItem::SetValueFromString"
 					, "Name: \"%s\" String Value: \"%s\""
-					, this->GetName().c_str()
+					, this->GetName()
 					, stringValue.c_str() );
 			T values[COUNT];
 			if(ParseStringValueIntoValues(stringValue, values) == COUNT)
 			{
-				ESP_LOGD("SetValueFromString", "Name: \"%s\" Setting Tx Value: \"%s\"", this->GetName().c_str(), stringValue.c_str() );
+				ESP_LOGD("SetValueFromString", "Name: \"%s\" Setting Tx Value: \"%s\"", this->GetName(), stringValue.c_str() );
 				return this->Set_Tx_Value(values, COUNT);
 			}
 			else
 			{
-				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
+				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName() );
 				return UpdateStatus_t();
 			}
 		}

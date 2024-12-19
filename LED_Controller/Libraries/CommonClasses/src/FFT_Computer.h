@@ -1,10 +1,20 @@
 #include <Arduino.h>
 #include <math.h>
 #include <vector>
+#include <memory>
 #include "xtensa/core-macros.h"  // For ESP32 low-level operations
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "Helpers.h"
+#include "CircularVector.h"
+
+struct FFT_Bin_Data
+{
+    float Frequency = 0.0f;
+    float Magnitude = 0.0f;
+    float NormalizedMagnitude = 0.0f;
+};
+typedef FFT_Bin_Data FFT_Bin_Data_t;
 
 enum DataWidth_t
 {
@@ -14,53 +24,47 @@ enum DataWidth_t
 };
 
 class FFT_Computer {
-    typedef void FFT_Results_Callback(float *leftMagnitudes, float* sortedFrequenciesLeft, float* rightMagnitudes, float* sortedFrequenciesRight, size_t count, void* args);
+    typedef void FFT_Results_Callback(FFT_Bin_Data_t *leftBins, FFT_Bin_Data_t* rightBins, size_t count, void* args);
 private:
     FFT_Results_Callback* m_CallBack = nullptr;
     bool m_IsMultithreaded = false;
     void* mp_CallBackArgs = nullptr;
-    int m_fftSize;                                  // FFT size (e.g., 8192)
-    int m_magnitudeSize;    
-    int m_hopSize;                                  // Hop size (number of samples between FFTs)
-    float m_f_s;                                    // Sample Rate
-    RingbufHandle_t m_ringBuffer;                   // DMA-friendly ring buffer handle
-    std::vector<float> mp_real_right_channel;         // Real part of FFT input
-    std::vector<float> mp_imag_right_channel;         // Imaginary part of FFT input
-    std::vector<float> mp_magnitudes_right_channel;   // FFT magnitudes
-    std::vector<float> mp_real_left_channel;          // Real part of FFT input
-    std::vector<float> mp_imag_left_channel;          // Imaginary part of FFT input
-    std::vector<float> mp_magnitudes_left_channel;    // FFT magnitudes
-    int m_bufferIndex;                              // Current write index in the circular buffer
-    int m_samplesSinceLastFFT;                      // Counter for samples pushed since the last FFT
-    SemaphoreHandle_t m_mutex;                      // mutex for thread-safe access to the circular buffer
+    size_t m_fftSize;                                               // FFT size (e.g., 8192)
+    size_t m_magnitudeSize;
+    size_t m_hopSize;                                               // Hop size (number of samples between FFTs)
+    float m_f_s;                                                    // Sample Rate
+    RingbufHandle_t m_ringBuffer;                                   // DMA-friendly ring buffer handle
+    std::unique_ptr<CircularVector<float>> mp_real_right_channel;   // Real part of FFT input
+    std::unique_ptr<CircularVector<float>> mp_imag_right_channel;   // Imaginary part of FFT input
+    std::vector<float> mp_magnitudes_right_channel;                 // FFT magnitudes
+    std::unique_ptr<CircularVector<float>> mp_real_left_channel;    // Real part of FFT input
+    std::unique_ptr<CircularVector<float>> mp_imag_left_channel;    // Imaginary part of FFT input
+    std::vector<float> mp_magnitudes_left_channel;                  // FFT magnitudes
+    size_t m_bufferIndex;                                           // Current write index in the circular buffer
+    size_t m_samplesSinceLastFFT;                                   // Counter for samples pushed since the last FFT
+    SemaphoreHandle_t m_mutex;                                      // mutex for thread-safe access to the circular buffer
     UBaseType_t m_uxPriority;
     BaseType_t m_xCoreID;
 
     TaskHandle_t m_fftTaskHandle = nullptr;         // Task handle for the FFT computation thread
-    bool m_normalizeMagnitudes = false;             // Whether to normalize the magnitudes to 0.0 to 1.0
     bool m_isInitialized = false;                   // Whether the setup function has been called
-
-    // Data width (8, 16, or 32-bit)
     DataWidth_t m_dataWidth;
 
 public:    
-    // Constructor with optional normalizeMagnitudes and dataWidth
-    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, DataWidth_t dataWidth)
+    FFT_Computer(int fftSize, int hopSize, float f_s, DataWidth_t dataWidth)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
         , m_f_s(f_s)
-        , m_normalizeMagnitudes(normalizeMagnitudes)
         , m_dataWidth(dataWidth)
         , m_isInitialized(false)
         , m_IsMultithreaded(false)
         , m_bufferIndex(0)
         , m_samplesSinceLastFFT(0)
         , m_magnitudeSize(m_fftSize/2) {}
-    FFT_Computer(int fftSize, int hopSize, float f_s, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+    FFT_Computer(int fftSize, int hopSize, float f_s, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
         , m_f_s(f_s)
-        , m_normalizeMagnitudes(normalizeMagnitudes)
         , m_dataWidth(dataWidth)
         , m_uxPriority(uxPriority)
         , m_xCoreID(xCoreID)
@@ -77,19 +81,19 @@ public:
             if(m_mutex)
             {
                 ESP_LOGD("~FFT_Computer", "m_mutex");
-                free(m_mutex);
+                vSemaphoreDelete(m_mutex);
                 m_mutex = nullptr;
             }
             if(m_ringBuffer)
             {
                 ESP_LOGD("~FFT_Computer", "m_ringBuffer");
-                free(m_ringBuffer);
+                vRingbufferDelete(m_ringBuffer);
                 m_ringBuffer = nullptr;
             }
             if(m_fftTaskHandle)
             {
                 ESP_LOGD("~FFT_Computer", "m_fftTaskHandle");
-                free(m_fftTaskHandle);
+                vTaskDelete(m_fftTaskHandle);
                 m_fftTaskHandle= nullptr;
             }
         }
@@ -102,17 +106,16 @@ public:
             return;
         }
 
-        mp_real_right_channel.resize(m_fftSize, 0.0f);
-        mp_imag_right_channel.resize(m_fftSize, 0.0f);
+        mp_real_right_channel = std::make_unique<CircularVector<float>>(m_fftSize);
+        mp_imag_right_channel = std::make_unique<CircularVector<float>>(m_fftSize);
+        mp_real_left_channel = std::make_unique<CircularVector<float>>(m_fftSize);
+        mp_imag_left_channel = std::make_unique<CircularVector<float>>(m_fftSize);
         mp_magnitudes_right_channel.resize(m_magnitudeSize, 0.0f);
-        mp_real_left_channel.resize(m_fftSize, 0.0f);
-        mp_imag_left_channel.resize(m_fftSize, 0.0f);
         mp_magnitudes_left_channel.resize(m_magnitudeSize, 0.0f);
 
         m_ringBuffer = xRingbufferCreate((m_fftSize * 2) * sizeof(Frame_t), RINGBUF_TYPE_BYTEBUF);
         if (!m_ringBuffer) {
             ESP_LOGE("Setup", "ERROR! Failed to create ring buffer.");
-            while (1);
         }
 
         m_mutex = xSemaphoreCreateMutex();
@@ -144,10 +147,12 @@ public:
                 ESP_LOGD("PushFrames", "Samples: \"%i\" Hop Length: \"%i\" Buffer Index: \"%i\"", m_samplesSinceLastFFT, m_hopSize, m_bufferIndex);
                 if(m_IsMultithreaded)
                 {
+                    ESP_LOGD("PushFrames", "Notify FFT Thread");
                     xTaskNotifyGive(m_fftTaskHandle);
                 }
                 else
                 {
+                    ESP_LOGD("PushFrames", "Perform FFT UnThreaded");
                     PerformFFT();
                 }
                 m_samplesSinceLastFFT = 0;
@@ -174,12 +179,12 @@ private:
     {
         while (true)
         {
-            // Wait for notification to start FFT processing
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
             PerformFFT();
+            vTaskDelay(pdMS_TO_TICKS(2));
         }
     }
-    void PerformFFT() 
+    void PerformFFT()
     {
         // Retrieve frames from the ring buffer
         size_t receivedByteCount;
@@ -195,23 +200,24 @@ private:
         if(receivedByteCount % sizeof(Frame_t) != 0)
         {
             ESP_LOGW("PerformFFT", "WARNING! Improper received byte count.");
-            vRingbufferReturnItem(m_ringBuffer, frames); // Return the item
+            vRingbufferReturnItem(m_ringBuffer, frames);
             return;
         }
         size_t frameCount = receivedByteCount / sizeof(Frame_t);
         ESP_LOGD("PerformFFT", "Received %i Frames", frameCount);
 
-        for (size_t i = 0; i < frameCount; ++i)
+        if(xSemaphoreTake(m_mutex, 0) == pdTRUE)
         {
-            // Sliding window
-            mp_real_left_channel.push_back(frames[i].channel1);
-            mp_real_left_channel.erase(mp_real_left_channel.begin());
-            mp_real_right_channel.push_back(frames[i].channel2);
-            mp_real_right_channel.erase(mp_real_right_channel.begin());
+            for (size_t i = 0; i < frameCount; ++i)
+            {
+                mp_real_left_channel->push(frames[i].channel1);
+                mp_real_right_channel->push(frames[i].channel2);
+            }
+            mp_imag_left_channel->fill(0.0f);
+            mp_imag_right_channel->fill(0.0f);
+            xSemaphoreGive(m_mutex);
         }
-        mp_imag_right_channel.resize(m_fftSize, 0.0f);
-        mp_imag_left_channel.resize(m_fftSize, 0.0f);
-
+        vRingbufferReturnItem(m_ringBuffer, frames);
 
         // Update buffer index and process FFT if the buffer is full
         m_bufferIndex += frameCount;
@@ -221,7 +227,6 @@ private:
             ProcessFFT();
             m_bufferIndex -= m_hopSize;
         }
-        vRingbufferReturnItem(m_ringBuffer, frames);
     }
 
     static void Static_PerformFFTTask(void* pvParameters) {
@@ -231,32 +236,36 @@ private:
 
     void ProcessFFT()
     {
-        ComputeFFT(mp_real_right_channel, mp_imag_right_channel);
-        ComputeFFT(mp_real_left_channel, mp_imag_left_channel);
-        float maxMagnitude = GetMaxMagnitude();
-        Serial.println(maxMagnitude);
-        for (int i = 0; i < m_magnitudeSize; i++)
+        if(xSemaphoreTake(m_mutex, portMAX_DELAY) == pdTRUE)
         {
-            mp_magnitudes_right_channel[i] = sqrtf(mp_real_right_channel[i] * mp_real_right_channel[i] + mp_imag_right_channel[i] * mp_imag_right_channel[i]);
-            mp_magnitudes_left_channel[i] = sqrtf(mp_real_left_channel[i] * mp_real_left_channel[i] + mp_imag_left_channel[i] * mp_imag_left_channel[i]);
-            if (m_normalizeMagnitudes && maxMagnitude != 0.0f)
+            ComputeFFT(*mp_real_right_channel, *mp_imag_right_channel);
+            ComputeFFT(*mp_real_left_channel, *mp_imag_left_channel);
+            float maxMagnitude = GetMaxMagnitude();
+            std::vector<FFT_Bin_Data_t> freqMags_left(m_magnitudeSize);
+            std::vector<FFT_Bin_Data_t> freqMags_right(m_magnitudeSize);
+            for (int i = 0; i < m_magnitudeSize; i++)
             {
-                mp_magnitudes_right_channel[i] /= maxMagnitude;
-                mp_magnitudes_left_channel[i] /= maxMagnitude;
+                mp_magnitudes_right_channel[i] = sqrtf(mp_real_right_channel->get(i) * mp_real_right_channel->get(i) + mp_imag_right_channel->get(i) * mp_imag_right_channel->get(i));
+                mp_magnitudes_left_channel[i] = sqrtf(mp_real_left_channel->get(i) * mp_real_left_channel->get(i) + mp_imag_left_channel->get(i) * mp_imag_left_channel->get(i));
+                freqMags_right[i].Frequency = binToFrequency(i);
+                freqMags_right[i].Magnitude = mp_magnitudes_right_channel[i];
+                freqMags_right[i].NormalizedMagnitude = mp_magnitudes_right_channel[i] / maxMagnitude;
+                freqMags_left[i].Frequency = binToFrequency(i);
+                freqMags_left[i].Magnitude = mp_magnitudes_left_channel[i];
+                freqMags_left[i].NormalizedMagnitude = mp_magnitudes_left_channel[i] / maxMagnitude;
             }
-        }
-        if (m_CallBack)
-        {
-            m_CallBack( mp_magnitudes_left_channel.data()
-                      , GetSortedFrequencies(mp_magnitudes_left_channel).data()
-                      , mp_magnitudes_right_channel.data()
-                      , GetSortedFrequencies(mp_magnitudes_right_channel).data()
-                      , m_magnitudeSize
-                      , mp_CallBackArgs);
-        }    
+            if (m_CallBack)
+            {
+                m_CallBack( freqMags_left.data()
+                        , freqMags_right.data()
+                        , m_magnitudeSize
+                        , mp_CallBackArgs);
+            }  
+            xSemaphoreGive(m_mutex);
+        }  
     }
 
-    void ComputeFFT(std::vector<float>& real, std::vector<float>& imag)
+    void ComputeFFT(CircularVector<float>& real, CircularVector<float>& imag)
     {
         int n = m_fftSize;
         int logN = log2(n);
@@ -267,8 +276,8 @@ private:
             int j = ReverseBits(i, logN);
             if (i < j)
             {
-                Swap(real[i], real[j]);
-                Swap(imag[i], imag[j]);
+                Swap(real.get(i), real.get(j));
+                Swap(imag.get(i), imag.get(j));
             }
         }
 
@@ -279,7 +288,7 @@ private:
 
         if (tableSize != n / 2) 
         {
-            ESP_LOGW("ComputeFFT", "Calculating Sin Cos Lookups Tables.");
+            ESP_LOGD("ComputeFFT", "Calculating Sin Cos Lookups Tables.");
             // Free old tables if they exist
             delete[] sineTable;
             delete[] cosineTable;
@@ -312,17 +321,17 @@ private:
                     float cosA = cosineTable[j * step];
                     float sinA = sineTable[j * step];
 
-                    float real_kjm = real[k + j + halfM];
-                    float imag_kjm = imag[k + j + halfM];
+                    float real_kjm = real.get(k + j + halfM);
+                    float imag_kjm = imag.get(k + j + halfM);
 
                     float tReal = cosA * real_kjm - sinA * imag_kjm;
                     float tImag = sinA * real_kjm + cosA * imag_kjm;
 
-                    real[k + j + halfM] = real[k + j] - tReal;
-                    imag[k + j + halfM] = imag[k + j] - tImag;
+                    real.get(k + j + halfM) = real.get(k + j) - tReal;
+                    imag.get(k + j + halfM) = imag.get(k + j) - tImag;
 
-                    real[k + j] += tReal;
-                    imag[k + j] += tImag;
+                    real.get(k + j) += tReal;
+                    imag.get(k + j) += tImag;
                 }
             }
         }
@@ -376,28 +385,6 @@ private:
         }
         
         return m_f_s * binIndex / m_fftSize;
-    }
-
-    std::vector<float> GetSortedFrequencies(std::vector<float>& inputArray) {
-        std::vector<int> indexes(inputArray.size());
-        
-        // Initialize the indexes array with 0, 1, 2, ..., N-1
-        for (int i = 0; i < inputArray.size(); ++i) {
-            indexes[i] = i;
-        }
-
-        // Sort indexes based on the values in inputArray
-        std::sort(indexes.begin(), indexes.end(), [&inputArray](int a, int b) {
-            return inputArray[a] > inputArray[b]; // Descending order of magnitudes
-        });
-
-        // Map sorted indices to their corresponding frequencies
-        std::vector<float> sortedFrequencies(indexes.size());
-        for (int i = 0; i < indexes.size(); ++i) {
-            sortedFrequencies[i] = binToFrequency(indexes[i]);
-        }
-
-        return sortedFrequencies;
     }
 
 };

@@ -29,7 +29,7 @@ void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Obje
 	{
 		if(NewCallee == callee)
 		{
-			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
+			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName());
 			IsFound = true;
 			break;
 		}
@@ -98,7 +98,7 @@ bool SerialPortMessageManager::QueueMessageFromDataType(const std::string& Name,
 		if(mp_DataSerializer)
 		{
 			std::string message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
-			result = QueueMessage( message.c_str() );
+			result = QueueMessage( message );
 		}
 		else
 		{
@@ -115,7 +115,6 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 	{	
 		if( message.length() > 0 &&
             message.length() <= MaxMessageLength &&
-            message.find('\0') != std::string::npos &&
             xQueueSend(m_TXQueue, message.c_str(), TIME_TO_WAIT_TO_SEND) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());

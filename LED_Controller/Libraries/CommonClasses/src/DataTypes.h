@@ -1,3 +1,21 @@
+/*
+    Light Tower by Rob Shockency
+    Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version of the License, or
+    (at your option) any later version. 3
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 #include <iostream>
@@ -276,14 +294,14 @@ public:
         return !(*this == other);
     }
 
-	operator String() const
+	operator std::string() const
 	{
 		return toString();
 	}
 
-    String toString() const
+    std::string toString() const
     {
-        return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(lastUpdateTime) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
+        return std::string(name) + ENCODE_VALUE_DIVIDER + std::string(address) + ENCODE_VALUE_DIVIDER + std::to_string(rssi) + ENCODE_VALUE_DIVIDER + std::to_string(lastUpdateTime) + ENCODE_VALUE_DIVIDER + std::to_string(timeSinceUpdate);
     }
 
     static ActiveBluetoothDevice_t fromString(const std::string &str)
@@ -407,14 +425,14 @@ struct BT_Device_Info_With_Time_Since_Update
 			return !(*this == other);
 		}
 
-		operator String() const
+		operator std::string() const
         {
             return toString();
         }
 
-        String toString() const
+        std::string toString() const
         {
-            return String(name) + ENCODE_VALUE_DIVIDER + String(address) + ENCODE_VALUE_DIVIDER + String(rssi) + ENCODE_VALUE_DIVIDER + String(timeSinceUpdate);
+            return std::string(name) + ENCODE_VALUE_DIVIDER + std::string(address) + ENCODE_VALUE_DIVIDER + std::to_string(rssi) + ENCODE_VALUE_DIVIDER + std::to_string(timeSinceUpdate);
         }
 
 		static BT_Device_Info_With_Time_Since_Update fromString(const std::string &str)
@@ -468,14 +486,14 @@ typedef BT_Device_Info_With_Time_Since_Update BT_Device_Info_With_Time_Since_Upd
 struct  BluetoothDevice_t
 {
 	public:
-		char name[BT_NAME_LENGTH] = "\0";
-		char address[BT_ADDRESS_LENGTH] = "\0";
+		char name[BT_NAME_LENGTH+1] = "\0";
+		char address[BT_ADDRESS_LENGTH+1] = "\0";
 		
         BluetoothDevice_t(){}
 
-		BluetoothDevice_t(const String &str)
+		BluetoothDevice_t(const std::string &str)
 		{
-			*this = fromString(str.c_str());
+			*this = fromString(str);
 		}
 
 		BluetoothDevice_t(const char* name_In, const char* address_In)
@@ -508,14 +526,14 @@ struct  BluetoothDevice_t
 			return !(*this == other);
 		}
 
-		operator String() const
+		operator std::string() const
         {
             return toString();
         }
 
-        String toString() const
+        std::string toString() const
         {
-            return String(name) + ENCODE_VALUE_DIVIDER + String(address);
+            return std::string(name) + ENCODE_VALUE_DIVIDER + std::string(address);
         }
 
 		static BluetoothDevice_t fromString(const std::string &str)
@@ -545,7 +563,7 @@ struct  BluetoothDevice_t
 		}
 
 		friend std::ostream& operator<<(std::ostream& os, const BluetoothDevice_t& device) {
-			os << device.toString().c_str();
+			os << device.toString();
 			return os;
 		}
 };
@@ -561,7 +579,7 @@ class SoundInputSource
             Count = 3
         };
  
-        static String ToString(const Value &source)
+        static std::string ToString(const Value &source)
         {
             switch (source)
             {
@@ -572,18 +590,20 @@ class SoundInputSource
             }
         }
 
-        static Value FromString(const String& str)
+        static Value FromString(const std::string& str)
         {
-            if (str.equals("OFF")) return OFF;
-            if (str.equals("Microphone")) return Microphone;
-            if (str.equals("Bluetooth")) return Bluetooth;
+            std::string input = str;
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+            if (input == "off") return OFF;
+            if (input == "microphone") return Microphone;
+            if (input == "bluetooth") return Bluetooth;
             return OFF;
         }
 
         friend std::ostream& operator<<(std::ostream& os, const SoundInputSource::Value& value) {
-            String result = SoundInputSource::ToString(value);
-            ESP_LOGD("SoundInputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result.c_str());
-            os << result.c_str();
+            std::string result = SoundInputSource::ToString(value);
+            ESP_LOGD("SoundInputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result);
+            os << result;
             return os;
         }
         
@@ -609,7 +629,7 @@ class SoundOutputSource
         };
 
         
-        static String ToString(Value source)
+        static std::string ToString(Value source)
         {
             switch (source)
             {
@@ -619,17 +639,19 @@ class SoundOutputSource
             }
         }
 
-        static Value FromString(const String& str)
+        static Value FromString(const std::string& str)
         {
-            if (str.equals("OFF")) return OFF;
-            if (str.equals("Bluetooth")) return Bluetooth;
+            std::string input = str;
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+            if (input == "off" ) return OFF;
+            if (input == "bluetooth" ) return Bluetooth;
             return OFF;
         }
 
         friend std::ostream& operator<<(std::ostream& os, const SoundOutputSource::Value& value) {
-            String result = SoundOutputSource::ToString(value);
-            ESP_LOGD("SoundOutputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result.c_str());
-            os << result.c_str();
+            std::string result = SoundOutputSource::ToString(value);
+            ESP_LOGD("SoundOutputSource", "ostream input value: \"%i\" Converted to: \"%s\"", value, result);
+            os << result;
             return os;
         }
         
@@ -653,20 +675,22 @@ class Mute_State
             Mute_State_Muted = 1
         };
 
-        static String ToString(Value state)
+        static std::string ToString(Value state)
         {
             switch (state)
             {
-                case Mute_State_Un_Muted: return "Mute_State_Un_Muted";
-                case Mute_State_Muted: return "Mute_State_Muted";
+                case Mute_State_Un_Muted: return "UnMuted";
+                case Mute_State_Muted: return "Muted";
                 default: return "Unknown";
             }
         }
 
-        static Value FromString(const String& str)
+        static Value FromString(const std::string& str)
         {
-            if (str == "Mute_State_Un_Muted") return Mute_State_Un_Muted;
-            if (str == "Mute_State_Muted") return Mute_State_Muted;
+            std::string input = str;
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+            if (input == "unmuted") return Mute_State_Un_Muted;
+            if (input == "muted") return Mute_State_Muted;
             return Mute_State_Un_Muted;
         }
 
@@ -674,12 +698,12 @@ class Mute_State
         {
             std::string token;
             is >> token;
-            value = Mute_State::FromString(token.c_str());
+            value = Mute_State::FromString(token);
             return is;
         }
         
         friend std::ostream& operator<<(std::ostream& os, const Mute_State::Value& value) {
-            os << Mute_State::ToString(value).c_str();
+            os << Mute_State::ToString(value);
             return os;
         }
 };
@@ -695,7 +719,7 @@ class Bluetooth_Discovery_Mode
             Discovery_Mode_Unknown = 2
         };
 
-        static String ToString(Value state)
+        static std::string ToString(Value state)
         {
             switch (state)
             {
@@ -706,10 +730,12 @@ class Bluetooth_Discovery_Mode
             }
         }
 
-        static Value FromString(const String& str)
+        static Value FromString(const std::string& str)
         {
-            if (str == "Started") return Discovery_Mode_Started;
-            if (str == "Stopped") return Discovery_Mode_Stopped;
+            std::string input = str;
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+            if (input == "started") return Discovery_Mode_Started;
+            if (input == "stopped") return Discovery_Mode_Stopped;
             return Discovery_Mode_Unknown;
         }
 
@@ -717,12 +743,12 @@ class Bluetooth_Discovery_Mode
         {
             std::string token;
             is >> token;
-            value = Bluetooth_Discovery_Mode::FromString(token.c_str());
+            value = Bluetooth_Discovery_Mode::FromString(token);
             return is;
         }
         
         friend std::ostream& operator<<(std::ostream& os, const Bluetooth_Discovery_Mode::Value& value) {
-            os << Bluetooth_Discovery_Mode::ToString(value).c_str();
+            os << Bluetooth_Discovery_Mode::ToString(value);
             return os;
         }
 };
@@ -748,42 +774,44 @@ class SoundState
             Sound_Level11_Detected = 12
         };
 
-        static String ToString(Value state)
+        static std::string ToString(Value state)
         {
             switch (state)
             {
-                case LastingSilenceDetected:    return "LastingSilenceDetected";
-                case SilenceDetected:           return "SilenceDetected";
-                case Sound_Level1_Detected:     return "Sound_Level1_Detected";
-                case Sound_Level2_Detected:     return "Sound_Level2_Detected";
-                case Sound_Level3_Detected:     return "Sound_Level3_Detected";
-                case Sound_Level4_Detected:     return "Sound_Level4_Detected";
-                case Sound_Level5_Detected:     return "Sound_Level5_Detected";
-                case Sound_Level6_Detected:     return "Sound_Level6_Detected";
-                case Sound_Level7_Detected:     return "Sound_Level7_Detected";
-                case Sound_Level8_Detected:     return "Sound_Level8_Detected";
-                case Sound_Level9_Detected:     return "Sound_Level9_Detected";
-                case Sound_Level10_Detected:    return "Sound_Level10_Detected";
-                case Sound_Level11_Detected:    return "Sound_Level11_Detected";
+                case LastingSilenceDetected:    return "Lasting Silence Detected";
+                case SilenceDetected:           return "Silence Detected";
+                case Sound_Level1_Detected:     return "Sound Level 1 Detected";
+                case Sound_Level2_Detected:     return "Sound Level 2 Detected";
+                case Sound_Level3_Detected:     return "Sound Level 3 Detected";
+                case Sound_Level4_Detected:     return "Sound Level 4 Detected";
+                case Sound_Level5_Detected:     return "Sound Level 5 Detected";
+                case Sound_Level6_Detected:     return "Sound Level 6 Detected";
+                case Sound_Level7_Detected:     return "Sound Level 7 Detected";
+                case Sound_Level8_Detected:     return "Sound Level 8 Detected";
+                case Sound_Level9_Detected:     return "Sound Level 9 Detected";
+                case Sound_Level10_Detected:    return "Sound Level 10 Detected";
+                case Sound_Level11_Detected:    return "Sound Level 11 Detected";
                 default:                        return "Unknown";
             }
         }
 
-        static Value FromString(const String& str)
+        static Value FromString(const std::string& str)
         {
-            if (str == "LastingSilenceDetected")    return LastingSilenceDetected;
-            if (str == "SilenceDetected")           return SilenceDetected;
-            if (str == "Sound_Level1_Detected")     return Sound_Level1_Detected;
-            if (str == "Sound_Level2_Detected")     return Sound_Level2_Detected;
-            if (str == "Sound_Level3_Detected")     return Sound_Level3_Detected;
-            if (str == "Sound_Level4_Detected")     return Sound_Level4_Detected;
-            if (str == "Sound_Level5_Detected")     return Sound_Level5_Detected;
-            if (str == "Sound_Level6_Detected")     return Sound_Level6_Detected;
-            if (str == "Sound_Level7_Detected")     return Sound_Level7_Detected;
-            if (str == "Sound_Level8_Detected")     return Sound_Level8_Detected;
-            if (str == "Sound_Level9_Detected")     return Sound_Level9_Detected;
-            if (str == "Sound_Level10_Detected")    return Sound_Level10_Detected;
-            if (str == "Sound_Level11_Detected")    return Sound_Level11_Detected;
+            std::string input = str;
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+            if (input == "lasting silence detected")    return LastingSilenceDetected;
+            if (input == "silence detected")            return SilenceDetected;
+            if (input == "sound level 1 detected")      return Sound_Level1_Detected;
+            if (input == "sound level 2 detected")      return Sound_Level2_Detected;
+            if (input == "sound level 3 detected")      return Sound_Level3_Detected;
+            if (input == "sound level 4 detected")      return Sound_Level4_Detected;
+            if (input == "sound level 5 detected")      return Sound_Level5_Detected;
+            if (input == "sound level 6 detected")      return Sound_Level6_Detected;
+            if (input == "sound level 7 detected")      return Sound_Level7_Detected;
+            if (input == "sound level 8 detected")      return Sound_Level8_Detected;
+            if (input == "sound level 9 detected")      return Sound_Level9_Detected;
+            if (input == "sound level 10 detected")     return Sound_Level10_Detected;
+            if (input == "sound level 11 detected")     return Sound_Level11_Detected;
             return  LastingSilenceDetected;
         }
 
@@ -791,12 +819,12 @@ class SoundState
         {
             std::string token;
             is >> token;
-            value = SoundState::FromString(token.c_str());
+            value = SoundState::FromString(token);
             return is;
         }
         
         friend std::ostream& operator<<(std::ostream& os, const SoundState::Value& value) {
-            os << SoundState::ToString(value).c_str();
+            os << SoundState::ToString(value);
             return os;
         }
 };
@@ -813,38 +841,39 @@ class Transciever
             Transciever_TXRX = 3
         };
 
-        static String ToString(Value transciever)
+        static std::string ToString(Value transciever)
         {
             switch (transciever)
             {
-                case Transciever_None: return "Transciever_None";
-                case Transciever_TX: return "Transciever_TX";
-                case Transciever_RX: return "Transciever_RX";
-                case Transciever_TXRX: return "Transciever_TXRX";
+                case Transciever_None: return "None";
+                case Transciever_TX: return "TX";
+                case Transciever_RX: return "RX";
+                case Transciever_TXRX: return "TXRX";
                 default: return "Unknown";
             }
         }
 
-        static Value FromString(const String& str)
+        static Value FromString(const std::string& str)
         {
-            if (str == "Transciever_None") return Transciever_None;
-            if (str == "Transciever_TX") return Transciever_TX;
-            if (str == "Transciever_RX") return Transciever_RX;
-            if (str == "Transciever_TXRX") return Transciever_TXRX;
-            
-            return Transciever_None; // Default or error value
+            std::string input = str;
+            std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+            if (input == "none") return Transciever_None;
+            if (input == "tx") return Transciever_TX;
+            if (input == "rx") return Transciever_RX;
+            if (input == "txrx") return Transciever_TXRX;
+            return Transciever_None;
         }
 
         friend std::istream& operator>>(std::istream& is, Transciever::Value& value) 
         {
             std::string token;
             is >> token;
-            value = Transciever::FromString(token.c_str());
+            value = Transciever::FromString(token);
             return is;
         }
         
         friend std::ostream& operator<<(std::ostream& os, const Transciever::Value& value) {
-            os << Transciever::ToString(value).c_str();
+            os << Transciever::ToString(value);
             return os;
         }
 
@@ -936,20 +965,22 @@ public:
         Unknown = 2
     };
 
-    static String ToString(Value status)
+    static std::string ToString(Value status)
     {
         switch (status)
         {
             case Station: return "Station";
-            case AccessPoint: return "AccessPoint";
+            case AccessPoint: return "Access Point";
             default: return "Unknown";
         }
     }
 
-    static Value FromString(const String& str)
+    static Value FromString(const std::string& str)
     {
-        if (str == "Station") return Station;
-        if (str == "AccessPoint") return AccessPoint;
+        std::string input = str;
+        std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+        if (input == "station") return Station;
+        if (input == "access point") return AccessPoint;
         return Unknown; // Default or error value
     }
 
@@ -957,13 +988,13 @@ public:
 	{
 		std::string token;
 		is >> token;
-		value = Wifi_Mode::FromString(token.c_str());
+		value = Wifi_Mode::FromString(token);
 		return is;
 	}
     
     friend std::ostream& operator<<(std::ostream& os, const Wifi_Mode::Value& value) {
         ESP_LOGD("operator<<", "Wifi Mode to String: \"%s\"", Wifi_Mode::ToString(value).c_str());
-        os << Wifi_Mode::ToString(value).c_str();
+        os << Wifi_Mode::ToString(value);
         return os;
     }
     
@@ -983,7 +1014,7 @@ public:
     };
 
     
-    static String ToString(Value status)
+    static std::string ToString(Value status)
     {
         switch (status)
         {
@@ -997,12 +1028,14 @@ public:
     }
 
     
-    static Value FromString(const String& str)
+    static Value FromString(const std::string& str)
     {
-        if (str == "Disconnected") return Disconnected;
-        if (str == "Connecting") return Connecting;
-        if (str == "Connected") return Connected;
-        if (str == "Disconnecting") return Disconnecting;
+        std::string input = str;
+        std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+        if (input == "disconnected") return Disconnected;
+        if (input == "vonnecting") return Connecting;
+        if (input == "vonnected") return Connected;
+        if (input == "disconnecting") return Disconnecting;
         return Unknown; // Default or error value
     }
 
@@ -1011,14 +1044,14 @@ public:
 	{
 		std::string token;
 		is >> token;
-		value = ConnectionStatus::FromString(token.c_str());
+		value = ConnectionStatus::FromString(token);
 		return is;
 	}
     
     
     friend std::ostream& operator<<(std::ostream& os, const ConnectionStatus::Value& value) {
-        ESP_LOGD("operator<<", "Connection Status to String: \"%s\"", ConnectionStatus::ToString(value).c_str());
-        os << ConnectionStatus::ToString(value).c_str();
+        ESP_LOGD("operator<<", "Connection Status to String: \"%s\"", ConnectionStatus::ToString(value));
+        os << ConnectionStatus::ToString(value);
         return os;
     }
     
@@ -1118,14 +1151,14 @@ struct ProcessedSoundData_t
         return !(*this == other);
     }
 
-    operator String() const
+    operator std::string() const
     {
         return toString();
     }
 
-    String toString() const
+    std::string toString() const
     {
-        return String(NormalizedPower) + ENCODE_VALUE_DIVIDER + String(Minimum) + ENCODE_VALUE_DIVIDER + String(Maximum);
+        return std::to_string(NormalizedPower) + ENCODE_VALUE_DIVIDER + std::to_string(Minimum) + ENCODE_VALUE_DIVIDER + std::to_string(Maximum);
     }
     
     static ProcessedSoundData_t fromString(const std::string &str)
@@ -1201,14 +1234,14 @@ struct ProcessedSoundFrame_t
         return !(*this == other);
     }
 
-    operator String() const
+    operator std::string() const
     {
         return toString();
     }
 
-    String toString() const
+    std::string toString() const
     {
-        return String(Channel1) + ENCODE_VALUE_DIVIDER + String(Channel2);
+        return std::string(Channel1) + ENCODE_VALUE_DIVIDER + std::string(Channel2);
     }
     
     static ProcessedSoundFrame_t fromString(const std::string &str)
@@ -1254,7 +1287,7 @@ struct ProcessedSoundFrame_t
     }
 
     friend std::ostream& operator<<(std::ostream& os, const ProcessedSoundFrame_t& psf) {
-        os << psf.toString().c_str();
+        os << psf.toString();
         return os;
     }
 };
@@ -1286,14 +1319,14 @@ struct MaxBandSoundData_t
         return !(*this == other);
     }
 
-    operator String() const
+    operator std::string() const
     {
         return toString();
     }
 
-    String toString() const
+    std::string toString() const
     {
-        return String(MaxBandNormalizedPower) + ENCODE_VALUE_DIVIDER + String(MaxBandIndex) + ENCODE_VALUE_DIVIDER + String(TotalBands);
+        return std::to_string(MaxBandNormalizedPower) + ENCODE_VALUE_DIVIDER + std::to_string(MaxBandIndex) + ENCODE_VALUE_DIVIDER + std::to_string(TotalBands);
     }
 
     static MaxBandSoundData_t fromString(const std::string &str)
@@ -1370,7 +1403,7 @@ class DataTypeFunctions
 			else if(std::is_same<T, uint16_t>::value) 									return DataType_Uint16_t;
 			else if(std::is_same<T, uint32_t>::value) 									return DataType_Uint32_t;
 			else if(std::is_same<T, char>::value) 										return DataType_Char_t;
-			else if(std::is_same<T, String>::value) 									return DataType_String_t;
+			else if(std::is_same<T, std::string>::value) 								return DataType_String_t;
 			else if(std::is_same<T, BT_Device_Info_t>::value) 							return DataType_BT_Device_Info_t;
 			else if(std::is_same<T, BT_Device_Info_With_Time_Since_Update_t>::value) 	return DataType_BT_Device_Info_With_Time_Since_Update_t;
 			else if(std::is_same<T, BluetoothDevice_t>::value)							return DataType_BluetoothDevice_t;

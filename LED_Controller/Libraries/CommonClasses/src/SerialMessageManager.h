@@ -128,7 +128,7 @@ class Rx_Value_Caller_Interface
 			{
 				if(NewCallee == callee)
 				{
-					ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
+					ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName());
 					IsFound = true;
 					break;
 				}

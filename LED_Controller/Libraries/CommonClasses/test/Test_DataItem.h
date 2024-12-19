@@ -267,7 +267,7 @@ protected:
     void TestNameIsSet( const std::string name, int32_t initialValue, RxTxType_t rxTxType,  uint16_t rate, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name, initialValue, rxTxType, rate, validStringValues);
-        EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
+        EXPECT_STREQ(name.c_str(), mp_DataItem->GetName());
         DestroyDataItem();
     }
 

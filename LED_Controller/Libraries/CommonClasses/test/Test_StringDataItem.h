@@ -308,7 +308,7 @@ protected:
 TEST_F(StringDataItemTest, StringDataItem_Name_Is_Set)
 {
     CreateDataItem(RxTxType_Tx_On_Change, 0);
-    EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
+    EXPECT_STREQ(name.c_str(), mp_DataItem->GetName());
     DestroyDataItem();
 }
 

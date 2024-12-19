@@ -477,7 +477,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 			else
 			{
-				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName().c_str() );
+				ESP_LOGE("SetValueFromString", "Name: \"%s\" Count Error!", this->GetName() );
 				return UpdateStatus_t();
 			}
 		}
@@ -554,13 +554,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				m_ChangeCount = newChangeCount;
 				m_ChangeCountInitialized = true;
-				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Initialized: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Initialized: \"%i\"", GetName(), m_ChangeCount);
 			}
 			if(incrementChangeCount)
 			{
 				m_ChangeCount += 1;
 				allowUpdate = true;
-				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName().c_str(), m_ChangeCount);
+				ESP_LOGD("UpdateChangeCount", "\"%s\": Change Count Incremented: \"%i\"", GetName(), m_ChangeCount);
 			}
 			return allowUpdate;
 		}
@@ -580,14 +580,14 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				assert(COUNT > 0);
 				ESP_LOGD( "UpdateStore"
 						, "Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\" New Change Count: \"%i\""
-						, GetName().c_str()
+						, GetName()
 						, ConvertValueToString(newValues, COUNT).c_str()
 						, m_ChangeCount
 						, newChangeCount );
 				updateStatus.ValueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
 				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
 				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-				updateStatus.UpdateSuccessful = UpdateChangeCount(newChangeCount, updateStatus.UpdateAllowed);
+				updateStatus.UpdateSuccessful = UpdateChangeCount(m_ChangeCount, updateStatus.UpdateAllowed);
 				if(updateStatus.UpdateSuccessful)
 				{
 					ZeroOutMemory(mp_Value);
@@ -599,14 +599,14 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 					}
 					else
 					{
-						ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+						ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName(), GetValueAsString().c_str(), m_ChangeCount);
 					}
 				}
 				else
 				{
-					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
+					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName(), m_ChangeCount);
 				}
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Status: \"%i|%i|%i|%i\"", GetName().c_str(), updateStatus.ValueChanged, updateStatus.ValidValue, updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
+				ESP_LOGD( "UpdateStore", "\"%s\": Update Status: \"%i|%i|%i|%i\"", GetName(), updateStatus.ValueChanged, updateStatus.ValidValue, updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			else
@@ -623,7 +623,7 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 				std::string stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
 				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
 				{
-					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
+					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName(), stringValue.c_str() );
 					return false;
 				}
 			}

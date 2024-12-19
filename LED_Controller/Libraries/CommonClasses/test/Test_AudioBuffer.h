@@ -69,21 +69,21 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Popping_To_Empty)
         if(i < bufferSize-1)
         {
             EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
-            EXPECT_EQ(true, audioBuffer->Push(newFrame));
+            EXPECT_EQ(true, audioBuffer->Push(newFrame)); //true on add without overwrite
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(false, audioBuffer->IsFull());
         }
         else if(i == bufferSize-1)
         {
             EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
-            EXPECT_EQ(true, audioBuffer->Push(newFrame));
+            EXPECT_EQ(true, audioBuffer->Push(newFrame)); //true on add without overwrite
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
         else if(i > bufferSize-1)
         {
             EXPECT_EQ(0, audioBuffer->GetFreeFrameCount());
-            EXPECT_EQ(false, audioBuffer->Push(newFrame));
+            EXPECT_EQ(false, audioBuffer->Push(newFrame)); //false on add with overwrite
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
@@ -150,21 +150,21 @@ TEST_F(ContinuousAudioBufferTests, Pushing_To_Full_Shifting_To_Empty)
         if(i < bufferSize-1)
         {
             EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
-            EXPECT_EQ(true, audioBuffer->Push(newFrame));
+            EXPECT_EQ(true, audioBuffer->Push(newFrame)); //true on add without overwrite
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(false, audioBuffer->IsFull());
         }
         else if(i == bufferSize-1)
         {
             EXPECT_EQ(bufferSize-i, audioBuffer->GetFreeFrameCount());
-            EXPECT_EQ(true, audioBuffer->Push(newFrame));
+            EXPECT_EQ(true, audioBuffer->Push(newFrame)); //true on add without overwrite
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }
         else if(i > bufferSize-1)
         {
             EXPECT_EQ(0, audioBuffer->GetFreeFrameCount());
-            EXPECT_EQ(false, audioBuffer->Push(newFrame));
+            EXPECT_EQ(false, audioBuffer->Push(newFrame)); //false on add with overwrite
             EXPECT_EQ(false, audioBuffer->IsEmpty());
             EXPECT_EQ(true, audioBuffer->IsFull());
         }

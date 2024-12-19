@@ -23,9 +23,9 @@
 class Amplitude_Calculator
 {
   public:
-    Amplitude_Calculator( int32_t RequiredSampleCount, BitLength_t BitLength )
+    Amplitude_Calculator( int32_t RequiredSampleCount, DataWidth_t DataWidth )
                         : m_RequiredSampleCount(RequiredSampleCount)
-                        , m_BitLength(BitLength)
+                        , m_DataWidth(DataWidth)
     {
     }
     virtual ~Amplitude_Calculator()
@@ -107,7 +107,7 @@ class Amplitude_Calculator
     }
     int32_t GetMax()
     {
-      switch(m_BitLength)
+      switch(m_DataWidth)
       {
         case DataWidth_32:
           return INT32_MAX;
@@ -125,7 +125,7 @@ class Amplitude_Calculator
     }
     int32_t GetMin()
     {
-      switch(m_BitLength)
+      switch(m_DataWidth)
       {
         case DataWidth_32:
           return INT32_MIN;
@@ -143,7 +143,7 @@ class Amplitude_Calculator
     }
     float GetBitMax()
     {
-      switch(m_BitLength)
+      switch(m_DataWidth)
       {
         case DataWidth_32:
           return m_32BitLength;
@@ -166,7 +166,7 @@ class Amplitude_Calculator
     int32_t m_RequiredSampleCount = 0;
     int32_t m_PushCount = 0;
     bool m_SolutionReady = false;
-    BitLength_t m_BitLength;
+    DataWidth_t m_DataWidth;
 
     uint32_t m_8BitLength = 1 << 8; // 2^8
     uint32_t m_16BitLength = 1 << 16; // 2^16

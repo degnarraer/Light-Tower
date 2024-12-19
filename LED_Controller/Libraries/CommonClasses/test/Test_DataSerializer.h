@@ -131,42 +131,6 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Bool_t_Corre
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
 
-TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint8_t_Correctly)
-{
-    std::string objectName = "Object Name";
-    uint8_t testValue = 10;
-    NamedObject_t namedObject;
-    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint8_t, &testValue, 1, 0);
-    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
-    EXPECT_NE(nullptr, namedObject.Object);
-    EXPECT_EQ(testValue, *(uint8_t*)namedObject.Object);
-    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
-}
-
-TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint16_t_Correctly)
-{
-    std::string objectName = "Object Name";
-    uint16_t testValue = 10;
-    NamedObject_t namedObject;
-    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint16_t, &testValue, 1, 0);
-    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
-    EXPECT_NE(nullptr, namedObject.Object);
-    EXPECT_EQ(testValue, *(uint16_t*)namedObject.Object);
-    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
-}
-
-TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint32_t_Correctly)
-{
-    std::string objectName = "Object Name";
-    uint32_t testValue = 10;
-    NamedObject_t namedObject;
-    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint32_t, &testValue, 1, 0);
-    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
-    EXPECT_NE(nullptr, namedObject.Object);
-    EXPECT_EQ(testValue, *(uint32_t*)namedObject.Object);
-    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
-}
-
 TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int8_t_Correctly)
 {
     std::string objectName = "Object Name";
@@ -200,6 +164,42 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Int32_t_Corr
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(int32_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint8_t_Correctly)
+{
+    std::string objectName = "Object Name";
+    uint8_t testValue = 10;
+    NamedObject_t namedObject;
+    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint8_t, &testValue, 1, 0);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(uint8_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint16_t_Correctly)
+{
+    std::string objectName = "Object Name";
+    uint16_t testValue = 10;
+    NamedObject_t namedObject;
+    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint16_t, &testValue, 1, 0);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(uint16_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Uint32_t_Correctly)
+{
+    std::string objectName = "Object Name";
+    uint32_t testValue = 10;
+    NamedObject_t namedObject;
+    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Uint32_t, &testValue, 1, 0);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(uint32_t*)namedObject.Object);
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
 
@@ -246,7 +246,7 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_BT_Device_In
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }
 
-TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_CompatibleDevice_Correctly)
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_BluetoothDevice_Correctly)
 {
     std::string objectName = "Object Name";
     char name[BT_NAME_LENGTH] = "LED Tower of Power";
@@ -410,5 +410,17 @@ TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_SoundOutputS
     EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
     EXPECT_NE(nullptr, namedObject.Object);
     EXPECT_EQ(testValue, *(SoundOutputSource_t*)namedObject.Object);
+    EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
+}
+
+TEST_F(DataSerializerTests, Data_Serializer_Serializes_Deserializes_Bluetooth_Discovery_Mode_Correctly)
+{
+    std::string objectName = "Object Name";
+    Bluetooth_Discovery_Mode_t testValue = Bluetooth_Discovery_Mode_t::Discovery_Mode_Stopped;
+    NamedObject_t namedObject;
+    std::string jsonString = mp_dataSerializer->SerializeDataItemToJson(objectName, DataType_Bluetooth_Discovery_Mode_t, &testValue, 1, 0);
+    EXPECT_EQ(true, mp_dataSerializer->DeSerializeJsonToNamedObject(jsonString, namedObject));
+    EXPECT_NE(nullptr, namedObject.Object);
+    EXPECT_EQ(testValue, *(Bluetooth_Discovery_Mode_t*)namedObject.Object);
     EXPECT_STREQ(objectName.c_str(), namedObject.Name.c_str());
 }

@@ -47,14 +47,14 @@ void Sound_Processor::Setup()
   }
 }
 
-void Sound_Processor::FFT_Results_Callback(float *leftMagnitudes, float* rightMagnitudes, size_t count)
+void Sound_Processor::FFT_Results_Callback(FFT_Bin_Data_t *leftBins, FFT_Bin_Data_t* rightBins, size_t count)
 {
     ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback.");
-    Update_Left_Bands_And_Send_Result(leftMagnitudes, count);
-    Update_Right_Bands_And_Send_Result(rightMagnitudes, count);
+    Update_Left_Bands_And_Send_Result(leftBins, count);
+    Update_Right_Bands_And_Send_Result(rightBins, count);
 }
 
-void Sound_Processor::Update_Right_Bands_And_Send_Result(float* magnitudes, size_t count)
+void Sound_Processor::Update_Right_Bands_And_Send_Result(FFT_Bin_Data_t* magnitudes, size_t count)
 {
     String message;
     float R_Bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
@@ -81,7 +81,7 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result(float* magnitudes, size
     R_MaxBand.TotalBands = NUMBER_OF_BANDS;
     m_R_Max_Band.SetValue(R_MaxBand);
 }
-void Sound_Processor::Update_Left_Bands_And_Send_Result(float* magnitudes, size_t count)
+void Sound_Processor::Update_Left_Bands_And_Send_Result(FFT_Bin_Data_t* magnitudes, size_t count)
 {
     String message;
     float L_Bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
@@ -158,12 +158,12 @@ void Sound_Processor::Calculate_Power()
     }
   }
 }
-void Sound_Processor::AssignToBands(float* Band_Data, float* magnitudes, size_t count)
+void Sound_Processor::AssignToBands(float* Band_Data, FFT_Bin_Data_t* magnitudes, size_t count)
 {
   String output = "";
   for(int i = 0; i < count; ++i)
   {
-    float magnitude = magnitudes[i];
+    float magnitude = magnitudes[i].NormalizedMagnitude;
     float freq = GetFreqForBin(i);
     int bandIndex = -1;
 

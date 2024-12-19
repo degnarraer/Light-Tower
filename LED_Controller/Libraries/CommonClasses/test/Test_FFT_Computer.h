@@ -63,10 +63,10 @@ class FFT_Computer_Tests : public Test
     protected:
         FFT_Computer* mp_FFT_Computer = nullptr;
         
-        static void Static_FFT_Results_Callback(float *leftMagnitudes, float* sortedFrequenciesLeft, float* rightMagnitudes, float* sortedFrequenciesRight, size_t count, void* args)
+        static void Static_FFT_Results_Callback(float *leftBins, FFT_Bin_Data_t* leftBinsSorted, float* rightBins, FFT_Bin_Data_t* sortedBinsRight, size_t count, void* args)
         {
             FFT_Computer_Tests* aTest = static_cast<FFT_Computer_Tests*>(args);
-            aTest->FFT_Results_Callback(leftMagnitudes, sortedFrequenciesLeft, rightMagnitudes, sortedFrequenciesRight, count);
+            aTest->FFT_Results_Callback(leftBins, leftBinsSorted, rightBins, sortedBinsRight, count);
         }
 
     private:
@@ -75,13 +75,14 @@ class FFT_Computer_Tests : public Test
         int m_FFT_Size = 0;
         int m_Hop_Size = 0;
         bool m_IsThreaded = false;
-        float m_max_Freq_Result_Left = 0.0f;
-        float m_max_Freq_Result_Right = 0.0f;
+        FFT_Bin_Data_t m_max_Freq_Result_Left;
+        FFT_Bin_Data_t m_max_Freq_Result_Right;
 
-        void FFT_Results_Callback(float *leftMagnitudes, float* sortedFrequenciesLeft, float* rightMagnitudes, float* sortedFrequenciesRight, size_t count)
+        void FFT_Results_Callback(float *leftBins, FFT_Bin_Data_t* leftBinsSorted, float* rightBins, FFT_Bin_Data_t* sortedBinsRight, size_t count)
         {
-            m_max_Freq_Result_Left = sortedFrequenciesLeft[0];
-            m_max_Freq_Result_Right = sortedFrequenciesRight[0];
+            ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback");
+            m_max_Freq_Result_Left = leftBinsSorted[0];
+            m_max_Freq_Result_Right = sortedBinsRight[0];
         }
 
         void RunTest(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
@@ -89,16 +90,20 @@ class FFT_Computer_Tests : public Test
             ESP_LOGD("TestFFT", "TestFFT");
             m_FFT_Size = fftSize;
             m_Hop_Size = hopSize;
-
+            if(mp_FFT_Computer)
+            {
+                delete mp_FFT_Computer;
+                mp_FFT_Computer = nullptr;
+            }
             if(m_IsThreaded)
             {
                 ESP_LOGD("TestFFT", "Threaded");
-                mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, normalizeMagnitudes, dataWidth, uxPriority, xCoreID);
+                mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, dataWidth, uxPriority, xCoreID);
             }
             else
             {
                 ESP_LOGD("TestFFT", "Unthreaded");
-                mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, normalizeMagnitudes, dataWidth);
+                mp_FFT_Computer = new FFT_Computer(fftSize, hopSize, f_s, dataWidth);
             }
 
             mp_FFT_Computer->Setup(Static_FFT_Results_Callback, this);
@@ -106,9 +111,15 @@ class FFT_Computer_Tests : public Test
             mp_FFT_Computer->PushFrames(mp_Frames.data(), m_FFT_Size);
 
             float allowed_Freq_Error = f_s / fftSize;
-            float freq_Error_Left = f_signal - m_max_Freq_Result_Left;
-            float freq_Error_Right = f_signal - m_max_Freq_Result_Right;
-            ESP_LOGD("TestFFT", "Error Left: \"%f\" Error Right: \"%f\"", freq_Error_Left, freq_Error_Right);
+            float freq_Error_Left = f_signal - m_max_Freq_Result_Left.Frequency;
+            float freq_Error_Right = f_signal - m_max_Freq_Result_Right.Frequency;
+            ESP_LOGD( "TestFFT", "\nInput Freq: \t\"%.1f\", \nAllowed Error: \t\"%.1f\" \nMax Freq Left: \t\"%.1f\", \nError Left: \t\"%.1f\" \nMax Freq Right: \"%.1f\" \nError Right: \t\"%.1f\""
+                    , f_signal
+                    , allowed_Freq_Error
+                    , m_max_Freq_Result_Left.Frequency
+                    , freq_Error_Left
+                    , m_max_Freq_Result_Right.Frequency
+                    , freq_Error_Right);
             EXPECT_TRUE(freq_Error_Left <= allowed_Freq_Error);
             EXPECT_TRUE(freq_Error_Right <= allowed_Freq_Error);
         }
@@ -116,29 +127,16 @@ class FFT_Computer_Tests : public Test
         void CreateInputSignals(float f_s, float f_signal, float magnitude)
         {
             ESP_LOGD("CreateInputSignals", "CreateInputSignals");
-
-            // Ensure m_FFT_Size is correctly set before proceeding
             Serial.print("Input Signal: ");
-            if (mp_Sine_Table.size() != m_FFT_Size)
+            mp_Sine_Table.resize(m_FFT_Size);
+            mp_Frames.resize(m_FFT_Size);
+            for (int i = 0; i < m_FFT_Size; ++i)
             {
-                // Resize the vectors to match the FFT size
-                mp_Sine_Table.resize(m_FFT_Size);
-                mp_Frames.resize(m_FFT_Size);
-
-                // Calculate the sine wave at the specified signal frequency
-                for (int i = 0; i < m_FFT_Size; ++i)
-                {
-                    // Calculate the phase angle for the sine wave based on the sample frequency (f_s) and signal frequency (f_signal)
-                    float angle = -2.0f * M_PI * f_signal * i / f_s;  // Adjusted for f_signal and f_s
-
-                    // Generate the sine wave value for this sample
-                    float sinAngle = magnitude*sinf(angle);
-
-                    // Store the sine wave value in the table and in the frames
-                    mp_Sine_Table[i] = sinAngle;
-                    mp_Frames[i].channel1 = sinAngle;
-                    mp_Frames[i].channel2 = sinAngle;
-                }
+                float angle = -2.0f * M_PI * f_signal * i / f_s;
+                float sinAngle = magnitude*sinf(angle);
+                mp_Sine_Table[i] = sinAngle;
+                mp_Frames[i].channel1 = sinAngle;
+                mp_Frames[i].channel2 = sinAngle;
             }
         }
 };
@@ -147,43 +145,142 @@ class FFT_Computer_Tests : public Test
 TEST_F(FFT_Computer_Tests, Allocation_DeAllocation)
 {
     size_t freeMemoryBeforeAllocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    ESP_LOGD("FFT_Computer_Tests", "Free heap before allocation: %u bytes", freeMemoryBeforeAllocation);
-    ESP_LOGD("FFT_Computer_Tests", "Starting Allocation_DeAllocation");
-    mp_FFT_Computer = new FFT_Computer(128, 128, 44100, false, DataWidth_16);
+    ESP_LOGD("Allocation_DeAllocation", "Memory before allocation: %i", freeMemoryBeforeAllocation);
+    mp_FFT_Computer = new FFT_Computer(128, 128, 44100, DataWidth_16);
     mp_FFT_Computer->Setup(Static_FFT_Results_Callback, this);
     size_t freeMemoryAfterAllocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    ESP_LOGD("FFT_Computer_Tests", "Free heap after allocation: %u bytes", freeMemoryAfterAllocation);
+    ESP_LOGD("Allocation_DeAllocation", "Memory after allocation: %i", freeMemoryAfterAllocation);
     delete mp_FFT_Computer;
     mp_FFT_Computer = nullptr;
     size_t freeMemoryAfterDeallocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
-    ESP_LOGD("FFT_Computer_Tests", "Free heap after deallocation: %u bytes", freeMemoryAfterDeallocation);
+    ESP_LOGD("Allocation_DeAllocation", "Memory after deallocation: %i", freeMemoryAfterDeallocation);
     EXPECT_TRUE(freeMemoryAfterAllocation == freeMemoryBeforeAllocation);
     EXPECT_TRUE(freeMemoryBeforeAllocation == freeMemoryAfterDeallocation);
 }
 
-TEST_F(FFT_Computer_Tests, FFT_Calculation_Testing)
+TEST_F(FFT_Computer_Tests, 128_Bin_FFT_Calculation_Testing)
 {
-    TestFFT(128, 128, 44100, 1000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 2000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 3000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 4000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 5000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 6000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 7000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 8000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 9000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 10000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 11000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 12000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 13000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 14000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 15000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 16000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 17000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 18000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 19000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 20000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 21000, 100, true, DataWidth_16);
-    TestFFT(128, 128, 44100, 22000, 100, true, DataWidth_16);
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 128;
+    int hop_size = 128;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("128_Bin_FFT_Calculation_Testing", "Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("128_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("128_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
+}
+
+TEST_F(FFT_Computer_Tests, 256_Bin_FFT_Calculation_Testing)
+{
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 256;
+    int hop_size = 256;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("256_Bin_FFT_Calculation_Testing", "Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("256_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("256_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
+}
+
+TEST_F(FFT_Computer_Tests, 512_Bin_FFT_Calculation_Testing)
+{
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 512;
+    int hop_size = 512;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("512_Bin_FFT_Calculation_Testing", "Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("512_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("512_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
+}
+
+TEST_F(FFT_Computer_Tests, 1024_Bin_FFT_Calculation_Testing)
+{
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 1024;
+    int hop_size = 1024;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("1024_Bin_FFT_Calculation_Testing", "Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("1024_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("1024_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
+}
+
+TEST_F(FFT_Computer_Tests, 2048_Bin_FFT_Calculation_Testing)
+{
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 2048;
+    int hop_size = 2048;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("2048_Bin_FFT_Calculation_Testing", "Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("2048_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("2048_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
+}
+
+TEST_F(FFT_Computer_Tests, 4096_Bin_FFT_Calculation_Testing)
+{
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 4096;
+    int hop_size = 4096;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("4096_Bin_FFT_Calculation_Testing", "Heap Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("4096_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("4096_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
+}
+
+TEST_F(FFT_Computer_Tests, 8192_Bin_FFT_Calculation_Testing)
+{
+    int f_s = 44100;
+    int nyquist = f_s/2;
+    int start_Freq = 1000;
+    int test_step = 1000;
+    int magnitude = 100;
+    int fft_size = 8192;
+    int hop_size = 8192;
+    for(int input_freq = start_Freq; input_freq < nyquist; input_freq+=1000)
+    {
+        ESP_LOGD("8192_Bin_FFT_Calculation_Testing", "Memory before test: %i", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+        ESP_LOGD("8192_Bin_FFT_Calculation_Testing", "Stack Memory before test: %i", uxTaskGetStackHighWaterMark(NULL) * 4);
+        ESP_LOGD("8192_Bin_FFT_Calculation_Testing", "Testing Input Frequency: %s", std::to_string(input_freq).c_str());
+        TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
+    }
 }
 

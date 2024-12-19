@@ -5,7 +5,7 @@
 
 BluetoothA2DPSink m_BTSink;
 Bluetooth_Sink m_BT_In = Bluetooth_Sink( "Bluetooth"
-                                       , 1                                  // Core
+                                       , BLUETOOTH_TASK_CORE                // Core
                                        , m_BTSink
                                        , I2S_NUM_0                          // I2S Interface
                                        , i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX)

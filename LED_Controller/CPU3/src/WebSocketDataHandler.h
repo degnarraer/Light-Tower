@@ -62,7 +62,7 @@ class WebSocketDataProcessor
       {
           ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
       }
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    0 );
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM,    &m_WebSocketTaskHandle,    tskNO_AFFINITY );
     }
     virtual ~WebSocketDataProcessor()
     {
@@ -305,7 +305,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
     {
       if(!m_ActiveDeviceUpdateTask)
       {
-        if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, 0 ) == pdTRUE )
+        if( xTaskCreatePinnedToCore( Static_UpdateActiveCompatibleDevices, "Update Active Devices", 5000,  this, THREAD_PRIORITY_MEDIUM, &m_ActiveDeviceUpdateTask, tskNO_AFFINITY ) == pdTRUE )
         {
           ESP_LOGI("CreateUpdateTask", "Started Device Tracking Task");
         }

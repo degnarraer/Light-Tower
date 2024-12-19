@@ -144,7 +144,7 @@ protected:
     void TestNameIsSet( const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )
     {
         CreateDataItem(name1, initialValue, validStringValues);
-        EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName().c_str());
+        EXPECT_STREQ(name1.c_str(), mp_DataItem->GetName());
     }
 
     void TestInitialValueIsSet( const std::string name, int32_t initialValue, ValidStringValues_t *validStringValues )

@@ -451,7 +451,7 @@ protected:
         EXPECT_CALL(*mp_mockPreferences, isKey( StrEq(name.c_str()) )).Times(1).WillOnce(Return(true));
         EXPECT_CALL(*mp_mockPreferences, getString( StrEq(name.c_str()), A<std::string>() )).Times(1).WillOnce(Return(initialValueString));
         CreateDataItemWithPreferences(name, initialValue, rxTxType, rate, validStringValues);
-        EXPECT_STREQ(name.c_str(), mp_DataItemWithPreferences->GetName().c_str());
+        EXPECT_STREQ(name.c_str(), mp_DataItemWithPreferences->GetName());
         ::testing::Mock::VerifyAndClearExpectations(&mp_mockPreferences);
     }
 

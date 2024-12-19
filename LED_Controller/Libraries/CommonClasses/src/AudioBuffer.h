@@ -355,7 +355,7 @@ class ContinuousAudioBuffer
         {
             for (size_t i = 0; i < Count; ++i)
             {
-                if (m_CircularAudioBuffer->available() > 0)
+                if (m_CircularAudioBuffer->size() > 0)
                 {
                     Frames[i] = m_CircularAudioBuffer->shift();
                     ++shifted;
@@ -428,7 +428,7 @@ class ContinuousAudioBuffer
         {
             for (size_t i = 0; i < Count; ++i)
             {
-                if (m_CircularAudioBuffer->available() > 0)
+                if (m_CircularAudioBuffer->size() > 0)
                 {
                     Frames[i] = m_CircularAudioBuffer->pop();
                     ++popped;

@@ -768,5 +768,5 @@ background-color: #4caf50;
 position: absolute;
 bottom: 0;
 height: 0;
-transition: height 0.2s ease-in-out;
+/*transition: height 0.2s ease-in-out;*/
 }

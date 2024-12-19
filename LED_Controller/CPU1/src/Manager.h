@@ -92,15 +92,15 @@ class Manager: public NamedItem
     }
 
     void SetupSerialPortManager();
-    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial1, &m_DataSerializer, 1);
-    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, 1);
+    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE);
+    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE);
     
     void SetupTasks();
     
-
+    
     void CreateMicrophoneTask()
     {
-      if( xTaskCreatePinnedToCore( Static_Microphone_Request_Task, "Microphone Request", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, 0 ) == pdTRUE )
+      if( xTaskCreatePinnedToCore( Static_Microphone_Request_Task, "Microphone Request", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, MICROPHONE_DATE_REQUEST_TASK_CORE ) == pdTRUE )
       {
         ESP_LOGI("StartDevice", "%s: Microphone task started.", GetTitle().c_str());
       }
@@ -123,6 +123,7 @@ class Manager: public NamedItem
         ESP_LOGW("DestroyTask", "WARNING! Unable to destroy Microphone task!");
       }
     }
+    
 
 
     String ConnectionStatusStrings[5]

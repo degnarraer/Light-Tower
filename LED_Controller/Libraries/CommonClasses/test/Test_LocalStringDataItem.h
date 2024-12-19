@@ -96,7 +96,7 @@ protected:
 
 TEST_F(LocalStringDataItemTest, dataItem_Name_Is_Set)
 {
-    EXPECT_STREQ(name.c_str(), mp_DataItem->GetName().c_str());
+    EXPECT_STREQ(name.c_str(), mp_DataItem->GetName());
 }
 
 TEST_F(LocalStringDataItemTest, dataItem_Initial_Value_Is_Returned_As_String)
