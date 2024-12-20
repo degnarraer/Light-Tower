@@ -82,8 +82,8 @@ class WebSocketDataProcessor
       if (!m_WebSocketMessageQueue) {
           ESP_LOGE("SetupWebSocket", "Failed to create queue");
       }
-      xTaskCreate(StaticWebSocketTransmissionTask, "WebSocketTransmissionTask", 10000, this, THREAD_PRIORITY_MEDIUM, NULL);
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   10000,  this,  THREAD_PRIORITY_MEDIUM, &m_WebSocketTaskHandle, tskNO_AFFINITY );
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   2500,  this,  THREAD_PRIORITY_HIGH, &m_WebSocketTaskHandle, tskNO_AFFINITY );
+      xTaskCreate(StaticWebSocketTransmissionTask, "WebSocketTransmissionTask", 2500, this, THREAD_PRIORITY_LOW, NULL);
     }
     void RegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void DeRegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
