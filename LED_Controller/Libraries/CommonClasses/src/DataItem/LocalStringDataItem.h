@@ -55,7 +55,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				if(mp_InitialValue)
 				{
 					stringValue = std::string(mp_InitialValue);
-					ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name, stringValue.c_str());
+					ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
 					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
 					return true;
 				}

@@ -169,7 +169,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
                     }
                     else
                     {
-                        ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name);
+                        ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
                     }
 
                     m_message.clear();

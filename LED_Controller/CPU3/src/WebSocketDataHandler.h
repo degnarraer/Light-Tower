@@ -60,12 +60,17 @@ class WebSocketDataProcessor
     }
     virtual ~WebSocketDataProcessor()
     {
-      if(m_WebSocketTaskHandle)
+      if(m_WebServerTaskHandle)
       {
-        vTaskDelete(m_WebSocketTaskHandle);
-        m_WebSocketTaskHandle = nullptr;
+        vTaskDelete(m_WebServerTaskHandle);
+        m_WebServerTaskHandle = nullptr;
       }
-      if (m_Tx_KeyValues_Semaphore)
+      if(m_WebServerTxTaskHandle)
+      {
+        vTaskDelete(m_WebServerTxTaskHandle);
+        m_WebServerTxTaskHandle = nullptr;
+      }
+      if(m_Tx_KeyValues_Semaphore)
       {
           vSemaphoreDelete(m_Tx_KeyValues_Semaphore);
           m_Tx_KeyValues_Semaphore = nullptr;
@@ -82,8 +87,8 @@ class WebSocketDataProcessor
       if (!m_WebSocketMessageQueue) {
           ESP_LOGE("SetupWebSocket", "Failed to create queue");
       }
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "WebServer_Task",   2500,  this,  THREAD_PRIORITY_HIGH, &m_WebSocketTaskHandle, tskNO_AFFINITY );
-      xTaskCreate(StaticWebSocketTransmissionTask, "WebSocketTransmissionTask", 2500, this, THREAD_PRIORITY_LOW, NULL);
+      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "Web Server Task",   2500,  this,  THREAD_PRIORITY_HIGH, &m_WebServerTaskHandle, tskNO_AFFINITY );
+      xTaskCreatePinnedToCore(StaticWebSocketTransmissionTask, "Web Server Tx Task", 2500, this, THREAD_PRIORITY_MEDIUM, &m_WebServerTxTaskHandle, tskNO_AFFINITY);
     }
     void RegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void DeRegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
@@ -133,7 +138,8 @@ class WebSocketDataProcessor
   private:
     WebServer &m_WebServer;
     WebSocketsServer &m_WebSocket;
-    TaskHandle_t m_WebSocketTaskHandle = nullptr;
+    TaskHandle_t m_WebServerTaskHandle = nullptr;
+    TaskHandle_t m_WebServerTxTaskHandle = nullptr;
     QueueHandle_t m_WebSocketMessageQueue = nullptr;
     std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();

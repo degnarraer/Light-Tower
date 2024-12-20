@@ -147,8 +147,8 @@ void Bluetooth_Source::SetNameToConnect( const std::string& sourceName, const st
 	ESP_LOGI( "ConnectToThisName", "Set name to connect: \"%s\" Address: \"%s\""
 			, sourceName.c_str()
 			, sourceAddress.c_str() );
-	m_Name = String(sourceName.c_str());
-	m_Address = String(sourceAddress.c_str());
+	m_Name = sourceName;
+	m_Address = sourceAddress;
 }
 
 void Bluetooth_Source::ResgisterForCallbacks(Bluetooth_Source_Callbacks *callee) 
@@ -483,6 +483,7 @@ void Bluetooth_Sink::InstallDevice()
 		m_BTSink.set_i2s_config(i2s_config);
 		m_BTSink.set_i2s_port(m_I2S_PORT);
 		m_BTSink.set_bits_per_sample(m_BitsPerSample);
+		m_BTSink.set_event_stack_size(5000);
 		m_BTSink.set_task_priority(THREAD_PRIORITY_RT);
 		m_BTSink.set_volume_control(&m_VolumeControl);
 		m_BTSink.set_volume(100);
