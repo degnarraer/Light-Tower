@@ -30,7 +30,7 @@ export class Model_Bands {
         try {
                 const values = newValue.split('|').map(parseFloat);
                 if (values.length === 32) {
-                    this.setValue(values);
+                    this.setValue(values, false);
                 } else {
                     console.error(`"${this.signalName}" received invalid data length: ${values.length}`);
                 }

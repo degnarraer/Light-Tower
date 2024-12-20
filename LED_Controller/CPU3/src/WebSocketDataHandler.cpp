@@ -25,17 +25,20 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
 
     while (true)
     {
-        vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(5)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, 0) == pdTRUE)
         {
             if (!m_Tx_KeyValues.empty())
             {
                 std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
                 if (!signalValues.empty())
                 {
-                    std::string message;
-                    Encode_Signal_Values_To_JSON(signalValues, message);
-                    NotifyClients(message);
+                    std::unique_ptr<std::string> message = std::make_unique<std::string>();
+                    Encode_Signal_Values_To_JSON(signalValues, *message);
+                    std::string* rawMessage = message.release();
+                    if (xQueueSend(m_WebSocketMessageQueue, &rawMessage, 0) != pdTRUE) {
+                        ESP_LOGW("WebSocketDataProcessor", "Queue is full, dropping message.");
+                        delete rawMessage;
+                    }
                 }
             }
             xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
@@ -44,6 +47,7 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
         {
             ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
         }
+        vTaskDelayUntil(&xLastWakeTime, xFrequency);
     }
 }
 

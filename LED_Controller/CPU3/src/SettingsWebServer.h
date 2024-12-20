@@ -67,6 +67,7 @@ class SettingsWebServerManager: public SetupCallerInterface
 
     void InitializeLocalvariables()
     {
+      m_WebSocketDataProcessor.Setup();
     }
 
     void StartWiFi()

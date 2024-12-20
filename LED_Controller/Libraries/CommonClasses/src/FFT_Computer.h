@@ -132,7 +132,7 @@ public:
         }
 
         size_t byteToWrite = count * sizeof(Frame_t);
-        if (xRingbufferSend(m_ringBuffer, frames, byteToWrite, pdMS_TO_TICKS(0)) != pdTRUE)
+        if (xRingbufferSend(m_ringBuffer, frames, byteToWrite, pdMS_TO_TICKS(1)) != pdTRUE)
         {
             static LogWithRateLimit PushFramesRateLimitedLog(1000);
             PushFramesRateLimitedLog.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Ring buffer is full! Frames dropped.");
@@ -181,7 +181,6 @@ private:
         {
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
             PerformFFT();
-            vTaskDelay(pdMS_TO_TICKS(2));
         }
     }
     void PerformFFT()
@@ -206,21 +205,18 @@ private:
         size_t frameCount = receivedByteCount / sizeof(Frame_t);
         ESP_LOGD("PerformFFT", "Received %i Frames", frameCount);
 
-        if(xSemaphoreTake(m_mutex, 0) == pdTRUE)
+        if(xSemaphoreTake(m_mutex, pdMS_TO_TICKS(1)) == pdTRUE)
         {
             for (size_t i = 0; i < frameCount; ++i)
             {
                 mp_real_left_channel->push(frames[i].channel1);
                 mp_real_right_channel->push(frames[i].channel2);
             }
-            mp_imag_left_channel->fill(0.0f);
-            mp_imag_right_channel->fill(0.0f);
             xSemaphoreGive(m_mutex);
+            m_bufferIndex += frameCount;
         }
         vRingbufferReturnItem(m_ringBuffer, frames);
 
-        // Update buffer index and process FFT if the buffer is full
-        m_bufferIndex += frameCount;
         if (m_bufferIndex >= m_fftSize)
         {
             ESP_LOGW("PerformFFT", "Performing FFT with buffer size: %i", m_fftSize);
@@ -238,6 +234,8 @@ private:
     {
         if(xSemaphoreTake(m_mutex, portMAX_DELAY) == pdTRUE)
         {
+            mp_imag_left_channel->fill(0.0f);
+            mp_imag_right_channel->fill(0.0f);
             ComputeFFT(*mp_real_right_channel, *mp_imag_right_channel);
             ComputeFFT(*mp_real_left_channel, *mp_imag_left_channel);
             float maxMagnitude = GetMaxMagnitude();
@@ -254,14 +252,14 @@ private:
                 freqMags_left[i].Magnitude = mp_magnitudes_left_channel[i];
                 freqMags_left[i].NormalizedMagnitude = mp_magnitudes_left_channel[i] / maxMagnitude;
             }
+            xSemaphoreGive(m_mutex);
             if (m_CallBack)
             {
                 m_CallBack( freqMags_left.data()
-                        , freqMags_right.data()
-                        , m_magnitudeSize
-                        , mp_CallBackArgs);
-            }  
-            xSemaphoreGive(m_mutex);
+                          , freqMags_right.data()
+                          , m_magnitudeSize
+                          , mp_CallBackArgs);
+            }
         }  
     }
 
