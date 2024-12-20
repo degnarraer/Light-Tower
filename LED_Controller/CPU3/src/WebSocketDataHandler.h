@@ -241,7 +241,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     {
       ESP_LOGD( "Web Socket Rx"
               , "\"%s\" WebSocket Rx Signal: \"%s\" Value: \"%s\""
-              , m_Name.c_str()
+              , m_Name
               , m_Signal.c_str()
               , stringValue.c_str());
       m_DataItem.SetValueFromString(stringValue);

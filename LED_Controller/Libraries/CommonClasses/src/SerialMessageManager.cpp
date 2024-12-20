@@ -29,7 +29,7 @@ void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Obje
 	{
 		if(NewCallee == callee)
 		{
-			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName());
+			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
 			IsFound = true;
 			break;
 		}
@@ -117,12 +117,12 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
             message.length() <= MaxMessageLength &&
             xQueueSend(m_TXQueue, message.c_str(), TIME_TO_WAIT_TO_SEND) == pdTRUE )
 		{
-			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name.c_str(), message.c_str());
+			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, message.c_str());
 			result = true;
 		}
 		else
 		{
-			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name.c_str());
+			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name);
 		}
 	}
 	else
@@ -159,17 +159,17 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
                 if (m_message.size() >= 1 && m_message.compare(m_message.size() - 1, 1, "\n") == 0)
                 {
                     m_message = trim(m_message);
-                    ESP_LOGD("SerialPortMessageManager", "Rx from: \"%s\" Message: \"%s\"", m_Name.c_str(), m_message.c_str());
+                    ESP_LOGD("SerialPortMessageManager", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
 
                     NamedObject_t NamedObject;
                     if (mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
                     {
-                        ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name.c_str(), NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+                        ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
                         this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
                     }
                     else
                     {
-                        ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
+                        ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name);
                     }
 
                     m_message.clear();
@@ -203,15 +203,15 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				{
 					if (strlen(message) > MaxMessageLength)
                     {
-                        ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name.c_str());
+                        ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name);
                         message[MaxMessageLength - 1] = '\0';
                     }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name.c_str(), message);
+					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, message);
 					mp_Serial->println(message);
 				}
 				else
 				{
-					ESP_LOGE("SerialPortMessageManager_TxTask", "\"%s\" ERROR! Unable to Send Message.",m_Name.c_str());
+					ESP_LOGE("SerialPortMessageManager_TxTask", "\"%s\" ERROR! Unable to Send Message.",m_Name);
 				}
 			}
 		}

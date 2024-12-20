@@ -35,7 +35,7 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , initialValue
 															 , namedCallback )
 									, PreferenceManager( preferencesInterface
-									 				   , String(this->m_Name.c_str())
+									 				   , String(this->m_Name)
 									 				   , this->GetInitialValueAsString()
 													   , PREFERENCE_TIMEOUT
 									 				   , this->StaticSetValueFromString
@@ -52,7 +52,7 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , namedCallback
 															 , setupCallerInterface )
 									, PreferenceManager( preferencesInterface
-									 				   , String(this->m_Name.c_str())
+									 				   , String(this->m_Name)
 									 				   , this->GetInitialValueAsString()
 													   , PREFERENCE_TIMEOUT
 									 				   , this->StaticSetValueFromString
@@ -72,7 +72,7 @@ class LocalDataItemWithPreferences: public LocalDataItem<T, COUNT>
 															 , validStringValues
 															 , setupCallerInterface )
 									, PreferenceManager( preferencesInterface
-									 				   , String(this->m_Name.c_str())
+									 				   , String(this->m_Name)
 									 				   , this->GetInitialValueAsString()
 													   , PREFERENCE_TIMEOUT
 									 				   , this->StaticSetValueFromString

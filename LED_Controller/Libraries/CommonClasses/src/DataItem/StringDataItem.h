@@ -44,12 +44,12 @@ class StringDataItem: public LocalStringDataItem
 
 		virtual ~StringDataItem() override
 		{
-			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalStringDataItem::GetName());				
+			ESP_LOGI("DataItem::~DataItem()", "\"%s\": DataItem Freeing Memory", LocalStringDataItem::GetName().c_str());				
 		}
 
 		virtual void Setup() override
 		{
-			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalStringDataItem::GetName());
+			ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", LocalStringDataItem::GetName().c_str());
 			LocalStringDataItem::Setup();
 			SerialMessageInterface<char, DATAITEM_STRING_LENGTH>::Setup();
 		}

@@ -130,9 +130,9 @@ class SetupCallerInterface
                 {
                     if (callee) 
                     {
-                        ESP_LOGI("SetupAllSetupCallees", "Setting up: \"%s\".", callee->GetName());
+                        ESP_LOGI("SetupAllSetupCallees", "Setting up: \"%s\".", callee->GetName().c_str());
                         callee->Setup();
-                        ESP_LOGI("SetupAllSetupCallees", "\"%s\" Setup.", callee->GetName());
+                        ESP_LOGI("SetupAllSetupCallees", "\"%s\" Setup.", callee->GetName().c_str());
                     }
                     else
                     {

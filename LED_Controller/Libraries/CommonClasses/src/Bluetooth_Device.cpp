@@ -279,10 +279,10 @@ bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address
 {
     std::string addressString = GetAddressString(address);
     ESP_LOGD("ConnectToThisName", "Connect to this device: Name: \"%s\" Address: \"%s\" RSSI: \"%i\" Target Name: \"%s\" Target Address: \"%s\"", 
-             name.c_str(), addressString.c_str(), rssi, m_Name.c_str(), m_Address.c_str());
+             name, addressString, rssi, m_Name, m_Address);
     
     // Use string content comparison, not pointer comparison
-    if (m_Name.c_str() == name && m_Address.c_str() == addressString) {
+    if (m_Name == name && m_Address == addressString) {
         return true;
     }
     else if (m_DeviceProcessorQueueHandle)

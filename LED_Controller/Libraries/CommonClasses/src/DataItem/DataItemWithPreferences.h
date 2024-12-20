@@ -109,7 +109,7 @@ class DataItemWithPreferences: public DataItem<T, COUNT>
 
 		virtual ~DataItemWithPreferences()
 		{
-			ESP_LOGI("DataItemWithPreferences::~DataItemWithPreferences()", "\"%s\": Freeing Memory", this->m_Name.c_str());
+			ESP_LOGI("DataItemWithPreferences::~DataItemWithPreferences()", "\"%s\": Freeing Memory", this->m_Name);
 			if(mp_PreferenceManager)
 			{
 				delete mp_PreferenceManager;

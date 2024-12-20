@@ -55,7 +55,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				if(mp_InitialValue)
 				{
 					stringValue = std::string(mp_InitialValue);
-					ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name.c_str(), stringValue.c_str());
+					ESP_LOGD("GetInitialValueAsString", "\"%s\": GetInitialValueAsString: \"%s\"", m_Name, stringValue.c_str());
 					xSemaphoreGiveRecursive(this->m_ValueSemaphore);
 					return true;
 				}
@@ -152,12 +152,12 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 					updateStatus.UpdateSuccessful = (strncmp(mp_Value, value, count) == 0);
 					if(updateStatus.UpdateSuccessful)
 					{
-						ESP_LOGI("LocalDataItem: SetValue", "\"%s\": Set Value to \"%s\".", GetName(), newValue.c_str());
+						ESP_LOGI("LocalDataItem: SetValue", "\"%s\": Set Value to \"%s\".", GetName().c_str(), newValue.c_str());
 						this->CallNamedCallbacks(mp_Value);
 					}
 					else
 					{
-						ESP_LOGE("LocalDataItem: SetValue", "ERROR! \"%s\": Setting value to \"%s\".", GetName(), newValue.c_str());
+						ESP_LOGE("LocalDataItem: SetValue", "ERROR! \"%s\": Setting value to \"%s\".", GetName().c_str(), newValue.c_str());
 					}
 				}
 				xSemaphoreGiveRecursive(this->m_ValueSemaphore);

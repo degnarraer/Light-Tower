@@ -119,8 +119,8 @@ class Bluetooth_Source: public NamedItem
 		BluetoothA2DPSource& m_BTSource;
 		Bluetooth_Source_Callbacks* m_Callee = NULL;
 		music_data_cb_t m_MusicDataCallback = NULL;
-		String m_Name;
-		String m_Address;
+		std::string m_Name;
+		std::string m_Address;
 		SemaphoreHandle_t m_ActiveCompatibleDevicesSemaphore;
 		std::vector<ActiveBluetoothDevice_t> m_ActiveCompatibleDevices;
 		QueueHandle_t m_DeviceProcessorQueueHandle = nullptr;
