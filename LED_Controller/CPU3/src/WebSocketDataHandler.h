@@ -104,7 +104,10 @@ class WebSocketDataProcessor
       {
         KVP keyValuePair = {key, value};
         m_Tx_KeyValues.push_back(keyValuePair);
-        xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
+        if(xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore) != pdTRUE)
+        {
+            ESP_LOGE("TxDataToWebSocket", "Failed to release semaphore!");
+        }
       }
       else
       {
@@ -388,7 +391,10 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
             m_ActiveDevices.push_back(newdevice);
           }
         }
-        xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore);
+        if(xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore) != pdTRUE)
+        {
+          ESP_LOGE("ActiveCompatibleDeviceReceived", "Failed to release semaphore!");
+        }
       }
       else
       {
@@ -433,7 +439,10 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
                 ++it;
             }
         }
-        xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore);
+        if(xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore) != pdTRUE)
+        {
+          ESP_LOGE("CleanActiveCompatibleDevices", "Failed to release semaphore!");
+        }
       }
       else
       {
@@ -465,7 +474,10 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
               jsonString += "}";
           }
           jsonString += "]}";
-          xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore);
+          if(xSemaphoreGiveRecursive(m_ActiveDevicesSemaphore) != pdTRUE)
+          {
+              ESP_LOGE("SendActiveCompatibleDevicesToWebSocket", "Failed to release semaphore!");
+          }
         }
         else
         {

@@ -41,7 +41,10 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
                     }
                 }
             }
-            xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
+            if(xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore) != pdTRUE)
+            {
+                ESP_LOGE("Web Socket TX Task", "Failed to release semaphore!");
+            }
         }
         else
         {

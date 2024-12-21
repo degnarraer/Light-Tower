@@ -27,8 +27,8 @@
 #define I2S_BUFFER_COUNT                10
 #define I2S_SAMPLE_COUNT                512
 #define NUMBER_OF_BANDS                 32
-#define FFT_SIZE                        128
-#define HOP_SIZE                        128
+#define FFT_SIZE                        2048
+#define HOP_SIZE                        2048
 #define FFT_AUDIO_BUFFER_SIZE           4096
 #define AMPLITUDE_BUFFER_FRAME_COUNT    128
 #define AMPLITUDE_AUDIO_BUFFER_SIZE     128

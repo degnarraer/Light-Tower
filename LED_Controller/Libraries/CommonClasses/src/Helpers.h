@@ -2,87 +2,78 @@
 #define Helpers_H
 #include "DataTypes.h"
 #include "Streaming.h"
+#include <Ticker.h>
 
 class LogWithRateLimit
 {
 public:
-    LogWithRateLimit(unsigned long interval) : logInterval(interval), lastLogTime(0), occurrenceCount(0) {}
+    LogWithRateLimit(uint32_t interval) 
+        : logInterval(interval), occurrenceCount(0)
+    {
+        // Attach the static callback function with 'this' pointer as argument
+        timer.attach_ms(logInterval, Static_Log_With_Rate_Limit_Callback, (void*)this); 
+    }
 
-    // Log function that supports different log levels and tracks occurrences
     void Log(esp_log_level_t level, const char* tag, const char* message)
     {
-        unsigned long currentTime = millis();
-
-        if (currentTime - lastLogTime >= logInterval) // If enough time has passed
+        if (occurrenceCount == 0)  // Log the first occurrence
         {
-            if (occurrenceCount > 1)
-            {
-                // Log the number of occurrences if more than 1
-                char messageWithCount[256];
-                snprintf(messageWithCount, sizeof(messageWithCount), "%s (Repeated %d times)", message, occurrenceCount);
-                switch (level)
-                {
-                    case ESP_LOG_ERROR:
-                        ESP_LOGE(tag, "%s", messageWithCount);
-                        break;
-                    case ESP_LOG_WARN:
-                        ESP_LOGW(tag, "%s", messageWithCount);
-                        break;
-                    case ESP_LOG_INFO:
-                        ESP_LOGI(tag, "%s", messageWithCount);
-                        break;
-                    case ESP_LOG_DEBUG:
-                        ESP_LOGD(tag, "%s", messageWithCount);
-                        break;
-                    case ESP_LOG_VERBOSE:
-                        ESP_LOGV(tag, "%s", messageWithCount);
-                        break;
-                    default:
-                        ESP_LOGI(tag, "%s", messageWithCount); // Default to INFO if no valid level
-                        break;
-                }
-            }
-            else
-            {
-                // Log the message normally if occurrence count is 1
-                switch (level)
-                {
-                    case ESP_LOG_ERROR:
-                        ESP_LOGE(tag, "%s", message);
-                        break;
-                    case ESP_LOG_WARN:
-                        ESP_LOGW(tag, "%s", message);
-                        break;
-                    case ESP_LOG_INFO:
-                        ESP_LOGI(tag, "%s", message);
-                        break;
-                    case ESP_LOG_DEBUG:
-                        ESP_LOGD(tag, "%s", message);
-                        break;
-                    case ESP_LOG_VERBOSE:
-                        ESP_LOGV(tag, "%s", message);
-                        break;
-                    default:
-                        ESP_LOGI(tag, "%s", message); // Default to INFO if no valid level
-                        break;
-                }
-            }
+            LogMessage(level, tag, message);
+        }
 
-            // Reset count and update the last log time
-            occurrenceCount = 0;
-            lastLogTime = currentTime;
-        }
-        else
-        {
-            // Increment occurrence count if within the rate limit period
-            ++occurrenceCount;
-        }
+        ++occurrenceCount;  // Increment the count on each occurrence
     }
 
 private:
-    unsigned long lastLogTime;
-    unsigned long logInterval;
-    int occurrenceCount; // Track the number of occurrences within the rate-limited period
+    Ticker timer;  // Timer object to track the interval
+    uint32_t logInterval;  // The log interval duration in milliseconds
+    int occurrenceCount;  // Counter for occurrences during the interval
+
+    // Static callback function to call the non-static member function
+    static void Static_Log_With_Rate_Limit_Callback(void* instance)
+    {
+        LogWithRateLimit* logInstance = static_cast<LogWithRateLimit*>(instance);
+        logInstance->ResetCount();  // Call the member function
+    }
+
+    // Function to log a message
+    void LogMessage(esp_log_level_t level, const char* tag, const char* message)
+    {
+        switch (level)
+        {
+            case ESP_LOG_ERROR:
+                ESP_LOGE(tag, "%s", message);
+                break;
+            case ESP_LOG_WARN:
+                ESP_LOGW(tag, "%s", message);
+                break;
+            case ESP_LOG_INFO:
+                ESP_LOGI(tag, "%s", message);
+                break;
+            case ESP_LOG_DEBUG:
+                ESP_LOGD(tag, "%s", message);
+                break;
+            case ESP_LOG_VERBOSE:
+                ESP_LOGV(tag, "%s", message);
+                break;
+            default:
+                ESP_LOGI(tag, "%s", message);
+                break;
+        }
+    }
+
+    // Function to reset the occurrence count and log additional occurrences if any
+    void ResetCount()
+    {
+        if (occurrenceCount > 1)  // If additional occurrences happened
+        {
+            char messageWithCount[256];
+            snprintf(messageWithCount, sizeof(messageWithCount), "Additional occurrences during interval: %d", occurrenceCount - 1);
+            LogMessage(ESP_LOG_INFO, "LogWithRateLimit", messageWithCount);
+        }
+
+        occurrenceCount = 0;  // Reset the occurrence count after the interval
+    }
 };
 
 

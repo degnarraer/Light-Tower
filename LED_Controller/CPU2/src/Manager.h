@@ -55,7 +55,7 @@ class Manager: public NamedItem
 
     void CreateRxTask()
     {
-      if( xTaskCreatePinnedToCore( Static_I2S_Request_Task, "I2S Request", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, tskNO_AFFINITY ) == pdTRUE )
+      if( xTaskCreate( Static_I2S_Request_Task, "I2S Request", 2000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle ) == pdTRUE )
       {
         ESP_LOGI("StartDevice", "%s: I2S device task started.", GetTitle().c_str());
       }
