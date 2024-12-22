@@ -23,7 +23,7 @@ public:
         {
             LogMessage(level, tag, message);
         }
-		if(lastLogTime - millis() > logInterval)
+		if(millis() - lastLogTime > logInterval)
 		{
             ResetCount();
 		}

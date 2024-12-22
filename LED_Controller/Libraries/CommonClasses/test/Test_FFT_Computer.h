@@ -63,7 +63,7 @@ class FFT_Computer_Tests : public Test
     protected:
         FFT_Computer* mp_FFT_Computer = nullptr;
         
-        static void Static_FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data, void* args)
+        static void Static_FFT_Results_Callback(const FFT_Bin_Data_Set_t &FFT_Bin_Data, void* args)
         {
             FFT_Computer_Tests* aTest = static_cast<FFT_Computer_Tests*>(args);
             aTest->FFT_Results_Callback(FFT_Bin_Data);
@@ -78,7 +78,7 @@ class FFT_Computer_Tests : public Test
         FFT_Bin_Data_t m_max_Freq_Result_Left;
         FFT_Bin_Data_t m_max_Freq_Result_Right;
 
-        void FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data)
+        void FFT_Results_Callback(const FFT_Bin_Data_Set_t &FFT_Bin_Data)
         {
             ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback");
             m_max_Freq_Result_Left = (*FFT_Bin_Data.Left_Channel)[FFT_Bin_Data.MaxLeftBin];

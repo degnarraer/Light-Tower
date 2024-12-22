@@ -33,6 +33,12 @@ struct FFT_Bin_Data_Set
                         MaxRightBin = MaxRightBin_in;
                         MaxLeftBin = MaxLeftBin_in;
                     }
+    virtual ~FFT_Bin_Data_Set()
+    {
+        ESP_LOGD("~FFT_Bin_Data_Set", "Deleting Data Set");
+        delete Left_Channel;
+        delete Right_Channel;
+    }
 };
 typedef FFT_Bin_Data_Set FFT_Bin_Data_Set_t;
 
@@ -44,24 +50,24 @@ enum DataWidth_t
 };
 
 class FFT_Computer {
-    typedef void FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data, void* args);
+    typedef void FFT_Results_Callback(FFT_Bin_Data_Set_t *FFT_Bin_Data, void* args);
 private:
     FFT_Results_Callback* mp_CallBack = nullptr;
     bool m_IsMultithreaded = false;
     void* mp_CallBackArgs = nullptr;
-    size_t m_fftSize;                                                   // FFT size (e.g., 8192)
+    size_t m_fftSize;                                   // FFT size (e.g., 8192)
     size_t m_magnitudeSize;
-    size_t m_hopSize;                                                   // Hop size (number of samples between FFTs)
-    float m_f_s;                                                        // Sample Rate
-    ShocksRingBuffer* mp_ringBuffer;                                    // Ring Buffer
-    std::vector<Frame_t> m_frames;                     // frame Buffer
-    std::vector<float> m_real_right_channel;           // Real part of FFT input
-    std::vector<float> m_imag_right_channel;           // Imaginary part of FFT input
-    std::vector<float> m_real_left_channel;            // Real part of FFT input
-    std::vector<float> m_imag_left_channel;            // Imaginary part of FFT input
-    std::vector<float> m_magnitudes_right_channel;                      // FFT magnitudes
-    std::vector<float> m_magnitudes_left_channel;                       // FFT magnitudes
-    size_t m_samplesSinceLastFFT;                                       // Counter for samples pushed since the last FFT
+    size_t m_hopSize;                                   // Hop size (number of samples between FFTs)
+    float m_f_s;                                        // Sample Rate
+    ShocksRingBuffer* mp_ringBuffer;                    // Ring Buffer
+    std::vector<Frame_t> m_frames;                      // frame Buffer
+    std::vector<float> m_real_right_channel;            // Real part of FFT input
+    std::vector<float> m_imag_right_channel;            // Imaginary part of FFT input
+    std::vector<float> m_real_left_channel;             // Real part of FFT input
+    std::vector<float> m_imag_left_channel;             // Imaginary part of FFT input
+    std::vector<float> m_magnitudes_right_channel;      // FFT magnitudes
+    std::vector<float> m_magnitudes_left_channel;       // FFT magnitudes
+    size_t m_samplesSinceLastFFT;                       // Counter for samples pushed since the last FFT
     UBaseType_t m_uxPriority;
     BaseType_t m_xCoreID;
 
@@ -125,23 +131,28 @@ public:
 
         if(m_IsMultithreaded)
         {
-            xTaskCreate(Static_PerformFFTTask, "FFTTask", 20000, this, m_uxPriority, &m_fftTaskHandle);
+            xTaskCreate(Static_PerformFFTTask, "FFT Task", 5000, this, m_uxPriority, &m_fftTaskHandle);
         }
         m_isInitialized = true;
     }
 
     void PushFrames(Frame_t *frames, size_t count)
     {
+        static LogWithRateLimit Push_Frames_Not_Initialized_RLL(1000, ESP_LOG_WARN);
+        static LogWithRateLimit Push_Frames_Null_Pointer_RLL(1000, ESP_LOG_WARN);
+        static LogWithRateLimit Push_Frames_Busy_RLL(1000, ESP_LOG_WARN);
+        static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
+        static LogWithRateLimit Push_Frames_Notify_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit Push_Frames_Unthreaded_RLL(1000, ESP_LOG_INFO);
+
         if (!m_isInitialized)
         {
-            static LogWithRateLimit Push_Frames_Not_Initialized_RLL(1000, ESP_LOG_WARN);
             Push_Frames_Not_Initialized_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! FFT class not initialized. Please call setup() first.");
             return;
         }
 
         if(!frames)
         {
-            static LogWithRateLimit Push_Frames_Null_Pointer_RLL(1000, ESP_LOG_WARN);
             Push_Frames_Null_Pointer_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
             return;
         }
@@ -160,12 +171,11 @@ public:
                     {
                         if(eBlocked == eTaskGetState(m_fftTaskHandle))
                         {
-                            ESP_LOGI("PushFrames", "Notify FFT Thread");
+                            Push_Frames_Notify_RLL.Log(ESP_LOG_INFO, "PushFrames", "Notify FFT Thread");
                             xTaskNotifyGive(m_fftTaskHandle);
                         }
                         else
                         {
-                            static LogWithRateLimit Push_Frames_Busy_RLL(1000, ESP_LOG_WARN);
                             Push_Frames_Busy_RLL.Log(ESP_LOG_WARN, "PushFrames", "FFT Perform task is busy.");
                         }
                     }
@@ -176,7 +186,7 @@ public:
                 }
                 else
                 {
-                    ESP_LOGD("PushFrames", "Perform FFT UnThreaded");
+                    Push_Frames_Unthreaded_RLL.Log(ESP_LOG_INFO, "PushFrames", "Perform FFT UnThreaded");
                     PerformFFT();
                 }
                 m_samplesSinceLastFFT = 0;
@@ -184,8 +194,7 @@ public:
         }
         else
         {
-            static LogWithRateLimit Push_Frames_RLL(1000, ESP_LOG_WARN);
-            Push_Frames_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Frames dropped.");
+            Push_Frames_Dropped_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Frames dropped.");
         }
     }
 
@@ -293,7 +302,7 @@ private:
                 }
                 
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Calling Callback");
-                FFT_Bin_Data_Set_t fft_Bin_Data_Set = FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
+                FFT_Bin_Data_Set_t *fft_Bin_Data_Set = new FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
                 mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
             }
             else

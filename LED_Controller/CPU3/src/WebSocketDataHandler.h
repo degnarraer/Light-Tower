@@ -84,9 +84,9 @@ class WebSocketDataProcessor
           ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
       }
       m_WebSocketMessageQueue = xQueueCreate(20, sizeof(std::string));
-      if (!m_WebSocketMessageQueue) {
-          ESP_LOGE("SetupWebSocket", "Failed to create queue");
-      }
+      if (m_WebSocketMessageQueue) ESP_LOGD("SetupWebSocket", "Created Queue");
+      else ESP_LOGE("SetupWebSocket", "Failed to create queue");
+
       xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "Web Server Task",   2500,  this,  THREAD_PRIORITY_HIGH, &m_WebServerTaskHandle, tskNO_AFFINITY );
       xTaskCreatePinnedToCore(StaticWebSocketTransmissionTask, "Web Server Tx Task", 2500, this, THREAD_PRIORITY_MEDIUM, &m_WebServerTxTaskHandle, tskNO_AFFINITY);
     }

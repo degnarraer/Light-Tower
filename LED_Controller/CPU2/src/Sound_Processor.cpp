@@ -59,33 +59,35 @@ void Sound_Processor::Setup()
 {
   SetupAllSetupCallees();
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
-
-  if( xTaskCreate( Static_Calculate_Power, "Sound Power Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask ) != pdTRUE )
-  ESP_LOGE("Setup", "ERROR! Unable to create task.");
   
-  if(m_FFT_Result_Processor_Queue = xQueueCreate(MaxQueueCount, sizeof(FFT_Bin_Data_Set_t) * 20 ))
-  ESP_LOGD("Setup", "FFT Result Processor Queue Created.");
+  m_FFT_Result_Processor_Queue = xQueueCreate(MaxQueueCount, sizeof(FFT_Bin_Data_Set_t*) * 20 );
+  if(m_FFT_Result_Processor_Queue) ESP_LOGD("Setup", "FFT Result Processor Queue Created.");
   else ESP_LOGE("Setup", "ERROR! Error creating the FFT Result Processor Queue.");
 
-  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 10000, this, THREAD_PRIORITY_MEDIUM, &m_MessageQueueProcessorTask ) != pdTRUE )
+  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 2000, this, THREAD_PRIORITY_MEDIUM, &m_MessageQueueProcessorTask ) != pdTRUE )
+  ESP_LOGE("Setup", "ERROR! Unable to create task.");
+  
+  if( xTaskCreate( Static_Calculate_Power, "Sound Power Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask ) != pdTRUE )
   ESP_LOGE("Setup", "ERROR! Unable to create task.");
   
   m_FFT_Computer.Setup(&StaticFFT_Results_Callback, this);
 }
 
-void Sound_Processor::FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data)
+void Sound_Processor::FFT_Results_Callback(FFT_Bin_Data_Set_t *FFT_Bin_Data)
 {
-    ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback.");
-    if(xQueueSend(m_FFT_Result_Processor_Queue, &FFT_Bin_Data, 0) == pdTRUE)
-    {
-      static LogWithRateLimit FFT_Result_Processor_Queue_Rate_Limited_Success_Log(1000, ESP_LOG_DEBUG);
-      FFT_Result_Processor_Queue_Rate_Limited_Success_Log.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "Queued FFT Data.");
-    }
-    else
-    {
-      static LogWithRateLimit FFT_Result_Processor_Queue_Rate_Limited_Fail_Log(1000, ESP_LOG_WARN);
-      FFT_Result_Processor_Queue_Rate_Limited_Fail_Log.Log(ESP_LOG_WARN, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
-    }
+  static LogWithRateLimit FFT_Results_Callback_RLL(1000, ESP_LOG_INFO);
+  static LogWithRateLimit FFT_Results_Callback_Queue_Success_RLL(1000, ESP_LOG_INFO);
+  static LogWithRateLimit FFT_Results_Callback_Queue_Fail_RLL(1000, ESP_LOG_INFO);
+  
+  FFT_Results_Callback_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "FFT_Results_Callback.");
+  if(m_FFT_Result_Processor_Queue && xQueueSend(m_FFT_Result_Processor_Queue, FFT_Bin_Data, 0) == pdTRUE)
+  {
+    FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "Queued FFT Data.");
+  }
+  else
+  {
+    FFT_Results_Callback_Queue_Fail_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
+  }
 }
     
 void Sound_Processor::Static_FFT_Result_Processor_Task(void * parameter)
@@ -103,15 +105,14 @@ void Sound_Processor::FFT_Result_Processor_Task()
     vTaskDelayUntil( &xLastWakeTime, xFrequency );
     if(m_FFT_Result_Processor_Queue)
     {
-      FFT_Bin_Data_Set_t FFT_Bin_Data_Set;
+      FFT_Bin_Data_Set_t* FFT_Bin_Data_Set = nullptr;
       if(xQueueReceive(m_FFT_Result_Processor_Queue, &FFT_Bin_Data_Set, 0) == pdTRUE )
       {
-        if(FFT_Bin_Data_Set.Left_Channel && FFT_Bin_Data_Set.Right_Channel)
+        if(FFT_Bin_Data_Set)
         {
-          Update_Left_Bands_And_Send_Result(FFT_Bin_Data_Set.Left_Channel);
-          Update_Right_Bands_And_Send_Result(FFT_Bin_Data_Set.Right_Channel);
-          delete FFT_Bin_Data_Set.Left_Channel;
-          delete FFT_Bin_Data_Set.Right_Channel;
+          Update_Left_Bands_And_Send_Result(FFT_Bin_Data_Set->Left_Channel);
+          Update_Right_Bands_And_Send_Result(FFT_Bin_Data_Set->Right_Channel);
+          delete FFT_Bin_Data_Set;
         }
         else
         {
@@ -134,7 +135,7 @@ void Sound_Processor::Update_Right_Bands_And_Send_Result(std::vector<FFT_Bin_Dat
     float MaxBandMagnitude = 0.0;
     int16_t MaxBandIndex = 0;
 
-    AssignToBands(R_Bands_DataBuffer, (*bin_Data).data(), (*bin_Data).size());
+    AssignToBands(R_Bands_DataBuffer, bin_Data);
     for(size_t i = 0; i < NUMBER_OF_BANDS; ++i)
     {
       if(i != 0) message += "|";
@@ -162,7 +163,7 @@ void Sound_Processor::Update_Left_Bands_And_Send_Result(std::vector<FFT_Bin_Data
     float MaxBandMagnitude = 0.0;
     int16_t MaxBandIndex = 0;
 
-    AssignToBands(L_Bands_DataBuffer, (*bin_Data).data(), (*bin_Data).size());
+    AssignToBands(L_Bands_DataBuffer, bin_Data);
     for(size_t i = 0; i < NUMBER_OF_BANDS; ++i)
     {
       if(i != 0) message += "|";
@@ -231,12 +232,12 @@ void Sound_Processor::Calculate_Power()
     }
   }
 }
-void Sound_Processor::AssignToBands(float* Band_Data, FFT_Bin_Data_t* magnitudes, size_t count)
+void Sound_Processor::AssignToBands(float* Band_Data, std::vector<FFT_Bin_Data_t>* bin_Data)
 {
   String output = "";
-  for(int i = 0; i < count; ++i)
+  for(int i = 0; i < bin_Data->size(); ++i)
   {
-    float magnitude = magnitudes[i].NormalizedMagnitude;
+    float magnitude = (*bin_Data)[i].Magnitude;
     float freq = GetFreqForBin(i);
     int bandIndex = -1;
 
