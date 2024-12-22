@@ -3,68 +3,78 @@
 #include "DataTypes.h"
 #include "Streaming.h"
 #include <Ticker.h>
+#include <mutex>
 
 class LogWithRateLimit
 {
 public:
-    LogWithRateLimit(uint32_t interval) 
-        : logInterval(interval), occurrenceCount(0)
+    LogWithRateLimit(uint32_t interval, esp_log_level_t delayedLogLevel = ESP_LOG_INFO)
+        : logInterval(interval), lastLogTime(0), delayedLogLevel(delayedLogLevel), occurrenceCount(0)
     {
-        timer.attach_ms(logInterval, Static_Log_With_Rate_Limit_Callback, (void*)this); 
     }
 
-    void Log(esp_log_level_t level, const char* tag, const char* message)
+    void Log(esp_log_level_t level, const std::string& tag_in, const std::string& message_in)
     {
+        std::lock_guard<std::mutex> lock(logMutex);  // Ensure thread-safety
+        tag = tag_in;
+        message = message_in;
+        
         if (occurrenceCount == 0)
         {
             LogMessage(level, tag, message);
         }
-        ++occurrenceCount;
+		if(lastLogTime - millis() > logInterval)
+		{
+            ResetCount();
+		}
+		else
+		{
+        	++occurrenceCount;
+		}
     }
 
 private:
-    Ticker timer;
-    uint32_t logInterval;
-    int occurrenceCount = 0;
+    unsigned long logInterval;
+	unsigned long lastLogTime;
+    esp_log_level_t delayedLogLevel;
+    int occurrenceCount;
+    std::string tag;
+    std::string message;
+    std::mutex logMutex;
 
-    static void Static_Log_With_Rate_Limit_Callback(void* instance)
+    void LogMessage(esp_log_level_t level, const std::string& tag, const std::string& message)
     {
-        LogWithRateLimit* logInstance = static_cast<LogWithRateLimit*>(instance);
-        logInstance->ResetCount();  // Call the member function
-    }
-
-    void LogMessage(esp_log_level_t level, const char* tag, const char* message)
-    {
-        switch (level)
+		lastLogTime = millis();
+		switch (level)
         {
             case ESP_LOG_ERROR:
-                ESP_LOGE(tag, "%s", message);
+                ESP_LOGE(tag.c_str(), "%s", message.c_str());
                 break;
             case ESP_LOG_WARN:
-                ESP_LOGW(tag, "%s", message);
+                ESP_LOGW(tag.c_str(), "%s", message.c_str());
                 break;
             case ESP_LOG_INFO:
-                ESP_LOGI(tag, "%s", message);
+                ESP_LOGI(tag.c_str(), "%s", message.c_str());
                 break;
             case ESP_LOG_DEBUG:
-                ESP_LOGD(tag, "%s", message);
+                ESP_LOGD(tag.c_str(), "%s", message.c_str());
                 break;
             case ESP_LOG_VERBOSE:
-                ESP_LOGV(tag, "%s", message);
+                ESP_LOGV(tag.c_str(), "%s", message.c_str());
                 break;
             default:
-                ESP_LOGI(tag, "%s", message);
+                ESP_LOGI(tag.c_str(), "%s", message.c_str());
                 break;
         }
     }
 
     void ResetCount()
     {
+        std::lock_guard<std::mutex> lock(logMutex);  // Ensure thread-safety
         if (occurrenceCount > 1)
         {
-            char messageWithCount[256];
-            snprintf(messageWithCount, sizeof(messageWithCount), "Delayed Log: Additional occurrences during interval: %d", occurrenceCount - 1);
-            LogMessage(ESP_LOG_INFO, "LogWithRateLimit", messageWithCount);
+            std::string messageWithCount = message + " Delayed Log: Additional occurrences during interval: " + std::to_string(occurrenceCount - 1);
+            LogMessage(delayedLogLevel, tag, messageWithCount);
         }
         occurrenceCount = 0;
     }

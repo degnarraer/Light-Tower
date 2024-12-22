@@ -22,7 +22,7 @@ struct FFT_Bin_Data_Set
     std::vector<FFT_Bin_Data_t>* Right_Channel;
     size_t MaxRightBin = 0;
     size_t MaxLeftBin = 0;
-    FFT_Bin_Data_Set();
+    FFT_Bin_Data_Set(){};
     FFT_Bin_Data_Set( std::vector<FFT_Bin_Data_t>* Left_Channel_in
                     , std::vector<FFT_Bin_Data_t>* Right_Channel_in
                     , size_t MaxRightBin_in
@@ -123,7 +123,10 @@ public:
         m_magnitudes_right_channel.resize(m_magnitudeSize, 0.0f);
         m_magnitudes_left_channel.resize(m_magnitudeSize, 0.0f);
 
-        if(m_IsMultithreaded) xTaskCreatePinnedToCore(Static_PerformFFTTask, "FFTTask", 5000, this, m_uxPriority, &m_fftTaskHandle, m_xCoreID);
+        if(m_IsMultithreaded)
+        {
+            xTaskCreate(Static_PerformFFTTask, "FFTTask", 20000, this, m_uxPriority, &m_fftTaskHandle);
+        }
         m_isInitialized = true;
     }
 
@@ -131,19 +134,19 @@ public:
     {
         if (!m_isInitialized)
         {
-            static LogWithRateLimit Push_Frames_Not_Initialized_Rate_Limited_Log(1000);
-            Push_Frames_Not_Initialized_Rate_Limited_Log.Log(ESP_LOG_WARN, "PushFrames", "WARNING! FFT class not initialized. Please call setup() first.");
+            static LogWithRateLimit Push_Frames_Not_Initialized_RLL(1000, ESP_LOG_WARN);
+            Push_Frames_Not_Initialized_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! FFT class not initialized. Please call setup() first.");
             return;
         }
 
         if(!frames)
         {
-            static LogWithRateLimit Push_Frames_Null_Pointer_Rate_Limited_Log(1000);
-            Push_Frames_Null_Pointer_Rate_Limited_Log.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
+            static LogWithRateLimit Push_Frames_Null_Pointer_RLL(1000, ESP_LOG_WARN);
+            Push_Frames_Null_Pointer_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
             return;
         }
 
-        size_t actualPushCount = mp_ringBuffer->push(frames, count);
+        size_t actualPushCount = mp_ringBuffer->push(frames, count, pdMS_TO_TICKS(0));
         if(actualPushCount == count)
         {
             m_samplesSinceLastFFT += actualPushCount;
@@ -153,8 +156,23 @@ public:
                 ESP_LOGD("PushFrames", "Hop Length Met");
                 if(m_IsMultithreaded)
                 {
-                    ESP_LOGD("PushFrames", "Notify FFT Thread");
-                    xTaskNotifyGive(m_fftTaskHandle);
+                    if(m_fftTaskHandle)
+                    {
+                        if(eBlocked == eTaskGetState(m_fftTaskHandle))
+                        {
+                            ESP_LOGI("PushFrames", "Notify FFT Thread");
+                            xTaskNotifyGive(m_fftTaskHandle);
+                        }
+                        else
+                        {
+                            static LogWithRateLimit Push_Frames_Busy_RLL(1000, ESP_LOG_WARN);
+                            Push_Frames_Busy_RLL.Log(ESP_LOG_WARN, "PushFrames", "FFT Perform task is busy.");
+                        }
+                    }
+                    else
+                    {
+                        ESP_LOGW("PushFrames", "WARNING! No task Handle.");
+                    }
                 }
                 else
                 {
@@ -166,8 +184,8 @@ public:
         }
         else
         {
-            static LogWithRateLimit Push_Frames_Rate_Limited_Log(1000);
-            Push_Frames_Rate_Limited_Log.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Frames dropped.");
+            static LogWithRateLimit Push_Frames_RLL(1000, ESP_LOG_WARN);
+            Push_Frames_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Frames dropped.");
         }
     }
 
@@ -196,17 +214,24 @@ private:
         while (true)
         {
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+            static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_INFO);
+            PerformFFTTask_RLL.Log(ESP_LOG_INFO, "PerformFFT", "Received notification");
             PerformFFT();
         }
     }
 
     void PerformFFT()
     {
+        static LogWithRateLimit PerformFFT_Reading_Buffers_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit PerformFFT_Done_Reading_Buffers_RLL(1000, ESP_LOG_INFO);
+        
+        PerformFFT_Reading_Buffers_RLL.Log(ESP_LOG_INFO, "PerformFFT", ("Requesting " + std::to_string(m_fftSize) + " Frames for FFT Processing.").c_str());
         size_t receivedFrameCount = mp_ringBuffer->get(m_frames, m_fftSize, pdMS_TO_TICKS(0));
+        PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_INFO, "PerformFFT", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
         if(receivedFrameCount == m_fftSize)
         {
-            static LogWithRateLimit PerformFFT_Read_Success_Rate_Limited_Log(1000);
-            PerformFFT_Read_Success_Rate_Limited_Log.Log(ESP_LOG_INFO, "PerformFFT", ("Preping Buffers for FFT Processing: " + std::to_string(m_fftSize) + " bins.").c_str());
+            static LogWithRateLimit PerformFFT_Read_Success_RLL(1000, ESP_LOG_INFO);
+            PerformFFT_Read_Success_RLL.Log(ESP_LOG_INFO, "PerformFFT", ("Preping Buffers for FFT Processing: " + std::to_string(m_fftSize) + " bins.").c_str());
             for(int i = 0; i < m_frames.size(); ++i)
             {
                 m_real_left_channel[i] = m_frames[i].channel1;
@@ -218,13 +243,18 @@ private:
         }
         else
         {
-            static LogWithRateLimit PerformFFT_Read_Failure_Rate_Limited_Log(1000);
-            PerformFFT_Read_Failure_Rate_Limited_Log.Log(ESP_LOG_WARN, "PerformFFT", "Unexpected buffer size read.");
+            static LogWithRateLimit PerformFFT_Read_Failure_RLL(1000, ESP_LOG_WARN);
+            PerformFFT_Read_Failure_RLL.Log(ESP_LOG_WARN, "PerformFFT", "Unexpected buffer size read.");
         }
     }
 
     void ProcessFFT()
     {
+        static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit ProcessFFT_No_Callback_RLL(1000, ESP_LOG_WARN);
+        static LogWithRateLimit ProcessFFT_Buffer_Size_RLL(1000, ESP_LOG_WARN);
+        
         if( m_real_right_channel.size() == m_fftSize &&
             m_real_left_channel.size() == m_fftSize &&
             m_imag_right_channel.size() == m_fftSize &&
@@ -232,8 +262,10 @@ private:
         {
             if (mp_CallBack)
             {
+                
                 ComputeFFT(m_real_right_channel, m_imag_right_channel);
                 ComputeFFT(m_real_left_channel, m_imag_left_channel);
+                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "FFT Calculation Completed");
 
                 float maxMagnitude = GetMaxMagnitude();
 
@@ -259,19 +291,19 @@ private:
                     (*p_freqMags_left)[i].Magnitude = m_magnitudes_left_channel[i];
                     (*p_freqMags_left)[i].NormalizedMagnitude = m_magnitudes_left_channel[i] / maxMagnitude;
                 }
-                    FFT_Bin_Data_Set_t fft_Bin_Data_Set = FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
-                    mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
+                
+                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Calling Callback");
+                FFT_Bin_Data_Set_t fft_Bin_Data_Set = FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
+                mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
             }
             else
             {
-                static LogWithRateLimit ProcessFFT_No_Callback_Rate_Limited_Log(1000);
-                ProcessFFT_No_Callback_Rate_Limited_Log.Log(ESP_LOG_WARN, "ProcessFFT", "No Callback");
+                ProcessFFT_No_Callback_RLL.Log(ESP_LOG_WARN, "ProcessFFT", "No Callback");
             }
         }
         else
         {
-            static LogWithRateLimit ProcessFFT_Buffer_Size_Rate_Limited_Log(1000);
-            ProcessFFT_Buffer_Size_Rate_Limited_Log.Log(ESP_LOG_WARN, "ProcessFFT", "Buffer Size Issue");
+            ProcessFFT_Buffer_Size_RLL.Log(ESP_LOG_WARN, "ProcessFFT", "Buffer Size Issue");
         }
     }
 

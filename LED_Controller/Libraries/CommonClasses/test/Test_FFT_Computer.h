@@ -83,6 +83,8 @@ class FFT_Computer_Tests : public Test
             ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback");
             m_max_Freq_Result_Left = (*FFT_Bin_Data.Left_Channel)[FFT_Bin_Data.MaxLeftBin];
             m_max_Freq_Result_Right = (*FFT_Bin_Data.Right_Channel)[FFT_Bin_Data.MaxRightBin];
+            delete FFT_Bin_Data.Left_Channel;
+            delete FFT_Bin_Data.Right_Channel;
         }
 
         void RunTest(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)

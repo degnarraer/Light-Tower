@@ -78,12 +78,12 @@ void Sound_Processor::FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data)
     ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback.");
     if(xQueueSend(m_FFT_Result_Processor_Queue, &FFT_Bin_Data, 0) == pdTRUE)
     {
-      static LogWithRateLimit FFT_Result_Processor_Queue_Rate_Limited_Success_Log(1000);
+      static LogWithRateLimit FFT_Result_Processor_Queue_Rate_Limited_Success_Log(1000, ESP_LOG_DEBUG);
       FFT_Result_Processor_Queue_Rate_Limited_Success_Log.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "Queued FFT Data.");
     }
     else
     {
-      static LogWithRateLimit FFT_Result_Processor_Queue_Rate_Limited_Fail_Log(1000);
+      static LogWithRateLimit FFT_Result_Processor_Queue_Rate_Limited_Fail_Log(1000, ESP_LOG_WARN);
       FFT_Result_Processor_Queue_Rate_Limited_Fail_Log.Log(ESP_LOG_WARN, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
     }
 }

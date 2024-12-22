@@ -18,124 +18,51 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <vector>
-#include <stdexcept>
-#include <algorithm>
 #include "DataTypes.h"
-
-template <typename T>
-class CircularVector 
-{
-    public:
-        CircularVector(size_t size) : m_size(size), m_start(0), m_end(0), m_full(false) {
-            m_buffer.resize(size, T());
-            m_full = true;
-        }
-        
-        void fill(const T& value)
-        {
-            std::fill(m_buffer.begin(), m_buffer.end(), value);
-        }
-
-        void push(const T& value)
-        {
-            if (m_full) {
-                m_start = (m_start + 1) % m_size;
-            }
-            m_buffer[m_end] = value;
-            m_end = (m_end + 1) % m_size;
-
-            if (m_end == m_start) {
-                m_full = true;
-            }
-        }
-
-        T& get(size_t index)
-        {
-            if (index >= size()) {
-                throw std::out_of_range("Index out of bounds");
-            }
-            return m_buffer[(m_start + index) % m_size];
-        }
-
-        const T& get(size_t index) const
-        {
-            if (index >= size()) {
-                throw std::out_of_range("Index out of bounds");
-            }
-            return m_buffer[(m_start + index) % m_size];
-        }
-
-        size_t size() const
-        {
-            if (m_full) {
-                return m_size;
-            }
-            if (m_end >= m_start) {
-                return m_end - m_start;
-            }
-            return m_size + m_end - m_start;
-        }
-
-        bool isEmpty() const
-        {
-            return (!m_full && (m_start == m_end));
-        }
-
-    private:
-        std::vector<T> m_buffer;  // Using vector to store the elements
-        size_t m_size;
-        size_t m_start;           // Index of the oldest element
-        size_t m_end;             // Index of the next available position
-        bool m_full;              // Whether the buffer is full
-};
-
 
 class ShocksRingBuffer {
 public:
     ShocksRingBuffer(size_t size) 
         : buffer(new Frame_t[size]), bufferSize(size), writeIndex(0), readIndex(0) {
-        vSemaphoreCreateBinary(mutex);
+        mutex = xSemaphoreCreateRecursiveMutex();
     }
 
     ~ShocksRingBuffer() {
-        delete buffer;
+        delete[] buffer;
         vSemaphoreDelete(mutex);
     }
 
     // Push new frame into the buffer (overwrites if full)
-    void push(Frame_t frame) {
-        if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE) {
+    void push(Frame_t frame, TickType_t waitTime) {
+        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
             buffer[writeIndex] = frame;
             writeIndex = (writeIndex + 1) % bufferSize;
             if (writeIndex == readIndex) {
                 readIndex = (readIndex + 1) % bufferSize;
             }
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
     }
 
-    size_t push(Frame_t* frames, size_t count) {
+    size_t push(Frame_t* frames, size_t count, TickType_t waitTime) {
         size_t pushed = 0;
-        if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE) {
+        if (frames && xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
             for (size_t i = 0; i < count; ++i) {
                 buffer[writeIndex] = frames[i];
                 writeIndex = (writeIndex + 1) % bufferSize;
-
                 if (writeIndex == readIndex) {
                     readIndex = (readIndex + 1) % bufferSize;
                 }
                 pushed++;
             }
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
         return pushed;
     }
 
     size_t get(std::vector<Frame_t>& frames, size_t count, TickType_t waitTime) {
         size_t returned = 0;
-        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
             size_t available = (writeIndex >= readIndex) ? (writeIndex - readIndex) : (bufferSize - readIndex + writeIndex);
             size_t framesToReturn = (available >= count) ? count : available;
             frames.resize(framesToReturn);
@@ -144,7 +71,7 @@ public:
             }
             readIndex = (readIndex + framesToReturn) % bufferSize;
             returned = framesToReturn;
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
         return returned;
     }
