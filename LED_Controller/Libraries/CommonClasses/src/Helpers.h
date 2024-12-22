@@ -10,33 +10,29 @@ public:
     LogWithRateLimit(uint32_t interval) 
         : logInterval(interval), occurrenceCount(0)
     {
-        // Attach the static callback function with 'this' pointer as argument
         timer.attach_ms(logInterval, Static_Log_With_Rate_Limit_Callback, (void*)this); 
     }
 
     void Log(esp_log_level_t level, const char* tag, const char* message)
     {
-        if (occurrenceCount == 0)  // Log the first occurrence
+        if (occurrenceCount == 0)
         {
             LogMessage(level, tag, message);
         }
-
-        ++occurrenceCount;  // Increment the count on each occurrence
+        ++occurrenceCount;
     }
 
 private:
-    Ticker timer;  // Timer object to track the interval
-    uint32_t logInterval;  // The log interval duration in milliseconds
-    int occurrenceCount;  // Counter for occurrences during the interval
+    Ticker timer;
+    uint32_t logInterval;
+    int occurrenceCount = 0;
 
-    // Static callback function to call the non-static member function
     static void Static_Log_With_Rate_Limit_Callback(void* instance)
     {
         LogWithRateLimit* logInstance = static_cast<LogWithRateLimit*>(instance);
         logInstance->ResetCount();  // Call the member function
     }
 
-    // Function to log a message
     void LogMessage(esp_log_level_t level, const char* tag, const char* message)
     {
         switch (level)
@@ -62,17 +58,15 @@ private:
         }
     }
 
-    // Function to reset the occurrence count and log additional occurrences if any
     void ResetCount()
     {
-        if (occurrenceCount > 1)  // If additional occurrences happened
+        if (occurrenceCount > 1)
         {
             char messageWithCount[256];
-            snprintf(messageWithCount, sizeof(messageWithCount), "Additional occurrences during interval: %d", occurrenceCount - 1);
+            snprintf(messageWithCount, sizeof(messageWithCount), "Delayed Log: Additional occurrences during interval: %d", occurrenceCount - 1);
             LogMessage(ESP_LOG_INFO, "LogWithRateLimit", messageWithCount);
         }
-
-        occurrenceCount = 0;  // Reset the occurrence count after the interval
+        occurrenceCount = 0;
     }
 };
 

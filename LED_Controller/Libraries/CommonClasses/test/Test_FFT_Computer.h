@@ -63,10 +63,10 @@ class FFT_Computer_Tests : public Test
     protected:
         FFT_Computer* mp_FFT_Computer = nullptr;
         
-        static void Static_FFT_Results_Callback(float *leftBins, FFT_Bin_Data_t* leftBinsSorted, float* rightBins, FFT_Bin_Data_t* sortedBinsRight, size_t count, void* args)
+        static void Static_FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data, void* args)
         {
             FFT_Computer_Tests* aTest = static_cast<FFT_Computer_Tests*>(args);
-            aTest->FFT_Results_Callback(leftBins, leftBinsSorted, rightBins, sortedBinsRight, count);
+            aTest->FFT_Results_Callback(FFT_Bin_Data);
         }
 
     private:
@@ -78,11 +78,11 @@ class FFT_Computer_Tests : public Test
         FFT_Bin_Data_t m_max_Freq_Result_Left;
         FFT_Bin_Data_t m_max_Freq_Result_Right;
 
-        void FFT_Results_Callback(float *leftBins, FFT_Bin_Data_t* leftBinsSorted, float* rightBins, FFT_Bin_Data_t* sortedBinsRight, size_t count)
+        void FFT_Results_Callback(FFT_Bin_Data_Set_t FFT_Bin_Data)
         {
             ESP_LOGD("FFT_Results_Callback", "FFT_Results_Callback");
-            m_max_Freq_Result_Left = leftBinsSorted[0];
-            m_max_Freq_Result_Right = sortedBinsRight[0];
+            m_max_Freq_Result_Left = (*FFT_Bin_Data.Left_Channel)[FFT_Bin_Data.MaxLeftBin];
+            m_max_Freq_Result_Right = (*FFT_Bin_Data.Right_Channel)[FFT_Bin_Data.MaxRightBin];
         }
 
         void RunTest(int fftSize, int hopSize, float f_s, float f_signal, float magnitude, bool normalizeMagnitudes, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
@@ -154,7 +154,7 @@ TEST_F(FFT_Computer_Tests, Allocation_DeAllocation)
     mp_FFT_Computer = nullptr;
     size_t freeMemoryAfterDeallocation = heap_caps_get_free_size(MALLOC_CAP_SPIRAM);
     ESP_LOGD("Allocation_DeAllocation", "Memory after deallocation: %i", freeMemoryAfterDeallocation);
-    EXPECT_TRUE(freeMemoryAfterAllocation == freeMemoryBeforeAllocation);
+    EXPECT_TRUE(freeMemoryAfterAllocation < freeMemoryBeforeAllocation);
     EXPECT_TRUE(freeMemoryBeforeAllocation == freeMemoryAfterDeallocation);
 }
 
@@ -283,4 +283,3 @@ TEST_F(FFT_Computer_Tests, 8192_Bin_FFT_Calculation_Testing)
         TestFFT(fft_size, hop_size, f_s, input_freq, magnitude, true, DataWidth_16);
     }
 }
-

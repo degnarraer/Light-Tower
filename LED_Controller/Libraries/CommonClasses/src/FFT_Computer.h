@@ -20,7 +20,19 @@ struct FFT_Bin_Data_Set
 {
     std::vector<FFT_Bin_Data_t>* Left_Channel;
     std::vector<FFT_Bin_Data_t>* Right_Channel;
-    size_t Count;
+    size_t MaxRightBin = 0;
+    size_t MaxLeftBin = 0;
+    FFT_Bin_Data_Set();
+    FFT_Bin_Data_Set( std::vector<FFT_Bin_Data_t>* Left_Channel_in
+                    , std::vector<FFT_Bin_Data_t>* Right_Channel_in
+                    , size_t MaxRightBin_in
+                    , size_t MaxLeftBin_in )
+                    {
+                        Left_Channel = Left_Channel_in;
+                        Right_Channel = Right_Channel_in;
+                        MaxRightBin = MaxRightBin_in;
+                        MaxLeftBin = MaxLeftBin_in;
+                    }
 };
 typedef FFT_Bin_Data_Set FFT_Bin_Data_Set_t;
 
@@ -37,21 +49,19 @@ private:
     FFT_Results_Callback* mp_CallBack = nullptr;
     bool m_IsMultithreaded = false;
     void* mp_CallBackArgs = nullptr;
-    size_t m_fftSize;                                               // FFT size (e.g., 8192)
+    size_t m_fftSize;                                                   // FFT size (e.g., 8192)
     size_t m_magnitudeSize;
-    size_t m_hopSize;                                               // Hop size (number of samples between FFTs)
-    float m_f_s;                                                    // Sample Rate
-    RingbufHandle_t m_ringBuffer = nullptr;                         // DMA-friendly ring buffer handle
-    std::unique_ptr<CircularVector<float>> mp_real_right_channel;   // Real part of FFT input
-    std::unique_ptr<CircularVector<float>> mp_imag_right_channel;   // Imaginary part of FFT input
-    std::vector<float> mp_magnitudes_right_channel;                 // FFT magnitudes
-    std::unique_ptr<CircularVector<float>> mp_real_left_channel;    // Real part of FFT input
-    std::unique_ptr<CircularVector<float>> mp_imag_left_channel;    // Imaginary part of FFT input
-    std::vector<float> mp_magnitudes_left_channel;                  // FFT magnitudes
-    size_t m_bufferIndex;                                           // Current write index in the circular buffer
-    size_t m_samplesSinceLastFFT;                                   // Counter for samples pushed since the last FFT
-    SemaphoreHandle_t m_pushFramesMutex = NULL;                     // thread safe-safe access to push to ring buffer to prevent 2 tasks from simultaneously writting
-    SemaphoreHandle_t m_FFT_Buffer_mutex;                           // mutex for thread-safe access to the circular buffer
+    size_t m_hopSize;                                                   // Hop size (number of samples between FFTs)
+    float m_f_s;                                                        // Sample Rate
+    ShocksRingBuffer* mp_ringBuffer;                                    // Ring Buffer
+    std::vector<Frame_t> m_frames;                     // frame Buffer
+    std::vector<float> m_real_right_channel;           // Real part of FFT input
+    std::vector<float> m_imag_right_channel;           // Imaginary part of FFT input
+    std::vector<float> m_real_left_channel;            // Real part of FFT input
+    std::vector<float> m_imag_left_channel;            // Imaginary part of FFT input
+    std::vector<float> m_magnitudes_right_channel;                      // FFT magnitudes
+    std::vector<float> m_magnitudes_left_channel;                       // FFT magnitudes
+    size_t m_samplesSinceLastFFT;                                       // Counter for samples pushed since the last FFT
     UBaseType_t m_uxPriority;
     BaseType_t m_xCoreID;
 
@@ -67,7 +77,6 @@ public:
         , m_dataWidth(dataWidth)
         , m_isInitialized(false)
         , m_IsMultithreaded(false)
-        , m_bufferIndex(0)
         , m_samplesSinceLastFFT(0)
         , m_magnitudeSize(m_fftSize/2) {}
     FFT_Computer(int fftSize, int hopSize, float f_s, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
@@ -79,7 +88,6 @@ public:
         , m_xCoreID(xCoreID)
         , m_isInitialized(false)
         , m_IsMultithreaded(true)
-        , m_bufferIndex(0)
         , m_samplesSinceLastFFT(0)
         , m_magnitudeSize(m_fftSize/2) {}
 
@@ -87,17 +95,11 @@ public:
     ~FFT_Computer() {
         if (m_isInitialized)
         {
-            if(m_FFT_Buffer_mutex)
+            if(mp_ringBuffer)
             {
-                ESP_LOGD("~FFT_Computer", "m_FFT_Buffer_mutex");
-                vSemaphoreDelete(m_FFT_Buffer_mutex);
-                m_FFT_Buffer_mutex = nullptr;
-            }
-            if(m_ringBuffer)
-            {
-                ESP_LOGD("~FFT_Computer", "m_ringBuffer");
-                vRingbufferDelete(m_ringBuffer);
-                m_ringBuffer = nullptr;
+                ESP_LOGD("~FFT_Computer", "mp_ringBuffer");
+                delete mp_ringBuffer;
+                mp_ringBuffer = nullptr;
             }
             if(m_fftTaskHandle)
             {
@@ -113,20 +115,13 @@ public:
         mp_CallBackArgs = callBackArgs;
         if (m_isInitialized)
             return;
-
-        m_pushFramesMutex = xSemaphoreCreateMutex();
-        m_FFT_Buffer_mutex = xSemaphoreCreateMutex();
-
-        m_ringBuffer = xRingbufferCreate((m_fftSize * 2) * sizeof(Frame_t), RINGBUF_TYPE_BYTEBUF);
-        if (!m_ringBuffer)
-            ESP_LOGE("Setup", "ERROR! Failed to create ring buffer.");
-
-        mp_real_right_channel = std::make_unique<CircularVector<float>>(m_fftSize);
-        mp_imag_right_channel = std::make_unique<CircularVector<float>>(m_fftSize);
-        mp_real_left_channel = std::make_unique<CircularVector<float>>(m_fftSize);
-        mp_imag_left_channel = std::make_unique<CircularVector<float>>(m_fftSize);
-        mp_magnitudes_right_channel.resize(m_magnitudeSize, 0.0f);
-        mp_magnitudes_left_channel.resize(m_magnitudeSize, 0.0f);
+        mp_ringBuffer = new ShocksRingBuffer(m_fftSize * 10);
+        m_real_right_channel.resize(m_fftSize, 0.0f);
+        m_imag_right_channel.resize(m_fftSize, 0.0f);
+        m_real_left_channel.resize(m_fftSize, 0.0f);
+        m_imag_left_channel.resize(m_fftSize, 0.0f);
+        m_magnitudes_right_channel.resize(m_magnitudeSize, 0.0f);
+        m_magnitudes_left_channel.resize(m_magnitudeSize, 0.0f);
 
         if(m_IsMultithreaded) xTaskCreatePinnedToCore(Static_PerformFFTTask, "FFTTask", 5000, this, m_uxPriority, &m_fftTaskHandle, m_xCoreID);
         m_isInitialized = true;
@@ -141,13 +136,6 @@ public:
             return;
         }
 
-        if (!count)
-        {
-            static LogWithRateLimit Push_Frames_Pusing_0_Rate_Limited_Log(1000);
-            Push_Frames_Pusing_0_Rate_Limited_Log.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Should not push 0 count to ring buffer.");
-            return;
-        }
-
         if(!frames)
         {
             static LogWithRateLimit Push_Frames_Null_Pointer_Rate_Limited_Log(1000);
@@ -155,44 +143,36 @@ public:
             return;
         }
 
-        if (m_ringBuffer)
+        size_t actualPushCount = mp_ringBuffer->push(frames, count);
+        if(actualPushCount == count)
         {
-            bool pushSuccessful = false;
-            if (xSemaphoreTake(m_pushFramesMutex, portMAX_DELAY) == pdTRUE)
+            m_samplesSinceLastFFT += actualPushCount;
+            ESP_LOGD("PushFrames", "Samples Since Last FFT: \"%i\" Hop Length: \"%i\"", m_samplesSinceLastFFT, m_hopSize);
+            if (m_samplesSinceLastFFT >= m_hopSize)
             {
-                bool pushSuccessful = (xRingbufferSend(m_ringBuffer, frames, count * sizeof(Frame_t), pdMS_TO_TICKS(10)) == pdTRUE);
-                xSemaphoreGive(m_pushFramesMutex);
-                if(!pushSuccessful)
+                ESP_LOGD("PushFrames", "Hop Length Met");
+                if(m_IsMultithreaded)
                 {
-                    static LogWithRateLimit Push_Frames_Rate_Limited_Log(1000);
-                    Push_Frames_Rate_Limited_Log.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Ring buffer is full! Frames dropped.");
+                    ESP_LOGD("PushFrames", "Notify FFT Thread");
+                    xTaskNotifyGive(m_fftTaskHandle);
                 }
                 else
                 {
-                    m_samplesSinceLastFFT += count;
-                    ESP_LOGD("PushFrames", "Count: %i.", count);
-                    if (m_samplesSinceLastFFT >= m_hopSize)
-                    {
-                        ESP_LOGD("PushFrames", "Samples: \"%i\" Hop Length: \"%i\" Buffer Index: \"%i\"", m_samplesSinceLastFFT, m_hopSize, m_bufferIndex);
-                        if(m_IsMultithreaded)
-                        {
-                            ESP_LOGD("PushFrames", "Notify FFT Thread");
-                            xTaskNotifyGive(m_fftTaskHandle);
-                        }
-                        else
-                        {
-                            ESP_LOGD("PushFrames", "Perform FFT UnThreaded");
-                            PerformFFT();
-                        }
-                        m_samplesSinceLastFFT = 0;
-                    }
+                    ESP_LOGD("PushFrames", "Perform FFT UnThreaded");
+                    PerformFFT();
                 }
+                m_samplesSinceLastFFT = 0;
             }
+        }
+        else
+        {
+            static LogWithRateLimit Push_Frames_Rate_Limited_Log(1000);
+            Push_Frames_Rate_Limited_Log.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Frames dropped.");
         }
     }
 
     float* GetMagnitudes() {
-        return mp_magnitudes_right_channel.data();
+        return m_magnitudes_right_channel.data();
     }
 
     void PrintBuffer(char* title, std::vector<float>& buffer) {
@@ -222,119 +202,81 @@ private:
 
     void PerformFFT()
     {
-        if(mp_real_left_channel && mp_real_right_channel && m_ringBuffer)
+        size_t receivedFrameCount = mp_ringBuffer->get(m_frames, m_fftSize, pdMS_TO_TICKS(0));
+        if(receivedFrameCount == m_fftSize)
         {
-            size_t receivedByteCount;
-            size_t requestedByteCount = std::min(m_hopSize*sizeof(Frame_t), m_fftSize*sizeof(Frame_t));
-            ESP_LOGD("PerformFFT", "Requested %i bytes", requestedByteCount);
-            Frame_t *frames = (Frame_t *)xRingbufferReceiveUpTo(m_ringBuffer, &receivedByteCount, pdMS_TO_TICKS(0), requestedByteCount);
-            ESP_LOGD("PerformFFT", "Received %i bytes", receivedByteCount);
-            if (!frames)
+            static LogWithRateLimit PerformFFT_Read_Success_Rate_Limited_Log(1000);
+            PerformFFT_Read_Success_Rate_Limited_Log.Log(ESP_LOG_INFO, "PerformFFT", ("Preping Buffers for FFT Processing: " + std::to_string(m_fftSize) + " bins.").c_str());
+            for(int i = 0; i < m_frames.size(); ++i)
             {
-                ESP_LOGW("PerformFFT", "WARNING! Ring buffer is empty or timed out.");
-                return;
+                m_real_left_channel[i] = m_frames[i].channel1;
+                m_imag_left_channel[i] = 0.0f;
+                m_real_right_channel[i] = m_frames[i].channel2;
+                m_imag_right_channel[i] = 0.0f;
             }
-            if(receivedByteCount % sizeof(Frame_t) != 0)
-            {
-                ESP_LOGW("PerformFFT", "WARNING! Improper received byte count.");
-                vRingbufferReturnItem(m_ringBuffer, frames);
-                return;
-            }
-            size_t frameCount = receivedByteCount / sizeof(Frame_t);
-            ESP_LOGD("PerformFFT", "Received %i Frames", frameCount);
-
-            if(xSemaphoreTake(m_FFT_Buffer_mutex, pdMS_TO_TICKS(1)) == pdTRUE)
-            {
-                for (size_t i = 0; i < frameCount; ++i)
-                {
-                    mp_real_left_channel->push(frames[i].channel1);
-                    mp_real_right_channel->push(frames[i].channel2);
-                }
-                xSemaphoreGive(m_FFT_Buffer_mutex);
-                m_bufferIndex += frameCount;
-            }
-            vRingbufferReturnItem(m_ringBuffer, frames);
-
-            if (m_bufferIndex >= m_fftSize)
-            {
-                static LogWithRateLimit PerformFFT_Rate_Limited_Log(1000);
-                PerformFFT_Rate_Limited_Log.Log(ESP_LOG_INFO, "PerformFFT", ("Performing FFT with buffer size: " + std::to_string(m_fftSize)).c_str());
-                ProcessFFT();
-                m_bufferIndex -= m_hopSize;
-            }
+            ProcessFFT();
         }
         else
         {
-            ESP_LOGW("PerformFFT", "NULL Pointers!");
+            static LogWithRateLimit PerformFFT_Read_Failure_Rate_Limited_Log(1000);
+            PerformFFT_Read_Failure_Rate_Limited_Log.Log(ESP_LOG_WARN, "PerformFFT", "Unexpected buffer size read.");
         }
     }
 
     void ProcessFFT()
     {
-        if (m_FFT_Buffer_mutex && xSemaphoreTake(m_FFT_Buffer_mutex, portMAX_DELAY) == pdTRUE)
+        if( m_real_right_channel.size() == m_fftSize &&
+            m_real_left_channel.size() == m_fftSize &&
+            m_imag_right_channel.size() == m_fftSize &&
+            m_imag_left_channel.size() == m_fftSize )
         {
-            if(mp_real_right_channel && mp_real_left_channel && mp_imag_left_channel && mp_imag_right_channel)
+            if (mp_CallBack)
             {
-                mp_imag_left_channel->fill(0.0f);
-                mp_imag_right_channel->fill(0.0f);
-
-                ComputeFFT(*mp_real_right_channel, *mp_imag_right_channel);
-                ComputeFFT(*mp_real_left_channel, *mp_imag_left_channel);
+                ComputeFFT(m_real_right_channel, m_imag_right_channel);
+                ComputeFFT(m_real_left_channel, m_imag_left_channel);
 
                 float maxMagnitude = GetMaxMagnitude();
 
                 std::vector<FFT_Bin_Data_t>* p_freqMags_left = new std::vector<FFT_Bin_Data_t>(m_magnitudeSize);
                 std::vector<FFT_Bin_Data_t>* p_freqMags_right = new std::vector<FFT_Bin_Data_t>(m_magnitudeSize);
+                size_t maxBin_Left = 0;
+                size_t maxBin_Right = 0;
                 
-                FFT_Bin_Data_Set_t FFT_Bin_Data_Set = { p_freqMags_left, p_freqMags_right, m_magnitudeSize };
-
                 for (int i = 0; i < m_magnitudeSize; i++)
                 {
-                    mp_magnitudes_right_channel[i] = sqrtf(mp_real_right_channel->get(i) * mp_real_right_channel->get(i) +
-                                                            mp_imag_right_channel->get(i) * mp_imag_right_channel->get(i));
-                    mp_magnitudes_left_channel[i] = sqrtf(mp_real_left_channel->get(i) * mp_real_left_channel->get(i) +
-                                                        mp_imag_left_channel->get(i) * mp_imag_left_channel->get(i));
+                    m_magnitudes_right_channel[i] = sqrtf(m_real_right_channel[i] * m_real_right_channel[i] +
+                                                            m_imag_right_channel[i] * m_imag_right_channel[i]);
+                    m_magnitudes_left_channel[i] = sqrtf(m_real_left_channel[i] * m_real_left_channel[i] +
+                                                        m_imag_left_channel[i] * m_imag_left_channel[i]);
+                    if(m_magnitudes_left_channel[i] > (*p_freqMags_left)[maxBin_Left].Magnitude) maxBin_Left = i;
+                    if(m_magnitudes_right_channel[i] > (*p_freqMags_right)[maxBin_Right].Magnitude) maxBin_Right = i;
 
                     (*p_freqMags_right)[i].Frequency = binToFrequency(i);
-                    (*p_freqMags_right)[i].Magnitude = mp_magnitudes_right_channel[i];
-                    (*p_freqMags_right)[i].NormalizedMagnitude = mp_magnitudes_right_channel[i] / maxMagnitude;
+                    (*p_freqMags_right)[i].Magnitude = m_magnitudes_right_channel[i];
+                    (*p_freqMags_right)[i].NormalizedMagnitude = m_magnitudes_right_channel[i] / maxMagnitude;
 
                     (*p_freqMags_left)[i].Frequency = binToFrequency(i);
-                    (*p_freqMags_left)[i].Magnitude = mp_magnitudes_left_channel[i];
-                    (*p_freqMags_left)[i].NormalizedMagnitude = mp_magnitudes_left_channel[i] / maxMagnitude;
+                    (*p_freqMags_left)[i].Magnitude = m_magnitudes_left_channel[i];
+                    (*p_freqMags_left)[i].NormalizedMagnitude = m_magnitudes_left_channel[i] / maxMagnitude;
                 }
-
-                if (xSemaphoreGive(m_FFT_Buffer_mutex) != pdTRUE)
-                {
-                    ESP_LOGE("ProcessFFT", "Failed to release semaphore!");
-                    delete p_freqMags_left;
-                    delete p_freqMags_right;
-                    return;
-                }
-
-                if (mp_CallBack)
-                {
-                    mp_CallBack(FFT_Bin_Data_Set, mp_CallBackArgs);
-                }
-                else
-                {
-                    delete p_freqMags_left;
-                    delete p_freqMags_right;
-                }
+                    FFT_Bin_Data_Set_t fft_Bin_Data_Set = FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
+                    mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
             }
             else
             {
-                ESP_LOGW("ProcessFFT", "NULL Pointers!");
+                static LogWithRateLimit ProcessFFT_No_Callback_Rate_Limited_Log(1000);
+                ProcessFFT_No_Callback_Rate_Limited_Log.Log(ESP_LOG_WARN, "ProcessFFT", "No Callback");
             }
         }
         else
         {
-            ESP_LOGE("ProcessFFT", "Failed to acquire semaphore!");
+            static LogWithRateLimit ProcessFFT_Buffer_Size_Rate_Limited_Log(1000);
+            ProcessFFT_Buffer_Size_Rate_Limited_Log.Log(ESP_LOG_WARN, "ProcessFFT", "Buffer Size Issue");
         }
     }
 
 
-    void ComputeFFT(CircularVector<float>& real, CircularVector<float>& imag)
+    void ComputeFFT(std::vector<float>& real, std::vector<float>& imag)
     {
         int n = m_fftSize;
         int logN = log2(n);
@@ -345,8 +287,8 @@ private:
             int j = ReverseBits(i, logN);
             if (i < j)
             {
-                Swap(real.get(i), real.get(j));
-                Swap(imag.get(i), imag.get(j));
+                Swap(real[i], real[j]);
+                Swap(imag[i], imag[j]);
             }
         }
 
@@ -390,17 +332,17 @@ private:
                     float cosA = cosineTable[j * step];
                     float sinA = sineTable[j * step];
 
-                    float real_kjm = real.get(k + j + halfM);
-                    float imag_kjm = imag.get(k + j + halfM);
+                    float real_kjm = real[k + j + halfM];
+                    float imag_kjm = imag[k + j + halfM];
 
                     float tReal = cosA * real_kjm - sinA * imag_kjm;
                     float tImag = sinA * real_kjm + cosA * imag_kjm;
 
-                    real.get(k + j + halfM) = real.get(k + j) - tReal;
-                    imag.get(k + j + halfM) = imag.get(k + j) - tImag;
+                    real[k + j + halfM] = real[k + j] - tReal;
+                    imag[k + j + halfM] = imag[k + j] - tImag;
 
-                    real.get(k + j) += tReal;
-                    imag.get(k + j) += tImag;
+                    real[k + j] += tReal;
+                    imag[k + j] += tImag;
                 }
             }
         }

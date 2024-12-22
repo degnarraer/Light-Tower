@@ -18,9 +18,11 @@
 
 #pragma once
 
+#include <Arduino.h>
 #include <vector>
 #include <stdexcept>
 #include <algorithm>
+#include "DataTypes.h"
 
 template <typename T>
 class CircularVector 
@@ -87,4 +89,70 @@ class CircularVector
         size_t m_start;           // Index of the oldest element
         size_t m_end;             // Index of the next available position
         bool m_full;              // Whether the buffer is full
+};
+
+
+class ShocksRingBuffer {
+public:
+    ShocksRingBuffer(size_t size) 
+        : buffer(new Frame_t[size]), bufferSize(size), writeIndex(0), readIndex(0) {
+        vSemaphoreCreateBinary(mutex);
+    }
+
+    ~ShocksRingBuffer() {
+        delete buffer;
+        vSemaphoreDelete(mutex);
+    }
+
+    // Push new frame into the buffer (overwrites if full)
+    void push(Frame_t frame) {
+        if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE) {
+            buffer[writeIndex] = frame;
+            writeIndex = (writeIndex + 1) % bufferSize;
+            if (writeIndex == readIndex) {
+                readIndex = (readIndex + 1) % bufferSize;
+            }
+            xSemaphoreGive(mutex);
+        }
+    }
+
+    size_t push(Frame_t* frames, size_t count) {
+        size_t pushed = 0;
+        if (xSemaphoreTake(mutex, portMAX_DELAY) == pdTRUE) {
+            for (size_t i = 0; i < count; ++i) {
+                buffer[writeIndex] = frames[i];
+                writeIndex = (writeIndex + 1) % bufferSize;
+
+                if (writeIndex == readIndex) {
+                    readIndex = (readIndex + 1) % bufferSize;
+                }
+                pushed++;
+            }
+            xSemaphoreGive(mutex);
+        }
+        return pushed;
+    }
+
+    size_t get(std::vector<Frame_t>& frames, size_t count, TickType_t waitTime) {
+        size_t returned = 0;
+        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+            size_t available = (writeIndex >= readIndex) ? (writeIndex - readIndex) : (bufferSize - readIndex + writeIndex);
+            size_t framesToReturn = (available >= count) ? count : available;
+            frames.resize(framesToReturn);
+            for (size_t i = 0; i < framesToReturn; ++i) {
+                frames[i] = buffer[(readIndex + i) % bufferSize];
+            }
+            readIndex = (readIndex + framesToReturn) % bufferSize;
+            returned = framesToReturn;
+            xSemaphoreGive(mutex);
+        }
+        return returned;
+    }
+
+private:
+    Frame_t* buffer;
+    size_t bufferSize;
+    size_t writeIndex;
+    size_t readIndex;
+    SemaphoreHandle_t mutex;
 };
