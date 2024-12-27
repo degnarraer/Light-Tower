@@ -143,7 +143,7 @@ public:
         static LogWithRateLimit Push_Frames_Busy_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Notify_RLL(1000, ESP_LOG_INFO);
-        static LogWithRateLimit Push_Frames_Unthreaded_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit Push_Frames_Unthreaded_RLL(1000, ESP_LOG_DEBUG);
 
         if (!m_isInitialized)
         {
@@ -169,14 +169,14 @@ public:
                 {
                     if(m_fftTaskHandle)
                     {
-                        if(eBlocked == eTaskGetState(m_fftTaskHandle))
+                        if( eRunning == eTaskGetState(m_fftTaskHandle) )
                         {
-                            Push_Frames_Notify_RLL.Log(ESP_LOG_INFO, "PushFrames", "Notify FFT Thread");
-                            xTaskNotifyGive(m_fftTaskHandle);
+                            Push_Frames_Busy_RLL.Log(ESP_LOG_WARN, "PushFrames", "FFT Perform task is busy.");
                         }
                         else
                         {
-                            Push_Frames_Busy_RLL.Log(ESP_LOG_WARN, "PushFrames", "FFT Perform task is busy.");
+                            Push_Frames_Notify_RLL.Log(ESP_LOG_INFO, "PushFrames", "Notify FFT Thread");
+                            xTaskNotifyGive(m_fftTaskHandle);
                         }
                     }
                     else
@@ -186,7 +186,7 @@ public:
                 }
                 else
                 {
-                    Push_Frames_Unthreaded_RLL.Log(ESP_LOG_INFO, "PushFrames", "Perform FFT UnThreaded");
+                    Push_Frames_Unthreaded_RLL.Log(ESP_LOG_DEBUG, "PushFrames", "Perform FFT UnThreaded");
                     PerformFFT();
                 }
                 m_samplesSinceLastFFT = 0;
@@ -220,27 +220,29 @@ private:
 
     void PerformFFTTask() 
     {
+        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_INFO);
         while (true)
         {
             ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-            static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_INFO);
             PerformFFTTask_RLL.Log(ESP_LOG_INFO, "PerformFFT", "Received notification");
             PerformFFT();
+            taskYIELD();
         }
     }
 
     void PerformFFT()
     {
-        static LogWithRateLimit PerformFFT_Reading_Buffers_RLL(1000, ESP_LOG_INFO);
-        static LogWithRateLimit PerformFFT_Done_Reading_Buffers_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit PerformFFT_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit PerformFFT_Done_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit PerformFFT_Read_Success_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit PerformFFT_Read_Failure_RLL(1000, ESP_LOG_WARN);
         
-        PerformFFT_Reading_Buffers_RLL.Log(ESP_LOG_INFO, "PerformFFT", ("Requesting " + std::to_string(m_fftSize) + " Frames for FFT Processing.").c_str());
+        PerformFFT_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "PerformFFT", ("Requesting " + std::to_string(m_fftSize) + " Frames for FFT Processing.").c_str());
         size_t receivedFrameCount = mp_ringBuffer->get(m_frames, m_fftSize, pdMS_TO_TICKS(0));
-        PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_INFO, "PerformFFT", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
+        PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "PerformFFT", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
         if(receivedFrameCount == m_fftSize)
         {
-            static LogWithRateLimit PerformFFT_Read_Success_RLL(1000, ESP_LOG_INFO);
-            PerformFFT_Read_Success_RLL.Log(ESP_LOG_INFO, "PerformFFT", ("Preping Buffers for FFT Processing: " + std::to_string(m_fftSize) + " bins.").c_str());
+            PerformFFT_Read_Success_RLL.Log(ESP_LOG_DEBUG, "PerformFFT", ("Preping Buffers for FFT Processing: " + std::to_string(m_fftSize) + " bins.").c_str());
             for(int i = 0; i < m_frames.size(); ++i)
             {
                 m_real_left_channel[i] = m_frames[i].channel1;
@@ -252,15 +254,14 @@ private:
         }
         else
         {
-            static LogWithRateLimit PerformFFT_Read_Failure_RLL(1000, ESP_LOG_WARN);
             PerformFFT_Read_Failure_RLL.Log(ESP_LOG_WARN, "PerformFFT", "Unexpected buffer size read.");
         }
     }
 
     void ProcessFFT()
     {
-        static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_INFO);
-        static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_No_Callback_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit ProcessFFT_Buffer_Size_RLL(1000, ESP_LOG_WARN);
         
@@ -274,7 +275,7 @@ private:
                 
                 ComputeFFT(m_real_right_channel, m_imag_right_channel);
                 ComputeFFT(m_real_left_channel, m_imag_left_channel);
-                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "FFT Calculation Completed");
+                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
 
                 float maxMagnitude = GetMaxMagnitude();
 
@@ -301,7 +302,7 @@ private:
                     (*p_freqMags_left)[i].NormalizedMagnitude = m_magnitudes_left_channel[i] / maxMagnitude;
                 }
                 
-                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Calling Callback");
+                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 FFT_Bin_Data_Set_t *fft_Bin_Data_Set = new FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
                 mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
             }

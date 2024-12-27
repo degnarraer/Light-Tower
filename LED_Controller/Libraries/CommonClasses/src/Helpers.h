@@ -13,72 +13,67 @@ public:
     {
     }
 
-    void Log(esp_log_level_t level, const std::string& tag_in, const std::string& message_in)
+    void Log(esp_log_level_t level, const std::string& tag, const std::string& message)
     {
-        std::lock_guard<std::mutex> lock(logMutex);  // Ensure thread-safety
-        tag = tag_in;
-        message = message_in;
-        
-        if (occurrenceCount == 0)
+        unsigned long currentTime = millis();
+        std::string delayedMessage;
+        int delayedOccurrences = 0;
+        bool shouldLogNow = false;
+
+        {
+            // Critical section: protect shared state
+            std::unique_lock<std::mutex> lock(logMutex);
+
+            if (occurrenceCount == 0 || (currentTime - lastLogTime > logInterval))
+            {
+                if (occurrenceCount > 1)
+                {
+                    delayedMessage = "Excessive Log: " + message + " (Occurrence Count: " + std::to_string(occurrenceCount - 1) + ")";
+                    delayedOccurrences = occurrenceCount - 1;
+                }
+
+                occurrenceCount = 0;
+                lastLogTime = currentTime;
+                shouldLogNow = true;
+            }
+
+            ++occurrenceCount;
+        }
+
+        // Perform logging outside the critical section
+        if (delayedOccurrences > 0)
+        {
+            LogMessage(delayedLogLevel, tag, delayedMessage);
+			shouldLogNow = false;
+        }
+
+        if (shouldLogNow)
         {
             LogMessage(level, tag, message);
         }
-		if(millis() - lastLogTime > logInterval)
-		{
-            ResetCount();
-		}
-		else
-		{
-        	++occurrenceCount;
-		}
     }
 
 private:
-    unsigned long logInterval;
-	unsigned long lastLogTime;
-    esp_log_level_t delayedLogLevel;
-    int occurrenceCount;
-    std::string tag;
-    std::string message;
-    std::mutex logMutex;
+    const uint32_t logInterval; 			// Interval between logs in milliseconds
+    unsigned long lastLogTime;  			// Timestamp of the last log
+    const esp_log_level_t delayedLogLevel; 	// Log level for delayed messages
+    int occurrenceCount = 0;        		// Number of occurrences within the interval
+    std::mutex logMutex;        			// Mutex to ensure thread safety
 
     void LogMessage(esp_log_level_t level, const std::string& tag, const std::string& message)
     {
-		lastLogTime = millis();
-		switch (level)
+        switch (level)
         {
-            case ESP_LOG_ERROR:
-                ESP_LOGE(tag.c_str(), "%s", message.c_str());
-                break;
-            case ESP_LOG_WARN:
-                ESP_LOGW(tag.c_str(), "%s", message.c_str());
-                break;
-            case ESP_LOG_INFO:
-                ESP_LOGI(tag.c_str(), "%s", message.c_str());
-                break;
-            case ESP_LOG_DEBUG:
-                ESP_LOGD(tag.c_str(), "%s", message.c_str());
-                break;
-            case ESP_LOG_VERBOSE:
-                ESP_LOGV(tag.c_str(), "%s", message.c_str());
-                break;
-            default:
-                ESP_LOGI(tag.c_str(), "%s", message.c_str());
-                break;
+            case ESP_LOG_ERROR:   ESP_LOGE(tag.c_str(), "%s", message.c_str()); break;
+            case ESP_LOG_WARN:    ESP_LOGW(tag.c_str(), "%s", message.c_str()); break;
+            case ESP_LOG_INFO:    ESP_LOGI(tag.c_str(), "%s", message.c_str()); break;
+            case ESP_LOG_DEBUG:   ESP_LOGD(tag.c_str(), "%s", message.c_str()); break;
+            case ESP_LOG_VERBOSE: ESP_LOGV(tag.c_str(), "%s", message.c_str()); break;
+            default:              ESP_LOGI(tag.c_str(), "%s", message.c_str()); break;
         }
-    }
-
-    void ResetCount()
-    {
-        std::lock_guard<std::mutex> lock(logMutex);  // Ensure thread-safety
-        if (occurrenceCount > 1)
-        {
-            std::string messageWithCount = message + " Delayed Log: Additional occurrences during interval: " + std::to_string(occurrenceCount - 1);
-            LogMessage(delayedLogLevel, tag, messageWithCount);
-        }
-        occurrenceCount = 0;
     }
 };
+
 
 
 class CommonUtils
@@ -99,6 +94,7 @@ class CommonUtils
 			return (T)Result;
 		}
 };
+
 class QueueController: public DataTypeFunctions
 {
 	public:

@@ -19,7 +19,7 @@
 #include "SerialMessageManager.h"
 
 //#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
-#define TIME_TO_WAIT_TO_SEND pdMS_TO_TICKS(10)
+#define TIME_TO_WAIT_TO_SEND pdMS_TO_TICKS(0)
 
 void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Object_Callee_Interface* NewCallee)
 {
@@ -73,17 +73,25 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const std::string
 
 void SerialPortMessageManager::Setup()
 {
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle,  m_CoreId ) == pdPASS)
-	ESP_LOGD("Setup", "RX Task Created.");
-	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
-	
-	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle,  m_CoreId ) == pdPASS)
-	ESP_LOGD("Setup", "TX Task Created.");
-	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
-	
-	if(m_TXQueue = xQueueCreate(MaxQueueCount, sizeof(char) * MaxMessageLength ))
+	if(m_TXQueueHandle = xQueueCreate(MaxQueueCount, sizeof(std::string*)))
 	ESP_LOGD("Setup", "TX Queue Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
+
+	if(m_MessageQueueHandle = xQueueCreate(MaxQueueCount, sizeof(std::string*)))
+	ESP_LOGD("Setup", "RX Queue Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue.");
+
+	if(xTaskCreate( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle ) == pdPASS)
+	ESP_LOGD("Setup", "RX Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
+
+	if(xTaskCreate( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_MEDIUM,  &m_RXQueueTaskHandle ) == pdPASS)
+	ESP_LOGD("Setup", "RX Queue Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue Task.");
+	
+	if(xTaskCreate( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle ) == pdPASS)
+	ESP_LOGD("Setup", "TX Task Created.");
+	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
 }
 
 bool SerialPortMessageManager::QueueMessageFromDataType(const std::string& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
@@ -111,18 +119,22 @@ bool SerialPortMessageManager::QueueMessageFromDataType(const std::string& Name,
 bool SerialPortMessageManager::QueueMessage(const std::string& message)
 {
 	bool result = false;
-	if(m_TXQueue)
+	if(m_TXQueueHandle)
 	{	
-		if( message.length() > 0 &&
-            message.length() <= MaxMessageLength &&
-            xQueueSend(m_TXQueue, message.c_str(), TIME_TO_WAIT_TO_SEND) == pdTRUE )
+		if( message.length() > 0 && message.length() <= MaxMessageLength )
 		{
-			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, message.c_str());
-			result = true;
-		}
-		else
-		{
-			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name);
+			std::string *p_txMessage = new std::string;
+			*p_txMessage = message;
+			if( xQueueSend(m_TXQueueHandle, &p_txMessage, TIME_TO_WAIT_TO_SEND) == pdTRUE )
+			{
+				ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
+				result = true;
+			}
+			else
+			{
+				ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name);
+				delete p_txMessage;
+			}
 		}
 	}
 	else
@@ -135,43 +147,37 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 {
     ESP_LOGD("Setup", "Starting RX Task.");
-    const TickType_t xFrequency = 25;
+	const TickType_t xFrequency = 20;
     TickType_t xLastWakeTime = xTaskGetTickCount();
     
     while (true)
     {
         vTaskDelayUntil(&xLastWakeTime, xFrequency);
-        
-        if (mp_Serial && mp_DataSerializer)
+        if (mp_Serial && m_MessageQueueHandle)
         {
-            while (mp_Serial->available())
+			size_t available = mp_Serial->available();
+            for(int i = 0; i < available; ++i)
             {
                 char character = mp_Serial->read();
                 if (m_message.length() >= MaxMessageLength)
                 {
-                    ESP_LOGE("SerialPortMessageManager", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
+                    ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
                     m_message.clear();
                     break;
                 }
-
                 m_message += character;
-
-                if (m_message.size() >= 1 && m_message.compare(m_message.size() - 1, 1, "\n") == 0)
+                if (m_message.size() >= 1 && character == '\n')
                 {
-                    m_message = trim(m_message);
-                    ESP_LOGD("SerialPortMessageManager", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
-
-                    NamedObject_t NamedObject;
-                    if (mp_DataSerializer->DeSerializeJsonToNamedObject(m_message.c_str(), NamedObject))
-                    {
-                        ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-                        this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
-                    }
-                    else
-                    {
-                        ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
-                    }
-
+					m_message = trim(m_message);
+					std::string *p_rxMessage = new std::string;
+					*p_rxMessage = m_message;
+					ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
+					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(0)) != pdTRUE )
+					{
+        				static LogWithRateLimit SerialPortMessageManager_RxTask_QueueFail_RLL(1000, ESP_LOG_WARN);
+						SerialPortMessageManager_RxTask_QueueFail_RLL.Log(ESP_LOG_WARN, "SerialPortMessageManager_RxTask", "RX Message Dropped.");
+						delete p_rxMessage;
+					}
                     m_message.clear();
                 }
             }
@@ -187,27 +193,30 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
 	ESP_LOGD("Setup", "Starting TX Task.");
-	const TickType_t xFrequency = 25;
+	const TickType_t xFrequency = 20;
 	TickType_t xLastWakeTime = xTaskGetTickCount();
 	while(true)
 	{
 		vTaskDelayUntil( &xLastWakeTime, xFrequency );
-		if(NULL != m_TXQueue)
+		if(m_TXQueueHandle)
 		{
-			size_t QueueCount = uxQueueMessagesWaiting(m_TXQueue);
-			if(QueueCount) ESP_LOGD("SerialPortMessageManager_TxTask", "Queue Count: %i", QueueCount);
-			for(size_t i = 0; i < QueueCount; ++i)
+			size_t messages = uxQueueMessagesWaiting(m_TXQueueHandle);
+			for(size_t i = 0; i < messages; ++i)
 			{
-				char message[MaxMessageLength] = "\0";
-				if ( xQueueReceive(m_TXQueue, message, 0) == pdTRUE )
+				std::string *p_Tx_Message;
+				if ( xQueueReceive(m_TXQueueHandle, &p_Tx_Message, 0) == pdTRUE )
 				{
-					if (strlen(message) > MaxMessageLength)
-                    {
-                        ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name);
-                        message[MaxMessageLength - 1] = '\0';
-                    }
-					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, message);
-					mp_Serial->println(message);
+					if(p_Tx_Message)
+					{
+						if (p_Tx_Message->length() > MaxMessageLength)
+						{
+							ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name);
+							(*p_Tx_Message)[MaxMessageLength - 1] = '\0';
+						}
+						ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, p_Tx_Message->c_str());
+						mp_Serial->println(p_Tx_Message->c_str());
+						delete p_Tx_Message;
+					}
 				}
 				else
 				{

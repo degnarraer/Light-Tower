@@ -38,7 +38,7 @@ void Bluetooth_Source::Setup()
 	{
 		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Processor Queue.");
 	}
-	if( xTaskCreatePinnedToCore( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_LOW, &m_CompatibleDeviceTrackerTaskHandle, m_Core ) == pdTRUE )
+	if( xTaskCreate( StaticCompatibleDeviceTrackerTaskLoop, "CompatibleDeviceTrackerTask", 10000, this, THREAD_PRIORITY_LOW, &m_CompatibleDeviceTrackerTaskHandle ) == pdTRUE )
 	{
 		ESP_LOGI("Setup", "Created compatible device Tracker task.");
 	}
@@ -46,7 +46,7 @@ void Bluetooth_Source::Setup()
 	{
 		ESP_LOGE("Setup", "ERROR! Unable to create compatible device Tracker task.");
 	}
-	if(xTaskCreatePinnedToCore( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_LOW, &m_DeviceProcessorTaskHandle, m_Core ) == pdTRUE)
+	if(xTaskCreate( StaticDeviceProcessingTask, "DeviceProcessingTask", 5000, this, THREAD_PRIORITY_LOW, &m_DeviceProcessorTaskHandle ) == pdTRUE)
 	{
 		ESP_LOGI("Setup", "Created compatible device Processor task.");
 	}
@@ -339,17 +339,26 @@ void Bluetooth_Source::DeviceProcessingTask()
 {
   	while(true)
   	{
-		BT_Device_Info receivedDevice;
-        if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, pdMS_TO_TICKS(5)) == pdPASS)
-        {
-            Compatible_Device_Found(receivedDevice);
-        }
+		size_t messages = uxQueueMessagesWaiting(m_DeviceProcessorQueueHandle);
+		for(int i = 0; i < messages; ++i)
+		{
+			BT_Device_Info receivedDevice;
+			if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, pdMS_TO_TICKS(0)) == pdPASS)
+			{
+				Compatible_Device_Found(receivedDevice);
+			}
+			else
+			{
+				ESP_LOGE("DeviceProcessingTask", "ERROR! Error Receiving Queue.");
+			}
+		}
+		vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
+	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
 	{
 		ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 		bool found = false;

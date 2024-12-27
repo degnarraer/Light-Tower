@@ -25,11 +25,11 @@
 #define CPU3_TX                   15
 
 //THREAD CORE ASSIGNMENTS
-#define BLUETOOTH_TASK_CORE                 1
-#define DATALINK_TASK_CORE                  1
-#define VISUALIZATION_TASK_CORE             0
-#define MICROPHONE_DATE_REQUEST_TASK_CORE   1
-#define STATISTICAL_ENGINE_TASK_CORE        1
+#define BLUETOOTH_TASK_CORE                 tskNO_AFFINITY
+#define DATALINK_TASK_CORE                  tskNO_AFFINITY
+#define VISUALIZATION_TASK_CORE             tskNO_AFFINITY
+#define MICROPHONE_DATE_REQUEST_TASK_CORE   tskNO_AFFINITY
+#define STATISTICAL_ENGINE_TASK_CORE        tskNO_AFFINITY
 
 //App Tunes
 #define I2S_SAMPLE_RATE 44100

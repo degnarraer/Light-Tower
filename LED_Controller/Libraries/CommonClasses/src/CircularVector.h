@@ -34,19 +34,19 @@ public:
 
     // Push new frame into the buffer (overwrites if full)
     void push(Frame_t frame, TickType_t waitTime) {
-        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
+        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
             buffer[writeIndex] = frame;
             writeIndex = (writeIndex + 1) % bufferSize;
             if (writeIndex == readIndex) {
                 readIndex = (readIndex + 1) % bufferSize;
             }
-            xSemaphoreGiveRecursive(mutex);
+            xSemaphoreGive(mutex);
         }
     }
 
     size_t push(Frame_t* frames, size_t count, TickType_t waitTime) {
         size_t pushed = 0;
-        if (frames && xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
+        if (frames && xSemaphoreTake(mutex, waitTime) == pdTRUE) {
             for (size_t i = 0; i < count; ++i) {
                 buffer[writeIndex] = frames[i];
                 writeIndex = (writeIndex + 1) % bufferSize;
@@ -55,23 +55,29 @@ public:
                 }
                 pushed++;
             }
-            xSemaphoreGiveRecursive(mutex);
+            xSemaphoreGive(mutex);
         }
         return pushed;
     }
 
     size_t get(std::vector<Frame_t>& frames, size_t count, TickType_t waitTime) {
         size_t returned = 0;
-        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
-            size_t available = (writeIndex >= readIndex) ? (writeIndex - readIndex) : (bufferSize - readIndex + writeIndex);
-            size_t framesToReturn = (available >= count) ? count : available;
+        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+            size_t available = (writeIndex >= readIndex) 
+                ? (writeIndex - readIndex) 
+                : (bufferSize - readIndex + writeIndex);
+
+            size_t framesToReturn = std::min(count, available);
             frames.resize(framesToReturn);
+
+            size_t tempIndex = readIndex; // Use a temporary index for reading
             for (size_t i = 0; i < framesToReturn; ++i) {
-                frames[i] = buffer[(readIndex + i) % bufferSize];
+                frames[i] = buffer[tempIndex];
+                tempIndex = (tempIndex + 1) % bufferSize;
             }
-            readIndex = (readIndex + framesToReturn) % bufferSize;
+
             returned = framesToReturn;
-            xSemaphoreGiveRecursive(mutex);
+            xSemaphoreGive(mutex);
         }
         return returned;
     }

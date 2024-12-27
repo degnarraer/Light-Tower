@@ -23,7 +23,7 @@
 #include "Helpers.h"
 #include "DataSerializer.h"
 
-#define MaxQueueCount 50
+#define MaxQueueCount 100
 #define MaxMessageLength 1000
 
 template <typename T>
@@ -220,26 +220,33 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			ESP_LOGD("~SerialPortMessageManager", "Deleting SerialPortMessageManager");
 			if(m_RXTaskHandle)
 			{
-				ESP_LOGD("~SerialPortMessageManager", "RX Task Exists.");
-				if(eTaskGetState(m_RXTaskHandle) != eDeleted)
-				{
-					ESP_LOGD("~SerialPortMessageManager", "Deleting RX Task.");
-					vTaskDelete(m_RXTaskHandle);
-				}
+				ESP_LOGD("~SerialPortMessageManager", "Deleting RX Task.");
+				vTaskDelete(m_RXTaskHandle);
+				m_RXTaskHandle = nullptr;
+			}
+			if(m_RXQueueTaskHandle)
+			{
+				ESP_LOGD("~SerialPortMessageManager", "Deleting RX Task.");
+				vTaskDelete(m_RXQueueTaskHandle);
+				m_RXQueueTaskHandle = nullptr;
 			}
 			if(m_TXTaskHandle)
 			{
-				ESP_LOGD("~SerialPortMessageManager", "TX Task Exists.");
-				if(eTaskGetState(m_TXTaskHandle) != eDeleted)
-				{
-					ESP_LOGD("~SerialPortMessageManager", "Deleting TX Task.");
-					vTaskDelete(m_TXTaskHandle);
-				}
+				ESP_LOGD("~SerialPortMessageManager", "Deleting TX Task.");
+				vTaskDelete(m_TXTaskHandle);
+				m_TXTaskHandle = nullptr;
 			}
-			if(m_TXQueue)
+			if(m_TXQueueHandle)
 			{
-				ESP_LOGD("~SerialPortMessageManager", "Deleting Queue");
-				vQueueDelete(m_TXQueue);
+				ESP_LOGD("~SerialPortMessageManager", "Deleting TX Queue");
+				vQueueDelete(m_TXQueueHandle);
+				m_TXQueueHandle = nullptr;
+			}
+			if(m_MessageQueueHandle)
+			{
+				ESP_LOGD("~SerialPortMessageManager", "Deleting RX Queue");
+				vQueueDelete(m_MessageQueueHandle);
+				m_MessageQueueHandle = nullptr;
 			}
 			ESP_LOGD("~SerialPortMessageManager", "SerialPortMessageManager Deleted");
 		}
@@ -257,14 +264,65 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		BaseType_t  m_CoreId = 1;
 		std::string m_message;
 		TaskHandle_t m_RXTaskHandle = nullptr;
+		TaskHandle_t m_RXQueueTaskHandle = nullptr;
 		TaskHandle_t m_TXTaskHandle = nullptr;
-		QueueHandle_t m_TXQueue = nullptr;
+		QueueHandle_t m_TXQueueHandle = nullptr;
+		QueueHandle_t m_MessageQueueHandle = nullptr;
+
 		static void StaticSerialPortMessageManager_RxTask(void *Parameters)
 		{
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
 			aSerialPortMessageManager->SerialPortMessageManager_RxTask();
 		}
 		virtual void SerialPortMessageManager_RxTask();
+
+		static void StaticSerialPortMessageManager_RxQueueTask(void *Parameters)
+		{
+			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
+			aSerialPortMessageManager->SerialPortMessageManager_RxQueueTask();
+		}
+		virtual void SerialPortMessageManager_RxQueueTask()
+		{
+			ESP_LOGD("Setup", "Starting RX Queue Task.");
+			const TickType_t xFrequency = 10;
+			TickType_t xLastWakeTime = xTaskGetTickCount();
+			while (true)
+			{
+        		vTaskDelayUntil(&xLastWakeTime, xFrequency);
+				if(m_MessageQueueHandle && mp_DataSerializer)
+				{
+					size_t messageCount = uxQueueMessagesWaiting(m_MessageQueueHandle);
+					for(int i = 0; i < messageCount; ++i)
+					{
+						for(int i = 0; i < messageCount; ++i)
+						{
+							std::string *p_rxMessage;
+							if ( xQueueReceive(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(0)) == pdTRUE )
+							{
+								NamedObject_t NamedObject;
+								if (mp_DataSerializer->DeSerializeJsonToNamedObject(p_rxMessage->c_str(), NamedObject))
+								{
+									ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+									this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
+								}
+								else
+								{
+									ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
+								}
+								delete p_rxMessage;
+							}
+							taskYIELD();
+						}
+					}
+				}
+				else
+				{
+					ESP_LOGE("SerialPortMessageManager_RxQueueTask", "ERROR! Null Pointer.");
+					vTaskDelay(100);
+				}
+			}
+		}
+
 		static void StaticSerialPortMessageManager_TxTask(void *Parameters)
 		{
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
@@ -276,7 +334,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			size_t start = str.find_first_not_of(" \t\n\r");
 			size_t end = str.find_last_not_of(" \t\n\r");
 			if (start == std::string::npos || end == std::string::npos) {
-				return ""; // All whitespace
+				return "";
 			}
 			return str.substr(start, end - start + 1);
 		}

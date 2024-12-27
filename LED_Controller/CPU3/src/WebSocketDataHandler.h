@@ -87,8 +87,8 @@ class WebSocketDataProcessor
       if (m_WebSocketMessageQueue) ESP_LOGD("SetupWebSocket", "Created Queue");
       else ESP_LOGE("SetupWebSocket", "Failed to create queue");
 
-      xTaskCreatePinnedToCore( StaticWebSocketDataProcessor_WebSocket_TxTask,  "Web Server Task",   2500,  this,  THREAD_PRIORITY_HIGH, &m_WebServerTaskHandle, tskNO_AFFINITY );
-      xTaskCreatePinnedToCore(StaticWebSocketTransmissionTask, "Web Server Tx Task", 2500, this, THREAD_PRIORITY_MEDIUM, &m_WebServerTxTaskHandle, tskNO_AFFINITY);
+      xTaskCreate( StaticWebSocketDataProcessor_WebSocket_TxTask,  "Web Server Task", 2500,  this,  THREAD_PRIORITY_HIGH, &m_WebServerTaskHandle );
+      xTaskCreate( StaticWebSocketTransmissionTask, "Web Server Tx Task", 2500, this, THREAD_PRIORITY_MEDIUM, &m_WebServerTxTaskHandle );
     }
     void RegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void DeRegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
@@ -126,15 +126,20 @@ class WebSocketDataProcessor
         while (true)
         {
             std::string* message;
-            if (xQueueReceive(m_WebSocketMessageQueue, &message, portMAX_DELAY) == pdTRUE)
+            size_t messages = uxQueueMessagesWaiting(m_WebSocketMessageQueue);
+            for(int i = 0; i < messages; ++i)
             {
-                NotifyClients(*message);
-                delete message;
+              if (xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(0)) == pdTRUE)
+              {
+                  NotifyClients(*message);
+                  delete message;
+              }
+              else
+              {
+                  ESP_LOGW("WebSocketTransmissionTask", "Failed to receive message from queue");
+              }
             }
-            else
-            {
-                ESP_LOGW("WebSocketTransmissionTask", "Failed to receive message from queue");
-            }
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 

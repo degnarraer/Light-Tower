@@ -38,7 +38,7 @@ void StatisticalEngine::Setup()
   m_NewBandDataCurrentTime = currentTime;
   m_NewMaxBandSoundDataCurrentTime = currentTime;
   m_NewSoundDataCurrentTime = currentTime;
-  xTaskCreatePinnedToCore( StaticUpdateSoundState,   "StaticUpdateSoundStateTask",  2000,  this,   configMAX_PRIORITIES - 3,   &m_SoundDetectionTask, STATISTICAL_ENGINE_TASK_CORE);
+  xTaskCreate( StaticUpdateSoundState,   "StaticUpdateSoundStateTask",  2000,  this,   configMAX_PRIORITIES - 3,   &m_SoundDetectionTask );
 }
 
 bool StatisticalEngine::NewSoundDataReady()
