@@ -170,8 +170,7 @@ public:
             Push_Frames_Null_Pointer_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
             return;
         }
-        size_t actualPushCount = mp_ringBuffer->push(frames, count, pdMS_TO_TICKS(0));
-        m_samplesSinceLastFFT += actualPushCount;
+        m_samplesSinceLastFFT += mp_ringBuffer->push(frames, count, pdMS_TO_TICKS(0));
         ESP_LOGD("PushFrames", "Samples Since Last FFT: \"%i\" Hop Length: \"%i\"", m_samplesSinceLastFFT, m_hopSize);
         if (m_samplesSinceLastFFT >= m_hopSize)
         {
@@ -218,7 +217,7 @@ private:
 
             //Ownership of p_Frame is given to the queue and should be deleted by the recepiant.
             std::vector<Frame_t>* p_Frames = new std::vector<Frame_t>(m_fftSize);
-            size_t receivedFrameCount = mp_ringBuffer->get((*p_Frames), m_fftSize, pdMS_TO_TICKS(0));
+            size_t receivedFrameCount = mp_ringBuffer->get((*p_Frames), m_fftSize, portMAX_DELAY);
             PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
             if(receivedFrameCount == m_fftSize)
             {

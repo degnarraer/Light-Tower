@@ -105,11 +105,15 @@ void Sound_Processor::FFT_Result_Processor_Task()
     if(m_FFT_Result_Processor_Queue)
     {
       size_t messages = uxQueueMessagesWaiting(m_FFT_Result_Processor_Queue);
-      if(0 == messages) vTaskDelay(pdMS_TO_TICKS(10));
+      if(0 == messages)
+      {
+        vTaskDelay(pdMS_TO_TICKS(10));
+        continue;
+      }
       for(int i = 0; i < messages; ++i)
       {
         FFT_Bin_Data_Set_t *fFT_Bin_Data_Set = nullptr;
-        if(xQueueReceive(m_FFT_Result_Processor_Queue, &fFT_Bin_Data_Set, pdMS_TO_TICKS(0)) == pdTRUE )
+        if(xQueueReceive(m_FFT_Result_Processor_Queue, &fFT_Bin_Data_Set, portMAX_DELAY) == pdTRUE )
         {
           FFT_Results_Processor_Task_RLL.Log(ESP_LOG_INFO, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
           if(fFT_Bin_Data_Set)
@@ -117,7 +121,7 @@ void Sound_Processor::FFT_Result_Processor_Task()
             Update_Left_Bands_And_Send_Result(fFT_Bin_Data_Set->Left_Channel);
             Update_Right_Bands_And_Send_Result(fFT_Bin_Data_Set->Right_Channel);
             delete fFT_Bin_Data_Set;
-            vTaskDelay(pdMS_TO_TICKS(1));
+            vTaskDelay(pdMS_TO_TICKS(10));
           }
           else
           {

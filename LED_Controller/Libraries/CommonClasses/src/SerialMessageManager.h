@@ -208,11 +208,13 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		SerialPortMessageManager( const std::string& name
 								, HardwareSerial *serial
 								, DataSerializer *dataSerializer
-								, BaseType_t coreId )
+								, BaseType_t coreId
+								, BaseType_t priority )
 								: m_Name(name)
 								, mp_Serial(serial)
 								, mp_DataSerializer(dataSerializer)
 								, m_CoreId(coreId)
+								, m_Priority(priority)
 		{
 		}
 		virtual ~SerialPortMessageManager()
@@ -262,6 +264,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		HardwareSerial *mp_Serial = nullptr;
 		DataSerializer *mp_DataSerializer = nullptr;
 		BaseType_t  m_CoreId = 1;
+		BaseType_t m_Priority = THREAD_PRIORITY_HIGH;
 		std::string m_message;
 		TaskHandle_t m_RXTaskHandle = nullptr;
 		TaskHandle_t m_RXQueueTaskHandle = nullptr;

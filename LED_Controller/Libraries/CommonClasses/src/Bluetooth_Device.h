@@ -63,9 +63,11 @@ class Bluetooth_Source: public NamedItem
 		
 		Bluetooth_Source( std::string Title
 						, BaseType_t Core
+						, BaseType_t Priority
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
 						, m_Core(Core)
+						, m_Priority(Priority)
 						, m_BTSource(BTSource)
 		{
 			bT_source_instance = this;
@@ -116,6 +118,7 @@ class Bluetooth_Source: public NamedItem
 	private:
 	
 		BaseType_t m_Core = 0;
+		BaseType_t m_Priority = THREAD_PRIORITY_HIGH;
 		BluetoothA2DPSource& m_BTSource;
 		Bluetooth_Source_Callbacks* m_Callee = NULL;
 		music_data_cb_t m_MusicDataCallback = NULL;
@@ -162,6 +165,7 @@ class Bluetooth_Sink: public NamedItem
   public:
     Bluetooth_Sink( std::string Title
 				  , BaseType_t Core
+				  , UBaseType_t Priority
 				  , BluetoothA2DPSink& BTSink
 				  , i2s_port_t i2S_PORT
 				  , i2s_mode_t Mode
@@ -180,6 +184,7 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataOutPin )
 				  : NamedItem(Title)
 				  , m_Core(Core)
+				  , m_Priority(Priority)
 				  , m_BTSink(BTSink)
 				  , m_I2S_PORT(i2S_PORT)
 				  , m_i2s_Mode(Mode)
@@ -237,6 +242,7 @@ class Bluetooth_Sink: public NamedItem
 
 	private:
 		BaseType_t m_Core = 0;
+		UBaseType_t m_Priority = THREAD_PRIORITY_HIGH;
 		Bluetooth_Sink_Callbacks* m_Callee = NULL;
 		BluetoothA2DPSink& m_BTSink;
 		i2s_port_t m_I2S_PORT;

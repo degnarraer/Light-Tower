@@ -46,14 +46,15 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out( "Bluetooth Source"
                          , BLUETOOTH_TASK_CORE
+                         , BLUETOOTH_TASK_PRIORITY
                          , a2dp_source );
                               
 FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, I2S_SAMPLE_RATE, DataWidth_16, FFT_COMPUTE_TASK_PRIORITY, FFT_COMPUTE_TASK_CORE);
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE);
-SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
 
 
 Sound_Processor m_SoundProcessor ( "Sound Processor"

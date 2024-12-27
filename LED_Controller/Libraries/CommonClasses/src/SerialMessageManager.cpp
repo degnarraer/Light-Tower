@@ -85,11 +85,11 @@ void SerialPortMessageManager::Setup()
 	ESP_LOGD("Setup", "RX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
 
-	if(xTaskCreate( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_MEDIUM,  &m_RXQueueTaskHandle ) == pdPASS)
+	if(xTaskCreate( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_RXQueueTaskHandle ) == pdPASS)
 	ESP_LOGD("Setup", "RX Queue Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue Task.");
 	
-	if(xTaskCreate( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_TXTaskHandle ) == pdPASS)
+	if(xTaskCreate( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_TXTaskHandle ) == pdPASS)
 	ESP_LOGD("Setup", "TX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
 }
