@@ -25,7 +25,7 @@ void WebSocketDataProcessor::WebSocketDataProcessor_WebSocket_TxTask()
 
     while (true)
     {
-        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, 0) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(0)) == pdTRUE)
         {
             if (!m_Tx_KeyValues.empty())
             {

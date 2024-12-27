@@ -55,24 +55,26 @@ private:
     FFT_Results_Callback* mp_CallBack = nullptr;
     bool m_IsMultithreaded = false;
     void* mp_CallBackArgs = nullptr;
-    size_t m_fftSize;                                   // FFT size (e.g., 8192)
-    size_t m_magnitudeSize;
-    size_t m_hopSize;                                   // Hop size (number of samples between FFTs)
-    float m_f_s;                                        // Sample Rate
-    ShocksRingBuffer* mp_ringBuffer;                    // Ring Buffer
-    std::vector<Frame_t> m_frames;                      // frame Buffer
-    std::vector<float> m_real_right_channel;            // Real part of FFT input
-    std::vector<float> m_imag_right_channel;            // Imaginary part of FFT input
-    std::vector<float> m_real_left_channel;             // Real part of FFT input
-    std::vector<float> m_imag_left_channel;             // Imaginary part of FFT input
-    std::vector<float> m_magnitudes_right_channel;      // FFT magnitudes
-    std::vector<float> m_magnitudes_left_channel;       // FFT magnitudes
-    size_t m_samplesSinceLastFFT;                       // Counter for samples pushed since the last FFT
+    size_t m_fftSize;                                       // FFT size (e.g., 8192)
+    size_t m_magnitudeSize; 
+    size_t m_hopSize;                                       // Hop size (number of samples between FFTs)
+    float m_f_s;                                            // Sample Rate
+    ShocksRingBuffer* mp_ringBuffer;                        // Ring Buffer
+    std::vector<Frame_t> m_frames;                          // frame Buffer
+    std::vector<float> m_real_right_channel;                // Real part of FFT input
+    std::vector<float> m_imag_right_channel;                // Imaginary part of FFT input
+    std::vector<float> m_real_left_channel;                 // Real part of FFT input
+    std::vector<float> m_imag_left_channel;                 // Imaginary part of FFT input
+    std::vector<float> m_magnitudes_right_channel;          // FFT magnitudes
+    std::vector<float> m_magnitudes_left_channel;           // FFT magnitudes
+    size_t m_samplesSinceLastFFT;                           // Counter for samples pushed since the last FFT
     UBaseType_t m_uxPriority;
     BaseType_t m_xCoreID;
 
-    TaskHandle_t m_fftTaskHandle = nullptr;         // Task handle for the FFT computation thread
-    bool m_isInitialized = false;                   // Whether the setup function has been called
+    TaskHandle_t m_fft_Data_Getter_TaskHandle = nullptr;    // Task handle for the FFT Data Getter
+    TaskHandle_t m_fft_Calculator_TaskHandle = nullptr;     // Task handle for the FFT Data Getter
+    QueueHandle_t m_FFT_Data_Input_QueueHandle = nullptr;
+    bool m_isInitialized = false;                           // Whether the setup function has been called
     DataWidth_t m_dataWidth;
 
 public:    
@@ -107,11 +109,11 @@ public:
                 delete mp_ringBuffer;
                 mp_ringBuffer = nullptr;
             }
-            if(m_fftTaskHandle)
+            if(m_fft_Data_Getter_TaskHandle)
             {
-                ESP_LOGD("~FFT_Computer", "m_fftTaskHandle");
-                vTaskDelete(m_fftTaskHandle);
-                m_fftTaskHandle= nullptr;
+                ESP_LOGD("~FFT_Computer", "m_fft_Data_Getter_TaskHandle");
+                vTaskDelete(m_fft_Data_Getter_TaskHandle);
+                m_fft_Data_Getter_TaskHandle= nullptr;
             }
         }
     }
@@ -121,7 +123,7 @@ public:
         mp_CallBackArgs = callBackArgs;
         if (m_isInitialized)
             return;
-        mp_ringBuffer = new ShocksRingBuffer(m_fftSize * 10);
+        mp_ringBuffer = new ShocksRingBuffer(m_fftSize * 2);
         m_real_right_channel.resize(m_fftSize, 0.0f);
         m_imag_right_channel.resize(m_fftSize, 0.0f);
         m_real_left_channel.resize(m_fftSize, 0.0f);
@@ -131,7 +133,19 @@ public:
 
         if(m_IsMultithreaded)
         {
-            xTaskCreate(Static_PerformFFTTask, "FFT Task", 5000, this, m_uxPriority, &m_fftTaskHandle);
+            m_FFT_Data_Input_QueueHandle = xQueueCreate(20, sizeof(std::vector<Frame_t>*) );
+            if(m_FFT_Data_Input_QueueHandle) ESP_LOGD("Setup", "FFT Data Input Queue Created.");
+            else ESP_LOGE("Setup", "ERROR! Error creating FFT Data Input Queue.");
+            
+            xTaskCreate(Static_Process_FFT_Task, "FFT Task", 5000, this, m_uxPriority, &m_fft_Calculator_TaskHandle);
+            if(m_fft_Calculator_TaskHandle) ESP_LOGD("Setup", "FFT Calculator Task Started.");
+            else ESP_LOGE("Setup", "ERROR! Error creating FFT Calculator Task.");            
+        }
+        else
+        {
+            m_FFT_Data_Input_QueueHandle = xQueueCreate(1, sizeof(std::vector<Frame_t>*) );
+            if(m_FFT_Data_Input_QueueHandle) ESP_LOGD("Setup", "FFT Data Input Queue Created.");
+            else ESP_LOGE("Setup", "ERROR! Error creating FFT Data Input Queue.");
         }
         m_isInitialized = true;
     }
@@ -142,7 +156,7 @@ public:
         static LogWithRateLimit Push_Frames_Null_Pointer_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Busy_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
-        static LogWithRateLimit Push_Frames_Notify_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit Push_Frames_Threaded_RLL(1000, ESP_LOG_INFO);
         static LogWithRateLimit Push_Frames_Unthreaded_RLL(1000, ESP_LOG_DEBUG);
 
         if (!m_isInitialized)
@@ -156,45 +170,24 @@ public:
             Push_Frames_Null_Pointer_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
             return;
         }
-
         size_t actualPushCount = mp_ringBuffer->push(frames, count, pdMS_TO_TICKS(0));
-        if(actualPushCount == count)
+        m_samplesSinceLastFFT += actualPushCount;
+        ESP_LOGD("PushFrames", "Samples Since Last FFT: \"%i\" Hop Length: \"%i\"", m_samplesSinceLastFFT, m_hopSize);
+        if (m_samplesSinceLastFFT >= m_hopSize)
         {
-            m_samplesSinceLastFFT += actualPushCount;
-            ESP_LOGD("PushFrames", "Samples Since Last FFT: \"%i\" Hop Length: \"%i\"", m_samplesSinceLastFFT, m_hopSize);
-            if (m_samplesSinceLastFFT >= m_hopSize)
+            ESP_LOGD("PushFrames", "Hop Length Met");
+            if(m_IsMultithreaded)
             {
-                ESP_LOGD("PushFrames", "Hop Length Met");
-                if(m_IsMultithreaded)
-                {
-                    if(m_fftTaskHandle)
-                    {
-                        if( eRunning == eTaskGetState(m_fftTaskHandle) )
-                        {
-                            Push_Frames_Busy_RLL.Log(ESP_LOG_WARN, "PushFrames", "FFT Perform task is busy.");
-                        }
-                        else
-                        {
-                            Push_Frames_Notify_RLL.Log(ESP_LOG_INFO, "PushFrames", "Notify FFT Thread");
-                            xTaskNotifyGive(m_fftTaskHandle);
-                        }
-                    }
-                    else
-                    {
-                        ESP_LOGW("PushFrames", "WARNING! No task Handle.");
-                    }
-                }
-                else
-                {
-                    Push_Frames_Unthreaded_RLL.Log(ESP_LOG_DEBUG, "PushFrames", "Perform FFT UnThreaded");
-                    PerformFFT();
-                }
-                m_samplesSinceLastFFT = 0;
+                Push_Frames_Threaded_RLL.Log(ESP_LOG_INFO, "PushFrames", "Perform FFT Threaded");
+                Get_FFT_Data();
             }
-        }
-        else
-        {
-            Push_Frames_Dropped_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! Frames dropped.");
+            else
+            {
+                Push_Frames_Unthreaded_RLL.Log(ESP_LOG_DEBUG, "PushFrames", "Perform FFT UnThreaded");
+                Get_FFT_Data();
+                ProcessFFT();
+            }
+            m_samplesSinceLastFFT = 0;
         }
     }
 
@@ -212,54 +205,61 @@ public:
     }
 
 private:
-    static void Static_PerformFFTTask(void* pvParameters)
-    {
-        FFT_Computer* fft = (FFT_Computer*)pvParameters;
-        fft->PerformFFTTask();  
-    }
 
-    void PerformFFTTask() 
-    {
-        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_INFO);
-        while (true)
-        {
-            ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-            PerformFFTTask_RLL.Log(ESP_LOG_INFO, "PerformFFT", "Received notification");
-            PerformFFT();
-            taskYIELD();
-        }
-    }
-
-    void PerformFFT()
+    void Get_FFT_Data()
     {
         static LogWithRateLimit PerformFFT_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit PerformFFT_Done_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
-        static LogWithRateLimit PerformFFT_Read_Success_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit PerformFFT_Read_Success_RLL(1000, ESP_LOG_INFO);
         static LogWithRateLimit PerformFFT_Read_Failure_RLL(1000, ESP_LOG_WARN);
-        
-        PerformFFT_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "PerformFFT", ("Requesting " + std::to_string(m_fftSize) + " Frames for FFT Processing.").c_str());
-        size_t receivedFrameCount = mp_ringBuffer->get(m_frames, m_fftSize, pdMS_TO_TICKS(0));
-        PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "PerformFFT", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
-        if(receivedFrameCount == m_fftSize)
+        if(m_FFT_Data_Input_QueueHandle)
         {
-            PerformFFT_Read_Success_RLL.Log(ESP_LOG_DEBUG, "PerformFFT", ("Preping Buffers for FFT Processing: " + std::to_string(m_fftSize) + " bins.").c_str());
-            for(int i = 0; i < m_frames.size(); ++i)
+            PerformFFT_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Requesting " + std::to_string(m_fftSize) + " Frames for FFT Processing.").c_str());
+
+            //Ownership of p_Frame is given to the queue and should be deleted by the recepiant.
+            std::vector<Frame_t>* p_Frames = new std::vector<Frame_t>(m_fftSize);
+            size_t receivedFrameCount = mp_ringBuffer->get((*p_Frames), m_fftSize, pdMS_TO_TICKS(0));
+            PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
+            if(receivedFrameCount == m_fftSize)
             {
-                m_real_left_channel[i] = m_frames[i].channel1;
-                m_imag_left_channel[i] = 0.0f;
-                m_real_right_channel[i] = m_frames[i].channel2;
-                m_imag_right_channel[i] = 0.0f;
+                PerformFFT_Read_Success_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Queueing " + std::to_string(m_fftSize) + " Frames.").c_str());
+                if(xQueueSend(m_FFT_Data_Input_QueueHandle, &p_Frames, pdMS_TO_TICKS(0)) != pdTRUE)
+                {
+                    delete p_Frames;
+                }
             }
-            ProcessFFT();
+            else
+            {
+                PerformFFT_Read_Failure_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", "Unexpected buffer size read.");
+                delete p_Frames;
+            }
         }
         else
         {
-            PerformFFT_Read_Failure_RLL.Log(ESP_LOG_WARN, "PerformFFT", "Unexpected buffer size read.");
+            ESP_LOGW("Get_FFT_Data", "WARNING! No task Handle.");
+        }
+    }
+
+    static void Static_Process_FFT_Task(void* pvParameters)
+    {
+        FFT_Computer* fft = (FFT_Computer*)pvParameters;
+        fft->Process_FFT_Task();  
+    }
+
+    void Process_FFT_Task() 
+    {
+        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_INFO);
+        while(true)
+        {
+            PerformFFTTask_RLL.Log(ESP_LOG_INFO, "Process_FFT_Task", "Process FFT Task Called");
+            ProcessFFT();
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 
     void ProcessFFT()
     {
+        static LogWithRateLimit ProcessFFT_FFT_Started_RLL(1000, ESP_LOG_INFO);
         static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_No_Callback_RLL(1000, ESP_LOG_WARN);
@@ -270,41 +270,69 @@ private:
             m_imag_right_channel.size() == m_fftSize &&
             m_imag_left_channel.size() == m_fftSize )
         {
-            if (mp_CallBack)
+            if (mp_CallBack && m_FFT_Data_Input_QueueHandle)
             {
-                
-                ComputeFFT(m_real_right_channel, m_imag_right_channel);
-                ComputeFFT(m_real_left_channel, m_imag_left_channel);
-                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
-
-                float maxMagnitude = GetMaxMagnitude();
-
-                std::vector<FFT_Bin_Data_t>* p_freqMags_left = new std::vector<FFT_Bin_Data_t>(m_magnitudeSize);
-                std::vector<FFT_Bin_Data_t>* p_freqMags_right = new std::vector<FFT_Bin_Data_t>(m_magnitudeSize);
-                size_t maxBin_Left = 0;
-                size_t maxBin_Right = 0;
-                
-                for (int i = 0; i < m_magnitudeSize; i++)
+                size_t messages = uxQueueMessagesWaiting(m_FFT_Data_Input_QueueHandle);
+                for(int i = 0; i < messages; ++i)
                 {
-                    m_magnitudes_right_channel[i] = sqrtf(m_real_right_channel[i] * m_real_right_channel[i] +
-                                                            m_imag_right_channel[i] * m_imag_right_channel[i]);
-                    m_magnitudes_left_channel[i] = sqrtf(m_real_left_channel[i] * m_real_left_channel[i] +
-                                                        m_imag_left_channel[i] * m_imag_left_channel[i]);
-                    if(m_magnitudes_left_channel[i] > (*p_freqMags_left)[maxBin_Left].Magnitude) maxBin_Left = i;
-                    if(m_magnitudes_right_channel[i] > (*p_freqMags_right)[maxBin_Right].Magnitude) maxBin_Right = i;
+                    if(i == 0) ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Process FFT Started");
+                    std::vector<Frame_t>* p_frames;
+                    if( xQueueReceive(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) == pdTRUE )
+                    {
+                        for(int i = 0; i < m_fftSize; ++i)
+                        {
+                            m_real_left_channel[i] = (*p_frames)[i].channel1;
+                            m_real_right_channel[i] = (*p_frames)[i].channel2;
+                            m_imag_right_channel[i] = 0.0f;
+                            m_imag_left_channel[i] = 0.0f;
+                        }
+                        delete p_frames;
 
-                    (*p_freqMags_right)[i].Frequency = binToFrequency(i);
-                    (*p_freqMags_right)[i].Magnitude = m_magnitudes_right_channel[i];
-                    (*p_freqMags_right)[i].NormalizedMagnitude = m_magnitudes_right_channel[i] / maxMagnitude;
+                        ComputeFFT(m_real_left_channel, m_imag_left_channel);
+                        ComputeFFT(m_real_right_channel, m_imag_right_channel);
+                        ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
 
-                    (*p_freqMags_left)[i].Frequency = binToFrequency(i);
-                    (*p_freqMags_left)[i].Magnitude = m_magnitudes_left_channel[i];
-                    (*p_freqMags_left)[i].NormalizedMagnitude = m_magnitudes_left_channel[i] / maxMagnitude;
+                        float maxMagnitude = GetMaxMagnitude();
+                        
+                        //Ownership of FFT_Bin_Data_t is given to FFT_Bin_Data_Set_t
+                        std::vector<FFT_Bin_Data_t>* p_freqMags_left = new std::vector<FFT_Bin_Data_t>(m_magnitudeSize);
+                        std::vector<FFT_Bin_Data_t>* p_freqMags_right = new std::vector<FFT_Bin_Data_t>(m_magnitudeSize);
+                        size_t maxBin_Left = 0;
+                        size_t maxBin_Right = 0;
+                        
+                        for (int i = 0; i < m_magnitudeSize; i++)
+                        {
+                            m_magnitudes_right_channel[i] = sqrtf(m_real_right_channel[i] * m_real_right_channel[i] +
+                                                                    m_imag_right_channel[i] * m_imag_right_channel[i]);
+                            m_magnitudes_left_channel[i] = sqrtf(m_real_left_channel[i] * m_real_left_channel[i] +
+                                                                m_imag_left_channel[i] * m_imag_left_channel[i]);
+                            if(m_magnitudes_left_channel[i] > (*p_freqMags_left)[maxBin_Left].Magnitude) maxBin_Left = i;
+                            if(m_magnitudes_right_channel[i] > (*p_freqMags_right)[maxBin_Right].Magnitude) maxBin_Right = i;
+
+                            (*p_freqMags_right)[i].Frequency = binToFrequency(i);
+                            (*p_freqMags_right)[i].Magnitude = m_magnitudes_right_channel[i];
+                            (*p_freqMags_right)[i].NormalizedMagnitude = m_magnitudes_right_channel[i] / maxMagnitude;
+
+                            (*p_freqMags_left)[i].Frequency = binToFrequency(i);
+                            (*p_freqMags_left)[i].Magnitude = m_magnitudes_left_channel[i];
+                            (*p_freqMags_left)[i].NormalizedMagnitude = m_magnitudes_left_channel[i] / maxMagnitude;
+                        }
+                        
+                        ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
+
+                        //Ownership of fft_Bin_Data_Set is given to the callback
+                        FFT_Bin_Data_Set_t *fft_Bin_Data_Set = new FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
+                        mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
+                        if(m_IsMultithreaded)
+                        {
+                            vTaskDelay(pdMS_TO_TICKS(1));
+                        }
+                    }
+                    else
+                    {
+                        //Shouldn't ever get here and cannot recover if we do get here.
+                    }
                 }
-                
-                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
-                FFT_Bin_Data_Set_t *fft_Bin_Data_Set = new FFT_Bin_Data_Set_t( p_freqMags_left, p_freqMags_right, maxBin_Left, maxBin_Right );
-                mp_CallBack(fft_Bin_Data_Set, mp_CallBackArgs);
             }
             else
             {
@@ -388,6 +416,7 @@ private:
                 }
             }
         }
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
 
     int ReverseBits(int num, int bits)

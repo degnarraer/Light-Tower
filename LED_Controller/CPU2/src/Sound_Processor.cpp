@@ -105,6 +105,7 @@ void Sound_Processor::FFT_Result_Processor_Task()
     if(m_FFT_Result_Processor_Queue)
     {
       size_t messages = uxQueueMessagesWaiting(m_FFT_Result_Processor_Queue);
+      if(0 == messages) vTaskDelay(pdMS_TO_TICKS(10));
       for(int i = 0; i < messages; ++i)
       {
         FFT_Bin_Data_Set_t *fFT_Bin_Data_Set = nullptr;
@@ -128,11 +129,11 @@ void Sound_Processor::FFT_Result_Processor_Task()
           FFT_Results_Processor_Task_Queue_Error_RLL.Log(ESP_LOG_ERROR, "FFT_Result_Processor_Task", "ERROR! Unable to receive queue item.");
         }
       }
-      vTaskDelay(pdMS_TO_TICKS(10));
     }
     else
     {
       ESP_LOGE("FFT_Result_Processor_Task", "FFT_Result_Processor_Queue is not initialized!");
+      vTaskDelay(pdMS_TO_TICKS(100));
     }
   }
 }

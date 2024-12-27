@@ -24,7 +24,7 @@ class ShocksRingBuffer {
 public:
     ShocksRingBuffer(size_t size) 
         : buffer(new Frame_t[size]), bufferSize(size), writeIndex(0), readIndex(0) {
-        mutex = xSemaphoreCreateRecursiveMutex();
+        mutex = xSemaphoreCreateMutex();
     }
 
     ~ShocksRingBuffer() {
@@ -69,13 +69,11 @@ public:
 
             size_t framesToReturn = std::min(count, available);
             frames.resize(framesToReturn);
-
             size_t tempIndex = readIndex; // Use a temporary index for reading
             for (size_t i = 0; i < framesToReturn; ++i) {
                 frames[i] = buffer[tempIndex];
                 tempIndex = (tempIndex + 1) % bufferSize;
             }
-
             returned = framesToReturn;
             xSemaphoreGive(mutex);
         }

@@ -311,7 +311,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 								}
 								delete p_rxMessage;
 							}
-							taskYIELD();
+            				vTaskDelay(pdMS_TO_TICKS(1));
 						}
 					}
 				}
