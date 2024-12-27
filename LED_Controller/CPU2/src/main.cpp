@@ -53,8 +53,8 @@ FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, I2S_SAMPLE_RATE, 
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
-SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3 Datalink Task", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
 
 
 Sound_Processor m_SoundProcessor ( "Sound Processor"

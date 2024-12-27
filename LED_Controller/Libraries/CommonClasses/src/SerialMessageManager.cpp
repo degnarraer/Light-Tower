@@ -81,15 +81,15 @@ void SerialPortMessageManager::Setup()
 	ESP_LOGD("Setup", "RX Queue Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue.");
 
-	if(xTaskCreate( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle ) == pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_RXTaskHandle, m_CoreId ) == pdPASS)
 	ESP_LOGD("Setup", "RX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Task.");
 
-	if(xTaskCreate( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_RXQueueTaskHandle ) == pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_RXQueueTaskHandle, m_CoreId ) == pdPASS)
 	ESP_LOGD("Setup", "RX Queue Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue Task.");
 	
-	if(xTaskCreate( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_TXTaskHandle ) == pdPASS)
+	if(xTaskCreatePinnedToCore( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_TXTaskHandle, m_CoreId ) == pdPASS)
 	ESP_LOGD("Setup", "TX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
 }

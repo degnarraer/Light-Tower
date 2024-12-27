@@ -60,15 +60,15 @@ void Sound_Processor::Setup()
   SetupAllSetupCallees();
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   
-  m_FFT_Result_Processor_Queue = xQueueCreate(MaxQueueCount, sizeof(FFT_Bin_Data_Set_t*) * 20 );
+  m_FFT_Result_Processor_Queue = xQueueCreate(FFT_COMPUTE_QUEUE_SIZE, sizeof(FFT_Bin_Data_Set_t*) );
   if(m_FFT_Result_Processor_Queue) ESP_LOGD("Setup", "FFT Result Processor Queue Created.");
   else ESP_LOGE("Setup", "ERROR! Error creating the FFT Result Processor Queue.");
 
-  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 10000, this, THREAD_PRIORITY_HIGH, &m_MessageQueueProcessorTask ) != pdTRUE )
+  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 10000, this, FFT_COMPUTE_TASK_PRIORITY, &m_MessageQueueProcessorTask ) != pdTRUE )
   ESP_LOGE("Setup", "ERROR! Unable to create task.");
   
-  if( xTaskCreate( Static_Calculate_Power, "Sound Power Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask ) != pdTRUE )
-  ESP_LOGE("Setup", "ERROR! Unable to create task.");
+  //if( xTaskCreate( Static_Calculate_Power, "Sound Power Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask ) != pdTRUE )
+  //ESP_LOGE("Setup", "ERROR! Unable to create task.");
   
   m_FFT_Computer.Setup(&StaticFFT_Results_Callback, this);
 }
