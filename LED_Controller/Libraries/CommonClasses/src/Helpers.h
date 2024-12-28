@@ -5,73 +5,137 @@
 #include <Ticker.h>
 #include <mutex>
 
-class LogWithRateLimit
+class LogWithRateLimitBase
+{
+	public:
+		LogWithRateLimitBase( uint32_t interval, esp_log_level_t delayedLogLevel = ESP_LOG_INFO)
+							: m_logInterval(interval)
+							, m_delayedLogLevel(delayedLogLevel)
+							, m_occurrenceCount(0)
+							, m_lastLogTime(0){}
+
+		virtual std::string GetDelayedMessage(const std::string& message, int delayedOccurrences) = 0;
+		virtual bool Log(const esp_log_level_t level, const std::string& tag, const std::string& message)
+		{
+			unsigned long currentTime = millis();
+			int delayedOccurrences = 0;
+			bool shouldLogNow = false;
+			std::string delayedMessage;
+			CreateMessage(message, currentTime, delayedOccurrences, delayedMessage, shouldLogNow);
+			return TryLogNow(level, tag, message, delayedOccurrences, delayedMessage, shouldLogNow);
+		}
+		virtual bool TryLogNow( const esp_log_level_t &level
+						   	  , const std::string &tag
+						   	  , const std::string &message
+						   	  , const int &delayedOccurrences
+						   	  , const std::string &delayedMessage
+						   	  , const bool &shouldLogNow )
+		{
+			// Perform logging outside the critical section
+			if (delayedOccurrences > 1)
+			{
+				LogMessage(m_delayedLogLevel, tag, delayedMessage);
+				return true;
+			}
+
+			if (shouldLogNow)
+			{
+				LogMessage(level, tag, message);
+				return true;
+			}
+			return false;
+		}
+	protected:
+		void LogMessage(const esp_log_level_t level, const std::string& tag, const std::string& message)
+		{
+			switch (level)
+			{
+				case ESP_LOG_ERROR:   ESP_LOGE(tag.c_str(), "%s", message.c_str()); break;
+				case ESP_LOG_WARN:    ESP_LOGW(tag.c_str(), "%s", message.c_str()); break;
+				case ESP_LOG_INFO:    ESP_LOGI(tag.c_str(), "%s", message.c_str()); break;
+				case ESP_LOG_DEBUG:   ESP_LOGD(tag.c_str(), "%s", message.c_str()); break;
+				case ESP_LOG_VERBOSE: ESP_LOGV(tag.c_str(), "%s", message.c_str()); break;
+				default:              ESP_LOGI(tag.c_str(), "%s", message.c_str()); break;
+			}
+		}
+	private:
+		const uint32_t m_logInterval; 				// Interval between logs in milliseconds
+		unsigned long m_lastLogTime;  				// Timestamp of the last log
+		const esp_log_level_t m_delayedLogLevel; 	// Log level for delayed messages
+		int m_occurrenceCount = 0;        			// Number of occurrences within the interval
+		std::mutex m_logMutex;        				// Mutex to ensure thread safety
+		virtual void CreateMessage(const std::string &message, unsigned long &currentTime, int &delayedOccurrences, std::string &delayedMessage, bool &shouldLogNow)
+		{
+			// Critical section: protect shared state
+			std::unique_lock<std::mutex> lock(m_logMutex);
+			if (m_occurrenceCount == 0)
+			{
+				shouldLogNow = true;
+				m_lastLogTime = currentTime;
+			}
+			else if(currentTime - m_lastLogTime > m_logInterval)
+			{
+				m_lastLogTime = currentTime;
+				if (m_occurrenceCount >= 1)
+				{
+					delayedOccurrences = m_occurrenceCount - 1;
+					delayedMessage = GetDelayedMessage(message, delayedOccurrences);
+				}
+				m_occurrenceCount = 0;
+			}
+			++m_occurrenceCount;
+		}
+};
+
+class LogWithRateLimit: public LogWithRateLimitBase
+{
+	public:
+		LogWithRateLimit( uint32_t interval, esp_log_level_t delayedLogLevel = ESP_LOG_INFO)
+						: LogWithRateLimitBase(interval, delayedLogLevel){}
+
+		std::string GetDelayedMessage(const std::string& message, int delayedOccurrences)
+		{
+			return "Excessive Log: " + message + " (Occurrence Count: " + std::to_string(delayedOccurrences) + ")";
+		}
+};
+
+template <typename T>
+class LogWithRateLimit_Average: public LogWithRateLimitBase
 {
 public:
-    LogWithRateLimit(uint32_t interval, esp_log_level_t delayedLogLevel = ESP_LOG_INFO)
-        : logInterval(interval), lastLogTime(0), delayedLogLevel(delayedLogLevel), occurrenceCount(0)
+    LogWithRateLimit_Average(uint32_t interval, esp_log_level_t delayedLogLevel = ESP_LOG_INFO)
+        : LogWithRateLimitBase(interval, delayedLogLevel)
     {
     }
 
-    void Log(esp_log_level_t level, const std::string& tag, const std::string& message)
-    {
-        unsigned long currentTime = millis();
-        std::string delayedMessage;
-        int delayedOccurrences = 0;
-        bool shouldLogNow = false;
+	void LogWithValue(esp_log_level_t level, const std::string& tag, const std::string& message, T value)
+	{
+		if(m_RunningTotal + value < m_RunningTotal) m_Overflow = true;
+		m_RunningTotal += value;
+		if(LogWithRateLimitBase::Log(level, tag, message))
+		{
+			m_RunningTotal = T();
+		}
+	}
 
-        {
-            // Critical section: protect shared state
-            std::unique_lock<std::mutex> lock(logMutex);
-
-            if (occurrenceCount == 0 || (currentTime - lastLogTime > logInterval))
-            {
-                if (occurrenceCount > 1)
-                {
-                    delayedMessage = "Excessive Log: " + message + " (Occurrence Count: " + std::to_string(occurrenceCount - 1) + ")";
-                    delayedOccurrences = occurrenceCount - 1;
-                }
-
-                occurrenceCount = 0;
-                lastLogTime = currentTime;
-                shouldLogNow = true;
-            }
-
-            ++occurrenceCount;
-        }
-
-        // Perform logging outside the critical section
-        if (delayedOccurrences > 0)
-        {
-            LogMessage(delayedLogLevel, tag, delayedMessage);
-			shouldLogNow = false;
-        }
-
-        if (shouldLogNow)
-        {
-            LogMessage(level, tag, message);
-        }
-    }
+	std::string GetDelayedMessage(const std::string& message, int delayedOccurrences)
+	{
+		std::string delayedMessage;
+		if(m_Overflow)
+		{
+			delayedMessage = "Excessive Log: " + message + " (Occurrence Count: \"" + std::to_string(delayedOccurrences) + "\" | Average Value: \"Overflowed\")";
+		}
+		else
+		{
+			float result = (float)m_RunningTotal / (float)delayedOccurrences;
+			delayedMessage = "Excessive Log: " + message + " (Occurrence Count: \"" + std::to_string(delayedOccurrences) + "\" | Average Value: \"" + std::to_string(result) + "\")";
+		}
+		return delayedMessage;
+	}
 
 private:
-    const uint32_t logInterval; 			// Interval between logs in milliseconds
-    unsigned long lastLogTime;  			// Timestamp of the last log
-    const esp_log_level_t delayedLogLevel; 	// Log level for delayed messages
-    int occurrenceCount = 0;        		// Number of occurrences within the interval
-    std::mutex logMutex;        			// Mutex to ensure thread safety
-
-    void LogMessage(esp_log_level_t level, const std::string& tag, const std::string& message)
-    {
-        switch (level)
-        {
-            case ESP_LOG_ERROR:   ESP_LOGE(tag.c_str(), "%s", message.c_str()); break;
-            case ESP_LOG_WARN:    ESP_LOGW(tag.c_str(), "%s", message.c_str()); break;
-            case ESP_LOG_INFO:    ESP_LOGI(tag.c_str(), "%s", message.c_str()); break;
-            case ESP_LOG_DEBUG:   ESP_LOGD(tag.c_str(), "%s", message.c_str()); break;
-            case ESP_LOG_VERBOSE: ESP_LOGV(tag.c_str(), "%s", message.c_str()); break;
-            default:              ESP_LOGI(tag.c_str(), "%s", message.c_str()); break;
-        }
-    }
+	T m_RunningTotal = T();
+	bool m_Overflow = false;
 };
 
 

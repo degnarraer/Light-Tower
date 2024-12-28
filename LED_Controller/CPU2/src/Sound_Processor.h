@@ -43,12 +43,12 @@ class Sound_Processor: public NamedItem
                    , IPreferences& preferences );
     virtual ~Sound_Processor();
     void Setup();
-    static void StaticFFT_Results_Callback(FFT_Bin_Data_Set_t *FFT_Bin_Data, void* args)
+    static bool StaticFFT_Results_Callback(FFT_Bin_Data_Set_t *p_FFT_Bin_Data, void* args)
     {
       Sound_Processor *aSound_Processor = static_cast<Sound_Processor*>(args);
-      aSound_Processor->FFT_Results_Callback(FFT_Bin_Data);
+      aSound_Processor->FFT_Results_Callback(p_FFT_Bin_Data);
     }
-    void FFT_Results_Callback(FFT_Bin_Data_Set_t *FFT_Bin_Data);
+    bool FFT_Results_Callback(FFT_Bin_Data_Set_t *p_FFT_Bin_Data);
     
   private:
     ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
@@ -156,9 +156,9 @@ class Sound_Processor: public NamedItem
     
     static void Static_FFT_Result_Processor_Task(void * parameter);
     void FFT_Result_Processor_Task();
-    void Update_Right_Bands_And_Send_Result(std::vector<FFT_Bin_Data_t>* bin_Data);
-    void Update_Left_Bands_And_Send_Result(std::vector<FFT_Bin_Data_t>* bin_Data);
-    void AssignToBands(float* Band_Data, std::vector<FFT_Bin_Data_t>* bin_Data);
+    void Update_Right_Bands_And_Send_Result(FFT_Bin_Data_t* bin_Data, size_t count);
+    void Update_Left_Bands_And_Send_Result(FFT_Bin_Data_t* bin_Data, size_t count);
+    void AssignToBands(float* Band_Data, FFT_Bin_Data_t* bin_Data, size_t count);
 
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);
