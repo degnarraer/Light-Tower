@@ -77,7 +77,7 @@ int32_t Manager::SetBTTxData(uint8_t *Data, int32_t channel_len)
   size_t ByteReceived = m_I2S_In.ReadSoundBufferData(Data, channel_len);
   ESP_LOGV("SetBTTxData", "BT Tx Data: %i bytes received.", ByteReceived);
   size_t FrameCount = ByteReceived / ( sizeof(Frame_t) );
-  //m_FFT_Computer.PushFrames((Frame_t*)Data, FrameCount);
+  m_FFT_Computer.PushFrames((Frame_t*)Data, FrameCount);
   //m_Amplitude_AudioBuffer.WriteAudioFrames((Frame_t*)Data, FrameCount);
   return ByteReceived;
 }

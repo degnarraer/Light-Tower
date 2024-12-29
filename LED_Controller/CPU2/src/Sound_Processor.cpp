@@ -73,27 +73,24 @@ void Sound_Processor::Setup()
   m_FFT_Computer.Setup(&StaticFFT_Results_Callback, this);
 }
 
-bool Sound_Processor::FFT_Results_Callback(FFT_Bin_Data_Set_t *p_FFT_Bin_Data)
+void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set)
 {
   static LogWithRateLimit FFT_Results_Callback_RLL(1000, ESP_LOG_INFO);
   static LogWithRateLimit FFT_Results_Callback_Queue_Success_RLL(1000, ESP_LOG_INFO);
   static LogWithRateLimit FFT_Results_Callback_Queue_Fail_RLL(1000, ESP_LOG_INFO);
 
-  bool acceptsOwnership = false;
-
   FFT_Results_Callback_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "FFT_Results_Callback.");
-  /*
-  if(m_FFT_Result_Processor_Queue && xQueueSend(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data, pdMS_TO_TICKS(0)) == pdTRUE)
+
+  FFT_Bin_Data_Set_t* p_fft_Bin_Data_Set_raw = sp_FFT_Bin_Data_Set.release();
+  if(m_FFT_Result_Processor_Queue && xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE)
   {
     FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "Queued FFT Data.");
-    acceptsOwnership = true;
   }
   else
   {
     FFT_Results_Callback_Queue_Fail_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
+    delete p_fft_Bin_Data_Set_raw;
   }
-  */
-  return acceptsOwnership;
 }
     
 void Sound_Processor::Static_FFT_Result_Processor_Task(void * parameter)
@@ -111,34 +108,23 @@ void Sound_Processor::FFT_Result_Processor_Task()
     if(m_FFT_Result_Processor_Queue)
     {
       size_t messages = uxQueueMessagesWaiting(m_FFT_Result_Processor_Queue);
-      if(0 == messages)
-      {
-        vTaskDelay(pdMS_TO_TICKS(10));
-        continue;
-      }
       for(int i = 0; i < messages; ++i)
       {
-        FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set = nullptr;
-        if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set, portMAX_DELAY) == pdTRUE )
+        FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set_raw = nullptr;
+        if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, portMAX_DELAY) == pdTRUE )
         {
           FFT_Results_Processor_Task_RLL.Log(ESP_LOG_INFO, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
-          if(p_FFT_Bin_Data_Set)
-          {
-            Update_Left_Bands_And_Send_Result(p_FFT_Bin_Data_Set->Left_Channel.get(), p_FFT_Bin_Data_Set->Count);
-            Update_Right_Bands_And_Send_Result(p_FFT_Bin_Data_Set->Right_Channel.get(), p_FFT_Bin_Data_Set->Count);
-            delete p_FFT_Bin_Data_Set;
-            vTaskDelay(pdMS_TO_TICKS(10));
-          }
-          else
-          {
-            ESP_LOGW("FFT_Result_Processor_Task", "Received invalid FFT data (null channel pointers)");
-          }
+            std::unique_ptr<FFT_Bin_Data_Set_t, PsMallocDeleter> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
+            Update_Left_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count);
+            Update_Right_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count);
         }
         else
         {
           FFT_Results_Processor_Task_Queue_Error_RLL.Log(ESP_LOG_ERROR, "FFT_Result_Processor_Task", "ERROR! Unable to receive queue item.");
         }
+        vTaskDelay(pdMS_TO_TICKS(10));
       }
+      vTaskDelay(pdMS_TO_TICKS(10));
     }
     else
     {
@@ -216,8 +202,8 @@ void Sound_Processor::Calculate_Power()
     size_t availableFrames = m_Amplitude_AudioBuffer.GetFrameCount();
     if(availableFrames >= AMPLITUDE_BUFFER_FRAME_COUNT)
     {
-      Frame_t *Buffer = (Frame_t*)ps_malloc(sizeof(Frame_t*) * AMPLITUDE_BUFFER_FRAME_COUNT);
-      size_t ReadFrameCount = m_Amplitude_AudioBuffer.ReadAudioFrames (Buffer, AMPLITUDE_BUFFER_FRAME_COUNT);
+      std::unique_ptr<Frame_t[], PsMallocDeleter> sp_buffer = std::unique_ptr<Frame_t[], PsMallocDeleter>(static_cast<Frame_t*>(ps_malloc(sizeof(Frame_t*) * AMPLITUDE_BUFFER_FRAME_COUNT)));
+      size_t ReadFrameCount = m_Amplitude_AudioBuffer.ReadAudioFrames (sp_buffer.get(), AMPLITUDE_BUFFER_FRAME_COUNT);
       float AmplitudeGain = m_Amplitude_Gain.GetValue();
       ESP_LOGD("Calculate_Power", "Read %i frames of %i. Gain: %f.", ReadFrameCount, availableFrames, AmplitudeGain);
       if(AMPLITUDE_BUFFER_FRAME_COUNT == ReadFrameCount)
@@ -228,12 +214,12 @@ void Sound_Processor::Calculate_Power()
           bool L_Amplitude_Calculated = false;
           ProcessedSoundData_t R_PSD;
           ProcessedSoundData_t L_PSD;
-          if(m_RightSoundData.PushValueAndCalculateSoundData(Buffer[i].channel1, AmplitudeGain))
+          if(m_RightSoundData.PushValueAndCalculateSoundData(sp_buffer[i].channel1, AmplitudeGain))
           {
             R_Amplitude_Calculated = true;
             R_PSD = m_RightSoundData.GetProcessedSoundData();
           }
-          if(true == m_LeftSoundData.PushValueAndCalculateSoundData(Buffer[i].channel2, AmplitudeGain))
+          if(true == m_LeftSoundData.PushValueAndCalculateSoundData(sp_buffer[i].channel2, AmplitudeGain))
           {
             L_Amplitude_Calculated = true;
             L_PSD = m_LeftSoundData.GetProcessedSoundData();
@@ -248,7 +234,6 @@ void Sound_Processor::Calculate_Power()
           }
         }
       }
-      free(Buffer);
     }
   }
 }
