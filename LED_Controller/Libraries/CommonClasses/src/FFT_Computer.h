@@ -249,11 +249,11 @@ private:
                 if(xQueueSend(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) != pdTRUE)
                 {
                     PerformFFT_Queued_Fail_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Unable to Queue " + std::to_string(m_fftSize) + " Frames.").c_str());
+                    free(p_frames);
                 }
                 else
                 {
                     PerformFFT_Queued_Success_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Queued " + std::to_string(m_fftSize) + " Frames.").c_str());
-                    free(p_frames);
                 }
             }
             else
