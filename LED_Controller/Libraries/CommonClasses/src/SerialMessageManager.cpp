@@ -203,20 +203,18 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 			size_t messages = uxQueueMessagesWaiting(m_TXQueueHandle);
 			for(size_t i = 0; i < messages; ++i)
 			{
-				std::string *p_Tx_Message;
-				if ( xQueueReceive(m_TXQueueHandle, &p_Tx_Message, 0) == pdTRUE )
+				std::string *rawMessage;
+				if ( xQueueReceive(m_TXQueueHandle, &rawMessage, 0) == pdTRUE )
 				{
-					if(p_Tx_Message)
+					std::unique_ptr<std::string> sp_Tx_Message(rawMessage);
+					if (sp_Tx_Message->length() > MaxMessageLength)
 					{
-						if (p_Tx_Message->length() > MaxMessageLength)
-						{
-							ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name);
-							(*p_Tx_Message)[MaxMessageLength - 1] = '\0';
-						}
-						ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, p_Tx_Message->c_str());
-						mp_Serial->println(p_Tx_Message->c_str());
-						delete p_Tx_Message;
+						ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name);
+						sp_Tx_Message->resize(MaxMessageLength - 1);
 					}
+					ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, sp_Tx_Message->c_str());
+					mp_Serial->println(sp_Tx_Message->c_str());
+					
 				}
 				else
 				{

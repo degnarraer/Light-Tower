@@ -131,7 +131,7 @@ public:
             vTaskDelay(pdMS_TO_TICKS(msDelay));
         }
     }
-    
+
     void Setup(FFT_Results_Callback* callback, void* callBackArgs)
     {
         if (m_isInitialized) return;
@@ -245,14 +245,15 @@ private:
             PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
             if(receivedFrameCount == m_fftSize)
             {   
-                Frame_t *temp_frames = sp_frames.release();
-                if(xQueueSend(m_FFT_Data_Input_QueueHandle, &temp_frames, pdMS_TO_TICKS(0)) != pdTRUE)
+                Frame_t *p_frames = sp_frames.release();
+                if(xQueueSend(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) != pdTRUE)
                 {
                     PerformFFT_Queued_Fail_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Unable to Queue " + std::to_string(m_fftSize) + " Frames.").c_str());
                 }
                 else
                 {
                     PerformFFT_Queued_Success_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Queued " + std::to_string(m_fftSize) + " Frames.").c_str());
+                    free(p_frames);
                 }
             }
             else
@@ -305,16 +306,13 @@ private:
                 Frame_t* p_frames = nullptr;
                 if(xQueueReceive(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) == pdTRUE )
                 {
-                    if(p_frames)
+                    std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames(p_frames);
+                    for (int j = 0; j < m_fftSize; j++)
                     {
-                        for (int j = 0; j < m_fftSize; j++)
-                        {
-                            sp_real_left_channel[j] = p_frames[j].channel1;
-                            sp_imag_left_channel[j] = 0.0f;
-                            sp_real_right_channel[j] = p_frames[j].channel2;
-                            sp_imag_right_channel[j] = 0.0f;
-                        }
-                        free(p_frames);
+                        sp_real_left_channel[j] = sp_frames[j].channel1;
+                        sp_imag_left_channel[j] = 0.0f;
+                        sp_real_right_channel[j] = sp_frames[j].channel2;
+                        sp_imag_right_channel[j] = 0.0f;
                     }
                 }
                 else
@@ -365,7 +363,7 @@ private:
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(std::move(sp_FFT_Bin_Data_Set), mp_CallBackArgs);
-                TackOnSomeMultithreadedDelay(5);
+                TackOnSomeMultithreadedDelay(10);
             }
             TackOnSomeMultithreadedDelay(10);
         }

@@ -20,6 +20,7 @@
 #include <HardwareSerial.h>
 #include <Arduino.h>
 #include <vector>
+#include <memory>
 #include "Helpers.h"
 #include "DataSerializer.h"
 

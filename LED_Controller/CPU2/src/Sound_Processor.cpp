@@ -64,7 +64,7 @@ void Sound_Processor::Setup()
   if(m_FFT_Result_Processor_Queue) ESP_LOGD("Setup", "FFT Result Processor Queue Created.");
   else ESP_LOGE("Setup", "ERROR! Error creating the FFT Result Processor Queue.");
 
-  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 10000, this, FFT_COMPUTE_TASK_PRIORITY, &m_MessageQueueProcessorTask ) != pdTRUE )
+  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 5000, this, FFT_COMPUTE_TASK_PRIORITY, &m_MessageQueueProcessorTask ) != pdTRUE )
   ESP_LOGE("Setup", "ERROR! Unable to create task.");
   
   //if( xTaskCreate( Static_Calculate_Power, "Sound Power Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask ) != pdTRUE )
@@ -114,23 +114,22 @@ void Sound_Processor::FFT_Result_Processor_Task()
         if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, portMAX_DELAY) == pdTRUE )
         {
           FFT_Results_Processor_Task_RLL.Log(ESP_LOG_INFO, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
-            std::unique_ptr<FFT_Bin_Data_Set_t, PsMallocDeleter> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
-            Update_Left_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count);
-            Update_Right_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count);
+          std::unique_ptr<FFT_Bin_Data_Set_t, PsMallocDeleter> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
+          Update_Left_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count);
+          Update_Right_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count);
         }
         else
         {
           FFT_Results_Processor_Task_Queue_Error_RLL.Log(ESP_LOG_ERROR, "FFT_Result_Processor_Task", "ERROR! Unable to receive queue item.");
         }
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(50));
       }
-      vTaskDelay(pdMS_TO_TICKS(10));
     }
     else
     {
       ESP_LOGE("FFT_Result_Processor_Task", "FFT_Result_Processor_Queue is not initialized!");
-      vTaskDelay(pdMS_TO_TICKS(100));
     }
+    vTaskDelay(pdMS_TO_TICKS(50));
   }
 }
 
