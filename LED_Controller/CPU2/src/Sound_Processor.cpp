@@ -64,7 +64,7 @@ void Sound_Processor::Setup()
   if(m_FFT_Result_Processor_Queue) ESP_LOGD("Setup", "FFT Result Processor Queue Created.");
   else ESP_LOGE("Setup", "ERROR! Error creating the FFT Result Processor Queue.");
 
-  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 5000, this, FFT_COMPUTE_TASK_PRIORITY, &m_MessageQueueProcessorTask ) != pdTRUE )
+  if( xTaskCreate( Static_FFT_Result_Processor_Task, "Message FFT Result Processor", 5000, this, FFT_MESSAGE_TASK_PRIORITY, &m_MessageQueueProcessorTask ) != pdTRUE )
   ESP_LOGE("Setup", "ERROR! Unable to create task.");
   
   //if( xTaskCreate( Static_Calculate_Power, "Sound Power Task", 10000, this, THREAD_PRIORITY_MEDIUM, &m_ProcessSoundPowerTask ) != pdTRUE )
@@ -121,73 +121,36 @@ void Sound_Processor::FFT_Result_Processor_Task()
         {
           FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
           std::unique_ptr<FFT_Bin_Data_Set_t, PsMallocDeleter> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
-          Update_Left_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count);
-          Update_Right_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count);
-          vTaskDelay(pdMS_TO_TICKS(50));
+          Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_R_Bands1, m_R_Bands3, m_R_Max_Band);
+          Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_L_Bands1, m_L_Bands3, m_R_Max_Band);
+          vTaskDelay(pdMS_TO_TICKS(20));
         }
     }
     else
     {
       ESP_LOGE("FFT_Result_Processor_Task", "FFT_Result_Processor_Queue is not initialized!");
     }
-    vTaskDelay(pdMS_TO_TICKS(50));
+    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
 
-void Sound_Processor::Update_Right_Bands_And_Send_Result(FFT_Bin_Data_t* bin_Data, size_t count)
+void Sound_Processor::Update_Bands_And_Send_Result( FFT_Bin_Data_t* bin_Data
+                                                  , size_t count
+                                                  , DataItem<float, 32> &bandDataItem1
+                                                  , DataItem<float, 32> &bandDataItem2
+                                                  , DataItem<MaxBandSoundData_t, 1> &maxBandDataItem )
 {
-    String message;
-    float R_Bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
-    MaxBandSoundData_t R_MaxBand;
+    float bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
+    MaxBandSoundData_t maxBand;
     float MaxBandMagnitude = 0.0;
     int16_t MaxBandIndex = 0;
-
-    AssignToBands(R_Bands_DataBuffer, bin_Data, count);
-    for(size_t i = 0; i < NUMBER_OF_BANDS; ++i)
-    {
-      if(i != 0) message += "|";
-      message += String(R_Bands_DataBuffer[i]);
-      if(R_Bands_DataBuffer[i] > MaxBandMagnitude)
-      {
-        MaxBandMagnitude = R_Bands_DataBuffer[i];
-        MaxBandIndex = i;
-      }
-    }
-    ESP_LOGD("Update_Right_Bands_And_Send_Result", "Right Bands: %s", message.c_str());
-    m_R_Bands1.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
-    m_R_Bands3.SetValue(R_Bands_DataBuffer, NUMBER_OF_BANDS);
-    R_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
-    R_MaxBand.MaxBandIndex = MaxBandIndex;
-    R_MaxBand.TotalBands = NUMBER_OF_BANDS;
-    m_R_Max_Band.SetValue(R_MaxBand);
-}
-
-void Sound_Processor::Update_Left_Bands_And_Send_Result(FFT_Bin_Data_t* bin_Data, size_t count)
-{
-    String message;
-    float L_Bands_DataBuffer[NUMBER_OF_BANDS] = {0.0};
-    MaxBandSoundData_t L_MaxBand;
-    float MaxBandMagnitude = 0.0;
-    int16_t MaxBandIndex = 0;
-
-    AssignToBands(L_Bands_DataBuffer, bin_Data, count);
-    for(size_t i = 0; i < NUMBER_OF_BANDS; ++i)
-    {
-      if(i != 0) message += "|";
-      message += String(L_Bands_DataBuffer[i]);
-      if(L_Bands_DataBuffer[i] > MaxBandMagnitude)
-      {
-        MaxBandMagnitude = L_Bands_DataBuffer[i];
-        MaxBandIndex = i;
-      }
-    }
-    ESP_LOGD("Update_Left_Bands_And_Send_Result", "Left Bands: %s", message.c_str());
-    m_L_Bands1.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
-    m_L_Bands3.SetValue(L_Bands_DataBuffer, NUMBER_OF_BANDS);
-    L_MaxBand.MaxBandNormalizedPower = MaxBandMagnitude;
-    L_MaxBand.MaxBandIndex = MaxBandIndex;
-    L_MaxBand.TotalBands = NUMBER_OF_BANDS;
-    m_L_Max_Band.SetValue(L_MaxBand);
+    AssignToBands(bands_DataBuffer, bin_Data, count, MaxBandIndex, MaxBandMagnitude);
+    //bandDataItem1.SetValue(bands_DataBuffer, NUMBER_OF_BANDS);
+    //bandDataItem2.SetValue(bands_DataBuffer, NUMBER_OF_BANDS);
+    maxBand.MaxBandNormalizedPower = MaxBandMagnitude;
+    maxBand.MaxBandIndex = MaxBandIndex;
+    maxBand.TotalBands = NUMBER_OF_BANDS;
+    //maxBandDataItem.SetValue(maxBand);
 }
 
 void Sound_Processor::Static_Calculate_Power(void * parameter)
@@ -237,7 +200,8 @@ void Sound_Processor::Calculate_Power()
     }
   }
 }
-void Sound_Processor::AssignToBands(float* Band_Data, FFT_Bin_Data_t* bin_Data, size_t count)
+
+void Sound_Processor::AssignToBands(float* Band_Data, FFT_Bin_Data_t* bin_Data, size_t count, int16_t &MaxBandIndex, float &MaxBandMagnitude)
 {
   String output = "";
   for(int i = 0; i < count; ++i)
@@ -321,13 +285,12 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Bin_Data_t* bin_Data, 
     {
       Band_Data[bandIndex] = 1.0;
     }
+    if(Band_Data[bandIndex] > MaxBandMagnitude)
+    {
+      MaxBandMagnitude = Band_Data[bandIndex];
+      MaxBandIndex = bandIndex;
+    }
   }
-  for(int i = 0; i < 32; ++i)
-  {
-    if(i!=0) output += "|";
-    output += String(Band_Data[i]); 
-  }
-  ESP_LOGD("AssignToBands", "Band Data: %s", output.c_str());
 }
 
 float Sound_Processor::GetFreqForBin(int Bin)

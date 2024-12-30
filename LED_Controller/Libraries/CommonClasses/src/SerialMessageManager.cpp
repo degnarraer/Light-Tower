@@ -150,15 +150,14 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
     {
         if (mp_Serial && m_MessageQueueHandle)
         {
-			size_t available = mp_Serial->available();
-            for(int i = 0; i < available; ++i)
+            while(mp_Serial->available())
             {
                 char character = mp_Serial->read();
                 if (m_message.length() >= MaxMessageLength)
                 {
                     ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
                     m_message.clear();
-                    break;
+                    continue;
                 }
                 m_message += character;
                 if (m_message.size() >= 1 && character == '\n')
@@ -175,7 +174,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 						delete p_rxMessage_raw;
 					}
                     m_message.clear();
-              		vTaskDelay(pdMS_TO_TICKS(1));
+              		taskYIELD();
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(20));

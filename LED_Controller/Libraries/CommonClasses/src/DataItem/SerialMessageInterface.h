@@ -251,10 +251,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				assert(newValues != nullptr);
 				assert(mp_RxValue != nullptr);
 				assert(COUNT > 0);
-				ESP_LOGD( "UpdateRxStore"
-						, "Name: \"%s\" Update Rx Store with value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newValues, COUNT).c_str());
+				ESP_LOGD( "UpdateRxStore", "Name: \"%s\" Update Rx Store with value: \"%s\"", GetName().c_str(), ConvertValueToString(newValues, COUNT).c_str());
 				updateStatus.ValueChanged= (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
 				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
 				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
@@ -333,11 +330,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			UpdateStatus_t updateStatus;
 			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
 			{
-				ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\""
-						, mp_SerialPortMessageManager->GetName().c_str()
-						, GetName().c_str()
-						, ConvertValueToString(mp_TxValue, COUNT)
-						, GetChangeCount() );
+				ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\"", mp_SerialPortMessageManager->GetName().c_str(), GetName().c_str(), ConvertValueToString(mp_TxValue, COUNT), GetChangeCount() );
 				if(mp_SerialPortMessageManager)
 				{
 					updateStatus |= UpdateStore(mp_TxValue, changeCount);

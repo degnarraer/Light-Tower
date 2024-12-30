@@ -156,9 +156,18 @@ class Sound_Processor: public NamedItem
     
     static void Static_FFT_Result_Processor_Task(void * parameter);
     void FFT_Result_Processor_Task();
-    void Update_Right_Bands_And_Send_Result(FFT_Bin_Data_t* bin_Data, size_t count);
-    void Update_Left_Bands_And_Send_Result(FFT_Bin_Data_t* bin_Data, size_t count);
-    void AssignToBands(float* Band_Data, FFT_Bin_Data_t* bin_Data, size_t count);
+    
+    void Update_Bands_And_Send_Result( FFT_Bin_Data_t* bin_Data
+                                     , size_t count
+                                     , DataItem<float, 32> &bandDataItem1
+                                     , DataItem<float, 32> &bandDataItem2
+                                     , DataItem<MaxBandSoundData_t, 1> &maxBandDataItem );
+    
+    void AssignToBands( float* Band_Data
+                      , FFT_Bin_Data_t* bin_Data
+                      , size_t count
+                      , int16_t &MaxBandIndex
+                      , float &MaxBandMagnitude);
 
     float GetFreqForBin(int bin);
     int GetBinForFrequency(float Frequency);

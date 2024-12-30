@@ -291,16 +291,17 @@ private:
         static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_Null_Pointers_RLL(1000, ESP_LOG_ERROR);
         
-        if( sp_real_right_channel &&
-            sp_real_left_channel &&
-            sp_imag_right_channel &&
-            sp_imag_left_channel &&
-            mp_CallBack &&
-            m_FFT_Data_Input_QueueHandle )
+        if( mp_CallBack && m_FFT_Data_Input_QueueHandle )
         {
             Frame_t* p_frames = nullptr;
             while(xQueueReceive(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) == pdTRUE)
             {
+                if( !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel.get() )
+                {
+                    ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
+                    TackOnSomeMultithreadedDelay(10);
+                    continue;
+                }
                 ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
                 std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames(p_frames);
                 for (int j = 0; j < m_fftSize; j++)
