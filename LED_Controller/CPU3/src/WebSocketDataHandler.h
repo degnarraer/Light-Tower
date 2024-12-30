@@ -123,24 +123,21 @@ class WebSocketDataProcessor
 
     void WebSocketTransmissionTask()
     {
-        while (true)
+      while (true)
+      {
+        if(m_WebSocketMessageQueue)
         {
-            std::string* message;
-            size_t messages = uxQueueMessagesWaiting(m_WebSocketMessageQueue);
-            for(int i = 0; i < messages; ++i)
-            {
-              if (xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(0)) == pdTRUE)
-              {
-                  NotifyClients(*message);
-                  delete message;
-              }
-              else
-              {
-                  ESP_LOGW("WebSocketTransmissionTask", "Failed to receive message from queue");
-              }
-            }
-            vTaskDelay(pdMS_TO_TICKS(10));
+          std::string* message;
+          while( xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(0)) == pdTRUE)
+          {
+            NotifyClients(*message);
+            delete message;
+            taskYIELD();
+          }
+          vTaskDelay(pdMS_TO_TICKS(20));
         }
+        vTaskDelay(pdMS_TO_TICKS(20));
+      }
     }
 
   private:

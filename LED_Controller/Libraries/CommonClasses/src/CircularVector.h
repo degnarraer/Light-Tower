@@ -17,58 +17,49 @@
 */
 
 #pragma once
-
-#include "DataTypes.h"
+#include <memory>
+#include <vector>
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 class ShocksRingBuffer {
 public:
-    ShocksRingBuffer(size_t size): bufferSize(size)
-                                 , writeIndex(0)
-                                 , readIndex(0)
-    {
-        p_buffer = (Frame_t*)ps_malloc(size);
+    ShocksRingBuffer(size_t size)
+        : bufferSize(size), writeIndex(0), readIndex(0),
+          p_buffer(std::make_unique<Frame_t[]>(size)) {
         mutex = xSemaphoreCreateMutex();
+        if (!mutex) {
+            throw std::runtime_error("Failed to create mutex");
+        }
     }
 
     ~ShocksRingBuffer() {
-        if(p_buffer)
-        {
-            free(p_buffer);
-            p_buffer = nullptr;
-        }
-        if(mutex)
-        {
+        if (mutex) {
             vSemaphoreDelete(mutex);
             mutex = nullptr;
         }
     }
 
-    // Push new frame into the buffer (overwrites if full)
-    void push(Frame_t frame, TickType_t waitTime)
-    {
-        if (xSemaphoreTake(mutex, waitTime) == pdTRUE)
-        {
+    // Push single frame
+    void push(Frame_t frame, TickType_t waitTime) {
+        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
             p_buffer[writeIndex] = frame;
             writeIndex = (writeIndex + 1) % bufferSize;
-            if (writeIndex == readIndex)
-            {
+            if (writeIndex == readIndex) { // Overwrite logic
                 readIndex = (readIndex + 1) % bufferSize;
             }
             xSemaphoreGive(mutex);
         }
     }
 
-    size_t push(Frame_t* frames, size_t count, TickType_t waitTime)
-    {
+    // Push multiple frames
+    size_t push(Frame_t* frames, size_t count, TickType_t waitTime) {
         size_t pushed = 0;
-        if (frames && xSemaphoreTake(mutex, waitTime) == pdTRUE)
-        {
-            for (size_t i = 0; i < count; ++i)
-            {
+        if (frames && xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+            for (size_t i = 0; i < count; ++i) {
                 p_buffer[writeIndex] = frames[i];
                 writeIndex = (writeIndex + 1) % bufferSize;
-                if (writeIndex == readIndex)
-                {
+                if (writeIndex == readIndex) { // Overwrite logic
                     readIndex = (readIndex + 1) % bufferSize;
                 }
                 pushed++;
@@ -78,19 +69,15 @@ public:
         return pushed;
     }
 
+    // Retrieve frames into a vector
     size_t get(std::vector<Frame_t>& frames, size_t count, TickType_t waitTime) {
         size_t returned = 0;
         if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
-            size_t available = (writeIndex >= readIndex) 
-                ? (writeIndex - readIndex) 
-                : (bufferSize - readIndex + writeIndex);
-
+            size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
             frames.resize(framesToReturn);
-            size_t tempIndex = readIndex; // Use a temporary index for reading
             for (size_t i = 0; i < framesToReturn; ++i) {
-                frames[i] = p_buffer[tempIndex];
-                tempIndex = (tempIndex + 1) % bufferSize;
+                frames[i] = p_buffer[(readIndex + i) % bufferSize];
             }
             returned = framesToReturn;
             xSemaphoreGive(mutex);
@@ -98,18 +85,14 @@ public:
         return returned;
     }
 
+    // Retrieve frames into a raw array
     size_t get(Frame_t* frames, size_t count, TickType_t waitTime) {
         size_t returned = 0;
         if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
-            size_t available = (writeIndex >= readIndex) 
-                ? (writeIndex - readIndex) 
-                : (bufferSize - readIndex + writeIndex);
-
+            size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
-            size_t tempIndex = readIndex; // Use a temporary index for reading
             for (size_t i = 0; i < framesToReturn; ++i) {
-                frames[i] = p_buffer[tempIndex];
-                tempIndex = (tempIndex + 1) % bufferSize;
+                frames[i] = p_buffer[(readIndex + i) % bufferSize];
             }
             returned = framesToReturn;
             xSemaphoreGive(mutex);
@@ -118,7 +101,13 @@ public:
     }
 
 private:
-    Frame_t* p_buffer = nullptr;
+    size_t getAvailableFrames() const {
+        return (writeIndex >= readIndex)
+            ? (writeIndex - readIndex)
+            : (bufferSize - readIndex + writeIndex);
+    }
+
+    std::unique_ptr<Frame_t[]> p_buffer;
     size_t bufferSize;
     size_t writeIndex;
     size_t readIndex;

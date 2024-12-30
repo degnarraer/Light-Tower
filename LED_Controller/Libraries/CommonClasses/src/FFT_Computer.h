@@ -174,15 +174,15 @@ public:
         m_isInitialized = true;
     }
 
-    void PushFrames(Frame_t *frames, size_t count)
+    void PushFrames(Frame_t *p_frames, size_t count)
     {
-        static LogWithRateLimit_Average<size_t> Push_Frames_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit_Average<size_t> Push_Frames_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit Push_Frames_Not_Initialized_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Null_Pointer_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Busy_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
-        static LogWithRateLimit Push_Frames_Threaded_RLL(1000, ESP_LOG_INFO);
-        static LogWithRateLimit Push_Frames_Unthreaded_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit Push_Frames_Threaded_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit Push_Frames_Unthreaded_RLL(1000, ESP_LOG_DEBUG);
 
         if (!m_isInitialized)
         {
@@ -190,24 +190,24 @@ public:
             return;
         }
 
-        if(!frames)
+        if(!p_frames)
         {
             Push_Frames_Null_Pointer_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
             return;
         }
-        m_samplesSinceLastFFT += mp_ringBuffer->push(frames, count, pdMS_TO_TICKS(0));
-        Push_Frames_RLL.LogWithValue(ESP_LOG_INFO, "PushFrames", "Push Frames: \"" + std::to_string(m_samplesSinceLastFFT) + "\"", m_samplesSinceLastFFT);
+        m_samplesSinceLastFFT += mp_ringBuffer->push(p_frames, count, pdMS_TO_TICKS(0));
+        Push_Frames_RLL.LogWithValue(ESP_LOG_DEBUG, "PushFrames", "Push Frames: \"" + std::to_string(m_samplesSinceLastFFT) + "\"", m_samplesSinceLastFFT);
         if (m_samplesSinceLastFFT >= m_hopSize)
         {
             ESP_LOGD("PushFrames", "Hop Length Met");
             if(m_IsMultithreaded)
             {
-                Push_Frames_Threaded_RLL.Log(ESP_LOG_INFO, "PushFrames", "Perform FFT Threaded");
+                Push_Frames_Threaded_RLL.Log(ESP_LOG_DEBUG, "PushFrames", "Perform FFT Threaded");
                 Get_FFT_Data();
             }
             else
             {
-                Push_Frames_Unthreaded_RLL.Log(ESP_LOG_INFO, "PushFrames", "Perform FFT UnThreaded");
+                Push_Frames_Unthreaded_RLL.Log(ESP_LOG_DEBUG, "PushFrames", "Perform FFT UnThreaded");
                 Get_FFT_Data();
                 ProcessFFT();
             }
@@ -234,7 +234,7 @@ private:
     {
         static LogWithRateLimit PerformFFT_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit PerformFFT_Done_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
-        static LogWithRateLimit PerformFFT_Queued_Success_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit PerformFFT_Queued_Success_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit PerformFFT_Queued_Fail_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit PerformFFT_Read_Failure_RLL(1000, ESP_LOG_WARN);
         if(m_FFT_Data_Input_QueueHandle)
@@ -248,12 +248,12 @@ private:
                 Frame_t *p_frames = sp_frames.release();
                 if(xQueueSend(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) != pdTRUE)
                 {
-                    PerformFFT_Queued_Fail_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Unable to Queue " + std::to_string(m_fftSize) + " Frames.").c_str());
+                    PerformFFT_Queued_Fail_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", ("Unable to Queue " + std::to_string(m_fftSize) + " Frames.").c_str());
                     free(p_frames);
                 }
                 else
                 {
-                    PerformFFT_Queued_Success_RLL.Log(ESP_LOG_INFO, "Get_FFT_Data", ("Queued " + std::to_string(m_fftSize) + " Frames.").c_str());
+                    PerformFFT_Queued_Success_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Queued " + std::to_string(m_fftSize) + " Frames.").c_str());
                 }
             }
             else
@@ -275,20 +275,20 @@ private:
 
     void Process_FFT_Task() 
     {
-        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_DEBUG);
         while(true)
         {
-            PerformFFTTask_RLL.Log(ESP_LOG_INFO, "Process_FFT_Task", "Process FFT Task Called");
+            PerformFFTTask_RLL.Log(ESP_LOG_DEBUG, "Process_FFT_Task", "Process FFT Task Called");
             ProcessFFT();
         }
     }
 
     void ProcessFFT()
     {
-        static LogWithRateLimit ProcessFFT_FFT_Started_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit ProcessFFT_FFT_Started_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_FFT_DeQueue_Fail_RLL(1000, ESP_LOG_WARN);
-        static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_INFO);
-        static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_INFO);
+        static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_Null_Pointers_RLL(1000, ESP_LOG_ERROR);
         
         if( sp_real_right_channel &&
@@ -298,40 +298,28 @@ private:
             mp_CallBack &&
             m_FFT_Data_Input_QueueHandle )
         {
-            size_t messages = uxQueueMessagesWaiting(m_FFT_Data_Input_QueueHandle);
-            for(int i = 0; i < messages; ++i)
+            Frame_t* p_frames = nullptr;
+            while(xQueueReceive(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) == pdTRUE)
             {
-                if(i == 0) ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Process FFT Started");
-
-                Frame_t* p_frames = nullptr;
-                if(xQueueReceive(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) == pdTRUE )
+                ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
+                std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames(p_frames);
+                for (int j = 0; j < m_fftSize; j++)
                 {
-                    std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames(p_frames);
-                    for (int j = 0; j < m_fftSize; j++)
-                    {
-                        sp_real_left_channel[j] = sp_frames[j].channel1;
-                        sp_imag_left_channel[j] = 0.0f;
-                        sp_real_right_channel[j] = sp_frames[j].channel2;
-                        sp_imag_right_channel[j] = 0.0f;
-                    }
+                    sp_real_left_channel[j] = sp_frames[j].channel1;
+                    sp_imag_left_channel[j] = 0.0f;
+                    sp_real_right_channel[j] = sp_frames[j].channel2;
+                    sp_imag_right_channel[j] = 0.0f;
                 }
-                else
-                {
-                    ProcessFFT_FFT_DeQueue_Fail_RLL.Log(ESP_LOG_WARN, "ProcessFFT", "WARNING! Failed to DeQueue frames.");
-                    TackOnSomeMultithreadedDelay(10);
-                    return;
-                }
-
+                
                 unsigned long startTime = millis();
                 ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
                 ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
                 unsigned long stopTime = millis();
 
-                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "FFT Calculation Completed");
+                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
 
                 float maxMagnitude = GetMaxMagnitude();
                 
-
                 std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> sp_freqMags_left = std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter>(static_cast<FFT_Bin_Data_t*>(ps_malloc(m_magnitudeSize * sizeof(FFT_Bin_Data_t))));
                 std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> sp_freqMags_right = std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter>(static_cast<FFT_Bin_Data_t*>(ps_malloc(m_magnitudeSize * sizeof(FFT_Bin_Data_t))));
                 
@@ -360,12 +348,12 @@ private:
                     sp_freqMags_left[j].NormalizedMagnitude = sp_magnitudes_left_channel[j] / maxMagnitude;
                 }
                 
-                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_INFO, "ProcessFFT", "Calling Callback");
+                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(std::move(sp_FFT_Bin_Data_Set), mp_CallBackArgs);
-                TackOnSomeMultithreadedDelay(10);
+                TackOnSomeMultithreadedDelay(50);
             }
-            TackOnSomeMultithreadedDelay(10);
+            TackOnSomeMultithreadedDelay(50);
         }
         else
         {
@@ -443,7 +431,6 @@ private:
                 }
             }
         }
-        TackOnSomeMultithreadedDelay(1);
     }
 
     int ReverseBits(int num, int bits)

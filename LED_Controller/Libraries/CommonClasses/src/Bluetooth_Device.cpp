@@ -339,20 +339,13 @@ void Bluetooth_Source::DeviceProcessingTask()
 {
   	while(true)
   	{
-		size_t messages = uxQueueMessagesWaiting(m_DeviceProcessorQueueHandle);
-		for(int i = 0; i < messages; ++i)
+		BT_Device_Info receivedDevice;
+		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, pdMS_TO_TICKS(0)) == pdTRUE)
 		{
-			BT_Device_Info receivedDevice;
-			if (xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, pdMS_TO_TICKS(0)) == pdPASS)
-			{
-				Compatible_Device_Found(receivedDevice);
-			}
-			else
-			{
-				ESP_LOGE("DeviceProcessingTask", "ERROR! Error Receiving Queue.");
-			}
+			Compatible_Device_Found(receivedDevice);
+			vTaskDelay(pdMS_TO_TICKS(20));
 		}
-		vTaskDelay(pdMS_TO_TICKS(10));
+		vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
 

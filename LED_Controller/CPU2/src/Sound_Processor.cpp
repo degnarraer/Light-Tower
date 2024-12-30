@@ -75,21 +75,30 @@ void Sound_Processor::Setup()
 
 void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set)
 {
-  static LogWithRateLimit FFT_Results_Callback_RLL(1000, ESP_LOG_INFO);
-  static LogWithRateLimit FFT_Results_Callback_Queue_Success_RLL(1000, ESP_LOG_INFO);
-  static LogWithRateLimit FFT_Results_Callback_Queue_Fail_RLL(1000, ESP_LOG_INFO);
+  static LogWithRateLimit FFT_Results_Callback_RLL(1000, ESP_LOG_DEBUG);
+  static LogWithRateLimit FFT_Results_Callback_Queue_Success_RLL(1000, ESP_LOG_DEBUG);
+  static LogWithRateLimit FFT_Results_Callback_Queue_Fail_RLL(1000, ESP_LOG_WARN);
+  static LogWithRateLimit FFT_Results_Callback_Queue_NULL_RLL(1000, ESP_LOG_WARN);
 
-  FFT_Results_Callback_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "FFT_Results_Callback.");
+  FFT_Results_Callback_RLL.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "FFT_Results_Callback.");
 
   FFT_Bin_Data_Set_t* p_fft_Bin_Data_Set_raw = sp_FFT_Bin_Data_Set.release();
-  if(m_FFT_Result_Processor_Queue && xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE)
+  if(m_FFT_Result_Processor_Queue)
   {
-    FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "Queued FFT Data.");
+    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE)
+    {
+      FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "Queued FFT Data.");
+    }
+    else
+    {
+      FFT_Results_Callback_Queue_Fail_RLL.Log(ESP_LOG_WARN, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
+      delete p_fft_Bin_Data_Set_raw;
+    }
   }
   else
   {
-    FFT_Results_Callback_Queue_Fail_RLL.Log(ESP_LOG_INFO, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
-    delete p_fft_Bin_Data_Set_raw;
+      FFT_Results_Callback_Queue_NULL_RLL.Log(ESP_LOG_WARN, "FFT_Results_Callback", "WARNING! Unable to Queue FFT Data.");
+      delete p_fft_Bin_Data_Set_raw;
   }
 }
     
@@ -103,27 +112,19 @@ void Sound_Processor::FFT_Result_Processor_Task()
 {
   while(true)
   {
-    static LogWithRateLimit FFT_Results_Processor_Task_RLL(1000, ESP_LOG_INFO);
+    static LogWithRateLimit FFT_Results_Processor_Task_RLL(1000, ESP_LOG_DEBUG);
     static LogWithRateLimit FFT_Results_Processor_Task_Queue_Error_RLL(1000, ESP_LOG_ERROR);
     if(m_FFT_Result_Processor_Queue)
     {
-      size_t messages = uxQueueMessagesWaiting(m_FFT_Result_Processor_Queue);
-      for(int i = 0; i < messages; ++i)
-      {
         FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set_raw = nullptr;
-        if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, portMAX_DELAY) == pdTRUE )
+        while( xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE )
         {
-          FFT_Results_Processor_Task_RLL.Log(ESP_LOG_INFO, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
+          FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
           std::unique_ptr<FFT_Bin_Data_Set_t, PsMallocDeleter> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
           Update_Left_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count);
           Update_Right_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count);
+          vTaskDelay(pdMS_TO_TICKS(50));
         }
-        else
-        {
-          FFT_Results_Processor_Task_Queue_Error_RLL.Log(ESP_LOG_ERROR, "FFT_Result_Processor_Task", "ERROR! Unable to receive queue item.");
-        }
-        vTaskDelay(pdMS_TO_TICKS(50));
-      }
     }
     else
     {

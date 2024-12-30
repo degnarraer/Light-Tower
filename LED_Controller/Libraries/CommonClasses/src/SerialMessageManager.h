@@ -285,44 +285,35 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
 			aSerialPortMessageManager->SerialPortMessageManager_RxQueueTask();
 		}
+
 		virtual void SerialPortMessageManager_RxQueueTask()
 		{
-			ESP_LOGD("Setup", "Starting RX Queue Task.");
-			const TickType_t xFrequency = 10;
-			TickType_t xLastWakeTime = xTaskGetTickCount();
 			while (true)
 			{
-        		vTaskDelayUntil(&xLastWakeTime, xFrequency);
 				if(m_MessageQueueHandle && mp_DataSerializer)
 				{
-					size_t messageCount = uxQueueMessagesWaiting(m_MessageQueueHandle);
-					for(int i = 0; i < messageCount; ++i)
+					std::string *p_rxMessage;
+					while (xQueueReceive(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(0)) == pdTRUE)
 					{
-						for(int i = 0; i < messageCount; ++i)
+						std::unique_ptr<std::string> sp_rxMessage(p_rxMessage);
+						NamedObject_t NamedObject;
+						if (mp_DataSerializer->DeSerializeJsonToNamedObject(p_rxMessage->c_str(), NamedObject))
 						{
-							std::string *p_rxMessage;
-							if ( xQueueReceive(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(0)) == pdTRUE )
-							{
-								NamedObject_t NamedObject;
-								if (mp_DataSerializer->DeSerializeJsonToNamedObject(p_rxMessage->c_str(), NamedObject))
-								{
-									ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-									this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
-								}
-								else
-								{
-									ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
-								}
-								delete p_rxMessage;
-							}
-            				vTaskDelay(pdMS_TO_TICKS(1));
+							ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+							this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
 						}
+						else
+						{
+							ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
+						}
+						taskYIELD();
 					}
+					vTaskDelay(pdMS_TO_TICKS(20));
 				}
 				else
 				{
 					ESP_LOGE("SerialPortMessageManager_RxQueueTask", "ERROR! Null Pointer.");
-					vTaskDelay(100);
+					vTaskDelay(pdMS_TO_TICKS(100));
 				}
 			}
 		}
