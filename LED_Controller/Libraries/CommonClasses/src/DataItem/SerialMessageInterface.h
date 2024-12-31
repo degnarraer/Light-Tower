@@ -96,7 +96,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			}
 		}
 		virtual T* GetValuePointer() const = 0;
-		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t changeCount) = 0;
+		virtual UpdateStatus_t UpdateStore(T *oldValues, const T *newValues, const size_t changeCount) = 0;
 		virtual bool EqualsValue(T *Object, size_t Count) const = 0;
 		virtual std::string GetName() const = 0;
 		virtual size_t GetChangeCount() const = 0;
@@ -123,7 +123,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 							, "Rx Echo for: \"%s\" with Value: \"%s\""
 							, GetName().c_str()
 							, ConvertValueToString(receivedValues, GetCount()).c_str() );
-					if(UpdateTxStore(mp_RxValue).UpdateSuccessful)
+					if(UpdateStore(mp_TxValue, mp_RxValue, GetChangeCount()).UpdateSuccessful)
 					{
 						storeUpdated |= Tx_Now(GetChangeCount());
 					}
@@ -155,9 +155,9 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 						, GetName().c_str()
 						, ConvertValueToString(receivedValues, GetCount()).c_str()
 						, GetChangeCount());
-				if(UpdateRxStore(receivedValues).UpdateSuccessful)
+				if(UpdateStore(mp_RxValue, receivedValues, changeCount).UpdateSuccessful)
 				{
-					storeUpdated |= UpdateStore(mp_RxValue, changeCount);
+					storeUpdated |= UpdateStore(GetValuePointer(), mp_RxValue, changeCount);
 					this->Notify_NewRxValue_Callees(mp_RxValue, COUNT, changeCount);
 				}
 				storeUpdated |= Try_Echo_Value(receivedValues);
@@ -181,8 +181,8 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 					if (mp_RxValue && mp_TxValue)
 					{
 						ESP_LOGD("DataItem<T, COUNT>::Setup()", "Setting Initial Tx/Rx Values to: %s", GetValueAsString().c_str());
-						UpdateRxStore(GetValuePointer());
-						UpdateTxStore(GetValuePointer());
+						UpdateStore(mp_RxValue, GetValuePointer(), GetChangeCount());
+						UpdateStore(mp_TxValue, GetValuePointer(), GetChangeCount());
 						SetDataLinkEnabled(true);
 					}
 					else
@@ -243,88 +243,6 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 			return updateStatus;
 		}
 
-		UpdateStatus_t UpdateRxStore(const T *newValues)
-		{
-			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
-			{
-				assert(newValues != nullptr);
-				assert(mp_RxValue != nullptr);
-				assert(COUNT > 0);
-				ESP_LOGD( "UpdateRxStore", "Name: \"%s\" Update Rx Store with value: \"%s\"", GetName().c_str(), ConvertValueToString(newValues, COUNT).c_str());
-				updateStatus.ValueChanged= (0 != memcmp(mp_RxValue, newValues, sizeof(T)*COUNT));
-				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
-				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-				if(updateStatus.UpdateAllowed)
-				{
-					ZeroOutMemory(mp_RxValue);
-					memcpy(mp_RxValue, newValues, sizeof(T) * COUNT);
-					updateStatus.UpdateSuccessful = ( memcmp(mp_RxValue, newValues, sizeof(T) * COUNT) == 0 );
-					if(updateStatus.UpdateSuccessful)
-					{
-						ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Successful.", GetName().c_str());
-					}
-					else
-					{
-						ESP_LOGE( "UpdateRxStore", "\"%s\": Update Rx Store: Not Successful.", GetName().c_str());
-					}
-				}
-				else
-				{
-					ESP_LOGD( "UpdateRxStore", "\"%s\": Update Rx Store: Not Allowed.", GetName().c_str());
-				}
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Status: \"%i|%i|%i|%i\"", GetName().c_str(), updateStatus.ValueChanged, updateStatus.ValidValue, updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
-				xSemaphoreGiveRecursive(m_ValueSemaphore);
-			}
-			else
-			{
-				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-			}
-			return updateStatus;
-		}
-
-		UpdateStatus_t UpdateTxStore(const T *newValues)
-		{
-			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
-			{
-				assert(newValues != nullptr);
-				assert(mp_TxValue != nullptr);
-				assert(COUNT > 0);
-				ESP_LOGD( "UpdateTxStore"
-						, "Name: \"%s\" Update Tx Store with value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newValues, COUNT).c_str());
-				updateStatus.ValueChanged = (0 != memcmp(mp_TxValue, newValues, sizeof(T)*COUNT));
-				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
-				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
-				if(updateStatus.UpdateAllowed)
-				{
-					ZeroOutMemory(mp_TxValue);
-					memcpy(mp_TxValue, newValues, sizeof(T) * COUNT);
-					updateStatus.UpdateSuccessful = (memcmp(mp_TxValue, newValues, sizeof(T) * COUNT) == 0);
-					if(updateStatus.UpdateSuccessful)
-					{
-						ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Successful.", GetName().c_str());
-					}
-					else
-					{
-						ESP_LOGE( "UpdateTxStore", "\"%s\": Update Tx Store: Not Successful.", GetName().c_str());
-					}
-				}
-				else
-				{
-					ESP_LOGD( "UpdateTxStore", "\"%s\": Update Tx Store: Not Allowed.", GetName().c_str());
-				}
-				xSemaphoreGiveRecursive(m_ValueSemaphore);
-			}
-			else
-			{
-				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-			}
-			return updateStatus;
-		}
-
 		UpdateStatus_t Tx_Now(size_t changeCount)
 		{
 			UpdateStatus_t updateStatus;
@@ -333,7 +251,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\"", mp_SerialPortMessageManager->GetName().c_str(), GetName().c_str(), ConvertValueToString(mp_TxValue, COUNT), GetChangeCount() );
 				if(mp_SerialPortMessageManager)
 				{
-					updateStatus |= UpdateStore(mp_TxValue, changeCount);
+					updateStatus |= UpdateStore(GetValuePointer(), mp_TxValue, changeCount);
 					ESP_LOGD( "Tx_Now", "\"%s\": Tx Message Change Count \"%i\"", GetName(), GetChangeCount());
 					if(!mp_SerialPortMessageManager->QueueMessageFromDataType(GetName(), GetDataType(), mp_TxValue, GetCount(), GetChangeCount()))
 					{
@@ -428,7 +346,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		UpdateStatus_t Update_Tx_Store_And_Try_Tx_On_Change(const T *newValues)
 		{
 			UpdateStatus_t storeUpdated;
-			if(UpdateTxStore(newValues).UpdateSuccessful)
+			if(UpdateStore(mp_TxValue, newValues, GetChangeCount()).UpdateSuccessful)
 			{
 				storeUpdated |= Try_TX_On_Change(newValues, GetChangeCount()+1);
 			}

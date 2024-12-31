@@ -406,62 +406,56 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
-		virtual size_t ParseStringValueIntoValues(const std::string& stringValue, T* values)
+		virtual size_t ParseStringValueIntoValues(const std::string& stringValue, T* values) 
 		{
-			std::vector<std::string> substrings;
+			// Use string_view for efficient substring manipulation without allocations
+			std::string_view input(stringValue);
+
+			size_t substringCount = 0;
 			size_t start = 0;
-			size_t end = stringValue.find(ENCODE_OBJECT_DIVIDER);
 
-			// Split the input string by ENCODE_OBJECT_DIVIDER
-			while (end != std::string::npos)
+			while (start < input.size() && substringCount < COUNT) 
 			{
-				std::string parsedString = stringValue.substr(start, end - start);
-				ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
-				if (parsedString.empty()) {
-					ESP_LOGW("SetValue", "WARNING! Empty Value Rejected: \"%s\".", parsedString.c_str());
+				// Find the position of the next ENCODE_OBJECT_DIVIDER
+				size_t end = input.find(ENCODE_OBJECT_DIVIDER, start);
+
+				// If not found, end at the end of the string
+				if (end == std::string_view::npos) {
+					end = input.size();
+				}
+
+				// Extract the substring view
+				std::string_view substring = input.substr(start, end - start);
+
+				if (!substring.empty()) {
+					// Validate the substring
+					if (!m_ValidValueChecker.IsValidStringValue(std::string(substring))) {
+						ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", m_Name.c_str(), std::string(substring).c_str());
+						return 0;
+					}
+
+					// Decode and store the value
+					values[substringCount++] = StringEncoderDecoder<T>::DecodeFromString(std::string(substring));
+				} else {
+					ESP_LOGW("SetValue", "WARNING! Empty Value Rejected at position %zu.", start);
 					return 0;
 				}
-				substrings.push_back(parsedString);
+
+				// Advance to the next position
 				start = end + 1;
-				end = stringValue.find(ENCODE_OBJECT_DIVIDER, start);
 			}
 
-			std::string parsedString = stringValue.substr(start);
-			ESP_LOGD("SetValueFromString", "Parsed String: \"%s\"", parsedString.c_str());
-			if (parsedString.empty()) {
-				ESP_LOGW("SetValue", "WARNING! Empty Value Rejected: \"%s\".", parsedString.c_str());
-				return 0;
-			}
-			substrings.push_back(parsedString);
-
-			// Check if the number of substrings matches the expected COUNT
-			if (substrings.size() != COUNT) 
-			{
+			// Validate substring count
+			if (substringCount != COUNT) {
 				ESP_LOGE("SetValueFromString", "Expected %zu substrings but got %zu in string: \"%s\".",
-						COUNT, substrings.size(), stringValue.c_str());
+						COUNT, substringCount, stringValue.c_str());
 				return 0;
 			}
 
-			// Decode each substring and store it in the value array
-			ESP_LOGD("ParseStringValueIntoValues", "\"%s\" Parsed %i Strings.", m_Name.c_str(), substrings.size());
-			for (size_t i = 0; i < substrings.size(); ++i) 
-			{
-				if (false == m_ValidValueChecker.IsValidStringValue(substrings[i]))
-				{
-					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", m_Name.c_str(), substrings[i].c_str());
-					return 0;
-				}
-
-				// Ensure decoding is safe for the type
-				if (substrings[i].empty()) {
-					ESP_LOGW("SetValue", "WARNING! Empty Value Rejected: \"%s\".", substrings[i].c_str());
-					return 0;
-				}
-
-				values[i] = StringEncoderDecoder<T>::DecodeFromString(substrings[i]);
-			}
-			return substrings.size();
+			return substringCount;
 		}
+
+
 
 		virtual UpdateStatus_t SetValueFromString(const std::string& stringValue)
 		{
@@ -482,13 +476,13 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			}
 		}
 
-		virtual UpdateStatus_t SetValue(const T *values, size_t count)
+		virtual UpdateStatus_t SetValue(const T *newValues, size_t count)
 		{
 			ESP_LOGD( "LocalDataItem: SetValue"
 					, "\"%s\" Set Value: \"%s\""
 					, m_Name.c_str()
-					, this->ConvertValueToString(values, count) );
-			return UpdateStore(values, GetChangeCount()+1);
+					, this->ConvertValueToString(newValues, count) );
+			return UpdateStore(GetValuePointer(), newValues, GetChangeCount()+1);
 		}
 
 		virtual UpdateStatus_t SetValue(const T& value)
@@ -517,27 +511,35 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return false;
 		}
 
-		virtual std::string ConvertValueToString(const T *pvalue, size_t count) const
+		virtual std::string ConvertValueToString(const T* pvalue, size_t count) const
 		{
-			std::vector<std::string> valueStrings;
-			if(pvalue && count > 0)
+			if (!pvalue || count == 0)
 			{
-				for (size_t i = 0; i < count; ++i)
+				return ""; // Return an empty string if no values are provided
+			}
+
+			// Reserve space in the resulting string to reduce reallocations
+			std::ostringstream resultStream;
+
+			for (size_t i = 0; i < count; ++i)
+			{
+				// Encode the value and append it to the result stream
+				std::string encodedString = StringEncoderDecoder<T>::EncodeToString(pvalue[i]);
+				ESP_LOGD("ConvertValueToString", "Encoded String \"%s\"", encodedString.c_str());
+
+				resultStream << encodedString;
+
+				// Add a delimiter after each value except the last one
+				if (i < count - 1)
 				{
-					std::string encodedString = StringEncoderDecoder<T>::EncodeToString(pvalue[i]);
-					ESP_LOGD("ConvertValueToString", "Encoded String \"%s\"", encodedString.c_str());
-					valueStrings.push_back(encodedString);
+					resultStream << ENCODE_OBJECT_DIVIDER;
 				}
 			}
-			std::string stringValue = "";
-			for (size_t i = 0; i < count - 1; ++i)
-			{
-				stringValue += valueStrings[i];
-				stringValue += ENCODE_OBJECT_DIVIDER;
-			}
-			stringValue += valueStrings[COUNT - 1];
-			return stringValue;
+
+			// Convert the stream into a string
+			return resultStream.str();
 		}
+
 
 	protected:
 		ValidValueChecker m_ValidValueChecker;
@@ -570,61 +572,81 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			return (changeCount < m_ChangeCount) && (m_ChangeCount - changeCount <= (SIZE_MAX / 2));
 		}
 
-		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t newChangeCount)
+		virtual UpdateStatus_t UpdateStore(T* oldValues, const T* newValues, const size_t newChangeCount)
 		{
 			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
+
+			if (xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
 			{
 				assert(newValues != nullptr);
-				assert(mp_Value != nullptr);
+				assert(oldValues != nullptr);
 				assert(COUNT > 0);
-				ESP_LOGD( "UpdateStore"
-						, "Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\" New Change Count: \"%i\""
-						, GetName().c_str()
-						, ConvertValueToString(newValues, COUNT).c_str()
-						, m_ChangeCount
-						, newChangeCount );
-				updateStatus.ValueChanged = (0 != memcmp(mp_Value, newValues, sizeof(T)*COUNT));
-				updateStatus.ValidValue = ConfirmValueValidity(newValues, COUNT);
-				updateStatus.UpdateAllowed = updateStatus.ValueChanged && updateStatus.ValidValue;
+
+				const char* name = GetName().c_str();
+				bool valueChanged = (memcmp(oldValues, newValues, sizeof(T) * COUNT) != 0);
+				bool validValue = valueChanged ? ConfirmValueValidity(newValues, COUNT) : true;
+
+				ESP_LOGD("UpdateStore", 
+						"Name: \"%s\" Update Store with value: \"%s\" Change Count: \"%i\" New Change Count: \"%i\"", 
+						name, ConvertValueToString(newValues, COUNT).c_str(), m_ChangeCount, newChangeCount);
+
+				updateStatus.ValueChanged = valueChanged;
+				updateStatus.ValidValue = validValue;
+				updateStatus.UpdateAllowed = valueChanged && validValue;
 				updateStatus.UpdateSuccessful = UpdateChangeCount(m_ChangeCount, updateStatus.UpdateAllowed);
-				if(updateStatus.UpdateSuccessful)
+
+				if (updateStatus.UpdateSuccessful)
 				{
-					ZeroOutMemory(mp_Value);
-					memcpy(mp_Value, newValues, sizeof(T) * COUNT);
-					updateStatus.UpdateSuccessful = ( memcmp(mp_Value, newValues, sizeof(T) * COUNT) == 0);
-					if(updateStatus.UpdateSuccessful)
+					// Use memcpy directly; no need to zero out memory beforehand.
+					memcpy(oldValues, newValues, sizeof(T) * COUNT);
+
+					if (memcmp(oldValues, newValues, sizeof(T) * COUNT) == 0)
 					{
-						this->CallNamedCallbacks(mp_Value);
+						this->CallNamedCallbacks(oldValues);
 					}
 					else
 					{
-						ESP_LOGE( "UpdateStore", "\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", GetName().c_str(), GetValueAsString().c_str(), m_ChangeCount);
+						ESP_LOGE("UpdateStore", 
+								"\"%s\": Update Store: Not Successful. Value: \"%s\" Change Count: \"%i\"", 
+								name, GetValueAsString().c_str(), m_ChangeCount);
+						updateStatus.UpdateSuccessful = false;
 					}
 				}
 				else
 				{
-					ESP_LOGD( "UpdateStore", "\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", GetName().c_str(), m_ChangeCount);
+					ESP_LOGD("UpdateStore", 
+							"\"%s\": Update Store: Not Allowed. Change Count: \"%i\"", 
+							name, m_ChangeCount);
 				}
-				ESP_LOGD( "UpdateStore", "\"%s\": Update Status: \"%i|%i|%i|%i\"", GetName().c_str(), updateStatus.ValueChanged, updateStatus.ValidValue, updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
+
+				ESP_LOGD("UpdateStore", 
+						"\"%s\": Update Status: \"%i|%i|%i|%i\"", 
+						name, updateStatus.ValueChanged, updateStatus.ValidValue, 
+						updateStatus.UpdateAllowed, updateStatus.UpdateSuccessful);
+
 				xSemaphoreGiveRecursive(m_ValueSemaphore);
 			}
 			else
 			{
 				ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
 			}
+
 			return updateStatus;
 		}
 
+
 		virtual bool ConfirmValueValidity(const T* values, size_t count) const
 		{
-			for(int i = 0; i < count; ++i)
+			if(m_ValidValueChecker.IsConfigured())
 			{
-				std::string stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
-				if(false == this->m_ValidValueChecker.IsValidStringValue(stringValue))
+				for(int i = 0; i < count; ++i)
 				{
-					ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
-					return false;
+					std::string stringValue = StringEncoderDecoder<T>::EncodeToString(values[i]);
+					if(!this->m_ValidValueChecker.IsValidStringValue(stringValue))
+					{
+						ESP_LOGW("SetValue", "WARNING! \"%s\" Value Rejected: \"%s\".", this->GetName().c_str(), stringValue.c_str() );
+						return false;
+					}		
 				}
 			}
 			return true;

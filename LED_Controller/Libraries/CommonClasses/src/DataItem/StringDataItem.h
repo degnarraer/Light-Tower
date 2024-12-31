@@ -86,9 +86,9 @@ class StringDataItem: public LocalStringDataItem
 		{
 			return LocalStringDataItem::GetDataType();
 		}
-		UpdateStatus_t UpdateStore(const char *newValues, const size_t changeCount)
+		UpdateStatus_t UpdateStore(char *oldValues, const char *newValues, const size_t changeCount)
 		{
-			return LocalStringDataItem::UpdateStore(newValues, changeCount);
+			return LocalStringDataItem::UpdateStore(oldValues, newValues, changeCount);
 		}
 		std::string ConvertValueToString(const char *values, size_t count) const
 		{

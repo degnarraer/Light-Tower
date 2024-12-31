@@ -207,8 +207,8 @@ class DataItem: public LocalDataItem<T, COUNT>
 			return LocalDataItem<T, COUNT>::ConfirmValueValidity(values, count);
 		}
 
-		virtual UpdateStatus_t UpdateStore(const T *newValues, const size_t changeCount) override
+		virtual UpdateStatus_t UpdateStore(T* oldValues, const T *newValues, const size_t changeCount) override
 		{
-			return LocalDataItem<T,COUNT>::UpdateStore(newValues, changeCount);
+			return LocalDataItem<T,COUNT>::UpdateStore(oldValues, newValues, changeCount);
 		}
 };

@@ -38,17 +38,18 @@ public:
             m_IsConfigured = true;
         }
 
-
     explicit ValidValueChecker(const ValidValueComparators_t* const validValueComparators)
         : mp_ValidStrings(nullptr)
         , mp_ValidValueComparators(validValueComparators)
         {
-            
             m_IsConfigured = true;
         }
 
     virtual ~ValidValueChecker() {}
-
+    bool IsConfigured() const
+    {
+        return m_IsConfigured;
+    }
     virtual bool IsValidStringValue(const std::string &stringValue) const
     {
         if (mp_ValidStrings)

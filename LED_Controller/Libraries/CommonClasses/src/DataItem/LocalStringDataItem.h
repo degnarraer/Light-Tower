@@ -147,7 +147,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 				updateStatus.UpdateAllowed = UpdateChangeCount(GetChangeCount(), (updateStatus.ValueChanged && updateStatus.ValidValue));
 				if (updateStatus.UpdateAllowed)
 				{   
-					ZeroOutMemory(mp_Value);
+					//ZeroOutMemory(mp_Value);
 					strncpy(mp_Value, value, count);
 					updateStatus.UpdateSuccessful = (strncmp(mp_Value, value, count) == 0);
 					if(updateStatus.UpdateSuccessful)

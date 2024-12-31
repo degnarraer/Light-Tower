@@ -8,6 +8,7 @@
 #include "Helpers.h"
 #include "CircularVector.h"
 #include "PSRamAllocator.h"
+#include "Tunes.h"
 
 struct FFT_Bin_Data
 {
@@ -157,7 +158,7 @@ public:
 
         if(m_IsMultithreaded)
         {
-            m_FFT_Data_Input_QueueHandle = xQueueCreate(20, sizeof(Frame_t*) );
+            m_FFT_Data_Input_QueueHandle = xQueueCreate(FFT_FRAME_QUEUE_SIZE, sizeof(Frame_t*) );
             if(m_FFT_Data_Input_QueueHandle) ESP_LOGD("Setup", "FFT Data Input Queue Created.");
             else ESP_LOGE("Setup", "ERROR! Error creating FFT Data Input Queue.");
             
@@ -167,7 +168,7 @@ public:
         }
         else
         {
-            m_FFT_Data_Input_QueueHandle = xQueueCreate(1, sizeof(std::vector<Frame_t>*) );
+            m_FFT_Data_Input_QueueHandle = xQueueCreate(1, sizeof(Frame_t*) );
             if(m_FFT_Data_Input_QueueHandle) ESP_LOGD("Setup", "FFT Data Input Queue Created.");
             else ESP_LOGE("Setup", "ERROR! Error creating FFT Data Input Queue.");
         }
@@ -308,7 +309,7 @@ private:
                 if( !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel.get() )
                 {
                     ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-                    TackOnSomeMultithreadedDelay(10);
+                    TackOnSomeMultithreadedDelay(50);
                     continue;
                 }
                 ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
@@ -368,7 +369,7 @@ private:
         else
         {
             ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-            TackOnSomeMultithreadedDelay(10);
+            TackOnSomeMultithreadedDelay(50);
         }
     }
 
