@@ -85,7 +85,7 @@ void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t>& 
   FFT_Bin_Data_Set_t* p_fft_Bin_Data_Set_raw = sp_FFT_Bin_Data_Set.release();
   if(m_FFT_Result_Processor_Queue)
   {
-    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE)
+    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, pdMS_TO_TICKS(FFT_MESSAGE_SEND_WAIT)) == pdTRUE)
     {
       FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "Queued FFT Data.");
     }
@@ -117,13 +117,13 @@ void Sound_Processor::FFT_Result_Processor_Task()
     if(m_FFT_Result_Processor_Queue)
     {
         FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set_raw = nullptr;
-        while( xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE )
+        while( xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(FFT_MESSAGE_RECEIVE_WAIT)) == pdTRUE )
         {
           FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
           std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
           Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_R_Bands1, m_R_Bands3, m_R_Max_Band);
           Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_L_Bands1, m_L_Bands3, m_R_Max_Band);
-          vTaskDelay(pdMS_TO_TICKS(FFT_MESSAGE_TASK_DELAY));
+          vTaskDelay(pdMS_TO_TICKS(FFT_MSG_PER_MSG_TASK_DELAY));
         }
         vTaskDelay(pdMS_TO_TICKS(FFT_MESSAGE_TASK_DELAY));
     }
@@ -281,15 +281,18 @@ void Sound_Processor::AssignToBands(float* Band_Data, FFT_Bin_Data_t* bin_Data, 
     else if(freq > 16000 && freq <= 20000) bandIndex = 30;
     else if(freq > 20000 ) bandIndex = 31;
     
-    if(bandIndex >= 0 && freq < I2S_SAMPLE_RATE / 2) Band_Data[bandIndex] += magnitude;
-    if(Band_Data[bandIndex] > 1.0)
+    if(bandIndex >= 0 && freq < I2S_SAMPLE_RATE / 2)
     {
-      Band_Data[bandIndex] = 1.0;
-    }
-    if(Band_Data[bandIndex] > MaxBandMagnitude)
-    {
-      MaxBandMagnitude = Band_Data[bandIndex];
-      MaxBandIndex = bandIndex;
+      Band_Data[bandIndex] += magnitude;
+      if(Band_Data[bandIndex] > 1.0)
+      {
+        Band_Data[bandIndex] = 1.0;
+      }
+      if(Band_Data[bandIndex] > MaxBandMagnitude)
+      {
+        MaxBandMagnitude = Band_Data[bandIndex];
+        MaxBandIndex = bandIndex;
+      }
     }
   }
 }

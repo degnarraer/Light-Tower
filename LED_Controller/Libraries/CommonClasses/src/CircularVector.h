@@ -1,32 +1,8 @@
-/*
-    Light Tower by Rob Shockency
-    Copyright (C) 2021 Rob Shockency degnarraer@yahoo.com
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version of the License, or
-    (at your option) any later version. 3
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#pragma once
-#include <memory>
-#include <vector>
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-
 class ShocksRingBuffer {
 public:
     ShocksRingBuffer(size_t size)
         : bufferSize(size), writeIndex(0), readIndex(0),
-          p_buffer(std::make_unique<Frame_t[]>(size)) {
+          isFull(false), p_buffer(std::make_unique<Frame_t[]>(size)) {
         mutex = xSemaphoreCreateMutex();
         if (!mutex) {
             throw std::runtime_error("Failed to create mutex");
@@ -40,28 +16,34 @@ public:
         }
     }
 
-    // Push single frame
+    // Push a single frame into the ring buffer
     void push(Frame_t frame, TickType_t waitTime) {
         if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
             p_buffer[writeIndex] = frame;
             writeIndex = (writeIndex + 1) % bufferSize;
-            if (writeIndex == readIndex) { // Overwrite logic
+
+            if (isFull) { // Overwrite logic
                 readIndex = (readIndex + 1) % bufferSize;
             }
+
+            isFull = (writeIndex == readIndex); // Update full flag
             xSemaphoreGive(mutex);
         }
     }
 
-    // Push multiple frames
+    // Push multiple frames into the ring buffer
     size_t push(Frame_t* frames, size_t count, TickType_t waitTime) {
         size_t pushed = 0;
         if (frames && xSemaphoreTake(mutex, waitTime) == pdTRUE) {
             for (size_t i = 0; i < count; ++i) {
                 p_buffer[writeIndex] = frames[i];
                 writeIndex = (writeIndex + 1) % bufferSize;
-                if (writeIndex == readIndex) { // Overwrite logic
+
+                if (isFull) { // Overwrite logic
                     readIndex = (readIndex + 1) % bufferSize;
                 }
+
+                isFull = (writeIndex == readIndex); // Update full flag
                 pushed++;
             }
             xSemaphoreGive(mutex);
@@ -76,9 +58,11 @@ public:
             size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
             frames.resize(framesToReturn);
+
             for (size_t i = 0; i < framesToReturn; ++i) {
                 frames[i] = p_buffer[(readIndex + i) % bufferSize];
             }
+
             returned = framesToReturn;
             xSemaphoreGive(mutex);
         }
@@ -91,9 +75,11 @@ public:
         if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
             size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
+
             for (size_t i = 0; i < framesToReturn; ++i) {
                 frames[i] = p_buffer[(readIndex + i) % bufferSize];
             }
+
             returned = framesToReturn;
             xSemaphoreGive(mutex);
         }
@@ -102,6 +88,9 @@ public:
 
 private:
     size_t getAvailableFrames() const {
+        if (isFull) {
+            return bufferSize; // If full, all slots are available
+        }
         return (writeIndex >= readIndex)
             ? (writeIndex - readIndex)
             : (bufferSize - readIndex + writeIndex);
@@ -111,5 +100,6 @@ private:
     size_t bufferSize;
     size_t writeIndex;
     size_t readIndex;
+    bool isFull; // Flag to track whether the buffer is full
     SemaphoreHandle_t mutex = nullptr;
 };

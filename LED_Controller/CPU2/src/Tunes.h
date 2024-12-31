@@ -14,38 +14,41 @@
 #define CPU3_TX     15
 
 //THREAD CORE ASSIGNMENTS
-#define BLUETOOTH_TASK_CORE         tskNO_AFFINITY
-#define BLUETOOTH_TASK_PRIORITY     THREAD_PRIORITY_HIGH
+#define BLUETOOTH_TASK_CORE                 tskNO_AFFINITY
+#define BLUETOOTH_TASK_PRIORITY             THREAD_PRIORITY_HIGH
 
-#define DATALINK_TASK_CORE          tskNO_AFFINITY
-#define DATALINK_TASK_PRIORITY      THREAD_PRIORITY_HIGH
+#define DATALINK_TASK_CORE                  tskNO_AFFINITY
+#define DATALINK_TASK_PRIORITY              THREAD_PRIORITY_HIGH
 
-#define AMPLITUDE_TASK_CORE         tskNO_AFFINITY
-#define AMPLITUDE_TASK_PRIORITY     THREAD_PRIORITY_LOW
+#define AMPLITUDE_TASK_CORE                 tskNO_AFFINITY
+#define AMPLITUDE_TASK_PRIORITY             THREAD_PRIORITY_LOW
 
-#define FFT_COMPUTE_TASK_CORE       tskNO_AFFINITY
-#define FFT_COMPUTE_TASK_PRIORITY   THREAD_PRIORITY_LOW
-#define FFT_COMPUTE_TASK_DELAY      5
+#define FFT_COMPUTE_TASK_CORE               tskNO_AFFINITY
+#define FFT_COMPUTE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
+#define FFT_COMPUTE_TASK_DELAY              50
+#define FFT_COMPUTE_HOP_CHECK_TASK_DELAY    1
 
-#define FFT_MESSAGE_QUEUE_SIZE      20
-#define FFT_MESSAGE_TASK_PRIORITY   THREAD_PRIORITY_MEDIUM
-#define FFT_MESSAGE_TASK_DELAY      5
+#define FFT_MESSAGE_QUEUE_SIZE              5
+#define FFT_MESSAGE_RECEIVE_WAIT            1
+#define FFT_MESSAGE_SEND_WAIT               1
+#define FFT_MESSAGE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
+#define FFT_MSG_PER_MSG_TASK_DELAY          1
+#define FFT_MESSAGE_TASK_DELAY              10
 
-#define NULL_POINTER_THREAD_DELAY   100
-
-//App Tunes
-#define I2S_SAMPLE_RATE                 44100
-#define MAX_VISUALIZATION_FREQUENCY     4000.0
-#define I2S_BUFFER_COUNT                10
-#define I2S_SAMPLE_COUNT                512
-#define NUMBER_OF_BANDS                 32
-#define FFT_SIZE                        256
-#define HOP_SIZE                        256
-#define FFT_AUDIO_BUFFER_SIZE           4096
-#define AMPLITUDE_BUFFER_FRAME_COUNT    128
-#define AMPLITUDE_AUDIO_BUFFER_SIZE     128
-
-#define TASK_STACK_SIZE_DEBUG           false
-#define TASK_LOOP_COUNT_DEBUG           false
+#define NULL_POINTER_THREAD_DELAY           100
+    
+//App Tunes 
+#define I2S_SAMPLE_RATE                     44100
+#define MAX_VISUALIZATION_FREQUENCY         4000.0
+#define I2S_BUFFER_COUNT                    10
+#define I2S_SAMPLE_COUNT                    512
+#define NUMBER_OF_BANDS                     32
+#define FFT_SIZE                            256
+#define HOP_SIZE                            256
+#define AMPLITUDE_BUFFER_FRAME_COUNT        128
+#define AMPLITUDE_AUDIO_BUFFER_SIZE         128
+    
+#define TASK_STACK_SIZE_DEBUG               false
+#define TASK_LOOP_COUNT_DEBUG               false
 
 #endif

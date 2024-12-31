@@ -235,7 +235,7 @@ void WebSocketDataProcessor::WebSocketTransmissionTask()
     if(m_WebSocketMessageQueue)
     {
         std::string* message;
-        while( xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(0)) == pdTRUE)
+        while( xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(1)) == pdTRUE)
         {
         NotifyClients(*message);
         delete message;
