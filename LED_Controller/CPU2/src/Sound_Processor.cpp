@@ -60,7 +60,7 @@ void Sound_Processor::Setup()
   SetupAllSetupCallees();
   m_AudioBinLimit = GetBinForFrequency(MAX_VISUALIZATION_FREQUENCY);
   
-  m_FFT_Result_Processor_Queue = xQueueCreate(FFT_COMPUTE_QUEUE_SIZE, sizeof(FFT_Bin_Data_Set_t*) );
+  m_FFT_Result_Processor_Queue = xQueueCreate(FFT_MESSAGE_QUEUE_SIZE, sizeof(FFT_Bin_Data_Set_t*) );
   if(m_FFT_Result_Processor_Queue) ESP_LOGD("Setup", "FFT Result Processor Queue Created.");
   else ESP_LOGE("Setup", "ERROR! Error creating the FFT Result Processor Queue.");
 
