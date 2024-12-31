@@ -18,9 +18,6 @@
 
 #include "SerialMessageManager.h"
 
-//#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
-#define TIME_TO_WAIT_TO_SEND pdMS_TO_TICKS(0)
-
 void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Object_Callee_Interface* NewCallee)
 {
 	ESP_LOGD("RegisterForNewRxValueNotification", "Try Registering Callee");
@@ -73,11 +70,11 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const std::string
 
 void SerialPortMessageManager::Setup()
 {
-	if(m_TXQueueHandle = xQueueCreate(MaxQueueCount, sizeof(std::string*)))
+	if(m_TXQueueHandle = xQueueCreate(MAX_QUEUE_COUNT, sizeof(std::string*)))
 	ESP_LOGD("Setup", "TX Queue Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
 
-	if(m_MessageQueueHandle = xQueueCreate(MaxQueueCount, sizeof(std::string*)))
+	if(m_MessageQueueHandle = xQueueCreate(MAX_QUEUE_COUNT, sizeof(std::string*)))
 	ESP_LOGD("Setup", "RX Queue Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue.");
 
@@ -121,11 +118,11 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 	bool result = false;
 	if(m_TXQueueHandle)
 	{	
-		if( message.length() > 0 && message.length() <= MaxMessageLength )
+		if( message.length() > 0 && message.length() <= MAX_MESSAGE_LENGTH )
 		{
 			std::string *p_txMessage = new std::string;
 			*p_txMessage = message;
-			if( xQueueSend(m_TXQueueHandle, &p_txMessage, TIME_TO_WAIT_TO_SEND) == pdTRUE )
+			if( xQueueSend(m_TXQueueHandle, &p_txMessage, pdMS_TO_TICKS(TIME_TO_WAIT_TO_SEND)) == pdTRUE )
 			{
 				ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
 				result = true;
@@ -153,7 +150,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
             while(mp_Serial->available())
             {
                 char character = mp_Serial->read();
-                if (m_message.length() >= MaxMessageLength)
+                if (m_message.length() >= MAX_MESSAGE_LENGTH)
                 {
                     ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
                     m_message.clear();
@@ -177,12 +174,12 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
               		taskYIELD();
                 }
             }
-            vTaskDelay(pdMS_TO_TICKS(20));
+            vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
         }
         else
         {
             ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Null Pointer.");
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
         }
     }
 }
@@ -197,20 +194,21 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 			while( xQueueReceive(m_TXQueueHandle, &rawMessage, 0) == pdTRUE )
 			{
 				std::unique_ptr<std::string> sp_Tx_Message(rawMessage);
-				if (sp_Tx_Message->length() > MaxMessageLength)
+				if (sp_Tx_Message->length() > MAX_MESSAGE_LENGTH)
 				{
-					ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MaxMessageLength. Truncating.",m_Name);
-					sp_Tx_Message->resize(MaxMessageLength - 1);
+					ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MAX_MESSAGE_LENGTH. Truncating.",m_Name);
+					sp_Tx_Message->resize(MAX_MESSAGE_LENGTH - 1);
 				}
 				ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, sp_Tx_Message->c_str());
 				mp_Serial->println(sp_Tx_Message->c_str());
 				taskYIELD();
 			}
-			vTaskDelay(pdMS_TO_TICKS(20));
+			vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
 		}
 		else
 		{
 			ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! NULL TX Queue.");
+			vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
 		}
 	}
 }

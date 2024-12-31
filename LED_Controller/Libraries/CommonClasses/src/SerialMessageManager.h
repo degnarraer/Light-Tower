@@ -24,8 +24,14 @@
 #include "Helpers.h"
 #include "DataSerializer.h"
 
-#define MaxQueueCount 20
-#define MaxMessageLength 1000
+#define TASK_DELAY 20
+#define NULL_POINTER_THREAD_DELAY 100
+
+#define TIME_TO_WAIT_TO_SEND 0
+#define TIME_TO_WAIT_TO_RECEIVE 0
+
+#define MAX_QUEUE_COUNT 20
+#define MAX_MESSAGE_LENGTH 1000
 
 template <typename T>
 class Rx_Value_Caller_Interface;
@@ -293,7 +299,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 				if(m_MessageQueueHandle && mp_DataSerializer)
 				{
 					std::string *p_rxMessage;
-					while (xQueueReceive(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(0)) == pdTRUE)
+					while (xQueueReceive(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(TIME_TO_WAIT_TO_RECEIVE)) == pdTRUE)
 					{
 						std::unique_ptr<std::string> sp_rxMessage(p_rxMessage);
 						NamedObject_t NamedObject;
@@ -308,12 +314,12 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 						}
 						taskYIELD();
 					}
-					vTaskDelay(pdMS_TO_TICKS(20));
+					vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
 				}
 				else
 				{
 					ESP_LOGE("SerialPortMessageManager_RxQueueTask", "ERROR! Null Pointer.");
-					vTaskDelay(pdMS_TO_TICKS(100));
+					vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
 				}
 			}
 		}

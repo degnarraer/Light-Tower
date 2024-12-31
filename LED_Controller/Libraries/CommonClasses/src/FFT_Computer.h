@@ -309,7 +309,7 @@ private:
                 if( !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel.get() )
                 {
                     ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-                    TackOnSomeMultithreadedDelay(50);
+                    TackOnSomeMultithreadedDelay(NULL_POINTER_THREAD_DELAY);
                     continue;
                 }
                 ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
@@ -362,14 +362,14 @@ private:
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
-                TackOnSomeMultithreadedDelay(50);
+                TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
             }
-            TackOnSomeMultithreadedDelay(50);
+            TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
         }
         else
         {
             ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-            TackOnSomeMultithreadedDelay(50);
+            TackOnSomeMultithreadedDelay(NULL_POINTER_THREAD_DELAY);
         }
     }
 
