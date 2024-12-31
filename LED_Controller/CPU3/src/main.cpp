@@ -117,6 +117,17 @@ void setup()
 
 void loop()
 {
+  static unsigned long lastPrintTime = 0;
+  unsigned long currentTime = millis();
+
   MyWebServer.handleClient();
   MyWebSocket.loop();
+
+  if (currentTime - lastPrintTime >= 1000) {
+    size_t heapSpace = ESP.getFreeHeap();
+    size_t psramSpace = ESP.getFreePsram();
+    Serial.printf("Heap Space Left: %u bytes, PSRAM Space Left: %u bytes\n", heapSpace, psramSpace);
+
+    lastPrintTime = currentTime;
+  }
 }

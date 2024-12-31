@@ -73,7 +73,7 @@ void Sound_Processor::Setup()
   m_FFT_Computer.Setup(&StaticFFT_Results_Callback, this);
 }
 
-void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set)
+void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t>& sp_FFT_Bin_Data_Set)
 {
   static LogWithRateLimit FFT_Results_Callback_RLL(1000, ESP_LOG_DEBUG);
   static LogWithRateLimit FFT_Results_Callback_Queue_Success_RLL(1000, ESP_LOG_DEBUG);
@@ -120,17 +120,18 @@ void Sound_Processor::FFT_Result_Processor_Task()
         while( xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(0)) == pdTRUE )
         {
           FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
-          std::unique_ptr<FFT_Bin_Data_Set_t, PsMallocDeleter> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
+          std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
           Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_R_Bands1, m_R_Bands3, m_R_Max_Band);
           Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_L_Bands1, m_L_Bands3, m_R_Max_Band);
           vTaskDelay(pdMS_TO_TICKS(20));
         }
+        vTaskDelay(pdMS_TO_TICKS(20));
     }
     else
     {
       ESP_LOGE("FFT_Result_Processor_Task", "FFT_Result_Processor_Queue is not initialized!");
+      vTaskDelay(pdMS_TO_TICKS(100));
     }
-    vTaskDelay(pdMS_TO_TICKS(20));
   }
 }
 
@@ -145,12 +146,12 @@ void Sound_Processor::Update_Bands_And_Send_Result( FFT_Bin_Data_t* bin_Data
     float MaxBandMagnitude = 0.0;
     int16_t MaxBandIndex = 0;
     AssignToBands(bands_DataBuffer, bin_Data, count, MaxBandIndex, MaxBandMagnitude);
-    //bandDataItem1.SetValue(bands_DataBuffer, NUMBER_OF_BANDS);
-    //bandDataItem2.SetValue(bands_DataBuffer, NUMBER_OF_BANDS);
+    bandDataItem1.SetValue(bands_DataBuffer, NUMBER_OF_BANDS);
+    bandDataItem2.SetValue(bands_DataBuffer, NUMBER_OF_BANDS);
     maxBand.MaxBandNormalizedPower = MaxBandMagnitude;
     maxBand.MaxBandIndex = MaxBandIndex;
     maxBand.TotalBands = NUMBER_OF_BANDS;
-    //maxBandDataItem.SetValue(maxBand);
+    maxBandDataItem.SetValue(maxBand);
 }
 
 void Sound_Processor::Static_Calculate_Power(void * parameter)

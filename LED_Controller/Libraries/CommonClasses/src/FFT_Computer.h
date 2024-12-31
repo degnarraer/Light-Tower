@@ -56,7 +56,7 @@ enum DataWidth_t
 };
 
 class FFT_Computer {
-    typedef void FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data, void* args);
+    typedef void FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> &sp_FFT_Bin_Data, void* args);
 private:
     alignas(4) FFT_Results_Callback* mp_CallBack = nullptr;
     bool m_IsMultithreaded = false;
@@ -233,37 +233,46 @@ private:
     void Get_FFT_Data()
     {
         static LogWithRateLimit PerformFFT_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
+        static LogWithRateLimit PerformFFT_MemoryFail_Buffers_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit PerformFFT_Done_Reading_Buffers_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit PerformFFT_Queued_Success_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit PerformFFT_Queued_Fail_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit PerformFFT_Read_Failure_RLL(1000, ESP_LOG_WARN);
+        static LogWithRateLimit PerformFFT_No_Task_RLL(1000, ESP_LOG_WARN);
         if(m_FFT_Data_Input_QueueHandle)
         {
             PerformFFT_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Requesting " + std::to_string(m_fftSize) + " Frames for FFT Processing.").c_str());
             std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>(static_cast<Frame_t*>(ps_malloc(sizeof(Frame_t) * m_fftSize)));
-            size_t receivedFrameCount = mp_ringBuffer->get(sp_frames.get(), m_fftSize, pdMS_TO_TICKS(0));
-            PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
-            if(receivedFrameCount == m_fftSize)
-            {   
-                Frame_t *p_frames = sp_frames.release();
-                if(xQueueSend(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) != pdTRUE)
+            if(sp_frames)
+            {
+                size_t receivedFrameCount = mp_ringBuffer->get(sp_frames.get(), m_fftSize, pdMS_TO_TICKS(0));
+                PerformFFT_Done_Reading_Buffers_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Received " + std::to_string(receivedFrameCount) + " Frames for FFT Processing:").c_str());
+                if(receivedFrameCount == m_fftSize)
                 {
-                    PerformFFT_Queued_Fail_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", ("Unable to Queue " + std::to_string(m_fftSize) + " Frames.").c_str());
-                    free(p_frames);
+                    Frame_t *p_frames = sp_frames.release();
+                    if(xQueueSend(m_FFT_Data_Input_QueueHandle, &p_frames, pdMS_TO_TICKS(0)) != pdTRUE)
+                    {
+                        PerformFFT_Queued_Fail_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", ("Unable to Queue " + std::to_string(m_fftSize) + " Frames.").c_str());
+                        free(p_frames);
+                    }
+                    else
+                    {
+                        PerformFFT_Queued_Success_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Queued " + std::to_string(m_fftSize) + " Frames.").c_str());
+                    }
                 }
                 else
                 {
-                    PerformFFT_Queued_Success_RLL.Log(ESP_LOG_DEBUG, "Get_FFT_Data", ("Queued " + std::to_string(m_fftSize) + " Frames.").c_str());
+                    PerformFFT_Read_Failure_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", "Unexpected buffer size read.");
                 }
             }
             else
             {
-                PerformFFT_Read_Failure_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", "Unexpected buffer size read.");
+                PerformFFT_MemoryFail_Buffers_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", "Unexpected buffer size read.");
             }
         }
         else
         {
-            ESP_LOGW("Get_FFT_Data", "WARNING! No task Handle.");
+            PerformFFT_No_Task_RLL.Log(ESP_LOG_WARN, "Get_FFT_Data", "WARNING! No task Handle.");
         }
     }
 
@@ -351,7 +360,7 @@ private:
                 
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
-                mp_CallBack(std::move(sp_FFT_Bin_Data_Set), mp_CallBackArgs);
+                mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
                 TackOnSomeMultithreadedDelay(50);
             }
             TackOnSomeMultithreadedDelay(50);

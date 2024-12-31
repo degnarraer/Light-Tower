@@ -43,12 +43,12 @@ class Sound_Processor: public NamedItem
                    , IPreferences& preferences );
     virtual ~Sound_Processor();
     void Setup();
-    static void StaticFFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data, void* args)
+    static void StaticFFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> &sp_FFT_Bin_Data, void* args)
     {
       Sound_Processor *aSound_Processor = static_cast<Sound_Processor*>(args);
-      aSound_Processor->FFT_Results_Callback(std::move(sp_FFT_Bin_Data));
+      aSound_Processor->FFT_Results_Callback(sp_FFT_Bin_Data);
     }
-    void FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data);
+    void FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t> &sp_FFT_Bin_Data);
     
   private:
     ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> &m_Amplitude_AudioBuffer;
