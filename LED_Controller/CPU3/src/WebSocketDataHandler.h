@@ -52,93 +52,21 @@ class WebSocketDataHandlerReceiver
 class WebSocketDataProcessor
 {
   public:
-    WebSocketDataProcessor( WebServer &webServer
-                          , WebSocketsServer &webSocket )
-                          : m_WebServer(webServer)
-                          , m_WebSocket(webSocket)
-    {
-    }
-    virtual ~WebSocketDataProcessor()
-    {
-      if(m_WebServerTaskHandle)
-      {
-        vTaskDelete(m_WebServerTaskHandle);
-        m_WebServerTaskHandle = nullptr;
-      }
-      if(m_WebServerTxTaskHandle)
-      {
-        vTaskDelete(m_WebServerTxTaskHandle);
-        m_WebServerTxTaskHandle = nullptr;
-      }
-      if(m_Tx_KeyValues_Semaphore)
-      {
-          vSemaphoreDelete(m_Tx_KeyValues_Semaphore);
-          m_Tx_KeyValues_Semaphore = nullptr;
-      }
-    }
-    void Setup()
-    {
-      m_Tx_KeyValues_Semaphore = xSemaphoreCreateMutex();
-      if (m_Tx_KeyValues_Semaphore == nullptr)
-      {
-          ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
-      }
-      m_WebSocketMessageQueue = xQueueCreate(20, sizeof(std::string));
-      if (m_WebSocketMessageQueue) ESP_LOGD("SetupWebSocket", "Created Queue");
-      else ESP_LOGE("SetupWebSocket", "Failed to create queue");
-
-      xTaskCreate( StaticWebSocketDataProcessor_WebSocket_TxTask,  "Web Server Task", 2500,  this,  THREAD_PRIORITY_HIGH, &m_WebServerTaskHandle );
-      xTaskCreate( StaticWebSocketTransmissionTask, "Web Server Tx Task", 2500, this, THREAD_PRIORITY_MEDIUM, &m_WebServerTxTaskHandle );
-    }
+    WebSocketDataProcessor( WebServer &webServer, WebSocketsServer &webSocket );
+    virtual ~WebSocketDataProcessor();
+    void Setup();
     void RegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void DeRegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void RegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
     void DeRegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
-    bool ProcessSignalValueAndSendToDatalink(const std::string& signalId, const std::string& value);
-    void UpdateAllDataToClient(uint8_t clientId);
+    bool Handle_Signal_Value_RX(const std::string& signalId, const std::string& value);
+    void Handle_Current_Value_Requect(uint8_t clientId);
 
-    static void StaticWebSocketDataProcessor_WebSocket_TxTask(void * parameter);
-    void TxDataToWebSocket(std::string key, std::string value)
-    {
-      if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(0)) == pdTRUE)
-      {
-        KVP keyValuePair = {key, value};
-        m_Tx_KeyValues.push_back(keyValuePair);
-        if(xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore) != pdTRUE)
-        {
-            ESP_LOGE("TxDataToWebSocket", "Failed to release semaphore!");
-        }
-      }
-      else
-      {
-          ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
-      }
-    }
-
-    static void StaticWebSocketTransmissionTask(void *pvParameters)
-    {
-      WebSocketDataProcessor *aProcessor = static_cast<WebSocketDataProcessor*>(pvParameters);
-      aProcessor->WebSocketTransmissionTask();
-    }
-
-    void WebSocketTransmissionTask()
-    {
-      while (true)
-      {
-        if(m_WebSocketMessageQueue)
-        {
-          std::string* message;
-          while( xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(0)) == pdTRUE)
-          {
-            NotifyClients(*message);
-            delete message;
-            taskYIELD();
-          }
-          vTaskDelay(pdMS_TO_TICKS(20));
-        }
-        vTaskDelay(pdMS_TO_TICKS(20));
-      }
-    }
+    void TxDataToWebSocket(std::string key, std::string value);
+    static void Static_WebSocket_Data_Processor_TxTask(void * parameter);
+    void WebSocket_Data_Processor_TxTask();
+    static void Static_WebSocket_Transmission_Task(void *pvParameters);
+    void WebSocketTransmissionTask();
 
   private:
     WebServer &m_WebServer;
@@ -150,7 +78,6 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
     SemaphoreHandle_t m_Tx_KeyValues_Semaphore;
-    void WebSocketDataProcessor_WebSocket_TxTask();
     void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, std::string &result);
     void NotifyClient(uint8_t clientID, const std::string& textString);
     void NotifyClients(const std::string& textString);

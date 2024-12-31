@@ -766,7 +766,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             if (WebSocketData.equals("New client is here!")) 
             {
                 ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"", clientID);
-                m_WebSocketDataProcessor.UpdateAllDataToClient(clientID);
+                m_WebSocketDataProcessor.Handle_Current_Value_Requect(clientID);
                 return;
             } 
             else 
@@ -800,7 +800,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           ESP_LOGD( "HandleWebSocketMessage", "Signal Value Message Received. ID: \"%s\" Value: \"%s\""
                   , Id.c_str()
                   , Value.c_str() );
-          if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id, Value))
+          if(!m_WebSocketDataProcessor.Handle_Signal_Value_RX(Id, Value))
           {
             ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown Signal Value Object: %s.", Id.c_str());
           }
@@ -827,7 +827,7 @@ class SettingsWebServerManager: public SetupCallerInterface
           ESP_LOGI( "HandleWebSocketMessage", "Web Socket JSON Data Received. Id: \"%s\" Value: \"%s\""
                   , Id.c_str()
                   , Value.c_str());
-          if(!m_WebSocketDataProcessor.ProcessSignalValueAndSendToDatalink(Id.c_str(), Value.c_str()))
+          if(!m_WebSocketDataProcessor.Handle_Signal_Value_RX(Id.c_str(), Value.c_str()))
           {
             ESP_LOGE("HandleWebSocketMessage", "ERROR! Unknown JSON Object: %s.", Id.c_str());
           }

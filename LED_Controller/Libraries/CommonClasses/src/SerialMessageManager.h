@@ -30,7 +30,7 @@
 #define TIME_TO_WAIT_TO_SEND 0
 #define TIME_TO_WAIT_TO_RECEIVE 0
 
-#define MAX_QUEUE_COUNT 20
+#define MAX_QUEUE_COUNT 50
 #define MAX_MESSAGE_LENGTH 1000
 
 template <typename T>
