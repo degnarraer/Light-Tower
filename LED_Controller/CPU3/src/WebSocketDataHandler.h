@@ -62,11 +62,11 @@ class WebSocketDataProcessor
     bool Handle_Signal_Value_RX(const std::string& signalId, const std::string& value);
     void Handle_Current_Value_Request(uint8_t clientId);
 
-    void Tx_Data_To_WebSocket(std::string key, std::string value);
+    void TxDataToWebSocket(std::string key, std::string value);
     static void Static_WebSocket_Data_Processor_TxTask(void * parameter);
     void WebSocket_Data_Processor_TxTask();
     static void Static_WebSocket_Transmission_Task(void *pvParameters);
-    void WebSocket_Transmission_Task();
+    void WebSocketTransmissionTask();
 
   private:
     WebServer &m_WebServer;
@@ -77,7 +77,7 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
-    SemaphoreHandle_t m_Tx_KeyValues_Semaphore = nullptr;
+    SemaphoreHandle_t m_Tx_KeyValues_Semaphore;
     void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, std::string &result);
     void NotifyClient(uint8_t clientID, const std::string& textString);
     void NotifyClients(const std::string& textString);
@@ -151,7 +151,7 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       bool success = false;
       if(IsChangeCountGreater(m_DataItem.GetChangeCount()))
       {
-        m_WebSocketDataProcessor.Tx_Data_To_WebSocket(m_Signal, m_DataItem.GetValueAsString());
+        m_WebSocketDataProcessor.TxDataToWebSocket(m_Signal, m_DataItem.GetValueAsString());
         success = true;
         ESP_LOGD( "NewRxValueReceived", "\"%s\": New Verified DataItem Rx Value: Sent to Web Socket", m_Signal.c_str());
       }
@@ -186,10 +186,10 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
 
-    void Tx_Data_To_WebSocket(std::string key, std::string value)
+    void TxDataToWebSocket(std::string key, std::string value)
     {
-      ESP_LOGD("Tx_Data_To_WebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
-      m_WebSocketDataProcessor.Tx_Data_To_WebSocket(key, value);
+      ESP_LOGD("TxDataToWebSocket", "Key: \"%s\" Value: \"%s\"", key.c_str(), value.c_str());
+      m_WebSocketDataProcessor.TxDataToWebSocket(key, value);
       m_ChangeCount = m_DataItem.GetChangeCount();
     }
 
@@ -418,7 +418,7 @@ class BT_Device_Info_With_Time_Since_Update_WebSocket_DataHandler: public WebSoc
         if (!jsonString.empty())
         {
             std::string key = this->GetSignal();
-            this->Tx_Data_To_WebSocket(key, jsonString.c_str());
+            this->TxDataToWebSocket(key, jsonString.c_str());
         }
     }
     private:
