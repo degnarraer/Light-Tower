@@ -27,7 +27,7 @@ WebSocketDataProcessor::~WebSocketDataProcessor()
 void WebSocketDataProcessor::Setup()
 {
     // Create binary semaphore for mutual exclusion
-    m_Tx_KeyValues_Semaphore = xSemaphoreCreateMutex();
+    m_Tx_KeyValues_Semaphore = xSemaphoreCreateRecursiveMutex();
     if (m_Tx_KeyValues_Semaphore == nullptr)
     {
         ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
@@ -66,11 +66,11 @@ void WebSocketDataProcessor::Handle_Current_Value_Request(uint8_t clientId)
 
 void WebSocketDataProcessor::Tx_Data_To_WebSocket(std::string key, std::string value)
 {
-    if (xSemaphoreTake(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) == pdTRUE)
+    if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) == pdTRUE)
     {
         KVP keyValuePair = {key, value};
         m_Tx_KeyValues.push_back(keyValuePair);
-        xSemaphoreGive(m_Tx_KeyValues_Semaphore);
+        xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
     }
     else
     {
@@ -197,7 +197,7 @@ void WebSocketDataProcessor::WebSocket_Data_Processor_TxTask()
     {
         bool messageToSend = false;
         std::unique_ptr<std::string> message = std::make_unique<std::string>();
-        if (xSemaphoreTake(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) == pdTRUE)
         {
             if (!m_Tx_KeyValues.empty())
             {
@@ -205,9 +205,10 @@ void WebSocketDataProcessor::WebSocket_Data_Processor_TxTask()
                 if (!signalValues.empty())
                 {
                     Encode_Signal_Values_To_JSON(signalValues, *message);
+                    messageToSend = true;
                 }
             }
-            xSemaphoreGive(m_Tx_KeyValues_Semaphore); // Release semaphore
+            xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore);
         }
         else
         {

@@ -77,7 +77,7 @@ class WebSocketDataProcessor
     std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
     std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
-    SemaphoreHandle_t m_Tx_KeyValues_Semaphore;
+    SemaphoreHandle_t m_Tx_KeyValues_Semaphore = nullptr;
     void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, std::string &result);
     void NotifyClient(uint8_t clientID, const std::string& textString);
     void NotifyClients(const std::string& textString);
