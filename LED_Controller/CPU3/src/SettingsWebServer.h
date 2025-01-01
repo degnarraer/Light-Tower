@@ -35,7 +35,7 @@ class SettingsWebServerManager: public SetupCallerInterface
     
     virtual ~SettingsWebServerManager();
     
-    void SetupSettingsWebServerManager();
+    void Setup();
     void InitializeLocalvariables();
     void StartWiFi();
     void EndWiFi();
@@ -514,7 +514,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             if (WebSocketData.equals("New client is here!")) 
             {
                 ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"", clientID);
-                m_WebSocketDataProcessor.Handle_Current_Value_Requect(clientID);
+                m_WebSocketDataProcessor.Handle_Current_Value_Request(clientID);
                 return;
             } 
             else 

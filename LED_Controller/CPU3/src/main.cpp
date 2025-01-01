@@ -91,9 +91,10 @@ void TestPSRam()
 
 void InitLocalVariables()
 {
+  m_PreferencesWrapper.Setup();
   m_CPU1SerialPortMessageManager.Setup();
   m_CPU2SerialPortMessageManager.Setup();
-  m_SettingsWebServerManager.SetupSettingsWebServerManager();
+  m_SettingsWebServerManager.Setup();
 }
 
 void PrintMemory(const char* message)
@@ -110,7 +111,6 @@ void setup()
   SetupSerialPorts();
   PrintMemory("Before Initialization");
   TestPSRam();
-  m_PreferencesWrapper.Setup();
   InitLocalVariables();
   PrintMemory("After Initialization");
 }

@@ -44,7 +44,7 @@ class SetupCallerInterface
         SetupCallerInterface()
         {
             ESP_LOGD("SetupCallerInterface", "Constructing SetupCallerInterface");
-			m_SetupCallesSemaphore = xSemaphoreCreateMutex();
+			m_SetupCallesSemaphore = xSemaphoreCreateRecursiveMutex();
 			if (m_SetupCallesSemaphore == nullptr)
 			{
 				ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");

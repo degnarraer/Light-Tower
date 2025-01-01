@@ -1,25 +1,23 @@
 #include "WebSocketDataHandler.h"
 
-WebSocketDataProcessor::WebSocketDataProcessor( WebServer &webServer, WebSocketsServer &webSocket )
-                                              : m_WebServer(webServer)
-                                              , m_WebSocket(webSocket)
+WebSocketDataProcessor::WebSocketDataProcessor(WebServer &webServer, WebSocketsServer &webSocket)
+    : m_WebServer(webServer), m_WebSocket(webSocket), m_WebServerTaskHandle(nullptr), m_WebServerTxTaskHandle(nullptr)
 {
-
 }
 
 WebSocketDataProcessor::~WebSocketDataProcessor()
 {
-    if(m_WebServerTaskHandle)
+    if (m_WebServerTaskHandle)
     {
         vTaskDelete(m_WebServerTaskHandle);
         m_WebServerTaskHandle = nullptr;
     }
-    if(m_WebServerTxTaskHandle)
+    if (m_WebServerTxTaskHandle)
     {
         vTaskDelete(m_WebServerTxTaskHandle);
         m_WebServerTxTaskHandle = nullptr;
     }
-    if(m_Tx_KeyValues_Semaphore)
+    if (m_Tx_KeyValues_Semaphore)
     {
         vSemaphoreDelete(m_Tx_KeyValues_Semaphore);
         m_Tx_KeyValues_Semaphore = nullptr;
@@ -28,22 +26,29 @@ WebSocketDataProcessor::~WebSocketDataProcessor()
 
 void WebSocketDataProcessor::Setup()
 {
+    // Create binary semaphore for mutual exclusion
     m_Tx_KeyValues_Semaphore = xSemaphoreCreateMutex();
     if (m_Tx_KeyValues_Semaphore == nullptr)
     {
         ESP_LOGE("WebSocketDataProcessor", "ERROR! Failed to create semaphore.");
+        return;
     }
-    m_WebSocketMessageQueue = xQueueCreate(50, sizeof(std::string));
-    if (m_WebSocketMessageQueue) ESP_LOGD("SetupWebSocket", "Created Queue");
-    else ESP_LOGE("SetupWebSocket", "Failed to create queue");
 
-    xTaskCreate( Static_WebSocket_Data_Processor_TxTask,  "Web Server Task", 2500,  this,  WEB_SOCKET_TX_TASK_PRIORITY, &m_WebServerTaskHandle );
-    xTaskCreate( Static_WebSocket_Transmission_Task, "Web Server Tx Task", 2500, this, WEB_SOCKET_TX_TASK_PRIORITY, &m_WebServerTxTaskHandle );
+    // Create message queue for WebSocket transmission
+    m_WebSocketMessageQueue = xQueueCreate(WEB_SOCKET_TX_QUEUE_SIZE, sizeof(std::string*));
+    if (m_WebSocketMessageQueue)
+        ESP_LOGD("SetupWebSocket", "Created Queue");
+    else
+        ESP_LOGE("SetupWebSocket", "Failed to create queue");
+
+    // Create tasks
+    xTaskCreate(Static_WebSocket_Data_Processor_TxTask, "Web Server Task", 2500, this, WEB_SOCKET_TX_TASK_PRIORITY, &m_WebServerTaskHandle);
+    xTaskCreate(Static_WebSocket_Transmission_Task, "Web Server Tx Task", 2500, this, WEB_SOCKET_TX_TASK_PRIORITY, &m_WebServerTxTaskHandle);
 }
 
-void WebSocketDataProcessor::Handle_Current_Value_Requect(uint8_t clientId)
+void WebSocketDataProcessor::Handle_Current_Value_Request(uint8_t clientId)
 {
-    ESP_LOGI("WebSocketDataProcessor::Handle_Current_Value_Requect", "Sending All Data to Client: %u", clientId);
+    ESP_LOGI("WebSocketDataProcessor::Handle_Current_Value_Request", "Sending All Data to Client: %u", clientId);
     std::vector<KVP> signalValues;
 
     for (int i = 0; i < m_MyTxNotifyees.size(); ++i)
@@ -59,20 +64,17 @@ void WebSocketDataProcessor::Handle_Current_Value_Requect(uint8_t clientId)
     }
 }
 
-void WebSocketDataProcessor::TxDataToWebSocket(std::string key, std::string value)
+void WebSocketDataProcessor::Tx_Data_To_WebSocket(std::string key, std::string value)
 {
-    if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+    if (xSemaphoreTake(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) == pdTRUE)
     {
         KVP keyValuePair = {key, value};
         m_Tx_KeyValues.push_back(keyValuePair);
-        if(xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore) != pdTRUE)
-        {
-            ESP_LOGE("TxDataToWebSocket", "Failed to release semaphore!");
-        }
+        xSemaphoreGive(m_Tx_KeyValues_Semaphore);
     }
     else
     {
-        ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+        ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore in Tx_Data_To_WebSocket.");
     }
 }
 
@@ -193,56 +195,56 @@ void WebSocketDataProcessor::WebSocket_Data_Processor_TxTask()
 {
     while (true)
     {
-        if (xSemaphoreTakeRecursive(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+        bool messageToSend = false;
+        std::unique_ptr<std::string> message = std::make_unique<std::string>();
+        if (xSemaphoreTake(m_Tx_KeyValues_Semaphore, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) == pdTRUE)
         {
             if (!m_Tx_KeyValues.empty())
             {
                 std::vector<KVP> signalValues = std::move(m_Tx_KeyValues);
                 if (!signalValues.empty())
                 {
-                    std::unique_ptr<std::string> message = std::make_unique<std::string>();
                     Encode_Signal_Values_To_JSON(signalValues, *message);
-                    std::string* rawMessage = message.release();
-                    if (xQueueSend(m_WebSocketMessageQueue, &rawMessage, pdMS_TO_TICKS(0)) != pdTRUE) {
-                        ESP_LOGW("WebSocketDataProcessor", "Queue is full, dropping message.");
-                        delete rawMessage;
-                    }
                 }
             }
-            if(xSemaphoreGiveRecursive(m_Tx_KeyValues_Semaphore) != pdTRUE)
-            {
-                ESP_LOGE("Web Socket TX Task", "Failed to release semaphore!");
-            }
+            xSemaphoreGive(m_Tx_KeyValues_Semaphore); // Release semaphore
         }
         else
         {
-            ESP_LOGW("Semaphore Take Failure", "WARNING! Failed to take Semaphore");
+            ESP_LOGW("WebSocketDataProcessor", "Failed to acquire semaphore.");
         }
-        vTaskDelay(pdMS_TO_TICKS(WEB_SOCKET_TX_TASK_DELAY));
+        if(messageToSend)
+        {
+            std::string *rawMessage = message.release();
+            if (xQueueSend(m_WebSocketMessageQueue, &rawMessage, pdMS_TO_TICKS(WEB_SOCKET_TX_WAIT)) != pdTRUE)
+            {
+                ESP_LOGW("WebSocketDataProcessor", "Queue is full, dropping message.");
+                delete rawMessage;
+            }
+        }
     }
 }
 
-void WebSocketDataProcessor::Static_WebSocket_Transmission_Task(void *pvParameters)
+void WebSocketDataProcessor::Static_WebSocket_Transmission_Task(void *parameter)
 {
-    WebSocketDataProcessor *aProcessor = static_cast<WebSocketDataProcessor*>(pvParameters);
-    aProcessor->WebSocketTransmissionTask();
+    WebSocketDataProcessor *processor = static_cast<WebSocketDataProcessor *>(parameter);
+    processor->WebSocket_Transmission_Task();
 }
 
-void WebSocketDataProcessor::WebSocketTransmissionTask()
+void WebSocketDataProcessor::WebSocket_Transmission_Task()
 {
     while (true)
     {
-    if(m_WebSocketMessageQueue)
-    {
-        std::string* message;
-        while( xQueueReceive(m_WebSocketMessageQueue, &message, pdMS_TO_TICKS(1)) == pdTRUE)
+        std::string *message_raw = nullptr;
+        while(xQueueReceive(m_WebSocketMessageQueue, &message_raw, portMAX_DELAY) == pdTRUE)
         {
-        NotifyClients(*message);
-        delete message;
-        taskYIELD();
+            std::unique_ptr<std::string> sp_message(message_raw);
+            if (sp_message)
+            {
+                NotifyClients(*sp_message);
+            }
+            vTaskDelay(pdMS_TO_TICKS(WEB_SOCKET_PER_MESSAGE_DELAY));
         }
         vTaskDelay(pdMS_TO_TICKS(WEB_SOCKET_TX_TASK_DELAY));
-    }
-    vTaskDelay(pdMS_TO_TICKS(WEB_SOCKET_TX_TASK_DELAY));
     }
 }

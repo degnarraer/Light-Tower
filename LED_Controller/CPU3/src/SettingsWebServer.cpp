@@ -48,7 +48,7 @@ SettingsWebServerManager::~SettingsWebServerManager()
 {
 }
     
-void SettingsWebServerManager::SetupSettingsWebServerManager()
+void SettingsWebServerManager::Setup()
 {
   InitializeLocalvariables();
   SetupAllSetupCallees();

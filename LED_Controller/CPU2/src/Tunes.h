@@ -32,7 +32,7 @@
 #define FFT_MESSAGE_RECEIVE_WAIT            1
 #define FFT_MESSAGE_SEND_WAIT               1
 #define FFT_MESSAGE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
-#define FFT_MSG_PER_MSG_TASK_DELAY          1
+#define FFT_MSG_PER_MSG_TASK_DELAY          0
 #define FFT_MESSAGE_TASK_DELAY              10
 
 #define NULL_POINTER_THREAD_DELAY           100
