@@ -9,31 +9,33 @@ WebSocketDataProcessor::WebSocketDataProcessor( WebServer &webServer, WebSockets
 
 WebSocketDataProcessor::~WebSocketDataProcessor()
 {
-    if(m_Message_Queue_Handle)
-    {
-        vQueueDelete(m_Message_Queue_Handle);
-        m_Message_Queue_Handle = nullptr;
-    }    
     if(m_Message_Task_Handle)
     {
         vTaskDelete(m_Message_Task_Handle);
         m_Message_Task_Handle = nullptr;
     }
-
+    if(m_Message_Queue_Handle)
+    {
+        vQueueDelete(m_Message_Queue_Handle);
+        m_Message_Queue_Handle = nullptr;
+    }
 }
 
 void WebSocketDataProcessor::Setup()
 {
-    m_Message_Queue_Handle = xQueueCreate(50, sizeof(KVP*));
-    if(!m_Message_Queue_Handle)
+    m_Message_Queue_Handle = xQueueCreate(WEB_SOCKET_QUEUE_SIZE, sizeof(KVP*));
+    if(m_Message_Queue_Handle)
+    {
+        if(xTaskCreate(Static_Message_Task, "Message Task", 5000, this, WEB_SOCKET_TX_TASK_PRIORITY, &m_Message_Task_Handle) != pdTRUE)
+        {
+            ESP_LOGE("Setup","ERROR! Unable to create task.");
+            vQueueDelete(m_Message_Queue_Handle);
+            m_Message_Queue_Handle = nullptr;
+        }
+    }
+    else
     {
         ESP_LOGE("Setup","ERROR! Unable to create queue.");
-    }
-
-    xTaskCreate(Static_Message_Task, "Message Task", 5000, this, THREAD_PRIORITY_HIGH, &m_Message_Task_Handle);
-    if(!m_Message_Task_Handle)
-    {
-        ESP_LOGE("Setup","ERROR! Unable to create task.");
     }
 }
 
@@ -47,36 +49,26 @@ void WebSocketDataProcessor::Message_Task()
 {
     while(true)
     {
-        if(m_Message_Queue_Handle)
+        if (!m_Message_Queue_Handle)
         {
-            KVP* pair_raw = nullptr;
-            std::vector<KVP> signalValues;
-            while(xQueueReceive(m_Message_Queue_Handle, &pair_raw, pdMS_TO_TICKS(0)) == pdTRUE)
-            {
-                if(pair_raw)
-                {
-                    signalValues.push_back(*pair_raw);
-                    delete pair_raw;
-                }
-                else
-                {
-                    ESP_LOGE("Message_Task","ERROR! Null pointers.");
-                }
-            }
-            if (!signalValues.empty())
-            {
-                std::string message;
-                Encode_Signal_Values_To_JSON(signalValues, message);
-                Serial.println(message.c_str());
-                NotifyClients(message);
-            }
-            vTaskDelay(pdMS_TO_TICKS(20));
+            ESP_LOGE("Message_Task", "Queue handle is null. Cleaning up and terminating task.");
+            vTaskDelay(pdMS_TO_TICKS(100)); // Allow some time for logs to flush
+            vTaskDelete(nullptr);
         }
-        else
+        KVP* pair_raw = nullptr;
+        std::vector<KVP> signalValues;
+        while(xQueueReceive(m_Message_Queue_Handle, &pair_raw, pdMS_TO_TICKS(10)) == pdTRUE)
         {
-            ESP_LOGE("Message_Task","ERROR! Null pointers.");
-            vTaskDelay(pdMS_TO_TICKS(100));
+            signalValues.push_back(*pair_raw);
+            delete pair_raw;
         }
+        if (!signalValues.empty())
+        {
+            std::string message;
+            Encode_Signal_Values_To_JSON(signalValues, message);
+            NotifyClients(message);
+        }
+        vTaskDelay(pdMS_TO_TICKS(WEB_SOCKET_TX_TASK_DELAY));
     }
 }
 
@@ -84,9 +76,13 @@ void WebSocketDataProcessor::Handle_Current_Value_Request(uint8_t clientId)
 {
     ESP_LOGI("WebSocketDataProcessor::Handle_Current_Value_Requect", "Sending All Data to Client: %u", clientId);
     std::vector<KVP> signalValues;
-    for (int i = 0; i < m_MyTxNotifyees.size(); ++i)
+    for (const auto &notifyee : m_MyTxNotifyees)
     {
-        signalValues.push_back(m_MyTxNotifyees[i]->HandleWebSocketDataRequest());
+        auto value = notifyee->HandleWebSocketDataRequest();
+        if (!value.Key.empty() && !value.Value.empty())
+        {
+            signalValues.push_back(value);
+        }
     }
     if (!signalValues.empty())
     {
@@ -98,13 +94,13 @@ void WebSocketDataProcessor::Handle_Current_Value_Request(uint8_t clientId)
 
 void WebSocketDataProcessor::TxDataToWebSocket(std::string key, std::string value)
 {
-    KVP *keyValuePair = new KVP(key, value);
-    Serial.println(keyValuePair->Value.c_str());
-    if(m_Message_Queue_Handle)
+    auto keyValuePair = std::make_unique<KVP>(key, value);
+    if (m_Message_Queue_Handle)
     {
-        if(xQueueSend(m_Message_Queue_Handle, &keyValuePair, pdMS_TO_TICKS(0)) != pdTRUE)
+        auto rawPtr = keyValuePair.release();
+        if (xQueueSend(m_Message_Queue_Handle, &rawPtr, pdMS_TO_TICKS(10)) != pdTRUE)
         {
-            delete keyValuePair;
+            delete rawPtr;
             ESP_LOGW("TxDataToWebSocket", "Unable to queue message");
         }
     }
@@ -112,7 +108,6 @@ void WebSocketDataProcessor::TxDataToWebSocket(std::string key, std::string valu
     {
         ESP_LOGE("TxDataToWebSocket", "ERROR! Null pointer.");
     }
-
 }
 
 void WebSocketDataProcessor::RegisterForWebSocketRxNotification(const std::string &name, WebSocketDataHandlerReceiver *aReceiver)
@@ -177,34 +172,33 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP>
         result = "[]";
         return;
     }
-
     JSONVar jsonArray;
-
-    for (size_t i = 0; i < keyValuePairs.size(); ++i)
+    for (const auto &pair : keyValuePairs)
     {
-        if (keyValuePairs[i].Key.empty() || keyValuePairs[i].Value.empty())
+        if (pair.Key.empty() || pair.Value.empty())
         {
-            ESP_LOGW("Encode_Signal_Values_To_JSON", "WARNING! Key or Value is empty at index %zu", i);
+            ESP_LOGW("Encode_Signal_Values_To_JSON", 
+                     "Skipping empty key or value in pair: Key=\"%s\", Value=\"%s\"", 
+                     pair.Key.c_str(), pair.Value.c_str());
             continue;
         }
-        jsonArray[i] = ConvertToJsonVar(keyValuePairs[i]);
+        JSONVar value;
+        value["Id"] = pair.Key.c_str();
+        value["Value"] = pair.Value.c_str();
+        jsonArray[jsonArray.length()] = value;
     }
-
-    result = std::string(JSON.stringify(jsonArray).c_str());
-
+    if (jsonArray.length() == 0)
+    {
+        ESP_LOGW("Encode_Signal_Values_To_JSON", "No valid key-value pairs found for JSON encoding.");
+        result = "[]";
+        return;
+    }
+    result = JSON.stringify(jsonArray).c_str(); // Serialize JSON array
     if (result.empty())
     {
-        ESP_LOGE("Encode_Signal_Values_To_JSON", "ERROR! Failed to serialize JSON array.");
+        ESP_LOGE("Encode_Signal_Values_To_JSON", "Failed to serialize JSON array. Returning empty array.");
         result = "[]";
     }
-}
-
-JSONVar WebSocketDataProcessor::ConvertToJsonVar(KVP pair)
-{
-    JSONVar jv;
-    jv["Id"] = pair.Key.c_str();
-    jv["Value"] = pair.Value.c_str();
-    return jv;
 }
 
 void WebSocketDataProcessor::NotifyClient(const uint8_t clientID, const std::string &textString)
