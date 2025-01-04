@@ -108,6 +108,12 @@ struct KeyValuePair
 {
   std::string Key;
   std::string Value;
+  KeyValuePair();
+  KeyValuePair(std::string Key_in, std::string Value_in)
+  {
+    Key = Key_in;
+    Value = Value_in;
+  }
 };
 typedef KeyValuePair KVP;
 

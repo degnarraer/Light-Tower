@@ -28,6 +28,7 @@
 #include "Arduino_JSON.h"
 #include "freertos/semphr.h"
 #include <cstring>
+#include <vector>
 
 #define MESSAGE_LENGTH 500
 #define BLUETOOTH_DEVICE_TIMEOUT 10000
@@ -55,30 +56,25 @@ class WebSocketDataProcessor
     WebSocketDataProcessor( WebServer &webServer, WebSocketsServer &webSocket );
     virtual ~WebSocketDataProcessor();
     void Setup();
+    static void Static_Message_Task(void* pvParameters);
+    void Message_Task();
     void RegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void DeRegisterForWebSocketRxNotification(const std::string& name, WebSocketDataHandlerReceiver *aReceiver);
     void RegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
     void DeRegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
     bool Handle_Signal_Value_RX(const std::string& signalId, const std::string& value);
     void Handle_Current_Value_Request(uint8_t clientId);
-
     void TxDataToWebSocket(std::string key, std::string value);
-    static void Static_WebSocket_Data_Processor_TxTask(void * parameter);
-    void WebSocket_Data_Processor_TxTask();
-    static void Static_WebSocket_Transmission_Task(void *pvParameters);
-    void WebSocketTransmissionTask();
 
   private:
     WebServer &m_WebServer;
     WebSocketsServer &m_WebSocket;
-    TaskHandle_t m_WebServerTaskHandle = nullptr;
-    TaskHandle_t m_WebServerTxTaskHandle = nullptr;
-    QueueHandle_t m_WebSocketMessageQueue = nullptr;
+    QueueHandle_t m_Message_Queue_Handle = nullptr;
+    TaskHandle_t m_Message_Task_Handle = nullptr;
     std::vector<WebSocketDataHandlerReceiver*> m_MyRxNotifyees = std::vector<WebSocketDataHandlerReceiver*>();
     std::vector<WebSocketDataHandlerSender*> m_MyTxNotifyees = std::vector<WebSocketDataHandlerSender*>();
-    std::vector<KVP> m_Tx_KeyValues = std::vector<KVP>();
-    SemaphoreHandle_t m_Tx_KeyValues_Semaphore;
     void Encode_Signal_Values_To_JSON(const std::vector<KVP> &signalValue, std::string &result);
+    JSONVar ConvertToJsonVar(KVP pair);
     void NotifyClient(uint8_t clientID, const std::string& textString);
     void NotifyClients(const std::string& textString);
 
@@ -100,6 +96,14 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
                           , public Rx_Value_Callee_Interface<T>
                           , public DataTypeFunctions
 {
+  
+  protected:
+    WebSocketDataProcessor &m_WebSocketDataProcessor;
+    LocalDataItem<T, COUNT> &m_DataItem;
+    size_t m_ChangeCount;
+    const std::string m_Name;
+    const std::string m_Signal;
+
   public:
     WebSocketDataHandler()
     {
@@ -194,15 +198,11 @@ class WebSocketDataHandler: public WebSocketDataHandlerReceiver
     }
 
   protected:
-    WebSocketDataProcessor &m_WebSocketDataProcessor;
-    LocalDataItem<T, COUNT> &m_DataItem;
-    size_t m_ChangeCount;
-    const std::string m_Name;
-    const std::string m_Signal;
 		bool IsChangeCountGreater(size_t changeCount)
 		{
 			return (changeCount > m_ChangeCount) || (m_ChangeCount - changeCount > (SIZE_MAX / 2));
 		}
+
 };
 
 class WebSocket_String_DataHandler: public WebSocketDataHandler<char, DATAITEM_STRING_LENGTH>

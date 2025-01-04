@@ -164,14 +164,14 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(m_message);
 					std::string *p_rxMessage_raw = sp_rxMessage.release();
 					ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
-					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, pdMS_TO_TICKS(0)) != pdTRUE )
+					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, pdMS_TO_TICKS(TIME_TO_WAIT_TO_SEND)) != pdTRUE )
 					{
         				static LogWithRateLimit SerialPortMessageManager_RxTask_QueueFail_RLL(1000, ESP_LOG_WARN);
 						SerialPortMessageManager_RxTask_QueueFail_RLL.Log(ESP_LOG_WARN, "SerialPortMessageManager_RxTask", "RX Message Dropped.");
 						delete p_rxMessage_raw;
 					}
                     m_message.clear();
-              		taskYIELD();
+            		vTaskDelay(pdMS_TO_TICKS(1));
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
@@ -201,7 +201,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				}
 				ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, sp_Tx_Message->c_str());
 				mp_Serial->println(sp_Tx_Message->c_str());
-				taskYIELD();
+				vTaskDelay(pdMS_TO_TICKS(1));
 			}
 			vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
 		}
