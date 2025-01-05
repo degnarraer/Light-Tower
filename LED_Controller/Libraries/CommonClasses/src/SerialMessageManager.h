@@ -24,7 +24,8 @@
 #include "Helpers.h"
 #include "DataSerializer.h"
 
-#define TASK_DELAY 20
+#define TASK_DELAY 25
+#define MESSAGE_DELAY 1
 #define NULL_POINTER_THREAD_DELAY 100
 
 #define TIME_TO_WAIT_TO_SEND 0

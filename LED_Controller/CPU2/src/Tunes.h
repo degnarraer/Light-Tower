@@ -14,31 +14,30 @@
 #define CPU3_TX     15
 
 //THREAD CORE ASSIGNMENTS
-#define BLUETOOTH_TASK_CORE                 tskNO_AFFINITY
-#define BLUETOOTH_TASK_PRIORITY             THREAD_PRIORITY_HIGH
+#define BLUETOOTH_TASK_CORE             tskNO_AFFINITY
+#define BLUETOOTH_TASK_PRIORITY         THREAD_PRIORITY_HIGH
 
-#define DATALINK_TASK_CORE                  tskNO_AFFINITY
-#define DATALINK_TASK_PRIORITY              THREAD_PRIORITY_HIGH
+#define DATALINK_TASK_CORE              tskNO_AFFINITY
+#define DATALINK_TASK_PRIORITY          THREAD_PRIORITY_HIGH
 
-#define AMPLITUDE_TASK_CORE                 tskNO_AFFINITY
-#define AMPLITUDE_TASK_PRIORITY             THREAD_PRIORITY_LOW
+#define AMPLITUDE_TASK_CORE             tskNO_AFFINITY
+#define AMPLITUDE_TASK_PRIORITY         THREAD_PRIORITY_LOW
 
-#define FFT_COMPUTE_TASK_CORE               tskNO_AFFINITY
-#define FFT_COMPUTE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
-#define FFT_COMPUTE_TASK_DELAY              20
-#define FFT_COMPUTE_HOP_CHECK_TASK_DELAY    10
+#define FFT_COMPUTE_TASK_CORE           tskNO_AFFINITY
+#define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_MEDIUM
+#define FFT_COMPUTE_TASK_DELAY          50
 
-#define FFT_MESSAGE_QUEUE_SIZE              5
-#define FFT_MESSAGE_RECEIVE_WAIT            0
-#define FFT_MESSAGE_SEND_WAIT               0
-#define FFT_MESSAGE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
-#define FFT_MESSAGE_TASK_DELAY              20
+#define FFT_BANDS_QUEUE_SIZE            5
+#define FFT_BANDS_RECEIVE_WAIT          5
+#define FFT_BANDS_SEND_WAIT             5
+#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_MEDIUM
+#define FFT_BANDS_TASK_DELAY            50
     
 //App Tunes 
 #define I2S_SAMPLE_RATE                     44100
 #define MAX_VISUALIZATION_FREQUENCY         4000.0
-#define I2S_BUFFER_COUNT                    10
-#define I2S_SAMPLE_COUNT                    512
+#define I2S_BUFFER_COUNT                    5
+#define I2S_SAMPLE_COUNT                    1024
 #define NUMBER_OF_BANDS                     32
 #define FFT_SIZE                            256
 #define HOP_SIZE                            256

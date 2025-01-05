@@ -184,7 +184,7 @@ public:
             Push_Frames_Null_Pointer_RLL.Log(ESP_LOG_WARN, "PushFrames", "WARNING! NULL Pointers.");
             return;
         }
-        m_totalFrames += mp_ringBuffer->push(p_frames, count, pdMS_TO_TICKS(0));
+        m_totalFrames += mp_ringBuffer->push(p_frames, count, pdMS_TO_TICKS(5));
         Push_Frames_RLL.LogWithValue(ESP_LOG_DEBUG, "PushFrames", "Push Frames: \"" + std::to_string(count) + "\"", count);
     }
 
@@ -240,7 +240,7 @@ private:
             ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
             {
                 std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
-                size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, pdMS_TO_TICKS(0));
+                size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, pdMS_TO_TICKS(5));
                 if(receivedFrames != m_fftSize)
                 {
                     return;
@@ -295,12 +295,8 @@ private:
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
             m_framesSinceLastFFT = m_totalFrames;
-            TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
         }
-        else
-        {
-            TackOnSomeMultithreadedDelay(FFT_COMPUTE_HOP_CHECK_TASK_DELAY);
-        }
+        TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
     }
 
     void ComputeFFT(float* real, float* imag, int n)

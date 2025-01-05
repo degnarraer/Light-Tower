@@ -154,13 +154,13 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
                 {
                     ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
                     m_message.clear();
+            		vTaskDelay(pdMS_TO_TICKS(MESSAGE_DELAY));
                     continue;
                 }
                 m_message += character;
                 if (m_message.size() >= 1 && character == '\n')
                 {
 					m_message = trim(m_message);
-					
 					std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(m_message);
 					std::string *p_rxMessage_raw = sp_rxMessage.release();
 					ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
@@ -171,15 +171,10 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 						delete p_rxMessage_raw;
 					}
                     m_message.clear();
-            		vTaskDelay(pdMS_TO_TICKS(1));
+            		vTaskDelay(pdMS_TO_TICKS(MESSAGE_DELAY));
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
-        }
-        else
-        {
-            ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Null Pointer.");
-            vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
         }
     }
 }
