@@ -312,7 +312,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 						{
 							ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
 						}
-						taskYIELD();
+						vTaskDelay(pdMS_TO_TICKS(1));
 					}
 					vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
 				}

@@ -227,15 +227,14 @@ private:
         static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_Null_Pointers_RLL(1000, ESP_LOG_ERROR);
         
-        unsigned long frameDifference = m_totalFrames - m_totalProcessedFrames;
-        bool hopSizeMet = m_totalFrames - m_framesSinceLastFFT >= m_hopSize;
-
+        unsigned long difference = m_totalFrames - m_framesSinceLastFFT;
+        bool hopSizeMet = difference >= m_hopSize;
         if( mp_CallBack && hopSizeMet )
         {
             if( !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
             {
                 ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-                TackOnSomeMultithreadedDelay(NULL_POINTER_THREAD_DELAY);
+                TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
                 return;
             }
             ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
@@ -295,12 +294,13 @@ private:
             ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
-
             m_framesSinceLastFFT = m_totalFrames;
-            m_totalProcessedFrames += std::min<unsigned long>(frameDifference, m_fftSize);
             TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
         }
-        TackOnSomeMultithreadedDelay(FFT_COMPUTE_HOP_CHECK_TASK_DELAY);
+        else
+        {
+            TackOnSomeMultithreadedDelay(FFT_COMPUTE_HOP_CHECK_TASK_DELAY);
+        }
     }
 
     void ComputeFFT(float* real, float* imag, int n)

@@ -114,24 +114,15 @@ void Sound_Processor::FFT_Result_Processor_Task()
   {
     static LogWithRateLimit FFT_Results_Processor_Task_RLL(1000, ESP_LOG_DEBUG);
     static LogWithRateLimit FFT_Results_Processor_Task_Queue_Error_RLL(1000, ESP_LOG_ERROR);
-    if(m_FFT_Result_Processor_Queue)
+    FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set_raw = nullptr;
+    if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(FFT_MESSAGE_RECEIVE_WAIT)) == pdTRUE )
     {
-        FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set_raw = nullptr;
-        while( xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(FFT_MESSAGE_RECEIVE_WAIT)) == pdTRUE )
-        {
-          FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
-          std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
-          Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_R_Bands1, m_R_Bands3, m_R_Max_Band);
-          Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_L_Bands1, m_L_Bands3, m_R_Max_Band);
-          vTaskDelay(pdMS_TO_TICKS(FFT_MSG_PER_MSG_TASK_DELAY));
-        }
-        vTaskDelay(pdMS_TO_TICKS(FFT_MESSAGE_TASK_DELAY));
+      FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
+      std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);
+      Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_R_Bands1, m_R_Bands3, m_R_Max_Band);
+      Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_L_Bands1, m_L_Bands3, m_R_Max_Band);
     }
-    else
-    {
-      ESP_LOGE("FFT_Result_Processor_Task", "FFT_Result_Processor_Queue is not initialized!");
-      vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
-    }
+    vTaskDelay(pdMS_TO_TICKS(FFT_MESSAGE_TASK_DELAY));
   }
 }
 

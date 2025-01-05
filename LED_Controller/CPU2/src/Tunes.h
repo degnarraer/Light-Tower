@@ -25,17 +25,14 @@
 
 #define FFT_COMPUTE_TASK_CORE               tskNO_AFFINITY
 #define FFT_COMPUTE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
-#define FFT_COMPUTE_TASK_DELAY              50
-#define FFT_COMPUTE_HOP_CHECK_TASK_DELAY    1
+#define FFT_COMPUTE_TASK_DELAY              20
+#define FFT_COMPUTE_HOP_CHECK_TASK_DELAY    10
 
-#define FFT_MESSAGE_QUEUE_SIZE              2
+#define FFT_MESSAGE_QUEUE_SIZE              5
 #define FFT_MESSAGE_RECEIVE_WAIT            0
 #define FFT_MESSAGE_SEND_WAIT               0
 #define FFT_MESSAGE_TASK_PRIORITY           THREAD_PRIORITY_MEDIUM
-#define FFT_MSG_PER_MSG_TASK_DELAY          5
 #define FFT_MESSAGE_TASK_DELAY              20
-
-#define NULL_POINTER_THREAD_DELAY           100
     
 //App Tunes 
 #define I2S_SAMPLE_RATE                     44100

@@ -61,6 +61,7 @@ void WebSocketDataProcessor::Message_Task()
         {
             signalValues.push_back(*pair_raw);
             delete pair_raw;
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
         if (!signalValues.empty())
         {
