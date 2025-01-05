@@ -92,7 +92,7 @@ void WebSocketDataProcessor::Handle_Current_Value_Request(uint8_t clientId)
     }
 }
 
-void WebSocketDataProcessor::TxDataToWebSocket(std::string key, std::string value)
+void WebSocketDataProcessor::TxDataToWebSocket(const std::string &key, const std::string &value)
 {
     auto keyValuePair = std::make_unique<KVP>(key, value);
     if (m_Message_Queue_Handle)
@@ -169,10 +169,11 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP>
 {
     if (keyValuePairs.empty())
     {
-        result = "[]";
+        result = "";
         return;
     }
     JSONVar jsonArray;
+    size_t items = 0;
     for (const auto &pair : keyValuePairs)
     {
         if (pair.Key.empty() || pair.Value.empty())
@@ -185,19 +186,19 @@ void WebSocketDataProcessor::Encode_Signal_Values_To_JSON(const std::vector<KVP>
         JSONVar value;
         value["Id"] = pair.Key.c_str();
         value["Value"] = pair.Value.c_str();
-        jsonArray[jsonArray.length()] = value;
+        jsonArray[items++] = value;
     }
     if (jsonArray.length() == 0)
     {
         ESP_LOGW("Encode_Signal_Values_To_JSON", "No valid key-value pairs found for JSON encoding.");
-        result = "[]";
+        result = "";
         return;
     }
-    result = JSON.stringify(jsonArray).c_str(); // Serialize JSON array
+    result = JSON.stringify(jsonArray).c_str();
     if (result.empty())
     {
         ESP_LOGE("Encode_Signal_Values_To_JSON", "Failed to serialize JSON array. Returning empty array.");
-        result = "[]";
+        result = "";
     }
 }
 

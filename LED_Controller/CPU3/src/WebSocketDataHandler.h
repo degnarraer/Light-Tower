@@ -64,7 +64,7 @@ class WebSocketDataProcessor
     void DeRegisterForWebSocketTxNotification(const std::string& name, WebSocketDataHandlerSender *aSender);
     bool Handle_Signal_Value_RX(const std::string& signalId, const std::string& value);
     void Handle_Current_Value_Request(uint8_t clientId);
-    void TxDataToWebSocket(std::string key, std::string value);
+    void TxDataToWebSocket(const std::string &key, const std::string &value);
 
   private:
     WebServer &m_WebServer;
