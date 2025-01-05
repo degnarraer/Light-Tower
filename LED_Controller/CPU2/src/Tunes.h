@@ -25,13 +25,13 @@
 
 #define FFT_COMPUTE_TASK_CORE           tskNO_AFFINITY
 #define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_MEDIUM
-#define FFT_COMPUTE_TASK_DELAY          50
+#define FFT_COMPUTE_TASK_DELAY          40
 
-#define FFT_BANDS_QUEUE_SIZE            5
-#define FFT_BANDS_RECEIVE_WAIT          5
-#define FFT_BANDS_SEND_WAIT             5
+#define FFT_BANDS_QUEUE_SIZE            10
+#define FFT_BANDS_RECEIVE_WAIT          20
+#define FFT_BANDS_SEND_WAIT             20
 #define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_MEDIUM
-#define FFT_BANDS_TASK_DELAY            50
+#define FFT_BANDS_TASK_DELAY            40
     
 //App Tunes 
 #define I2S_SAMPLE_RATE                     44100
