@@ -68,7 +68,7 @@ private:
     size_t m_magnitudeSize; 
     size_t m_hopSize;                       // Hop size (number of samples between FFTs)
     float m_f_s;                            // Sample Rate
-    float m_Gain = 1.0;
+    float m_Gain = 50.0;
     ShocksRingBuffer* mp_ringBuffer;        // Ring Buffer
     std::vector<Frame_t> m_frames;          // frame Buffer
     std::unique_ptr<float[], PsMallocDeleter> sp_real_right_channel;           // Real part of FFT input
@@ -285,8 +285,8 @@ private:
             
             for (int j = 0; j < m_magnitudeSize; ++j)
             {
-                sp_magnitudes_right_channel[j] = m_Gain/10000.0 * sqrtf(sp_real_right_channel[j] * sp_real_right_channel[j] +sp_imag_right_channel[j] * sp_imag_right_channel[j]);
-                sp_magnitudes_left_channel[j] = m_Gain/10000.0 * sqrtf(sp_real_left_channel[j] * sp_real_left_channel[j] + sp_imag_left_channel[j] * sp_imag_left_channel[j]);
+                sp_magnitudes_right_channel[j] = m_Gain/1000.0 * sqrtf(sp_real_right_channel[j] * sp_real_right_channel[j] +sp_imag_right_channel[j] * sp_imag_right_channel[j]);
+                sp_magnitudes_left_channel[j] = m_Gain/1000.0 * sqrtf(sp_real_left_channel[j] * sp_real_left_channel[j] + sp_imag_left_channel[j] * sp_imag_left_channel[j]);
                 if(sp_magnitudes_left_channel[j] > sp_freqMags_left[maxBin_Left].Magnitude)
                 {
                     maxBin_Left = j;

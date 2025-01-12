@@ -702,6 +702,7 @@ input:checked + .slider:before {
     position: absolute;
     top: 50%;
     left: 50%;
+
     transform: translate(-50%, -50%);
 }
 
@@ -754,7 +755,7 @@ input:checked + .slider:before {
 }
 
 .fft-bar {
-width: 20px;
+flex: 0 0 calc((100% - (31px)) / 32);
 height: 150px;
 background-color: #444;
 position: relative;
@@ -768,5 +769,23 @@ background-color: #4caf50;
 position: absolute;
 bottom: 0;
 height: 0;
-/*transition: height 0.2s ease-in-out;*/
+transition: height 0.05s ease-in-out;
+}
+
+.two-columns {
+    display: flex;
+}
+
+.column {
+flex: 1; /* Each column takes up equal space */
+padding: 10px; /* Optional: Adds space inside the columns */
+box-sizing: border-box; /* Includes padding in the width */
+}
+
+.column:first-child {
+background-color: #f0f0f0; /* Optional: Add styling to distinguish columns */
+}
+
+.column:last-child {
+background-color: #e0e0e0; /* Optional: Add styling to distinguish columns */
 }
