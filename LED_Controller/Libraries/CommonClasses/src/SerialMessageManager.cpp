@@ -154,7 +154,6 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
                 {
                     ESP_LOGE("SerialPortMessageManager_RxTask", "ERROR! Message RX Overrun: \"%s\".", m_message.c_str());
                     m_message.clear();
-            		vTaskDelay(pdMS_TO_TICKS(MESSAGE_DELAY));
                     continue;
                 }
                 m_message += character;
