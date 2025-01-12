@@ -171,7 +171,6 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 						delete p_rxMessage_raw;
 					}
                     m_message.clear();
-            		vTaskDelay(pdMS_TO_TICKS(MESSAGE_DELAY));
                 }
             }
             vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
