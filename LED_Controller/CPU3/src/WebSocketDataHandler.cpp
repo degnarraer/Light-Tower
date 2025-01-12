@@ -57,11 +57,10 @@ void WebSocketDataProcessor::Message_Task()
         }
         KVP* pair_raw = nullptr;
         std::vector<KVP> signalValues;
-        while(xQueueReceive(m_Message_Queue_Handle, &pair_raw, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+        while(xQueueReceive(m_Message_Queue_Handle, &pair_raw, SEMAPHORE_NO_BLOCK) == pdTRUE)
         {
             signalValues.push_back(*pair_raw);
             delete pair_raw;
-            vTaskDelay(pdMS_TO_TICKS(1));
         }
         if (!signalValues.empty())
         {
