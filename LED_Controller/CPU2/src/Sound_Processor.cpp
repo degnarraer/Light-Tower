@@ -115,7 +115,7 @@ void Sound_Processor::FFT_Result_Processor_Task()
     static LogWithRateLimit FFT_Results_Processor_Task_RLL(1000, ESP_LOG_DEBUG);
     static LogWithRateLimit FFT_Results_Processor_Task_Queue_Error_RLL(1000, ESP_LOG_ERROR);
     FFT_Bin_Data_Set_t* p_FFT_Bin_Data_Set_raw = nullptr;
-    if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, pdMS_TO_TICKS(FFT_BANDS_RECEIVE_WAIT)) == pdTRUE )
+    if(xQueueReceive(m_FFT_Result_Processor_Queue, &p_FFT_Bin_Data_Set_raw, portMAX_DELAY) == pdTRUE )
     {
       FFT_Results_Processor_Task_RLL.Log(ESP_LOG_DEBUG, "FFT_Result_Processor_Task", "Processing FFT Data from Queue.");
       std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set(p_FFT_Bin_Data_Set_raw);

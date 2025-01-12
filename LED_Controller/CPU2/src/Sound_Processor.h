@@ -59,6 +59,16 @@ class Sound_Processor: public NamedItem
     SerialPortMessageManager &m_CPU3SerialPortMessageManager;
     IPreferences& m_Preferences;
     bool m_BufferReadError = false;
+    struct CallbackArguments 
+    {
+      void* arg1;
+      void* arg2;
+      void* arg3;
+      void* arg4;
+
+      CallbackArguments(void* a1 = nullptr, void* a2 = nullptr, void* a3 = nullptr, void* a4 = nullptr)
+        : arg1(a1), arg2(a2), arg3(a3), arg4(a4) {}
+    };
 
     const float m_Amplitude_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_Amplitude_Gain = DataItemWithPreferences<float, 1>( "Amp_Gain"
@@ -69,7 +79,8 @@ class Sound_Processor: public NamedItem
                                                                                           , &m_CPU3SerialPortMessageManager
                                                                                           , NULL
                                                                                           , this );
-
+    CallbackArguments m_FFT_Gain_CallbackArgs = {&m_FFT_Computer, nullptr, nullptr, nullptr};
+    NamedCallback_t m_FFT_Gain_Callback = {"m_SinkDisconnect_Callback", &FFT_Gain_ValueChanged, &m_FFT_Gain_CallbackArgs};
     const float m_FFT_Gain_InitialValue = 1.1;
     DataItemWithPreferences<float, 1> m_FFT_Gain = DataItemWithPreferences<float, 1>( "FFT_Gain"
                                                                                     , m_FFT_Gain_InitialValue
@@ -77,8 +88,22 @@ class Sound_Processor: public NamedItem
                                                                                     , 5000
                                                                                     , &m_Preferences
                                                                                     , &m_CPU3SerialPortMessageManager
-                                                                                    , NULL
+                                                                                    , &m_FFT_Gain_Callback
                                                                                     , this );
+    static void FFT_Gain_ValueChanged(const std::string &Name, void* object, void* arg)
+    {
+      ESP_LOGE("FFT_Gain_ValueChanged", "FFT Gain Value Changed");
+      if(object && arg)
+      {
+        CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
+        if(arguments->arg1)
+        {
+          float* gain = static_cast<float*>(object);
+          FFT_Computer* fftComputer = static_cast<FFT_Computer*>(arguments->arg1);
+          fftComputer->SetGain(*gain);
+        }
+      }
+    }
     
     MaxBandSoundData_t m_R_Max_Band_InitialValue = MaxBandSoundData_t();
     DataItem<MaxBandSoundData_t, 1> m_R_Max_Band = DataItem<MaxBandSoundData_t, 1>( "R_Max_Band"

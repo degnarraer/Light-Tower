@@ -340,7 +340,7 @@ void Bluetooth_Source::DeviceProcessingTask()
   	while(true)
   	{
 		BT_Device_Info receivedDevice;
-		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, pdMS_TO_TICKS(0)) == pdTRUE)
+		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
 		{
 			Compatible_Device_Found(receivedDevice);
 			vTaskDelay(pdMS_TO_TICKS(20));
@@ -351,7 +351,7 @@ void Bluetooth_Source::DeviceProcessingTask()
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
 	{
 		ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 		bool found = false;
@@ -396,7 +396,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		unsigned long CurrentTime = millis();
 		std::vector<ActiveBluetoothDevice_t> activeDevicesCopy;
 
-		if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, pdMS_TO_TICKS(5)) == pdTRUE)
+		if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
 		{
 			// Use standard erase-remove idiom to filter devices
 			auto newEnd = std::remove_if(

@@ -55,7 +55,7 @@ class AudioBuffer
 
     void AllocateMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             ESP_LOGD("AllocateMemory", "Allocating memory");
             m_CircularAudioBuffer = new(std::nothrow) bfs::CircleBuf<Frame_t, COUNT>;
@@ -74,7 +74,7 @@ class AudioBuffer
 
     void FreeMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             if (m_CircularAudioBuffer != nullptr)
             {
@@ -92,7 +92,7 @@ class AudioBuffer
     size_t GetFrameCapacity()
     {
         size_t capacity = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             capacity = m_CircularAudioBuffer->capacity();
             xSemaphoreGiveRecursive(m_Lock);
@@ -106,7 +106,7 @@ class AudioBuffer
 
     bool ClearAudioBuffer()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             m_CircularAudioBuffer->Clear();
             xSemaphoreGiveRecursive(m_Lock);
@@ -122,7 +122,7 @@ class AudioBuffer
     size_t GetFrameCount()
     {
         size_t count = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             count = m_CircularAudioBuffer->size();
             xSemaphoreGiveRecursive(m_Lock);
@@ -142,7 +142,7 @@ class AudioBuffer
     bool IsEmpty()
     {
         bool isEmpty = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             isEmpty = m_CircularAudioBuffer->isEmpty();
             xSemaphoreGiveRecursive(m_Lock);
@@ -157,7 +157,7 @@ class AudioBuffer
     bool IsFull()
     {
         bool isFull = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             isFull = m_CircularAudioBuffer->isFull();
             xSemaphoreGiveRecursive(m_Lock);
@@ -172,7 +172,7 @@ class AudioBuffer
     size_t WriteAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
     {
         size_t written = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             written = m_CircularAudioBuffer->Write(FrameBuffer, FrameCount);
             xSemaphoreGiveRecursive(m_Lock);
@@ -187,7 +187,7 @@ class AudioBuffer
     bool WriteAudioFrame(Frame_t Frame)
     {
         bool result = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             result = m_CircularAudioBuffer->Write(Frame);
             xSemaphoreGiveRecursive(m_Lock);
@@ -202,7 +202,7 @@ class AudioBuffer
     size_t ReadAudioFrames(Frame_t* FrameBuffer, size_t FrameCount)
     {
         size_t read = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             read = m_CircularAudioBuffer->Read(FrameBuffer, FrameCount);
             xSemaphoreGiveRecursive(m_Lock);
@@ -217,7 +217,7 @@ class AudioBuffer
     bfs::optional<Frame_t> ReadAudioFrame()
     {
         bfs::optional<Frame_t> frame;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             frame = m_CircularAudioBuffer->Read();
             xSemaphoreGiveRecursive(m_Lock);
@@ -264,7 +264,7 @@ class ContinuousAudioBuffer
 
     void AllocateMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             ESP_LOGD("AllocateMemory", "Allocating memory");
             m_CircularAudioBuffer = new(std::nothrow) CircularBuffer<Frame_t, COUNT>;
@@ -282,7 +282,7 @@ class ContinuousAudioBuffer
 
     void FreeMemory()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             if (m_CircularAudioBuffer != nullptr)
             {
@@ -300,7 +300,7 @@ class ContinuousAudioBuffer
     bool Push(Frame_t Frame)
     {
         bool result = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             result = m_CircularAudioBuffer->push(Frame);
             xSemaphoreGiveRecursive(m_Lock);
@@ -315,7 +315,7 @@ class ContinuousAudioBuffer
     size_t Push(Frame_t* Frames, size_t Count)
     {
         size_t pushed = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             for (size_t i = 0; i < Count; ++i)
             {
@@ -336,7 +336,7 @@ class ContinuousAudioBuffer
     Frame_t Shift()
     {
         Frame_t frame;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             frame = m_CircularAudioBuffer->shift();
             xSemaphoreGiveRecursive(m_Lock);
@@ -351,7 +351,7 @@ class ContinuousAudioBuffer
     size_t Shift(Frame_t* Frames, size_t Count)
     {
         size_t shifted = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             for (size_t i = 0; i < Count; ++i)
             {
@@ -373,7 +373,7 @@ class ContinuousAudioBuffer
     bool Unshift(Frame_t Frame)
     {
         bool result = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             result = m_CircularAudioBuffer->unshift(Frame);
             xSemaphoreGiveRecursive(m_Lock);
@@ -388,7 +388,7 @@ class ContinuousAudioBuffer
     size_t Unshift(Frame_t* Frames, size_t Count)
     {
         size_t pushed = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             for (size_t i = 0; i < Count; ++i)
             {
@@ -409,7 +409,7 @@ class ContinuousAudioBuffer
     Frame_t Pop()
     {
         Frame_t frame;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             frame = m_CircularAudioBuffer->pop();
             xSemaphoreGiveRecursive(m_Lock);
@@ -424,7 +424,7 @@ class ContinuousAudioBuffer
     size_t Pop(Frame_t* Frames, size_t Count)
     {
         size_t popped = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             for (size_t i = 0; i < Count; ++i)
             {
@@ -446,7 +446,7 @@ class ContinuousAudioBuffer
     size_t GetFrameCapacity()
     {
         size_t frameCapacity = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             frameCapacity = m_CircularAudioBuffer->capacity;
             xSemaphoreGiveRecursive(m_Lock);
@@ -460,7 +460,7 @@ class ContinuousAudioBuffer
 
     bool ClearAudioBuffer()
     {
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             m_CircularAudioBuffer->Clear();
             xSemaphoreGiveRecursive(m_Lock);
@@ -476,7 +476,7 @@ class ContinuousAudioBuffer
     size_t GetFrameCount()
     {
         size_t count = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             count = m_CircularAudioBuffer->size();
             xSemaphoreGiveRecursive(m_Lock);
@@ -496,7 +496,7 @@ class ContinuousAudioBuffer
     bool IsEmpty()
     {
         bool isEmpty = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             isEmpty = m_CircularAudioBuffer->isEmpty();
             xSemaphoreGiveRecursive(m_Lock);
@@ -511,7 +511,7 @@ class ContinuousAudioBuffer
     bool IsFull()
     {
         bool isFull = false;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             isFull = m_CircularAudioBuffer->isFull();
             xSemaphoreGiveRecursive(m_Lock);
@@ -526,7 +526,7 @@ class ContinuousAudioBuffer
     size_t Size()
     {
         size_t size = 0;
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(0)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             size = m_CircularAudioBuffer->size();
             xSemaphoreGiveRecursive(m_Lock);
@@ -542,7 +542,7 @@ class ContinuousAudioBuffer
     {
         uint32_t elementsToRead = 0;
 
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             uint32_t bufferSize = m_CircularAudioBuffer->size();
             
@@ -577,7 +577,7 @@ class ContinuousAudioBuffer
     {
         uint32_t ElementsWritten = 0;
 
-        if (xSemaphoreTakeRecursive(m_Lock, pdMS_TO_TICKS(100)) == pdTRUE)
+        if (xSemaphoreTakeRecursive(m_Lock, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             uint32_t bufferSize = m_CircularAudioBuffer->capacity; // Get the buffer's maximum size
             uint32_t currentSize = m_CircularAudioBuffer->size();   // Get the current number of elements in the buffer

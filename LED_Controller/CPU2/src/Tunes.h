@@ -24,14 +24,15 @@
 #define AMPLITUDE_TASK_PRIORITY         THREAD_PRIORITY_LOW
 
 #define FFT_COMPUTE_TASK_CORE           tskNO_AFFINITY
-#define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_MEDIUM
-#define FFT_COMPUTE_TASK_DELAY          40
+#define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_IDLE
+#define FFT_COMPUTE_TASK_DELAY          10
+#define FFT_COMPUTE_REST_DELAY          1
 
-#define FFT_BANDS_QUEUE_SIZE            10
-#define FFT_BANDS_RECEIVE_WAIT          20
-#define FFT_BANDS_SEND_WAIT             20
-#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_MEDIUM
-#define FFT_BANDS_TASK_DELAY            40
+#define FFT_BANDS_QUEUE_SIZE            5
+#define FFT_BANDS_RECEIVE_WAIT          portMAX_DELAY
+#define FFT_BANDS_SEND_WAIT             10
+#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_HIGH
+#define FFT_BANDS_TASK_DELAY            10
     
 //App Tunes 
 #define I2S_SAMPLE_RATE                     44100
@@ -39,8 +40,8 @@
 #define I2S_BUFFER_COUNT                    5
 #define I2S_SAMPLE_COUNT                    1024
 #define NUMBER_OF_BANDS                     32
-#define FFT_SIZE                            256
-#define HOP_SIZE                            256
+#define FFT_SIZE                            2048
+#define HOP_SIZE                            2048
 #define AMPLITUDE_BUFFER_FRAME_COUNT        128
 #define AMPLITUDE_AUDIO_BUFFER_SIZE         128
     

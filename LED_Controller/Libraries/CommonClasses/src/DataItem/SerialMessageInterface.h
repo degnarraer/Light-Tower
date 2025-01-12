@@ -65,7 +65,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		virtual ~SerialMessageInterface()
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				ESP_LOGD("~DataItem", "Deleting SerialMessageInterface");
 				DestroyTimer(m_TxTimer);
@@ -115,7 +115,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		UpdateStatus_t Try_Echo_Value(const T* receivedValues)
 		{
 			UpdateStatus_t storeUpdated;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				if(RxTxType_Rx_Echo_Value == m_RxTxType)
 				{
@@ -146,7 +146,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		virtual UpdateStatus_t New_Object_From_Sender(const Named_Object_Caller_Interface* sender, const void* values, const size_t changeCount) override
 		{
 			UpdateStatus_t storeUpdated;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				const T* receivedValues = static_cast<const T*>(values);
 				ESP_LOGD( "NewRxValueReceived"
@@ -172,7 +172,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		void Setup()
 		{
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				if(!mp_RxValue) mp_RxValue = (T*)malloc(sizeof(T)*COUNT);
 				if(!mp_TxValue) mp_TxValue = (T*)malloc(sizeof(T)*COUNT);
@@ -204,30 +204,22 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 
 		UpdateStatus_t Set_Tx_Value(const T* newTxValues, size_t count)
 		{
+			assert(newTxValues != nullptr);
+			assert(mp_TxValue != nullptr);
+			assert(COUNT > 0);
+			assert(count <= COUNT);
+			
 			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
 			{
-				ESP_LOGD( "Set_Tx_Value"
-						, "\"%s\" Set Tx Value: \"%s\""
-						, GetName().c_str()
-						, ConvertValueToString(newTxValues, count).c_str());
-				assert(newTxValues != nullptr);
-				assert(mp_TxValue != nullptr);
-				assert(COUNT > 0);
-				assert(count <= COUNT);
+				ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value: \"%s\"", GetName().c_str(), ConvertValueToString(newTxValues, count).c_str());
 				updateStatus.ValueChanged = (0 != memcmp(mp_TxValue, newTxValues, sizeof(T)*count));
-				updateStatus.ValidValue = ConfirmValueValidity(newTxValues, COUNT);
+				updateStatus.ValidValue = ConfirmValueValidity(newTxValues, count);
 				updateStatus.UpdateAllowed = (updateStatus.ValueChanged && updateStatus.ValidValue);
-				ESP_LOGD( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\""
-						, GetName().c_str()
-						, updateStatus.UpdateAllowed
-						, ConvertValueToString(mp_TxValue, count).c_str()
-						, ConvertValueToString(newTxValues, count).c_str() );
+				ESP_LOGD( "Set_Tx_Value", "\"%s\": UpdateAllowed: \"%i\" Current Value: \"%s\" New Value: \"%s\"", GetName().c_str(), updateStatus.UpdateAllowed, ConvertValueToString(mp_TxValue, count).c_str(), ConvertValueToString(newTxValues, count).c_str() );
 				if(updateStatus.UpdateAllowed)
 				{
-					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed."
-								, mp_SerialPortMessageManager->GetName().c_str()
-								, GetName().c_str() );
+					ESP_LOGD( "Set_Tx_Value", "\"%s\" Set Tx Value for: \"%s\": Value changed.", mp_SerialPortMessageManager->GetName().c_str(), GetName().c_str() );
 					updateStatus |= Update_Tx_Store_And_Try_Tx_On_Change(newTxValues);
 				}
 				else
@@ -246,7 +238,7 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 		UpdateStatus_t Tx_Now(size_t changeCount)
 		{
 			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(m_ValueSemaphore, pdMS_TO_TICKS(0)) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				ESP_LOGD( "Tx_Now", "\"%s\" Tx: \"%s\" Value: \"%s\" Change Count: \"%i\"", mp_SerialPortMessageManager->GetName().c_str(), GetName().c_str(), ConvertValueToString(mp_TxValue, COUNT), GetChangeCount() );
 				if(mp_SerialPortMessageManager)
@@ -526,10 +518,5 @@ class SerialMessageInterface: public Rx_Value_Caller_Interface<T>
 				result = true;
 			}
 			return result;
-		}
-
-		void ZeroOutMemory(T* object)
-		{
-			memset((void*)object, 0, sizeof(T) * COUNT);
 		}
 };

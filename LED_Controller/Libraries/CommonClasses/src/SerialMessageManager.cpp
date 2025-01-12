@@ -122,7 +122,7 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 		{
 			std::string *p_txMessage = new std::string;
 			*p_txMessage = message;
-			if( xQueueSend(m_TXQueueHandle, &p_txMessage, pdMS_TO_TICKS(TIME_TO_WAIT_TO_SEND)) == pdTRUE )
+			if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_NO_BLOCK) == pdTRUE )
 			{
 				ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
 				result = true;
@@ -164,7 +164,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(m_message);
 					std::string *p_rxMessage_raw = sp_rxMessage.release();
 					ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
-					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, pdMS_TO_TICKS(TIME_TO_WAIT_TO_SEND)) != pdTRUE )
+					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, SEMAPHORE_NO_BLOCK) != pdTRUE )
 					{
         				static LogWithRateLimit SerialPortMessageManager_RxTask_QueueFail_RLL(1000, ESP_LOG_WARN);
 						SerialPortMessageManager_RxTask_QueueFail_RLL.Log(ESP_LOG_WARN, "SerialPortMessageManager_RxTask", "RX Message Dropped.");

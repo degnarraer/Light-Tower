@@ -57,7 +57,7 @@ void WebSocketDataProcessor::Message_Task()
         }
         KVP* pair_raw = nullptr;
         std::vector<KVP> signalValues;
-        while(xQueueReceive(m_Message_Queue_Handle, &pair_raw, pdMS_TO_TICKS(10)) == pdTRUE)
+        while(xQueueReceive(m_Message_Queue_Handle, &pair_raw, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             signalValues.push_back(*pair_raw);
             delete pair_raw;
@@ -99,7 +99,7 @@ void WebSocketDataProcessor::TxDataToWebSocket(const std::string &key, const std
     if (m_Message_Queue_Handle)
     {
         auto rawPtr = keyValuePair.release();
-        if (xQueueSend(m_Message_Queue_Handle, &rawPtr, pdMS_TO_TICKS(10)) != pdTRUE)
+        if (xQueueSend(m_Message_Queue_Handle, &rawPtr, SEMAPHORE_SHORT_BLOCK) != pdTRUE)
         {
             delete rawPtr;
             ESP_LOGW("TxDataToWebSocket", "Unable to queue message");
