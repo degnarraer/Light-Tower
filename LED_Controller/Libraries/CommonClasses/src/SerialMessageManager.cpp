@@ -164,7 +164,7 @@ void SerialPortMessageManager::SerialPortMessageManager_RxTask()
 					std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(m_message);
 					std::string *p_rxMessage_raw = sp_rxMessage.release();
 					ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
-					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, SEMAPHORE_NO_BLOCK) != pdTRUE )
+					if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, SEMAPHORE_MEDIUM_BLOCK) != pdTRUE )
 					{
         				static LogWithRateLimit SerialPortMessageManager_RxTask_QueueFail_RLL(1000, ESP_LOG_WARN);
 						SerialPortMessageManager_RxTask_QueueFail_RLL.Log(ESP_LOG_WARN, "SerialPortMessageManager_RxTask", "RX Message Dropped.");
@@ -186,7 +186,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 		if(m_TXQueueHandle)
 		{
 			std::string *rawMessage;
-			while( xQueueReceive(m_TXQueueHandle, &rawMessage, 0) == pdTRUE )
+			while( xQueueReceive(m_TXQueueHandle, &rawMessage, portMAX_DELAY) == pdTRUE )
 			{
 				std::unique_ptr<std::string> sp_Tx_Message(rawMessage);
 				if (sp_Tx_Message->length() > MAX_MESSAGE_LENGTH)
@@ -196,9 +196,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 				}
 				ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, sp_Tx_Message->c_str());
 				mp_Serial->println(sp_Tx_Message->c_str());
-				vTaskDelay(pdMS_TO_TICKS(1));
 			}
-			vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
 		}
 		else
 		{
