@@ -128,14 +128,6 @@ public:
             }
         }
     }
-    
-    void TackOnSomeMultithreadedDelay(int msDelay)
-    {
-        if(m_IsMultithreaded)
-        {
-            vTaskDelay(pdMS_TO_TICKS(msDelay));
-        }
-    }
 
     void Setup(FFT_Results_Callback* callback, void* callBackArgs)
     {
@@ -240,7 +232,6 @@ private:
         if(!mp_CallBack || !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
         {
             ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-            TackOnSomeMultithreadedDelay(1);
             return;
         }
 
@@ -257,7 +248,6 @@ private:
         }
         else
         {
-            TackOnSomeMultithreadedDelay(1);
             return;
         }
 
@@ -269,7 +259,6 @@ private:
                 size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_NO_BLOCK);
                 if(receivedFrames != m_fftSize)
                 {
-                    TackOnSomeMultithreadedDelay(1);
                     return;
                 }
                 for (int j = 0; j < m_fftSize; j++)
@@ -320,7 +309,6 @@ private:
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
         }
-        TackOnSomeMultithreadedDelay(1);
     }
 
     void ComputeFFT(float* real, float* imag, int n)
