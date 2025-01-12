@@ -240,7 +240,7 @@ private:
         if(!mp_CallBack || !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
         {
             ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-            TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
+            TackOnSomeMultithreadedDelay(1);
             return;
         }
 
@@ -257,10 +257,10 @@ private:
         }
         else
         {
-            TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
+            TackOnSomeMultithreadedDelay(1);
             return;
         }
-        
+
         if(hopSizeMet)
         {
             ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
@@ -269,7 +269,7 @@ private:
                 size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_NO_BLOCK);
                 if(receivedFrames != m_fftSize)
                 {
-                    TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
+                    TackOnSomeMultithreadedDelay(1);
                     return;
                 }
                 for (int j = 0; j < m_fftSize; j++)
@@ -285,7 +285,6 @@ private:
             ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
             ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
             unsigned long stopTime = millis();
-            TackOnSomeMultithreadedDelay(FFT_COMPUTE_REST_DELAY);
             ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
 
             float maxMagnitude = GetMaxMagnitude();
@@ -297,8 +296,8 @@ private:
             
             for (int j = 0; j < m_magnitudeSize; ++j)
             {
-                sp_magnitudes_right_channel[j] = m_Gain * sqrtf(sp_real_right_channel[j] * sp_real_right_channel[j] +sp_imag_right_channel[j] * sp_imag_right_channel[j]);
-                sp_magnitudes_left_channel[j] = m_Gain * sqrtf(sp_real_left_channel[j] * sp_real_left_channel[j] + sp_imag_left_channel[j] * sp_imag_left_channel[j]);
+                sp_magnitudes_right_channel[j] = m_Gain/10000.0 * sqrtf(sp_real_right_channel[j] * sp_real_right_channel[j] +sp_imag_right_channel[j] * sp_imag_right_channel[j]);
+                sp_magnitudes_left_channel[j] = m_Gain/10000.0 * sqrtf(sp_real_left_channel[j] * sp_real_left_channel[j] + sp_imag_left_channel[j] * sp_imag_left_channel[j]);
                 if(sp_magnitudes_left_channel[j] > sp_freqMags_left[maxBin_Left].Magnitude)
                 {
                     maxBin_Left = j;
@@ -321,7 +320,7 @@ private:
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
         }
-        TackOnSomeMultithreadedDelay(FFT_COMPUTE_TASK_DELAY);
+        TackOnSomeMultithreadedDelay(1);
     }
 
     void ComputeFFT(float* real, float* imag, int n)

@@ -85,7 +85,7 @@ void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t>& 
   FFT_Bin_Data_Set_t* p_fft_Bin_Data_Set_raw = sp_FFT_Bin_Data_Set.release();
   if(m_FFT_Result_Processor_Queue)
   {
-    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, pdMS_TO_TICKS(FFT_BANDS_SEND_WAIT)) == pdTRUE)
+    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
     {
       FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "Queued FFT Data.");
     }
@@ -122,7 +122,7 @@ void Sound_Processor::FFT_Result_Processor_Task()
       Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Right_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_R_Bands1, m_R_Bands3, m_R_Max_Band);
       Update_Bands_And_Send_Result(sp_FFT_Bin_Data_Set->Left_Channel.get(), sp_FFT_Bin_Data_Set->Count, m_L_Bands1, m_L_Bands3, m_R_Max_Band);
     }
-    vTaskDelay(pdMS_TO_TICKS(FFT_BANDS_TASK_DELAY));
+    vTaskDelay(SEMAPHORE_SHORT_BLOCK);
   }
 }
 
