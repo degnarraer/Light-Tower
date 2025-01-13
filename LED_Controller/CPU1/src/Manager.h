@@ -86,8 +86,13 @@ class Manager: public NamedItem
     {
       while(true)
       {
-        uint8_t buffer[512] = {0};
-        m_I2S_Out.WriteSoundBufferData(buffer, m_Microphone.ReadSoundBufferData(buffer, 512));
+        size_t byteCount = I2S_SAMPLE_COUNT * sizeof(Frame_t);
+        uint8_t buffer[byteCount] = {0};
+        size_t readByteCount = m_Microphone.ReadSoundBufferData(buffer, byteCount);
+        if(readByteCount > 0)
+        {
+          m_I2S_Out.WriteSoundBufferData(buffer, readByteCount);
+        }
       }
     }
 

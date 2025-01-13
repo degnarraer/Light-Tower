@@ -195,11 +195,10 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *soundBufferData, size_t byteCoun
     return bytes_read;
 }
 
-
 size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 {
     size_t bytes_written = 0;
-    if (IsInitialized())
+    if (IsInitialized() && byteCount > 0)
     {
       ESP_Process((this->GetTitle() + std::string(" I2S Write Request")).c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
       ESP_LOGV("I2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
@@ -252,7 +251,7 @@ void I2S_Device::InstallDevice()
       .dma_buf_count = m_BufferCount,
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
-      .tx_desc_auto_clear = true,
+      .tx_desc_auto_clear = false,
       .fixed_mclk = m_FixedClock
     };
 

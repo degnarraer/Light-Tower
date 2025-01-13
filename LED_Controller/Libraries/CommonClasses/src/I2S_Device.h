@@ -27,8 +27,8 @@
 #include "Streaming.h"
 #include "BitDepthConverter.h"
 
-//#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
 #define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
+//#define TIME_TO_WAIT_FOR_SOUND SEMAPHORE_LONG_BLOCK
 
 extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
 
