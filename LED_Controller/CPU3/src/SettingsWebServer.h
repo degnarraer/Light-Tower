@@ -508,10 +508,10 @@ class SettingsWebServerManager: public SetupCallerInterface
         {
             payload[length] = 0;
 
-            String WebSocketData = String((char*)payload);
+            std::string WebSocketData = std::string((char*)payload);
             ESP_LOGD("HandleWebSocketMessage", "WebSocket Data from Client %u: %s", clientID, WebSocketData.c_str());
 
-            if (WebSocketData.equals("New client is here!")) 
+            if (WebSocketData == "New client is here!") 
             {
                 ESP_LOGI("HandleWebSocketMessage", "Message from client %u: \"New client is here!\"", clientID);
                 m_WebSocketDataProcessor.Handle_Current_Value_Request(clientID);
@@ -519,7 +519,7 @@ class SettingsWebServerManager: public SetupCallerInterface
             } 
             else 
             {
-                JSONVar jsonObject = JSON.parse(WebSocketData);
+                JSONVar jsonObject = JSON.parse(WebSocketData.c_str());
                 if (JSON.typeof(jsonObject) == "undefined") 
                 {
                     ESP_LOGE("HandleWebSocketMessage", "ERROR! Parsing failed for Input from Client %u: %s.", clientID, WebSocketData.c_str());

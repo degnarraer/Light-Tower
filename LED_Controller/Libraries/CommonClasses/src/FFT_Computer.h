@@ -81,10 +81,10 @@ private:
     BaseType_t m_xCoreID;
 
     
-    unsigned long m_totalFrames = 0;
-    unsigned long m_totalProcessedFrames = 0;
-    unsigned long m_framesSinceLastFFT = 0;
-    SemaphoreHandle_t m_Frame_Count_Semaphore;
+    unsigned long m_totalFrames;
+    unsigned long m_totalProcessedFrames;
+    unsigned long m_framesSinceLastFFT;
+    SemaphoreHandle_t m_WorkSemaphore;
 
     TaskHandle_t m_fft_Calculator_TaskHandle = nullptr;     // Task handle for the FFT Data Getter
     bool m_isInitialized = false;                           // Whether the setup function has been called
@@ -98,7 +98,10 @@ public:
         , m_dataWidth(dataWidth)
         , m_isInitialized(false)
         , m_IsMultithreaded(false)
-        , m_magnitudeSize(m_fftSize/2) {}
+        , m_magnitudeSize(m_fftSize/2)
+        , m_totalFrames(0)
+        , m_totalProcessedFrames(0)
+        , m_framesSinceLastFFT(0) {}
     FFT_Computer(int fftSize, int hopSize, float f_s, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
@@ -108,7 +111,10 @@ public:
         , m_xCoreID(xCoreID)
         , m_isInitialized(false)
         , m_IsMultithreaded(true)
-        , m_magnitudeSize(m_fftSize/2) {}
+        , m_magnitudeSize(m_fftSize/2)
+        , m_totalFrames(0)
+        , m_totalProcessedFrames(0)
+        , m_framesSinceLastFFT(0)  {}
 
     // Destructor
     ~FFT_Computer() {
@@ -141,7 +147,7 @@ public:
         {
             mp_CallBack = callback;
         }
-        m_Frame_Count_Semaphore = xSemaphoreCreateMutex();
+        m_WorkSemaphore = xSemaphoreCreateBinary();
         mp_CallBackArgs = callBackArgs;
         mp_ringBuffer = new ShocksRingBuffer(m_fftSize);
         sp_real_right_channel = std::unique_ptr<float[], PsMallocDeleter>(static_cast<float*>(ps_malloc(m_fftSize * sizeof(float))));
@@ -171,19 +177,18 @@ public:
         assert(p_frames);
         static LogWithRateLimit_Average<size_t> Push_Frames_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
-        if(xSemaphoreTake(m_Frame_Count_Semaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+
+        size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_NO_BLOCK);
+        if(count == framesPushed)
         {
-            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
-            if(count == framesPushed)
+            m_totalFrames += framesPushed;
+            unsigned long difference = m_totalFrames - m_framesSinceLastFFT;
+            bool hopSizeMet = difference >= m_hopSize;
+            if(hopSizeMet)
             {
-                
-                m_totalFrames += framesPushed;
+                xSemaphoreGive(m_WorkSemaphore);
+                m_framesSinceLastFFT = m_totalFrames;
             }
-            else
-            {
-                Push_Frames_Dropped_RLL.Log(ESP_LOG_WARN, "PushFrames", "Dropped Frames.");
-            }
-            xSemaphoreGive(m_Frame_Count_Semaphore);
         }
     }
 
@@ -235,38 +240,23 @@ private:
             return;
         }
 
-        bool hopSizeMet = false;
-        if(xSemaphoreTake(m_Frame_Count_Semaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+        if(xSemaphoreTake(m_WorkSemaphore, portMAX_DELAY) == pdTRUE)
         {
-            unsigned long difference = m_totalFrames - m_framesSinceLastFFT;
-            hopSizeMet = difference >= m_hopSize;
-            if(hopSizeMet)
+            std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize)); 
+            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_BLOCK);
+            if(receivedFrames != m_fftSize)
             {
-                m_framesSinceLastFFT = m_totalFrames;
+                return;
             }
-            xSemaphoreGive(m_Frame_Count_Semaphore);
-        }
-        else
-        {
-            return;
-        }
 
-        if(hopSizeMet)
-        {
             ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
             {
-                std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));                
-                size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_NO_BLOCK);
-                if(receivedFrames != m_fftSize)
+                for (int i = 0; i < m_fftSize; i++)
                 {
-                    return;
-                }
-                for (int j = 0; j < m_fftSize; j++)
-                {
-                    sp_real_left_channel[j] = sp_frames[j].channel1;
-                    sp_imag_left_channel[j] = 0.0f;
-                    sp_real_right_channel[j] = sp_frames[j].channel2;
-                    sp_imag_right_channel[j] = 0.0f;
+                    sp_real_left_channel[i] = sp_frames[i].channel1;
+                    sp_imag_left_channel[i] = 0.0f;
+                    sp_real_right_channel[i] = sp_frames[i].channel2;
+                    sp_imag_right_channel[i] = 0.0f;
                 }
             }
             
@@ -283,26 +273,26 @@ private:
             size_t maxBin_Left = 0;
             size_t maxBin_Right = 0;
             
-            for (int j = 0; j < m_magnitudeSize; ++j)
+            for (int i = 0; i < m_magnitudeSize; ++i)
             {
-                sp_magnitudes_right_channel[j] = m_Gain/1000.0 * sqrtf(sp_real_right_channel[j] * sp_real_right_channel[j] +sp_imag_right_channel[j] * sp_imag_right_channel[j]);
-                sp_magnitudes_left_channel[j] = m_Gain/1000.0 * sqrtf(sp_real_left_channel[j] * sp_real_left_channel[j] + sp_imag_left_channel[j] * sp_imag_left_channel[j]);
-                if(sp_magnitudes_left_channel[j] > sp_freqMags_left[maxBin_Left].Magnitude)
+                sp_magnitudes_right_channel[i] = m_Gain/1000.0 * sqrtf(sp_real_right_channel[i] * sp_real_right_channel[i] +sp_imag_right_channel[i] * sp_imag_right_channel[i]);
+                sp_magnitudes_left_channel[i] = m_Gain/1000.0 * sqrtf(sp_real_left_channel[i] * sp_real_left_channel[i] + sp_imag_left_channel[i] * sp_imag_left_channel[i]);
+                if(sp_magnitudes_left_channel[i] > sp_freqMags_left[maxBin_Left].Magnitude)
                 {
-                    maxBin_Left = j;
+                    maxBin_Left = i;
                 }
-                if(sp_magnitudes_right_channel[j] > sp_freqMags_right[maxBin_Right].Magnitude)
+                if(sp_magnitudes_right_channel[i] > sp_freqMags_right[maxBin_Right].Magnitude)
                 {
-                    maxBin_Right = j;
+                    maxBin_Right = i;
                 }
 
-                sp_freqMags_right[j].Frequency = binToFrequency(j);
-                sp_freqMags_right[j].Magnitude = sp_magnitudes_right_channel[j];
-                sp_freqMags_right[j].NormalizedMagnitude = sp_magnitudes_right_channel[j] / maxMagnitude;
+                sp_freqMags_right[i].Frequency = binToFrequency(i);
+                sp_freqMags_right[i].Magnitude = sp_magnitudes_right_channel[i];
+                sp_freqMags_right[i].NormalizedMagnitude = sp_magnitudes_right_channel[i] / maxMagnitude;
 
-                sp_freqMags_left[j].Frequency = binToFrequency(j);
-                sp_freqMags_left[j].Magnitude = sp_magnitudes_left_channel[j];
-                sp_freqMags_left[j].NormalizedMagnitude = sp_magnitudes_left_channel[j] / maxMagnitude;
+                sp_freqMags_left[i].Frequency = binToFrequency(i);
+                sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
+                sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
             }
             
             ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");

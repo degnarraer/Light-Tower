@@ -18,22 +18,22 @@
 #define BLUETOOTH_TASK_PRIORITY         THREAD_PRIORITY_RT
 
 #define DATALINK_TASK_CORE              tskNO_AFFINITY
-#define DATALINK_TASK_PRIORITY          THREAD_PRIORITY_HIGH
+#define DATALINK_TASK_PRIORITY          THREAD_PRIORITY_MEDIUM
 
 #define AMPLITUDE_TASK_CORE             tskNO_AFFINITY
 #define AMPLITUDE_TASK_PRIORITY         THREAD_PRIORITY_LOW
 
 #define FFT_COMPUTE_TASK_CORE           tskNO_AFFINITY
-#define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_IDLE
+#define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_LOW
 
 #define FFT_BANDS_QUEUE_SIZE            5
-#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_HIGH
+#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_MEDIUM
     
 //App Tunes 
 #define I2S_SAMPLE_RATE                     44100
 #define MAX_VISUALIZATION_FREQUENCY         4000.0
-#define I2S_BUFFER_COUNT                    5
-#define I2S_SAMPLE_COUNT                    1024
+#define I2S_BUFFER_COUNT                    50
+#define I2S_SAMPLE_COUNT                    128
 #define NUMBER_OF_BANDS                     32
 #define FFT_SIZE                            2048
 #define HOP_SIZE                            2048

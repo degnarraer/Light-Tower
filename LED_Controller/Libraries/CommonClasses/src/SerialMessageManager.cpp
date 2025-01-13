@@ -122,7 +122,8 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 		{
 			std::string *p_txMessage = new std::string;
 			*p_txMessage = message;
-			if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_NO_BLOCK) == pdTRUE )
+			if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_MEDIUM_BLOCK
+			) == pdTRUE )
 			{
 				ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
 				result = true;

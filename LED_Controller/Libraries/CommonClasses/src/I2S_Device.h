@@ -28,7 +28,7 @@
 #include "BitDepthConverter.h"
 
 //#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
-#define TIME_TO_WAIT_FOR_SOUND pdMS_TO_TICKS(1000)
+#define TIME_TO_WAIT_FOR_SOUND portMAX_DELAY
 
 extern "C" { size_t i2s_get_buffered_data_len(i2s_port_t i2s_num);}
 
