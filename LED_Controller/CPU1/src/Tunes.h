@@ -38,8 +38,8 @@
 //App Tunes
 #define I2S_SAMPLE_RATE 44100
 
-#define I2S_BUFFER_COUNT 50
-#define I2S_SAMPLE_COUNT 128
+#define I2S_BUFFER_COUNT 8
+#define I2S_SAMPLE_COUNT 512
 #define ANALOG_GAIN 1
 
 

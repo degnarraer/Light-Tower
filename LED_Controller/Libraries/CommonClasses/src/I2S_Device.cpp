@@ -251,17 +251,17 @@ void I2S_Device::InstallDevice()
       .dma_buf_count = m_BufferCount,
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
-      .tx_desc_auto_clear = false,
+      .tx_desc_auto_clear = true,
       .fixed_mclk = m_FixedClock
     };
 
     // The pin config as per the setup
     const i2s_pin_config_t pin_config = 
     {
-      .bck_io_num = m_I2SClockPin,         // Serial Clock (SCK)
-      .ws_io_num = m_I2SWordSelectPin,           // Word Select (WS)
-      .data_out_num = m_I2SDataOutPin,     // not used (only for speakers)
-      .data_in_num = m_I2SDataInPin        // Serial Data (SD)
+      .bck_io_num = m_I2SClockPin,        // Serial Clock (SCK)
+      .ws_io_num = m_I2SWordSelectPin,    // Word Select (WS)
+      .data_out_num = m_I2SDataOutPin,    // not used (only for speakers)
+      .data_in_num = m_I2SDataInPin       // Serial Data (SD)
     };
     // Configuring the I2S driver and pins.
     // This function must be called before any I2S driver read/write operations.

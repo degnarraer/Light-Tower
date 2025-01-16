@@ -54,7 +54,7 @@ I2S_Device m_I2S_Out = I2S_Device( "I2S Out"                              // Cor
                                  , true                            // Use APLL
                                  , false                           // Fixed Clock
                                  , I2S_BUFFER_COUNT                // Buffer Count
-                                 , I2S_SAMPLE_COUNT        // Buffer Size
+                                 , I2S_SAMPLE_COUNT                // Buffer Size
                                  , I2S2_SCLCK_PIN                  // Serial Clock Pin
                                  , I2S2_WD_PIN                     // Word Selection Pin
                                  , I2S2_SDIN_PIN                   // Serial Data In Pin
