@@ -70,16 +70,17 @@ public:
     }
 
     // Retrieve frames into a raw array
-    size_t get(Frame_t* frames, size_t count, TickType_t waitTime) {
+    size_t get(Frame_t* frames, size_t count, TickType_t waitTime)
+    {
         size_t returned = 0;
-        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+        if (xSemaphoreTake(mutex, waitTime) == pdTRUE)
+        {
             size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
-
-            for (size_t i = 0; i < framesToReturn; ++i) {
+            for (size_t i = 0; i < framesToReturn; ++i)
+            {
                 frames[i] = p_buffer[(readIndex + i) % bufferSize];
             }
-
             returned = framesToReturn;
             xSemaphoreGive(mutex);
         }

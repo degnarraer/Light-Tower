@@ -178,7 +178,7 @@ public:
         static LogWithRateLimit_Average<size_t> Push_Frames_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
 
-        size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_NO_BLOCK);
+        size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
         if(count == framesPushed)
         {
             m_totalFrames += framesPushed;
@@ -186,8 +186,8 @@ public:
             bool hopSizeMet = difference >= m_hopSize;
             if(hopSizeMet)
             {
-                xSemaphoreGive(m_WorkSemaphore);
                 m_framesSinceLastFFT = m_totalFrames;
+                xSemaphoreGive(m_WorkSemaphore);
             }
         }
     }
@@ -243,9 +243,10 @@ private:
         if(xSemaphoreTake(m_WorkSemaphore, portMAX_DELAY) == pdTRUE)
         {
             std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize)); 
-            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_BLOCK);
+            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_SHORT_BLOCK);
             if(receivedFrames != m_fftSize)
             {
+                xSemaphoreGive(m_WorkSemaphore);
                 return;
             }
 
@@ -298,6 +299,7 @@ private:
             ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
+            xSemaphoreGive(m_WorkSemaphore);
         }
     }
 

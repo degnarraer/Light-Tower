@@ -251,7 +251,7 @@ void I2S_Device::InstallDevice()
       .dma_buf_count = m_BufferCount,
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
-      .tx_desc_auto_clear = true,
+      .tx_desc_auto_clear = false,
       .fixed_mclk = m_FixedClock
     };
 
