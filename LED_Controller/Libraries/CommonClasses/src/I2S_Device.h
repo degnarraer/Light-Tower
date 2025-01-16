@@ -22,6 +22,7 @@
 #include <Arduino.h>
 #include <DataTypes.h>
 #include <Helpers.h>
+#include <memory>
 #include <mutex>
 #include "driver/i2s.h"
 #include "Streaming.h"

@@ -15,7 +15,7 @@
 
 //THREAD CORE ASSIGNMENTS
 #define BLUETOOTH_TASK_CORE             tskNO_AFFINITY
-#define BLUETOOTH_TASK_PRIORITY         THREAD_PRIORITY_RT
+#define BLUETOOTH_TASK_PRIORITY         THREAD_PRIORITY_HIGH
 
 #define DATALINK_TASK_CORE              tskNO_AFFINITY
 #define DATALINK_TASK_PRIORITY          THREAD_PRIORITY_MEDIUM
@@ -33,7 +33,7 @@
 #define I2S_SAMPLE_RATE                     44100
 #define MAX_VISUALIZATION_FREQUENCY         4000.0
 #define I2S_BUFFER_COUNT                    100
-#define I2S_SAMPLE_COUNT                    32
+#define I2S_SAMPLE_COUNT                    64
 #define NUMBER_OF_BANDS                     32
 #define FFT_SIZE                            2048
 #define HOP_SIZE                            2048

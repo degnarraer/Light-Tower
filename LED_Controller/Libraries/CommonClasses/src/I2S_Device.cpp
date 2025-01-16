@@ -180,13 +180,12 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *soundBufferData, size_t byteCoun
     if (IsInitialized())
     {
         size_t inputSize = ConvertByteCount(byteCount, m_BitsPerSampleIn, m_BitsPerSampleOut);
-        uint8_t *buffer = (uint8_t*)malloc(sizeof(uint8_t)*inputSize);
+        std::unique_ptr<uint8_t[]> spBuffer(reinterpret_cast<uint8_t*>(ps_malloc(sizeof(uint8_t)*inputSize)));
         ESP_LOGV("I2S Device", "%s I2S Read Request", GetTitle().c_str());
-        if(ESP_Process((this->GetTitle() + std::string(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, buffer, inputSize, &bytes_read, TIME_TO_WAIT_FOR_SOUND)))
+        if(ESP_Process((this->GetTitle() + std::string(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, spBuffer.get(), inputSize, &bytes_read, TIME_TO_WAIT_FOR_SOUND)))
         {
-            bytes_read = BitDepthConverter::ConvertBitDepth(buffer, bytes_read, soundBufferData, m_BitsPerSampleIn, m_BitsPerSampleOut);
+            bytes_read = BitDepthConverter::ConvertBitDepth(spBuffer.get(), bytes_read, soundBufferData, m_BitsPerSampleIn, m_BitsPerSampleOut);
         }
-        free(buffer);
     }
     else
     {
@@ -251,7 +250,7 @@ void I2S_Device::InstallDevice()
       .dma_buf_count = m_BufferCount,
       .dma_buf_len = m_BufferSize,
       .use_apll = m_Use_APLL,
-      .tx_desc_auto_clear = false,
+      .tx_desc_auto_clear = true,
       .fixed_mclk = m_FixedClock
     };
 

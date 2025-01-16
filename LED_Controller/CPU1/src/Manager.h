@@ -87,11 +87,11 @@ class Manager: public NamedItem
       while(true)
       {
         size_t byteCount = I2S_SAMPLE_COUNT * sizeof(Frame_t);
-        uint8_t buffer[byteCount];
-        size_t readByteCount = m_Microphone.ReadSoundBufferData(buffer, byteCount);
+        std::unique_ptr<uint8_t[]> spBuffer(reinterpret_cast<uint8_t*>(ps_malloc(byteCount)));
+        size_t readByteCount = m_Microphone.ReadSoundBufferData(spBuffer.get(), byteCount);
         if(readByteCount > 0)
         {
-          m_I2S_Out.WriteSoundBufferData(buffer, readByteCount);
+          m_I2S_Out.WriteSoundBufferData(spBuffer.get(), readByteCount);
         }
       }
     }
