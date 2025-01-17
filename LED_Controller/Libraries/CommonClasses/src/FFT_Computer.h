@@ -239,12 +239,13 @@ private:
         }
 
         uint32_t notificationValue;
-        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_LONG_BLOCK) == pdTRUE)
         {
             std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize)); 
-            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_SHORT_BLOCK);
+            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_LONG_BLOCK);
             if(receivedFrames != m_fftSize)
             {
+                vTaskDelay(pdMS_TO_TICKS(10));
                 return;
             }
 
@@ -300,7 +301,7 @@ private:
         }
         else
         {
-            taskYIELD();
+            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 
