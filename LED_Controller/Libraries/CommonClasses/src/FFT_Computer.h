@@ -3,8 +3,8 @@
 #include <vector>
 #include <memory>
 #include "xtensa/core-macros.h"  // For ESP32 low-level operations
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include "Helpers.h"
 #include "CircularVector.h"
 #include "PSRamAllocator.h"
@@ -84,7 +84,6 @@ private:
     unsigned long m_totalFrames;
     unsigned long m_totalProcessedFrames;
     unsigned long m_framesSinceLastFFT;
-    SemaphoreHandle_t m_WorkSemaphore;
 
     TaskHandle_t m_fft_Calculator_TaskHandle = nullptr;     // Task handle for the FFT Data Getter
     bool m_isInitialized = false;                           // Whether the setup function has been called
@@ -147,7 +146,6 @@ public:
         {
             mp_CallBack = callback;
         }
-        m_WorkSemaphore = xSemaphoreCreateBinary();
         mp_CallBackArgs = callBackArgs;
         mp_ringBuffer = new ShocksRingBuffer(m_fftSize);
         sp_real_right_channel = std::unique_ptr<float[], PsMallocDeleter>(static_cast<float*>(ps_malloc(m_fftSize * sizeof(float))));
@@ -178,7 +176,7 @@ public:
         static LogWithRateLimit_Average<size_t> Push_Frames_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
 
-        size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_NO_BLOCK);
+        size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
         if(count == framesPushed)
         {
             m_totalFrames += framesPushed;
@@ -187,7 +185,7 @@ public:
             if(hopSizeMet)
             {
                 m_framesSinceLastFFT = m_totalFrames;
-                xSemaphoreGive(m_WorkSemaphore);
+                xTaskNotifyGive(m_fft_Calculator_TaskHandle);
             }
         }
     }
@@ -240,10 +238,11 @@ private:
             return;
         }
 
-        if(xSemaphoreTake(m_WorkSemaphore, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS)) == pdTRUE)
+        uint32_t notificationValue;
+        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
         {
             std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize)); 
-            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, pdMS_TO_TICKS(SEMAPHORE_WAIT_MS));
+            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_SHORT_BLOCK);
             if(receivedFrames != m_fftSize)
             {
                 return;
