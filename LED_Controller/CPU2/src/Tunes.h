@@ -27,7 +27,7 @@
 #define FFT_COMPUTE_TASK_PRIORITY       THREAD_PRIORITY_LOW
 
 #define FFT_BANDS_QUEUE_SIZE            5
-#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_LOW
+#define FFT_BANDS_TASK_PRIORITY         THREAD_PRIORITY_MEDIUM
     
 //App Tunes 
 #define I2S_SAMPLE_RATE                     44100

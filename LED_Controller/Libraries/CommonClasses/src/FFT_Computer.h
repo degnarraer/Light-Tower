@@ -309,7 +309,7 @@ private:
                 sp_freqMags_left[i].Frequency = binToFrequency(i);
                 sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
                 sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
-                if(i % 100 == 0) vTaskDelay(1);
+                if(i % 100 == 0) vTaskDelay(SEMAPHORE_SHORT_BLOCK);
             }
             
             ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
