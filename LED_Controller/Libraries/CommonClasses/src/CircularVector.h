@@ -1,4 +1,12 @@
-class ShocksRingBuffer {
+
+#include <vector>
+#include <memory>
+#include <freertos/FreeRTOS.h>
+
+#pragma once
+
+class ShocksRingBuffer 
+{
 public:
     ShocksRingBuffer(size_t size)
         : bufferSize(size), writeIndex(0), readIndex(0),

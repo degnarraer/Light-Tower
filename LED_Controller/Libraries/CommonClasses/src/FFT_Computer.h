@@ -182,9 +182,7 @@ public:
             if(framesPushed == count)
             {
                 m_totalFrames += framesPushed;
-                unsigned long difference = m_totalFrames - m_framesSinceLastFFT;
-                bool hopSizeMet = difference >= m_hopSize;
-                if(hopSizeMet)
+                if(m_totalFrames - m_framesSinceLastFFT >= m_hopSize)
                 {
                     m_framesSinceLastFFT = m_totalFrames;
                     xTaskNotifyGive(m_fft_Calculator_TaskHandle);
