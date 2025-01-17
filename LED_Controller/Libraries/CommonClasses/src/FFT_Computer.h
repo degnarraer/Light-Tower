@@ -175,17 +175,19 @@ public:
         assert(p_frames);
         static LogWithRateLimit_Average<size_t> Push_Frames_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
-
-        size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
-        if(count == framesPushed)
+        if(count > 0)
         {
-            m_totalFrames += framesPushed;
-            unsigned long difference = m_totalFrames - m_framesSinceLastFFT;
-            bool hopSizeMet = difference >= m_hopSize;
-            if(hopSizeMet)
+            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_NO_BLOCK);
+            if(framesPushed == count)
             {
-                m_framesSinceLastFFT = m_totalFrames;
-                xTaskNotifyGive(m_fft_Calculator_TaskHandle);
+                m_totalFrames += framesPushed;
+                unsigned long difference = m_totalFrames - m_framesSinceLastFFT;
+                bool hopSizeMet = difference >= m_hopSize;
+                if(hopSizeMet)
+                {
+                    m_framesSinceLastFFT = m_totalFrames;
+                    xTaskNotifyGive(m_fft_Calculator_TaskHandle);
+                }
             }
         }
     }
@@ -221,6 +223,7 @@ private:
         {
             PerformFFTTask_RLL.Log(ESP_LOG_DEBUG, "Process_FFT_Task", "Process FFT Task Called");
             ProcessFFT();
+            taskYIELD();
         }
     }
 
@@ -239,13 +242,18 @@ private:
         }
 
         uint32_t notificationValue;
-        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_LONG_BLOCK) == pdTRUE)
+        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, portMAX_DELAY) == pdTRUE)
         {
-            std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize)); 
-            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_LONG_BLOCK);
+            std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
+            if (!sp_frames)
+            {
+                ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for frames.");
+                return;
+            }
+            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_NO_BLOCK);
             if(receivedFrames != m_fftSize)
             {
-                vTaskDelay(pdMS_TO_TICKS(10));
+                ESP_LOGE("ProcessFFT", "ERROR! Failed to receive expected frame count.");
                 return;
             }
 
@@ -293,15 +301,12 @@ private:
                 sp_freqMags_left[i].Frequency = binToFrequency(i);
                 sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
                 sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
+                taskYIELD();
             }
             
             ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
-        }
-        else
-        {
-            vTaskDelay(pdMS_TO_TICKS(10));
         }
     }
 
