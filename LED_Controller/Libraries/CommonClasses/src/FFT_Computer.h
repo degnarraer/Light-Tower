@@ -298,6 +298,10 @@ private:
             std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
             mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
         }
+        else
+        {
+            taskYIELD();
+        }
     }
 
     void ComputeFFT(float* real, float* imag, int n)
