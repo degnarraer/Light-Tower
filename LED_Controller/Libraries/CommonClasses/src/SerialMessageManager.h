@@ -18,6 +18,7 @@
 
 #pragma once
 #include <HardwareSerial.h>
+#include "SerialDMA.h"
 #include <Arduino.h>
 #include <vector>
 #include <memory>
@@ -25,6 +26,7 @@
 #include "DataSerializer.h"
 
 #define TASK_DELAY 20
+#define MAX_BLOCK_TIME_MS 100 
 #define MESSAGE_DELAY 1
 #define NULL_POINTER_THREAD_DELAY 100
 
@@ -223,6 +225,23 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 								, mp_DataSerializer(dataSerializer)
 								, m_CoreId(coreId)
 								, m_Priority(priority)
+								, m_UsesSerialDMA(false)
+		{
+		}
+		SerialPortMessageManager( const std::string& name
+								, int rxPin
+								, int txPin
+								, int baudRate
+								, uart_port_t port
+								, DataSerializer *dataSerializer
+								, BaseType_t coreId
+								, BaseType_t priority )
+								: m_Name(name)
+								, mp_DataSerializer(dataSerializer)
+								, m_CoreId(coreId)
+								, m_Priority(priority)
+								, mp_SerialDMA(new SerialDMA(rxPin, txPin, baudRate, StaticOnNewMessage, this, port))
+								, m_UsesSerialDMA(true)
 		{
 		}
 		virtual ~SerialPortMessageManager()
@@ -261,6 +280,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 			ESP_LOGD("~SerialPortMessageManager", "SerialPortMessageManager Deleted");
 		}
 		virtual void Setup();
+		virtual void QueueNewRXMessage(const std::string &message);
 		virtual bool QueueMessageFromDataType(const std::string& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount);
 		virtual bool QueueMessage(const std::string& message);
 		virtual std::string GetName() const override
@@ -270,6 +290,8 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 	private:
 		std::string m_Name;
 		HardwareSerial *mp_Serial = nullptr;
+		SerialDMA *mp_SerialDMA;
+		bool m_UsesSerialDMA;
 		DataSerializer *mp_DataSerializer = nullptr;
 		BaseType_t  m_CoreId = 1;
 		BaseType_t m_Priority = THREAD_PRIORITY_HIGH;
@@ -279,6 +301,18 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		TaskHandle_t m_TXTaskHandle = nullptr;
 		QueueHandle_t m_TXQueueHandle = nullptr;
 		QueueHandle_t m_MessageQueueHandle = nullptr;
+	
+		static void StaticOnNewMessage(const std::string& message, void* arg)
+		{
+    		SerialPortMessageManager *manager = static_cast<SerialPortMessageManager*>(arg);
+			manager->OnNewMessage(message);
+		} 
+		
+		void OnNewMessage(const std::string& message)
+		{
+            ESP_LOGI("OnNewMessage", "OnNewMessage: %s", message.c_str());
+    		QueueNewRXMessage(message);
+		}
 
 		static void StaticSerialPortMessageManager_RxTask(void *Parameters)
 		{

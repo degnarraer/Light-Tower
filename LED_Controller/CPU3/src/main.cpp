@@ -28,8 +28,8 @@ Preferences m_Preferences;
 PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
 
 DataSerializer m_DataSerializer;  
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
-SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2 Datalink Task", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", CPU1_RX, CPU1_TX, 500000, UART_NUM_1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2 Datalink Task", CPU2_RX, CPU2_TX, 500000, UART_NUM_2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
 
 // Create AsyncWebServer object on port 80
 WebServer MyWebServer(80);
@@ -49,12 +49,6 @@ void SetupSerialPorts()
 {
   Serial.begin(115200, SERIAL_8O2);
   Serial.flush();
-  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  Serial1.flush();
-  Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial2.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
-  Serial2.flush();
   ESP_LOGI("SetupSerialPorts", "Serial Ports Setup");
 }
 
