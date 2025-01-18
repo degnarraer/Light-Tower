@@ -97,8 +97,8 @@ class Manager: public NamedItem
     }
 
     void SetupSerialPortManager();
-    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2 Datalink Task", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
-    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3 Datalink Task", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+    SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2 Datalink Task", CPU2_RX, CPU2_TX, 500000, UART_NUM_1, &m_DataSerializer, DATALINK_TASK_PRIORITY);
+    SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3 Datalink Task", CPU3_RX, CPU3_TX, 500000, UART_NUM_2, &m_DataSerializer, DATALINK_TASK_PRIORITY);
     
     void SetupTasks();
     

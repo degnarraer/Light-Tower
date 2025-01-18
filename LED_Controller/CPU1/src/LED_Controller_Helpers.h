@@ -102,14 +102,6 @@ void InitSerialCommunication()
   //PC Serial Communication
   Serial.begin(115200);
   Serial.flush();
-  
-  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial1.begin(500000, SERIAL_8O2, CPU2_RX, CPU2_TX);
-  Serial1.flush();
-  
-  Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
-  Serial2.flush();
 }
 
 void TestPSRam()

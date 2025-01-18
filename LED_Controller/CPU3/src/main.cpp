@@ -28,8 +28,8 @@ Preferences m_Preferences;
 PreferencesWrapper m_PreferencesWrapper = PreferencesWrapper("Settings", &m_Preferences);
 
 DataSerializer m_DataSerializer;  
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", CPU1_RX, CPU1_TX, 500000, UART_NUM_1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
-SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2 Datalink Task", CPU2_RX, CPU2_TX, 500000, UART_NUM_2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", CPU1_RX, CPU1_TX, 500000, UART_NUM_1, &m_DataSerializer, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU2SerialPortMessageManager = SerialPortMessageManager("CPU2 Datalink Task", CPU2_RX, CPU2_TX, 500000, UART_NUM_2, &m_DataSerializer, DATALINK_TASK_PRIORITY);
 
 // Create AsyncWebServer object on port 80
 WebServer MyWebServer(80);

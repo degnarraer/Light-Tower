@@ -218,14 +218,11 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		SerialPortMessageManager( const std::string& name
 								, HardwareSerial *serial
 								, DataSerializer *dataSerializer
-								, BaseType_t coreId
 								, BaseType_t priority )
 								: m_Name(name)
 								, mp_Serial(serial)
 								, mp_DataSerializer(dataSerializer)
-								, m_CoreId(coreId)
 								, m_Priority(priority)
-								, m_UsesSerialDMA(false)
 		{
 		}
 		SerialPortMessageManager( const std::string& name
@@ -234,14 +231,11 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 								, int baudRate
 								, uart_port_t port
 								, DataSerializer *dataSerializer
-								, BaseType_t coreId
 								, BaseType_t priority )
 								: m_Name(name)
 								, mp_DataSerializer(dataSerializer)
-								, m_CoreId(coreId)
 								, m_Priority(priority)
 								, mp_SerialDMA(new SerialDMA(rxPin, txPin, baudRate, StaticOnNewMessage, this, port))
-								, m_UsesSerialDMA(true)
 		{
 		}
 		virtual ~SerialPortMessageManager()
@@ -291,9 +285,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		std::string m_Name;
 		HardwareSerial *mp_Serial = nullptr;
 		SerialDMA *mp_SerialDMA;
-		bool m_UsesSerialDMA;
 		DataSerializer *mp_DataSerializer = nullptr;
-		BaseType_t  m_CoreId = 1;
 		BaseType_t m_Priority = THREAD_PRIORITY_HIGH;
 		std::string m_message;
 		TaskHandle_t m_RXTaskHandle = nullptr;
@@ -310,16 +302,9 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		
 		void OnNewMessage(const std::string& message)
 		{
-            ESP_LOGI("OnNewMessage", "OnNewMessage: %s", message.c_str());
+            ESP_LOGD("OnNewMessage", "%s", message.c_str());
     		QueueNewRXMessage(message);
 		}
-
-		static void StaticSerialPortMessageManager_RxTask(void *Parameters)
-		{
-			SerialPortMessageManager* aSerialPortMessageManager = (SerialPortMessageManager*)Parameters;
-			aSerialPortMessageManager->SerialPortMessageManager_RxTask();
-		}
-		virtual void SerialPortMessageManager_RxTask();
 
 		static void StaticSerialPortMessageManager_RxQueueTask(void *Parameters)
 		{

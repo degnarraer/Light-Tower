@@ -53,8 +53,8 @@ FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, I2S_SAMPLE_RATE, 
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
-SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", &Serial1, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
-SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3 Datalink Task", &Serial2, &m_DataSerializer, DATALINK_TASK_CORE, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU1SerialPortMessageManager = SerialPortMessageManager("CPU1 Datalink Task", CPU1_RX, CPU1_TX, 500000, UART_NUM_1, &m_DataSerializer, DATALINK_TASK_PRIORITY);
+SerialPortMessageManager m_CPU3SerialPortMessageManager = SerialPortMessageManager("CPU3 Datalink Task", CPU3_RX, CPU3_TX, 500000, UART_NUM_2, &m_DataSerializer, DATALINK_TASK_PRIORITY);
 
 
 Sound_Processor m_SoundProcessor ( "Sound Processor"
@@ -120,14 +120,6 @@ void setup()
   //PC Serial Communication
   Serial.begin(115200, SERIAL_8N1);
   Serial.flush();
-
-  Serial1.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial1.begin(500000, SERIAL_8O2, CPU1_RX, CPU1_TX);
-  Serial1.flush();
-  
-  Serial2.setRxBufferSize(SERIAL_RX_BUFFER_SIZE);
-  Serial2.begin(500000, SERIAL_8O2, CPU3_RX, CPU3_TX);
-  Serial2.flush();
 
   TestPSRam();
   m_Amplitude_AudioBuffer.Setup();
