@@ -24,6 +24,11 @@ void Named_Object_Caller_Interface::RegisterForNewRxValueNotification(Named_Obje
 	bool IsFound = false;
 	for (Named_Object_Callee_Interface* callee : m_NewValueCallees)
 	{
+		if(!callee) 
+		{
+			ESP_LOGE("Call_Named_Object_Callback", "ERROR! Invalid Callee");
+			continue;
+		}
 		if(NewCallee == callee)
 		{
 			ESP_LOGE("RegisterForNewRxValueNotification", "ERROR! A callee with the name \"%s\" already exists.", NewCallee->GetName().c_str());
@@ -54,15 +59,17 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const std::string
 	bool found = false;
 	for (Named_Object_Callee_Interface* callee : m_NewValueCallees)
 	{
-		if (callee) 
+		if(!callee) 
 		{
-			if (callee->GetName() == name)
-			{
-				found = true;
-				ESP_LOGD("Call_Named_Object_Callback", "Callee Found: \"%s\"", name.c_str());
-				callee->New_Object_From_Sender(this, object, changeCount);
-				break;
-			}
+			ESP_LOGE("Call_Named_Object_Callback", "ERROR! Invalid Callee.");
+			continue;
+		}
+		if (callee->GetName() == name)
+		{
+			found = true;
+			ESP_LOGD("Call_Named_Object_Callback", "Callee Found: \"%s\"", name.c_str());
+			callee->New_Object_From_Sender(this, object, changeCount);
+			break;
 		}
 	}
 	if(!found) ESP_LOGE("NewRxValueReceived", "ERROR! Rx Value Callee Not Found Found: \"%s\"", name.c_str());
@@ -95,54 +102,37 @@ void SerialPortMessageManager::Setup()
 bool SerialPortMessageManager::QueueMessageFromDataType(const std::string& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
 {
 	bool result = false;
-	if(nullptr == Object || 0 == Name.length() || 0 == Count)
+	if(nullptr == mp_DataSerializer || nullptr == Object || 0 == Name.length() || 0 == Count)
 	{
 		ESP_LOGE("QueueMessageFromDataType", "ERROR! Invalid Data.");
+		return result;
 	}
-	else
-	{
-		if(mp_DataSerializer)
-		{
-			std::string message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
-			result = QueueMessage( message );
-		}
-		else
-		{
-			ESP_LOGE("QueueMessageFromDataType", "ERROR! Null Pointer.");
-		}
-	}
+	std::string message = mp_DataSerializer->SerializeDataItemToJson(Name, DataType, Object, Count, ChangeCount);
+	result = QueueMessage( message );
 	return result;
 }
 
 bool SerialPortMessageManager::QueueMessage(const std::string& message)
 {
 	bool result = false;
-	if(m_TXQueueHandle)
-	{	
-		if( message.length() > 0 && message.length() <= MAX_MESSAGE_LENGTH )
+	if( message.length() > 0 && message.length() <= MAX_MESSAGE_LENGTH )
+	{
+		std::string *p_txMessage = new std::string;
+		*p_txMessage = message;
+		if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_SHORT_BLOCK) == pdTRUE )
 		{
-			std::string *p_txMessage = new std::string;
-			*p_txMessage = message;
-			if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_MEDIUM_BLOCK
-			) == pdTRUE )
-			{
-				ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
-				result = true;
-			}
-			else
-			{
-				ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name);
-				delete p_txMessage;
-			}
+			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
+			result = true;
 		}
 		else
 		{
-			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Message too long.", m_Name);
+			ESP_LOGW("QueueMessage", "WARNING! \"%s\" Unable to Queue Message.", m_Name);
+			delete p_txMessage;
 		}
 	}
 	else
 	{
-		ESP_LOGE("QueueMessage", "ERROR! NULL Queue.");
+		ESP_LOGW("QueueMessage", "WARNING! \"%s\" Message too long.", m_Name);
 	}
 	return result;
 }
@@ -165,28 +155,20 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 {
 	while(true)
 	{
-		if(m_TXQueueHandle)
+		std::string *rawMessage;
+		if(xQueueReceive(m_TXQueueHandle, &rawMessage, portMAX_DELAY) == pdTRUE )
 		{
-			std::string *rawMessage;
-			while( xQueueReceive(m_TXQueueHandle, &rawMessage, portMAX_DELAY) == pdTRUE )
+			std::unique_ptr<std::string> sp_Tx_Message(rawMessage);
+			if (sp_Tx_Message->length() > MAX_MESSAGE_LENGTH)
 			{
-				std::unique_ptr<std::string> sp_Tx_Message(rawMessage);
-				if (sp_Tx_Message->length() > MAX_MESSAGE_LENGTH)
-				{
-					ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MAX_MESSAGE_LENGTH. Truncating.",m_Name);
-					sp_Tx_Message->resize(MAX_MESSAGE_LENGTH - 1);
-				}
-				ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, sp_Tx_Message->c_str());
-				if(mp_SerialDMA)
-				{
-					mp_SerialDMA->write(sp_Tx_Message->c_str());
-				}
+				ESP_LOGW("SerialPortMessageManager_TxTask", "\"%s\" WARNING! Message exceeds MAX_MESSAGE_LENGTH. Skipping.",m_Name);
+				continue;
 			}
-		}
-		else
-		{
-			ESP_LOGE("SerialPortMessageManager_TxTask", "ERROR! NULL TX Queue.");
-			vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
+			ESP_LOGD("SerialPortMessageManager_TxTask", "\"%s\" Data TX: \"%s\"",m_Name, sp_Tx_Message->c_str());
+			if(mp_SerialDMA)
+			{
+				mp_SerialDMA->write(sp_Tx_Message->c_str());
+			}
 		}
 	}
 }

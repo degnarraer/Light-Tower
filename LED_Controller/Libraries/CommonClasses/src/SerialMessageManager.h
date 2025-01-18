@@ -319,7 +319,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 				if(m_MessageQueueHandle && mp_DataSerializer)
 				{
 					std::string *p_rxMessage;
-					while (xQueueReceive(m_MessageQueueHandle, &p_rxMessage, pdMS_TO_TICKS(TIME_TO_WAIT_TO_RECEIVE)) == pdTRUE)
+					if (xQueueReceive(m_MessageQueueHandle, &p_rxMessage, portMAX_DELAY) == pdTRUE)
 					{
 						std::unique_ptr<std::string> sp_rxMessage(p_rxMessage);
 						NamedObject_t NamedObject;
@@ -332,9 +332,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 						{
 							ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
 						}
-						vTaskDelay(pdMS_TO_TICKS(1));
 					}
-					vTaskDelay(pdMS_TO_TICKS(TASK_DELAY));
 				}
 				else
 				{

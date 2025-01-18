@@ -28,7 +28,7 @@ class SerialDMA
     private:
         uart_port_t uartNum;                        // UART port (e.g., UART_NUM_1)
         QueueHandle_t uartQueue;                    // Queue to handle UART events
-        static constexpr size_t BUF_SIZE = 1024;    // DMA buffer size
+        static constexpr size_t BUF_SIZE = 2048;    // DMA buffer size
         std::function<void(const std::string&, void*)> messageCallback; // Callback for new messages
         void* callbackArg; // Argument passed to the callback
 
@@ -61,7 +61,7 @@ class SerialDMA
             while (true)
             {
                 // Wait for a UART event
-                if (xQueueReceive(instance->uartQueue, (void*)&event, portMAX_DELAY))
+                if (xQueueReceive(instance->uartQueue, (void*)&event, portMAX_DELAY) == pdTRUE)
                 {
                     if (event.type == UART_PATTERN_DET)
                     {
