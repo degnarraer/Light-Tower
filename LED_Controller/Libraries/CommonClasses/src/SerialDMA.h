@@ -74,7 +74,7 @@ class SerialDMA
                             data[len] = '\0'; // Null-terminate the message
                             if (instance->messageCallback)
                             {
-                                ESP_LOGI("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
+                                ESP_LOGD("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
                                 instance->messageCallback(std::string((const char*)data), instance->callbackArg);
                             }
                         }
@@ -90,7 +90,7 @@ class SerialDMA
                             data[length] = '\0'; // Null-terminate the data
                             if (instance->messageCallback)
                             {
-                                ESP_LOGI("uartEventTask: UART_DATA", "%s", (const char*)data);
+                                ESP_LOGD("uartEventTask: UART_DATA", "%s", (const char*)data);
                                 instance->messageCallback(std::string((const char*)data), instance->callbackArg);
                             }
                         }
@@ -138,14 +138,14 @@ class SerialDMA
         // Method to send data over UART
         void write(const std::string& data)
         {
-            ESP_LOGI("write", "%s", (const char*)data.c_str());
+            ESP_LOGD("write", "%s", (const char*)data.c_str());
             uart_write_bytes(uartNum, data.c_str(), data.length());
         }
 
         // Alternative method to send data with a raw buffer
         void write(const uint8_t* data, size_t length)
         {
-            ESP_LOG_BUFFER_HEXDUMP("write", data, length, ESP_LOG_INFO);
+            ESP_LOG_BUFFER_HEXDUMP("write", data, length, ESP_LOG_DEBUG);
             uart_write_bytes(uartNum, (const char*)data, length);
         }
 };
