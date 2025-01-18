@@ -63,37 +63,66 @@ class SerialDMA
                 // Wait for a UART event
                 if (xQueueReceive(instance->uartQueue, (void*)&event, portMAX_DELAY) == pdTRUE)
                 {
-                    if (event.type == UART_PATTERN_DET)
+                    switch(event.type)
                     {
-                        // Determine the location of the pattern
-                        int pos = uart_pattern_pop_pos(instance->uartNum);
-                        if (pos != -1)
-                        {
-                            // Read message up to the pattern position
-                            int len = uart_read_bytes(instance->uartNum, data, pos + 1, portMAX_DELAY);
-                            data[len] = '\0'; // Null-terminate the message
-                            if (instance->messageCallback)
+                        case UART_DATA:
+                            ESP_LOGI("uartEventTask", "UART_DATA");
                             {
-                                ESP_LOGD("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
-                                instance->messageCallback(std::string((const char*)data), instance->callbackArg);
+                                // Handle timeout or buffer overflow
+                                int length = uart_read_bytes(instance->uartNum, data, BUF_SIZE, 0);
+                                if (length > 0)
+                                {
+                                    data[length] = '\0'; // Null-terminate the data
+                                    if (instance->messageCallback)
+                                    {
+                                        ESP_LOGD("uartEventTask: UART_DATA", "%s", (const char*)data);
+                                        instance->messageCallback(std::string((const char*)data), instance->callbackArg);
+                                    }
+                                }
                             }
-                        }
-                        // Reset pattern queue after processing
-                        uart_pattern_queue_reset(instance->uartNum, 10);
-                    }
-                    else if (event.type == UART_DATA)
-                    {
-                        // Handle timeout or buffer overflow
-                        int length = uart_read_bytes(instance->uartNum, data, BUF_SIZE, 10 / portTICK_PERIOD_MS);
-                        if (length > 0)
-                        {
-                            data[length] = '\0'; // Null-terminate the data
-                            if (instance->messageCallback)
+                        break;
+                        case UART_BREAK:
+                            ESP_LOGI("uartEventTask", "UART_BREAK");
+                        break;
+                        case UART_BUFFER_FULL:
+                            ESP_LOGI("uartEventTask", "UART_BUFFER_FULL");
+                        break;
+                        case UART_FIFO_OVF:
+                            ESP_LOGI("uartEventTask", "UART_FIFO_OVF");
+                        break;
+                        case UART_FRAME_ERR:
+                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
+                        break;
+                        case UART_PARITY_ERR:
+                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
+                        break;
+                        case UART_DATA_BREAK:
+                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
+                        break;
+                        case UART_PATTERN_DET:
+                            ESP_LOGI("uartEventTask", "UART_PATTERN_DET");
                             {
-                                ESP_LOGD("uartEventTask: UART_DATA", "%s", (const char*)data);
-                                instance->messageCallback(std::string((const char*)data), instance->callbackArg);
+                                // Determine the location of the pattern
+                                int pos = uart_pattern_pop_pos(instance->uartNum);
+                                if (pos != -1)
+                                {
+                                    // Read message up to the pattern position
+                                    int len = uart_read_bytes(instance->uartNum, data, pos + 1, 0);
+                                    data[len] = '\0'; // Null-terminate the message
+                                    if (instance->messageCallback)
+                                    {
+                                        ESP_LOGD("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
+                                        instance->messageCallback(std::string((const char*)data), instance->callbackArg);
+                                    }
+                                }
+                                // Reset pattern queue after processing
+                                uart_pattern_queue_reset(instance->uartNum, 10);
                             }
-                        }
+                        break;
+                        case UART_EVENT_MAX:
+                        default:
+                            ESP_LOGI("uartEventTask", "UART_PATTERN_DET");
+                        break;
                     }
                 }
             }
@@ -129,7 +158,8 @@ class SerialDMA
             // Clear the RX buffer by reading all available data
             uint8_t data[BUF_SIZE];
             size_t bufferedLen = 0;
-            while (uart_get_buffered_data_len(uartNum, &bufferedLen) == ESP_OK && bufferedLen > 0) {
+            while (uart_get_buffered_data_len(uartNum, &bufferedLen) == ESP_OK && bufferedLen > 0)
+            {
                 uart_read_bytes(uartNum, data, BUF_SIZE, 0); // Non-blocking read to clear buffer
                 uart_get_buffered_data_len(uartNum, &bufferedLen); // Update the buffered length
             }

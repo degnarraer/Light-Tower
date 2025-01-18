@@ -340,18 +340,16 @@ void Bluetooth_Source::DeviceProcessingTask()
   	while(true)
   	{
 		BT_Device_Info receivedDevice;
-		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, SEMAPHORE_BLOCK) == pdTRUE)
 		{
 			Compatible_Device_Found(receivedDevice);
-			vTaskDelay(pdMS_TO_TICKS(20));
 		}
-		vTaskDelay(pdMS_TO_TICKS(20));
     }
 }
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 	{
 		ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 		bool found = false;
