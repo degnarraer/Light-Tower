@@ -241,7 +241,7 @@ private:
         }
 
         uint32_t notificationValue;
-        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, portMAX_DELAY) == pdTRUE)
+        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_BLOCK) == pdTRUE)
         {
             std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
             if (!sp_frames)
@@ -250,7 +250,7 @@ private:
                 vTaskDelay(SEMAPHORE_LONG_BLOCK);
                 return;
             }
-            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_MEDIUM_BLOCK);
+            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_BLOCK);
             if(receivedFrames != m_fftSize)
             {
                 ESP_LOGE("ProcessFFT", "ERROR! Failed to receive expected frame count.");
@@ -358,7 +358,7 @@ private:
         }
 
         // Step 3: FFT computation using lookup tables
-        for (int s = 1; s <= logN; s++)
+        for(int s = 1; s <= logN; s++)
         {
             int m = 1 << s;
             int halfM = m / 2;

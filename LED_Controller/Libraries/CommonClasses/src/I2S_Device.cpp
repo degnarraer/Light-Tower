@@ -176,13 +176,15 @@ bool I2S_Device::ESP_Process(const char* subject, esp_err_t result)
 
 size_t I2S_Device::ReadSoundBufferData(uint8_t *soundBufferData, size_t byteCount)
 {
+    static LogWithRateLimit_Average<size_t> ReadSamples_RLL(1000, ESP_LOG_INFO);
     size_t bytes_read = 0;
     if (IsInitialized())
     {
         size_t inputSize = ConvertByteCount(byteCount, m_BitsPerSampleIn, m_BitsPerSampleOut);
         std::unique_ptr<uint8_t[]> spBuffer(reinterpret_cast<uint8_t*>(ps_malloc(sizeof(uint8_t)*inputSize)));
         ESP_LOGV("I2S Device", "%s I2S Read Request", GetTitle().c_str());
-        if(ESP_Process((this->GetTitle() + std::string(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, spBuffer.get(), inputSize, &bytes_read, TIME_TO_WAIT_FOR_SOUND)))
+        ReadSamples_RLL.LogWithValue(ESP_LOG_INFO, "ReadSoundBufferData", "ReadSoundBufferData", byteCount);
+        if(ESP_Process((this->GetTitle() + std::string(" I2S Read Request")).c_str(), i2s_read(m_I2S_PORT, spBuffer.get(), inputSize, &bytes_read, SEMAPHORE_BLOCK)))
         {
             bytes_read = BitDepthConverter::ConvertBitDepth(spBuffer.get(), bytes_read, soundBufferData, m_BitsPerSampleIn, m_BitsPerSampleOut);
         }
@@ -196,10 +198,12 @@ size_t I2S_Device::ReadSoundBufferData(uint8_t *soundBufferData, size_t byteCoun
 
 size_t I2S_Device::WriteSamples(uint8_t *samples, size_t byteCount)
 {
+    static LogWithRateLimit_Average<size_t> WriteSamples_RLL(1000, ESP_LOG_INFO);
     size_t bytes_written = 0;
     if (IsInitialized() && byteCount > 0)
     {
-      ESP_Process((this->GetTitle() + std::string(" I2S Write Request")).c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, TIME_TO_WAIT_FOR_SOUND));
+      WriteSamples_RLL.LogWithValue(ESP_LOG_INFO, "WriteSamples", "WriteSamples", byteCount);
+      ESP_Process((this->GetTitle() + std::string(" I2S Write Request")).c_str(), i2s_write(m_I2S_PORT, samples, byteCount, &bytes_written, SEMAPHORE_BLOCK));
       ESP_LOGV("I2S Device", "%s: Write %i bytes of %i bytes.", GetTitle().c_str(), bytes_written, byteCount);
     }
     return bytes_written;
