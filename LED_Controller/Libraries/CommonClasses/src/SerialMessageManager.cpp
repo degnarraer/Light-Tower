@@ -139,16 +139,23 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 
 void SerialPortMessageManager::QueueNewRXMessage(const std::string &message)
 {
-	std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(message);
-	trim(*sp_rxMessage);
-	std::string *p_rxMessage_raw = sp_rxMessage.release();
-	ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, m_message.c_str());
-	if( xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, SEMAPHORE_MEDIUM_BLOCK) != pdTRUE )
+    std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(message);
+    trim(*sp_rxMessage);
+    std::string *p_rxMessage_raw = sp_rxMessage.release();
+
+    ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, p_rxMessage_raw->c_str());
+
+    // Use xQueueSendFromISR inside an interrupt
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+	// Inside an interrupt, use xQueueSendFromISR
+	if (xQueueSendFromISR(m_MessageQueueHandle, &p_rxMessage_raw, &xHigherPriorityTaskWoken) != pdTRUE)
 	{
+		// Log failure
 		static LogWithRateLimit SerialPortMessageManager_RxTask_QueueFail_RLL(1000, ESP_LOG_WARN);
 		SerialPortMessageManager_RxTask_QueueFail_RLL.Log(ESP_LOG_WARN, "SerialPortMessageManager_RxTask", "RX Message Dropped.");
 		delete p_rxMessage_raw;
 	}
+	portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // Yield to higher priority task if needed
 }
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()

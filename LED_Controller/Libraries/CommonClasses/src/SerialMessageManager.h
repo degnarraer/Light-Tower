@@ -24,6 +24,9 @@
 #include <memory>
 #include "Helpers.h"
 #include "DataSerializer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
+#include "freertos/portmacro.h"
 
 #define TASK_DELAY 20
 #define MAX_BLOCK_TIME_MS 100 
@@ -235,7 +238,7 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 								: m_Name(name)
 								, mp_DataSerializer(dataSerializer)
 								, m_Priority(priority)
-								, mp_SerialDMA(new SerialDMA(rxPin, txPin, baudRate, StaticOnNewMessage, this, port))
+								, mp_SerialDMA(new SerialDMA(rxPin, txPin, baudRate, StaticOnNewMessage, this, port, priority))
 		{
 		}
 		virtual ~SerialPortMessageManager()

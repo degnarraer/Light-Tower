@@ -22,15 +22,17 @@
 #include <driver/uart.h>
 #include <freertos/queue.h>
 #include <functional>
+#include "DataTypes.h"
 
 class SerialDMA
 {
     private:
-        uart_port_t uartNum;                        // UART port (e.g., UART_NUM_1)
-        QueueHandle_t uartQueue;                    // Queue to handle UART events
-        static constexpr size_t BUF_SIZE = 2048;    // DMA buffer size
+        uart_port_t uartNum;                                            // UART port (e.g., UART_NUM_1)
+        QueueHandle_t uartQueue;                                        // Queue to handle UART events
+        static constexpr size_t BUF_SIZE = 2048;                        // DMA buffer size
         std::function<void(const std::string&, void*)> messageCallback; // Callback for new messages
-        void* callbackArg; // Argument passed to the callback
+        void* callbackArg;                                              // Argument passed to the callback
+        BaseType_t threadPriority;
 
         void initUART(int rxPin, int txPin, int baudRate)
         {
@@ -48,7 +50,7 @@ class SerialDMA
             uart_driver_install(uartNum, BUF_SIZE, BUF_SIZE, 10, &uartQueue, 0);
 
             // Enable pattern detection for '\n' (ASCII 10)
-            uart_enable_pattern_det_intr(uartNum, '\n', 1, 10000, 10, 10);
+            uart_enable_pattern_det_intr(uartNum, '\n', 1, 100, 10, 1);
             uart_pattern_queue_reset(uartNum, 10);
         }
 
@@ -66,57 +68,50 @@ class SerialDMA
                     switch(event.type)
                     {
                         case UART_DATA:
-                            ESP_LOGI("uartEventTask", "UART_DATA");
-                            {
-                                // Handle timeout or buffer overflow
-                                int length = uart_read_bytes(instance->uartNum, data, BUF_SIZE, 0);
-                                if (length > 0)
-                                {
-                                    data[length] = '\0'; // Null-terminate the data
-                                    if (instance->messageCallback)
-                                    {
-                                        ESP_LOGD("uartEventTask: UART_DATA", "%s", (const char*)data);
-                                        instance->messageCallback(std::string((const char*)data), instance->callbackArg);
-                                    }
-                                }
-                            }
                         break;
                         case UART_BREAK:
-                            ESP_LOGI("uartEventTask", "UART_BREAK");
+                            ESP_LOGD("uartEventTask", "UART_BREAK");
                         break;
                         case UART_BUFFER_FULL:
-                            ESP_LOGI("uartEventTask", "UART_BUFFER_FULL");
+                            ESP_LOGD("uartEventTask", "UART_BUFFER_FULL");
                         break;
                         case UART_FIFO_OVF:
-                            ESP_LOGI("uartEventTask", "UART_FIFO_OVF");
+                            ESP_LOGD("uartEventTask", "UART_FIFO_OVF");
                         break;
                         case UART_FRAME_ERR:
-                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
+                            ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
                         break;
                         case UART_PARITY_ERR:
-                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
+                            ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
                         break;
                         case UART_DATA_BREAK:
-                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
+                            ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
                         break;
                         case UART_PATTERN_DET:
-                            ESP_LOGI("uartEventTask", "UART_PATTERN_DET");
+                            ESP_LOGD("uartEventTask", "UART_PATTERN_DET");
                             {
-                                // Determine the location of the pattern
-                                int pos = uart_pattern_pop_pos(instance->uartNum);
-                                if (pos != -1)
+                                while (true)
                                 {
+                                    // Determine the location of the pattern
+                                    int pos = uart_pattern_pop_pos(instance->uartNum);
+                                    if (pos == -1)
+                                    {
+                                        // No more patterns in the queue
+                                        break;
+                                    }
+
                                     // Read message up to the pattern position
                                     int len = uart_read_bytes(instance->uartNum, data, pos + 1, 0);
-                                    data[len] = '\0'; // Null-terminate the message
-                                    if (instance->messageCallback)
+                                    if (len > 0)
                                     {
-                                        ESP_LOGD("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
-                                        instance->messageCallback(std::string((const char*)data), instance->callbackArg);
+                                        data[len] = '\0'; // Null-terminate the message
+                                        if (instance->messageCallback)
+                                        {
+                                            ESP_LOGD("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
+                                            instance->messageCallback(std::string((const char*)data), instance->callbackArg);
+                                        }
                                     }
                                 }
-                                // Reset pattern queue after processing
-                                uart_pattern_queue_reset(instance->uartNum, 10);
                             }
                         break;
                         case UART_EVENT_MAX:
@@ -130,8 +125,17 @@ class SerialDMA
 
     public:
         // Constructor: Use custom RX/TX pins
-        SerialDMA(int rxPin, int txPin, int baudRate, std::function<void(const std::string&, void*)> callback, void* arg = nullptr, uart_port_t port = UART_NUM_1)
-            : uartNum(port), messageCallback(callback), callbackArg(arg)
+        SerialDMA( int rxPin
+                 , int txPin
+                 , int baudRate
+                 , std::function<void(const std::string&, void*)> callback
+                 , void* arg
+                 , uart_port_t port
+                 , BaseType_t priority )
+                 : uartNum(port)
+                 , messageCallback(callback)
+                 , callbackArg(arg)
+                 , threadPriority(priority)
         {
             initUART(rxPin, txPin, baudRate);
         }
@@ -145,7 +149,7 @@ class SerialDMA
         {
             // Create a FreeRTOS task to handle UART events
             ESP_LOGI("begin", "Serial DMA Begin.");
-            xTaskCreate(uartEventTask, "UART Event Task", 5000, this, 12, nullptr);
+            xTaskCreate(uartEventTask, "UART Event Task", 5000, this, threadPriority, nullptr);
         }
 
         // Flush the UART buffers (TX and RX)
@@ -169,13 +173,28 @@ class SerialDMA
         void write(const std::string& data)
         {
             ESP_LOGD("write", "%s", (const char*)data.c_str());
-            uart_write_bytes(uartNum, data.c_str(), data.length());
+            std::string dataWithNewline = data + '\n';
+            uart_write_bytes(uartNum, dataWithNewline.c_str(), dataWithNewline.length());
         }
 
         // Alternative method to send data with a raw buffer
         void write(const uint8_t* data, size_t length)
         {
-            ESP_LOG_BUFFER_HEXDUMP("write", data, length, ESP_LOG_DEBUG);
-            uart_write_bytes(uartNum, (const char*)data, length);
+            // Create a new buffer to hold the original data + '\n'
+            uint8_t* bufferWithNewline = (uint8_t*)malloc(length + 1);
+            if (bufferWithNewline)
+            {
+                memcpy(bufferWithNewline, data, length);  // Copy the original data
+                bufferWithNewline[length] = '\n';         // Append '\n'
+
+                ESP_LOG_BUFFER_HEXDUMP("write", bufferWithNewline, length + 1, ESP_LOG_DEBUG);
+                uart_write_bytes(uartNum, (const char*)bufferWithNewline, length + 1);
+
+                free(bufferWithNewline);  // Free the allocated memory
+            }
+            else
+            {
+                ESP_LOGE("write", "Failed to allocate memory for bufferWithNewline");
+            }
         }
 };
