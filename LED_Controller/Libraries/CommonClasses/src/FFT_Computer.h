@@ -178,7 +178,7 @@ public:
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
         if(count > 0)
         {
-            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
+            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_NO_BLOCK);
             Push_Frames_RLL.LogWithValue(ESP_LOG_INFO, "PushFrames", "PushFrames", framesPushed);
             if(framesPushed == count)
             {

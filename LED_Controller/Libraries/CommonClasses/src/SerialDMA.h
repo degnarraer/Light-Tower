@@ -29,6 +29,7 @@ class SerialDMA
     private:
         uart_port_t uartNum;                                            // UART port (e.g., UART_NUM_1)
         QueueHandle_t uartQueue;                                        // Queue to handle UART events
+        TaskHandle_t taskHandle;
         static constexpr size_t BUF_SIZE = 2048;                        // DMA buffer size
         std::function<void(const std::string&, void*)> messageCallback; // Callback for new messages
         void* callbackArg;                                              // Argument passed to the callback
@@ -74,37 +75,39 @@ class SerialDMA
                         break;
                         case UART_BUFFER_FULL:
                             ESP_LOGD("uartEventTask", "UART_BUFFER_FULL");
+                            instance->flush();
                         break;
                         case UART_FIFO_OVF:
                             ESP_LOGD("uartEventTask", "UART_FIFO_OVF");
+                            instance->flush();
                         break;
                         case UART_FRAME_ERR:
                             ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
+                            instance->flush();
                         break;
                         case UART_PARITY_ERR:
                             ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
+                            instance->flush();
                         break;
                         case UART_DATA_BREAK:
                             ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
+                            instance->flush();
                         break;
                         case UART_PATTERN_DET:
                             ESP_LOGD("uartEventTask", "UART_PATTERN_DET");
                             {
                                 while (true)
                                 {
-                                    // Determine the location of the pattern
                                     int pos = uart_pattern_pop_pos(instance->uartNum);
                                     if (pos == -1)
                                     {
-                                        // No more patterns in the queue
                                         break;
                                     }
 
-                                    // Read message up to the pattern position
                                     int len = uart_read_bytes(instance->uartNum, data, pos + 1, 0);
                                     if (len > 0)
                                     {
-                                        data[len] = '\0'; // Null-terminate the message
+                                        data[len] = '\0';
                                         if (instance->messageCallback)
                                         {
                                             ESP_LOGD("uartEventTask: UART_PATTERN_DET", "%s", (const char*)data);
@@ -143,13 +146,17 @@ class SerialDMA
         ~SerialDMA()
         {
             uart_driver_delete(uartNum);
+            if(taskHandle)
+            {
+                vTaskDelete(taskHandle);
+            }
         }
 
         void begin()
         {
             // Create a FreeRTOS task to handle UART events
             ESP_LOGI("begin", "Serial DMA Begin.");
-            xTaskCreate(uartEventTask, "UART Event Task", 5000, this, threadPriority, nullptr);
+            xTaskCreate(uartEventTask, "UART Event Task", 5000, this, threadPriority, &taskHandle);
         }
 
         // Flush the UART buffers (TX and RX)
