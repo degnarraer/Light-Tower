@@ -64,7 +64,7 @@ class SerialDMA
             while (true)
             {
                 // Wait for a UART event
-                if (xQueueReceive(instance->uartQueue, (void*)&event, portMAX_DELAY) == pdTRUE)
+                while (xQueueReceive(instance->uartQueue, (void*)&event, SEMAPHORE_NO_BLOCK) == pdTRUE)
                 {
                     switch(event.type)
                     {
@@ -114,6 +114,7 @@ class SerialDMA
                                             instance->messageCallback(std::string((const char*)data), instance->callbackArg);
                                         }
                                     }
+                                    vTaskDelay(pdMS_TO_TICKS(1));
                                 }
                             }
                         break;
@@ -123,6 +124,7 @@ class SerialDMA
                         break;
                     }
                 }
+                vTaskDelay(pdMS_TO_TICKS(10));
             }
         }
 

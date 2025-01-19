@@ -319,28 +319,20 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		{
 			while (true)
 			{
-				if(m_MessageQueueHandle && mp_DataSerializer)
+				std::string *p_rxMessage;
+				if(xQueueReceive(m_MessageQueueHandle, &p_rxMessage, portMAX_DELAY) == pdTRUE)
 				{
-					std::string *p_rxMessage;
-					if (xQueueReceive(m_MessageQueueHandle, &p_rxMessage, portMAX_DELAY) == pdTRUE)
+					std::unique_ptr<std::string> sp_rxMessage(p_rxMessage);
+					NamedObject_t NamedObject;
+					if (mp_DataSerializer->DeSerializeJsonToNamedObject(p_rxMessage->c_str(), NamedObject))
 					{
-						std::unique_ptr<std::string> sp_rxMessage(p_rxMessage);
-						NamedObject_t NamedObject;
-						if (mp_DataSerializer->DeSerializeJsonToNamedObject(p_rxMessage->c_str(), NamedObject))
-						{
-							ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
-							this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
-						}
-						else
-						{
-							ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
-						}
+						ESP_LOGD("SerialPortMessageManager", "\"%s\" DeSerialized Named object: \"%s\" Address: \"%p\"", m_Name, NamedObject.Name.c_str(), static_cast<void*>(NamedObject.Object));
+						this->Call_Named_Object_Callback(NamedObject.Name, NamedObject.Object, NamedObject.ChangeCount);
 					}
-				}
-				else
-				{
-					ESP_LOGE("SerialPortMessageManager_RxQueueTask", "ERROR! Null Pointer.");
-					vTaskDelay(pdMS_TO_TICKS(NULL_POINTER_THREAD_DELAY));
+					else
+					{
+						ESP_LOGW("SerialPortMessageManager", "WARNING! \"%s\" DeSerialized Named object failed", m_Name.c_str());
+					}
 				}
 			}
 		}
@@ -355,7 +347,8 @@ class SerialPortMessageManager: public Named_Object_Caller_Interface
 		std::string trim(const std::string &str) {
 			size_t start = str.find_first_not_of(" \t\n\r");
 			size_t end = str.find_last_not_of(" \t\n\r");
-			if (start == std::string::npos || end == std::string::npos) {
+			if (start == std::string::npos || end == std::string::npos)
+			{
 				return "";
 			}
 			return str.substr(start, end - start + 1);

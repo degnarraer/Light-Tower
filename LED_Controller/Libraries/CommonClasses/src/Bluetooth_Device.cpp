@@ -288,7 +288,7 @@ bool Bluetooth_Source::ConnectToThisName(std::string name, esp_bd_addr_t address
     else if (m_DeviceProcessorQueueHandle)
     {
         BT_Device_Info newDevice(name.c_str(), addressString.c_str(), rssi);
-        if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, (TickType_t)0) == pdPASS)
+        if (xQueueSend(m_DeviceProcessorQueueHandle, &newDevice, SEMAPHORE_NO_BLOCK) == pdPASS)
         {
             ESP_LOGD("ConnectToThisName", "Device info sent to queue");
         }
@@ -340,16 +340,17 @@ void Bluetooth_Source::DeviceProcessingTask()
   	while(true)
   	{
 		BT_Device_Info receivedDevice;
-		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, SEMAPHORE_BLOCK) == pdTRUE)
+		while(xQueueReceive(m_DeviceProcessorQueueHandle, &receivedDevice, SEMAPHORE_NO_BLOCK) == pdTRUE)
 		{
 			Compatible_Device_Found(receivedDevice);
 		}
+		vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 void Bluetooth_Source::Compatible_Device_Found(BT_Device_Info newDevice)
 {
-	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
+	if (xSemaphoreTakeRecursive(m_ActiveCompatibleDevicesSemaphore, SEMAPHORE_NO_BLOCK) == pdTRUE)
 	{
 		ESP_LOGD("Bluetooth_Device", "compatible device found. Name: \"%s\" Address: \"%s\"", newDevice.name, newDevice.address);
 		bool found = false;
@@ -423,6 +424,7 @@ void Bluetooth_Source::CompatibleDeviceTrackerTaskLoop()
 		{
 			m_Callee->BluetoothActiveDeviceListUpdated(activeDevicesCopy);
 		}
+		vTaskDelay(pdMS_TO_TICKS(10));
 	}
 }
 
