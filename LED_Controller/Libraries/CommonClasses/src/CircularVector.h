@@ -11,7 +11,7 @@ public:
     ShocksRingBuffer(size_t size)
         : bufferSize(size), writeIndex(0), readIndex(0),
           isFull(false), p_buffer(std::make_unique<Frame_t[]>(size)) {
-        mutex = xSemaphoreCreateMutex();
+        mutex = xSemaphoreCreateRecursiveMutex();
         if (!mutex) {
             throw std::runtime_error("Failed to create mutex");
         }
@@ -26,7 +26,7 @@ public:
 
     // Push a single frame into the ring buffer
     void push(Frame_t frame, TickType_t waitTime) {
-        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
             p_buffer[writeIndex] = frame;
             writeIndex = (writeIndex + 1) % bufferSize;
 
@@ -35,14 +35,14 @@ public:
             }
 
             isFull = (writeIndex == readIndex); // Update full flag
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
     }
 
     // Push multiple frames into the ring buffer
     size_t push(Frame_t* frames, size_t count, TickType_t waitTime) {
         size_t pushed = 0;
-        if (frames && xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+        if (frames && xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
             for (size_t i = 0; i < count; ++i) {
                 p_buffer[writeIndex] = frames[i];
                 writeIndex = (writeIndex + 1) % bufferSize;
@@ -54,7 +54,7 @@ public:
                 isFull = (writeIndex == readIndex); // Update full flag
                 pushed++;
             }
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
         return pushed;
     }
@@ -62,7 +62,7 @@ public:
     // Retrieve frames into a vector
     size_t get(std::vector<Frame_t>& frames, size_t count, TickType_t waitTime) {
         size_t returned = 0;
-        if (xSemaphoreTake(mutex, waitTime) == pdTRUE) {
+        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE) {
             size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
             frames.resize(framesToReturn);
@@ -72,7 +72,7 @@ public:
             }
 
             returned = framesToReturn;
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
         return returned;
     }
@@ -81,7 +81,7 @@ public:
     size_t get(Frame_t* frames, size_t count, TickType_t waitTime)
     {
         size_t returned = 0;
-        if (xSemaphoreTake(mutex, waitTime) == pdTRUE)
+        if (xSemaphoreTakeRecursive(mutex, waitTime) == pdTRUE)
         {
             size_t available = getAvailableFrames();
             size_t framesToReturn = std::min(count, available);
@@ -90,19 +90,19 @@ public:
                 frames[i] = p_buffer[(readIndex + i) % bufferSize];
             }
             returned = framesToReturn;
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
         return returned;
     }
 
 private:
-    size_t getAvailableFrames() const {
-        if (isFull) {
-            return bufferSize; // If full, all slots are available
+    size_t getAvailableFrames() const
+    {
+        if (isFull)
+        {
+            return bufferSize;
         }
-        return (writeIndex >= readIndex)
-            ? (writeIndex - readIndex)
-            : (bufferSize - readIndex + writeIndex);
+        return (writeIndex >= readIndex) ? (writeIndex - readIndex) : (bufferSize - readIndex + writeIndex);
     }
 
     std::unique_ptr<Frame_t[]> p_buffer;
