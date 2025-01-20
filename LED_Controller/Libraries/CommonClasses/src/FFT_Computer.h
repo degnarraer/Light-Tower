@@ -269,7 +269,7 @@ private:
                     }
                 }
                 
-                taskYIELD();
+                vTaskDelay(SEMAPHORE_SHORT_BLOCK);
                 unsigned long startTime = millis();
                 ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
                 ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
@@ -308,14 +308,14 @@ private:
                     sp_freqMags_left[i].Frequency = binToFrequency(i);
                     sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
                     sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
-                    if(i % 100 == 0) taskYIELD();
+                    if(i % 100 == 0) vTaskDelay(SEMAPHORE_SHORT_BLOCK);
                 }
                 
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
             }
-            taskYIELD();
+            vTaskDelay(SEMAPHORE_MEDIUM_BLOCK);
         }
     }
 
