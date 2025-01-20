@@ -76,6 +76,7 @@ private:
     std::unique_ptr<float[], PsMallocDeleter> sp_magnitudes_right_channel;     // FFT magnitudes
     std::unique_ptr<float[], PsMallocDeleter> sp_magnitudes_left_channel;      // FFT magnitudes
     UBaseType_t m_uxPriority;
+    SemaphoreHandle_t m_Lock;
 
     
     unsigned long m_totalFrames;
@@ -144,6 +145,7 @@ public:
         {
             mp_CallBack = callback;
         }
+        m_Lock = xSemaphoreCreateBinary();
         mp_CallBackArgs = callBackArgs;
         mp_ringBuffer = new ShocksRingBuffer(m_fftSize);
         sp_real_right_channel = std::unique_ptr<float[], PsMallocDeleter>(static_cast<float*>(ps_malloc(m_fftSize * sizeof(float))));
@@ -183,7 +185,7 @@ public:
                 if(m_totalFrames - m_framesSinceLastFFT >= m_hopSize)
                 {
                     m_framesSinceLastFFT = m_totalFrames;
-                    xTaskNotifyGive(m_fft_Calculator_TaskHandle);
+                    xSemaphoreGive(m_Lock);
                 }
             }
             else
@@ -241,7 +243,7 @@ private:
             }
 
             uint32_t notificationValue;
-            if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_BLOCK) == pdTRUE)
+            if (xSemaphoreTake(m_Lock, SEMAPHORE_BLOCK) == pdTRUE)
             {
                 m_isProcessing = true;
                 std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
@@ -269,7 +271,7 @@ private:
                     }
                 }
                 
-                vTaskDelay(SEMAPHORE_SHORT_BLOCK);
+                vTaskDelay(SEMAPHORE_NO_BLOCK);
                 unsigned long startTime = millis();
                 ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
                 ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
@@ -308,14 +310,14 @@ private:
                     sp_freqMags_left[i].Frequency = binToFrequency(i);
                     sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
                     sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
-                    if(i % 100 == 0) vTaskDelay(SEMAPHORE_SHORT_BLOCK);
+                    if(i % 500 == 0) vTaskDelay(SEMAPHORE_SHORT_BLOCK);
+                    else if(i % 100 == 0) taskYIELD();
                 }
                 
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
             }
-            vTaskDelay(SEMAPHORE_MEDIUM_BLOCK);
         }
     }
 
