@@ -98,7 +98,7 @@ void WebSocketDataProcessor::TxDataToWebSocket(const std::string &key, const std
     if (m_Message_Queue_Handle)
     {
         auto rawPtr = keyValuePair.release();
-        if (xQueueSend(m_Message_Queue_Handle, &rawPtr, SEMAPHORE_SHORT_BLOCK) != pdTRUE)
+        if (xQueueSend(m_Message_Queue_Handle, &rawPtr, SEMAPHORE_BLOCK) != pdTRUE)
         {
             delete rawPtr;
             ESP_LOGW("TxDataToWebSocket", "Unable to queue message");

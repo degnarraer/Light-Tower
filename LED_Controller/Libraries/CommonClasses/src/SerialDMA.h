@@ -28,8 +28,11 @@ class SerialDMA
 {
     private:
         uart_port_t uartNum;                                            // UART port (e.g., UART_NUM_1)
-        QueueHandle_t uartQueue;                                        // Queue to handle UART events
-        TaskHandle_t taskHandle;
+        QueueHandle_t rxQueue;                                          // Queue to handle UART events
+        TaskHandle_t uartEventTaskHandle;
+        QueueHandle_t txQueue;                                          // Queue for TX data
+        TaskHandle_t txTaskHandle;
+        static constexpr size_t TX_QUEUE_SIZE = 10;                     // Maximum number of messages in the queue
         static constexpr size_t BUF_SIZE = 2048;                        // DMA buffer size
         std::function<void(const std::string&, void*)> messageCallback; // Callback for new messages
         void* callbackArg;                                              // Argument passed to the callback
@@ -37,7 +40,12 @@ class SerialDMA
 
         void initUART(int rxPin, int txPin, int baudRate)
         {
-            // Configure UART parameters
+            txQueue = xQueueCreate(TX_QUEUE_SIZE, sizeof(char*));       // Store pointers to buffers
+            if (!txQueue)
+            {
+                ESP_LOGE("SerialDMA", "Failed to create TX queue");
+            }
+
             uart_config_t uartConfig = {
                 .baud_rate = baudRate,
                 .data_bits = UART_DATA_8_BITS,
@@ -48,9 +56,7 @@ class SerialDMA
             };
             uart_param_config(uartNum, &uartConfig);
             uart_set_pin(uartNum, txPin, rxPin, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-            uart_driver_install(uartNum, BUF_SIZE, BUF_SIZE, 10, &uartQueue, 0);
-
-            // Enable pattern detection for '\n' (ASCII 10)
+            uart_driver_install(uartNum, BUF_SIZE, BUF_SIZE, 10, &rxQueue, 0);
             uart_enable_pattern_det_intr(uartNum, '\n', 1, 100, 10, 1);
             uart_pattern_queue_reset(uartNum, 10);
         }
@@ -63,38 +69,38 @@ class SerialDMA
             uint8_t data[BUF_SIZE];
             while (true)
             {
-                // Wait for a UART event
-                while (xQueueReceive(instance->uartQueue, (void*)&event, SEMAPHORE_NO_BLOCK) == pdTRUE)
+                if(xQueueReceive(instance->rxQueue, (void*)&event, SEMAPHORE_BLOCK) == pdTRUE)
                 {
                     switch(event.type)
                     {
                         case UART_DATA:
+                            ESP_LOGD("uartEventTask", "UART_DATA");
                         break;
                         case UART_BREAK:
-                            ESP_LOGD("uartEventTask", "UART_BREAK");
+                            ESP_LOGI("uartEventTask", "UART_BREAK");
                         break;
                         case UART_BUFFER_FULL:
-                            ESP_LOGD("uartEventTask", "UART_BUFFER_FULL");
+                            ESP_LOGI("uartEventTask", "UART_BUFFER_FULL");
                             instance->flush();
                         break;
                         case UART_FIFO_OVF:
-                            ESP_LOGD("uartEventTask", "UART_FIFO_OVF");
+                            ESP_LOGI("uartEventTask", "UART_FIFO_OVF");
                             instance->flush();
                         break;
                         case UART_FRAME_ERR:
-                            ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
+                            ESP_LOGE("uartEventTask", "UART_FRAME_ERR");
                             instance->flush();
                         break;
                         case UART_PARITY_ERR:
-                            ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
+                            ESP_LOGE("uartEventTask", "UART_FRAME_ERR");
                             instance->flush();
                         break;
                         case UART_DATA_BREAK:
-                            ESP_LOGD("uartEventTask", "UART_FRAME_ERR");
+                            ESP_LOGI("uartEventTask", "UART_FRAME_ERR");
                             instance->flush();
                         break;
                         case UART_PATTERN_DET:
-                            ESP_LOGD("uartEventTask", "UART_PATTERN_DET");
+                            ESP_LOGI("uartEventTask", "UART_PATTERN_DET");
                             {
                                 while (true)
                                 {
@@ -114,22 +120,19 @@ class SerialDMA
                                             instance->messageCallback(std::string((const char*)data), instance->callbackArg);
                                         }
                                     }
-                                    vTaskDelay(pdMS_TO_TICKS(1));
                                 }
                             }
                         break;
                         case UART_EVENT_MAX:
                         default:
-                            ESP_LOGI("uartEventTask", "UART_PATTERN_DET");
+                            ESP_LOGE("uartEventTask", "UART_PATTERN_DET");
                         break;
                     }
                 }
-                vTaskDelay(pdMS_TO_TICKS(10));
             }
         }
 
     public:
-        // Constructor: Use custom RX/TX pins
         SerialDMA( int rxPin
                  , int txPin
                  , int baudRate
@@ -148,62 +151,85 @@ class SerialDMA
         ~SerialDMA()
         {
             uart_driver_delete(uartNum);
-            if(taskHandle)
+            if(uartEventTaskHandle)
             {
-                vTaskDelete(taskHandle);
+                vTaskDelete(uartEventTaskHandle);
+            }
+            if(txTaskHandle)
+            {
+                vTaskDelete(txTaskHandle);
             }
         }
 
         void begin()
         {
-            // Create a FreeRTOS task to handle UART events
             ESP_LOGI("begin", "Serial DMA Begin.");
-            xTaskCreate(uartEventTask, "UART Event Task", 5000, this, threadPriority, &taskHandle);
+            xTaskCreate(uartEventTask, "UART Rx Task", 4096, this, threadPriority, &uartEventTaskHandle);
+            xTaskCreate(txTask, "UART TX Task", 4096, this, threadPriority, &txTaskHandle);
         }
 
-        // Flush the UART buffers (TX and RX)
         void flush()
         {
             ESP_LOGD("flush", "Serial DMA flush.");
-            // Flush TX buffer
             uart_flush(uartNum);
 
-            // Clear the RX buffer by reading all available data
             uint8_t data[BUF_SIZE];
             size_t bufferedLen = 0;
             while (uart_get_buffered_data_len(uartNum, &bufferedLen) == ESP_OK && bufferedLen > 0)
             {
-                uart_read_bytes(uartNum, data, BUF_SIZE, 0); // Non-blocking read to clear buffer
-                uart_get_buffered_data_len(uartNum, &bufferedLen); // Update the buffered length
+                uart_read_bytes(uartNum, data, BUF_SIZE, 0);
+                uart_get_buffered_data_len(uartNum, &bufferedLen);
             }
         }
 
-        // Method to send data over UART
         void write(const std::string& data)
         {
-            ESP_LOGD("write", "%s", (const char*)data.c_str());
             std::string dataWithNewline = data + '\n';
-            uart_write_bytes(uartNum, dataWithNewline.c_str(), dataWithNewline.length());
-        }
-
-        // Alternative method to send data with a raw buffer
-        void write(const uint8_t* data, size_t length)
-        {
-            // Create a new buffer to hold the original data + '\n'
-            uint8_t* bufferWithNewline = (uint8_t*)malloc(length + 1);
-            if (bufferWithNewline)
+            char* buffer = (char*)malloc(dataWithNewline.length() + 1);
+            if (buffer)
             {
-                memcpy(bufferWithNewline, data, length);  // Copy the original data
-                bufferWithNewline[length] = '\n';         // Append '\n'
-
-                ESP_LOG_BUFFER_HEXDUMP("write", bufferWithNewline, length + 1, ESP_LOG_DEBUG);
-                uart_write_bytes(uartNum, (const char*)bufferWithNewline, length + 1);
-
-                free(bufferWithNewline);  // Free the allocated memory
+                memcpy(buffer, dataWithNewline.c_str(), dataWithNewline.length() + 1);
+                if (xQueueSend(txQueue, &buffer, 0) != pdTRUE)
+                {
+                    ESP_LOGE("write", "TX queue full, dropping message");
+                    free(buffer);
+                }
             }
             else
             {
-                ESP_LOGE("write", "Failed to allocate memory for bufferWithNewline");
+                ESP_LOGE("write", "Failed to allocate memory for TX buffer");
+            }
+        }
+
+        void write(const uint8_t* data, size_t length)
+        {
+            uint8_t* bufferWithNewline = (uint8_t*)malloc(length + 1);
+            if (bufferWithNewline) {
+                memcpy(bufferWithNewline, data, length);
+                bufferWithNewline[length] = '\n';
+                if (xQueueSend(txQueue, &bufferWithNewline, 0) != pdTRUE)
+                {
+                    ESP_LOGE("write", "TX queue full, dropping message");
+                    free(bufferWithNewline);
+                }
+            }
+            else
+            {
+                ESP_LOGE("write", "Failed to allocate memory for TX buffer");
+            }
+        }
+
+        static void txTask(void* pvParameters)
+        {
+            SerialDMA* instance = static_cast<SerialDMA*>(pvParameters);
+            uint8_t* buffer = nullptr;
+            while (true)
+            {
+                if (xQueueReceive(instance->txQueue, &buffer, portMAX_DELAY) == pdTRUE)
+                {
+                    uart_write_bytes(instance->uartNum, (const char*)buffer, strlen((const char*)buffer));
+                    free(buffer);
+                }
             }
         }
 };

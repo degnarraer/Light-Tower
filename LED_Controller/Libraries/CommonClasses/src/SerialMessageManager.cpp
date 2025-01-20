@@ -78,10 +78,7 @@ void Named_Object_Caller_Interface::Call_Named_Object_Callback(const std::string
 void SerialPortMessageManager::Setup()
 {
 	ESP_LOGD("Setup", "SerialPortMessageManager Setup.");
-	if(mp_SerialDMA)
-	{
-		mp_SerialDMA->begin();
-	}
+
 	if(m_TXQueueHandle = xQueueCreate(MAX_QUEUE_COUNT, sizeof(std::string*)))
 	ESP_LOGD("Setup", "TX Queue Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Queue.");
@@ -90,13 +87,22 @@ void SerialPortMessageManager::Setup()
 	ESP_LOGD("Setup", "RX Queue Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue.");
 
-	if(xTaskCreate( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_RXQueueTaskHandle ) == pdPASS)
+	if(xTaskCreate( StaticSerialPortMessageManager_RxQueueTask, m_Name.c_str(), 5000, this,  THREAD_PRIORITY_RT,  &m_RXQueueTaskHandle ) == pdPASS)
 	ESP_LOGD("Setup", "RX Queue Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the RX Queue Task.");
 	
 	if(xTaskCreate( StaticSerialPortMessageManager_TxTask, m_Name.c_str(), 5000, this,  m_Priority,  &m_TXTaskHandle ) == pdPASS)
 	ESP_LOGD("Setup", "TX Task Created.");
 	else ESP_LOGE("Setup", "ERROR! Error creating the TX Task.");
+
+	if(mp_SerialDMA)
+	{
+		mp_SerialDMA->begin();
+	}
+	else
+	{
+		ESP_LOGE("Setup", "ERROR! Upable to start Serial DMA device.");
+	}
 }
 
 bool SerialPortMessageManager::QueueMessageFromDataType(const std::string& Name, DataType_t DataType, void* Object, size_t Count, size_t ChangeCount)
@@ -119,7 +125,7 @@ bool SerialPortMessageManager::QueueMessage(const std::string& message)
 	{
 		std::string *p_txMessage = new std::string;
 		*p_txMessage = message;
-		if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_MEDIUM_BLOCK) == pdTRUE )
+		if( xQueueSend(m_TXQueueHandle, &p_txMessage, SEMAPHORE_BLOCK) == pdTRUE )
 		{
 			ESP_LOGD("QueueMessage", "\"%s\" Queued Message: \"%s\"", m_Name, p_txMessage->c_str());
 			result = true;
@@ -142,20 +148,13 @@ void SerialPortMessageManager::QueueNewRXMessage(const std::string &message)
     std::unique_ptr<std::string> sp_rxMessage = std::make_unique<std::string>(message);
     trim(*sp_rxMessage);
     std::string *p_rxMessage_raw = sp_rxMessage.release();
-
     ESP_LOGD("SerialPortMessageManager_RxTask", "Rx from: \"%s\" Message: \"%s\"", m_Name, p_rxMessage_raw->c_str());
-
-    // Use xQueueSendFromISR inside an interrupt
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-	// Inside an interrupt, use xQueueSendFromISR
-	if (xQueueSendFromISR(m_MessageQueueHandle, &p_rxMessage_raw, &xHigherPriorityTaskWoken) != pdTRUE)
+    if (xQueueSend(m_MessageQueueHandle, &p_rxMessage_raw, SEMAPHORE_NO_BLOCK) != pdTRUE)
 	{
-		// Log failure
 		static LogWithRateLimit SerialPortMessageManager_RxTask_QueueFail_RLL(1000, ESP_LOG_WARN);
 		SerialPortMessageManager_RxTask_QueueFail_RLL.Log(ESP_LOG_WARN, "SerialPortMessageManager_RxTask", "RX Message Dropped.");
 		delete p_rxMessage_raw;
 	}
-	portYIELD_FROM_ISR(xHigherPriorityTaskWoken); // Yield to higher priority task if needed
 }
 
 void SerialPortMessageManager::SerialPortMessageManager_TxTask()
@@ -163,7 +162,7 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 	while(true)
 	{
 		std::string *rawMessage;
-		if(xQueueReceive(m_TXQueueHandle, &rawMessage, SEMAPHORE_MEDIUM_BLOCK) == pdTRUE )
+		while(xQueueReceive(m_TXQueueHandle, &rawMessage, SEMAPHORE_BLOCK) == pdTRUE )
 		{
 			std::unique_ptr<std::string> sp_Tx_Message(rawMessage);
 			if (sp_Tx_Message->length() > MAX_MESSAGE_LENGTH)
@@ -176,6 +175,8 @@ void SerialPortMessageManager::SerialPortMessageManager_TxTask()
 			{
 				mp_SerialDMA->write(sp_Tx_Message->c_str());
 			}
+			taskYIELD();
 		}
+		vTaskDelay(pdMS_TO_TICKS(10));
 	}
 }

@@ -88,6 +88,7 @@ private:
 
     TaskHandle_t m_fft_Calculator_TaskHandle = nullptr;     // Task handle for the FFT Data Getter
     bool m_isInitialized = false;                           // Whether the setup function has been called
+    bool m_isProcessing = false;
     DataWidth_t m_dataWidth;
 
 public:    
@@ -178,7 +179,7 @@ public:
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
         if(count > 0)
         {
-            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_NO_BLOCK);
+            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
             Push_Frames_RLL.LogWithValue(ESP_LOG_INFO, "PushFrames", "PushFrames", framesPushed);
             if(framesPushed == count)
             {
@@ -186,7 +187,7 @@ public:
                 if(m_totalFrames - m_framesSinceLastFFT >= m_hopSize)
                 {
                     m_framesSinceLastFFT = m_totalFrames;
-                    xTaskNotifyGive(m_fft_Calculator_TaskHandle);
+                    //xTaskNotifyGive(m_fft_Calculator_TaskHandle);
                 }
             }
             else
@@ -222,102 +223,106 @@ private:
 
     void Process_FFT_Task() 
     {
-        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_DEBUG);
-        while(true)
-        {
-            PerformFFTTask_RLL.Log(ESP_LOG_DEBUG, "Process_FFT_Task", "Process FFT Task Called");
-            ProcessFFT();
-        }
+        ProcessFFT();
     }
 
     void ProcessFFT()
     {
+        static LogWithRateLimit PerformFFTTask_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_FFT_Started_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_FFT_DeQueue_Fail_RLL(1000, ESP_LOG_WARN);
         static LogWithRateLimit ProcessFFT_FFT_Complete_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_Calling_Callbacks_RLL(1000, ESP_LOG_DEBUG);
         static LogWithRateLimit ProcessFFT_Null_Pointers_RLL(1000, ESP_LOG_ERROR);
-        
-        if(!mp_CallBack || !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
+        while(true)
         {
-            ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-            vTaskDelay(SEMAPHORE_LONG_BLOCK);
-            return;
-        }
-
-        uint32_t notificationValue;
-        if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_BLOCK) == pdTRUE)
-        {
-            std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
-            if (!sp_frames)
+            PerformFFTTask_RLL.Log(ESP_LOG_DEBUG, "Process_FFT_Task", "Process FFT Task Called");            
+            if(!mp_CallBack || !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
             {
-                ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for frames.");
-                vTaskDelay(SEMAPHORE_LONG_BLOCK);
-                return;
-            }
-            size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_BLOCK);
-            if(receivedFrames != m_fftSize)
-            {
-                ESP_LOGE("ProcessFFT", "ERROR! Failed to receive expected frame count.");
+                ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
                 vTaskDelay(SEMAPHORE_LONG_BLOCK);
                 return;
             }
 
-            ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
+            uint32_t notificationValue;
+            if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_BLOCK) == pdTRUE)
             {
-                for (int i = 0; i < m_fftSize; i++)
+                if (m_isProcessing) 
                 {
-                    sp_real_left_channel[i] = sp_frames[i].channel1;
-                    sp_imag_left_channel[i] = 0.0f;
-                    sp_real_right_channel[i] = sp_frames[i].channel2;
-                    sp_imag_right_channel[i] = 0.0f;
+                    continue;
                 }
-            }
-            
-            unsigned long startTime = millis();
-            ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
-            ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
-            unsigned long stopTime = millis();
-            ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
-
-            float maxMagnitude = GetMaxMagnitude();
-            std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> sp_freqMags_left = std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter>(static_cast<FFT_Bin_Data_t*>(ps_malloc(m_magnitudeSize * sizeof(FFT_Bin_Data_t))));
-            std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> sp_freqMags_right = std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter>(static_cast<FFT_Bin_Data_t*>(ps_malloc(m_magnitudeSize * sizeof(FFT_Bin_Data_t))));
-            if (!sp_freqMags_left || !sp_freqMags_right)
-            {
-                ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for FFT Bin Data.");
-                vTaskDelay(SEMAPHORE_LONG_BLOCK);
-                return;
-            }
-            size_t maxBin_Left = 0;
-            size_t maxBin_Right = 0;
-            
-            for (int i = 0; i < m_magnitudeSize; ++i)
-            {
-                sp_magnitudes_right_channel[i] = m_Gain/1000.0 * sqrtf(sp_real_right_channel[i] * sp_real_right_channel[i] +sp_imag_right_channel[i] * sp_imag_right_channel[i]);
-                sp_magnitudes_left_channel[i] = m_Gain/1000.0 * sqrtf(sp_real_left_channel[i] * sp_real_left_channel[i] + sp_imag_left_channel[i] * sp_imag_left_channel[i]);
-                if(sp_magnitudes_left_channel[i] > sp_freqMags_left[maxBin_Left].Magnitude)
+                m_isProcessing = true;
+                std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
+                if (!sp_frames)
                 {
-                    maxBin_Left = i;
+                    ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for frames.");
+                    vTaskDelay(SEMAPHORE_LONG_BLOCK);
+                    continue;
                 }
-                if(sp_magnitudes_right_channel[i] > sp_freqMags_right[maxBin_Right].Magnitude)
+                size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_BLOCK);
+                if(receivedFrames != m_fftSize)
                 {
-                    maxBin_Right = i;
+                    ESP_LOGE("ProcessFFT", "ERROR! Failed to receive expected frame count.");
+                    vTaskDelay(SEMAPHORE_LONG_BLOCK);
+                    continue;
                 }
+                ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
+                {
+                    for (int i = 0; i < m_fftSize; i++)
+                    {
+                        sp_real_left_channel[i] = sp_frames[i].channel1;
+                        sp_imag_left_channel[i] = 0.0f;
+                        sp_real_right_channel[i] = sp_frames[i].channel2;
+                        sp_imag_right_channel[i] = 0.0f;
+                    }
+                }
+                
+                unsigned long startTime = millis();
+                ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
+                ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
+                unsigned long stopTime = millis();
+                ProcessFFT_FFT_Complete_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "FFT Calculation Completed");
 
-                sp_freqMags_right[i].Frequency = binToFrequency(i);
-                sp_freqMags_right[i].Magnitude = sp_magnitudes_right_channel[i];
-                sp_freqMags_right[i].NormalizedMagnitude = sp_magnitudes_right_channel[i] / maxMagnitude;
+                float maxMagnitude = GetMaxMagnitude();
+                std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> sp_freqMags_left = std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter>(static_cast<FFT_Bin_Data_t*>(ps_malloc(m_magnitudeSize * sizeof(FFT_Bin_Data_t))));
+                std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> sp_freqMags_right = std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter>(static_cast<FFT_Bin_Data_t*>(ps_malloc(m_magnitudeSize * sizeof(FFT_Bin_Data_t))));
+                if (!sp_freqMags_left || !sp_freqMags_right)
+                {
+                    ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for FFT Bin Data.");
+                    vTaskDelay(SEMAPHORE_LONG_BLOCK);
+                    continue;
+                }
+                size_t maxBin_Left = 0;
+                size_t maxBin_Right = 0;
+                
+                for (int i = 0; i < m_magnitudeSize; ++i)
+                {
+                    sp_magnitudes_right_channel[i] = m_Gain/1000.0 * sqrtf(sp_real_right_channel[i] * sp_real_right_channel[i] +sp_imag_right_channel[i] * sp_imag_right_channel[i]);
+                    sp_magnitudes_left_channel[i] = m_Gain/1000.0 * sqrtf(sp_real_left_channel[i] * sp_real_left_channel[i] + sp_imag_left_channel[i] * sp_imag_left_channel[i]);
+                    if(sp_magnitudes_left_channel[i] > sp_freqMags_left[maxBin_Left].Magnitude)
+                    {
+                        maxBin_Left = i;
+                    }
+                    if(sp_magnitudes_right_channel[i] > sp_freqMags_right[maxBin_Right].Magnitude)
+                    {
+                        maxBin_Right = i;
+                    }
 
-                sp_freqMags_left[i].Frequency = binToFrequency(i);
-                sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
-                sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
-                if(i % 100 == 0) vTaskDelay(SEMAPHORE_SHORT_BLOCK);
+                    sp_freqMags_right[i].Frequency = binToFrequency(i);
+                    sp_freqMags_right[i].Magnitude = sp_magnitudes_right_channel[i];
+                    sp_freqMags_right[i].NormalizedMagnitude = sp_magnitudes_right_channel[i] / maxMagnitude;
+
+                    sp_freqMags_left[i].Frequency = binToFrequency(i);
+                    sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
+                    sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
+                    if(i % 100 == 0) taskYIELD();
+                }
+                
+                ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
+                std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
+                mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
+                m_isProcessing = false;
             }
-            
-            ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
-            std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
-            mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
         }
     }
 

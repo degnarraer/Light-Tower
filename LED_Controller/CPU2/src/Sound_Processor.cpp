@@ -85,7 +85,7 @@ void Sound_Processor::FFT_Results_Callback(std::unique_ptr<FFT_Bin_Data_Set_t>& 
   FFT_Bin_Data_Set_t* p_fft_Bin_Data_Set_raw = sp_FFT_Bin_Data_Set.release();
   if(m_FFT_Result_Processor_Queue)
   {
-    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+    if(xQueueSend(m_FFT_Result_Processor_Queue, &p_fft_Bin_Data_Set_raw, SEMAPHORE_BLOCK) == pdTRUE)
     {
       FFT_Results_Callback_Queue_Success_RLL.Log(ESP_LOG_DEBUG, "FFT_Results_Callback", "Queued FFT Data.");
     }
