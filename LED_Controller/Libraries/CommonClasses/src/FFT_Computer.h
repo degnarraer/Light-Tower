@@ -10,8 +10,6 @@
 #include "PSRamAllocator.h"
 #include "Tunes.h"
 
-#define SEMAPHORE_WAIT_MS 10
-
 struct FFT_Bin_Data
 {
     float Frequency = 0.0f;
@@ -177,7 +175,7 @@ public:
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
         if(count > 0)
         {
-            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_SHORT_BLOCK);
+            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_MEDIUM_BLOCK);
             Push_Frames_RLL.LogWithValue(ESP_LOG_INFO, "PushFrames", "PushFrames", framesPushed);
             if(framesPushed == count)
             {
@@ -185,7 +183,7 @@ public:
                 if(m_totalFrames - m_framesSinceLastFFT >= m_hopSize)
                 {
                     m_framesSinceLastFFT = m_totalFrames;
-                    //xTaskNotifyGive(m_fft_Calculator_TaskHandle);
+                    xTaskNotifyGive(m_fft_Calculator_TaskHandle);
                 }
             }
             else
@@ -245,10 +243,6 @@ private:
             uint32_t notificationValue;
             if (xTaskNotifyWait(0x00, 0xFFFFFFFF, &notificationValue, SEMAPHORE_BLOCK) == pdTRUE)
             {
-                if (m_isProcessing) 
-                {
-                    continue;
-                }
                 m_isProcessing = true;
                 std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
                 if (!sp_frames)
@@ -275,6 +269,7 @@ private:
                     }
                 }
                 
+                taskYIELD();
                 unsigned long startTime = millis();
                 ComputeFFT(sp_real_left_channel.get(), sp_imag_left_channel.get(), m_fftSize);
                 ComputeFFT(sp_real_right_channel.get(), sp_imag_right_channel.get(), m_fftSize);
@@ -313,14 +308,14 @@ private:
                     sp_freqMags_left[i].Frequency = binToFrequency(i);
                     sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
                     sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
-                    if(i % 100 == 0) taskYIELD();
+                    if(i % 50 == 0) taskYIELD();
                 }
                 
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
-                m_isProcessing = false;
             }
+            vTaskDelay(pdMS_TO_TICKS(1));
         }
     }
 

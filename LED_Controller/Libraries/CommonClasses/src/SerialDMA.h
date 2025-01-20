@@ -100,7 +100,7 @@ class SerialDMA
                             instance->flush();
                         break;
                         case UART_PATTERN_DET:
-                            ESP_LOGI("uartEventTask", "UART_PATTERN_DET");
+                            ESP_LOGD("uartEventTask", "UART_PATTERN_DET");
                             {
                                 while (true)
                                 {
@@ -185,11 +185,11 @@ class SerialDMA
         void write(const std::string& data)
         {
             std::string dataWithNewline = data + '\n';
-            char* buffer = (char*)malloc(dataWithNewline.length() + 1);
+            char* buffer = (char*)ps_malloc(dataWithNewline.length() + 1);
             if (buffer)
             {
                 memcpy(buffer, dataWithNewline.c_str(), dataWithNewline.length() + 1);
-                if (xQueueSend(txQueue, &buffer, 0) != pdTRUE)
+                if (xQueueSend(txQueue, &buffer, SEMAPHORE_NO_BLOCK) != pdTRUE)
                 {
                     ESP_LOGE("write", "TX queue full, dropping message");
                     free(buffer);
@@ -203,11 +203,11 @@ class SerialDMA
 
         void write(const uint8_t* data, size_t length)
         {
-            uint8_t* bufferWithNewline = (uint8_t*)malloc(length + 1);
+            uint8_t* bufferWithNewline = (uint8_t*)ps_malloc(length + 1);
             if (bufferWithNewline) {
                 memcpy(bufferWithNewline, data, length);
                 bufferWithNewline[length] = '\n';
-                if (xQueueSend(txQueue, &bufferWithNewline, 0) != pdTRUE)
+                if (xQueueSend(txQueue, &bufferWithNewline, SEMAPHORE_NO_BLOCK) != pdTRUE)
                 {
                     ESP_LOGE("write", "TX queue full, dropping message");
                     free(bufferWithNewline);
