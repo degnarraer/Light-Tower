@@ -237,7 +237,7 @@ private:
             {
                 ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
                 vTaskDelay(SEMAPHORE_LONG_BLOCK);
-                return;
+                continue;
             }
 
             uint32_t notificationValue;
@@ -308,14 +308,14 @@ private:
                     sp_freqMags_left[i].Frequency = binToFrequency(i);
                     sp_freqMags_left[i].Magnitude = sp_magnitudes_left_channel[i];
                     sp_freqMags_left[i].NormalizedMagnitude = sp_magnitudes_left_channel[i] / maxMagnitude;
-                    if(i % 50 == 0) taskYIELD();
+                    if(i % 100 == 0) taskYIELD();
                 }
                 
                 ProcessFFT_Calling_Callbacks_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Calling Callback");
                 std::unique_ptr<FFT_Bin_Data_Set_t> sp_FFT_Bin_Data_Set = std::make_unique<FFT_Bin_Data_Set_t>(std::move(sp_freqMags_left), std::move(sp_freqMags_right), maxBin_Left, maxBin_Right, m_magnitudeSize);
                 mp_CallBack(sp_FFT_Bin_Data_Set, mp_CallBackArgs);
             }
-            vTaskDelay(pdMS_TO_TICKS(1));
+            vTaskDelay(SEMAPHORE_MEDIUM_BLOCK);
         }
     }
 
