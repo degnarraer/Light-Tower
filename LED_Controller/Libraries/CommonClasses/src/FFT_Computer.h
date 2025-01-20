@@ -78,7 +78,6 @@ private:
     std::unique_ptr<float[], PsMallocDeleter> sp_magnitudes_right_channel;     // FFT magnitudes
     std::unique_ptr<float[], PsMallocDeleter> sp_magnitudes_left_channel;      // FFT magnitudes
     UBaseType_t m_uxPriority;
-    BaseType_t m_xCoreID;
 
     
     unsigned long m_totalFrames;
@@ -103,13 +102,12 @@ public:
         , m_totalFrames(0)
         , m_totalProcessedFrames(0)
         , m_framesSinceLastFFT(0) {}
-    FFT_Computer(int fftSize, int hopSize, float f_s, DataWidth_t dataWidth, UBaseType_t uxPriority, BaseType_t xCoreID)
+    FFT_Computer(int fftSize, int hopSize, float f_s, DataWidth_t dataWidth, UBaseType_t uxPriority)
         : m_fftSize(fftSize)
         , m_hopSize(hopSize)
         , m_f_s(f_s)
         , m_dataWidth(dataWidth)
         , m_uxPriority(uxPriority)
-        , m_xCoreID(xCoreID)
         , m_isInitialized(false)
         , m_IsMultithreaded(true)
         , m_magnitudeSize(m_fftSize/2)

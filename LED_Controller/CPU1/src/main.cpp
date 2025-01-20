@@ -37,7 +37,7 @@ void VisualizationTaskLoop(void * parameter)
 
 void InitTasks()
 {
-  xTaskCreatePinnedToCore( VisualizationTaskLoop, "VisualizationTask", 5000, NULL, THREAD_PRIORITY_MEDIUM, &VisualizationTask, VISUALIZATION_TASK_CORE );
+  xTaskCreate( VisualizationTaskLoop, "VisualizationTask", 5000, NULL, THREAD_PRIORITY_MEDIUM, &VisualizationTask );
 }
 
 void setup()

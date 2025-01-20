@@ -62,11 +62,9 @@ class Bluetooth_Source: public NamedItem
 		};
 		
 		Bluetooth_Source( std::string Title
-						, BaseType_t Core
 						, BaseType_t Priority
 						, BluetoothA2DPSource& BTSource)
 						: NamedItem(Title)
-						, m_Core(Core)
 						, m_Priority(Priority)
 						, m_BTSource(BTSource)
 		{
@@ -116,8 +114,6 @@ class Bluetooth_Source: public NamedItem
 		const char* GetAddressString(esp_bd_addr_t bda);
 
 	private:
-	
-		BaseType_t m_Core = 0;
 		BaseType_t m_Priority = THREAD_PRIORITY_HIGH;
 		BluetoothA2DPSource& m_BTSource;
 		Bluetooth_Source_Callbacks* m_Callee = NULL;
@@ -164,7 +160,6 @@ class Bluetooth_Sink: public NamedItem
 		
   public:
     Bluetooth_Sink( std::string Title
-				  , BaseType_t Core
 				  , UBaseType_t Priority
 				  , BluetoothA2DPSink& BTSink
 				  , i2s_port_t i2S_PORT
@@ -183,7 +178,6 @@ class Bluetooth_Sink: public NamedItem
 				  , int SerialDataInPin
 				  , int SerialDataOutPin )
 				  : NamedItem(Title)
-				  , m_Core(Core)
 				  , m_Priority(Priority)
 				  , m_BTSink(BTSink)
 				  , m_I2S_PORT(i2S_PORT)
@@ -241,7 +235,6 @@ class Bluetooth_Sink: public NamedItem
 	}
 
 	private:
-		BaseType_t m_Core = 0;
 		UBaseType_t m_Priority = THREAD_PRIORITY_HIGH;
 		Bluetooth_Sink_Callbacks* m_Callee = NULL;
 		BluetoothA2DPSink& m_BTSink;

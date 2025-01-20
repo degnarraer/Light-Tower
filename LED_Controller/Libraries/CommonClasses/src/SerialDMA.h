@@ -27,7 +27,7 @@
 class SerialDMA
 {
     private:
-        uart_port_t uartNum;                                            // UART port (e.g., UART_NUM_1)
+        uart_port_t uartNum;                                            // UART port (e.g., UART_NUM_0)
         QueueHandle_t rxQueue;                                          // Queue to handle UART events
         TaskHandle_t uartEventTaskHandle;
         QueueHandle_t txQueue;                                          // Queue for TX data

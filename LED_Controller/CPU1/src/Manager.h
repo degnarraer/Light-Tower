@@ -105,7 +105,7 @@ class Manager: public NamedItem
     
     void CreateMicrophoneTask()
     {
-      if( xTaskCreatePinnedToCore( Static_Microphone_Request_Task, "Microphone Request", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle, MICROPHONE_DATE_REQUEST_TASK_CORE ) == pdTRUE )
+      if( xTaskCreate( Static_Microphone_Request_Task, "Microphone Request", 5000, this, THREAD_PRIORITY_HIGH,  &m_TaskHandle ) == pdTRUE )
       {
         ESP_LOGI("StartDevice", "%s: Microphone task started.", GetTitle().c_str());
       }

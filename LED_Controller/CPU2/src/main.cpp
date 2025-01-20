@@ -45,11 +45,10 @@ I2S_Device m_I2S_In = I2S_Device( "I2S_In"
 
 BluetoothA2DPSource a2dp_source;
 Bluetooth_Source m_BT_Out( "Bluetooth Source"
-                         , BLUETOOTH_TASK_CORE
                          , BLUETOOTH_TASK_PRIORITY
                          , a2dp_source );
                               
-FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, I2S_SAMPLE_RATE, DataWidth_16, FFT_COMPUTE_TASK_PRIORITY, FFT_COMPUTE_TASK_CORE);
+FFT_Computer m_FFT_Computer = FFT_Computer(FFT_SIZE, HOP_SIZE, I2S_SAMPLE_RATE, DataWidth_16, FFT_COMPUTE_TASK_PRIORITY);
 ContinuousAudioBuffer<AMPLITUDE_AUDIO_BUFFER_SIZE> m_Amplitude_AudioBuffer;
 
 DataSerializer m_DataSerializer;
