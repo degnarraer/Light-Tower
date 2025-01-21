@@ -115,7 +115,6 @@ class DataSerializer: public CommonUtils
 
 		virtual bool DeSerializeJsonToNamedObject(std::string json, NamedObject_t &NamedObject)
 		{
-			bool deserialized = false;
 			ESP_LOGD("DeSerializeJsonToNamedObject", "JSON String: %s", json);
 			
 			JSONVar deserializeDoc;
@@ -126,7 +125,7 @@ class DataSerializer: public CommonUtils
 				++m_FailCount;
 				NamedObject.Object = nullptr;
 				ESP_LOGW("DeSerializeJsonToNamedObject", "WARNING! Parsing failed for Input: %s", json);
-				return deserialized;
+				return false;
 			}
 			else
 			{
@@ -167,7 +166,7 @@ class DataSerializer: public CommonUtils
 						ESP_LOGW("DeSerializeJsonToNamedObject", "Memory allocation failed for Buffer");
 						NamedObject.Object = nullptr; // Set Object to nullptr if allocation fails
 						++m_FailCount;
-						return deserialized;
+						return false;
 					}
 
 					// Ensure the deserialized data is valid
@@ -194,7 +193,6 @@ class DataSerializer: public CommonUtils
 						{
 							ESP_LOGD("DeSerializeJsonToNamedObject", "Checksum matched, setting buffer");
 							NamedObject.Object = Buffer; // Assign the buffer to NamedObject
-							deserialized = true;
 							ESP_LOGD("DeSerializeJsonToNamedObject", "Buffer set successfully");
 						}
 						else
@@ -204,6 +202,7 @@ class DataSerializer: public CommonUtils
 							NamedObject.Object = nullptr;
 							++m_FailCount;
 							ESP_LOGW("DeSerializeJsonToNamedObject", "Checksum error: (%i != %i)", CheckSumCalc, CheckSumIn);
+							return false;
 						}
 					}
 					else
@@ -212,6 +211,7 @@ class DataSerializer: public CommonUtils
 						++m_FailCount;
 						NamedObject.Object = nullptr;
 						ESP_LOGW("DeSerializeJsonToNamedObject", "Byte count or object count mismatch.");
+						return false;
 					}
 				}
 				else
@@ -219,11 +219,12 @@ class DataSerializer: public CommonUtils
 					// Missing or invalid tags
 					++m_FailCount;
 					NamedObject.Object = nullptr;
-					ESP_LOGW("DeSerializeJsonToNamedObject", "Missing or invalid tags in input: %s", json);
+					ESP_LOGW("DeSerializeJsonToNamedObject", "Missing or invalid tags in input: %s", json.c_str());
+					return false;
 				}
 			}
 			FailPercentage();
-			return deserialized;
+			return true;
 		}
 
 		bool isHexadecimal(const String &str)
@@ -254,41 +255,39 @@ class DataSerializer: public CommonUtils
 			// Check if all required tags are present and valid
 			if (!doc.hasOwnProperty(m_NameTag) || doc[m_NameTag] == nullptr)
 			{
-				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_NameTag.c_str());
+				ESP_LOGW("AllTagsExist", "Missing or invalid \"%s\"", m_NameTag.c_str());
 				return false;
 			}
 
 			if (!doc.hasOwnProperty(m_CheckSumTag) || doc[m_CheckSumTag] == nullptr)
 			{
-				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_CheckSumTag.c_str());
+				ESP_LOGW("AllTagsExist", "Missing or invalid \"%s\"", m_CheckSumTag.c_str());
 				return false;
 			}
 
 			if (!doc.hasOwnProperty(m_CountTag) || doc[m_CountTag] == nullptr)
 			{
-				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_CountTag.c_str());
+				ESP_LOGW("AllTagsExist", "Missing or invalid \"%s\"", m_CountTag.c_str());
 				return false;
 			}
 
 			if (!doc.hasOwnProperty(m_ChangeCountTag) || doc[m_ChangeCountTag] == nullptr)
 			{
-				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_ChangeCountTag.c_str());
+				ESP_LOGW("AllTagsExist", "Missing or invalid \"%s\"", m_ChangeCountTag.c_str());
 				return false;
 			}
 
 			if (!doc.hasOwnProperty(m_TotalByteCountTag) || doc[m_TotalByteCountTag] == nullptr)
 			{
-				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_TotalByteCountTag.c_str());
+				ESP_LOGW("AllTagsExist", "Missing or invalid \"%s\"", m_TotalByteCountTag.c_str());
 				return false;
 			}
 
 			if (!doc.hasOwnProperty(m_DataTag) || doc[m_DataTag] == nullptr)
 			{
-				ESP_LOGW("AllTagsExist", "Missing or invalid %s", m_DataTag.c_str());
+				ESP_LOGW("AllTagsExist", "Missing or invalid \"%s\"", m_DataTag.c_str());
 				return false;
 			}
-
-			// If all tags are valid
 			return true;
 		}
 

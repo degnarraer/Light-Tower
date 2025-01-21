@@ -51,7 +51,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool GetInitialValueAsString(std::string &stringValue) const override
 		{
 			bool result = false;
-			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				if(mp_InitialValue)
 				{
@@ -82,7 +82,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 		virtual bool GetValueAsString(std::string &stringValue) const override
 		{
 			bool result = false;
-			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				if(mp_Value)
 				{
@@ -122,7 +122,7 @@ class LocalStringDataItem: public LocalDataItem<char, DATAITEM_STRING_LENGTH>
 			assert(count <= DATAITEM_STRING_LENGTH);
 			
 			UpdateStatus_t updateStatus;
-			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, portMAX_DELAY) == pdTRUE)
+			if(xSemaphoreTakeRecursive(this->m_ValueSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
 			{
 				std::string newValue(value, count);
 				ESP_LOGD("DataItem: SetValue", "\"%s\" Set Value: \"%s\"", m_Name.c_str(), newValue.c_str());

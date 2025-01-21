@@ -53,7 +53,7 @@ class SetupCallerInterface
 
         virtual ~SetupCallerInterface()
         {
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
             {
                 ESP_LOGD("SetupCallerInterface", "Deleting SetupCallerInterface");
                 for (SetupCalleeInterface* callee : m_SetupCallees)
@@ -77,7 +77,7 @@ class SetupCallerInterface
 
         virtual void RegisterForSetupCall(SetupCalleeInterface* newCallee)
 		{
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
             {
                 ESP_LOGD("SetupCallerInterface", "Try Registering Callee");
                 bool isFound = false;
@@ -105,7 +105,7 @@ class SetupCallerInterface
 
         virtual void DeRegisterForSetupCall(SetupCalleeInterface* callee)
 		{
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
             {
                 auto it = std::find(m_SetupCallees.begin(), m_SetupCallees.end(), callee);
                 if (it != m_SetupCallees.end())
@@ -123,7 +123,7 @@ class SetupCallerInterface
 
         virtual void SetupAllSetupCallees()
 		{
-			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_SHORT_BLOCK) == pdTRUE)
+			if(xSemaphoreTakeRecursive(m_SetupCallesSemaphore, SEMAPHORE_BLOCK) == pdTRUE)
             {
                 ESP_LOGI("SetupAllSetupCallees", "Setup All Setup Callees");
                 for (SetupCalleeInterface* callee : m_SetupCallees)
