@@ -160,8 +160,8 @@ class DataSerializer: public CommonUtils
 					ESP_LOGD("DeSerializeJsonToNamedObject", "Actual Byte Count: %i", ObjectByteCount);
 
 					// Allocate buffer to store deserialized data
-					uint8_t *Buffer = (uint8_t *)malloc(sizeof(uint8_t) * ByteCountIn); // Raw pointer allocation
-					if (Buffer == nullptr)
+					std::unique_ptr<uint8_t[], PsMallocDeleter> spBuffer(static_cast<uint8_t*>(ps_malloc(sizeof(uint8_t) * ByteCountIn)));
+					if(spBuffer == nullptr)
 					{
 						ESP_LOGW("DeSerializeJsonToNamedObject", "Memory allocation failed for Buffer");
 						NamedObject.Object = nullptr; // Set Object to nullptr if allocation fails
@@ -183,7 +183,7 @@ class DataSerializer: public CommonUtils
 								strcpy(hexArray, BytesString.substring(startIndex, startIndex + 2).c_str());
 								long decValue = strtol(String(hexArray).c_str(), NULL, 16);
 								CheckSumCalc += decValue;
-								Buffer[j * ObjectByteCount + k] = decValue;
+								spBuffer[j * ObjectByteCount + k] = decValue;
 							}
 						}
 						ESP_LOGD("DeSerializeJsonToNamedObject", "Calculated Checksum: %i", CheckSumCalc);
@@ -192,13 +192,12 @@ class DataSerializer: public CommonUtils
 						if (CheckSumCalc == CheckSumIn)
 						{
 							ESP_LOGD("DeSerializeJsonToNamedObject", "Checksum matched, setting buffer");
-							NamedObject.Object = Buffer; // Assign the buffer to NamedObject
+							NamedObject.Object = spBuffer.release(); // Assign the buffer to NamedObject
 							ESP_LOGD("DeSerializeJsonToNamedObject", "Buffer set successfully");
 						}
 						else
 						{
 							ESP_LOGD("DeSerializeJsonToNamedObject", "Checksum mismatch!");
-							free(Buffer); // Free buffer if checksum does not match
 							NamedObject.Object = nullptr;
 							++m_FailCount;
 							ESP_LOGW("DeSerializeJsonToNamedObject", "Checksum error: (%i != %i)", CheckSumCalc, CheckSumIn);

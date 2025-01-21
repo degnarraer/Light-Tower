@@ -42,6 +42,11 @@
 #define ENCODE_OBJECT_DIVIDER "|"
 #define ENCODE_VALUE_DIVIDER ","
 
+struct PsMallocDeleter {
+    void operator()(void* ptr) const {
+        free(ptr);
+    }
+};
 
 enum DeviceState
 {

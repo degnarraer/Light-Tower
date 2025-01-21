@@ -169,8 +169,8 @@ class LocalDataItem: public DataItemInterface<T, COUNT>
 			{
 				ESP_LOGD("DataItem<T, COUNT>::Setup()", "\"%s\": Allocating Memory", m_Name);
 				if(mp_NamedCallback) this->RegisterNamedCallback(mp_NamedCallback);
-				mp_Value = (T*)malloc(sizeof(T)*COUNT);
-				mp_InitialValue = (T*)malloc(sizeof(T)*COUNT);
+				mp_Value = (T*)ps_malloc(sizeof(T)*COUNT);
+				mp_InitialValue = (T*)ps_malloc(sizeof(T)*COUNT);
 				if (mp_Value && mp_InitialValue && mp_InitialValuePtr)
 				{
 					if (std::is_same<T, char>::value)

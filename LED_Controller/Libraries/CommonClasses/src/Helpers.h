@@ -609,7 +609,7 @@ class QueueManager: public CommonUtils
 			ESP_LOGE("CommonUtils", "ERROR! %s: Allocating %i DataItem's for a total of %i bytes of Memory.", m_Title.c_str(), m_DataItemCount, ConfigBytes);
 			
 			//Placement Allocation
-			void *DataItem_t_raw = malloc(sizeof(DataItem_t) * m_DataItemCount);
+			void *DataItem_t_raw = ps_malloc(sizeof(DataItem_t) * m_DataItemCount);
 			m_DataItem = new(DataItem_t_raw) DataItem_t[m_DataItemCount];
 
 			assert(m_DataItem != NULL);

@@ -18,12 +18,6 @@ struct FFT_Bin_Data
 };
 typedef FFT_Bin_Data FFT_Bin_Data_t;
 
-struct PsMallocDeleter {
-    void operator()(void* ptr) const {
-        free(ptr);
-    }
-};
-
 struct FFT_Bin_Data_Set
 {
     std::unique_ptr<FFT_Bin_Data_t[], PsMallocDeleter> Left_Channel = nullptr;
@@ -76,7 +70,8 @@ private:
     std::unique_ptr<float[], PsMallocDeleter> sp_magnitudes_right_channel;     // FFT magnitudes
     std::unique_ptr<float[], PsMallocDeleter> sp_magnitudes_left_channel;      // FFT magnitudes
     UBaseType_t m_uxPriority;
-    SemaphoreHandle_t m_Lock;
+    SemaphoreHandle_t m_WorkLock;
+    SemaphoreHandle_t m_BufferLock;
 
     
     unsigned long m_totalFrames;
@@ -86,7 +81,6 @@ private:
 
     TaskHandle_t m_fft_Calculator_TaskHandle = nullptr;     // Task handle for the FFT Data Getter
     bool m_isInitialized = false;                           // Whether the setup function has been called
-    bool m_isProcessing = false;
     DataWidth_t m_dataWidth;
 
 public:    
@@ -145,7 +139,8 @@ public:
         {
             mp_CallBack = callback;
         }
-        m_Lock = xSemaphoreCreateBinary();
+        m_WorkLock = xSemaphoreCreateBinary();
+        m_BufferLock = xSemaphoreCreateMutex();
         mp_CallBackArgs = callBackArgs;
         mp_ringBuffer = new ShocksRingBuffer(m_fftSize);
         sp_real_right_channel = std::unique_ptr<float[], PsMallocDeleter>(static_cast<float*>(ps_malloc(m_fftSize * sizeof(float))));
@@ -177,20 +172,24 @@ public:
         static LogWithRateLimit Push_Frames_Dropped_RLL(1000, ESP_LOG_WARN);
         if(count > 0)
         {
-            size_t framesPushed = mp_ringBuffer->push(p_frames, count, SEMAPHORE_MEDIUM_BLOCK);
-            Push_Frames_RLL.LogWithValue(ESP_LOG_INFO, "PushFrames", "PushFrames", framesPushed);
-            if(framesPushed == count)
+            if(xSemaphoreTake(m_BufferLock, pdMS_TO_TICKS(SEMAPHORE_SHORT_BLOCK)))
             {
-                m_totalFrames += framesPushed;
-                if(m_totalFrames - m_framesSinceLastFFT >= m_hopSize)
+                size_t framesPushed = mp_ringBuffer->push(p_frames, count);
+                Push_Frames_RLL.LogWithValue(ESP_LOG_INFO, "PushFrames", "PushFrames", framesPushed);
+                if(framesPushed == count)
                 {
-                    m_framesSinceLastFFT = m_totalFrames;
-                    xSemaphoreGive(m_Lock);
+                    m_totalFrames += framesPushed;
+                    if(m_totalFrames - m_framesSinceLastFFT >= m_hopSize)
+                    {
+                        m_framesSinceLastFFT = m_totalFrames;
+                        xSemaphoreGive(m_WorkLock);
+                    }
                 }
-            }
-            else
-            {
-                Push_Frames_Dropped_RLL.Log(ESP_LOG_WARN, "PushFrames", "Frames Dropped");
+                else
+                {
+                    Push_Frames_Dropped_RLL.Log(ESP_LOG_WARN, "PushFrames", "Frames Dropped");
+                }
+                xSemaphoreGive(m_BufferLock);
             }
         }
     }
@@ -234,41 +233,45 @@ private:
         static LogWithRateLimit ProcessFFT_Null_Pointers_RLL(1000, ESP_LOG_ERROR);
         while(true)
         {
-            PerformFFTTask_RLL.Log(ESP_LOG_DEBUG, "Process_FFT_Task", "Process FFT Task Called");            
-            if(!mp_CallBack || !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
+            if (xSemaphoreTake(m_WorkLock, SEMAPHORE_BLOCK) == pdTRUE)
             {
-                ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
-                vTaskDelay(SEMAPHORE_LONG_BLOCK);
-                continue;
-            }
+                PerformFFTTask_RLL.Log(ESP_LOG_DEBUG, "Process_FFT_Task", "Process FFT Task Called");            
+                if(!mp_CallBack || !sp_real_right_channel || !sp_real_left_channel || !sp_imag_right_channel || !sp_imag_left_channel )
+                {
+                    ProcessFFT_Null_Pointers_RLL.Log(ESP_LOG_ERROR, "ProcessFFT", "ERROR! Null Pointers");
+                    vTaskDelay(SEMAPHORE_LONG_BLOCK);
+                    continue;
+                }
 
-            uint32_t notificationValue;
-            if (xSemaphoreTake(m_Lock, SEMAPHORE_BLOCK) == pdTRUE)
-            {
-                m_isProcessing = true;
-                std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
-                if (!sp_frames)
+                if(xSemaphoreTake(m_BufferLock, SEMAPHORE_BLOCK) == pdTRUE)
                 {
-                    ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for frames.");
-                    vTaskDelay(SEMAPHORE_LONG_BLOCK);
-                    continue;
-                }
-                size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize, SEMAPHORE_BLOCK);
-                if(receivedFrames != m_fftSize)
-                {
-                    ESP_LOGE("ProcessFFT", "ERROR! Failed to receive expected frame count.");
-                    vTaskDelay(SEMAPHORE_LONG_BLOCK);
-                    continue;
-                }
-                ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
-                {
-                    for (int i = 0; i < m_fftSize; i++)
+                    std::unique_ptr<Frame_t[], PsMallocDeleter> sp_frames = std::unique_ptr<Frame_t[], PsMallocDeleter>((Frame_t*)ps_malloc(sizeof(Frame_t) * m_fftSize));
+                    if (!sp_frames)
                     {
-                        sp_real_left_channel[i] = sp_frames[i].channel1;
-                        sp_imag_left_channel[i] = 0.0f;
-                        sp_real_right_channel[i] = sp_frames[i].channel2;
-                        sp_imag_right_channel[i] = 0.0f;
+                        ESP_LOGE("ProcessFFT", "ERROR! Failed to allocate memory for frames.");
+                        vTaskDelay(SEMAPHORE_LONG_BLOCK);
+                        xSemaphoreGive(m_BufferLock);
+                        continue;
                     }
+                    size_t receivedFrames = mp_ringBuffer->get(sp_frames.get(), m_fftSize);
+                    if(receivedFrames != m_fftSize)
+                    {
+                        ESP_LOGE("ProcessFFT", "ERROR! Failed to receive expected frame count.");
+                        vTaskDelay(SEMAPHORE_LONG_BLOCK);
+                        xSemaphoreGive(m_BufferLock);
+                        continue;
+                    }
+                    ProcessFFT_FFT_Started_RLL.Log(ESP_LOG_DEBUG, "ProcessFFT", "Process FFT Started");
+                    {
+                        for (int i = 0; i < m_fftSize; i++)
+                        {
+                            sp_real_left_channel[i] = sp_frames[i].channel1;
+                            sp_imag_left_channel[i] = 0.0f;
+                            sp_real_right_channel[i] = sp_frames[i].channel2;
+                            sp_imag_right_channel[i] = 0.0f;
+                        }
+                    }
+                    xSemaphoreGive(m_BufferLock);
                 }
                 
                 vTaskDelay(SEMAPHORE_NO_BLOCK);
