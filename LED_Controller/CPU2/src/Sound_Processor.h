@@ -92,7 +92,7 @@ class Sound_Processor: public NamedItem
                                                                                     , this );
     static void FFT_Gain_ValueChanged(const std::string &Name, void* object, void* arg)
     {
-      ESP_LOGE("FFT_Gain_ValueChanged", "FFT Gain Value Changed");
+      ESP_LOGI("FFT_Gain_ValueChanged", "FFT Gain Value Changed");
       if(object && arg)
       {
         CallbackArguments* arguments = static_cast<CallbackArguments*>(arg);
